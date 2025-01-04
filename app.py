@@ -81,6 +81,7 @@ def search():
             rows = cursor.fetchall()
 
             if rows:
+                # Додаємо таблицю і знайдені ціни до результатів
                 results.append({"table": table_name, "prices": rows})
 
         cursor.close()

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пошук артикула</title>
+</head>
+<body>
+    <h1>Пошук артикула</h1>
+    <form method="POST">
+        <label for="article">Введіть артикул:</label>
+        <input type="text" id="article" name="article" required>
+        <button type="submit">Пошук</button>
+    </form>
+    {% if price %}
+        <p>Результат: {{ price }}</p>
+    {% endif %}
+</body>
+</html>

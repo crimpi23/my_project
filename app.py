@@ -48,6 +48,31 @@ def search():
         # Якщо сталася помилка, повертаємо повідомлення про помилку
         return jsonify({"error": str(e)}), 500
 
+# Рут для сторінки завантаження прайс-листів
+@app.route("/upload")
+def upload_page():
+    return render_template("upload.html")
+
+# Рут для обробки завантаження файлів прайс-листів
+@app.route("/upload", methods=["POST"])
+def upload_file():
+    # Перевіряємо, чи є файл в запиті
+    if "file" not in request.files:
+        return jsonify({"error": "Файл не вибрано"}), 400
+    
+    file = request.files["file"]
+    
+    if file.filename == "":
+        return jsonify({"error": "Файл не вибрано"}), 400
+    
+    if file:
+        # Зберігаємо файл на сервері (потрібно налаштувати папку для збереження)
+        file_path = os.path.join("uploads", file.filename)
+        file.save(file_path)
+        
+        # Тут можна додати логіку для парсингу файлу і завантаження даних у базу даних
+        return jsonify({"message": f"Файл {file.filename} успішно завантажено"}), 200
+
 # Запуск Flask-додатку
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

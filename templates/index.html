@@ -16,7 +16,7 @@
     <div class="container">
         <h1>Пошук артикула</h1>
 
-        <form action="/" method="get">
+        <form action="/{{ token }}/" method="get">
             <label for="article">Введіть артикул: </label>
             <input type="text" id="article" name="article" placeholder="Введіть один артикул">
 
@@ -39,6 +39,11 @@
                         {% for detail in details %}
                         <li>
                             <span class="table-name">{{ detail.table }}</span> - <span class="price">{{ detail.price }} €</span>
+                            <form action="/{{ token }}/add_to_cart" method="post" style="display: inline;">
+                                <input type="hidden" name="product_id" value="{{ detail.table }}_{{ article }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit">Додати до корзини</button>
+                            </form>
                         </li>
                         {% endfor %}
                     </ul>

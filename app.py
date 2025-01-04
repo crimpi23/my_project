@@ -2,7 +2,7 @@ import os
 import tempfile
 import psycopg2
 import uuid
-from flask import Flask, request, render_template, jsonify, redirect
+from flask import Flask, request, render_template, jsonify, redirect, url_for
 from werkzeug.utils import secure_filename
 from import_data import import_to_db  # Імпортуємо функцію з import_data.py
 import logging
@@ -19,10 +19,6 @@ def get_connection():
         logging.error("DATABASE_URL is not set")
         raise Exception("DATABASE_URL is not set")
     return psycopg2.connect(database_url, sslmode='require')
-
-# Створення унікального токена для користувача
-def generate_token():
-    return str(uuid.uuid4())
 
 # Головна сторінка - з пошуком артикула
 @app.route("/<token>/", methods=["GET"])
@@ -120,7 +116,7 @@ def add_to_cart(token):
         cursor.close()
         conn.close()
 
-        return redirect(f"/{token}/")
+        return redirect(url_for('index', token=token))
     except Exception as e:
         logging.error(f"Error occurred during adding to cart: {e}")
         return str(e), 500
@@ -165,4 +161,4 @@ def upload():
 
 # Запуск Flask-додатку
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=

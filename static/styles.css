@@ -1,45 +1,66 @@
-/* Стилі для хедера */
-header {
-    background-color: #f8f9fa;
-    padding: 20px;
-    border-bottom: 1px solid #ddd;
+/* Загальні стилі для всього сайту */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
 }
 
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.upload-button, .back-button {
-    padding: 10px 15px;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-}
-
-.upload-button:hover, .back-button:hover {
-    background-color: #0056b3;
-}
-
-/* Стилі для контенту */
 .container {
-    max-width: 800px;
-    margin: 20px auto;
+    width: 80%;
+    margin: 0 auto;
     padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+form {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+label, input, button {
+    font-size: 16px;
+}
+
+input[type="text"] {
+    padding: 8px;
+    width: 200px;
+    margin-right: 10px;
 }
 
 button {
-    padding: 10px 20px;
-    background-color: #28a745;
+    padding: 8px 16px;
+    background-color: #4CAF50;
     color: white;
     border: none;
-    border-radius: 5px;
+    cursor: pointer;
 }
 
 button:hover {
-    background-color: #218838;
+    background-color: #45a049;
+}
+
+h2 {
+    margin-top: 20px;
+}
+
+#resultContainer {
+    margin-top: 20px;
+}
+
+h3 {
+    color: #007BFF;
+}
+
+p {
+    font-size: 16px;
+}
+
+#articleResult {
+    font-weight: bold;
 }

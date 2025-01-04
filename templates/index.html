@@ -4,17 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пошук артикула</title>
+    <link rel="stylesheet" href="/static/styles.css"> <!-- Підключаємо CSS -->
 </head>
 <body>
-    <h1>Пошук артикула</h1>
-    <form id="searchForm">
-        <label for="article">Введіть артикул:</label>
-        <input type="text" id="article" name="article" required>
-        <button type="submit">Шукати</button>
-    </form>
+    <div class="container">
+        <h1>Пошук артикула</h1>
+        <form id="searchForm">
+            <label for="article">Введіть артикул:</label>
+            <input type="text" id="article" name="article" required>
+            <button type="submit">Шукати</button>
+        </form>
 
-    <h2>Ціна для артикула <span id="articleResult"></span>:</h2>
-    <div id="resultContainer"></div>
+        <h2>Ціна для артикула <span id="articleResult"></span>:</h2>
+        <div id="resultContainer"></div>
+    </div>
 
     <script>
         document.getElementById('searchForm').addEventListener('submit', function (event) {
@@ -27,6 +30,7 @@
             fetch(`/search?article=${article}`)
                 .then(response => response.json())
                 .then(data => {
+                    console.log(data); // Діагностичне повідомлення для перегляду відповіді сервера
                     if (data.message) {
                         resultContainer.innerHTML = `<p>${data.message}</p>`;
                     } else if (data.results) {

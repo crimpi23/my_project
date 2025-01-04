@@ -13,11 +13,6 @@ def get_connection():
         raise Exception("DATABASE_URL is not set")
     return psycopg2.connect(database_url, sslmode='require')
 
-# Головна сторінка
-@app.route("/", methods=["GET"])
-def home():
-    return render_template("index.html")
-
 # Рут для завантаження прайс-листів
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
@@ -72,17 +67,24 @@ def search():
         cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
 
+        if not tables:
+            return jsonify({"error": "Немає таблиць для пошуку"}), 404
+
         results = []
 
         for table in tables:
             table_name = table[0]
+            print(f"Шукаємо артикул {article} в таблиці {table_name}")  # Діагностичне повідомлення
+
             # Шукаємо артикул у кожній з таблиць
             cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
             rows = cursor.fetchall()
 
             if rows:
-                # Додаємо таблицю і знайдені ціни до результатів
+                print(f"Знайдені ціни: {rows}")  # Діагностичне повідомлення
                 results.append({"table": table_name, "prices": rows})
+            else:
+                print(f"Артикул {article} не знайдений в таблиці {table_name}")  # Діагностичне повідомлення
 
         cursor.close()
         conn.close()
@@ -90,7 +92,6 @@ def search():
         if not results:
             return jsonify({"message": "Артикул не знайдений в жодній таблиці"}), 404
 
-        # Повертаємо знайдені ціни з відповідних таблиць
         return jsonify({"article": article, "results": results})
 
     except Exception as e:

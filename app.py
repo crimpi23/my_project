@@ -13,8 +13,8 @@ def get_connection():
     if not database_url:
         raise Exception("DATABASE_URL is not set")
     
-    # Підключаємося до PostgreSQL через psycopg2
-    return psycopg2.connect(database_url)
+    # Підключаємося до PostgreSQL через psycopg2 з параметром SSL
+    return psycopg2.connect(database_url, sslmode='require')
 
 # Головний рут, щоб відображати інтерфейс
 @app.route("/")

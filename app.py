@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify, render_template
 app = Flask(__name__)
 
 # Додаємо шлях до бібліотеки вручну
-os.add_dll_directory(r"C:\Program Files\PostgreSQL\17\bin")
+#os.add_dll_directory(r"C:\Program Files\PostgreSQL\17\bin")
 
 # Функція для підключення до бази
 def get_connection():

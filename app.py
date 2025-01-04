@@ -1,7 +1,8 @@
 import os
 import tempfile
 import psycopg2
-from flask import Flask, request, render_template, jsonify
+import uuid
+from flask import Flask, request, render_template, jsonify, redirect
 from werkzeug.utils import secure_filename
 from import_data import import_to_db  # Імпортуємо функцію з import_data.py
 import logging
@@ -19,19 +20,31 @@ def get_connection():
         raise Exception("DATABASE_URL is not set")
     return psycopg2.connect(database_url, sslmode='require')
 
+# Створення унікального токена для користувача
+def generate_token():
+    return str(uuid.uuid4())
+
 # Головна сторінка - з пошуком артикула
-@app.route("/", methods=["GET"])
-def index():
+@app.route("/<token>/", methods=["GET"])
+def index(token):
     article = request.args.get('article')
     articles = request.args.get('articles')
     error = None
     results = {}
 
-    if article or articles:
-        try:
-            conn = get_connection()
-            cursor = conn.cursor()
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
+        # Перевірка валідності токена
+        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
+        user = cursor.fetchone()
+        if not user:
+            return "Invalid token", 403
+
+        user_id = user[0]
+
+        if article or articles:
             if article:
                 # Отримуємо всі таблиці прайс-листів
                 cursor.execute("SELECT table_name FROM price_lists")
@@ -69,18 +82,48 @@ def index():
                         if article not in results:
                             results[article] = []
                         results[article].append({"table": table_name, "price": row[1]})
-            
-            cursor.close()
-            conn.close()
+        
+        cursor.close()
+        conn.close()
 
-            if not results:
-                error = "Артикул(и) не знайдено в жодній таблиці"
+        if not results:
+            error = "Артикул(и) не знайдено в жодній таблиці"
 
-        except Exception as e:
-            error = str(e)
-            logging.error(f"Error occurred during search: {e}")
+    except Exception as e:
+        error = str(e)
+        logging.error(f"Error occurred during search: {e}")
 
-    return render_template("index.html", article=article, articles=articles, results=results, error=error)
+    return render_template("index.html", token=token, article=article, articles=articles, results=results, error=error)
+
+# Додавання продукту в корзину
+@app.route("/<token>/add_to_cart", methods=["POST"])
+def add_to_cart(token):
+    product_id = request.form.get('product_id')
+    quantity = int(request.form.get('quantity', 1))
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # Перевірка валідності токена
+        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
+        user = cursor.fetchone()
+        if not user:
+            return "Invalid token", 403
+
+        user_id = user[0]
+
+        # Додавання продукту в корзину
+        cursor.execute("INSERT INTO cart (user_id, product_id, quantity) VALUES (%s, %s, %s) ON CONFLICT (user_id, product_id) DO UPDATE SET quantity = cart.quantity + EXCLUDED.quantity", (user_id, product_id, quantity))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return redirect(f"/{token}/")
+    except Exception as e:
+        logging.error(f"Error occurred during adding to cart: {e}")
+        return str(e), 500
 
 # Рут для завантаження прайс-листів
 @app.route("/upload", methods=["GET", "POST"])
@@ -119,45 +162,6 @@ def upload():
                 return jsonify({"error": str(e)}), 500
         else:
             return jsonify({"error": "Необхідно вибрати файл і таблицю"}), 400
-
-# Рут для пошуку артикулів
-@app.route("/search", methods=["GET"])
-def search():
-    article = request.args.get('article')
-
-    if not article:
-        return jsonify({"error": "Не вказано артикул"}), 400
-
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # Отримуємо всі таблиці прайс-листів
-        cursor.execute("SELECT table_name FROM price_lists")
-        tables = cursor.fetchall()
-
-        results = []
-
-        # Шукаємо артикул у всіх таблицях
-        for table in tables:
-            table_name = table[0]
-            cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
-            rows = cursor.fetchall()
-
-            if rows:
-                results.append({"table": table_name, "prices": rows})
-
-        cursor.close()
-        conn.close()
-
-        if not results:
-            return jsonify({"message": "Артикул не знайдений в жодній таблиці"}), 404
-
-        return jsonify({"article": article, "results": results})
-
-    except Exception as e:
-        logging.error(f"Error occurred during search: {e}")
-        return jsonify({"error": str(e)}), 500
 
 # Запуск Flask-додатку
 if __name__ == "__main__":

@@ -1,0 +1,59 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пошук артикула</title>
+</head>
+<body>
+    <h1>Пошук артикула</h1>
+    <form method="POST">
+        <label for="article">Введіть артикул:</label>
+        <input type="text" id="article" name="article" required>
+        <button type="submit">Пошук</button>
+    </form>
+    {% if price %}
+        <p>Результат: {{ price }}</p>
+    {% endif %}
+</body>
+</html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пошук артикула</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Пошук артикула</h1>
+        <form id="searchForm">
+            <label for="article">Введіть артикул:</label>
+            <input type="text" id="article" name="article" required>
+            <button type="submit">Шукати</button>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const article = document.getElementById('article').value;
+
+            const response = await fetch(`/search?article=${article}`);
+            const data = await response.json();
+
+            const resultDiv = document.getElementById('result');
+            if (data.error) {
+                resultDiv.innerHTML = `<p class="error">${data.error}</p>`;
+            } else {
+                resultDiv.innerHTML = `<p class="success">Ціна для артикула <b>${data.article}</b>: ${data.price} грн</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
+>>>>>>> 409a251 (Initial commit)

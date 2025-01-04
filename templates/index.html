@@ -7,22 +7,16 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <!-- Хедер з кнопкою для переходу -->
-    <header>
-        <div class="header-container">
-            <h1>Пошук артикула</h1>
-            <a href="/upload" class="upload-button">Завантажити прайс-листи</a>
-        </div>
-    </header>
-
-    <!-- Основний контент -->
     <div class="container">
+        <h1>Пошук артикула</h1>
         <form id="searchForm">
             <label for="article">Введіть артикул:</label>
             <input type="text" id="article" name="article" required>
             <button type="submit">Шукати</button>
         </form>
         <div id="result"></div>
+        <br>
+        <a href="/upload"><button>Завантажити прайс-лист</button></a>
     </div>
 
     <script>

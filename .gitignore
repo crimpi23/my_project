@@ -42,3 +42,6 @@ Thumbs.db
 
 # Secret and config files (if you decide to use later)
 config.py
+
+# Ignore the uploads directory
+uploads/

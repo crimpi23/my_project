@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Завантаження прайс-листів</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Хедер з кнопкою для повернення на головну сторінку -->
+    <header>
+        <div class="header-container">
+            <h1>Завантаження прайс-листів</h1>
+            <a href="/" class="back-button">Повернутись до пошуку</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2>Завантажити прайс-лист у базу даних</h2>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <label for="file">Виберіть файл прайс-листа:</label>
+            <input type="file" id="file" name="file" required>
+            <button type="submit">Завантажити</button>
+        </form>
+        <div id="uploadResult"></div>
+    </div>
+</body>
+</html>

@@ -7,8 +7,16 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+    <!-- Хедер з кнопкою для переходу -->
+    <header>
+        <div class="header-container">
+            <h1>Пошук артикула</h1>
+            <a href="/upload" class="upload-button">Завантажити прайс-листи</a>
+        </div>
+    </header>
+
+    <!-- Основний контент -->
     <div class="container">
-        <h1>Пошук артикула</h1>
         <form id="searchForm">
             <label for="article">Введіть артикул:</label>
             <input type="text" id="article" name="article" required>
@@ -29,7 +37,7 @@
             if (data.error) {
                 resultDiv.innerHTML = `<p class="error">${data.error}</p>`;
             } else {
-                resultDiv.innerHTML = `<p class="success">Ціна для артикула <b>${data.article}</b>: ${data.price} грн</p>`;
+                resultDiv.innerHTML = `<p class="success">Ціна для артикула <b>${data.article}</b>: ${data.price} euro</p>`;
             }
         });
     </script>

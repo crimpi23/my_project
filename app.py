@@ -13,13 +13,6 @@ def get_connection():
         raise Exception("DATABASE_URL is not set")
     return psycopg2.connect(database_url, sslmode='require')
 
-# Перевірка та створення директорії для завантажених файлів
-UPLOAD_FOLDER = 'uploads'
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 # Головна сторінка - без пошуку артикула при завантаженні
 @app.route("/", methods=["GET"])
 def index():
@@ -46,13 +39,10 @@ def upload():
 
         if file and table:
             filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file_path = os.path.join('uploads', filename)
+            file.save(file_path)
 
             try:
-                # Збереження файлу
-                file.save(file_path)
-
-                # Імпорт даних в базу
                 import_to_db(table, file_path)
                 return jsonify({"message": f"Файл {filename} успішно завантажено в таблицю {table}"}), 200
             except Exception as e:
@@ -72,11 +62,13 @@ def search():
         conn = get_connection()
         cursor = conn.cursor()
 
+        # Отримуємо всі таблиці прайс-листів
         cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
 
         results = []
 
+        # Шукаємо артикул у всіх таблицях
         for table in tables:
             table_name = table[0]
             cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))

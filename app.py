@@ -13,11 +13,22 @@ def get_connection():
         raise Exception("DATABASE_URL is not set")
     return psycopg2.connect(database_url, sslmode='require')
 
+# Перевірка та створення директорії для завантажених файлів
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Головна сторінка - без пошуку артикула при завантаженні
+@app.route("/", methods=["GET"])
+def index():
+    return render_template("index.html")
+
 # Рут для завантаження прайс-листів
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     if request.method == "GET":
-        # Отримуємо список таблиць з бази даних
         try:
             conn = get_connection()
             cursor = conn.cursor()
@@ -27,23 +38,21 @@ def upload():
             conn.close()
         except Exception as e:
             return jsonify({"error": str(e)}), 500
-
-        # Повертаємо сторінку з переліком таблиць
-        return render_template("index.html", tables=[t[0] for t in tables])
+        return render_template("upload.html", tables=[t[0] for t in tables])
 
     if request.method == "POST":
-        # Обробка завантаження файлу
         file = request.files.get('file')
         table = request.form.get('table')
 
         if file and table:
-            # Зберігаємо файл
             filename = secure_filename(file.filename)
-            file_path = os.path.join('uploads', filename)
-            file.save(file_path)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-            # Викликаємо функцію для імпорту в базу
             try:
+                # Збереження файлу
+                file.save(file_path)
+
+                # Імпорт даних в базу
                 import_to_db(table, file_path)
                 return jsonify({"message": f"Файл {filename} успішно завантажено в таблицю {table}"}), 200
             except Exception as e:
@@ -52,18 +61,17 @@ def upload():
             return jsonify({"error": "Необхідно вибрати файл і таблицю"}), 400
 
 # Рут для пошуку артикулів
-@app.route("/", methods=["GET"])
+@app.route("/search", methods=["GET"])
 def search():
     article = request.args.get('article')
 
     if not article:
-        return render_template("index.html", error="Не вказано артикул")
+        return jsonify({"error": "Не вказано артикул"}), 400
 
     try:
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Отримуємо список таблиць з таблиці price_lists
         cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
 
@@ -71,7 +79,6 @@ def search():
 
         for table in tables:
             table_name = table[0]
-            # Шукаємо артикул у кожній з таблиць
             cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
             rows = cursor.fetchall()
 
@@ -82,13 +89,12 @@ def search():
         conn.close()
 
         if not results:
-            return render_template("index.html", error="Артикул не знайдений в жодній таблиці")
+            return jsonify({"message": "Артикул не знайдений в жодній таблиці"}), 404
 
-        # Повертаємо знайдені ціни з відповідних таблиць
-        return render_template("index.html", article=article, results=results)
+        return jsonify({"article": article, "results": results})
 
     except Exception as e:
-        return render_template("index.html", error=f"Помилка: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 # Запуск Flask-додатку
 if __name__ == "__main__":

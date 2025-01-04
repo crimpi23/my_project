@@ -13,10 +13,41 @@ def get_connection():
         raise Exception("DATABASE_URL is not set")
     return psycopg2.connect(database_url, sslmode='require')
 
-# Головна сторінка - без пошуку артикула при завантаженні
+# Головна сторінка - з пошуком артикула
 @app.route("/", methods=["GET"])
 def index():
-    return render_template("index.html")
+    article = request.args.get('article')
+    error = None
+    results = []
+
+    if article:
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            # Отримуємо всі таблиці прайс-листів
+            cursor.execute("SELECT table_name FROM price_lists")
+            tables = cursor.fetchall()
+
+            # Шукаємо артикул у всіх таблицях
+            for table in tables:
+                table_name = table[0]
+                cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
+                rows = cursor.fetchall()
+
+                if rows:
+                    results.append({"table": table_name, "prices": rows})
+
+            cursor.close()
+            conn.close()
+
+            if not results:
+                error = "Артикул не знайдений в жодній таблиці"
+
+        except Exception as e:
+            error = str(e)
+
+    return render_template("index.html", article=article, results=results, error=error)
 
 # Рут для завантаження прайс-листів
 @app.route("/upload", methods=["GET", "POST"])

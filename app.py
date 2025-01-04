@@ -22,14 +22,15 @@ def get_connection():
 @app.route("/", methods=["GET"])
 def index():
     article = request.args.get('article')
+    articles = request.args.get('articles')
     error = None
     results = []
 
-    if article:
-        try:
-            conn = get_connection()
-            cursor = conn.cursor()
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
+        if article:
             # Отримуємо всі таблиці прайс-листів
             cursor.execute("SELECT table_name FROM price_lists")
             tables = cursor.fetchall()
@@ -42,18 +43,35 @@ def index():
 
                 if rows:
                     results.append({"table": table_name, "prices": rows})
+        
+        elif articles:
+            # Розділяємо артикули по нових рядках
+            articles_list = [a.strip() for a in articles.split('\n') if a.strip()]
+            
+            # Отримуємо всі таблиці прайс-листів
+            cursor.execute("SELECT table_name FROM price_lists")
+            tables = cursor.fetchall()
 
-            cursor.close()
-            conn.close()
+            # Шукаємо артикули у всіх таблицях
+            for table in tables:
+                table_name = table[0]
+                cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = ANY(%s::text[])", (articles_list,))
+                rows = cursor.fetchall()
 
-            if not results:
-                error = "Артикул не знайдений в жодній таблиці"
+                if rows:
+                    results.append({"table": table_name, "prices": rows})
+        
+        cursor.close()
+        conn.close()
 
-        except Exception as e:
-            error = str(e)
-            logging.error(f"Error occurred during search: {e}")
+        if not results:
+            error = "Артикул(и) не знайдено в жодній таблиці"
 
-    return render_template("index.html", article=article, results=results, error=error)
+    except Exception as e:
+        error = str(e)
+        logging.error(f"Error occurred during search: {e}")
+
+    return render_template("index.html", article=article, articles=articles, results=results, error=error)
 
 # Рут для завантаження прайс-листів
 @app.route("/upload", methods=["GET", "POST"])
@@ -77,11 +95,15 @@ def upload():
 
         if file and table:
             filename = secure_filename(file.filename)
-            file_path = os.path.join('uploads', filename)
-            file.save(file_path)
+
+            # Використання тимчасової директорії для зберігання файлу
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                file_path = temp_file.name
+                file.save(file_path)
 
             try:
                 import_to_db(table, file_path)
+                os.remove(file_path)  # Видалення тимчасового файлу після використання
                 return jsonify({"message": f"Файл {filename} успішно завантажено в таблицю {table}"}), 200
             except Exception as e:
                 logging.error(f"Error occurred during import: {e}")

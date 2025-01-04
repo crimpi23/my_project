@@ -12,12 +12,16 @@
 
         <form action="/" method="get">
             <label for="article">Введіть артикул: </label>
-            <input type="text" id="article" name="article" required>
+            <input type="text" id="article" name="article" placeholder="Введіть один артикул">
+
+            <label for="articles">Введіть артикули (кожний з нового рядка): </label>
+            <textarea id="articles" name="articles" rows="5" placeholder="Введіть декілька артикулів, кожний з нового рядка"></textarea>
+
             <button type="submit">Шукати</button>
         </form>
 
-        {% if article %}
-        <h2>Ціна для артикула {{ article }}:</h2>
+        {% if article or articles %}
+        <h2>Результати пошуку:</h2>
         <ul>
             {% for result in results %}
             <li>
@@ -33,18 +37,6 @@
         <div class="error">{{ error }}</div>
         {% endif %}
 
-        <h2>Завантажити прайс-лист</h2>
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <label for="file">Виберіть файл:</label>
-            <input type="file" id="file" name="file" required>
-            <label for="table">Оберіть таблицю:</label>
-            <select name="table" required>
-                {% for table in tables %}
-                <option value="{{ table }}">{{ table }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit">Завантажити</button>
-        </form>
     </div>
 </body>
 </html>

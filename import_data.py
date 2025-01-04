@@ -1,4 +1,5 @@
 import csv
+import os
 import psycopg2
 
 def import_to_db(table, file_path):

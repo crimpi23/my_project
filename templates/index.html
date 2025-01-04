@@ -23,11 +23,17 @@
         {% if article or articles %}
         <h2>Результати пошуку:</h2>
         <ul>
-            {% for result in results %}
+            {% for article, details in results.items() %}
             <li>
-                <strong>Таблиця:</strong> {{ result.table }} <br>
-                <strong>Артикул:</strong> {{ result.article }} <br>
-                <strong>Ціна:</strong> {{ result.price }} €
+                <strong>Артикул:</strong> {{ article }}
+                <ul>
+                    {% for detail in details %}
+                    <li>
+                        <strong>Таблиця:</strong> {{ detail.table }} <br>
+                        <strong>Ціна:</strong> {{ detail.price }} €
+                    </li>
+                    {% endfor %}
+                </ul>
             </li>
             {% endfor %}
         </ul>

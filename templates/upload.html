@@ -1,15 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Завантажити прайс-лист</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
+    <header>
+        <nav>
+            <a href="/" class="nav-link">Додому</a>
+            <a href="/upload" class="nav-link">Завантажити прайс-лист</a>
+        </nav>
+    </header>
     <div class="container">
         <h1>Завантажити прайс-лист</h1>
-        
+
         <!-- Виводимо список таблиць, якщо є прайс-листи -->
         <h3>Існуючі таблиці:</h3>
         <ul>
@@ -27,35 +33,35 @@
             
             <button type="submit">Завантажити файл</button>
         </form>
-        
+
         <div id="message"></div>
-    </div>
 
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
+        <script>
+            document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
 
-            const formData = new FormData();
-            const table = document.getElementById('table').value;
-            const file = document.getElementById('file').files[0];
+                const formData = new FormData();
+                const table = document.getElementById('table').value;
+                const file = document.getElementById('file').files[0];
 
-            formData.append('table', table);
-            formData.append('file', file);
+                formData.append('table', table);
+                formData.append('file', file);
 
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                const messageDiv = document.getElementById('message');
+                if (data.error) {
+                    messageDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                } else {
+                    messageDiv.innerHTML = `<p class="success">${data.message}</p>`;
+                }
             });
-
-            const data = await response.json();
-
-            const messageDiv = document.getElementById('message');
-            if (data.error) {
-                messageDiv.innerHTML = `<p class="error">${data.error}</p>`;
-            } else {
-                messageDiv.innerHTML = `<p class="success">${data.message}</p>`;
-            }
-        });
-    </script>
+        </script>
+    </div>
 </body>
 </html>

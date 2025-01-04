@@ -13,6 +13,11 @@ def get_connection():
         raise Exception("DATABASE_URL is not set")
     return psycopg2.connect(database_url, sslmode='require')
 
+# Рут для головної сторінки
+@app.route("/")
+def index():
+    return render_template("index.html")  # Головна сторінка
+
 # Рут для завантаження прайс-листів
 @app.route("/upload", methods=["GET", "POST"])
 def upload():

@@ -26,8 +26,8 @@
             {% for result in results %}
             <li>
                 <strong>Таблиця:</strong> {{ result.table }} <br>
-                <strong>Артикул:</strong> {{ result.prices[0][0] }} <br>
-                <strong>Ціна:</strong> {{ result.prices[0][1] }} €
+                <strong>Артикул:</strong> {{ result.article }} <br>
+                <strong>Ціна:</strong> {{ result.price }} €
             </li>
             {% endfor %}
         </ul>

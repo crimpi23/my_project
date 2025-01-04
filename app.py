@@ -42,7 +42,8 @@ def index():
                 rows = cursor.fetchall()
 
                 if rows:
-                    results.append({"table": table_name, "prices": rows})
+                    for row in rows:
+                        results.append({"table": table_name, "article": row[0], "price": row[1]})
         
         elif articles:
             # Розділяємо артикули по нових рядках
@@ -55,11 +56,13 @@ def index():
             # Шукаємо артикули у всіх таблицях
             for table in tables:
                 table_name = table[0]
+                # Використовуємо ANY для пошуку кожного артикула
                 cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = ANY(%s::text[])", (articles_list,))
                 rows = cursor.fetchall()
 
                 if rows:
-                    results.append({"table": table_name, "prices": rows})
+                    for row in rows:
+                        results.append({"table": table_name, "article": row[0], "price": row[1]})
         
         cursor.close()
         conn.close()

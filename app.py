@@ -13,11 +13,6 @@ def get_connection():
         raise Exception("DATABASE_URL is not set")
     return psycopg2.connect(database_url, sslmode='require')
 
-# Рут для головної сторінки
-@app.route("/")
-def home():
-    return render_template("index.html")
-
 # Рут для завантаження прайс-листів
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
@@ -34,7 +29,7 @@ def upload():
             return jsonify({"error": str(e)}), 500
 
         # Повертаємо сторінку з переліком таблиць
-        return render_template("upload.html", tables=[t[0] for t in tables])
+        return render_template("index.html", tables=[t[0] for t in tables])
 
     if request.method == "POST":
         # Обробка завантаження файлу
@@ -57,12 +52,12 @@ def upload():
             return jsonify({"error": "Необхідно вибрати файл і таблицю"}), 400
 
 # Рут для пошуку артикулів
-@app.route("/search", methods=["GET"])
+@app.route("/", methods=["GET"])
 def search():
     article = request.args.get('article')
 
     if not article:
-        return jsonify({"error": "Не вказано артикул"}), 400
+        return render_template("index.html", error="Не вказано артикул")
 
     try:
         conn = get_connection()
@@ -72,35 +67,28 @@ def search():
         cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
 
-        if not tables:
-            return jsonify({"error": "Немає таблиць для пошуку"}), 404
-
         results = []
 
         for table in tables:
             table_name = table[0]
-            print(f"Шукаємо артикул {article} в таблиці {table_name}")  # Діагностичне повідомлення
-
             # Шукаємо артикул у кожній з таблиць
             cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
             rows = cursor.fetchall()
 
             if rows:
-                print(f"Знайдені ціни: {rows}")  # Діагностичне повідомлення
                 results.append({"table": table_name, "prices": rows})
-            else:
-                print(f"Артикул {article} не знайдений в таблиці {table_name}")  # Діагностичне повідомлення
 
         cursor.close()
         conn.close()
 
         if not results:
-            return jsonify({"message": "Артикул не знайдений в жодній таблиці"}), 404
+            return render_template("index.html", error="Артикул не знайдений в жодній таблиці")
 
-        return jsonify({"article": article, "results": results})
+        # Повертаємо знайдені ціни з відповідних таблиць
+        return render_template("index.html", article=article, results=results)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return render_template("index.html", error=f"Помилка: {str(e)}")
 
 # Запуск Flask-додатку
 if __name__ == "__main__":

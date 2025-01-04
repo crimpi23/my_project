@@ -4,51 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пошук артикула</title>
-    <link rel="stylesheet" href="/static/styles.css"> <!-- Підключаємо CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <div class="container">
         <h1>Пошук артикула</h1>
-        <form id="searchForm">
-            <label for="article">Введіть артикул:</label>
+
+        <form action="/" method="get">
+            <label for="article">Введіть артикул: </label>
             <input type="text" id="article" name="article" required>
             <button type="submit">Шукати</button>
         </form>
 
-        <h2>Ціна для артикула <span id="articleResult"></span>:</h2>
-        <div id="resultContainer"></div>
+        {% if article %}
+        <h2>Ціна для артикула {{ article }}:</h2>
+        <ul>
+            {% for result in results %}
+            <li>
+                <strong>Таблиця:</strong> {{ result.table }} <br>
+                <strong>Артикул:</strong> {{ result.prices[0][0] }} <br>
+                <strong>Ціна:</strong> {{ result.prices[0][1] }} €
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <h2>Завантажити прайс-лист</h2>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <label for="file">Виберіть файл:</label>
+            <input type="file" id="file" name="file" required>
+            <label for="table">Оберіть таблицю:</label>
+            <select name="table" required>
+                {% for table in tables %}
+                <option value="{{ table }}">{{ table }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Завантажити</button>
+        </form>
     </div>
-
-    <script>
-        document.getElementById('searchForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const article = document.getElementById('article').value;
-            const resultContainer = document.getElementById('resultContainer');
-            const articleResult = document.getElementById('articleResult');
-            articleResult.textContent = article;
-
-            fetch(`/search?article=${article}`)
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data); // Діагностичне повідомлення для перегляду відповіді сервера
-                    if (data.message) {
-                        resultContainer.innerHTML = `<p>${data.message}</p>`;
-                    } else if (data.results) {
-                        resultContainer.innerHTML = '';
-                        data.results.forEach(result => {
-                            const table = document.createElement('div');
-                            table.innerHTML = `<h3>Таблиця: ${result.table}</h3>`;
-                            result.prices.forEach(price => {
-                                table.innerHTML += `<p>Артикул: ${price.article}, Ціна: ${price.price} €</p>`;
-                            });
-                            resultContainer.appendChild(table);
-                        });
-                    }
-                })
-                .catch(error => {
-                    resultContainer.innerHTML = `<p>Сталася помилка: ${error}</p>`;
-                });
-        });
-    </script>
 </body>
 </html>

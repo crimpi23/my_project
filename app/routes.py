@@ -1,6 +1,7 @@
+# app/routes.py
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from .forms import ArticleForm, UploadForm
-from .utils import get_connection, import_to_db
+from .utils import get_connection, release_connection, import_to_db
 import logging
 
 bp = Blueprint('main', __name__)
@@ -11,24 +12,14 @@ logging.basicConfig(level=logging.DEBUG)
 def index(token):
     form = ArticleForm()
     if form.validate_on_submit():
+        article = form.article.data
+        articles = form.articles.data
         # Логіка для обробки форми
-        pass
+        conn = get_connection()
+        cursor = conn.cursor()
+        # Запити до бази даних
+        cursor.close()
+        release_connection(conn)
     return render_template('index.html', form=form, token=token)
 
-@bp.route("/<token>/add_to_cart", methods=["POST"])
-def add_to_cart(token):
-    # Логіка для додавання до кошика
-    pass
-
-@bp.route("/<token>/cart", methods=["GET"])
-def view_cart(token):
-    # Логіка для перегляду кошика
-    pass
-
-@bp.route("/<token>/upload", methods=["GET", "POST"])
-def upload(token):
-    form = UploadForm()
-    if form.validate_on_submit():
-        # Логіка для завантаження файлу
-        pass
-    return render_template('upload.html', form=form, token=token)
+# Інші маршрути залишаються без змін

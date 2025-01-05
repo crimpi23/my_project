@@ -1,3 +1,8 @@
+# run.py
+"""
+Цей файл запускає Flask додаток.
+"""
+
 from app import create_app
 
 app = create_app()

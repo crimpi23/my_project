@@ -1,50 +1,47 @@
 # app/utils.py
-import os
-import psycopg2
-from psycopg2 import pool
+
 import logging
+from . import get_connection, release_connection, import_to_db  # Додавання існуючих функцій, якщо вони є у файлі
 
-# Налаштування пулу підключень
-connection_pool = psycopg2.pool.SimpleConnectionPool(
-    1,  # Мінімальна кількість підключень
-    20,  # Максимальна кількість підключень
-    os.getenv("DATABASE_URL"),
-    sslmode='require'
-)
-
-def get_connection():
-    """
-    Отримання підключення з пулу підключень.
-    """
-    try:
-        conn = connection_pool.getconn()
-        if conn:
-            logging.debug("Successfully received connection from connection pool")
-            return conn
-    except Exception as e:
-        logging.error(f"Error occurred while getting connection: {e}")
-
-def release_connection(conn):
-    """
-    Повернення підключення у пул підключень.
-    """
-    try:
-        connection_pool.putconn(conn)
-        logging.debug("Successfully returned connection to connection pool")
-    except Exception as e:
-        logging.error(f"Error occurred while returning connection: {e}")
-
-def import_to_db(table, file_path):
-    """
-    Імпортує дані з CSV файлу у вказану таблицю бази даних.
-    Аргументи:
-    table -- назва таблиці у базі даних
-    file_path -- шлях до CSV файлу
-    Повертає None.
-    """
+def get_existing_tables():
     conn = get_connection()
     cursor = conn.cursor()
-    # Логіка для імпорту даних
-    conn.commit()
-    cursor.close()
-    release_connection(conn)
+    try:
+        cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+        tables = cursor.fetchall()
+        return [table[0] for table in tables]
+    except Exception as e:
+        logging.error(f"Error occurred while fetching tables: {e}")
+        return []
+    finally:
+        cursor.close()
+        release_connection(conn)
+
+def get_cart_items(token):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
+        user = cursor.fetchone()
+        if not user:
+            return []
+        
+        user_id = user[0]
+        cursor.execute("""
+            SELECT p.article, p.table_name, p.price, c.quantity, c.added_at, p.id
+            FROM cart c
+            JOIN products p ON c.product_id = p.id
+            WHERE c.user_id = %s
+        """, (user_id,))
+        cart_items = cursor.fetchall()
+        return cart_items
+    except Exception as e:
+        logging.error(f"Error occurred while fetching cart items: {e}")
+        return []
+    finally:
+        cursor.close()
+        release_connection(conn)
+
+def calculate_total_price(cart_items):
+    total_price = sum(item[2] * item[3] for item in cart_items)  # Ціна помножена на кількість
+    return total_price

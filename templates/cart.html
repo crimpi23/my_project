@@ -5,6 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кошик</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .item-details {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .item-details div {
+            margin-right: 15px;
+        }
+        .item-actions {
+            display: flex;
+            align-items: center;
+        }
+        .item-actions form {
+            margin-right: 10px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -22,18 +48,21 @@
             {% for item in cart_items %}
             <li class="cart-item">
                 <div class="item-details">
-                    <strong>Артикул:</strong> {{ item[0] }} <br>
-                    <strong>Таблиця:</strong> {{ item[1] }} <br>
-                    <strong>Ціна:</strong> {{ item[2] }} € <br>
-                    <strong>Кількість:</strong>
-                    <form action="/{{ token }}/update_quantity" method="post" style="display: inline;">
-                        <input type="hidden" name="product_id" value="{{ item[5] }}">
-                        <input type="number" name="quantity" value="{{ item[3] }}" min="1">
-                        <button type="submit">Змінити</button>
-                    </form>
-                    <br>
-                    <strong>Дата додавання:</strong> {{ item[4].strftime("%Y-%m-%d %H:%M") }}
-                    <form action="/{{ token }}/remove_item" method="post" style="display: inline;">
+                    <div><strong>Артикул:</strong> {{ item[0] }}</div>
+                    <div><strong>Таблиця:</strong> {{ item[1] }}</div>
+                    <div><strong>Ціна:</strong> {{ item[2] }} €</div>
+                    <div>
+                        <strong>Кількість:</strong>
+                        <form action="/{{ token }}/update_quantity" method="post" style="display: inline;">
+                            <input type="hidden" name="product_id" value="{{ item[5] }}">
+                            <input type="number" name="quantity" value="{{ item[3] }}" min="1" style="width: 50px;">
+                            <button type="submit">Змінити</button>
+                        </form>
+                    </div>
+                    <div><strong>Дата додавання:</strong> {{ item[4].strftime("%Y-%m-%d %H:%M") }}</div>
+                </div>
+                <div class="item-actions">
+                    <form action="/{{ token }}/remove_item" method="post">
                         <input type="hidden" name="product_id" value="{{ item[5] }}">
                         <button type="submit">Видалити</button>
                     </form>

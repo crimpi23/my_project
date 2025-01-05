@@ -125,7 +125,12 @@ def add_to_cart(token):
             product_id = product[0]
 
         # Додавання продукту в корзину
-        cursor.execute("INSERT INTO cart (user_id, product_id, quantity) VALUES (%s, %s, %s) ON CONFLICT (user_id, product_id) DO UPDATE SET quantity = cart.quantity + EXCLUDED.quantity", (user_id, product_id, quantity))
+        cursor.execute("""
+            INSERT INTO cart (user_id, product_id, quantity, added_at)
+            VALUES (%s, %s, %s, NOW())
+            ON CONFLICT (user_id, product_id) DO UPDATE
+            SET quantity = cart.quantity + EXCLUDED.quantity, added_at = NOW()
+        """, (user_id, product_id, quantity))
         conn.commit()
 
         cursor.close()
@@ -177,8 +182,8 @@ def view_cart(token):
         return str(e), 500
 
 # Рут для завантаження прайс-листів
-@app.route("/upload", methods=["GET", "POST"])
-def upload():
+@app.route("/<token>/upload", methods=["GET", "POST"])
+def upload(token):
     if request.method == "GET":
         try:
             conn = get_connection()
@@ -190,7 +195,7 @@ def upload():
         except Exception as e:
             logging.error(f"Error occurred while fetching tables: {e}")
             return jsonify({"error": str(e)}), 500
-        return render_template("upload.html", tables=[t[0] for t in tables])
+        return render_template("upload.html", tables=[t[0] for t in tables], token=token)
 
     if request.method == "POST":
         file = request.files.get('file')

@@ -17,7 +17,6 @@
     <div class="container">
         <h1>Завантажити прайс-лист</h1>
 
-        <!-- Виводимо список таблиць, якщо є прайс-листи -->
         <h3>Існуючі таблиці:</h3>
         <ul>
             {% for table in tables %}
@@ -33,9 +32,11 @@
             <input type="file" id="file" name="file" required />
             
             <button type="submit">Завантажити файл</button>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         </form>
 
         <div id="message"></div>
+        <div id="loading" style="display: none;">Завантаження...</div>
 
         <script>
             document.getElementById('uploadForm').addEventListener('submit', async (event) => {
@@ -44,14 +45,20 @@
                 const formData = new FormData();
                 const table = document.getElementById('table').value;
                 const file = document.getElementById('file').files[0];
+                const csrfToken = document.querySelector('input[name="csrf_token"]').value;
 
                 formData.append('table', table);
                 formData.append('file', file);
+                formData.append('csrf_token', csrfToken);
+
+                document.getElementById('loading').style.display = 'block';
 
                 const response = await fetch('/{{ token }}/upload', {
                     method: 'POST',
                     body: formData
                 });
+
+                document.getElementById('loading').style.display = 'none';
 
                 const data = await response.json();
 
@@ -60,6 +67,7 @@
                     messageDiv.innerHTML = `<p class="error">${data.error}</p>`;
                 } else {
                     messageDiv.innerHTML = `<p class="success">${data.message}</p>`;
+                    document.getElementById('uploadForm').reset();
                 }
             });
         </script>

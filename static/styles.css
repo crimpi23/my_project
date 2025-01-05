@@ -23,12 +23,13 @@ nav {
     text-decoration: none;
     font-size: 16px;
     padding: 10px 20px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s;
 }
 
 .nav-link:hover {
     background-color: #495057;
     border-radius: 5px;
+    transform: scale(1.05);
 }
 
 .container {
@@ -80,11 +81,12 @@ button {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s;
 }
 
 button:hover {
     background-color: #218838;
+    transform: scale(1.05);
 }
 
 .error {
@@ -139,5 +141,20 @@ ul {
 }
 
 .price-list .price {
-    font-weight: normal;
+    font-weight normal;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+        padding: 10px;
+    }
+    .nav-link {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+    button {
+        font-size: 14px;
+    }
 }

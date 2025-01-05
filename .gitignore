@@ -42,6 +42,19 @@ Thumbs.db
 
 # Secret and config files (if you decide to use later)
 config.py
+.env
+.env.local
 
 # Ignore the uploads directory
 uploads/
+
+# Cache and temporary files
+.cache/
+*.temp
+*.tmp
+
+# Specific editor files
+*.sublime-workspace
+*.sublime-project
+.vscode/
+.idea/

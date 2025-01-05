@@ -15,10 +15,10 @@ COPY . .
 EXPOSE 5000
 
 # Команда для запуску додатку
-CMD ["python", "app.py"]
+CMD ["python", "run.py"]
 
 # Додавання підтримки змінних середовища
-ENV FLASK_APP=app.py
+ENV FLASK_APP=run.py
 ENV FLASK_ENV=development
 
 # Healthcheck

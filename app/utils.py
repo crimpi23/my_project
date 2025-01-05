@@ -1,8 +1,22 @@
 # app/utils.py
 
 import logging
-from . import get_connection, release_connection, import_to_db  # Додавання існуючих функцій, якщо вони є у файлі
+import psycopg2
+from psycopg2 import pool
+from flask import current_app as app
 
+# Ваша поточна реалізація get_connection, release_connection, import_to_db
+def get_connection():
+    return app.config['POOL'].getconn()
+
+def release_connection(conn):
+    app.config['POOL'].putconn(conn)
+
+def import_to_db(table, file):
+    # Ваша реалізація імпорту до БД
+    pass
+
+# Додаємо нові функції
 def get_existing_tables():
     conn = get_connection()
     cursor = conn.cursor()

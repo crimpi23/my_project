@@ -159,7 +159,7 @@ def view_cart(token):
 
         # Отримання вмісту кошика
         cursor.execute("""
-            SELECT p.article, p.table_name, p.price, c.quantity, c.added_at
+            SELECT p.article, p.table_name, p.price, c.quantity, c.added_at, p.id
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
@@ -172,7 +172,7 @@ def view_cart(token):
         for item in cart_items:
             added_at = item[4].replace(tzinfo=utc)  # Встановлюємо часовий зсув для доданого часу
             if now - added_at > timedelta(hours=24):
-                cursor.execute("DELETE FROM cart WHERE user_id = %s AND product_id = %s", (user_id, item[0]))
+                cursor.execute("DELETE FROM cart WHERE user_id = %s AND product_id = %s", (user_id, item[5]))
         
         conn.commit()
         cursor.close()
@@ -182,45 +182,38 @@ def view_cart(token):
     except Exception as e:
         logging.error(f"Error occurred while viewing cart: {e}")
         return str(e), 500
+# Оновлення кількості товарів у кошику
+@app.route("/<token>/update_quantity", methods=["POST"])
+def update_quantity(token):
+    product_id = request.form.get('product_id')
+    quantity = int(request.form.get('quantity', 1))
 
-# Рут для завантаження прайс-листів
-@app.route("/<token>/upload", methods=["GET", "POST"])
-def upload(token):
-    if request.method == "GET":
-        try:
-            conn = get_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'vag%'")
-            tables = cursor.fetchall()
-            cursor.close()
-            conn.close()
-        except Exception as e:
-            logging.error(f"Error occurred while fetching tables: {e}")
-            return jsonify({"error": str(e)}), 500
-        return render_template("upload.html", tables=[t[0] for t in tables], token=token)
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    if request.method == "POST":
-        file = request.files.get('file')
-        table = request.form.get('table')
+        # Перевірка валідності токена
+        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
+        user = cursor.fetchone()
+        if not user:
+            return "Invalid token", 403
 
-        if file and table:
-            filename = secure_filename(file.filename)
+        user_id = user[0]
 
-            # Використання тимчасової директорії для зберігання файлу
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                file_path = temp_file.name
-                file.save(file_path)
+        # Оновлення кількості товару в кошику
+        cursor.execute("UPDATE cart SET quantity = %s WHERE user_id = %s AND product_id = %s", (quantity, user_id, product_id))
+        conn.commit()
 
-            try:
-                import_to_db(table, file_path)
-                os.remove(file_path)  # Видалення тимчасового файлу після використання
-                return jsonify({"message": f"Файл {filename} успішно завантажено в таблицю {table}"}), 200
-            except Exception as e:
-                logging.error(f"Error occurred during import: {e}")
-                return jsonify({"error": str(e)}), 500
-        else:
-            return jsonify({"error": "Необхідно вибрати файл і таблицю"}), 400
+        cursor.close()
+        conn.close()
 
-# Запуск Flask-додатку
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+        return redirect(url_for('view_cart', token=token))
+    except Exception as e:
+        logging.error(f"Error occurred during updating quantity: {e}")
+        return str(e), 500
+
+# Видалення товару з кошика
+@app.route("/<token>/remove_item", methods=["POST"])
+def remove_item(token):
+    product_id = request.form.get('product_id')
+

@@ -25,12 +25,25 @@
                     <strong>Артикул:</strong> {{ item[0] }} <br>
                     <strong>Таблиця:</strong> {{ item[1] }} <br>
                     <strong>Ціна:</strong> {{ item[2] }} € <br>
-                    <strong>Кількість:</strong> {{ item[3] }} <br>
-                    <strong>Дата додавання:</strong> {{ item[4] }}
+                    <strong>Кількість:</strong>
+                    <form action="/{{ token }}/update_quantity" method="post" style="display: inline;">
+                        <input type="hidden" name="product_id" value="{{ item[5] }}">
+                        <input type="number" name="quantity" value="{{ item[3] }}" min="1">
+                        <button type="submit">Змінити</button>
+                    </form>
+                    <br>
+                    <strong>Дата додавання:</strong> {{ item[4].strftime("%Y-%m-%d %H:%M") }}
+                    <form action="/{{ token }}/remove_item" method="post" style="display: inline;">
+                        <input type="hidden" name="product_id" value="{{ item[5] }}">
+                        <button type="submit">Видалити</button>
+                    </form>
                 </div>
             </li>
             {% endfor %}
         </ul>
+        <form action="/{{ token }}/checkout" method="post">
+            <button type="submit" disabled>Оформити замовлення (не працює)</button>
+        </form>
         {% else %}
         <p>Кошик порожній.</p>
         {% endif %}

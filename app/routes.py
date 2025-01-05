@@ -2,7 +2,7 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from .forms import ArticleForm, UploadForm
-from .utils import get_connection, release_connection, import_to_db
+from .utils import get_connection, release_connection, import_to_db, get_existing_tables, get_cart_items, calculate_total_price
 import logging
 
 bp = Blueprint('main', __name__)
@@ -27,7 +27,7 @@ def index(token):
 def upload(token):
     form = UploadForm()
     try:
-        tables = get_existing_tables()  # Ваша функція для отримання існуючих таблиць
+        tables = get_existing_tables()  # Виклик функції для отримання існуючих таблиць
         if form.validate_on_submit():
             table = form.table.data
             file = form.file.data
@@ -42,8 +42,8 @@ def upload(token):
 @bp.route("/<token>/cart", methods=["GET"])
 def cart(token):
     try:
-        cart_items = get_cart_items(token)  # Ваша функція для отримання товарів у кошику
-        total_price = calculate_total_price(cart_items)  # Ваша функція для підрахунку загальної суми
+        cart_items = get_cart_items(token)  # Виклик функції для отримання товарів у кошику
+        total_price = calculate_total_price(cart_items)  # Виклик функції для підрахунку загальної суми
     except Exception as e:
         logging.error(f"Error occurred while fetching cart: {e}")
         return "Internal Server Error", 500

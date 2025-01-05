@@ -41,6 +41,7 @@
             </li>
             {% endfor %}
         </ul>
+        <p><strong>Загальна сума:</strong> {{ total_price }} €</p>
         <form action="/{{ token }}/checkout" method="post">
             <button type="submit" disabled>Оформити замовлення (не працює)</button>
         </form>

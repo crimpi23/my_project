@@ -140,7 +140,6 @@ def add_to_cart(token):
     except Exception as e:
         logging.error(f"Error occurred during adding to cart: {e}")
         return str(e), 500
-
 # Відображення вмісту кошика
 @app.route("/<token>/cart", methods=["GET"])
 def view_cart(token):
@@ -165,6 +164,9 @@ def view_cart(token):
         """, (user_id,))
         cart_items = cursor.fetchall()
 
+        # Обчислення загальної суми кошика
+        total_price = sum(item[2] * item[3] for item in cart_items)
+
         # Перевірка на час зберігання товарів в кошику (наприклад, 24 години)
         utc = pytz.UTC
         now = datetime.now(utc)  # Встановлюємо часовий зсув для поточного часу
@@ -177,7 +179,7 @@ def view_cart(token):
         cursor.close()
         conn.close()
 
-        return render_template("cart.html", token=token, cart_items=cart_items)
+        return render_template("cart.html", token=token, cart_items=cart_items, total_price=total_price)
     except Exception as e:
         logging.error(f"Error occurred while viewing cart: {e}")
         return str(e), 500
@@ -230,8 +232,14 @@ def remove_item(token):
 
         # Видалення товару з кошика
         cursor.execute("DELETE FROM cart WHERE user_id = %s AND product_id = %s", (user_id, product_id))
-        conn.commit()
 
+        # Видалення товару з таблиці products, якщо його більше немає у кошику
+        cursor.execute("SELECT COUNT(*) FROM cart WHERE product_id = %s", (product_id,))
+        count = cursor.fetchone()[0]
+        if count == 0:
+            cursor.execute("DELETE FROM products WHERE id = %s", (product_id,))
+
+        conn.commit()
         cursor.close()
         conn.close()
 
@@ -239,7 +247,6 @@ def remove_item(token):
     except Exception as e:
         logging.error(f"Error occurred during removing item: {e}")
         return str(e), 500
-
 # Рут для завантаження прайс-листів
 @app.route("/<token>/upload", methods=["GET", "POST"])
 def upload(token):

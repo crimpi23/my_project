@@ -1,4 +1,5 @@
 # app/__init__.py
+
 """
 Цей файл ініціалізує Flask додаток та налаштовує CSRF захист.
 """
@@ -14,7 +15,7 @@ def create_app():
     Створює і налаштовує Flask додаток.
     Повертає додаток Flask.
     """
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='static')  # Зазначаємо папку для статичних файлів
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
 
     csrf.init_app(app)

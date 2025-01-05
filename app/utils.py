@@ -5,7 +5,7 @@ import psycopg2
 from psycopg2 import pool
 from flask import current_app as app
 
-# Ваша поточна реалізація get_connection, release_connection, import_to_db
+# Існуючі функції для отримання з'єднання з БД
 def get_connection():
     return app.config['POOL'].getconn()
 
@@ -16,12 +16,12 @@ def import_to_db(table, file):
     # Ваша реалізація імпорту до БД
     pass
 
-# Додаємо нові функції
+# Нова функція для отримання існуючих таблиць з price_lists
 def get_existing_tables():
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+        cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
         return [table[0] for table in tables]
     except Exception as e:
@@ -31,6 +31,7 @@ def get_existing_tables():
         cursor.close()
         release_connection(conn)
 
+# Нова функція для отримання товарів у кошику
 def get_cart_items(token):
     conn = get_connection()
     cursor = conn.cursor()
@@ -56,6 +57,7 @@ def get_cart_items(token):
         cursor.close()
         release_connection(conn)
 
+# Нова функція для підрахунку загальної суми товарів у кошику
 def calculate_total_price(cart_items):
     total_price = sum(item[2] * item[3] for item in cart_items)  # Ціна помножена на кількість
     return total_price

@@ -45,4 +45,9 @@ def create_app():
         from . import routes
         app.register_blueprint(routes.bp)
 
+    # Оголошуємо шлях до статичних файлів
+    @app.route('/static/<path:filename>')
+    def static_files(filename):
+        return app.send_static_file(filename)
+
     return app

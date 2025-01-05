@@ -6,7 +6,7 @@ from flask import Flask, request, render_template, jsonify, redirect, url_for
 from werkzeug.utils import secure_filename
 from import_data import import_to_db  # Імпортуємо функцію з import_data.py
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Налаштування логування
 logging.basicConfig(level=logging.DEBUG)
@@ -166,7 +166,7 @@ def view_cart(token):
         cart_items = cursor.fetchall()
 
         # Перевірка на час зберігання товарів в кошику (наприклад, 24 години)
-        now = datetime.now()
+        now = datetime.now(timezone.utc)  # Використовуємо timezone.utc для забезпечення однакового типу дат
         for item in cart_items:
             added_at = item[4]
             if now - added_at > timedelta(hours=24):

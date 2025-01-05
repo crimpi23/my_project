@@ -38,6 +38,13 @@
             margin-right: 10px;
         }
     </style>
+    <script>
+        // Функція для видалення пробілів з артикулів
+        function cleanInput(inputId) {
+            var input = document.getElementById(inputId);
+            input.value = input.value.replace(/ /g, '');
+        }
+    </script>
 </head>
 <body>
     <header>
@@ -53,15 +60,15 @@
         <form action="/{{ token }}/" method="get">
             {{ csrf_token() }}
             <label for="article">Введіть артикул: </label>
-            <input type="text" id="article" name="article" placeholder="Введіть один артикул">
+            <input type="text" id="article" name="article" placeholder="Введіть один артикул" onblur="cleanInput('article')">
 
             <label for="articles">Введіть артикули (кожний з нового рядка): </label>
-            <textarea id="articles" name="articles" rows="5" placeholder="Введіть декілька артикулів, кожний з нового рядка"></textarea>
+            <textarea id="articles" name="articles" rows="5" placeholder="Введіть декілька артикулів, кожний з нового рядка" onblur="cleanInput('articles')"></textarea>
 
             <button type="submit">Шукати</button>
         </form>
 
-        {% if article or articles %}
+        {% if results %}
         <h2>Результати пошуку:</h2>
         <ul class="search-results">
             {% for article, details in results.items() %}
@@ -80,6 +87,7 @@
                                 <input type="hidden" name="table" value="{{ detail.table }}">
                                 <input type="hidden" name="price" value="{{ detail.price }}">
                                 <input type="hidden" name="quantity" value="1">
+                                <input type="hidden" name="results" value="{{ results }}">  <!-- Збереження результатів пошуку -->
                                 <button type="submit"><i class="fas fa-shopping-cart"></i></button>
                             </form>
                         </li>

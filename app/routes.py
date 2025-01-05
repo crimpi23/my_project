@@ -1,4 +1,14 @@
 # app/routes.py
+
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from .forms import ArticleForm, UploadForm
+from .utils import get_connection, release_connection, import_to_db
+import logging
+
+bp = Blueprint('main', __name__)
+
+logging.basicConfig(level=logging.DEBUG)
+
 @bp.route("/<token>/", methods=["GET", "POST"])
 def index(token):
     form = ArticleForm()
@@ -42,7 +52,7 @@ def search_articles(token, article, articles):
                         results[article].append({"table": table_name, "price": row[1]})
         
         if articles:
-            articles_list = [a.strip() for a in articles.split('\n') if a.strip()]
+            articles_list = [a.strip().replace(" ", "") for a in articles.split('\n') if a.strip()]
 
             # Отримуємо всі таблиці прайс-листів
             cursor.execute("SELECT table_name FROM price_lists")
@@ -54,8 +64,8 @@ def search_articles(token, article, articles):
                 cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = ANY(%s::text[])", (articles_list,))
                 rows = cursor.fetchall()
 
-                for row, details in zip(rows, articles_list):
-                    article = row[0].replace(" ", "")  # Видаляємо пробіли з артикулів при обробці результатів
+                for row in rows:
+                    article = row[0]
                     if article not in results:
                         results[article] = []
                     results[article].append({"table": table_name, "price": row[1]})
@@ -76,7 +86,9 @@ def add_to_cart(token):
     price = request.form.get('price')
     quantity = int(request.form.get('quantity', 1))
 
-    results = request.form.get('results')  # Отримуємо результати пошуку з форми
+    # Отримуємо результати пошуку з форми і конвертуємо до словника
+    results_str = request.form.get('results')
+    results = eval(results_str) if results_str else {}
 
     try:
         conn = get_connection()

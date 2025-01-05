@@ -87,7 +87,7 @@
                                 <input type="hidden" name="table" value="{{ detail.table }}">
                                 <input type="hidden" name="price" value="{{ detail.price }}">
                                 <input type="hidden" name="quantity" value="1">
-                                <input type="hidden" name="results" value="{{ results }}">  <!-- Збереження результатів пошуку -->
+                                <input type="hidden" name="results" value="{{ results|tojson|safe }}">  <!-- Збереження результатів пошуку -->
                                 <button type="submit"><i class="fas fa-shopping-cart"></i></button>
                             </form>
                         </li>

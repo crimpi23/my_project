@@ -23,6 +23,21 @@ def index(token):
         results = search_articles(token, article, articles)
     return render_template('index.html', form=form, token=token, results=results)
 
+@bp.route("/<token>/upload", methods=["GET", "POST"])
+def upload(token):
+    form = UploadForm()
+    tables = get_existing_tables()  # Ваша функція для отримання існуючих таблиць
+    if form.validate_on_submit():
+        # Логіка для обробки завантаження
+        pass
+    return render_template('upload.html', form=form, token=token, tables=tables)
+
+@bp.route("/<token>/cart", methods=["GET"])
+def cart(token):
+    cart_items = get_cart_items(token)  # Ваша функція для отримання товарів у кошику
+    total_price = calculate_total_price(cart_items)  # Ваша функція для підрахунку загальної суми
+    return render_template('cart.html', token=token, cart_items=cart_items, total_price=total_price)
+
 def search_articles(token, article, articles):
     conn = get_connection()
     cursor = conn.cursor()

@@ -1,160 +1,114 @@
-body {
-    font-family: 'Roboto', sans-serif;
-    background-color: #e9ecef;
-    color: #343a40;
-    margin: 0;
-    padding: 0;
-}
-
-header {
-    background-color: #343a40;
-    padding: 10px 0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-nav {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
-
-.nav-link {
-    color: #fff;
-    text-decoration: none;
-    font-size: 16px;
-    padding: 10px 20px;
-    transition: background-color 0.3s ease, transform 0.2s;
-}
-
-.nav-link:hover {
-    background-color: #495057;
-    border-radius: 5px;
-    transform: scale(1.05);
-}
-
-.container {
-    max-width: 800px;
-    margin: 40px auto;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-    text-align: center;
-    color: #28a745;
-    margin-bottom: 20px;
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-input[type="text"],
-input[type="file"],
-select,
-textarea {
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ced4da;
-    border-radius: 5px;
-    background-color: #f8f9fa;
-    transition: border-color 0.3s ease;
-}
-
-input[type="text"]:focus,
-input[type="file"]:focus,
-select:focus,
-textarea:focus {
-    border-color: #80bdff;
-    outline: none;
-}
-
+/* Загальний стиль кнопок */
 button {
-    padding: 12px 20px;
-    font-size: 16px;
-    color: #fff;
-    background-color: #28a745;
+    padding: 10px 20px;
     border: none;
     border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s;
+    transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
+/* Анімація для hover ефекту */
 button:hover {
-    background-color: #218838;
+    background-color: #0056b3;
     transform: scale(1.05);
 }
 
-.error {
-    color: #dc3545;
-    font-weight: bold;
-    margin-top: 20px;
+/* Анімація для натиску кнопки */
+button:active {
+    transform: scale(0.95);
 }
 
-h2 {
-    margin-top: 30px;
-    color: #343a40;
-}
-
-ul {
-    list-style-type: none;
-    padding-left: 0;
-}
-
-.article-item {
+/* Анімація для елементів у кошику */
+.cart-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 10px;
     padding: 10px;
-    background-color: #f8f9fa;
-    margin: 10px 0;
+    border: 1px solid #ccc;
     border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
-.article-left {
-    flex: 1;
+.cart-item:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transform: scale(1.02);
 }
 
-.article-right {
-    flex: 2;
-    font-size: 14px;
-    color: #6c757d;
-}
+/* Адаптивний дизайн */
 
-.price-list {
-    list-style-type: none;
-    padding-left: 0;
-}
-
-.price-list li {
-    display: flex;
-    justify-content: space-between;
-}
-
-.price-list .table-name {
-    font-weight: bold;
-}
-
-.price-list .price {
-    font-weight normal;
-}
-
-/* Media Queries for Responsiveness */
-@media (max-width: 768px) {
+/* Стиль для мобільних пристроїв */
+@media (max-width: 600px) {
     .container {
-        width: 90%;
         padding: 10px;
     }
+
     .nav-link {
-        font-size: 14px;
-        padding: 8px 16px;
+        display: block;
+        margin-bottom: 10px;
     }
-    button {
-        font-size: 14px;
+
+    .cart-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .item-details, .item-actions {
+        width: 100%;
+    }
+
+    .item-details div {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+}
+
+/* Стиль для планшетів */
+@media (min-width: 601px) and (max-width: 1024px) {
+    .container {
+        padding: 20px;
+    }
+
+    .nav-link {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .cart-item {
+        flex-direction: row;
+    }
+
+    .item-details, .item-actions {
+        width: 100%;
+    }
+
+    .item-details div {
+        margin-right: 15px;
+    }
+}
+
+/* Стиль для десктопів */
+@media (min-width: 1025px) {
+    .container {
+        padding: 30px;
+    }
+
+    .nav-link {
+        display: inline-block;
+        margin-right: 15px;
+    }
+
+    .cart-item {
+        flex-direction: row;
+    }
+
+    .item-details, .item-actions {
+        width: auto;
+    }
+
+    .item-details div {
+        margin-right: 15px;
     }
 }

@@ -28,6 +28,9 @@ def index(token):
     error = None
     results = {}
 
+    if not article and not articles:
+        return render_template("index.html", token=token, article=article, articles=articles, results=results, error=error)
+
     try:
         conn = get_connection()
         cursor = conn.cursor()

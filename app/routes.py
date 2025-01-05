@@ -1,5 +1,3 @@
-# app/routes.py
-
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from .forms import ArticleForm, UploadForm
 from .utils import get_connection, release_connection, import_to_db, get_existing_tables, get_cart_items, calculate_total_price
@@ -27,11 +25,10 @@ def index(token):
 def upload(token):
     form = UploadForm()
     try:
-        tables = get_existing_tables()  # Виклик функції для отримання існуючих таблиць
+        tables = get_existing_tables()
         if form.validate_on_submit():
             table = form.table.data
             file = form.file.data
-            # Логіка для обробки завантаження
             import_to_db(table, file)
             return jsonify({"message": "File uploaded successfully."})
     except Exception as e:
@@ -42,8 +39,8 @@ def upload(token):
 @bp.route("/<token>/cart", methods=["GET"])
 def cart(token):
     try:
-        cart_items = get_cart_items(token)  # Виклик функції для отримання товарів у кошику
-        total_price = calculate_total_price(cart_items)  # Виклик функції для підрахунку загальної суми
+        cart_items = get_cart_items(token)
+        total_price = calculate_total_price(cart_items)
     except Exception as e:
         logging.error(f"Error occurred while fetching cart: {e}")
         return "Internal Server Error", 500
@@ -54,9 +51,7 @@ def search_articles(token, article, articles):
     cursor = conn.cursor()
     results = {}
     
-    # Запити до бази даних
     try:
-        # Перевірка валідності токена
         cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
         user = cursor.fetchone()
         if not user:
@@ -65,11 +60,9 @@ def search_articles(token, article, articles):
         user_id = user[0]
 
         if article:
-            # Отримуємо всі таблиці прайс-листів
             cursor.execute("SELECT table_name FROM price_lists")
             tables = cursor.fetchall()
 
-            # Шукаємо артикул у всіх таблицях
             for table in tables:
                 table_name = table[0]
                 cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
@@ -84,11 +77,9 @@ def search_articles(token, article, articles):
         if articles:
             articles_list = [a.strip().replace(" ", "") for a in articles.split('\n') if a.strip()]
 
-            # Отримуємо всі таблиці прайс-листів
             cursor.execute("SELECT table_name FROM price_lists")
             tables = cursor.fetchall()
 
-            # Шукаємо артикули у всіх таблицях
             for table in tables:
                 table_name = table[0]
                 cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = ANY(%s::text[])", (articles_list,))
@@ -116,7 +107,6 @@ def add_to_cart(token):
     price = request.form.get('price')
     quantity = int(request.form.get('quantity', 1))
 
-    # Отримуємо результати пошуку з форми і конвертуємо до словника
     results_str = request.form.get('results')
     results = eval(results_str) if results_str else {}
 
@@ -124,7 +114,6 @@ def add_to_cart(token):
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Перевірка валідності токена
         cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
         user = cursor.fetchone()
         if not user:
@@ -132,7 +121,6 @@ def add_to_cart(token):
 
         user_id = user[0]
 
-        # Перевірка, чи вже існує продукт в таблиці products
         cursor.execute("SELECT id FROM products WHERE article = %s AND table_name = %s", (article, table))
         product = cursor.fetchone()
         if not product:
@@ -141,7 +129,6 @@ def add_to_cart(token):
         else:
             product_id = product[0]
 
-        # Додавання продукту в корзину
         cursor.execute("""
             INSERT INTO cart (user_id, product_id, quantity, added_at)
             VALUES (%s, %s, %s, NOW())
@@ -153,7 +140,7 @@ def add_to_cart(token):
         cursor.close()
         release_connection(conn)
 
-        return redirect(url_for('main.index', token=token, results=results))  # Повертаємо результати пошуку
+        return redirect(url_for('main.index', token=token, results=results))
     except Exception as e:
         logging.error(f"Error occurred during adding to cart: {e}")
         return str(e), 500

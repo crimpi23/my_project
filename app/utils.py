@@ -1,11 +1,8 @@
-# app/utils.py
-
 import logging
 import psycopg2
 from psycopg2 import pool
 from flask import current_app as app
 
-# Існуючі функції для отримання з'єднання з БД
 def get_connection():
     return app.config['POOL'].getconn()
 
@@ -13,10 +10,8 @@ def release_connection(conn):
     app.config['POOL'].putconn(conn)
 
 def import_to_db(table, file):
-    # Ваша реалізація імпорту до БД
     pass
 
-# Нова функція для отримання існуючих таблиць з price_lists
 def get_existing_tables():
     conn = get_connection()
     cursor = conn.cursor()
@@ -31,7 +26,6 @@ def get_existing_tables():
         cursor.close()
         release_connection(conn)
 
-# Нова функція для отримання товарів у кошику
 def get_cart_items(token):
     conn = get_connection()
     cursor = conn.cursor()
@@ -57,7 +51,6 @@ def get_cart_items(token):
         cursor.close()
         release_connection(conn)
 
-# Нова функція для підрахунку загальної суми товарів у кошику
 def calculate_total_price(cart_items):
-    total_price = sum(item[2] * item[3] for item in cart_items)  # Ціна помножена на кількість
+    total_price = sum(item[2] * item[3] for item in cart_items)
     return total_price

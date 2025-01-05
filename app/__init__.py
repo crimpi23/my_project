@@ -1,9 +1,3 @@
-# app/__init__.py
-
-"""
-Цей файл ініціалізує Flask додаток та налаштовує CSRF захист.
-"""
-
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
 import os
@@ -14,14 +8,9 @@ from urllib.parse import urlparse
 csrf = CSRFProtect()
 
 def create_app():
-    """
-    Створює і налаштовує Flask додаток.
-    Повертає додаток Flask.
-    """
     app = Flask(__name__, static_folder='static')
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
 
-    # Використовуємо DATABASE_URL для налаштування пулу з'єднань
     db_url = os.getenv('DATABASE_URL')
     result = urlparse(db_url)
     username = result.username
@@ -45,7 +34,6 @@ def create_app():
         from . import routes
         app.register_blueprint(routes.bp)
 
-    # Оголошуємо шлях до статичних файлів
     @app.route('/static/<path:filename>')
     def static_files(filename):
         return app.send_static_file(filename)

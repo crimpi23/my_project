@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кошик</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         .cart-item {
             display: flex;
@@ -32,31 +31,13 @@
             margin-right: 10px;
         }
     </style>
-    <script>
-        async function updateQuantity(productId, quantity) {
-            const formData = new FormData();
-            formData.append('product_id', productId);
-            formData.append('quantity', quantity);
-
-            const response = await fetch('/{{ token }}/update_quantity', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                console.error('Failed to update quantity');
-            }
-        }
-    </script>
 </head>
 <body>
     <header>
         <nav>
             <a href="/{{ token }}/" class="nav-link">Додому</a>
             <a href="/{{ token }}/upload" class="nav-link">Завантажити прайс-лист</a>
-            <a href="/{{ token }}/cart" class="nav-link"><i class="fas fa-shopping-cart"></i> Кошик</a>
+            <a href="/{{ token }}/cart" class="nav-link">Кошик</a>
         </nav>
     </header>
     <div class="container">
@@ -72,14 +53,18 @@
                     <div><strong>Ціна:</strong> {{ item[2] }} €</div>
                     <div>
                         <strong>Кількість:</strong>
-                        <input type="number" name="quantity" value="{{ item[3] }}" min="1" style="width: 50px;" onchange="updateQuantity('{{ item[5] }}', this.value)">
+                        <form action="/{{ token }}/update_quantity" method="post" style="display: inline;">
+                            <input type="hidden" name="product_id" value="{{ item[5] }}">
+                            <input type="number" name="quantity" value="{{ item[3] }}" min="1" style="width: 50px;">
+                            <button type="submit">Змінити</button>
+                        </form>
                     </div>
                     <div><strong>Дата додавання:</strong> {{ item[4].strftime("%Y-%m-%d %H:%M") }}</div>
                 </div>
                 <div class="item-actions">
                     <form action="/{{ token }}/remove_item" method="post">
                         <input type="hidden" name="product_id" value="{{ item[5] }}">
-                        <button type="submit"><i class="fas fa-trash-alt"></i></button>
+                        <button type="submit">Видалити</button>
                     </form>
                 </div>
             </li>

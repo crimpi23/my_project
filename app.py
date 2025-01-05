@@ -247,35 +247,6 @@ def remove_item(token):
     except Exception as e:
         logging.error(f"Error occurred during removing item: {e}")
         return str(e), 500
-# Оновлення кількості товарів у кошику
-@app.route("/<token>/update_quantity", methods=["POST"])
-def update_quantity(token):
-    product_id = request.form.get('product_id')
-    quantity = int(request.form.get('quantity', 1))
-
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # Перевірка валідності токена
-        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
-        user = cursor.fetchone()
-        if not user:
-            return "Invalid token", 403
-
-        user_id = user[0]
-
-        # Оновлення кількості товару в кошику
-        cursor.execute("UPDATE cart SET quantity = %s WHERE user_id = %s AND product_id = %s", (quantity, user_id, product_id))
-        conn.commit()
-
-        cursor.close()
-        conn.close()
-
-        return 'OK', 200
-    except Exception as e:
-        logging.error(f"Error occurred during updating quantity: {e}")
-        return str(e), 500
 # Рут для завантаження прайс-листів
 @app.route("/<token>/upload", methods=["GET", "POST"])
 def upload(token):

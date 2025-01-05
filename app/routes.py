@@ -9,6 +9,10 @@ bp = Blueprint('main', __name__)
 
 logging.basicConfig(level=logging.DEBUG)
 
+@bp.route("/", methods=["GET"])
+def home():
+    return redirect(url_for('main.index', token='default'))
+
 @bp.route("/<token>/", methods=["GET", "POST"])
 def index(token):
     form = ArticleForm()
@@ -123,7 +127,7 @@ def add_to_cart(token):
         cursor.close()
         release_connection(conn)
 
-        return redirect(url_for('index', token=token, results=results))  # Повертаємо результати пошуку
+        return redirect(url_for('main.index', token=token, results=results))  # Повертаємо результати пошуку
     except Exception as e:
         logging.error(f"Error occurred during adding to cart: {e}")
         return str(e), 500

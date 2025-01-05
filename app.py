@@ -94,7 +94,9 @@ def index(token):
 # Додавання продукту в корзину
 @app.route("/<token>/add_to_cart", methods=["POST"])
 def add_to_cart(token):
-    product_id = request.form.get('product_id')
+    article = request.form.get('article')
+    table = request.form.get('table')
+    price = request.form.get('price')
     quantity = int(request.form.get('quantity', 1))
 
     try:
@@ -108,6 +110,15 @@ def add_to_cart(token):
             return "Invalid token", 403
 
         user_id = user[0]
+
+        # Перевірка, чи вже існує продукт в таблиці products
+        cursor.execute("SELECT id FROM products WHERE article = %s AND table_name = %s", (article, table))
+        product = cursor.fetchone()
+        if not product:
+            cursor.execute("INSERT INTO products (article, table_name, price) VALUES (%s, %s, %s) RETURNING id", (article, table, price))
+            product_id = cursor.fetchone()[0]
+        else:
+            product_id = product[0]
 
         # Додавання продукту в корзину
         cursor.execute("INSERT INTO cart (user_id, product_id, quantity) VALUES (%s, %s, %s) ON CONFLICT (user_id, product_id) DO UPDATE SET quantity = cart.quantity + EXCLUDED.quantity", (user_id, product_id, quantity))

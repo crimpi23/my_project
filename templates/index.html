@@ -40,7 +40,9 @@
                         <li>
                             <span class="table-name">{{ detail.table }}</span> - <span class="price">{{ detail.price }} €</span>
                             <form action="/{{ token }}/add_to_cart" method="post" style="display: inline;">
-                                <input type="hidden" name="product_id" value="{{ detail.table }}_{{ article }}">
+                                <input type="hidden" name="article" value="{{ article }}">
+                                <input type="hidden" name="table" value="{{ detail.table }}">
+                                <input type="hidden" name="price" value="{{ detail.price }}">
                                 <input type="hidden" name="quantity" value="1">
                                 <button type="submit">Додати до корзини</button>
                             </form>

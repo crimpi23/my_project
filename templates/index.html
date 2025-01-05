@@ -5,13 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пошук артикула</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .article-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .article-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .article-actions {
+            display: flex;
+            align-items: center;
+        }
+        .article-actions form {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+        .price-list {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
 </head>
 <body>
     <header>
         <nav>
             <a href="/{{ token }}/" class="nav-link">Додому</a>
             <a href="/{{ token }}/upload" class="nav-link">Завантажити прайс-лист</a>
-            <a href="/{{ token }}/cart" class="nav-link">Кошик</a>
+            <a href="/{{ token }}/cart" class="nav-link"><i class="fas fa-shopping-cart"></i> Кошик</a>
         </nav>
     </header>
     <div class="container">
@@ -32,10 +61,8 @@
         <ul>
             {% for article, details in results.items() %}
             <li class="article-item">
-                <div class="article-left">
+                <div class="article-details">
                     <strong>Артикул:</strong> {{ article }}
-                </div>
-                <div class="article-right">
                     <ul class="price-list">
                         {% for detail in details %}
                         <li>
@@ -45,7 +72,7 @@
                                 <input type="hidden" name="table" value="{{ detail.table }}">
                                 <input type="hidden" name="price" value="{{ detail.price }}">
                                 <input type="hidden" name="quantity" value="1">
-                                <button type="submit">Додати до корзини</button>
+                                <button type="submit"><i class="fas fa-shopping-cart"></i></button>
                             </form>
                         </li>
                         {% endfor %}

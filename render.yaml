@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: my-web-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: DATABASE_URL
+        value: YOUR_DATABASE_URL
+    preDeploy:
+      - pip install --cache-dir=$XDG_CACHE_HOME/pip -r requirements.txt

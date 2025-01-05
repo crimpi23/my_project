@@ -95,7 +95,6 @@ def index(token):
         logging.error(f"Error occurred during search: {e}")
 
     return render_template("index.html", token=token, article=article, articles=articles, results=results, error=error)
-
 # Додавання продукту в корзину
 @app.route("/<token>/add_to_cart", methods=["POST"])
 def add_to_cart(token):
@@ -217,3 +216,68 @@ def update_quantity(token):
 def remove_item(token):
     product_id = request.form.get('product_id')
 
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # Перевірка валідності токена
+        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
+        user = cursor.fetchone()
+        if not user:
+            return "Invalid token", 403
+
+        user_id = user[0]
+
+        # Видалення товару з кошика
+        cursor.execute("DELETE FROM cart WHERE user_id = %s AND product_id = %s", (user_id, product_id))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return redirect(url_for('view_cart', token=token))
+    except Exception as e:
+        logging.error(f"Error occurred during removing item: {e}")
+        return str(e), 500
+
+# Рут для завантаження прайс-листів
+@app.route("/<token>/upload", methods=["GET", "POST"])
+def upload(token):
+    if request.method == "GET":
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'vag%'")
+            tables = cursor.fetchall()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            logging.error(f"Error occurred while fetching tables: {e}")
+            return jsonify({"error": str(e)}), 500
+        return render_template("upload.html", tables=[t[0] for t in tables], token=token)
+
+    if request.method == "POST":
+        file = request.files.get('file')
+        table = request.form.get('table')
+
+        if file and table:
+            filename = secure_filename(file.filename)
+
+            # Використання тимчасової директорії для зберігання файлу
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                file_path = temp_file.name
+                file.save(file_path)
+
+            try:
+                import_to_db(table, file_path)
+                os.remove(file_path)  # Видалення тимчасового файлу після використання
+                return jsonify({"message": f"Файл {filename} успішно завантажено в таблицю {table}"}), 200
+            except Exception as e:
+                logging.error(f"Error occurred during import: {e}")
+                return jsonify({"error": str(e)}), 500
+        else:
+            return jsonify({"error": "Необхідно вибрати файл і таблицю"}), 400
+
+# Запуск Flask-додатку
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

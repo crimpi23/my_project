@@ -20,18 +20,22 @@
             display: flex;
             flex-direction: column;
         }
-        .article-actions {
+        .article-right {
             display: flex;
             align-items: center;
-        }
-        .article-actions form {
-            display: flex;
-            align-items: center;
-            margin-right: 10px;
         }
         .price-list {
             display: flex;
             flex-direction: column;
+        }
+        .price-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .price-list .table-name, .price-list .price {
+            margin-right: 10px;
         }
     </style>
 </head>
@@ -63,6 +67,8 @@
             <li class="article-item">
                 <div class="article-details">
                     <strong>Артикул:</strong> {{ article }}
+                </div>
+                <div class="article-right">
                     <ul class="price-list">
                         {% for detail in details %}
                         <li>

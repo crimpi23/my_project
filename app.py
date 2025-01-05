@@ -6,6 +6,7 @@ from flask import Flask, request, render_template, jsonify, redirect, url_for
 from werkzeug.utils import secure_filename
 from import_data import import_to_db  # Імпортуємо функцію з import_data.py
 import logging
+from datetime import datetime, timedelta
 
 # Налаштування логування
 logging.basicConfig(level=logging.DEBUG)
@@ -133,6 +134,46 @@ def add_to_cart(token):
         return redirect(url_for('index', token=token))
     except Exception as e:
         logging.error(f"Error occurred during adding to cart: {e}")
+        return str(e), 500
+
+# Відображення вмісту кошика
+@app.route("/<token>/cart", methods=["GET"])
+def view_cart(token):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # Перевірка валідності токена
+        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
+        user = cursor.fetchone()
+        if not user:
+            return "Invalid token", 403
+
+        user_id = user[0]
+
+        # Отримання вмісту кошика
+        cursor.execute("""
+            SELECT p.article, p.table_name, p.price, c.quantity, c.added_at
+            FROM cart c
+            JOIN products p ON c.product_id = p.id
+            WHERE c.user_id = %s
+        """, (user_id,))
+        cart_items = cursor.fetchall()
+
+        # Перевірка на час зберігання товарів в кошику (наприклад, 24 години)
+        now = datetime.now()
+        for item in cart_items:
+            added_at = item[4]
+            if now - added_at > timedelta(hours=24):
+                cursor.execute("DELETE FROM cart WHERE user_id = %s AND product_id = %s", (user_id, item[0]))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return render_template("cart.html", token=token, cart_items=cart_items)
+    except Exception as e:
+        logging.error(f"Error occurred while viewing cart: {e}")
         return str(e), 500
 
 # Рут для завантаження прайс-листів

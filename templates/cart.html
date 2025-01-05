@@ -4,4 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кошик</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/{{ token }}/" class="nav-link">Додому</a>
+            <a href="/upload" class="nav-link">Завантажити прайс-лист</a>
+            <a href="/{{ token }}/cart" class="nav-link">Кошик</a>
+        </nav>
+    </header>
+    <div class="container">
+        <h1>Ваш кошик</h1>
+
+        {% if cart_items %}
+        <ul>
+            {% for item in cart_items %}
+            <li class="cart-item">
+                <div class="item-details">
+                    <strong>Артикул:</strong> {{ item[0] }} <br>
+                    <strong>Таблиця:</strong> {{ item[1] }} <br>
+                    <strong>Ціна:</strong> {{ item[2] }} € <br>
+                    <strong>Кількість:</strong> {{ item[3] }} <br>
+                    <strong>Дата додавання:</strong> {{ item[4] }}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Кошик порожній.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

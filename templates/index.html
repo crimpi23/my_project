@@ -3,61 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Пошук артикула</title>
+    <title>Завантажити прайс-лист</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <header>
         <nav>
             <a href="/{{ token }}/" class="nav-link">Додому</a>
-            <a href="/upload" class="nav-link">Завантажити прайс-лист</a>
+            <a href="/{{ token }}/upload" class="nav-link">Завантажити прайс-лист</a>
+            <a href="/{{ token }}/cart" class="nav-link">Кошик</a>
         </nav>
     </header>
     <div class="container">
-        <h1>Пошук артикула</h1>
+        <h1>Завантажити прайс-лист</h1>
 
-        <form action="/{{ token }}/" method="get">
-            <label for="article">Введіть артикул: </label>
-            <input type="text" id="article" name="article" placeholder="Введіть один артикул">
-
-            <label for="articles">Введіть артикули (кожний з нового рядка): </label>
-            <textarea id="articles" name="articles" rows="5" placeholder="Введіть декілька артикулів, кожний з нового рядка"></textarea>
-
-            <button type="submit">Шукати</button>
-        </form>
-
-        {% if article or articles %}
-        <h2>Результати пошуку:</h2>
+        <!-- Виводимо список таблиць, якщо є прайс-листи -->
+        <h3>Існуючі таблиці:</h3>
         <ul>
-            {% for article, details in results.items() %}
-            <li class="article-item">
-                <div class="article-left">
-                    <strong>Артикул:</strong> {{ article }}
-                </div>
-                <div class="article-right">
-                    <ul class="price-list">
-                        {% for detail in details %}
-                        <li>
-                            <span class="table-name">{{ detail.table }}</span> - <span class="price">{{ detail.price }} €</span>
-                            <form action="/{{ token }}/add_to_cart" method="post" style="display: inline;">
-                                <input type="hidden" name="article" value="{{ article }}">
-                                <input type="hidden" name="table" value="{{ detail.table }}">
-                                <input type="hidden" name="price" value="{{ detail.price }}">
-                                <input type="hidden" name="quantity" value="1">
-                                <button type="submit">Додати до корзини</button>
-                            </form>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </li>
+            {% for table in tables %}
+                <li>{{ table }}</li>
             {% endfor %}
         </ul>
-        {% endif %}
 
-        {% if error %}
-        <div class="error">{{ error }}</div>
-        {% endif %}
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="table">Виберіть таблицю:</label>
+            <input type="text" id="table" name="table" required placeholder="Введіть назву таблиці" />
+
+            <label for="file">Виберіть файл:</label>
+            <input type="file" id="file" name="file" required />
+            
+            <button type="submit">Завантажити файл</button>
+        </form>
+
+        <div id="message"></div>
+
+        <script>
+            document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const formData = new FormData();
+                const table = document.getElementById('table').value;
+                const file = document.getElementById('file').files[0];
+
+                formData.append('table', table);
+                formData.append('file', file);
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                const messageDiv = document.getElementById('message');
+                if (data.error) {
+                    messageDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                } else {
+                    messageDiv.innerHTML = `<p class="success">${data.message}</p>`;
+                }
+            });
+        </script>
     </div>
 </body>
 </html>

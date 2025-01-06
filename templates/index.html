@@ -3,25 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Article</title>
+    <title>Search Multiple Articles</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
         <h1>Article Price Search</h1>
-        <form method="GET" action="/search">
-            <label for="article">Enter Article:</label>
-            <input type="text" id="article" name="article" placeholder="e.g., 0XW105101" required>
+        <form method="POST" action="/search">
+            <label for="articles">Enter Articles (one per line):</label>
+            <textarea id="articles" name="articles" rows="10" placeholder="Enter one article per line..." required></textarea>
             <button type="submit">Search</button>
         </form>
-        {% if prices %}
+        {% if results %}
         <div class="results">
             <h2>Search Results:</h2>
-            <ul>
-                {% for price in prices %}
-                <li>Price: {{ price.price }}</li>
-                {% endfor %}
-            </ul>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Table</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>{{ result.article }}</td>
+                        <td>{{ result.price }}</td>
+                        <td>{{ result.table_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
         {% elif message %}
         <div class="results">

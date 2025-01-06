@@ -1,25 +1,32 @@
-from flask import Flask, render_template, request
-import psycopg2
-from psycopg2.extras import RealDictCursor
+from flask import Flask, render_template, request, session
 import os
+import psycopg2
+import psycopg2.extras
 
-app = Flask(__name__)  # Ініціалізація Flask
+app = Flask(__name__)
 
-# Підключення до бази даних
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Генерація secret_key із змінної середовища або автоматичне створення
+app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
+# Функція для підключення до бази даних
 def get_db_connection():
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-    return conn
+    return psycopg2.connect(
+        dsn=os.environ.get('DATABASE_URL'),
+        sslmode="require",
+        cursor_factory=psycopg2.extras.DictCursor
+    )
 
+# Головна сторінка
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
 
+# Пошук артикулів
 @app.route('/search', methods=['POST'])
 def search_articles():
     articles = []
     quantities = {}
+    auto_set_quantities = []
 
     # Отримуємо текстовий ввід
     articles_input = request.form.get('articles')
@@ -32,15 +39,15 @@ def search_articles():
         if len(parts) == 1:  # Тільки артикул, без кількості
             article = parts[0].strip()
             articles.append(article)
-            quantities[article] = 1  # Встановлюємо кількість 1 за замовчуванням
+            quantities[article] = 1
+            auto_set_quantities.append(article)
         elif len(parts) == 2 and parts[0].strip() and parts[1].isdigit():  # Артикул і кількість
             article, quantity = parts
             articles.append(article.strip())
             quantities[article] = int(quantity)
 
-    # Якщо немає валідних даних
     if not articles:
-        return render_template('index.html', message="No valid articles provided. Please enter valid Article and Quantity.")
+        return render_template('index.html', message="No valid articles provided.")
 
     try:
         conn = get_db_connection()
@@ -62,7 +69,6 @@ def search_articles():
             rows = cursor.fetchall()
             results.extend(rows)
 
-        # Групуємо результати за артикулом
         grouped_results = {}
         for result in results:
             article = result['article']
@@ -73,19 +79,19 @@ def search_articles():
                 'table_name': result['table_name']
             })
 
-        # Визначаємо артикули, яких немає в результатах
-        found_articles = set(grouped_results.keys())
-        missing_articles = [article for article in articles if article not in found_articles]
+        missing_articles = [article for article in articles if article not in grouped_results]
 
-        if grouped_results or missing_articles:
-            return render_template(
-                'index.html',
-                grouped_results=grouped_results,
-                quantities=quantities,
-                missing_articles=missing_articles
-            )
-        else:
-            return render_template('index.html', message="No results found for the provided articles.")
+        # Зберігаємо результати пошуку в сесії
+        session['grouped_results'] = grouped_results
+        session['quantities'] = quantities
+
+        return render_template(
+            'index.html',
+            grouped_results=grouped_results,
+            quantities=quantities,
+            missing_articles=missing_articles,
+            auto_set_quantities=auto_set_quantities
+        )
 
     except Exception as e:
         return render_template('index.html', message=f"Error: {str(e)}")
@@ -94,6 +100,7 @@ def search_articles():
         cursor.close()
         conn.close()
 
+# Додавання в кошик
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
     try:
@@ -104,49 +111,26 @@ def add_to_cart():
         table_name = request.form.get('table_name')
         user_id = 1  # Заставний користувач
 
-        # Підключення до бази
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Знаходимо product_id для артикулу, ціни та таблиці
+        # Додаємо в кошик
         cursor.execute("""
-            SELECT id
-            FROM products
-            WHERE article = %s AND price = %s AND table_name = %s
-        """, (article, price, table_name))
-        product = cursor.fetchone()
-
-        if not product:
-            return render_template('index.html', message="Product not found.")
-
-        product_id = product['id']
-
-        # Перевіряємо, чи товар уже в кошику
-        cursor.execute("""
-            SELECT id, quantity
-            FROM cart
-            WHERE user_id = %s AND product_id = %s
-        """, (user_id, product_id))
-        cart_item = cursor.fetchone()
-
-        if cart_item:
-            # Якщо товар уже є в кошику, оновлюємо кількість
-            new_quantity = cart_item['quantity'] + quantity
-            cursor.execute("""
-                UPDATE cart
-                SET quantity = %s
-                WHERE id = %s
-            """, (new_quantity, cart_item['id']))
-        else:
-            # Якщо товару немає, додаємо його в кошик
-            cursor.execute("""
-                INSERT INTO cart (user_id, product_id, quantity, added_at)
-                VALUES (%s, %s, %s, NOW())
-            """, (user_id, product_id, quantity))
-
+            INSERT INTO cart (user_id, product_id, quantity, added_at)
+            VALUES (%s, (SELECT id FROM products WHERE article = %s AND price = %s AND table_name = %s), %s, NOW())
+        """, (user_id, article, price, table_name, quantity))
         conn.commit()
-        return render_template('index.html', message="Product added to cart successfully!")
 
+        # Завантажуємо попередні результати з сесії
+        grouped_results = session.get('grouped_results', {})
+        quantities = session.get('quantities', {})
+
+        return render_template(
+            'index.html',
+            grouped_results=grouped_results,
+            quantities=quantities,
+            message="Product added to cart successfully!"
+        )
     except Exception as e:
         return render_template('index.html', message=f"Error: {str(e)}")
     finally:

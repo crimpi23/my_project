@@ -39,13 +39,31 @@ def search_articles():
         results = []
         for table in tables:
             table_name = table['table_name']
-            query = f"SELECT article, price, %s AS table_name FROM {table_name} WHERE article = ANY(%s)"
+            query = f"""
+                SELECT article, price, %s AS table_name
+                FROM {table_name}
+                WHERE article = ANY(%s)
+            """
             cursor.execute(query, (table_name, articles))
             rows = cursor.fetchall()
             results.extend(rows)
 
-        if results:
-            return render_template('index.html', results=results)
+        # Сортуємо результати відповідно до порядку введених артикулів
+        sorted_results = sorted(
+            results,
+            key=lambda x: articles.index(x['article'])
+        )
+
+        # Визначаємо артикули, яких немає в результатах
+        found_articles = {result['article'] for result in results}
+        missing_articles = [article for article in articles if article not in found_articles]
+
+        if sorted_results or missing_articles:
+            return render_template(
+                'index.html', 
+                results=sorted_results, 
+                missing_articles=missing_articles
+            )
         else:
             return render_template('index.html', message="No results found for the provided articles.")
 

@@ -12,8 +12,10 @@
         <form method="POST" action="/search">
             <label for="articles">Enter Articles (one per line):</label>
             <textarea id="articles" name="articles" rows="10" placeholder="Enter one article per line..." required></textarea>
+            <p>Results will appear in the same order as entered articles.</p>
             <button type="submit">Search</button>
         </form>
+
         {% if results %}
         <div class="results">
             <h2>Search Results:</h2>
@@ -36,7 +38,20 @@
                 </tbody>
             </table>
         </div>
-        {% elif message %}
+        {% endif %}
+
+        {% if missing_articles %}
+        <div class="results">
+            <h2>Missing Articles:</h2>
+            <ul>
+                {% for article in missing_articles %}
+                <li>{{ article }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if message %}
         <div class="results">
             <h2>{{ message }}</h2>
         </div>

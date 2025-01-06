@@ -1,8 +1,0 @@
-flask
-flask-sqlalchemy
-flask-migrate
-flask-wtf
-flask-login
-werkzeug
-gunicorn
-psycopg2-binary

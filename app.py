@@ -1,14 +1,13 @@
 import os
 import tempfile
 import psycopg2
-import uuid
-from flask import Flask, request, render_template, jsonify, redirect, url_for
+from flask import Flask, request, render_template, jsonify, redirect, url_for, session, make_response
 from werkzeug.utils import secure_filename
 from import_data import import_to_db  # Імпортуємо функцію з import_data.py
-import logging
+from flask_wtf.csrf import CSRFProtect
 from datetime import datetime, timedelta
 import pytz
-from flask_wtf.csrf import CSRFProtect
+import logging
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -17,6 +16,14 @@ csrf = CSRFProtect(app)
 # Налаштування логування
 logging.basicConfig(level=logging.DEBUG)
 
+# Заборона кешування статичних файлів
+@app.after_request
+def add_header(response):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Expires"] = "0"
+    response.headers["Pragma"] = "no-cache"
+    return response
+
 # Підключення до бази даних
 def get_connection():
     database_url = os.getenv("DATABASE_URL")
@@ -24,9 +31,25 @@ def get_connection():
         logging.error("DATABASE_URL is not set")
         raise Exception("DATABASE_URL is not set")
     return psycopg2.connect(database_url, sslmode='require')
-# Головна сторінка - з пошуком артикула
-@app.route("/<token>/", methods=["GET"])
-def index(token):
+
+# Генерація токена
+def generate_token():
+    return os.urandom(16).hex()
+
+# Головна сторінка
+@app.route("/", methods=["GET"])
+def index():
+    if 'token' not in session:
+        session['token'] = generate_token()
+    token = session['token']
+    return render_template("index.html", token=token)
+
+# Пошук артикула
+@app.route("/search", methods=["GET"])
+def search():
+    token = session.get('token')
+    if not token:
+        return redirect(url_for('index'))
     article = request.args.get('article')
     articles = request.args.get('articles')
     error = None
@@ -39,53 +62,30 @@ def index(token):
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Перевірка валідності токена
-        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
-        user = cursor.fetchone()
-        if not user:
-            return "Invalid token", 403
+        # Отримуємо всі таблиці прайс-листів
+        cursor.execute("SELECT table_name FROM price_lists")
+        tables = cursor.fetchall()
 
-        user_id = user[0]
+        if article:
+            for table in tables:
+                table_name = table[0]
+                cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
+                rows = cursor.fetchall()
+                if rows:
+                    results[article] = [{"table": table_name, "price": row[1]} for row in rows]
 
-        if article or articles:
-            if article:
-                # Отримуємо всі таблиці прайс-листів
-                cursor.execute("SELECT table_name FROM price_lists")
-                tables = cursor.fetchall()
+        elif articles:
+            articles_list = [a.strip() for a in articles.split('\n') if a.strip()]
+            for table in tables:
+                table_name = table[0]
+                cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = ANY(%s::text[])", (articles_list,))
+                rows = cursor.fetchall()
+                for row in rows:
+                    article = row[0]
+                    if article not in results:
+                        results[article] = []
+                    results[article].append({"table": table_name, "price": row[1]})
 
-                # Шукаємо артикул у всіх таблицях
-                for table in tables:
-                    table_name = table[0]
-                    cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
-                    rows = cursor.fetchall()
-
-                    if rows:
-                        if article not in results:
-                            results[article] = []
-                        for row in rows:
-                            results[article].append({"table": table_name, "price": row[1]})
-            
-            elif articles:
-                # Розділяємо артикули по нових рядках
-                articles_list = [a.strip() for a in articles.split('\n') if a.strip()]
-                
-                # Отримуємо всі таблиці прайс-листів
-                cursor.execute("SELECT table_name FROM price_lists")
-                tables = cursor.fetchall()
-
-                # Шукаємо артикули у всіх таблицях
-                for table in tables:
-                    table_name = table[0]
-                    # Використовуємо ANY для пошуку кожного артикула
-                    cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = ANY(%s::text[])", (articles_list,))
-                    rows = cursor.fetchall()
-
-                    for row in rows:
-                        article = row[0]
-                        if article not in results:
-                            results[article] = []
-                        results[article].append({"table": table_name, "price": row[1]})
-        
         cursor.close()
         conn.close()
 
@@ -97,195 +97,11 @@ def index(token):
         logging.error(f"Error occurred during search: {e}")
 
     return render_template("index.html", token=token, article=article, articles=articles, results=results, error=error)
-# Додавання продукту в корзину
-@app.route("/<token>/add_to_cart", methods=["POST"])
-def add_to_cart(token):
-    article = request.form.get('article')
-    table = request.form.get('table')
-    price = request.form.get('price')
-    quantity = int(request.form.get('quantity', 1))
 
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
+# Рути для інших функцій (наприклад, кошик, завантаження прайс-листів)
+# Переконайтеся, що всі функції перевіряють токен у сесії.
+# ...
 
-        # Перевірка валідності токена
-        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
-        user = cursor.fetchone()
-        if not user:
-            return "Invalid token", 403
-
-        user_id = user[0]
-
-        # Перевірка, чи вже існує продукт в таблиці products
-        cursor.execute("SELECT id FROM products WHERE article = %s AND table_name = %s", (article, table))
-        product = cursor.fetchone()
-        if not product:
-            cursor.execute("INSERT INTO products (article, table_name, price) VALUES (%s, %s, %s) RETURNING id", (article, table, price))
-            product_id = cursor.fetchone()[0]
-        else:
-            product_id = product[0]
-
-        # Додавання продукту в корзину
-        cursor.execute("""
-            INSERT INTO cart (user_id, product_id, quantity, added_at)
-            VALUES (%s, %s, %s, NOW())
-            ON CONFLICT (user_id, product_id) DO UPDATE
-            SET quantity = cart.quantity + EXCLUDED.quantity, added_at = NOW()
-        """, (user_id, product_id, quantity))
-        conn.commit()
-
-        cursor.close()
-        conn.close()
-
-        return redirect(url_for('index', token=token))
-    except Exception as e:
-        logging.error(f"Error occurred during adding to cart: {e}")
-        return str(e), 500
-# Відображення вмісту кошика
-@app.route("/<token>/cart", methods=["GET"])
-def view_cart(token):
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # Перевірка валідності токена
-        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
-        user = cursor.fetchone()
-        if not user:
-            return "Invalid token", 403
-
-        user_id = user[0]
-
-        # Отримання вмісту кошика
-        cursor.execute("""
-            SELECT p.article, p.table_name, p.price, c.quantity, c.added_at, p.id
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = %s
-        """, (user_id,))
-        cart_items = cursor.fetchall()
-
-        # Обчислення загальної суми кошика
-        total_price = sum(item[2] * item[3] for item in cart_items)
-
-        # Перевірка на час зберігання товарів в кошику (наприклад, 24 години)
-        utc = pytz.UTC
-        now = datetime.now(utc)  # Встановлюємо часовий зсув для поточного часу
-        for item in cart_items:
-            added_at = item[4].replace(tzinfo=utc)  # Встановлюємо часовий зсув для доданого часу
-            if now - added_at > timedelta(hours=24):
-                cursor.execute("DELETE FROM cart WHERE user_id = %s AND product_id = %s", (user_id, item[5]))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return render_template("cart.html", token=token, cart_items=cart_items, total_price=total_price)
-    except Exception as e:
-        logging.error(f"Error occurred while viewing cart: {e}")
-        return str(e), 500
-
-# Оновлення кількості товарів у кошику
-@app.route("/<token>/update_quantity", methods=["POST"])
-def update_quantity(token):
-    product_id = request.form.get('product_id')
-    quantity = int(request.form.get('quantity', 1))
-
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # Перевірка валідності токена
-        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
-        user = cursor.fetchone()
-        if not user:
-            return "Invalid token", 403
-
-        user_id = user[0]
-
-        # Оновлення кількості товару в кошику
-        cursor.execute("UPDATE cart SET quantity = %s WHERE user_id = %s AND product_id = %s", (quantity, user_id, product_id))
-        conn.commit()
-
-        cursor.close()
-        conn.close()
-
-        return redirect(url_for('view_cart', token=token))
-    except Exception as e:
-        logging.error(f"Error occurred during updating quantity: {e}")
-        return str(e), 500
-# Видалення товару з кошика
-@app.route("/<token>/remove_item", methods=["POST"])
-def remove_item(token):
-    product_id = request.form.get('product_id')
-
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # Перевірка валідності токена
-        cursor.execute("SELECT id FROM users WHERE token = %s", (token,))
-        user = cursor.fetchone()
-        if not user:
-            return "Invalid token", 403
-
-        user_id = user[0]
-
-        # Видалення товару з кошика
-        cursor.execute("DELETE FROM cart WHERE user_id = %s AND product_id = %s", (user_id, product_id))
-
-        # Видалення товару з таблиці products, якщо його більше немає у кошику
-        cursor.execute("SELECT COUNT(*) FROM cart WHERE product_id = %s", (product_id,))
-        count = cursor.fetchone()[0]
-        if count == 0:
-            cursor.execute("DELETE FROM products WHERE id = %s", (product_id,))
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return redirect(url_for('view_cart', token=token))
-    except Exception as e:
-        logging.error(f"Error occurred during removing item: {e}")
-        return str(e), 500
-# Рут для завантаження прайс-листів
-@app.route("/<token>/upload", methods=["GET", "POST"])
-def upload(token):
-    if request.method == "GET":
-        try:
-            conn = get_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'vag%'")
-            tables = cursor.fetchall()
-            cursor.close()
-            conn.close()
-        except Exception as e:
-            logging.error(f"Error occurred while fetching tables: {e}")
-            return jsonify({"error": str(e)}), 500
-        return render_template("upload.html", tables=[t[0] for t in tables], token=token)
-
-    if request.method == "POST":
-        file = request.files.get('file')
-        table = request.form.get('table')
-
-        if file and table:
-            filename = secure_filename(file.filename)
-
-            # Використання тимчасової директорії для зберігання файлу
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                file_path = temp_file.name
-                file.save(file_path)
-
-            try:
-                import_to_db(table, file_path)
-                os.remove(file_path)  # Видалення тимчасового файлу після використання
-                return jsonify({"message": f"Файл {filename} успішно завантажено в таблицю {table}"}), 200
-            except Exception as e:
-                logging.error(f"Error occurred during import: {e}")
-                return jsonify({"error": str(e)}), 500
-        else:
-            return jsonify({"error": "Необхідно вибрати файл і таблицю"}), 400
 # Запуск Flask-додатку
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

@@ -5,39 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пошук артикула</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        .search-results .article-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .article-details {
-            display: flex;
-            flex-direction: column;
-        }
-        .article-right {
-            display: flex;
-            align-items: center;
-        }
-        .price-list {
-            display: flex;
-            flex-direction: column;
-        }
-        .price-list li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        .price-list .table-name, .price-list .price {
-            margin-right: 10px;
-        }
-    </style>
     <script>
         // Функція для видалення пробілів з артикулів
         function cleanInput(inputId) {
@@ -49,15 +16,14 @@
 <body>
     <header>
         <nav>
-            <a href="/{{ token }}/" class="nav-link">Додому</a>
-            <a href="/{{ token }}/upload" class="nav-link">Завантажити прайс-лист</a>
-            <a href="/{{ token }}/cart" class="nav-link"><i class="fas fa-shopping-cart"></i> Кошик</a>
+            <a href="/" class="nav-link">Додому</a>
+            <a href="/upload" class="nav-link">Завантажити прайс-лист</a>
+            <a href="/cart" class="nav-link">Кошик</a>
         </nav>
     </header>
     <div class="container">
         <h1>Пошук артикула</h1>
-        <form action="/{{ token }}/" method="get">
-            {{ csrf_token() }}
+        <form action="/search" method="get">
             <label for="article">Введіть артикул: </label>
             <input type="text" id="article" name="article" placeholder="Введіть один артикул" onblur="cleanInput('article')">
             <label for="articles">Введіть артикули (кожний з нового рядка): </label>
@@ -69,28 +35,13 @@
         <h2>Результати пошуку:</h2>
         <ul class="search-results">
             {% for article, details in results.items() %}
-            <li class="article-item">
-                <div class="article-details">
-                    <strong>Артикул:</strong> {{ article }}
-                </div>
-                <div class="article-right">
-                    <ul class="price-list">
-                        {% for detail in details %}
-                        <li>
-                            <span class="table-name">{{ detail.table }}</span> - <span class="price">{{ detail.price }} €</span>
-                            <form action="/{{ token }}/add_to_cart" method="post" style="display: inline;">
-                                {{ csrf_token() }}
-                                <input type="hidden" name="article" value="{{ article }}">
-                                <input type="hidden" name="table" value="{{ detail.table }}">
-                                <input type="hidden" name="price" value="{{ detail.price }}">
-                                <input type="hidden" name="quantity" value="1">
-                                <input type="hidden" name="results" value="{{ results|tojson|safe }}">
-                                <button type="submit"><i class="fas fa-shopping-cart"></i></button>
-                            </form>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
+            <li>
+                <strong>{{ article }}</strong>
+                <ul>
+                    {% for detail in details %}
+                    <li>{{ detail.table }} - {{ detail.price }} €</li>
+                    {% endfor %}
+                </ul>
             </li>
             {% endfor %}
         </ul>

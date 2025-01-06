@@ -1,34 +1,32 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
 
-# Ініціалізація Flask
 app = Flask(__name__)
 
-# Підключення до бази даних через DATABASE_URL
+# Підключення до бази даних
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Функція для підключення до бази даних
 def get_db_connection():
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     return conn
 
 @app.route('/')
 def home():
-    return "API для пошуку цін за артикулами. Використовуйте /search?article=ARTICUL"
+    return render_template('index.html')
 
 @app.route('/search', methods=['GET'])
 def search_article():
     article = request.args.get('article')
     if not article:
-        return jsonify({"error": "Параметр 'article' обов'язковий"}), 400
+        return render_template('index.html', message="Please enter an article.")
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримуємо список таблиць з price_lists
+        # Отримуємо всі таблиці з price_lists
         cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
 
@@ -41,18 +39,17 @@ def search_article():
             results.extend(rows)
 
         if results:
-            return jsonify({"article": article, "prices": results})
+            return render_template('index.html', prices=results)
         else:
-            return jsonify({"article": article, "message": "Артикул не знайдено"}), 404
+            return render_template('index.html', message="No results found for the given article.")
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return render_template('index.html', message=f"Error: {str(e)}")
 
     finally:
         cursor.close()
         conn.close()
 
-# Запуск сервера
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)

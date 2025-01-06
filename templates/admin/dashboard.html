@@ -1,17 +1,22 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Адмінпанель</title>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <h1>Адмінпанель</h1>
-    <nav>
-        <a href="{{ url_for('manage_users') }}">Користувачі</a>
-        <a href="{{ url_for('manage_prices') }}">Прайси</a>
-        <a href="{{ url_for('manage_orders') }}">Замовлення</a>
-        <a href="{{ url_for('admin_logout') }}">Вийти</a>
-    </nav>
+    <header>
+        <h1>Admin Dashboard</h1>
+    </header>
+    <div class="container">
+        <p>Welcome, {{ current_user.username }}</p>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('manage_users') }}">Manage Users</a></li>
+                <li><a href="{{ url_for('manage_prices') }}">Manage Price Lists</a></li>
+                <li><a href="{{ url_for('admin_logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </div>
 </body>
 </html>

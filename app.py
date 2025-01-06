@@ -1,104 +1,85 @@
 import os
-import psycopg2
-from flask import Flask, render_template, request, redirect, url_for, session
-from flask_wtf.csrf import CSRFProtect
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_wtf.csrf import CSRFProtect
+from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin
 
 app = Flask(__name__)
-app.config.from_object("config.Config")
+
+# Налаштування
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///data.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 csrf = CSRFProtect(app)
 
-# Підключення до бази даних
-def get_connection():
-    return psycopg2.connect(app.config["DATABASE_URL"], sslmode="require")
+# Логін-менеджер
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'admin_login'
 
-# Перевірка авторизації адміністратора
-def is_admin():
-    return session.get("is_admin", False)
+# Модель користувача
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
 
-# Головна сторінка адміністратора
-@app.route("/admin", methods=["GET", "POST"])
-def admin_login():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+class PriceList(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+    description = db.Column(db.Text, nullable=True)
 
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT password FROM admins WHERE username = %s", (username,))
-        admin = cursor.fetchone()
-        conn.close()
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    article = db.Column(db.String(80), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    price_list_id = db.Column(db.Integer, db.ForeignKey('price_list.id'), nullable=False)
+    price_list = db.relationship('PriceList', backref=db.backref('products', lazy=True))
 
-        if admin and check_password_hash(admin[0], password):
-            session["is_admin"] = True
-            return redirect(url_for("admin_dashboard"))
-        else:
-            return render_template("admin/login.html", error="Невірні дані")
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
-    return render_template("admin/login.html")
+@app.route('/')
+def home():
+    return render_template('index.html')
 
-@app.route("/admin/dashboard", methods=["GET"])
+@app.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('query')
+    results = []
+    if query:
+        results = Product.query.filter(Product.article.ilike(f'%{query}%')).all()
+    return render_template('search.html', query=query, results=results)
+
+@app.route('/admin')
+@login_required
 def admin_dashboard():
-    if not is_admin():
-        return redirect(url_for("admin_login"))
-    return render_template("admin/dashboard.html")
+    if not current_user.is_admin:
+        return redirect(url_for('home'))
+    return render_template('admin/dashboard.html')
 
-# Вихід адміністратора
-@app.route("/admin/logout", methods=["GET"])
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('admin_dashboard'))
+    return render_template('admin/login.html')
+
+@app.route('/admin/logout')
+@login_required
 def admin_logout():
-    session.clear()
-    return redirect(url_for("admin_login"))
-@app.route("/admin/prices", methods=["GET", "POST"])
-def manage_prices():
-    if not is_admin():
-        return redirect(url_for("admin_login"))
+    logout_user()
+    return redirect(url_for('home'))
 
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    if request.method == "POST":
-        table_name = request.form.get("table_name")
-        cursor.execute("INSERT INTO price_lists (table_name) VALUES (%s)", (table_name,))
-        conn.commit()
-
-    cursor.execute("SELECT table_name FROM price_lists")
-    tables = cursor.fetchall()
-    conn.close()
-
-    return render_template("admin/prices.html", tables=tables)
-@app.route("/admin/users", methods=["GET", "POST"])
-def manage_users():
-    if not is_admin():
-        return redirect(url_for("admin_login"))
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    if request.method == "POST":
-        username = request.form.get("username")
-        token = uuid.uuid4().hex
-        cursor.execute("INSERT INTO users (token, is_admin) VALUES (%s, FALSE)", (token,))
-        conn.commit()
-
-    cursor.execute("SELECT token, created_at FROM users")
-    users = cursor.fetchall()
-    conn.close()
-
-    return render_template("admin/users.html", users=users)
-@app.route("/admin/orders", methods=["GET"])
-def manage_orders():
-    if not is_admin():
-        return redirect(url_for("admin_login"))
-
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT c.id, u.token, p.article, p.table_name, p.price, c.quantity, c.added_at
-        FROM cart c
-        JOIN users u ON c.user_id = u.id
-        JOIN products p ON c.product_id = p.id
-    """)
-    orders = cursor.fetchall()
-    conn.close()
-
-    return render_template("admin/orders.html", orders=orders)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

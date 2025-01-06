@@ -1,4 +1,8 @@
-Flask==2.3.2
-Flask-WTF==1.1.1
-Werkzeug==2.3.2
-psycopg2-binary==2.9.6
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-WTF
+Flask-Login
+Werkzeug
+psycopg2-binary
+gunicorn

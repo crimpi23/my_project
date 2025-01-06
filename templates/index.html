@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Welcome to Crimpi Parts</h1>
+    </header>
+    <div class="container">
+        <h2>Search for Products</h2>
+        <form action="{{ url_for('search') }}" method="get">
+            <input type="text" name="query" placeholder="Enter article" required>
+            <button type="submit">Search</button>
+        </form>
+    </div>
+</body>
+</html>

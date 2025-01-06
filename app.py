@@ -3,7 +3,7 @@ import tempfile
 import psycopg2
 from flask import Flask, request, render_template, jsonify, redirect, url_for, session
 from werkzeug.utils import secure_filename
-from import_data import import_to_db  # Імпортуємо функцію з import_data.py
+from import_data import import_to_db
 from flask_wtf.csrf import CSRFProtect
 from datetime import datetime, timedelta
 import pytz
@@ -57,16 +57,21 @@ def index():
         session['token'] = generate_token()
         logging.info(f"Generated new token: {session['token']}")
     token = session['token']
+    return redirect(url_for('index_with_token', token=token))
+
+# Головна сторінка з токеном
+@app.route("/<token>/", methods=["GET"])
+def index_with_token(token):
     if not validate_token(token):
         return "Invalid token", 403
-    return render_template("index.html", token=token)
+    article = request.args.get('article', '')
+    return render_template("index.html", token=token, article=article)
 
 # Пошук артикула
-@app.route("/search", methods=["GET"])
-def search():
-    token = session.get('token')
-    if not token or not validate_token(token):
-        return redirect(url_for('index'))
+@app.route("/<token>/search", methods=["GET"])
+def search(token):
+    if not validate_token(token):
+        return "Invalid token", 403
     article = request.args.get('article')
     articles = request.args.get('articles')
     error = None
@@ -116,11 +121,10 @@ def search():
     return render_template("index.html", token=token, article=article, articles=articles, results=results, error=error)
 
 # Завантаження прайс-листів
-@app.route("/upload", methods=["GET", "POST"])
-def upload():
-    token = session.get('token')
-    if not token or not validate_token(token):
-        return redirect(url_for('index'))
+@app.route("/<token>/upload", methods=["GET", "POST"])
+def upload(token):
+    if not validate_token(token):
+        return "Invalid token", 403
 
     if request.method == "GET":
         try:

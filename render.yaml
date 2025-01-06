@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: crimpi_parts_service
-    env: docker
-    plan: free
-    dockerfilePath: ./Dockerfile
-    envVars:
-      DATABASE_URL: ${DATABASE_URL}

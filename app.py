@@ -58,9 +58,20 @@ def home():
 def search():
     query = request.args.get('query')
     results = []
-    if query:
+
+    if not query:
+        return render_template('search.html', query=query, results=results, error="Please provide a search query.")
+
+    try:
+        # Пошук в базі даних
         results = Product.query.filter(Product.article.ilike(f'%{query}%')).all()
-    return render_template('search.html', query=query, results=results)
+
+    except Exception as e:
+        # Логування помилки
+        app.logger.error(f"Error during search: {e}")
+        return render_template('search.html', query=query, results=results, error="An error occurred during the search.")
+
+    return render_template('search.html', query=query, results=results, error=None)
 
 @app.route('/admin')
 @login_required

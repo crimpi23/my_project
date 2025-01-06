@@ -74,16 +74,16 @@ th {
 
 /* Поле кількості та кнопка */
 .quantity-input {
-    width: 60px; /* Ширина поля для введення кількості */
+    width: 60px;
     padding: 5px;
-    margin-right: 5px; /* Відступ між полем і кнопкою */
+    margin-right: 5px;
     border: 1px solid #ddd;
     border-radius: 4px;
 }
 
 .cart-button {
-    padding: 5px 8px; /* Розмір кнопки */
-    background-color: #28a745; /* Зелений колір */
+    padding: 5px 8px;
+    background-color: #28a745;
     color: white;
     border: none;
     border-radius: 4px;
@@ -91,18 +91,20 @@ th {
 }
 
 .cart-button:hover {
-    background-color: #218838; /* Темно-зелений при наведенні */
+    background-color: #218838;
 }
 
 .cart-button i {
-    font-size: 16px; /* Розмір іконки кошика */
+    font-size: 16px;
 }
 
 .cart-form {
-    display: flex; /* Горизонтальне розташування елементів */
-    align-items: center; /* Вирівнювання по центру */
-    justify-content: center; /* Центрування */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+/* Повідомлення */
 .info-message {
     background-color: #f8f9fa;
     border-left: 5px solid #007BFF;
@@ -140,58 +142,8 @@ th {
     padding-left: 20px;
     list-style: disc;
 }
-.navigation-buttons {
-    margin-bottom: 20px;
-    text-align: center;
-}
 
-.navigation-buttons button {
-    padding: 10px 20px;
-    font-size: 14px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.navigation-buttons button:hover {
-    background-color: #0056b3;
-}
-
-.cart-section {
-    margin-top: 30px;
-}
-
-.cart-section h2 {
-    font-size: 20px;
-    color: #333;
-    margin-bottom: 10px;
-}
-
-.cart-section table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.cart-section th, .cart-section td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-}
-
-.cart-section th {
-    background-color: #f4f4f9;
-    font-weight: bold;
-}
-
-.quantity-input {
-    width: 60px;
-    padding: 5px;
-    margin-right: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
+/* Хедер */
 header {
     background-color: #007BFF;
     padding: 10px 0;

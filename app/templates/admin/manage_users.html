@@ -1,0 +1,21 @@
+
+{% extends "base.html" %}
+{% block title %}Manage Users{% endblock %}
+{% block content %}
+<h1>Керування користувачами</h1>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Ім'я</th>
+            <th>Email</th>
+            <th>Токен</th>
+            <th>Дії</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Users will be listed here dynamically -->
+    </tbody>
+</table>
+<a href="/admin/create-user">Створити нового користувача</a>
+{% endblock %}

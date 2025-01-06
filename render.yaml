@@ -1,0 +1,13 @@
+
+services:
+  - type: web
+    name: my-project
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn -w 4 -b 0.0.0.0:5000 run:app"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: my-database
+      - key: SECRET_KEY
+        value: supersecretkey
+    autoDeploy: true

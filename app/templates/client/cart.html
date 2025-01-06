@@ -1,0 +1,22 @@
+
+{% extends "base.html" %}
+{% block title %}Кошик{% endblock %}
+{% block content %}
+<h1>Кошик</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Товар</th>
+            <th>Кількість</th>
+            <th>Ціна</th>
+            <th>Загальна ціна</th>
+            <th>Дії</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Cart items will be dynamically rendered -->
+    </tbody>
+</table>
+<p>Загальна сума: <span id="total-price">0.00</span></p>
+<a href="/client/checkout">Оформити замовлення</a>
+{% endblock %}

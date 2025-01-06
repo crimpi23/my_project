@@ -1,29 +1,3 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Завантажити прайс-лист</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-    <header>
-        <nav>
-            <a href="/{{ token }}/" class="nav-link">Додому</a>
-            <a href="/{{ token }}/upload" class="nav-link">Завантажити прайс-лист</a>
-            <a href="/{{ token }}/cart" class="nav-link">Кошик</a>
-        </nav>
-    </header>
-    <div class="container">
-        <h1>Завантажити прайс-лист</h1>
-
-        <h3>Існуючі таблиці:</h3>
-        <ul>
-            {% for table in tables %}
-                <li>{{ table }}</li>
-            {% endfor %}
-        </ul>
-
         <form id="uploadForm" enctype="multipart/form-data">
             <label for="table">Виберіть таблицю:</label>
             <input type="text" id="table" name="table" required placeholder="Введіть назву таблиці" />

@@ -293,6 +293,6 @@ def place_order():
         cursor.close()
         conn.close()
 
-    if __name__ == '__main__':
-        port = int(os.environ.get('PORT', 5000))  # Порт, визначений середовищем Render
-        app.run(host='0.0.0.0', port=port, debug=True)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))  # Отримуємо порт із змінних середовища
+    app.run(host='0.0.0.0', port=port)  # Запускаємо на всіх доступних адресах

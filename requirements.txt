@@ -1,7 +1,4 @@
-
-Flask==2.3.2
-Flask-SQLAlchemy==3.0.4
-Flask-Migrate==4.0.3
-psycopg2-binary==2.9.6
-pandas==2.0.3
-gunicorn==21.2.0
+fastapi
+uvicorn
+sqlalchemy
+psycopg2

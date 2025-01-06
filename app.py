@@ -153,33 +153,47 @@ def add_to_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        # Логування SQL-запиту
+        print(f"Adding to cart: article={article}, price={price}, quantity={quantity}, table_name={table_name}, user_id={user_id}")
+
+        # Перевіряємо, чи товар уже є в кошику
+        check_query = """
             SELECT id FROM cart
             WHERE user_id = %s AND product_id = (
                 SELECT id FROM products WHERE article = %s AND price = %s AND table_name = %s
             )
-        """, (user_id, article, price, table_name))
+        """
+        print("Executing query:", check_query % (user_id, article, price, table_name))
+        cursor.execute(check_query, (user_id, article, price, table_name))
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
-            cursor.execute("""
+            # Оновлюємо кількість
+            update_query = """
                 UPDATE cart
                 SET quantity = quantity + %s
                 WHERE id = %s
-            """, (quantity, existing_cart_item['id']))
+            """
+            print("Executing query:", update_query % (quantity, existing_cart_item['id']))
+            cursor.execute(update_query, (quantity, existing_cart_item['id']))
         else:
-            cursor.execute("""
+            # Додаємо новий товар
+            insert_query = """
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, (SELECT id FROM products WHERE article = %s AND price = %s AND table_name = %s), %s, NOW())
-            """, (user_id, article, price, table_name, quantity))
+            """
+            print("Executing query:", insert_query % (user_id, article, price, table_name, quantity))
+            cursor.execute(insert_query, (user_id, article, price, table_name, quantity))
         conn.commit()
 
         return redirect(url_for('index'))
     except Exception as e:
+        print("Error in add_to_cart:", e)
         return render_template('index.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
+
 
 @app.route('/update_cart', methods=['POST'])
 def update_cart():

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Multiple Articles</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -22,7 +23,6 @@
                 <thead>
                     <tr>
                         <th>Article</th>
-                        <th>Quantity</th>
                         <th>Price</th>
                         <th>Table</th>
                         <th>Action</th>
@@ -33,18 +33,19 @@
                     {% for detail in details %}
                     <tr>
                         {% if loop.index == 1 %}
-                        <td rowspan="{{ details|length }}">{{ article }}</td>
-                        <td rowspan="{{ details|length }}">{{ quantities[article] }}</td>
+                        <td rowspan="{{ details|length }}" class="article-cell">{{ article }}</td>
                         {% endif %}
                         <td>{{ detail.price }}</td>
                         <td>{{ detail.table_name }}</td>
                         <td>
-                            <form method="POST" action="/add_to_cart">
+                            <form method="POST" action="/add_to_cart" class="cart-form">
                                 <input type="hidden" name="article" value="{{ article }}">
                                 <input type="hidden" name="price" value="{{ detail.price }}">
                                 <input type="hidden" name="table_name" value="{{ detail.table_name }}">
-                                <input type="number" name="quantity" value="{{ quantities[article] }}" min="1">
-                                <button type="submit">Add to Cart</button>
+                                <input type="number" name="quantity" value="{{ quantities[article] }}" min="1" class="quantity-input">
+                                <button type="submit" class="cart-button">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
                             </form>
                         </td>
                     </tr>

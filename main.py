@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from models import SessionLocal, User, Product, Order, PriceList
+import os
 
 app = FastAPI()
 

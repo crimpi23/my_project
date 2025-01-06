@@ -2,8 +2,9 @@ from sqlalchemy import create_engine, Column, Integer, String, Numeric, ForeignK
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from datetime import datetime
+import os
 
-DATABASE_URL = "postgresql://crimpi_parts_user:m9xEi6jMGGtDrtYMh8P3oW3zR6RLFTWn@dpg-cts5hh5umphs73fk5pvg-a/crimpi_parts"
+DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 Base = declarative_base()
 

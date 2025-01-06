@@ -185,6 +185,10 @@ def update_cart():
         quantity = int(request.form.get('quantity'))
         user_id = 1
 
+        if quantity <= 0:
+            # Якщо кількість <= 0, видаляємо товар
+            return redirect(url_for('remove_from_cart'))
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -199,6 +203,32 @@ def update_cart():
         conn.commit()
 
         return redirect(url_for('cart'))
+    except Exception as e:
+        return render_template('cart.html', message=f"Error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+        
+@app.route('/remove_from_cart', methods=['POST'])
+def remove_from_cart():
+    try:
+        article = request.form.get('article')
+        user_id = 1
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Видаляємо товар із кошика
+        cursor.execute("""
+            DELETE FROM cart
+            WHERE user_id = %s AND product_id = (
+                SELECT id FROM products WHERE article = %s
+            )
+        """, (user_id, article))
+        conn.commit()
+
+        return redirect(url_for('cart'))  # Повернення на сторінку кошика
     except Exception as e:
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:

@@ -18,15 +18,25 @@ def home():
 
 @app.route('/search', methods=['POST'])
 def search_articles():
+    articles = []
+    quantities = {}
+
+    # Отримуємо текстовий ввід
     articles_input = request.form.get('articles')
     if not articles_input:
-        return render_template('index.html', message="Please enter at least one article.")
+        return render_template('index.html', message="Please enter at least one article and quantity.")
 
-    # Розбиваємо введений текст на список артикулів
-    articles = [article.strip() for article in articles_input.splitlines() if article.strip()]
-    
+    # Розбираємо текстовий ввід на артикули й кількість
+    for line in articles_input.splitlines():
+        parts = line.strip().split()
+        if len(parts) == 2 and parts[0].strip() and parts[1].isdigit():
+            article, quantity = parts
+            articles.append(article.strip())
+            quantities[article] = int(quantity)
+
+    # Якщо немає валідних даних
     if not articles:
-        return render_template('index.html', message="No valid articles provided.")
+        return render_template('index.html', message="No valid articles provided. Please enter Article and Quantity separated by a space.")
 
     try:
         conn = get_db_connection()
@@ -60,8 +70,9 @@ def search_articles():
 
         if sorted_results or missing_articles:
             return render_template(
-                'index.html', 
-                results=sorted_results, 
+                'index.html',
+                results=sorted_results,
+                quantities=quantities,
                 missing_articles=missing_articles
             )
         else:

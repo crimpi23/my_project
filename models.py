@@ -33,5 +33,12 @@ class Order(Base):
     user = relationship('User', back_populates='orders')
     product = relationship('Product')
 
+class PriceList(Base):
+    __tablename__ = 'price_lists'
+    id = Column(Integer, primary_key=True)
+    table_name = Column(String)
+    description = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 Base.metadata.create_all(engine)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

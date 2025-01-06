@@ -42,7 +42,6 @@ def search_articles():
     auto_set_quantities = []
     duplicate_articles = []
 
-    # Обробка введення
     articles_input = request.form.get('articles')
     if not articles_input:
         return render_template('index.html', message="Please enter at least one article.")
@@ -59,7 +58,7 @@ def search_articles():
                 articles.append(article)
                 quantities[article] = 1
                 auto_set_quantities.append(article)
-        elif len(parts) == 2 and parts[0].strip() and parts[1].isdigit():  # Артикул і кількість
+        elif len(parts) == 2 and parts[0].strip() and parts[1].isdigit():
             article, quantity = parts
             if article in quantities:
                 quantities[article] += int(quantity)
@@ -73,7 +72,6 @@ def search_articles():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримуємо таблиці
         cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
 
@@ -143,7 +141,6 @@ def cart():
         cursor.close()
         conn.close()
 
-# Додавання в кошик
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
     try:
@@ -156,7 +153,6 @@ def add_to_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Перевіряємо, чи товар уже є в кошику
         cursor.execute("""
             SELECT id FROM cart
             WHERE user_id = %s AND product_id = (
@@ -166,14 +162,12 @@ def add_to_cart():
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
-            # Оновлюємо кількість
             cursor.execute("""
                 UPDATE cart
                 SET quantity = quantity + %s
                 WHERE id = %s
             """, (quantity, existing_cart_item['id']))
         else:
-            # Додаємо новий товар
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, (SELECT id FROM products WHERE article = %s AND price = %s AND table_name = %s), %s, NOW())
@@ -187,7 +181,6 @@ def add_to_cart():
         cursor.close()
         conn.close()
 
-# Оновлення кошика
 @app.route('/update_cart', methods=['POST'])
 def update_cart():
     try:
@@ -196,13 +189,11 @@ def update_cart():
         user_id = 1
 
         if quantity <= 0:
-            # Якщо кількість <= 0, видаляємо товар
             return redirect(url_for('remove_from_cart'))
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Оновлюємо кількість товару
         cursor.execute("""
             UPDATE cart
             SET quantity = %s
@@ -212,55 +203,52 @@ def update_cart():
         """, (quantity, user_id, article))
         conn.commit()
 
-        return redirect(url_for('cart'))  # Повертаємося на кошик
+        return redirect(url_for('cart'))
     except Exception as e:
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
 
-    @app.route('/remove_from_cart', methods=['POST'])
-    def remove_from_cart():
-        try:
-            article = request.form.get('article')
-            user_id = 1
+@app.route('/remove_from_cart', methods=['POST'])
+def remove_from_cart():
+    try:
+        article = request.form.get('article')
+        user_id = 1
 
-            conn = get_db_connection()
-            cursor = conn.cursor()
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-            # Видаляємо товар із кошика
-            cursor.execute("""
-                DELETE FROM cart
-                WHERE user_id = %s AND product_id = (
-                    SELECT id FROM products WHERE article = %s
-                )
-            """, (user_id, article))
-            conn.commit()
+        cursor.execute("""
+            DELETE FROM cart
+            WHERE user_id = %s AND product_id = (
+                SELECT id FROM products WHERE article = %s
+            )
+        """, (user_id, article))
+        conn.commit()
+        return redirect(url_for('cart'))
+    except Exception as e:
+        return render_template('cart.html', message=f"Error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
 
-            return redirect(url_for('cart'))  # Повертаємося на кошик
-        except Exception as e:
-            return render_template('cart.html', message=f"Error: {str(e)}")
-        finally:
-            cursor.close()
-            conn.close()
-            
-    @app.route('/clear_cart', methods=['POST'])
-    def clear_cart():
-        try:
-            user_id = 1
-            conn = get_db_connection()
-            cursor = conn.cursor()
+@app.route('/clear_cart', methods=['POST'])
+def clear_cart():
+    try:
+        user_id = 1
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-            # Видаляємо всі товари з кошика для даного користувача
-            cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
-            conn.commit()
+        cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
+        conn.commit()
 
-            return redirect(url_for('cart'))
-        except Exception as e:
-            return render_template('cart.html', message=f"Error: {str(e)}")
-        finally:
-            cursor.close()
-            conn.close()
+        return redirect(url_for('cart'))
+    except Exception as e:
+        return render_template('cart.html', message=f"Error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route('/place_order', methods=['POST'])
 def place_order():
@@ -269,11 +257,9 @@ def place_order():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Створюємо замовлення
         cursor.execute("INSERT INTO orders (user_id) VALUES (%s) RETURNING id", (user_id,))
         order_id = cursor.fetchone()[0]
 
-        # Додаємо товари з кошика до деталей замовлення
         cursor.execute("""
             INSERT INTO order_details (order_id, product_id, price, quantity)
             SELECT %s, c.product_id, p.price, c.quantity
@@ -282,7 +268,6 @@ def place_order():
             WHERE c.user_id = %s
         """, (order_id, user_id))
 
-        # Очищаємо кошик
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
 
@@ -294,5 +279,5 @@ def place_order():
         conn.close()
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Отримуємо порт із змінних середовища
-    app.run(host='0.0.0.0', port=port)  # Запускаємо на всіх доступних адресах
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)

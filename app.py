@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, redirect, url_for
 import os
 import psycopg2
 import psycopg2.extras
 
 app = Flask(__name__)
 
-# Генерація secret_key із змінної середовища або автоматичне створення
+# Секретний ключ для сесій
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
 # Функція для підключення до бази даних
@@ -16,52 +16,32 @@ def get_db_connection():
         cursor_factory=psycopg2.extras.DictCursor
     )
 
-# Головна сторінка
+# Головна сторінка для пошуку
 @app.route('/')
 def index():
-    try:
-        user_id = 1  # Ідентифікатор користувача
-        conn = get_db_connection()
-        cursor = conn.cursor()
+    return render_template('index.html')
 
-        # Отримуємо дані з кошика
-        cursor.execute("""
-            SELECT p.article, p.price, c.quantity, (p.price * c.quantity) AS total_price, p.table_name
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = %s
-        """, (user_id,))
-        cart_items = cursor.fetchall()
-
-        return render_template('index.html', cart_items=cart_items)
-    except Exception as e:
-        return render_template('index.html', message=f"Error: {str(e)}")
-    finally:
-        cursor.close()
-        conn.close()
-
-# Пошук артикулів
+# Маршрут для пошуку артикулів
 @app.route('/search', methods=['POST'])
 def search_articles():
     articles = []
     quantities = {}
     auto_set_quantities = []
-    duplicate_articles = []  # Список для дубльованих артикулів
+    duplicate_articles = []
 
-    # Отримуємо текстовий ввід
+    # Обробка введення
     articles_input = request.form.get('articles')
     if not articles_input:
         return render_template('index.html', message="Please enter at least one article.")
 
-    # Розбираємо текстовий ввід на артикули й кількість
     for line in articles_input.splitlines():
         parts = line.strip().split()
-        if len(parts) == 1:  # Тільки артикул, без кількості
+        if len(parts) == 1:  # Тільки артикул
             article = parts[0].strip()
             if article in quantities:
                 quantities[article] += 1
                 if article not in duplicate_articles:
-                    duplicate_articles.append(article)  # Додаємо до дублювань
+                    duplicate_articles.append(article)
             else:
                 articles.append(article)
                 quantities[article] = 1
@@ -71,18 +51,16 @@ def search_articles():
             if article in quantities:
                 quantities[article] += int(quantity)
                 if article not in duplicate_articles:
-                    duplicate_articles.append(article)  # Додаємо до дублювань
+                    duplicate_articles.append(article)
             else:
                 articles.append(article)
                 quantities[article] = int(quantity)
-
-    if not articles:
-        return render_template('index.html', message="No valid articles provided.")
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Отримуємо таблиці
         cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
 
@@ -110,7 +88,6 @@ def search_articles():
 
         missing_articles = [article for article in articles if article not in grouped_results]
 
-        # Зберігаємо результати пошуку в сесії
         session['grouped_results'] = grouped_results
         session['quantities'] = quantities
 
@@ -130,6 +107,33 @@ def search_articles():
         cursor.close()
         conn.close()
 
+# Сторінка кошика
+@app.route('/cart')
+def cart():
+    try:
+        user_id = 1
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Отримуємо товари в кошику
+        cursor.execute("""
+            SELECT p.article, p.price, c.quantity, (p.price * c.quantity) AS total_price, p.table_name
+            FROM cart c
+            JOIN products p ON c.product_id = p.id
+            WHERE c.user_id = %s
+        """, (user_id,))
+        cart_items = cursor.fetchall()
+
+        return render_template('cart.html', cart_items=cart_items)
+
+    except Exception as e:
+        return render_template('cart.html', message=f"Error: {str(e)}")
+
+    finally:
+        cursor.close()
+        conn.close()
+
+# Додавання в кошик
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
     try:
@@ -142,69 +146,38 @@ def add_to_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Перевіряємо, чи запис існує
+        # Перевіряємо, чи товар уже є в кошику
         cursor.execute("""
             SELECT id FROM cart
             WHERE user_id = %s AND product_id = (
-                SELECT id FROM products
-                WHERE article = %s AND price = %s AND table_name = %s
+                SELECT id FROM products WHERE article = %s AND price = %s AND table_name = %s
             )
         """, (user_id, article, price, table_name))
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
+            # Оновлюємо кількість
             cursor.execute("""
                 UPDATE cart
                 SET quantity = quantity + %s
                 WHERE id = %s
             """, (quantity, existing_cart_item['id']))
         else:
+            # Додаємо новий товар
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, (SELECT id FROM products WHERE article = %s AND price = %s AND table_name = %s), %s, NOW())
             """, (user_id, article, price, table_name, quantity))
         conn.commit()
 
-        grouped_results = session.get('grouped_results', {})
-        quantities = session.get('quantities', {})
-
-        return render_template(
-            'index.html',
-            grouped_results=grouped_results,
-            quantities=quantities,
-            message="Product added to cart successfully!"
-        )
+        return redirect(url_for('index'))
     except Exception as e:
         return render_template('index.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
 
-@app.route('/cart')
-def view_cart():
-    try:
-        user_id = 1  # Заставний користувач
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Отримуємо всі товари з кошика
-        cursor.execute("""
-            SELECT c.id AS cart_id, p.article, p.price, c.quantity, c.product_id
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = %s
-        """, (user_id,))
-        cart_items = cursor.fetchall()
-
-        return render_template('cart.html', cart_items=cart_items)
-
-    except Exception as e:
-        return render_template('cart.html', message=f"Error: {str(e)}")
-    finally:
-        cursor.close()
-        conn.close()
-
-@app.route('/update_cart', methods=['POST'])
+# Оновлення кошика
 @app.route('/update_cart', methods=['POST'])
 def update_cart():
     try:
@@ -225,13 +198,12 @@ def update_cart():
         """, (quantity, user_id, article))
         conn.commit()
 
-        return render_template('index.html', message="Cart updated successfully!")
+        return redirect(url_for('cart'))
     except Exception as e:
-        return render_template('index.html', message=f"Error: {str(e)}")
+        return render_template('cart.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)

@@ -5,10 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Cart</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <!-- Хедер із навігацією -->
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/cart">Cart</a></li>
+            </ul>
+        </nav>
+    </header>
+
     <div class="container">
         <h1>Your Cart</h1>
+        
+        <!-- Відображення кошика -->
         {% if cart_items %}
         <table>
             <thead>
@@ -25,13 +38,22 @@
                 <tr>
                     <td>{{ item.article }}</td>
                     <td>{{ item.price }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ item.price * item.quantity }}</td>
                     <td>
                         <form method="POST" action="/update_cart">
-                            <input type="hidden" name="cart_id" value="{{ item.cart_id }}">
+                            <input type="hidden" name="article" value="{{ item.article }}">
                             <input type="number" name="quantity" value="{{ item.quantity }}" min="0">
-                            <button type="submit">Update</button>
+                            <button type="submit" class="update-button">
+                                <i class="fas fa-edit"></i> Update
+                            </button>
+                        </form>
+                    </td>
+                    <td>{{ item.total_price }}</td>
+                    <td>
+                        <form method="POST" action="/remove_from_cart">
+                            <input type="hidden" name="article" value="{{ item.article }}">
+                            <button type="submit" class="remove-button">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
                         </form>
                     </td>
                 </tr>
@@ -41,6 +63,11 @@
         {% else %}
         <p>Your cart is empty.</p>
         {% endif %}
+        
+        <!-- Кнопка повернення до пошуку -->
+        <div class="navigation-buttons">
+            <button onclick="window.location.href='/'">Back to Search</button>
+        </div>
     </div>
 </body>
 </html>

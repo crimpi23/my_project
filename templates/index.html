@@ -8,13 +8,42 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <!-- Хедер із посиланнями -->
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/cart">Cart</a></li>
+            </ul>
+        </nav>
+    </header>
+
     <div class="container">
         <h1>Article Price Search</h1>
 
-        <!-- Кнопка для повернення до пошуку -->
-        <div class="navigation-buttons">
-            <button onclick="window.location.href='#search-section'">Go to Search</button>
+        <!-- Повідомлення про дубльовані артикули -->
+        {% if duplicate_articles %}
+        <div class="warning-message">
+            <p>The following articles are duplicated in your input. Their quantities were combined automatically:</p>
+            <ul>
+                {% for article in duplicate_articles %}
+                <li>{{ article }}</li>
+                {% endfor %}
+            </ul>
         </div>
+        {% endif %}
+
+        <!-- Повідомлення про автоматично підставлену кількість -->
+        {% if auto_set_quantities %}
+        <div class="info-message">
+            <p>The following articles had no quantity specified. Their quantity has been automatically set to <strong>1</strong>:</p>
+            <ul>
+                {% for article in auto_set_quantities %}
+                <li>{{ article }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
         <!-- Секція кошика -->
         {% if cart_items %}

@@ -1,7 +1,12 @@
 import os
 
-class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
-    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/db_name")
-    ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "password")
+# Завантажуємо URL бази даних із змінних середовища
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+# Замінюємо `postgres://` на `postgresql://` для сумісності з SQLAlchemy
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Налаштування SQLAlchemy
+SQLALCHEMY_DATABASE_URI = DATABASE_URL
+SQLALCHEMY_TRACK_MODIFICATIONS = False

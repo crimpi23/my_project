@@ -244,13 +244,6 @@ def remove_from_cart():
         cursor.close()
         conn.close()
 
-        return redirect(url_for('cart'))  # Повернення на сторінку кошика
-    except Exception as e:
-        return render_template('cart.html', message=f"Error: {str(e)}")
-    finally:
-        cursor.close()
-        conn.close()
-
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  # Порт, визначений середовищем Render
     app.run(host='0.0.0.0', port=port, debug=True)

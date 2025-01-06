@@ -156,7 +156,6 @@ def add_to_cart():
         # Логування SQL-запиту
         print(f"Adding to cart: article={article}, price={price}, quantity={quantity}, table_name={table_name}, user_id={user_id}")
 
-        # Перевіряємо, чи товар уже є в кошику
         check_query = """
             SELECT id FROM cart
             WHERE user_id = %s AND product_id = (
@@ -166,9 +165,9 @@ def add_to_cart():
         print("Executing query:", check_query % (user_id, article, price, table_name))
         cursor.execute(check_query, (user_id, article, price, table_name))
         existing_cart_item = cursor.fetchone()
+        print("Existing cart item:", existing_cart_item)
 
         if existing_cart_item:
-            # Оновлюємо кількість
             update_query = """
                 UPDATE cart
                 SET quantity = quantity + %s
@@ -177,7 +176,6 @@ def add_to_cart():
             print("Executing query:", update_query % (quantity, existing_cart_item['id']))
             cursor.execute(update_query, (quantity, existing_cart_item['id']))
         else:
-            # Додаємо новий товар
             insert_query = """
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, (SELECT id FROM products WHERE article = %s AND price = %s AND table_name = %s), %s, NOW())
@@ -186,6 +184,7 @@ def add_to_cart():
             cursor.execute(insert_query, (user_id, article, price, table_name, quantity))
         conn.commit()
 
+        print("Successfully added to cart.")
         return redirect(url_for('index'))
     except Exception as e:
         print("Error in add_to_cart:", e)
@@ -208,21 +207,26 @@ def update_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        update_query = """
             UPDATE cart
             SET quantity = %s
             WHERE user_id = %s AND product_id = (
                 SELECT id FROM products WHERE article = %s
             )
-        """, (quantity, user_id, article))
+        """
+        print("Executing query:", update_query % (quantity, user_id, article))
+        cursor.execute(update_query, (quantity, user_id, article))
         conn.commit()
+        print(f"Updated cart for user_id={user_id} with article={article}, new quantity={quantity}")
 
         return redirect(url_for('cart'))
     except Exception as e:
+        print("Error in update_cart:", e)
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
+
 
 @app.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart():
@@ -233,15 +237,20 @@ def remove_from_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        delete_query = """
             DELETE FROM cart
             WHERE user_id = %s AND product_id = (
                 SELECT id FROM products WHERE article = %s
             )
-        """, (user_id, article))
+        """
+        print("Executing query:", delete_query % (user_id, article))
+        cursor.execute(delete_query, (user_id, article))
         conn.commit()
+        print(f"Removed article={article} from cart for user_id={user_id}")
+
         return redirect(url_for('cart'))
     except Exception as e:
+        print("Error in remove_from_cart:", e)
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
@@ -254,11 +263,14 @@ def clear_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        print(f"Clearing cart for user_id={user_id}")
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
+        print(f"Cart cleared for user_id={user_id}")
 
         return redirect(url_for('cart'))
     except Exception as e:
+        print("Error in clear_cart:", e)
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()

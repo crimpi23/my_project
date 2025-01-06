@@ -24,19 +24,23 @@ def search_articles():
     # Отримуємо текстовий ввід
     articles_input = request.form.get('articles')
     if not articles_input:
-        return render_template('index.html', message="Please enter at least one article and quantity.")
+        return render_template('index.html', message="Please enter at least one article.")
 
     # Розбираємо текстовий ввід на артикули й кількість
     for line in articles_input.splitlines():
         parts = line.strip().split()
-        if len(parts) == 2 and parts[0].strip() and parts[1].isdigit():
+        if len(parts) == 1:  # Тільки артикул, без кількості
+            article = parts[0].strip()
+            articles.append(article)
+            quantities[article] = 1  # Встановлюємо кількість 1 за замовчуванням
+        elif len(parts) == 2 and parts[0].strip() and parts[1].isdigit():  # Артикул і кількість
             article, quantity = parts
             articles.append(article.strip())
             quantities[article] = int(quantity)
 
     # Якщо немає валідних даних
     if not articles:
-        return render_template('index.html', message="No valid articles provided. Please enter Article and Quantity separated by a space.")
+        return render_template('index.html', message="No valid articles provided. Please enter valid Article and Quantity.")
 
     try:
         conn = get_db_connection()

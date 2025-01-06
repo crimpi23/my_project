@@ -103,3 +103,21 @@ th {
     align-items: center; /* Вирівнювання по центру */
     justify-content: center; /* Центрування */
 }
+.info-message {
+    background-color: #f8f9fa;
+    border-left: 5px solid #007BFF;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    color: #333;
+}
+
+.info-message p {
+    margin: 0 0 10px;
+}
+
+.info-message ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style: disc;
+}

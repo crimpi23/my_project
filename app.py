@@ -5,8 +5,6 @@ from flask import Flask, request, render_template, jsonify, redirect, url_for, s
 from werkzeug.utils import secure_filename
 from import_data import import_to_db
 from flask_wtf.csrf import CSRFProtect
-from datetime import datetime, timedelta
-import pytz
 import logging
 
 app = Flask(__name__)
@@ -64,8 +62,7 @@ def index():
 def index_with_token(token):
     if not validate_token(token):
         return "Invalid token", 403
-    article = request.args.get('article', '')
-    return render_template("index.html", token=token, article=article)
+    return render_template("index.html", token=token)
 
 # Пошук артикула
 @app.route("/<token>/search", methods=["GET"])
@@ -84,7 +81,6 @@ def search(token):
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Отримуємо всі таблиці прайс-листів
         cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
 
@@ -146,14 +142,13 @@ def upload(token):
         if file and table:
             filename = secure_filename(file.filename)
 
-            # Використання тимчасової директорії для зберігання файлу
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                 file_path = temp_file.name
                 file.save(file_path)
 
             try:
                 import_to_db(table, file_path)
-                os.remove(file_path)  # Видалення тимчасового файлу після використання
+                os.remove(file_path)
                 return jsonify({"message": f"Файл {filename} успішно завантажено в таблицю {table}"}), 200
             except Exception as e:
                 logging.error(f"Error during import: {e}")

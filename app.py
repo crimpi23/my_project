@@ -95,6 +95,7 @@ def add_to_cart():
     try:
         # Отримуємо дані з форми
         article = request.form.get('article')
+        price = float(request.form.get('price'))
         quantity = int(request.form.get('quantity'))
         table_name = request.form.get('table_name')
         user_id = 1  # Заставний користувач
@@ -103,12 +104,12 @@ def add_to_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Знаходимо product_id для артикулу
+        # Знаходимо product_id для артикулу, ціни та таблиці
         cursor.execute("""
             SELECT id
             FROM products
-            WHERE article = %s AND table_name = %s
-        """, (article, table_name))
+            WHERE article = %s AND price = %s AND table_name = %s
+        """, (article, price, table_name))
         product = cursor.fetchone()
 
         if not product:

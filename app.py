@@ -212,7 +212,7 @@ def update_cart():
         """, (quantity, user_id, article))
         conn.commit()
 
-        return redirect(url_for('cart'))
+        return redirect(url_for('cart'))  # Повертаємося на кошик
     except Exception as e:
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:
@@ -237,7 +237,7 @@ def remove_from_cart():
         """, (user_id, article))
         conn.commit()
 
-        return redirect(url_for('cart'))  # Перенаправляємо на кошик
+        return redirect(url_for('cart'))  # Повертаємося на кошик
     except Exception as e:
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:

@@ -17,57 +17,52 @@
             </ul>
         </nav>
     </header>
-
-    <div class="container">
-        <h1>Your Cart</h1>
-        
-        <!-- Відображення кошика -->
-        {% if cart_items %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Article</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Total</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in cart_items %}
-                <tr>
-                    <td>{{ item.article }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>
-                        <form method="POST" action="/update_cart">
-                            <input type="hidden" name="article" value="{{ item.article }}">
-                            <input type="number" name="quantity" value="{{ item.quantity }}" min="0">
-                            <button type="submit" class="update-button">
-                                <i class="fas fa-edit"></i> Update
-                            </button>
-                        </form>
-                    </td>
-                    <td>{{ item.total_price }}</td>
-                    <td>
-                        <form method="POST" action="/remove_from_cart">
-                            <input type="hidden" name="article" value="{{ item.article }}">
-                            <button type="submit" class="remove-button">
-                                <i class="fas fa-trash"></i> Remove
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>Your cart is empty.</p>
-        {% endif %}
-        
-        <!-- Кнопка повернення до пошуку -->
-        <div class="navigation-buttons">
+	<div class="container">
+		<h1>Your Cart</h1>
+		{% if cart_items %}
+		<table>
+			<thead>
+				<tr>
+					<th>Article</th>
+					<th>Price</th>
+					<th>Quantity</th>
+					<th>Total</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for item in cart_items %}
+				<tr>
+					<td>{{ item.article }}</td>
+					<td>{{ item.price }}</td>
+					<td>
+						<form method="POST" action="/update_cart">
+							<input type="hidden" name="article" value="{{ item.article }}">
+							<input type="number" name="quantity" value="{{ item.quantity }}" min="1">
+							<button type="submit" class="update-button">
+								<i class="fas fa-edit"></i> Update
+							</button>
+						</form>
+					</td>
+					<td>{{ item.total_price }}</td>
+					<td>
+						<form method="POST" action="/remove_from_cart">
+							<input type="hidden" name="article" value="{{ item.article }}">
+							<button type="submit" class="remove-button">
+								<i class="fas fa-trash"></i> Remove
+							</button>
+						</form>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		{% else %}
+		<p>Your cart is empty.</p>
+		<div class="navigation-buttons">
 			<button onclick="window.location.href='/'">Back to Search</button>
 		</div>
-    </div>
+		{% endif %}
+	</div>
 </body>
 </html>

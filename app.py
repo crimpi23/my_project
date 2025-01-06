@@ -19,7 +19,26 @@ def get_db_connection():
 # Головна сторінка
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try:
+        user_id = 1  # Ідентифікатор користувача
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Отримуємо дані з кошика
+        cursor.execute("""
+            SELECT p.article, p.price, c.quantity, (p.price * c.quantity) AS total_price, p.table_name
+            FROM cart c
+            JOIN products p ON c.product_id = p.id
+            WHERE c.user_id = %s
+        """, (user_id,))
+        cart_items = cursor.fetchall()
+
+        return render_template('index.html', cart_items=cart_items)
+    except Exception as e:
+        return render_template('index.html', message=f"Error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
 
 # Пошук артикулів
 @app.route('/search', methods=['POST'])
@@ -186,33 +205,29 @@ def view_cart():
         conn.close()
 
 @app.route('/update_cart', methods=['POST'])
+@app.route('/update_cart', methods=['POST'])
 def update_cart():
     try:
-        cart_id = request.form.get('cart_id')
+        article = request.form.get('article')
         quantity = int(request.form.get('quantity'))
+        user_id = 1
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        if quantity > 0:
-            # Оновлюємо кількість у кошику
-            cursor.execute("""
-                UPDATE cart
-                SET quantity = %s
-                WHERE id = %s
-            """, (quantity, cart_id))
-        else:
-            # Видаляємо товар із кошика, якщо кількість 0
-            cursor.execute("""
-                DELETE FROM cart
-                WHERE id = %s
-            """, (cart_id,))
-
+        # Оновлюємо кількість товару
+        cursor.execute("""
+            UPDATE cart
+            SET quantity = %s
+            WHERE user_id = %s AND product_id = (
+                SELECT id FROM products WHERE article = %s
+            )
+        """, (quantity, user_id, article))
         conn.commit()
-        return view_cart()
 
+        return render_template('index.html', message="Cart updated successfully!")
     except Exception as e:
-        return render_template('cart.html', message=f"Error: {str(e)}")
+        return render_template('index.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()

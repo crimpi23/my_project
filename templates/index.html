@@ -3,96 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Multiple Articles</title>
+    <title>Article Price Search</title>
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-	<div class="container">
-		<h1>Article Price Search</h1>
-		<form method="POST" action="/search">
-			<label for="articles">Enter Articles and Quantities (one per line, separated by space):</label>
-			<textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required></textarea>
-			<button type="submit">Search</button>
-		</form>
+    <div class="container">
+        <h1>Article Price Search</h1>
 
-		{% if auto_set_quantities %}
-		<div class="info-message">
-			<p>The following articles had no quantity specified. Their quantity has been automatically set to <strong>1</strong>:</p>
-			<ul>
-				{% for article in auto_set_quantities %}
-				<li>{{ article }}</li>
-				{% endfor %}
-			</ul>
-		</div>
-		{% endif %}
-		{% if duplicate_articles %}
-		<div class="warning-message">
-			<p>The following articles are duplicated in your input. Their quantities were combined automatically:</p>
-			<ul>
-				{% for article in duplicate_articles %}
-				<li>{{ article }}</li>
-				{% endfor %}
-			</ul>
-		</div>
-		{% endif %}
-		{% if grouped_results %}
-		<div class="results">
-			<h2>Search Results:</h2>
-			<table>
-				<thead>
-					<tr>
-						<th>Article</th>
-						<th>Price</th>
-						<th>Table</th>
-						<th>Action</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for article, details in grouped_results.items() %}
-					{% for detail in details %}
-					<tr>
-						{% if loop.index == 1 %}
-						<td rowspan="{{ details|length }}" class="article-cell">{{ article }}</td>
-						{% endif %}
-						<td>{{ detail.price }}</td>
-						<td>{{ detail.table_name }}</td>
-						<td>
-							<form method="POST" action="/add_to_cart" class="cart-form">
-								<input type="hidden" name="article" value="{{ article }}">
-								<input type="hidden" name="price" value="{{ detail.price }}">
-								<input type="hidden" name="table_name" value="{{ detail.table_name }}">
-								<input type="number" name="quantity" value="{{ quantities[article] }}" min="1" class="quantity-input">
-								<button type="submit" class="cart-button">
-									<i class="fas fa-shopping-cart"></i>
-								</button>
-							</form>
-						</td>
-					</tr>
-					{% endfor %}
-					{% endfor %}
-				</tbody>
-			</table>
-		</div>
-		{% endif %}
+        <!-- Кнопка для повернення до пошуку -->
+        <div class="navigation-buttons">
+            <button onclick="window.location.href='#search-section'">Go to Search</button>
+        </div>
 
-		{% if missing_articles %}
-		<div class="results">
-			<h2>Missing Articles:</h2>
-			<ul>
-				{% for article in missing_articles %}
-				<li>{{ article }}</li>
-				{% endfor %}
-			</ul>
-		</div>
-		{% endif %}
+        <!-- Секція кошика -->
+        {% if cart_items %}
+        <div class="cart-section">
+            <h2>Your Cart</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Table</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.article }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>
+                            <form method="POST" action="/update_cart">
+                                <input type="hidden" name="article" value="{{ item.article }}">
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
+                                <button type="submit">Update</button>
+                            </form>
+                        </td>
+                        <td>{{ item.total_price }}</td>
+                        <td>{{ item.table_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>Your cart is empty.</p>
+        {% endif %}
 
-		{% if message %}
-		<div class="results">
-			<h2>{{ message }}</h2>
-		</div>
-		{% endif %}
-	</div>
+        <!-- Секція пошуку -->
+        <div id="search-section">
+            <form method="POST" action="/search">
+                <label for="articles">Enter Articles and Quantities (one per line, separated by space):</label>
+                <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required></textarea>
+                <button type="submit">Search</button>
+            </form>
+        </div>
 
+        <!-- Секція результатів пошуку -->
+        {% if grouped_results %}
+        <div class="results">
+            <h2>Search Results:</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Table</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article, details in grouped_results.items() %}
+                    {% for detail in details %}
+                    <tr>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{ details|length }}" class="article-cell">{{ article }}</td>
+                        {% endif %}
+                        <td>{{ detail.price }}</td>
+                        <td>{{ detail.table_name }}</td>
+                        <td>
+                            <form method="POST" action="/add_to_cart" class="cart-form">
+                                <input type="hidden" name="article" value="{{ article }}">
+                                <input type="hidden" name="price" value="{{ detail.price }}">
+                                <input type="hidden" name="table_name" value="{{ detail.table_name }}">
+                                <input type="number" name="quantity" value="{{ quantities[article] }}" min="1" class="quantity-input">
+                                <button type="submit" class="cart-button">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if missing_articles %}
+        <div class="results">
+            <h2>Missing Articles:</h2>
+            <ul>
+                {% for article in missing_articles %}
+                <li>{{ article }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if message %}
+        <div class="results">
+            <h2>{{ message }}</h2>
+        </div>
+        {% endif %}
+    </div>
 </body>
 </html>

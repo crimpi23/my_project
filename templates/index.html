@@ -38,16 +38,16 @@
                         <td>{{ detail.price }}</td>
                         <td>{{ detail.table_name }}</td>
                         <td>
-                            <form method="POST" action="/add_to_cart" class="cart-form">
-                                <input type="hidden" name="article" value="{{ article }}">
-                                <input type="hidden" name="price" value="{{ detail.price }}">
-                                <input type="hidden" name="table_name" value="{{ detail.table_name }}">
-                                <input type="number" name="quantity" value="{{ quantities[article] }}" min="1" class="quantity-input">
-                                <button type="submit" class="cart-button">
-                                    <i class="fas fa-shopping-cart"></i>
-                                </button>
-                            </form>
-                        </td>
+							<form method="POST" action="/add_to_cart" class="cart-form">
+								<!-- Поле для кількості -->
+								<input type="number" name="quantity" value="{{ quantities[article] }}" min="1" class="quantity-input">
+
+								<!-- Кнопка з іконкою кошика -->
+								<button type="submit" class="cart-button">
+									<i class="fas fa-shopping-cart"></i>
+								</button>
+							</form>
+						</td>
                     </tr>
                     {% endfor %}
                     {% endfor %}

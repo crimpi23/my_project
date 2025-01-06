@@ -121,3 +121,22 @@ th {
     padding-left: 20px;
     list-style: disc;
 }
+
+.warning-message {
+    background-color: #fff3cd;
+    border-left: 5px solid #ffc107;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    color: #856404;
+}
+
+.warning-message p {
+    margin: 0 0 10px;
+}
+
+.warning-message ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style: disc;
+}

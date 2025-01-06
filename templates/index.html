@@ -26,7 +26,16 @@
 			</ul>
 		</div>
 		{% endif %}
-
+		{% if duplicate_articles %}
+		<div class="warning-message">
+			<p>The following articles are duplicated in your input. Their quantities were combined automatically:</p>
+			<ul>
+				{% for article in duplicate_articles %}
+				<li>{{ article }}</li>
+				{% endfor %}
+			</ul>
+		</div>
+		{% endif %}
 		{% if grouped_results %}
 		<div class="results">
 			<h2>Search Results:</h2>

@@ -40,11 +40,12 @@ class PriceList(db.Model):
     description = db.Column(db.Text, nullable=True)
 
 class Product(db.Model):
+    __tablename__ = 'products'  # Вказуємо правильну назву таблиці
+
     id = db.Column(db.Integer, primary_key=True)
     article = db.Column(db.String(80), nullable=False)
+    table_name = db.Column(db.String(120), nullable=False)
     price = db.Column(db.Float, nullable=False)
-    price_list_id = db.Column(db.Integer, db.ForeignKey('price_list.id'), nullable=False)
-    price_list = db.relationship('PriceList', backref=db.backref('products', lazy=True))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -58,20 +59,10 @@ def home():
 def search():
     query = request.args.get('query')
     results = []
-
-    if not query:
-        return render_template('search.html', query=query, results=results, error="Please provide a search query.")
-
-    try:
-        # Пошук в базі даних
+    if query:
+        # Пошук артикула у всіх таблицях
         results = Product.query.filter(Product.article.ilike(f'%{query}%')).all()
-
-    except Exception as e:
-        # Логування помилки
-        app.logger.error(f"Error during search: {e}")
-        return render_template('search.html', query=query, results=results, error="An error occurred during the search.")
-
-    return render_template('search.html', query=query, results=results, error=None)
+    return render_template('search.html', query=query, results=results)
 
 @app.route('/admin')
 @login_required

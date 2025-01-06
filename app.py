@@ -19,19 +19,13 @@ def get_db_connection():
 # Головна сторінка для пошуку
 @app.route('/')
 def index():
-    grouped_results = session.get('grouped_results', {})
-    quantities = session.get('quantities', {})
-    missing_articles = session.get('missing_articles', [])
-    auto_set_quantities = session.get('auto_set_quantities', [])
-    duplicate_articles = session.get('duplicate_articles', [])
-
     return render_template(
         'index.html',
-        grouped_results=grouped_results,
-        quantities=quantities,
-        missing_articles=missing_articles,
-        auto_set_quantities=auto_set_quantities,
-        duplicate_articles=duplicate_articles
+        grouped_results=session.get('grouped_results', {}),
+        quantities=session.get('quantities', {}),
+        missing_articles=session.get('missing_articles', []),
+        auto_set_quantities=session.get('auto_set_quantities', []),
+        duplicate_articles=session.get('duplicate_articles', [])
     )
 
 # Маршрут для пошуку артикулів
@@ -48,7 +42,7 @@ def search_articles():
 
     for line in articles_input.splitlines():
         parts = line.strip().split()
-        if len(parts) == 1:  # Тільки артикул
+        if len(parts) == 1:
             article = parts[0].strip()
             if article in quantities:
                 quantities[article] += 1
@@ -58,7 +52,7 @@ def search_articles():
                 articles.append(article)
                 quantities[article] = 1
                 auto_set_quantities.append(article)
-        elif len(parts) == 2 and parts[0].strip() and parts[1].isdigit():
+        elif len(parts) == 2 and parts[1].isdigit():
             article, quantity = parts
             if article in quantities:
                 quantities[article] += int(quantity)
@@ -84,15 +78,12 @@ def search_articles():
                 WHERE article = ANY(%s)
             """
             cursor.execute(query, (table_name, articles))
-            rows = cursor.fetchall()
-            results.extend(rows)
+            results.extend(cursor.fetchall())
 
         grouped_results = {}
         for result in results:
             article = result['article']
-            if article not in grouped_results:
-                grouped_results[article] = []
-            grouped_results[article].append({
+            grouped_results.setdefault(article, []).append({
                 'price': result['price'],
                 'table_name': result['table_name']
             })
@@ -113,7 +104,6 @@ def search_articles():
 
     except Exception as e:
         return render_template('index.html', message=f"Error: {str(e)}")
-
     finally:
         cursor.close()
         conn.close()
@@ -141,6 +131,7 @@ def cart():
         cursor.close()
         conn.close()
 
+# Додавання в кошик
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
     try:
@@ -153,47 +144,35 @@ def add_to_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Логування SQL-запиту
-        print(f"Adding to cart: article={article}, price={price}, quantity={quantity}, table_name={table_name}, user_id={user_id}")
-
-        check_query = """
+        cursor.execute("""
             SELECT id FROM cart
             WHERE user_id = %s AND product_id = (
                 SELECT id FROM products WHERE article = %s AND price = %s AND table_name = %s
             )
-        """
-        print("Executing query:", check_query % (user_id, article, price, table_name))
-        cursor.execute(check_query, (user_id, article, price, table_name))
+        """, (user_id, article, price, table_name))
         existing_cart_item = cursor.fetchone()
-        print("Existing cart item:", existing_cart_item)
 
         if existing_cart_item:
-            update_query = """
+            cursor.execute("""
                 UPDATE cart
                 SET quantity = quantity + %s
                 WHERE id = %s
-            """
-            print("Executing query:", update_query % (quantity, existing_cart_item['id']))
-            cursor.execute(update_query, (quantity, existing_cart_item['id']))
+            """, (quantity, existing_cart_item['id']))
         else:
-            insert_query = """
+            cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, (SELECT id FROM products WHERE article = %s AND price = %s AND table_name = %s), %s, NOW())
-            """
-            print("Executing query:", insert_query % (user_id, article, price, table_name, quantity))
-            cursor.execute(insert_query, (user_id, article, price, table_name, quantity))
+            """, (user_id, article, price, table_name, quantity))
         conn.commit()
 
-        print("Successfully added to cart.")
         return redirect(url_for('index'))
     except Exception as e:
-        print("Error in add_to_cart:", e)
         return render_template('index.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
 
-
+# Оновлення кошика
 @app.route('/update_cart', methods=['POST'])
 def update_cart():
     try:
@@ -207,27 +186,23 @@ def update_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        update_query = """
+        cursor.execute("""
             UPDATE cart
             SET quantity = %s
             WHERE user_id = %s AND product_id = (
                 SELECT id FROM products WHERE article = %s
             )
-        """
-        print("Executing query:", update_query % (quantity, user_id, article))
-        cursor.execute(update_query, (quantity, user_id, article))
+        """, (quantity, user_id, article))
         conn.commit()
-        print(f"Updated cart for user_id={user_id} with article={article}, new quantity={quantity}")
 
         return redirect(url_for('cart'))
     except Exception as e:
-        print("Error in update_cart:", e)
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
 
-
+# Видалення товару з кошика
 @app.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart():
     try:
@@ -237,25 +212,22 @@ def remove_from_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        delete_query = """
+        cursor.execute("""
             DELETE FROM cart
             WHERE user_id = %s AND product_id = (
                 SELECT id FROM products WHERE article = %s
             )
-        """
-        print("Executing query:", delete_query % (user_id, article))
-        cursor.execute(delete_query, (user_id, article))
+        """, (user_id, article))
         conn.commit()
-        print(f"Removed article={article} from cart for user_id={user_id}")
 
         return redirect(url_for('cart'))
     except Exception as e:
-        print("Error in remove_from_cart:", e)
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
 
+# Очищення кошика
 @app.route('/clear_cart', methods=['POST'])
 def clear_cart():
     try:
@@ -263,19 +235,17 @@ def clear_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        print(f"Clearing cart for user_id={user_id}")
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
-        print(f"Cart cleared for user_id={user_id}")
 
         return redirect(url_for('cart'))
     except Exception as e:
-        print("Error in clear_cart:", e)
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
 
+# Оформлення замовлення
 @app.route('/place_order', methods=['POST'])
 def place_order():
     try:

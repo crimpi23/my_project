@@ -219,31 +219,80 @@ def update_cart():
         cursor.close()
         conn.close()
 
-@app.route('/remove_from_cart', methods=['POST'])
-def remove_from_cart():
-    try:
-        article = request.form.get('article')
-        user_id = 1
+    @app.route('/remove_from_cart', methods=['POST'])
+    def remove_from_cart():
+        try:
+            article = request.form.get('article')
+            user_id = 1
 
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            # Видаляємо товар із кошика
+            cursor.execute("""
+                DELETE FROM cart
+                WHERE user_id = %s AND product_id = (
+                    SELECT id FROM products WHERE article = %s
+                )
+            """, (user_id, article))
+            conn.commit()
+
+            return redirect(url_for('cart'))  # Повертаємося на кошик
+        except Exception as e:
+            return render_template('cart.html', message=f"Error: {str(e)}")
+        finally:
+            cursor.close()
+            conn.close()
+            
+    @app.route('/clear_cart', methods=['POST'])
+    def clear_cart():
+        try:
+            user_id = 1
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            # Видаляємо всі товари з кошика для даного користувача
+            cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
+            conn.commit()
+
+            return redirect(url_for('cart'))
+        except Exception as e:
+            return render_template('cart.html', message=f"Error: {str(e)}")
+        finally:
+            cursor.close()
+            conn.close()
+
+@app.route('/place_order', methods=['POST'])
+def place_order():
+    try:
+        user_id = 1
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Видаляємо товар із кошика
+        # Створюємо замовлення
+        cursor.execute("INSERT INTO orders (user_id) VALUES (%s) RETURNING id", (user_id,))
+        order_id = cursor.fetchone()[0]
+
+        # Додаємо товари з кошика до деталей замовлення
         cursor.execute("""
-            DELETE FROM cart
-            WHERE user_id = %s AND product_id = (
-                SELECT id FROM products WHERE article = %s
-            )
-        """, (user_id, article))
+            INSERT INTO order_details (order_id, product_id, price, quantity)
+            SELECT %s, c.product_id, p.price, c.quantity
+            FROM cart c
+            JOIN products p ON c.product_id = p.id
+            WHERE c.user_id = %s
+        """, (order_id, user_id))
+
+        # Очищаємо кошик
+        cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
 
-        return redirect(url_for('cart'))  # Повертаємося на кошик
+        return render_template('cart.html', message="Order placed successfully!")
     except Exception as e:
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Порт, визначений середовищем Render
-    app.run(host='0.0.0.0', port=port, debug=True)
+    if __name__ == '__main__':
+        port = int(os.environ.get('PORT', 5000))  # Порт, визначений середовищем Render
+        app.run(host='0.0.0.0', port=port, debug=True)

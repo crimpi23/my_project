@@ -15,35 +15,40 @@
             <button type="submit">Search</button>
         </form>
 
-        {% if results %}
+        {% if grouped_results %}
         <div class="results">
             <h2>Search Results:</h2>
             <table>
                 <thead>
                     <tr>
                         <th>Article</th>
-                        <th>Price</th>
                         <th>Quantity</th>
+                        <th>Price</th>
                         <th>Table</th>
-                        <th>Actions</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for result in results %}
+                    {% for article, details in grouped_results.items() %}
+                    {% for detail in details %}
                     <tr>
-                        <td>{{ result.article }}</td>
-                        <td>{{ result.price }}</td>
-                        <td>{{ quantities[result.article] }}</td>
-                        <td>{{ result.table_name }}</td>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{ details|length }}">{{ article }}</td>
+                        <td rowspan="{{ details|length }}">{{ quantities[article] }}</td>
+                        {% endif %}
+                        <td>{{ detail.price }}</td>
+                        <td>{{ detail.table_name }}</td>
                         <td>
                             <form method="POST" action="/add_to_cart">
-                                <input type="hidden" name="article" value="{{ result.article }}">
-                                <input type="hidden" name="table_name" value="{{ result.table_name }}">
-                                <input type="number" name="quantity" value="{{ quantities[result.article] }}" min="1">
+                                <input type="hidden" name="article" value="{{ article }}">
+                                <input type="hidden" name="price" value="{{ detail.price }}">
+                                <input type="hidden" name="table_name" value="{{ detail.table_name }}">
+                                <input type="number" name="quantity" value="{{ quantities[article] }}" min="1">
                                 <button type="submit">Add to Cart</button>
                             </form>
                         </td>
                     </tr>
+                    {% endfor %}
                     {% endfor %}
                 </tbody>
             </table>

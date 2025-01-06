@@ -58,20 +58,25 @@ def search_articles():
             rows = cursor.fetchall()
             results.extend(rows)
 
-        # Сортуємо результати відповідно до порядку введених артикулів
-        sorted_results = sorted(
-            results,
-            key=lambda x: articles.index(x['article'])
-        )
+        # Групуємо результати за артикулом
+        grouped_results = {}
+        for result in results:
+            article = result['article']
+            if article not in grouped_results:
+                grouped_results[article] = []
+            grouped_results[article].append({
+                'price': result['price'],
+                'table_name': result['table_name']
+            })
 
         # Визначаємо артикули, яких немає в результатах
-        found_articles = {result['article'] for result in results}
+        found_articles = set(grouped_results.keys())
         missing_articles = [article for article in articles if article not in found_articles]
 
-        if sorted_results or missing_articles:
+        if grouped_results or missing_articles:
             return render_template(
                 'index.html',
-                results=sorted_results,
+                grouped_results=grouped_results,
                 quantities=quantities,
                 missing_articles=missing_articles
             )

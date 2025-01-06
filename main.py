@@ -1,11 +1,15 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from models import SessionLocal, User, Product, Order, PriceList
 
 app = FastAPI()
 
 security = HTTPBearer()
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 def get_db():
     db = SessionLocal()
@@ -20,6 +24,16 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     if not user:
         raise HTTPException(status_code=403, detail="Invalid or missing token")
     return user
+
+@app.get("/", response_class=HTMLResponse)
+def read_root():
+    with open("templates/client.html") as f:
+        return f.read()
+
+@app.get("/admin", response_class=HTMLResponse)
+def read_admin():
+    with open("templates/admin.html") as f:
+        return f.read()
 
 @app.post("/orders/", dependencies=[Depends(verify_token)])
 def create_order(user_id: int, product_id: int, quantity: int, db: Session = Depends(get_db)):

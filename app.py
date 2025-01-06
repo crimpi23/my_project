@@ -19,7 +19,20 @@ def get_db_connection():
 # Головна сторінка для пошуку
 @app.route('/')
 def index():
-    return render_template('index.html')
+    grouped_results = session.get('grouped_results', {})
+    quantities = session.get('quantities', {})
+    missing_articles = session.get('missing_articles', [])
+    auto_set_quantities = session.get('auto_set_quantities', [])
+    duplicate_articles = session.get('duplicate_articles', [])
+
+    return render_template(
+        'index.html',
+        grouped_results=grouped_results,
+        quantities=quantities,
+        missing_articles=missing_articles,
+        auto_set_quantities=auto_set_quantities,
+        duplicate_articles=duplicate_articles
+    )
 
 # Маршрут для пошуку артикулів
 @app.route('/search', methods=['POST'])
@@ -115,7 +128,6 @@ def cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримуємо товари в кошику
         cursor.execute("""
             SELECT p.article, p.price, c.quantity, (p.price * c.quantity) AS total_price, p.table_name
             FROM cart c
@@ -125,10 +137,8 @@ def cart():
         cart_items = cursor.fetchall()
 
         return render_template('cart.html', cart_items=cart_items)
-
     except Exception as e:
         return render_template('cart.html', message=f"Error: {str(e)}")
-
     finally:
         cursor.close()
         conn.close()
@@ -209,7 +219,6 @@ def update_cart():
         cursor.close()
         conn.close()
 
-        
 @app.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart():
     try:
@@ -227,6 +236,13 @@ def remove_from_cart():
             )
         """, (user_id, article))
         conn.commit()
+
+        return redirect(url_for('cart'))  # Перенаправляємо на кошик
+    except Exception as e:
+        return render_template('cart.html', message=f"Error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
 
         return redirect(url_for('cart'))  # Повернення на сторінку кошика
     except Exception as e:

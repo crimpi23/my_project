@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Адмінпанель</title>
+</head>
+<body>
+    <h1>Адмінпанель</h1>
+    <nav>
+        <a href="{{ url_for('manage_users') }}">Користувачі</a>
+        <a href="{{ url_for('manage_prices') }}">Прайси</a>
+        <a href="{{ url_for('manage_orders') }}">Замовлення</a>
+        <a href="{{ url_for('admin_logout') }}">Вийти</a>
+    </nav>
+</body>
+</html>

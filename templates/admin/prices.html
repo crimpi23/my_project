@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Керування прайсами</title>
+</head>
+<body>
+    <h1>Керування прайсами</h1>
+    <form method="post">
+        <label>Назва таблиці:</label>
+        <input type="text" name="table_name" required>
+        <button type="submit">Створити таблицю</button>
+    </form>
+    <h2>Список таблиць</h2>
+    <ul>
+        {% for table in tables %}
+        <li>{{ table[0] }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

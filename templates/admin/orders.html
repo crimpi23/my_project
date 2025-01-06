@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Керування замовленнями</title>
+</head>
+<body>
+    <h1>Керування замовленнями</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Користувач</th>
+                <th>Артикул</th>
+                <th>Ціна</th>
+                <th>Кількість</th>
+                <th>Дата створення</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order[0] }}</td>
+                <td>{{ order[1] }}</td>
+                <td>{{ order[2] }}</td>
+                <td>{{ order[3] }} €</td>
+                <td>{{ order[4] }}</td>
+                <td>{{ order[5] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

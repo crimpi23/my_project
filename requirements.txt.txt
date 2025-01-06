@@ -1,0 +1,4 @@
+Flask==2.3.2
+Flask-WTF==1.1.1
+Werkzeug==2.3.2
+psycopg2-binary==2.9.6

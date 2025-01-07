@@ -472,38 +472,43 @@ def orders():
         if conn:
             conn.close()
 
-@app.route('/order_details/<int:order_id>')
+@@app.route('/order_details/<int:order_id>')
 def order_details(order_id):
+    conn = None
+    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         # Отримання деталей замовлення
-        cursor.execute("""
-            SELECT p.article, p.price, od.quantity, od.total_price
+        query = """
+            SELECT od.product_id, p.article, p.price, od.quantity, od.total_price
             FROM order_details od
             JOIN products p ON od.product_id = p.id
             WHERE od.order_id = %s
-        """, (order_id,))
+        """
+        cursor.execute(query, (order_id,))
         order_details = cursor.fetchall()
 
-        # Отримання інформації про замовлення
-        cursor.execute("""
-            SELECT id, total_price, order_date
-            FROM orders
-            WHERE id = %s
-        """, (order_id,))
-        order_info = cursor.fetchone()
+        # Логування отриманих даних
+        if order_details:
+            logging.debug(f"Order details for order_id={order_id}: {order_details}")
+        else:
+            logging.warning(f"No details found for order_id={order_id}")
 
-        return render_template('order_details.html', order_details=order_details, order_info=order_info)
+        return render_template('order_details.html', order_details=order_details, order_id=order_id)
+
     except Exception as e:
-        flash(f"Error loading order details: {str(e)}", "error")
+        logging.error(f"Error fetching order details for order_id={order_id}: {str(e)}", exc_info=True)
+        flash("Error fetching order details. Please try again.", "error")
         return redirect(url_for('orders'))
+
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

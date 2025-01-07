@@ -201,26 +201,30 @@ def add_to_cart():
 @app.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart():
     try:
-        article = request.form.get('article')
-        user_id = 1
+        product_id = request.form.get('product_id')
+        user_id = 1  # Замініть на реальну логіку ідентифікації користувача
+
+        if not product_id:
+            flash("Product ID is missing.", "error")
+            return redirect(url_for('cart'))
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        print(f"Executing remove_from_cart: user_id={user_id}, article={article}")
+        # Видаляємо конкретний товар з кошика
         cursor.execute("""
             DELETE FROM cart
-            WHERE user_id = %s AND product_id = (
-                SELECT id FROM products WHERE article = %s
-            )
-        """, (user_id, article))
+            WHERE user_id = %s AND product_id = %s
+        """, (user_id, product_id))
         conn.commit()
-        print(f"Removed article from cart: user_id={user_id}, article={article}")
 
+        flash("Product removed from cart.", "success")
         return redirect(url_for('cart'))
+
     except Exception as e:
-        print(f"Error in remove_from_cart: {e}")
-        return render_template('cart.html', message=f"Error: {str(e)}")
+        flash(f"Error removing product: {str(e)}", "error")
+        return redirect(url_for('cart'))
+
     finally:
         cursor.close()
         conn.close()

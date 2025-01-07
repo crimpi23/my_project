@@ -91,9 +91,15 @@ def search_articles():
 
         missing_articles = [article for article in articles if article not in grouped_results]
 
+        # Збереження результатів у сесії
         session['grouped_results'] = grouped_results
         session['quantities'] = quantities
         session['missing_articles'] = missing_articles
+
+        # Логування діагностики
+        print("Grouped results:", grouped_results)
+        print("Quantities:", quantities)
+        print("Missing articles:", missing_articles)
 
         flash("Search completed successfully!", "success")
         return redirect(url_for('index'))

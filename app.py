@@ -121,10 +121,10 @@ def cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримання даних для кошика
+        # Отримання товарів у кошику
         cursor.execute("""
             SELECT c.product_id, p.article, p.price, c.quantity, 
-                   (p.price * c.quantity) AS total_price, p.table_name
+                   (p.price * c.quantity) AS total_price
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
@@ -134,7 +134,7 @@ def cart():
         # Розрахунок загальної суми
         total_price = sum(item['total_price'] for item in cart_items)
 
-        # Передаємо дані до шаблону
+        # Повертаємо шаблон із даними
         return render_template('cart.html', cart_items=cart_items, total_price=total_price)
     except Exception as e:
         logging.error(f"Error in cart: {str(e)}")

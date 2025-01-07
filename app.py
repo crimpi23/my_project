@@ -356,7 +356,7 @@ def clear_cart():
 @app.route('/place_order', methods=['POST'])
 def place_order():
     try:
-        user_id = 1
+        user_id = 1  # Замінити на логіку авторизації користувача
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -373,10 +373,10 @@ def place_order():
             flash("Your cart is empty!", "error")
             return redirect(url_for('cart'))
 
-        # Розрахунок загальної суми
+        # Розрахунок загальної суми замовлення
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
 
-        # Вставка в таблицю orders
+        # Вставка замовлення в таблицю orders
         cursor.execute("""
             INSERT INTO orders (user_id, total_price, order_date)
             VALUES (%s, %s, NOW())
@@ -384,12 +384,18 @@ def place_order():
         """, (user_id, total_price))
         order_id = cursor.fetchone()['id']
 
-        # Вставка в таблицю order_details
+        # Додавання деталей замовлення
         for item in cart_items:
             cursor.execute("""
                 INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
                 VALUES (%s, %s, %s, %s, %s)
-            """, (order_id, item['product_id'], item['price'], item['quantity'], item['price'] * item['quantity']))
+            """, (
+                order_id,
+                item['product_id'],
+                item['price'],
+                item['quantity'],
+                item['price'] * item['quantity']
+            ))
 
         # Очищення кошика
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
@@ -397,8 +403,11 @@ def place_order():
 
         flash("Order placed successfully!", "success")
         return redirect(url_for('cart'))
+
     except Exception as e:
-        conn.rollback()
+        if conn:
+            conn.rollback()
+        logging.error(f"Error placing order: {str(e)}")
         flash(f"Error placing order: {str(e)}", "error")
         return redirect(url_for('cart'))
     finally:
@@ -406,7 +415,81 @@ def place_order():
             cursor.close()
         if conn:
             conn.close()
+    
 
+@app.route('/orders', methods=['GET', 'POST'])
+def orders():
+    try:
+        user_id = 1  # Ідентифікатор користувача
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # Пошук за артикулом
+        search_article = request.form.get('search_article') if request.method == 'POST' else None
+
+        if search_article:
+            # Отримання замовлень, які містять певний артикул
+            cursor.execute("""
+                SELECT DISTINCT o.id, o.total_price, o.order_date
+                FROM orders o
+                JOIN order_details od ON o.id = od.order_id
+                JOIN products p ON od.product_id = p.id
+                WHERE o.user_id = %s AND p.article ILIKE %s
+                ORDER BY o.order_date DESC
+            """, (user_id, f"%{search_article}%"))
+        else:
+            # Отримання всіх замовлень користувача
+            cursor.execute("""
+                SELECT id, total_price, order_date
+                FROM orders
+                WHERE user_id = %s
+                ORDER BY order_date DESC
+            """, (user_id,))
+        
+        orders = cursor.fetchall()
+
+        return render_template('orders.html', orders=orders, search_article=search_article)
+    except Exception as e:
+        flash(f"Error loading orders: {str(e)}", "error")
+        return redirect(url_for('index'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+@app.route('/order_details/<int:order_id>')
+def order_details(order_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # Отримання деталей замовлення
+        cursor.execute("""
+            SELECT p.article, p.price, od.quantity, od.total_price
+            FROM order_details od
+            JOIN products p ON od.product_id = p.id
+            WHERE od.order_id = %s
+        """, (order_id,))
+        order_details = cursor.fetchall()
+
+        # Отримання інформації про замовлення
+        cursor.execute("""
+            SELECT id, total_price, order_date
+            FROM orders
+            WHERE id = %s
+        """, (order_id,))
+        order_info = cursor.fetchone()
+
+        return render_template('order_details.html', order_details=order_details, order_info=order_info)
+    except Exception as e:
+        flash(f"Error loading order details: {str(e)}", "error")
+        return redirect(url_for('orders'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

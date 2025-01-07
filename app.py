@@ -16,7 +16,7 @@ import bcrypt
 # Налаштування логування (можна додати у верхній частині файлу)
 logging.basicConfig(level=logging.DEBUG)
 
-app = Flask(name)
+app = Flask(__name__)
 
 # Секретний ключ для сесій
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
@@ -356,7 +356,7 @@ def clear_cart():
 @app.route('/place_order', methods=['POST'])
 def place_order():
     try:
-        user_id = 1  # Замінити на реального користувача
+        user_id = 1  # Заміна на реального користувача
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -373,15 +373,12 @@ def place_order():
             flash("Your cart is empty!", "error")
             return redirect(url_for('cart'))
 
-        # Розрахунок загальної суми
-        total_price = sum(item['price'] * item['quantity'] for item in cart_items)
-
         # Вставка в таблицю orders
         cursor.execute("""
-            INSERT INTO orders (user_id, total_price, order_date)
-            VALUES (%s, %s, NOW())
+            INSERT INTO orders (user_id)
+            VALUES (%s)
             RETURNING id
-        """, (user_id, total_price))
+        """, (user_id,))
         order_id = cursor.fetchone()['id']
 
         # Вставка в таблицю order_details
@@ -399,7 +396,6 @@ def place_order():
         return redirect(url_for('cart'))
     except Exception as e:
         conn.rollback()
-        logging.error("Error placing order: %s", str(e))
         flash(f"Error placing order: {str(e)}", "error")
         return redirect(url_for('cart'))
     finally:
@@ -407,6 +403,7 @@ def place_order():
             cursor.close()
         if conn:
             conn.close()
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

@@ -356,7 +356,7 @@ def clear_cart():
 @app.route('/place_order', methods=['POST'])
 def place_order():
     try:
-        user_id = 1  # Заміна на реального користувача
+        user_id = 1
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -373,12 +373,15 @@ def place_order():
             flash("Your cart is empty!", "error")
             return redirect(url_for('cart'))
 
+        # Розрахунок загальної суми
+        total_price = sum(item['price'] * item['quantity'] for item in cart_items)
+
         # Вставка в таблицю orders
         cursor.execute("""
-            INSERT INTO orders (user_id)
-            VALUES (%s)
+            INSERT INTO orders (user_id, total_price, order_date)
+            VALUES (%s, %s, NOW())
             RETURNING id
-        """, (user_id,))
+        """, (user_id, total_price))
         order_id = cursor.fetchone()['id']
 
         # Вставка в таблицю order_details

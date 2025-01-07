@@ -472,7 +472,7 @@ def orders():
         if conn:
             conn.close()
 
-@@app.route('/order_details/<int:order_id>')
+@app.route('/order_details/<int:order_id>')
 def order_details(order_id):
     conn = None
     cursor = None

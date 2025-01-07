@@ -228,10 +228,11 @@ def remove_from_cart():
     conn = None
     cursor = None
     try:
+        # Отримуємо product_id із запиту
         product_id = request.form.get('product_id')
-        user_id = 1  # Замініть на реальну логіку ідентифікації користувача
+        user_id = 1  # Замінити на логіку авторизації
 
-        logging.debug("Attempting to remove product_id=%s for user_id=%s", product_id, user_id)
+        logging.debug("Received product_id=%s for removal", product_id)
 
         if not product_id:
             flash("Product ID is missing.", "error")
@@ -240,7 +241,7 @@ def remove_from_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Видаляємо конкретний товар з кошика
+        # Видаляємо товар із кошика
         cursor.execute("""
             DELETE FROM cart
             WHERE user_id = %s AND product_id = %s

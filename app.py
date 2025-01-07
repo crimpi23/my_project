@@ -200,6 +200,8 @@ def add_to_cart():
 # Видалення товару з кошика
 @app.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart():
+    conn = None
+    cursor = None
     try:
         product_id = request.form.get('product_id')
         user_id = 1  # Замініть на реальну логіку ідентифікації користувача
@@ -226,8 +228,11 @@ def remove_from_cart():
         return redirect(url_for('cart'))
 
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 
 @app.route('/update_cart', methods=['POST'])
 def update_cart():

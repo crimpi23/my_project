@@ -315,27 +315,33 @@ def clear_cart():
 @app.route('/place_order', methods=['POST'])
 def place_order():
     try:
-        user_id = 1
+        user_id = 1  # Приклад: користувач із ID 1
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("INSERT INTO orders (user_id) VALUES (%s) RETURNING id", (user_id,))
-        order_id = cursor.fetchone()[0]
-
+        # Вставляємо дані з кошика в таблицю orders
         cursor.execute("""
-            INSERT INTO order_details (order_id, product_id, price, quantity)
-            SELECT %s, c.product_id, p.price, c.quantity
+            INSERT INTO orders (user_id, product_id, quantity, total_price, order_date)
+            SELECT 
+                c.user_id,
+                c.product_id,
+                c.quantity,
+                (c.quantity * p.price) AS total_price,
+                NOW()
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
-        """, (order_id, user_id))
+        """, (user_id,))
 
+        # Видаляємо товари з кошика
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
 
-        return render_template('cart.html', message="Order placed successfully!")
+        flash("Order placed successfully!", "success")
+        return redirect(url_for('cart'))
     except Exception as e:
-        return render_template('cart.html', message=f"Error: {str(e)}")
+        flash(f"Error placing order: {str(e)}", "error")
+        return redirect(url_for('cart'))
     finally:
         cursor.close()
         conn.close()

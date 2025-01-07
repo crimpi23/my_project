@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, flash
 import os
 import psycopg2
 import psycopg2.extras
@@ -31,38 +31,39 @@ def index():
 # Маршрут для пошуку артикулів
 @app.route('/search', methods=['POST'])
 def search_articles():
-    articles = []
-    quantities = {}
-    auto_set_quantities = []
-    duplicate_articles = []
-
-    articles_input = request.form.get('articles')
-    if not articles_input:
-        return render_template('index.html', message="Please enter at least one article.")
-
-    for line in articles_input.splitlines():
-        parts = line.strip().split()
-        if len(parts) == 1:
-            article = parts[0].strip()
-            if article in quantities:
-                quantities[article] += 1
-                if article not in duplicate_articles:
-                    duplicate_articles.append(article)
-            else:
-                articles.append(article)
-                quantities[article] = 1
-                auto_set_quantities.append(article)
-        elif len(parts) == 2 and parts[1].isdigit():
-            article, quantity = parts
-            if article in quantities:
-                quantities[article] += int(quantity)
-                if article not in duplicate_articles:
-                    duplicate_articles.append(article)
-            else:
-                articles.append(article)
-                quantities[article] = int(quantity)
-
     try:
+        articles = []
+        quantities = {}
+        auto_set_quantities = []
+        duplicate_articles = []
+
+        articles_input = request.form.get('articles')
+        if not articles_input:
+            flash("Please enter at least one article.", "error")
+            return redirect(url_for('index'))
+
+        for line in articles_input.splitlines():
+            parts = line.strip().split()
+            if len(parts) == 1:
+                article = parts[0].strip()
+                if article in quantities:
+                    quantities[article] += 1
+                    if article not in duplicate_articles:
+                        duplicate_articles.append(article)
+                else:
+                    articles.append(article)
+                    quantities[article] = 1
+                    auto_set_quantities.append(article)
+            elif len(parts) == 2 and parts[1].isdigit():
+                article, quantity = parts
+                if article in quantities:
+                    quantities[article] += int(quantity)
+                    if article not in duplicate_articles:
+                        duplicate_articles.append(article)
+                else:
+                    articles.append(article)
+                    quantities[article] = int(quantity)
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -92,18 +93,14 @@ def search_articles():
 
         session['grouped_results'] = grouped_results
         session['quantities'] = quantities
+        session['missing_articles'] = missing_articles
 
-        return render_template(
-            'index.html',
-            grouped_results=grouped_results,
-            quantities=quantities,
-            missing_articles=missing_articles,
-            auto_set_quantities=auto_set_quantities,
-            duplicate_articles=duplicate_articles
-        )
+        flash("Search completed successfully!", "success")
+        return redirect(url_for('index'))
 
     except Exception as e:
-        return render_template('index.html', message=f"Error: {str(e)}")
+        flash(f"Error: {str(e)}", "error")
+        return redirect(url_for('index'))
     finally:
         cursor.close()
         conn.close()
@@ -126,7 +123,8 @@ def cart():
 
         return render_template('cart.html', cart_items=cart_items)
     except Exception as e:
-        return render_template('cart.html', message=f"Error: {str(e)}")
+        flash(f"Error: {str(e)}", "error")
+        return redirect(url_for('index'))
     finally:
         cursor.close()
         conn.close()
@@ -144,7 +142,6 @@ def add_to_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Перевірка, чи існує продукт
         cursor.execute("""
             SELECT id FROM products
             WHERE article = %s AND price = %s AND table_name = %s
@@ -152,13 +149,11 @@ def add_to_cart():
         product = cursor.fetchone()
 
         if not product:
-            # Якщо продукт не знайдено
-            print(f"Product not found: article={article}, price={price}, table_name={table_name}")
-            return render_template('index.html', message="Product not found in database.")
+            flash("Product not found in database.", "error")
+            return redirect(url_for('index'))
 
         product_id = product['id']
 
-        # Перевіряємо, чи товар уже є в кошику
         cursor.execute("""
             SELECT id FROM cart
             WHERE user_id = %s AND product_id = %s
@@ -166,14 +161,12 @@ def add_to_cart():
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
-            # Оновлюємо кількість
             cursor.execute("""
                 UPDATE cart
                 SET quantity = quantity + %s
                 WHERE id = %s
             """, (quantity, existing_cart_item['id']))
         else:
-            # Додаємо новий товар
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, %s, %s, NOW())
@@ -181,12 +174,11 @@ def add_to_cart():
 
         conn.commit()
 
-        print(f"Successfully added to cart: user_id={user_id}, product_id={product_id}, quantity={quantity}")
-        flash("Product successfully added to cart!", "success")
+        flash("Product added to cart!", "success")
         return redirect(url_for('cart'))
     except Exception as e:
-        print(f"Error in add_to_cart: {e}")
-        return render_template('index.html', message=f"Error: {str(e)}")
+        flash(f"Error: {str(e)}", "error")
+        return redirect(url_for('index'))
     finally:
         cursor.close()
         conn.close()

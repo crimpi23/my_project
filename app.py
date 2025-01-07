@@ -170,15 +170,21 @@ def cart():
         """, (user_id,))
         cart_items = cursor.fetchall()
 
+        # Логування вмісту кошика
+        logging.debug(f"Cart items for user_id={user_id}: {cart_items}")
+        for item in cart_items:
+            logging.debug(
+                f"Cart item: product_id={item['product_id']}, article={item['article']}, "
+                f"price={item['price']}, quantity={item['quantity']}, total_price={item['total_price']}"
+            )
+
         # Розрахунок загальної суми
         total_price = sum(item['total_price'] for item in cart_items)
-
-        logging.debug(f"Cart items: {cart_items}")
-        logging.debug(f"Total price: {total_price}")
+        logging.debug(f"Calculated total_price for cart: {total_price}")
 
         return render_template('cart.html', cart_items=cart_items, total_price=total_price)
     except Exception as e:
-        logging.error(f"Error in cart: {str(e)}")
+        logging.error(f"Error in cart for user_id={user_id}: {str(e)}", exc_info=True)
         flash("Could not load your cart. Please try again.", "error")
         return redirect(url_for('index'))
     finally:
@@ -186,6 +192,8 @@ def cart():
             cursor.close()
         if conn:
             conn.close()
+        logging.debug("Database connection closed.")
+
 
 # Додавання в кошик
 @app.route('/add_to_cart', methods=['POST'])
@@ -410,7 +418,16 @@ def place_order():
 
     except Exception as e:
         conn.rollback()
-        logging.error(
+        logging.error(f"Error placing order for user_id={user_id}: {str(e)}", exc_info=True)
+        flash(f"Error placing order: {str(e)}", "error")
+        return redirect(url_for('cart'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+        logging.debug("Database connection closed.")
+
 
 
 

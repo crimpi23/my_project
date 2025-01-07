@@ -119,9 +119,9 @@ def search_articles():
 @app.route('/cart')
 def cart():
     try:
-        user_id = 1  # Замініть на логіку авторизації користувача
+        user_id = 1
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         # Отримання товарів у кошику
         cursor.execute("""
@@ -136,11 +136,9 @@ def cart():
         # Розрахунок загальної суми
         total_price = sum(item['total_price'] for item in cart_items)
 
-        # Логування даних
         logging.debug(f"Cart items: {cart_items}")
         logging.debug(f"Total price: {total_price}")
 
-        # Повертаємо шаблон із даними
         return render_template('cart.html', cart_items=cart_items, total_price=total_price)
     except Exception as e:
         logging.error(f"Error in cart: {str(e)}")
@@ -151,6 +149,7 @@ def cart():
             cursor.close()
         if conn:
             conn.close()
+
 
 # Додавання в кошик
 @app.route('/add_to_cart', methods=['POST'])

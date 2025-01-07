@@ -29,56 +29,46 @@
                 </div>
             {% endif %}
         {% endwith %}
-
-        {% if cart_items %}
-        <!-- Відображення товарів у кошику -->
-        <table>
-            <thead>
-                <tr>
-                    <th>Article</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Total</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in cart_items %}
-                <tr>
-                    <td>{{ item.article }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>
-                        <form method="POST" action="/update_cart">
-                            <input type="hidden" name="product_id" value="{{ item.product_id }}">
-                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1">
-                            <button type="submit">Update</button>
-                        </form>
-                    </td>
-                    <td>{{ item.total_price }}</td>
-                    <td>
-                        <form method="POST" action="/remove_from_cart">
-                            <input type="hidden" name="product_id" value="{{ item.product_id }}">
-                            <button type="submit" class="remove-button">Remove</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <!-- Відображення загальної суми -->
-        <div class="total-container">
-            <h3>Total: {{ total_price }}</h3>
-        </div>
-
-        <!-- Кнопка оформлення замовлення -->
-        <form method="POST" action="/place_order">
-            <button type="submit" class="place-order-button">Place Order</button>
-        </form>
-        {% else %}
-        <p>Your cart is empty.</p>
-        {% endif %}
-
+		{% if cart_items %}
+		<table>
+			<thead>
+				<tr>
+					<th>Article</th>
+					<th>Price</th>
+					<th>Quantity</th>
+					<th>Total</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for item in cart_items %}
+				<tr>
+					<td>{{ item.article }}</td>
+					<td>{{ item.price }}</td>
+					<td>
+						<form method="POST" action="/update_cart">
+							<input type="hidden" name="product_id" value="{{ item.product_id }}">
+							<input type="number" name="quantity" value="{{ item.quantity }}" min="1">
+							<button type="submit">Update</button>
+						</form>
+					</td>
+					<td>{{ item.total_price }}</td>
+					<td>
+						<form method="POST" action="/remove_from_cart">
+							<input type="hidden" name="product_id" value="{{ item.product_id }}">
+							<button type="submit" class="remove-button">Remove</button>
+						</form>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		<div class="total-container">
+			<h3>Total: {{ total_price }}</h3>
+		</div>
+		{% else %}
+		<p>Your cart is empty.</p>
+		{% endif %}
         <!-- Кнопка повернення до пошуку -->
         <div class="navigation-buttons">
             <button onclick="window.location.href='/'">Back to Search</button>

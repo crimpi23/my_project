@@ -119,6 +119,7 @@ def cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Отримання товарів із кошика
         cursor.execute("""
             SELECT p.article, p.price, c.quantity, (p.price * c.quantity) AS total_price, p.table_name
             FROM cart c
@@ -127,8 +128,18 @@ def cart():
         """, (user_id,))
         cart_items = cursor.fetchall()
 
+        # Логування отриманих даних
+        print("Cart items:", cart_items)
+
+        # Якщо кошик порожній, повертаємо відповідне повідомлення
+        if not cart_items:
+            flash("Your cart is empty.", "info")
+            return render_template('cart.html', cart_items=[])
+
         return render_template('cart.html', cart_items=cart_items)
     except Exception as e:
+        # Логування помилок
+        print(f"Error in cart function: {e}")
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('index'))
     finally:

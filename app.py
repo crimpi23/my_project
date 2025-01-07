@@ -315,19 +315,27 @@ def clear_cart():
 @app.route('/place_order', methods=['POST'])
 def place_order():
     try:
-        user_id = 1  # Приклад: користувач із ID 1
+        user_id = 1  # ID користувача, наприклад, користувач із ID 1
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Додаємо запис до таблиці orders
+        # Крок 1: Вставляємо дані в таблицю orders
         cursor.execute("""
-            INSERT INTO orders (user_id, order_date)
-            VALUES (%s, NOW())
-            RETURNING id
+            INSERT INTO orders (user_id, quantity, total_price, order_date)
+            SELECT 
+                c.user_id,
+                SUM(c.quantity) AS total_quantity,
+                SUM(c.quantity * p.price) AS total_price,
+                NOW() AS order_date
+            FROM cart c
+            JOIN products p ON c.product_id = p.id
+            WHERE c.user_id = %s
+            GROUP BY c.user_id
+            RETURNING id;
         """, (user_id,))
-        order_id = cursor.fetchone()['id']  # Отримуємо ID замовлення
+        order_id = cursor.fetchone()[0]  # Отримуємо ID створеного замовлення
 
-        # Додаємо деталі замовлення до таблиці order_details
+        # Крок 2: Вставляємо дані в таблицю order_details
         cursor.execute("""
             INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
             SELECT 
@@ -338,22 +346,26 @@ def place_order():
                 (c.quantity * p.price) AS total_price
             FROM cart c
             JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = %s
+            WHERE c.user_id = %s;
         """, (order_id, user_id))
 
-        # Видаляємо товари з кошика
+        # Крок 3: Очищуємо кошик
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
+
+        # Фіксуємо транзакцію
         conn.commit()
 
         flash("Order placed successfully!", "success")
         return redirect(url_for('cart'))
     except Exception as e:
+        # Відміняємо транзакцію у разі помилки
+        conn.rollback()
         flash(f"Error placing order: {str(e)}", "error")
         return redirect(url_for('cart'))
     finally:
+        # Закриваємо курсор і з'єднання
         cursor.close()
         conn.close()
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

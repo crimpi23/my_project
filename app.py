@@ -356,7 +356,7 @@ def clear_cart():
 @app.route('/place_order', methods=['POST'])
 def place_order():
     try:
-        user_id = 1  # Замінити на реального користувача
+        user_id = 1  # Замінити на логіку реального користувача
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -371,51 +371,48 @@ def place_order():
 
         if not cart_items:
             flash("Your cart is empty!", "error")
+            logging.error("Cart is empty for user_id=%s", user_id)
             return redirect(url_for('cart'))
+
+        # Логування вмісту кошика
+        logging.debug(f"Cart items for user_id={user_id}: {cart_items}")
+        for item in cart_items:
+            logging.debug(f"Item: product_id={item['product_id']}, price={item['price']}, quantity={item['quantity']}")
 
         # Розрахунок загальної суми
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
+        logging.debug(f"Calculated total_price for order: {total_price}")
 
-        # Вставка в таблицю orders
+        # Вставка замовлення в таблицю orders
         cursor.execute("""
             INSERT INTO orders (user_id, total_price, order_date)
             VALUES (%s, %s, NOW())
             RETURNING id
         """, (user_id, total_price))
         order_id = cursor.fetchone()['id']
+        logging.debug(f"Order created with id={order_id} for user_id={user_id}")
 
-        # Вставка в таблицю order_details
+        # Вставка деталей замовлення
         for item in cart_items:
             cursor.execute("""
                 INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
                 VALUES (%s, %s, %s, %s, %s)
-            """, (
-                order_id,
-                item['product_id'],
-                item['price'],
-                item['quantity'],
-                item['price'] * item['quantity']
-            ))
+            """, (order_id, item['product_id'], item['price'], item['quantity'], item['price'] * item['quantity']))
+            logging.debug(f"Inserted order detail: order_id={order_id}, product_id={item['product_id']}")
 
         # Очищення кошика
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
 
         flash("Order placed successfully!", "success")
+        logging.info(f"Order successfully placed for user_id={user_id}")
         return redirect(url_for('cart'))
 
     except Exception as e:
         conn.rollback()
-        logging.error(f"Error placing order: {e}")
-        flash(f"Error placing order: {e}", "error")
-        return redirect(url_for('cart'))
+        logging.error(
 
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-    
+
 
 @app.route('/orders', methods=['GET', 'POST'])
 def orders():

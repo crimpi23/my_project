@@ -319,15 +319,15 @@ def place_order():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Додаємо замовлення в таблицю orders і отримуємо order_id
+        # Додаємо запис до таблиці orders
         cursor.execute("""
             INSERT INTO orders (user_id, order_date)
             VALUES (%s, NOW())
             RETURNING id
         """, (user_id,))
-        order_id = cursor.fetchone()['id']  # Отримуємо згенерований ID замовлення
+        order_id = cursor.fetchone()['id']  # Отримуємо ID замовлення
 
-        # Додаємо деталі замовлення в order_details
+        # Додаємо деталі замовлення до таблиці order_details
         cursor.execute("""
             INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
             SELECT 

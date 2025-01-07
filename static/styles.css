@@ -177,3 +177,27 @@ header nav ul li a:hover {
 .place-order-button:hover {
     background-color: #218838;
 }
+.place-order-button, .remove-button {
+    background-color: #4CAF50; /* Зелений */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.remove-button {
+    background-color: #f44336; /* Червоний */
+}
+
+.place-order-button:hover, .remove-button:hover {
+    opacity: 0.9;
+}
+.total-container {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    text-align: right;
+}

@@ -117,11 +117,11 @@ def search_articles():
 @app.route('/cart')
 def cart():
     try:
-        user_id = 1  # Замінити на логіку авторизації
+        user_id = 1  # Замініть на логіку авторизації користувача
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Оновлений SQL-запит для отримання даних кошика
+        # Отримання даних для кошика
         cursor.execute("""
             SELECT c.product_id, p.article, p.price, c.quantity, 
                    (p.price * c.quantity) AS total_price, p.table_name
@@ -131,14 +131,13 @@ def cart():
         """, (user_id,))
         cart_items = cursor.fetchall()
 
-        # Логування для перевірки отриманих даних
-        logging.debug("Cart items: %s", cart_items)
+        # Розрахунок загальної суми
+        total_price = sum(item['total_price'] for item in cart_items)
 
         # Передаємо дані до шаблону
-        return render_template('cart.html', cart_items=cart_items)
+        return render_template('cart.html', cart_items=cart_items, total_price=total_price)
     except Exception as e:
-        # Логуємо помилку, якщо вона виникає
-        logging.error("Error in cart function: %s", str(e))
+        logging.error(f"Error in cart: {str(e)}")
         flash("Could not load your cart. Please try again.", "error")
         return redirect(url_for('index'))
     finally:
@@ -146,7 +145,6 @@ def cart():
             cursor.close()
         if conn:
             conn.close()
-        logging.debug("Database connection closed.")
 
 # Додавання в кошик
 @app.route('/add_to_cart', methods=['POST'])

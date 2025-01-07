@@ -356,11 +356,11 @@ def clear_cart():
 @app.route('/place_order', methods=['POST'])
 def place_order():
     try:
-        user_id = 1  # Фіксований user_id
+        user_id = 1  # Замінити на реального користувача
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримуємо товари з кошика
+        # Отримання товарів із кошика
         cursor.execute("""
             SELECT c.product_id, p.price, c.quantity
             FROM cart c
@@ -373,10 +373,10 @@ def place_order():
             flash("Your cart is empty!", "error")
             return redirect(url_for('cart'))
 
-        # Розрахунок загальної суми замовлення
+        # Розрахунок загальної суми
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
 
-        # Створюємо запис у таблиці orders
+        # Вставка в таблицю orders
         cursor.execute("""
             INSERT INTO orders (user_id, total_price, order_date)
             VALUES (%s, %s, NOW())
@@ -384,13 +384,12 @@ def place_order():
         """, (user_id, total_price))
         order_id = cursor.fetchone()['id']
 
-        # Додаємо деталі замовлення
-        order_details_query = """
-            INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
-            VALUES (%s, %s, %s, %s, %s)
-        """
+        # Вставка в таблицю order_details
         for item in cart_items:
-            cursor.execute(order_details_query, (
+            cursor.execute("""
+                INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
                 order_id,
                 item['product_id'],
                 item['price'],
@@ -398,7 +397,7 @@ def place_order():
                 item['price'] * item['quantity']
             ))
 
-        # Очищуємо кошик
+        # Очищення кошика
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
 
@@ -408,8 +407,9 @@ def place_order():
     except Exception as e:
         conn.rollback()
         logging.error(f"Error placing order: {e}")
-        flash(f"Error placing order: {str(e)}", "error")
+        flash(f"Error placing order: {e}", "error")
         return redirect(url_for('cart'))
+
     finally:
         if cursor:
             cursor.close()

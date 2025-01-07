@@ -3,6 +3,7 @@ import os
 import psycopg2
 import psycopg2.extras
 import logging
+import bcrypt
 
 # Налаштування логування (можна додати у верхній частині файлу)
 logging.basicConfig(level=logging.DEBUG)
@@ -19,6 +20,33 @@ def get_db_connection():
         sslmode="require",
         cursor_factory=psycopg2.extras.DictCursor
     )
+
+#створення користувача
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        username = request.form.get('username')
+        password = request.form.get('password')
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO users (username, password_hash) VALUES (%s, %s)
+        """, (username, hashed_password.decode('utf-8')))
+        conn.commit()
+
+        flash("Registration successful!", "success")
+        return redirect(url_for('index'))
+    except Exception as e:
+        flash(f"Error during registration: {str(e)}", "error")
+        return redirect(url_for('index'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 
 # Головна сторінка для пошуку
 @app.route('/')
@@ -315,38 +343,40 @@ def clear_cart():
 @app.route('/place_order', methods=['POST'])
 def place_order():
     try:
-        user_id = 1  # ID користувача
+        user_id = 1  # Замінити на реального користувача
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Вставляємо дані в таблицю orders
+        # Отримання товарів із кошика
         cursor.execute("""
-            INSERT INTO orders (user_id, total_price, order_date)
-            SELECT 
-                c.user_id,
-                SUM(c.quantity * p.price) AS total_price,
-                NOW()
+            SELECT c.product_id, p.price, c.quantity
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
-            GROUP BY c.user_id
-            RETURNING id
         """, (user_id,))
-        order_id = cursor.fetchone()[0]
+        cart_items = cursor.fetchall()
 
-        # Вставляємо дані в таблицю order_details
+        if not cart_items:
+            flash("Your cart is empty!", "error")
+            return redirect(url_for('cart'))
+
+        # Розрахунок загальної суми
+        total_price = sum(item['price'] * item['quantity'] for item in cart_items)
+
+        # Вставка в таблицю orders
         cursor.execute("""
-            INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
-            SELECT 
-                %s AS order_id,
-                c.product_id,
-                p.price,
-                c.quantity,
-                c.quantity * p.price AS total_price
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = %s
-        """, (order_id, user_id))
+            INSERT INTO orders (user_id, total_price)
+            VALUES (%s, %s)
+            RETURNING id
+        """, (user_id, total_price))
+        order_id = cursor.fetchone()['id']
+
+        # Вставка в таблицю order_details
+        for item in cart_items:
+            cursor.execute("""
+                INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (order_id, item['product_id'], item['price'], item['quantity'], item['price'] * item['quantity']))
 
         # Очищення кошика
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
@@ -355,11 +385,15 @@ def place_order():
         flash("Order placed successfully!", "success")
         return redirect(url_for('cart'))
     except Exception as e:
+        conn.rollback()
         flash(f"Error placing order: {str(e)}", "error")
         return redirect(url_for('cart'))
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 
 
 if __name__ == '__main__':

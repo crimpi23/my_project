@@ -222,7 +222,6 @@ def add_to_cart():
             conn.close()
         logging.debug("Database connection closed.")
 
-
 # Видалення товару з кошика
 @app.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart():
@@ -231,6 +230,8 @@ def remove_from_cart():
     try:
         product_id = request.form.get('product_id')
         user_id = 1  # Замініть на реальну логіку ідентифікації користувача
+
+        logging.debug("Attempting to remove product_id=%s for user_id=%s", product_id, user_id)
 
         if not product_id:
             flash("Product ID is missing.", "error")
@@ -246,10 +247,12 @@ def remove_from_cart():
         """, (user_id, product_id))
         conn.commit()
 
+        logging.info("Product removed: product_id=%s, user_id=%s", product_id, user_id)
         flash("Product removed from cart.", "success")
         return redirect(url_for('cart'))
 
     except Exception as e:
+        logging.error("Error removing product: %s", str(e), exc_info=True)
         flash(f"Error removing product: {str(e)}", "error")
         return redirect(url_for('cart'))
 
@@ -258,7 +261,7 @@ def remove_from_cart():
             cursor.close()
         if conn:
             conn.close()
-
+        logging.debug("Database connection closed.")
 
 @app.route('/update_cart', methods=['POST'])
 def update_cart():

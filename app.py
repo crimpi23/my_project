@@ -356,11 +356,11 @@ def clear_cart():
 @app.route('/place_order', methods=['POST'])
 def place_order():
     try:
-        user_id = 1  # Замінити на логіку авторизації користувача
+        user_id = 1  # Фіксований user_id
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримання товарів із кошика
+        # Отримуємо товари з кошика
         cursor.execute("""
             SELECT c.product_id, p.price, c.quantity
             FROM cart c
@@ -376,7 +376,7 @@ def place_order():
         # Розрахунок загальної суми замовлення
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
 
-        # Вставка замовлення в таблицю orders
+        # Створюємо запис у таблиці orders
         cursor.execute("""
             INSERT INTO orders (user_id, total_price, order_date)
             VALUES (%s, %s, NOW())
@@ -384,12 +384,13 @@ def place_order():
         """, (user_id, total_price))
         order_id = cursor.fetchone()['id']
 
-        # Додавання деталей замовлення
+        # Додаємо деталі замовлення
+        order_details_query = """
+            INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
+            VALUES (%s, %s, %s, %s, %s)
+        """
         for item in cart_items:
-            cursor.execute("""
-                INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (
+            cursor.execute(order_details_query, (
                 order_id,
                 item['product_id'],
                 item['price'],
@@ -397,7 +398,7 @@ def place_order():
                 item['price'] * item['quantity']
             ))
 
-        # Очищення кошика
+        # Очищуємо кошик
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
 
@@ -405,9 +406,8 @@ def place_order():
         return redirect(url_for('cart'))
 
     except Exception as e:
-        if conn:
-            conn.rollback()
-        logging.error(f"Error placing order: {str(e)}")
+        conn.rollback()
+        logging.error(f"Error placing order: {e}")
         flash(f"Error placing order: {str(e)}", "error")
         return redirect(url_for('cart'))
     finally:

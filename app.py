@@ -117,32 +117,36 @@ def search_articles():
 @app.route('/cart')
 def cart():
     try:
-        user_id = 1
+        user_id = 1  # Замінити на логіку авторизації
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримуємо товари з кошика
+        # Оновлений SQL-запит для отримання даних кошика
         cursor.execute("""
-            SELECT p.article, p.price, c.quantity, (p.price * c.quantity) AS total_price, p.table_name
+            SELECT c.product_id, p.article, p.price, c.quantity, 
+                   (p.price * c.quantity) AS total_price, p.table_name
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
         """, (user_id,))
         cart_items = cursor.fetchall()
 
-        # Логування даних
-        print("Fetched cart items:", cart_items)
+        # Логування для перевірки отриманих даних
+        logging.debug("Cart items: %s", cart_items)
 
         # Передаємо дані до шаблону
         return render_template('cart.html', cart_items=cart_items)
     except Exception as e:
-        # Логуємо помилку
-        print(f"Error in cart function: {e}")
+        # Логуємо помилку, якщо вона виникає
+        logging.error("Error in cart function: %s", str(e))
         flash("Could not load your cart. Please try again.", "error")
         return redirect(url_for('index'))
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+        logging.debug("Database connection closed.")
 
 # Додавання в кошик
 @app.route('/add_to_cart', methods=['POST'])

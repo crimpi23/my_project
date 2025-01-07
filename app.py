@@ -144,60 +144,107 @@ def add_to_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Перевірка, чи існує продукт
+        cursor.execute("""
+            SELECT id FROM products
+            WHERE article = %s AND price = %s AND table_name = %s
+        """, (article, price, table_name))
+        product = cursor.fetchone()
+
+        if not product:
+            # Якщо продукт не знайдено
+            print(f"Product not found: article={article}, price={price}, table_name={table_name}")
+            return render_template('index.html', message="Product not found in database.")
+
+        product_id = product['id']
+
+        # Перевіряємо, чи товар уже є в кошику
         cursor.execute("""
             SELECT id FROM cart
-            WHERE user_id = %s AND product_id = (
-                SELECT id FROM products WHERE article = %s AND price = %s AND table_name = %s
-            )
-        """, (user_id, article, price, table_name))
+            WHERE user_id = %s AND product_id = %s
+        """, (user_id, product_id))
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
+            # Оновлюємо кількість
             cursor.execute("""
                 UPDATE cart
                 SET quantity = quantity + %s
                 WHERE id = %s
             """, (quantity, existing_cart_item['id']))
         else:
+            # Додаємо новий товар
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
-                VALUES (%s, (SELECT id FROM products WHERE article = %s AND price = %s AND table_name = %s), %s, NOW())
-            """, (user_id, article, price, table_name, quantity))
+                VALUES (%s, %s, %s, NOW())
+            """, (user_id, product_id, quantity))
+
         conn.commit()
 
+        print(f"Successfully added to cart: user_id={user_id}, product_id={product_id}, quantity={quantity}")
         return redirect(url_for('index'))
     except Exception as e:
+        print(f"Error in add_to_cart: {e}")
         return render_template('index.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
 
 # Оновлення кошика
-@app.route('/update_cart', methods=['POST'])
-def update_cart():
+@app.route('/add_to_cart', methods=['POST'])
+def add_to_cart():
     try:
         article = request.form.get('article')
+        price = float(request.form.get('price'))
         quantity = int(request.form.get('quantity'))
+        table_name = request.form.get('table_name')
         user_id = 1
-
-        if quantity <= 0:
-            return redirect(url_for('remove_from_cart'))
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Перевірка, чи існує продукт
         cursor.execute("""
-            UPDATE cart
-            SET quantity = %s
-            WHERE user_id = %s AND product_id = (
-                SELECT id FROM products WHERE article = %s
-            )
-        """, (quantity, user_id, article))
+            SELECT id FROM products
+            WHERE article = %s AND price = %s AND table_name = %s
+        """, (article, price, table_name))
+        product = cursor.fetchone()
+
+        if not product:
+            # Якщо продукт не знайдено
+            print(f"Product not found: article={article}, price={price}, table_name={table_name}")
+            return render_template('index.html', message="Product not found in database.")
+
+        product_id = product['id']
+
+        # Перевіряємо, чи товар уже є в кошику
+        cursor.execute("""
+            SELECT id FROM cart
+            WHERE user_id = %s AND product_id = %s
+        """, (user_id, product_id))
+        existing_cart_item = cursor.fetchone()
+
+        if existing_cart_item:
+            # Оновлюємо кількість
+            cursor.execute("""
+                UPDATE cart
+                SET quantity = quantity + %s
+                WHERE id = %s
+            """, (quantity, existing_cart_item['id']))
+        else:
+            # Додаємо новий товар
+            cursor.execute("""
+                INSERT INTO cart (user_id, product_id, quantity, added_at)
+                VALUES (%s, %s, %s, NOW())
+            """, (user_id, product_id, quantity))
+
         conn.commit()
 
-        return redirect(url_for('cart'))
+        print(f"Successfully added to cart: user_id={user_id}, product_id={product_id}, quantity={quantity}")
+        return redirect(url_for('index'))
     except Exception as e:
-        return render_template('cart.html', message=f"Error: {str(e)}")
+        print(f"Error in add_to_cart: {e}")
+        return render_template('index.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()
         conn.close()
@@ -212,6 +259,7 @@ def remove_from_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        print(f"Executing remove_from_cart: user_id={user_id}, article={article}")
         cursor.execute("""
             DELETE FROM cart
             WHERE user_id = %s AND product_id = (
@@ -219,9 +267,11 @@ def remove_from_cart():
             )
         """, (user_id, article))
         conn.commit()
+        print(f"Removed article from cart: user_id={user_id}, article={article}")
 
         return redirect(url_for('cart'))
     except Exception as e:
+        print(f"Error in remove_from_cart: {e}")
         return render_template('cart.html', message=f"Error: {str(e)}")
     finally:
         cursor.close()

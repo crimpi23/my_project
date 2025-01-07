@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, session, redirect, url_for, f
 import os
 import psycopg2
 import psycopg2.extras
+import logging
+
 
 app = Flask(__name__)
 
@@ -151,7 +153,7 @@ def add_to_cart():
         price = float(request.form.get('price'))
         quantity = int(request.form.get('quantity'))
         table_name = request.form.get('table_name')
-        user_id = 1  # Заміна на реального користувача при потребі
+        user_id = 1  # Замінити на логіку реального користувача
 
         logging.debug("Received data: article=%s, price=%s, quantity=%s, table_name=%s, user_id=%s",
                       article, price, quantity, table_name, user_id)
@@ -167,7 +169,6 @@ def add_to_cart():
         product = cursor.fetchone()
 
         if not product:
-            # Логування створення товару
             logging.info("Product not found. Creating a new product: article=%s, table_name=%s, price=%s",
                          article, table_name, price)
 
@@ -191,7 +192,6 @@ def add_to_cart():
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
-            # Оновлюємо кількість товару в кошику
             logging.info("Updating quantity for product in cart: product_id=%s, current_quantity=%s",
                          product_id, quantity)
             cursor.execute("""
@@ -200,14 +200,12 @@ def add_to_cart():
                 WHERE id = %s
             """, (quantity, existing_cart_item['id']))
         else:
-            # Додаємо товар у кошик
             logging.info("Adding new product to cart: product_id=%s, quantity=%s", product_id, quantity)
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, %s, %s, NOW())
             """, (user_id, product_id, quantity))
 
-        # Підтверджуємо зміни
         conn.commit()
         logging.info("Changes committed to the database.")
 
@@ -218,11 +216,12 @@ def add_to_cart():
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('index'))
     finally:
-        if cursor:
+        if 'cursor' in locals() and cursor:
             cursor.close()
-        if conn:
+        if 'conn' in locals() and conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 # Видалення товару з кошика
 @app.route('/remove_from_cart', methods=['POST'])

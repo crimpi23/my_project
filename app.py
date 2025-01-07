@@ -319,19 +319,27 @@ def place_order():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Вставляємо дані з кошика в таблицю orders
+        # Додаємо замовлення в таблицю orders і отримуємо order_id
         cursor.execute("""
-            INSERT INTO orders (user_id, product_id, quantity, total_price, order_date)
+            INSERT INTO orders (user_id, order_date)
+            VALUES (%s, NOW())
+            RETURNING id
+        """, (user_id,))
+        order_id = cursor.fetchone()['id']  # Отримуємо згенерований ID замовлення
+
+        # Додаємо деталі замовлення в order_details
+        cursor.execute("""
+            INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
             SELECT 
-                c.user_id,
+                %s AS order_id,
                 c.product_id,
+                p.price,
                 c.quantity,
-                (c.quantity * p.price) AS total_price,
-                NOW()
+                (c.quantity * p.price) AS total_price
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
-        """, (user_id,))
+        """, (order_id, user_id))
 
         # Видаляємо товари з кошика
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))

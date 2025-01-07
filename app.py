@@ -329,6 +329,7 @@ def place_order():
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
+            GROUP BY c.user_id
             RETURNING id
         """, (user_id,))
         order_id = cursor.fetchone()[0]

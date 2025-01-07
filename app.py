@@ -4,6 +4,8 @@ import psycopg2
 import psycopg2.extras
 import logging
 
+# Налаштування логування (можна додати у верхній частині файлу)
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 
@@ -133,6 +135,10 @@ def cart():
 
         # Розрахунок загальної суми
         total_price = sum(item['total_price'] for item in cart_items)
+
+        # Логування даних
+        logging.debug(f"Cart items: {cart_items}")
+        logging.debug(f"Total price: {total_price}")
 
         # Повертаємо шаблон із даними
         return render_template('cart.html', cart_items=cart_items, total_price=total_price)

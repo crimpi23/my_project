@@ -37,7 +37,7 @@
                     <td>{{ item.price }}</td>
                     <td>
                         <form method="POST" action="/update_cart">
-                            <input type="hidden" name="article" value="{{ item.article }}">
+                            <input type="hidden" name="product_id" value="{{ item.product_id }}">
                             <input type="number" name="quantity" value="{{ item.quantity }}" min="1">
                             <button type="submit" class="update-button">
                                 <i class="fas fa-edit"></i> Update
@@ -47,7 +47,7 @@
                     <td>{{ item.total_price }}</td>
                     <td>
                         <form method="POST" action="/remove_from_cart">
-                            <input type="hidden" name="article" value="{{ item.article }}">
+                            <input type="hidden" name="product_id" value="{{ item.product_id }}">
                             <button type="submit" class="remove-button">
                                 <i class="fas fa-trash"></i> Remove
                             </button>

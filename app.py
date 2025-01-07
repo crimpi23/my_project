@@ -228,7 +228,6 @@ def remove_from_cart():
     conn = None
     cursor = None
     try:
-        # Отримуємо product_id із запиту
         product_id = request.form.get('product_id')
         user_id = 1  # Замінити на логіку авторизації
 
@@ -241,7 +240,6 @@ def remove_from_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Видаляємо товар із кошика
         cursor.execute("""
             DELETE FROM cart
             WHERE user_id = %s AND product_id = %s
@@ -253,7 +251,7 @@ def remove_from_cart():
         return redirect(url_for('cart'))
 
     except Exception as e:
-        logging.error("Error removing product: %s", str(e), exc_info=True)
+        logging.error("Error in remove_from_cart: %s", str(e), exc_info=True)
         flash(f"Error removing product: {str(e)}", "error")
         return redirect(url_for('cart'))
 

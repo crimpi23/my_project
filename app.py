@@ -229,8 +229,9 @@ def remove_from_cart():
     cursor = None
     try:
         product_id = request.form.get('product_id')
-        user_id = 1  # Замінити на логіку авторизації
+        user_id = 1  # Замініть на реальну логіку авторизації
 
+        # Логування отриманого product_id
         logging.debug("Received product_id=%s for removal", product_id)
 
         if not product_id:

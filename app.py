@@ -119,7 +119,7 @@ def cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримання товарів із кошика
+        # Отримуємо товари з кошика
         cursor.execute("""
             SELECT p.article, p.price, c.quantity, (p.price * c.quantity) AS total_price, p.table_name
             FROM cart c
@@ -128,23 +128,20 @@ def cart():
         """, (user_id,))
         cart_items = cursor.fetchall()
 
-        # Логування отриманих даних
-        print("Cart items:", cart_items)
+        # Логування даних
+        print("Fetched cart items:", cart_items)
 
-        # Якщо кошик порожній, повертаємо відповідне повідомлення
-        if not cart_items:
-            flash("Your cart is empty.", "info")
-            return render_template('cart.html', cart_items=[])
-
+        # Передаємо дані до шаблону
         return render_template('cart.html', cart_items=cart_items)
     except Exception as e:
-        # Логування помилок
+        # Логуємо помилку
         print(f"Error in cart function: {e}")
-        flash(f"Error: {str(e)}", "error")
+        flash("Could not load your cart. Please try again.", "error")
         return redirect(url_for('index'))
     finally:
         cursor.close()
         conn.close()
+
 
 # Додавання в кошик
 @app.route('/add_to_cart', methods=['POST'])

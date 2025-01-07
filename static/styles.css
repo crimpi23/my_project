@@ -23,7 +23,8 @@ h1 {
     color: #007BFF;
 }
 
-textarea {
+/* Поля вводу */
+textarea, .quantity-input {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
@@ -32,25 +33,67 @@ textarea {
     font-size: 14px;
 }
 
+.quantity-input {
+    width: 60px;
+    margin-right: 5px;
+}
+
+/* Кнопки */
 button {
-    padding: 10px;
+    padding: 10px 15px;
     font-size: 14px;
-    background-color: #007BFF;
-    color: #fff;
+    color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #0056b3;
+    opacity: 0.9;
 }
 
-/* Таблиця */
+.clear-cart-button {
+    background-color: #dc3545;
+}
+
+.clear-cart-button:hover {
+    background-color: #c82333;
+}
+
+.place-order-button {
+    background-color: #28a745;
+}
+
+.place-order-button:hover {
+    background-color: #218838;
+}
+
+.remove-button {
+    background-color: #f44336;
+}
+
+.remove-button:hover {
+    background-color: #d32f2f;
+}
+
+.cart-button {
+    background-color: #28a745;
+}
+
+.cart-button:hover {
+    background-color: #218838;
+}
+
+.cart-button i {
+    font-size: 16px;
+}
+
+/* Таблиці */
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 th, td {
@@ -65,64 +108,25 @@ th {
     font-weight: bold;
 }
 
-.article-cell {
-    font-weight: bold;
-    text-align: center;
-    vertical-align: middle;
-    background-color: #f8f9fa;
-}
-
-/* Поле кількості та кнопка */
-.quantity-input {
-    width: 60px;
-    padding: 5px;
-    margin-right: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.cart-button {
-    padding: 5px 8px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.cart-button:hover {
-    background-color: #218838;
-}
-
-.cart-button i {
-    font-size: 16px;
-}
-
-.cart-form {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 /* Повідомлення */
 .info-message, .warning-message {
     background-color: #f9f9f9;
     border: 1px solid #ddd;
     font-size: 12px;
-    padding: 5px 10px;
+    padding: 10px;
     margin-bottom: 10px;
     border-radius: 4px;
     color: #666;
+}
+
+.info-message p, .warning-message p {
+    margin: 0;
 }
 
 .info-message ul, .warning-message ul {
     margin: 0;
     padding-left: 20px;
     list-style: disc;
-}
-
-.info-message p, .warning-message p {
-    margin: 0 0 10px;
 }
 
 /* Хедер */
@@ -152,96 +156,11 @@ header nav ul li a {
 header nav ul li a:hover {
     text-decoration: underline;
 }
-.clear-cart-button {
-    padding: 10px;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
 
-.clear-cart-button:hover {
-    background-color: #c82333;
-}
-
-.place-order-button {
-    padding: 10px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.place-order-button:hover {
-    background-color: #218838;
-}
-.place-order-button, .remove-button {
-    background-color: #4CAF50; /* Зелений */
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 16px;
-}
-
-.remove-button {
-    background-color: #f44336; /* Червоний */
-}
-
-.place-order-button:hover, .remove-button:hover {
-    opacity: 0.9;
-}
-.total-container {
-    margin-top: 20px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    text-align: right;
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-th {
-    background-color: #f4f4f4;
-    font-weight: bold;
-}
-
+/* Додаткові стилі */
 .total-container {
     text-align: right;
-    margin-top: 20px;
     font-size: 18px;
     font-weight: bold;
-}
-
-button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-.remove-button {
-    background-color: #f44336;
-}
-
-.remove-button:hover {
-    background-color: #d32f2f;
+    margin-top: 20px;
 }

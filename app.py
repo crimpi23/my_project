@@ -5,10 +5,18 @@ import psycopg2.extras
 import logging
 import bcrypt
 
+
+import logging
+from flask import Flask, render_template, request, session, redirect, url_for, flash
+import os
+import psycopg2
+import psycopg2.extras
+import bcrypt
+
 # Налаштування логування (можна додати у верхній частині файлу)
 logging.basicConfig(level=logging.DEBUG)
 
-app = Flask(__name__)
+app = Flask(name)
 
 # Секретний ключ для сесій
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
@@ -21,7 +29,7 @@ def get_db_connection():
         cursor_factory=psycopg2.extras.DictCursor
     )
 
-#створення користувача
+# Створення користувача
 @app.route('/register', methods=['POST'])
 def register():
     try:
@@ -120,8 +128,7 @@ def search_articles():
                 'price': result['price'],
                 'table_name': result['table_name']
             })
-
-        missing_articles = [article for article in articles if article not in grouped_results]
+            missing_articles = [article for article in articles if article not in grouped_results]
 
         # Збереження результатів у сесії
         session['grouped_results'] = grouped_results
@@ -129,31 +136,33 @@ def search_articles():
         session['missing_articles'] = missing_articles
 
         # Логування діагностики
-        print("Grouped results:", grouped_results)
-        print("Quantities:", quantities)
-        print("Missing articles:", missing_articles)
+        logging.debug("Grouped results: %s", grouped_results)
+        logging.debug("Quantities: %s", quantities)
+        logging.debug("Missing articles: %s", missing_articles)
 
         flash("Search completed successfully!", "success")
         return redirect(url_for('index'))
 
     except Exception as e:
+        logging.error("Error in search_articles: %s", str(e))
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('index'))
     finally:
-        cursor.close()
-        conn.close()
-
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 # Сторінка кошика
 @app.route('/cart')
 def cart():
     try:
-        user_id = 1
+        user_id = 1  # Замінити на логіку реального користувача
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         # Отримання товарів у кошику
         cursor.execute("""
-            SELECT c.product_id, p.article, p.price, c.quantity, 
+            SELECT c.product_id, p.article, p.price, c.quantity,
                    (p.price * c.quantity) AS total_price
             FROM cart c
             JOIN products p ON c.product_id = p.id
@@ -178,7 +187,6 @@ def cart():
         if conn:
             conn.close()
 
-
 # Додавання в кошик
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
@@ -192,11 +200,11 @@ def add_to_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Перевіряємо, чи існує товар у products
+        # Перевірка існування товару в таблиці products
         cursor.execute("""
             SELECT id FROM products
-            WHERE article = %s AND price = %s AND table_name = %s
-        """, (article, price, table_name))
+            WHERE article = %s AND table_name = %s
+        """, (article, table_name))
         product = cursor.fetchone()
 
         if not product:
@@ -209,7 +217,7 @@ def add_to_cart():
         else:
             product_id = product['id']
 
-        # Перевіряємо, чи є товар у кошику
+        # Перевірка наявності товару в кошику
         cursor.execute("""
             SELECT id FROM cart
             WHERE user_id = %s AND product_id = %s
@@ -242,8 +250,7 @@ def add_to_cart():
             cursor.close()
         if conn:
             conn.close()
-
-
+            
 # Видалення товару з кошика
 @app.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart():
@@ -251,9 +258,8 @@ def remove_from_cart():
     cursor = None
     try:
         product_id = request.form.get('product_id')
-        user_id = 1  # Замініть на реальну логіку авторизації
+        user_id = 1  # Замінити на логіку реального користувача
 
-        # Логування отриманого product_id
         logging.debug("Received product_id=%s for removal", product_id)
 
         if not product_id:
@@ -283,8 +289,9 @@ def remove_from_cart():
             cursor.close()
         if conn:
             conn.close()
-        logging.debug("Database connection closed.")
 
+
+# Оновлення товару в кошику
 @app.route('/update_cart', methods=['POST'])
 def update_cart():
     try:
@@ -299,7 +306,6 @@ def update_cart():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Оновлюємо кількість товару в кошику
         cursor.execute("""
             UPDATE cart
             SET quantity = %s
@@ -321,6 +327,7 @@ def update_cart():
         if conn:
             conn.close()
 
+
 # Очищення кошика
 @app.route('/clear_cart', methods=['POST'])
 def clear_cart():
@@ -332,12 +339,18 @@ def clear_cart():
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
 
+        flash("Cart cleared successfully!", "success")
         return redirect(url_for('cart'))
     except Exception as e:
-        return render_template('cart.html', message=f"Error: {str(e)}")
+        logging.error("Error clearing cart: %s", str(e))
+        flash("Error clearing cart.", "error")
+        return redirect(url_for('cart'))
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 
 # Оформлення замовлення
 @app.route('/place_order', methods=['POST'])
@@ -365,8 +378,8 @@ def place_order():
 
         # Вставка в таблицю orders
         cursor.execute("""
-            INSERT INTO orders (user_id, total_price)
-            VALUES (%s, %s)
+            INSERT INTO orders (user_id, total_price, order_date)
+            VALUES (%s, %s, NOW())
             RETURNING id
         """, (user_id, total_price))
         order_id = cursor.fetchone()['id']
@@ -386,6 +399,7 @@ def place_order():
         return redirect(url_for('cart'))
     except Exception as e:
         conn.rollback()
+        logging.error("Error placing order: %s", str(e))
         flash(f"Error placing order: {str(e)}", "error")
         return redirect(url_for('cart'))
     finally:
@@ -393,8 +407,6 @@ def place_order():
             cursor.close()
         if conn:
             conn.close()
-
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

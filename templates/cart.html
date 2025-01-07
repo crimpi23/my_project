@@ -19,7 +19,7 @@
     <div class="container">
         <h1>Your Cart</h1>
 
-        <!-- Відображення Flash-повідомлень -->
+        <!-- Відображення флеш-повідомлень -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="flash-messages">
@@ -31,7 +31,6 @@
         {% endwith %}
 
         {% if cart_items %}
-        <!-- Відображення товарів у кошику -->
         <table>
             <thead>
                 <tr>
@@ -39,7 +38,7 @@
                     <th>Price</th>
                     <th>Quantity</th>
                     <th>Total</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -48,19 +47,21 @@
                     <td>{{ item.article }}</td>
                     <td>{{ item.price }}</td>
                     <td>
-                        <!-- Форма для оновлення кількості товару -->
                         <form method="POST" action="/update_cart">
                             <input type="hidden" name="product_id" value="{{ item.product_id }}">
                             <input type="number" name="quantity" value="{{ item.quantity }}" min="1">
-                            <button type="submit">Update</button>
+                            <button type="submit" class="update-button">
+                                <i class="fas fa-edit"></i> Update
+                            </button>
                         </form>
                     </td>
                     <td>{{ item.total_price }}</td>
                     <td>
-                        <!-- Форма для видалення товару -->
                         <form method="POST" action="/remove_from_cart">
                             <input type="hidden" name="product_id" value="{{ item.product_id }}">
-                            <button type="submit" class="remove-button">Remove</button>
+                            <button type="submit" class="remove-button">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
                         </form>
                     </td>
                 </tr>
@@ -68,23 +69,23 @@
             </tbody>
         </table>
 
-        <!-- Відображення загальної суми -->
-        <div class="total-container">
-            <h3>Total: {{ total_price }}</h3>
+        <!-- Загальна сума -->
+        <div class="total-section">
+            <p><strong>Total Price:</strong> {{ total_price }}</p>
         </div>
 
-        <!-- Кнопка оформлення замовлення -->
-        <form method="POST" action="/place_order">
-            <button type="submit" class="place-order-button">Place Order</button>
-        </form>
+        <!-- Кнопки для очищення кошика та оформлення замовлення -->
+        <div class="cart-actions">
+            <form method="POST" action="/clear_cart">
+                <button type="submit" class="clear-cart-button">Clear Cart</button>
+            </form>
+            <form method="POST" action="/place_order">
+                <button type="submit" class="place-order-button">Place Order</button>
+            </form>
+        </div>
         {% else %}
         <p>Your cart is empty.</p>
         {% endif %}
-
-        <!-- Кнопка повернення до пошуку -->
-        <div class="navigation-buttons">
-            <button onclick="window.location.href='/'">Back to Search</button>
-        </div>
     </div>
 </body>
 </html>

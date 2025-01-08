@@ -429,8 +429,6 @@ def place_order():
         logging.debug("Database connection closed.")
 
 
-
-
 @app.route('/orders', methods=['GET', 'POST'])
 def orders():
     try:
@@ -478,7 +476,7 @@ def order_details(order_id):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Отримуємо деталі замовлення
+        # Отримання деталей замовлення
         cursor.execute("""
             SELECT od.order_id, p.article, p.price, od.quantity, od.total_price
             FROM order_details od
@@ -487,15 +485,14 @@ def order_details(order_id):
         """, (order_id,))
         details = cursor.fetchall()
 
-        # Логування даних
-        logging.debug(f"Order details for order_id={order_id}: {details}")
+        # Логування результатів запиту
+        logging.debug(f"Query result for order_id={order_id}: {details}")
 
         if not details:
             logging.warning(f"No details found for order_id={order_id}")
             flash("No details found for this order.", "warning")
             return render_template('order_details.html', details=[])
 
-        # Передаємо дані в шаблон
         return render_template('order_details.html', details=details)
     except Exception as e:
         logging.error(f"Error loading order details for order_id={order_id}: {str(e)}")
@@ -506,6 +503,7 @@ def order_details(order_id):
             cursor.close()
         if conn:
             conn.close()
+
 
 
 if __name__ == '__main__':

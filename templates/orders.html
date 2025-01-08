@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Details</title>
+    <title>Orders</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -11,37 +11,44 @@
         <nav>
             <ul>
                 <li><a href="/">Home</a></li>
-                <li><a href="/orders">Back to Orders</a></li>
+                <li><a href="/cart">Cart</a></li>
             </ul>
         </nav>
     </header>
     <div class="container">
-        <h1>Order Details</h1>
-        {% if details %}
+        <h1>Your Orders</h1>
+        
+        <!-- Перевірка даних -->
+        <div>
+            <h2>Diagnostic Information:</h2>
+            <pre>{{ orders }}</pre>
+        </div>
+        
+        {% if orders %}
         <table>
             <thead>
                 <tr>
                     <th>Order ID</th>
-                    <th>Article</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
                     <th>Total Price</th>
+                    <th>Order Date</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for detail in details %}
+                {% for order in orders %}
                 <tr>
-                    <td>{{ detail.order_id }}</td>
-                    <td>{{ detail.article }}</td>
-                    <td>{{ detail.price }}</td>
-                    <td>{{ detail.quantity }}</td>
-                    <td>{{ detail.total_price }}</td>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.total_price }}</td>
+                    <td>{{ order.order_date }}</td>
+                    <td>
+                        <a href="/order_details/{{ order.id }}">View Details</a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         {% else %}
-        <p>No details available for this order.</p>
+        <p>No orders found. Place an order to see it here.</p>
         {% endif %}
     </div>
 </body>

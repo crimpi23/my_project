@@ -658,7 +658,7 @@ def upload_price_list():
                     logging.warning(f"Skipping row with invalid price: {row}")
                     continue
 
-            logging.info(f"Prepared {len(data)} rows for insertion.")
+            logging.info(f"Number of rows prepared for insertion: {len(data)}")  # Додавання логування
 
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -691,12 +691,17 @@ def upload_price_list():
             deleted_rows = cursor.rowcount
             logging.info(f"Cleared {deleted_rows} rows from table: {table_name}")
 
-            # Додавання нових даних
-            logging.info(f"Inserting data into table: {table_name}")
-            cursor.executemany(
-                f"INSERT INTO {table_name} (article, price) VALUES (%s, %s);", data
-            )
-            conn.commit()
+            # Додавання нових даних пакетами
+            logging.info(f"Starting batch insertion into table: {table_name}")
+            batch_size = 10000
+            for i in range(0, len(data), batch_size):
+                batch = data[i:i + batch_size]
+                cursor.executemany(
+                    f"INSERT INTO {table_name} (article, price) VALUES (%s, %s);", batch
+                )
+                conn.commit()  # Фіксуємо транзакцію після кожної партії
+                logging.info(f"Inserted batch {i // batch_size + 1} of {len(data) // batch_size + 1}")
+
             conn.close()
 
             # Додавання Flash-повідомлення
@@ -709,10 +714,6 @@ def upload_price_list():
             logging.error(f"Error during POST request: {str(e)}")
             flash("An error occurred during upload.", "error")
             return redirect(url_for('upload_price_list'))
-
-
-
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

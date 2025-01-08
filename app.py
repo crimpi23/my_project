@@ -474,40 +474,38 @@ def orders():
 
 @app.route('/order_details/<int:order_id>')
 def order_details(order_id):
-    conn = None
-    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Отримання деталей замовлення
-        query = """
-            SELECT od.product_id, p.article, p.price, od.quantity, od.total_price
+        # Отримуємо деталі замовлення
+        cursor.execute("""
+            SELECT od.order_id, p.article, p.price, od.quantity, od.total_price
             FROM order_details od
             JOIN products p ON od.product_id = p.id
             WHERE od.order_id = %s
-        """
-        cursor.execute(query, (order_id,))
-        order_details = cursor.fetchall()
+        """, (order_id,))
+        details = cursor.fetchall()
 
-        # Логування отриманих даних
-        if order_details:
-            logging.debug(f"Order details for order_id={order_id}: {order_details}")
-        else:
+        # Логування результатів
+        logging.debug(f"Order details for order_id={order_id}: {details}")
+
+        if not details:
             logging.warning(f"No details found for order_id={order_id}")
+            flash("No details found for this order.", "warning")
+            return render_template('order_details.html', details=[])
 
-        return render_template('order_details.html', order_details=order_details, order_id=order_id)
-
+        return render_template('order_details.html', details=details)
     except Exception as e:
-        logging.error(f"Error fetching order details for order_id={order_id}: {str(e)}", exc_info=True)
-        flash("Error fetching order details. Please try again.", "error")
+        logging.error(f"Error loading order details for order_id={order_id}: {str(e)}")
+        flash("Error loading order details. Please try again.", "error")
         return redirect(url_for('orders'))
-
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
+
 
 
 if __name__ == '__main__':

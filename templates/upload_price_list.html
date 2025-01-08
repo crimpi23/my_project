@@ -1,35 +1,106 @@
-<h2>Upload Price List</h2>
-<form method="POST" action="/admin/upload_price_list" enctype="multipart/form-data">
-    <!-- Вибір існуючої таблиці -->
-    <label for="table_name">Select Table:</label>
-    <select name="table_name" id="table_name">
-        {% for table in price_lists %}
-        <option value="{{ table.table_name }}">{{ table.table_name }}</option>
-        {% endfor %}
-        <option value="new">New Table</option>
-    </select>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Price List</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/admin">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container">
+        <h1>Upload Price List</h1>
 
-    <!-- Поле для назви нової таблиці -->
-    <div id="new_table_name_container" style="display: none;">
-        <label for="new_table_name">New Table Name:</label>
-        <input type="text" name="new_table_name" id="new_table_name">
+        <!-- Форма завантаження файлу -->
+        <form id="uploadForm">
+            <label for="table_name">Select Table:</label>
+            <select name="table_name" id="table_name" required>
+                {% for table in price_lists %}
+                <option value="{{ table.table_name }}">{{ table.table_name }}</option>
+                {% endfor %}
+                <option value="new">New Table</option>
+            </select>
+
+            <div id="new_table_name_container" style="display: none;">
+                <label for="new_table_name">New Table Name:</label>
+                <input type="text" name="new_table_name" id="new_table_name">
+            </div>
+
+            <label for="file">Choose File:</label>
+            <input type="file" name="file" id="file" accept=".csv,.txt" required>
+
+            <button type="submit">Upload</button>
+        </form>
+
+        <!-- Індикатор прогресу -->
+        <div id="progressContainer" style="display: none; margin-top: 20px;">
+            <div id="progressBar" style="width: 0; height: 20px; background: #007bff;"></div>
+            <p id="progressText" style="text-align: center;">Starting upload...</p>
+        </div>
     </div>
 
-    <!-- Завантаження файлу -->
-    <label for="file">Choose File:</label>
-    <input type="file" name="file" id="file" accept=".csv,.txt" required>
+    <script>
+        // Показати/сховати поле для назви нової таблиці
+        document.getElementById('table_name').addEventListener('change', function () {
+            const newTableContainer = document.getElementById('new_table_name_container');
+            if (this.value === 'new') {
+                newTableContainer.style.display = 'block';
+            } else {
+                newTableContainer.style.display = 'none';
+            }
+        });
 
-    <button type="submit">Upload</button>
-</form>
+        // Завантаження файлу з прогресом
+        document.getElementById('uploadForm').addEventListener('submit', function (e) {
+            e.preventDefault();
 
-<script>
-    // Показати поле для назви нової таблиці, якщо вибрано "New Table"
-    document.getElementById('table_name').addEventListener('change', function() {
-        const newTableContainer = document.getElementById('new_table_name_container');
-        if (this.value === 'new') {
-            newTableContainer.style.display = 'block';
-        } else {
-            newTableContainer.style.display = 'none';
-        }
-    });
-</script>
+            const formData = new FormData(this);
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = 'Starting upload...';
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/admin/upload_price_list', true);
+
+            // Відслідковування прогресу
+            xhr.upload.onprogress = function (event) {
+                if (event.lengthComputable) {
+                    const percent = Math.round((event.loaded / event.total) * 100);
+                    progressBar.style.width = percent + '%';
+                    progressText.textContent = 'Uploading: ' + percent + '%';
+                }
+            };
+
+            // Завершення завантаження
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    progressText.textContent = 'Upload complete! Processing...';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000); // Перезавантажити сторінку через 2 секунди
+                } else {
+                    progressText.textContent = 'Error during upload. Please try again.';
+                }
+            };
+
+            // Обробка помилок
+            xhr.onerror = function () {
+                progressText.textContent = 'Network error. Please try again.';
+            };
+
+            xhr.send(formData);
+        });
+    </script>
+</body>
+</html>

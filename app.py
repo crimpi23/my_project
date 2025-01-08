@@ -592,6 +592,7 @@ def detect_delimiter(file_content):
 
     return max(counts, key=counts.get)
 
+#Завантаження прайсу в Адмінці
 @app.route('/admin/upload_price_list', methods=['GET', 'POST'])
 def upload_price_list():
     if request.method == 'GET':
@@ -610,95 +611,93 @@ def upload_price_list():
         new_table_name = request.form.get('new_table_name', '').strip()
 
         if 'file' not in request.files:
-            flash('No file uploaded', 'error')
             logging.error("No file uploaded.")
-            return redirect(url_for('upload_price_list'))
+            return {"status": "error", "message": "No file uploaded."}, 400
 
         file = request.files['file']
         if file.filename == '':
-            flash('No file selected', 'error')
             logging.error("No file selected.")
-            return redirect(url_for('upload_price_list'))
+            return {"status": "error", "message": "No file selected."}, 400
 
         # Обробка файлу
-        file_content = file.read().decode('utf-8', errors='ignore')
-        delimiter = detect_delimiter(file_content)
-        logging.info(f"File delimiter detected: {delimiter}")
+        try:
+            file_content = file.read().decode('utf-8', errors='ignore')
+            delimiter = detect_delimiter(file_content)
+            logging.info(f"File delimiter detected: {delimiter}")
 
-        reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
+            reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
 
-        # Підготовка даних
-        data = []
-        header_skipped = False
-        for row in reader:
-            if len(row) < 2:  # Пропускаємо рядки з недостатньою кількістю колонок
-                logging.warning(f"Skipping invalid row: {row}")
-                continue
+            # Підготовка даних
+            data = []
+            header_skipped = False
+            for row in reader:
+                if len(row) < 2:  # Пропускаємо рядки з недостатньою кількістю колонок
+                    logging.warning(f"Skipping invalid row: {row}")
+                    continue
 
-            # Пропускаємо заголовки, якщо є
-            if not header_skipped and not row[1].replace(',', '').replace('.', '').isdigit():
-                logging.info(f"Skipping header row: {row}")
-                header_skipped = True
-                continue
+                # Пропускаємо заголовки, якщо є
+                if not header_skipped and not row[1].replace(',', '').replace('.', '').isdigit():
+                    logging.info(f"Skipping header row: {row}")
+                    header_skipped = True
+                    continue
 
-            article = row[0].strip().replace(" ", "").upper()
-            price = row[1].replace(",", ".").strip()
+                article = row[0].strip().replace(" ", "").upper()
+                price = row[1].replace(",", ".").strip()
 
-            try:
-                price = float(price)
-                data.append((article, price))
-            except ValueError:
-                logging.warning(f"Skipping row with invalid price: {row}")
-                continue
+                try:
+                    price = float(price)
+                    data.append((article, price))
+                except ValueError:
+                    logging.warning(f"Skipping row with invalid price: {row}")
+                    continue
 
-        logging.info(f"Prepared {len(data)} rows for insertion.")
+            logging.info(f"Prepared {len(data)} rows for insertion.")
 
-        # Підключення до бази даних
-        conn = get_db_connection()
-        cursor = conn.cursor()
+            # Підключення до бази даних
+            conn = get_db_connection()
+            cursor = conn.cursor()
 
-        # Якщо нова таблиця
-        if table_name == 'new':
-            if not new_table_name:
-                flash('New table name is required', 'error')
-                logging.error("New table name is missing.")
-                return redirect(url_for('upload_price_list'))
+            # Якщо нова таблиця
+            if table_name == 'new':
+                if not new_table_name:
+                    logging.error("New table name is missing.")
+                    return {"status": "error", "message": "New table name is required."}, 400
 
-            normalized_table_name = new_table_name.strip().replace(" ", "_").lower()
-            logging.info(f"Creating new table: {normalized_table_name}")
+                normalized_table_name = new_table_name.strip().replace(" ", "_").lower()
+                logging.info(f"Creating new table: {normalized_table_name}")
 
-            cursor.execute(f"""
-                CREATE TABLE {normalized_table_name} (
-                    article TEXT PRIMARY KEY,
-                    price NUMERIC
-                );
-            """)
-            cursor.execute("""
-                INSERT INTO price_lists (table_name, created_at)
-                VALUES (%s, NOW());
-            """, (normalized_table_name,))
+                cursor.execute(f"""
+                    CREATE TABLE {normalized_table_name} (
+                        article TEXT PRIMARY KEY,
+                        price NUMERIC
+                    );
+                """)
+                cursor.execute("""
+                    INSERT INTO price_lists (table_name, created_at)
+                    VALUES (%s, NOW());
+                """, (normalized_table_name,))
 
-            table_name = normalized_table_name
+                table_name = normalized_table_name
 
-        # Очищуємо таблицю перед оновленням
-        logging.info(f"Clearing table: {table_name}")
-        cursor.execute(f"DELETE FROM {table_name};")
+            # Очищуємо таблицю перед оновленням
+            logging.info(f"Clearing table: {table_name}")
+            cursor.execute(f"DELETE FROM {table_name};")
 
-        # Додаємо нові дані
-        logging.info(f"Inserting data into table: {table_name}")
-        cursor.executemany(
-            f"INSERT INTO {table_name} (article, price) VALUES (%s, %s);", data
-        )
+            # Додаємо нові дані
+            logging.info(f"Inserting data into table: {table_name}")
+            cursor.executemany(
+                f"INSERT INTO {table_name} (article, price) VALUES (%s, %s);", data
+            )
 
-        conn.commit()
-        conn.close()
-        logging.info(f"Successfully uploaded {len(data)} rows to table '{table_name}'.")
+            conn.commit()
+            conn.close()
+            logging.info(f"Successfully uploaded {len(data)} rows to table '{table_name}'.")
 
-        flash(f"Uploaded {len(data)} records to table '{table_name}' successfully.", "success")
-        return redirect(url_for('admin_panel'))
+            return {"status": "success", "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}, 200
 
-
-
+        except Exception as e:
+            logging.error(f"Error during file processing: {str(e)}")
+            return {"status": "error", "message": "An error occurred during file processing."}, 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

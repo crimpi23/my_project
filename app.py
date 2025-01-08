@@ -596,6 +596,7 @@ def detect_delimiter(file_content):
 @app.route('/admin/upload_price_list', methods=['GET', 'POST'])
 def upload_price_list():
     if request.method == 'GET':
+        flash("This is a test message.", "success")  # Тестове повідомлення
         try:
             conn = get_db_connection()
             cursor = conn.cursor()

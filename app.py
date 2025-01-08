@@ -595,36 +595,50 @@ def detect_delimiter(file_content):
 @app.route('/admin/upload_price_list', methods=['GET', 'POST'])
 def upload_price_list():
     if request.method == 'GET':
-        # Отримуємо список таблиць із price_lists
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT table_name FROM price_lists;")
         price_lists = cursor.fetchall()
         conn.close()
+        logging.info("Price list tables fetched successfully.")
         return render_template('upload_price_list.html', price_lists=price_lists)
 
     if request.method == 'POST':
+        logging.info("Starting file upload process.")
+
         table_name = request.form['table_name']
         new_table_name = request.form.get('new_table_name', '').strip()
 
-        # Перевіряємо файл
         if 'file' not in request.files:
             flash('No file uploaded', 'error')
+            logging.error("No file uploaded.")
             return redirect(url_for('upload_price_list'))
 
         file = request.files['file']
         if file.filename == '':
             flash('No file selected', 'error')
+            logging.error("No file selected.")
             return redirect(url_for('upload_price_list'))
 
-        # Обробляємо файл
+        # Обробка файлу
         file_content = file.read().decode('utf-8', errors='ignore')
         delimiter = detect_delimiter(file_content)
+        logging.info(f"File delimiter detected: {delimiter}")
+
         reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
 
+        # Підготовка даних
         data = []
+        header_skipped = False
         for row in reader:
-            if len(row) < 2:
+            if len(row) < 2:  # Пропускаємо рядки з недостатньою кількістю колонок
+                logging.warning(f"Skipping invalid row: {row}")
+                continue
+
+            # Пропускаємо заголовки, якщо є
+            if not header_skipped and not row[1].replace(',', '').replace('.', '').isdigit():
+                logging.info(f"Skipping header row: {row}")
+                header_skipped = True
                 continue
 
             article = row[0].strip().replace(" ", "").upper()
@@ -632,23 +646,29 @@ def upload_price_list():
 
             try:
                 price = float(price)
+                data.append((article, price))
             except ValueError:
+                logging.warning(f"Skipping row with invalid price: {row}")
                 continue
 
-            data.append((article, price))
+        logging.info(f"Prepared {len(data)} rows for insertion.")
 
+        # Підключення до бази даних
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Якщо обрана нова таблиця
+        # Якщо нова таблиця
         if table_name == 'new':
             if not new_table_name:
                 flash('New table name is required', 'error')
+                logging.error("New table name is missing.")
                 return redirect(url_for('upload_price_list'))
 
-            # Створюємо нову таблицю
+            normalized_table_name = new_table_name.strip().replace(" ", "_").lower()
+            logging.info(f"Creating new table: {normalized_table_name}")
+
             cursor.execute(f"""
-                CREATE TABLE {new_table_name} (
+                CREATE TABLE {normalized_table_name} (
                     article TEXT PRIMARY KEY,
                     price NUMERIC
                 );
@@ -656,23 +676,27 @@ def upload_price_list():
             cursor.execute("""
                 INSERT INTO price_lists (table_name, created_at)
                 VALUES (%s, NOW());
-            """, (new_table_name,))
+            """, (normalized_table_name,))
 
-            table_name = new_table_name
+            table_name = normalized_table_name
 
         # Очищуємо таблицю перед оновленням
+        logging.info(f"Clearing table: {table_name}")
         cursor.execute(f"DELETE FROM {table_name};")
 
         # Додаємо нові дані
+        logging.info(f"Inserting data into table: {table_name}")
         cursor.executemany(
             f"INSERT INTO {table_name} (article, price) VALUES (%s, %s);", data
         )
 
         conn.commit()
         conn.close()
+        logging.info(f"Successfully uploaded {len(data)} rows to table '{table_name}'.")
 
         flash(f"Uploaded {len(data)} records to table '{table_name}' successfully.", "success")
         return redirect(url_for('admin_panel'))
+
 
 
 

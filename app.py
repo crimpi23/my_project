@@ -504,7 +504,76 @@ def order_details(order_id):
         if conn:
             conn.close()
 
+@app.route('/admin')
+def admin_panel():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
+    # Отримати всіх користувачів
+    cursor.execute("""
+        SELECT id, username, email FROM users;
+    """)
+    users = cursor.fetchall()
+
+    conn.close()
+    return render_template('admin_main.html', users=users)
+
+@app.route('/admin/assign_roles', methods=['GET', 'POST'])
+def assign_roles():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    # Отримати всіх користувачів і їх ролі
+    cursor.execute("""
+        SELECT users.id AS user_id, users.username, roles.id AS role_id, roles.name AS role_name
+        FROM user_roles
+        JOIN users ON user_roles.user_id = users.id
+        JOIN roles ON user_roles.role_id = roles.id
+        ORDER BY users.username;
+    """)
+    user_roles = cursor.fetchall()
+
+    # Отримати всіх користувачів і доступні ролі
+    cursor.execute("SELECT id, username FROM users;")
+    users = cursor.fetchall()
+
+    cursor.execute("SELECT id, name FROM roles;")
+    roles = cursor.fetchall()
+
+    if request.method == 'POST':
+        action = request.form['action']
+        user_id = request.form['user_id']
+        role_id = request.form['role_id']
+
+        if action == 'assign':
+            # Перевірити, чи роль уже призначена
+            cursor.execute("""
+                SELECT * FROM user_roles
+                WHERE user_id = %s AND role_id = %s;
+            """, (user_id, role_id))
+            if cursor.fetchone():
+                flash("Role is already assigned to this user.", "warning")
+            else:
+                # Додати роль користувачу
+                cursor.execute("""
+                    INSERT INTO user_roles (user_id, role_id)
+                    VALUES (%s, %s);
+                """, (user_id, role_id))
+                conn.commit()
+                flash("Role assigned successfully.", "success")
+        elif action == 'remove':
+            # Видалити роль у користувача
+            cursor.execute("""
+                DELETE FROM user_roles
+                WHERE user_id = %s AND role_id = %s;
+            """, (user_id, role_id))
+            conn.commit()
+            flash("Role removed successfully.", "success")
+
+        return redirect(url_for('assign_roles'))
+
+    conn.close()
+    return render_template('assign_roles.html', user_roles=user_roles, users=users, roles=roles)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

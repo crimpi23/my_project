@@ -593,18 +593,9 @@ def detect_delimiter(file_content):
     return max(counts, key=counts.get)
 
 #Завантаження прайсу в Адмінці
-@app.route('/admin/upload_price_list', methods=['GET', 'POST'])
+@app.route('/admin/upload_price_list', methods=['POST'])
 def upload_price_list():
-    if request.method == 'GET':
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT table_name FROM price_lists;")
-        price_lists = cursor.fetchall()
-        conn.close()
-        logging.info("Price list tables fetched successfully.")
-        return render_template('upload_price_list.html', price_lists=price_lists)
-
-    if request.method == 'POST':
+    try:
         logging.info("Starting file upload process.")
 
         table_name = request.form['table_name']
@@ -620,84 +611,89 @@ def upload_price_list():
             return {"status": "error", "message": "No file selected."}, 400
 
         # Обробка файлу
+        file_content = file.read().decode('utf-8', errors='ignore')
+        delimiter = detect_delimiter(file_content)
+        logging.info(f"File delimiter detected: {delimiter}")
+
+        reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
+
+        # Підготовка даних
+        data = []
+        header_skipped = False
+
+        for row in reader:
+            if len(row) < 2:  # Пропускаємо рядки з недостатньою кількістю колонок
+                logging.warning(f"Skipping invalid row: {row}")
+                continue
+
+            # Пропускаємо заголовки, якщо є
+            if not header_skipped and not row[1].replace(',', '').replace('.', '').isdigit():
+                logging.info(f"Skipping header row: {row}")
+                header_skipped = True
+                continue
+
+            article = row[0].strip().replace(" ", "").upper()
+            price = row[1].replace(",", ".").strip()
+
+            try:
+                price = float(price)
+                data.append((article, price))
+            except ValueError:
+                logging.warning(f"Skipping row with invalid price: {row}")
+                continue
+
+        logging.info(f"Prepared {len(data)} rows for insertion.")
+
+        # Підключення до бази даних
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        if table_name == 'new':
+            if not new_table_name:
+                logging.error("New table name is missing.")
+                return {"status": "error", "message": "New table name is required."}, 400
+
+            normalized_table_name = new_table_name.strip().replace(" ", "_").lower()
+            logging.info(f"Creating new table: {normalized_table_name}")
+
+            cursor.execute(f"""
+                CREATE TABLE {normalized_table_name} (
+                    article TEXT PRIMARY KEY,
+                    price NUMERIC
+                );
+            """)
+            cursor.execute("""
+                INSERT INTO price_lists (table_name, created_at)
+                VALUES (%s, NOW());
+            """, (normalized_table_name,))
+
+            table_name = normalized_table_name
+
+        # Очищуємо таблицю перед оновленням
+        logging.info(f"Clearing table: {table_name}")
+        cursor.execute(f"DELETE FROM {table_name};")
+        deleted_rows = cursor.rowcount  # Отримуємо кількість видалених рядків
+        logging.info(f"Cleared {deleted_rows} rows from table: {table_name}")
+
+        # Додаємо нові дані
         try:
-            file_content = file.read().decode('utf-8', errors='ignore')
-            delimiter = detect_delimiter(file_content)
-            logging.info(f"File delimiter detected: {delimiter}")
-
-            reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
-
-            # Підготовка даних
-            data = []
-            header_skipped = False
-            for row in reader:
-                if len(row) < 2:  # Пропускаємо рядки з недостатньою кількістю колонок
-                    logging.warning(f"Skipping invalid row: {row}")
-                    continue
-
-                # Пропускаємо заголовки, якщо є
-                if not header_skipped and not row[1].replace(',', '').replace('.', '').isdigit():
-                    logging.info(f"Skipping header row: {row}")
-                    header_skipped = True
-                    continue
-
-                article = row[0].strip().replace(" ", "").upper()
-                price = row[1].replace(",", ".").strip()
-
-                try:
-                    price = float(price)
-                    data.append((article, price))
-                except ValueError:
-                    logging.warning(f"Skipping row with invalid price: {row}")
-                    continue
-
-            logging.info(f"Prepared {len(data)} rows for insertion.")
-
-            # Підключення до бази даних
-            conn = get_db_connection()
-            cursor = conn.cursor()
-
-            # Якщо нова таблиця
-            if table_name == 'new':
-                if not new_table_name:
-                    logging.error("New table name is missing.")
-                    return {"status": "error", "message": "New table name is required."}, 400
-
-                normalized_table_name = new_table_name.strip().replace(" ", "_").lower()
-                logging.info(f"Creating new table: {normalized_table_name}")
-
-                cursor.execute(f"""
-                    CREATE TABLE {normalized_table_name} (
-                        article TEXT PRIMARY KEY,
-                        price NUMERIC
-                    );
-                """)
-                cursor.execute("""
-                    INSERT INTO price_lists (table_name, created_at)
-                    VALUES (%s, NOW());
-                """, (normalized_table_name,))
-
-                table_name = normalized_table_name
-
-            # Очищуємо таблицю перед оновленням
-            logging.info(f"Clearing table: {table_name}")
-            cursor.execute(f"DELETE FROM {table_name};")
-
-            # Додаємо нові дані
             logging.info(f"Inserting data into table: {table_name}")
             cursor.executemany(
                 f"INSERT INTO {table_name} (article, price) VALUES (%s, %s);", data
             )
-
             conn.commit()
-            conn.close()
             logging.info(f"Successfully uploaded {len(data)} rows to table '{table_name}'.")
-
-            return {"status": "success", "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}, 200
-
+            return {"status": "success", "message": f"Uploaded {len(data)} rows successfully."}, 200
         except Exception as e:
-            logging.error(f"Error during file processing: {str(e)}")
-            return {"status": "error", "message": "An error occurred during file processing."}, 500
+            logging.error(f"Error during data insertion: {str(e)}")
+            return {"status": "error", "message": "Error during data insertion."}, 500
+        finally:
+            conn.close()
+
+    except Exception as e:
+        logging.error(f"Error during file processing: {str(e)}")
+        return {"status": "error", "message": "An error occurred during file processing."}, 500
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

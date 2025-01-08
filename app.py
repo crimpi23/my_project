@@ -593,106 +593,117 @@ def detect_delimiter(file_content):
     return max(counts, key=counts.get)
 
 #Завантаження прайсу в Адмінці
-@app.route('/admin/upload_price_list', methods=['POST'])
+@app.route('/admin/upload_price_list', methods=['GET', 'POST'])
 def upload_price_list():
-    try:
-        logging.info("Starting file upload process.")
-
-        table_name = request.form['table_name']
-        new_table_name = request.form.get('new_table_name', '').strip()
-
-        if 'file' not in request.files:
-            logging.error("No file uploaded.")
-            return {"status": "error", "message": "No file uploaded."}, 400
-
-        file = request.files['file']
-        if file.filename == '':
-            logging.error("No file selected.")
-            return {"status": "error", "message": "No file selected."}, 400
-
-        # Обробка файлу
-        file_content = file.read().decode('utf-8', errors='ignore')
-        delimiter = detect_delimiter(file_content)
-        logging.info(f"File delimiter detected: {delimiter}")
-
-        reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
-
-        # Підготовка даних
-        data = []
-        header_skipped = False
-
-        for row in reader:
-            if len(row) < 2:  # Пропускаємо рядки з недостатньою кількістю колонок
-                logging.warning(f"Skipping invalid row: {row}")
-                continue
-
-            # Пропускаємо заголовки, якщо є
-            if not header_skipped and not row[1].replace(',', '').replace('.', '').isdigit():
-                logging.info(f"Skipping header row: {row}")
-                header_skipped = True
-                continue
-
-            article = row[0].strip().replace(" ", "").upper()
-            price = row[1].replace(",", ".").strip()
-
-            try:
-                price = float(price)
-                data.append((article, price))
-            except ValueError:
-                logging.warning(f"Skipping row with invalid price: {row}")
-                continue
-
-        logging.info(f"Prepared {len(data)} rows for insertion.")
-
-        # Підключення до бази даних
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        if table_name == 'new':
-            if not new_table_name:
-                logging.error("New table name is missing.")
-                return {"status": "error", "message": "New table name is required."}, 400
-
-            normalized_table_name = new_table_name.strip().replace(" ", "_").lower()
-            logging.info(f"Creating new table: {normalized_table_name}")
-
-            cursor.execute(f"""
-                CREATE TABLE {normalized_table_name} (
-                    article TEXT PRIMARY KEY,
-                    price NUMERIC
-                );
-            """)
-            cursor.execute("""
-                INSERT INTO price_lists (table_name, created_at)
-                VALUES (%s, NOW());
-            """, (normalized_table_name,))
-
-            table_name = normalized_table_name
-
-        # Очищуємо таблицю перед оновленням
-        logging.info(f"Clearing table: {table_name}")
-        cursor.execute(f"DELETE FROM {table_name};")
-        deleted_rows = cursor.rowcount  # Отримуємо кількість видалених рядків
-        logging.info(f"Cleared {deleted_rows} rows from table: {table_name}")
-
-        # Додаємо нові дані
+    if request.method == 'GET':
         try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT table_name FROM price_lists;")
+            price_lists = cursor.fetchall()
+            conn.close()
+            logging.info("Price list tables fetched successfully.")
+            return render_template('upload_price_list.html', price_lists=price_lists)
+        except Exception as e:
+            logging.error(f"Error during GET request: {str(e)}")
+            return {"status": "error", "message": "Error loading the page."}, 500
+
+    if request.method == 'POST':
+        try:
+            logging.info("Starting file upload process.")
+
+            table_name = request.form['table_name']
+            new_table_name = request.form.get('new_table_name', '').strip()
+
+            if 'file' not in request.files:
+                logging.error("No file uploaded.")
+                flash("No file uploaded.", "error")
+                return redirect(url_for('upload_price_list'))
+
+            file = request.files['file']
+            if file.filename == '':
+                logging.error("No file selected.")
+                flash("No file selected.", "error")
+                return redirect(url_for('upload_price_list'))
+
+            # Обробка файлу
+            file_content = file.read().decode('utf-8', errors='ignore')
+            delimiter = detect_delimiter(file_content)
+            logging.info(f"File delimiter detected: {delimiter}")
+
+            reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
+
+            # Підготовка даних
+            data = []
+            header_skipped = False
+            for row in reader:
+                if len(row) < 2:
+                    logging.warning(f"Skipping invalid row: {row}")
+                    continue
+
+                if not header_skipped and not row[1].replace(',', '').replace('.', '').isdigit():
+                    logging.info(f"Skipping header row: {row}")
+                    header_skipped = True
+                    continue
+
+                article = row[0].strip().replace(" ", "").upper()
+                price = row[1].replace(",", ".").strip()
+
+                try:
+                    price = float(price)
+                    data.append((article, price))
+                except ValueError:
+                    logging.warning(f"Skipping row with invalid price: {row}")
+                    continue
+
+            logging.info(f"Prepared {len(data)} rows for insertion.")
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            if table_name == 'new':
+                if not new_table_name:
+                    logging.error("New table name is missing.")
+                    flash("New table name is required.", "error")
+                    return redirect(url_for('upload_price_list'))
+
+                normalized_table_name = new_table_name.strip().replace(" ", "_").lower()
+                logging.info(f"Creating new table: {normalized_table_name}")
+
+                cursor.execute(f"""
+                    CREATE TABLE {normalized_table_name} (
+                        article TEXT PRIMARY KEY,
+                        price NUMERIC
+                    );
+                """)
+                cursor.execute("""
+                    INSERT INTO price_lists (table_name, created_at)
+                    VALUES (%s, NOW());
+                """, (normalized_table_name,))
+
+                table_name = normalized_table_name
+
+            logging.info(f"Clearing table: {table_name}")
+            cursor.execute(f"DELETE FROM {table_name};")
+            deleted_rows = cursor.rowcount
+            logging.info(f"Cleared {deleted_rows} rows from table: {table_name}")
+
             logging.info(f"Inserting data into table: {table_name}")
             cursor.executemany(
                 f"INSERT INTO {table_name} (article, price) VALUES (%s, %s);", data
             )
             conn.commit()
-            logging.info(f"Successfully uploaded {len(data)} rows to table '{table_name}'.")
-            return {"status": "success", "message": f"Uploaded {len(data)} rows successfully."}, 200
-        except Exception as e:
-            logging.error(f"Error during data insertion: {str(e)}")
-            return {"status": "error", "message": "Error during data insertion."}, 500
-        finally:
             conn.close()
 
-    except Exception as e:
-        logging.error(f"Error during file processing: {str(e)}")
-        return {"status": "error", "message": "An error occurred during file processing."}, 500
+            logging.info(f"Successfully uploaded {len(data)} rows to table '{table_name}'.")
+            flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "success")
+            return redirect(url_for('upload_price_list'))
+
+        except Exception as e:
+            logging.error(f"Error during POST request: {str(e)}")
+            flash("An error occurred during upload.", "error")
+            return redirect(url_for('upload_price_list'))
+
 
 
 if __name__ == '__main__':

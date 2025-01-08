@@ -1,0 +1,35 @@
+<h2>Upload Price List</h2>
+<form method="POST" action="/admin/upload_price_list" enctype="multipart/form-data">
+    <!-- Вибір існуючої таблиці -->
+    <label for="table_name">Select Table:</label>
+    <select name="table_name" id="table_name">
+        {% for table in price_lists %}
+        <option value="{{ table.table_name }}">{{ table.table_name }}</option>
+        {% endfor %}
+        <option value="new">New Table</option>
+    </select>
+
+    <!-- Поле для назви нової таблиці -->
+    <div id="new_table_name_container" style="display: none;">
+        <label for="new_table_name">New Table Name:</label>
+        <input type="text" name="new_table_name" id="new_table_name">
+    </div>
+
+    <!-- Завантаження файлу -->
+    <label for="file">Choose File:</label>
+    <input type="file" name="file" id="file" accept=".csv,.txt" required>
+
+    <button type="submit">Upload</button>
+</form>
+
+<script>
+    // Показати поле для назви нової таблиці, якщо вибрано "New Table"
+    document.getElementById('table_name').addEventListener('change', function() {
+        const newTableContainer = document.getElementById('new_table_name_container');
+        if (this.value === 'new') {
+            newTableContainer.style.display = 'block';
+        } else {
+            newTableContainer.style.display = 'none';
+        }
+    });
+</script>

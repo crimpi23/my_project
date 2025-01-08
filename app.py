@@ -508,20 +508,17 @@ def order_details(order_id):
 @app.route('/admin')
 def admin_panel():
     conn = get_db_connection()
-    cursor = conn.cursor()  # Використовує DictCursor за замовчуванням
+    cursor = conn.cursor()  # DictCursor вже використовується у функції get_db_connection
     
     cursor.execute("""
-        SELECT users.id, users.username, users.email, 
-               COALESCE(array_agg(roles.name), '{}') AS roles
+        SELECT users.id, users.username, users.email
         FROM users
-        LEFT JOIN user_roles ON users.id = user_roles.user_id
-        LEFT JOIN roles ON user_roles.role_id = roles.id
-        GROUP BY users.id;
     """)
     users = cursor.fetchall()
 
     conn.close()
     return render_template('admin_main.html', users=users)
+
 
 
 @app.route('/admin/assign_roles', methods=['GET', 'POST'])

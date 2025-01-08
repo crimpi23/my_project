@@ -1,138 +1,17 @@
-/* Загальні стилі */
+/* Загальні стилі для сторінки */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f8f9fa;
-    color: #333;
+    line-height: 1.6;
     margin: 0;
     padding: 0;
-}
-
-.container {
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 20px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-    font-size: 24px;
-    text-align: center;
-    color: #007BFF;
-}
-
-/* Поля вводу */
-textarea, .quantity-input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    font-size: 14px;
-}
-
-.quantity-input {
-    width: 60px;
-    margin-right: 5px;
-}
-
-/* Кнопки */
-button {
-    padding: 10px 15px;
-    font-size: 14px;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-button:hover {
-    opacity: 0.9;
-}
-
-.clear-cart-button {
-    background-color: #dc3545;
-}
-
-.clear-cart-button:hover {
-    background-color: #c82333;
-}
-
-.place-order-button {
-    background-color: #28a745;
-}
-
-.place-order-button:hover {
-    background-color: #218838;
-}
-
-.remove-button {
-    background-color: #f44336;
-}
-
-.remove-button:hover {
-    background-color: #d32f2f;
-}
-
-.cart-button {
-    background-color: #28a745;
-}
-
-.cart-button:hover {
-    background-color: #218838;
-}
-
-.cart-button i {
-    font-size: 16px;
-}
-
-/* Таблиці */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-    vertical-align: middle;
-}
-
-th {
-    background-color: #f4f4f9;
-    font-weight: bold;
-}
-
-/* Повідомлення */
-.info-message, .warning-message {
     background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    font-size: 12px;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-    color: #666;
+    color: #333;
 }
 
-.info-message p, .warning-message p {
-    margin: 0;
-}
-
-.info-message ul, .warning-message ul {
-    margin: 0;
-    padding-left: 20px;
-    list-style: disc;
-}
-
-/* Хедер */
+/* Хедер і навігація */
 header {
     background-color: #007BFF;
-    padding: 10px 0;
+    padding: 10px 20px;
 }
 
 header nav ul {
@@ -140,27 +19,143 @@ header nav ul {
     margin: 0;
     padding: 0;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 header nav ul li {
-    margin: 0 15px;
+    margin-right: 20px;
 }
 
 header nav ul li a {
-    color: white;
     text-decoration: none;
-    font-size: 16px;
+    color: white;
+    font-weight: bold;
 }
 
 header nav ul li a:hover {
     text-decoration: underline;
 }
 
-/* Додаткові стилі */
-.total-container {
-    text-align: right;
+/* Контейнер для вмісту сторінки */
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Таблиці */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+table th,
+table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+table th {
+    background-color: #007BFF;
+    color: white;
+}
+
+table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+table tr:hover {
+    background-color: #ddd;
+}
+
+/* Кнопки */
+button,
+input[type="submit"],
+a.button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+button:hover,
+input[type="submit"]:hover,
+a.button:hover {
+    background-color: #0056b3;
+}
+
+/* Форма пошуку та textarea */
+form {
+    margin: 20px 0;
+}
+
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: vertical;
+}
+
+/* Повідомлення */
+.warning-message,
+.info-message {
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 5px;
+}
+
+.warning-message {
+    background-color: #ffc107;
+    color: #856404;
+}
+
+.info-message {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.flash-messages .flash-message {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+.flash-messages .flash-message.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.flash-messages .flash-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Кнопки дій у таблиці */
+.update-button,
+.remove-button {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.update-button i,
+.remove-button i {
+    margin-right: 5px;
+}
+
+/* Секція загальної суми */
+.total-section {
+    margin: 20px 0;
     font-size: 18px;
     font-weight: bold;
-    margin-top: 20px;
 }

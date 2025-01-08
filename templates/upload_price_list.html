@@ -95,18 +95,34 @@
 			xhr.onload = function () {
 				if (xhr.status === 200) {
 					const response = JSON.parse(xhr.responseText);
+					const flashMessages = document.querySelector('.flash-messages');
+					flashMessages.innerHTML = ''; // Очищуємо старі повідомлення
+
 					if (response.status === 'success') {
 						progressText.textContent = response.message;
 						progressBar.style.backgroundColor = 'green';
+
+						// Додаємо Flash-повідомлення
+						const successMessage = document.createElement('div');
+						successMessage.className = 'flash-message success';
+						successMessage.textContent = response.message;
+						flashMessages.appendChild(successMessage);
 					} else {
 						progressText.textContent = response.message;
 						progressBar.style.backgroundColor = 'red';
+
+						// Додаємо Flash-повідомлення
+						const errorMessage = document.createElement('div');
+						errorMessage.className = 'flash-message error';
+						errorMessage.textContent = response.message;
+						flashMessages.appendChild(errorMessage);
 					}
 				} else {
 					progressText.textContent = 'Error during upload. Please try again.';
 					progressBar.style.backgroundColor = 'red';
 				}
 			};
+
 
 			// Обробка помилок
 			xhr.onerror = function () {

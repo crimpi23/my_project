@@ -615,6 +615,7 @@ def upload_price_list():
             table_name = request.form['table_name']
             new_table_name = request.form.get('new_table_name', '').strip()
 
+            # Перевіряємо, чи файл завантажено
             if 'file' not in request.files:
                 logging.error("No file uploaded.")
                 flash("No file uploaded.", "error")
@@ -661,6 +662,7 @@ def upload_price_list():
             conn = get_db_connection()
             cursor = conn.cursor()
 
+            # Якщо створюється нова таблиця
             if table_name == 'new':
                 if not new_table_name:
                     logging.error("New table name is missing.")
@@ -680,14 +682,15 @@ def upload_price_list():
                     INSERT INTO price_lists (table_name, created_at)
                     VALUES (%s, NOW());
                 """, (normalized_table_name,))
-
                 table_name = normalized_table_name
 
+            # Очищення таблиці перед оновленням
             logging.info(f"Clearing table: {table_name}")
             cursor.execute(f"DELETE FROM {table_name};")
             deleted_rows = cursor.rowcount
             logging.info(f"Cleared {deleted_rows} rows from table: {table_name}")
 
+            # Додавання нових даних
             logging.info(f"Inserting data into table: {table_name}")
             cursor.executemany(
                 f"INSERT INTO {table_name} (article, price) VALUES (%s, %s);", data
@@ -695,14 +698,17 @@ def upload_price_list():
             conn.commit()
             conn.close()
 
+            # Додавання Flash-повідомлення
             logging.info(f"Successfully uploaded {len(data)} rows to table '{table_name}'.")
             flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "success")
             return redirect(url_for('upload_price_list'))
 
         except Exception as e:
+            # Flash-повідомлення про помилку
             logging.error(f"Error during POST request: {str(e)}")
             flash("An error occurred during upload.", "error")
             return redirect(url_for('upload_price_list'))
+
 
 
 

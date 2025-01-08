@@ -487,7 +487,7 @@ def order_details(order_id):
         """, (order_id,))
         details = cursor.fetchall()
 
-        # Логування результатів
+        # Логування даних
         logging.debug(f"Order details for order_id={order_id}: {details}")
 
         if not details:
@@ -495,6 +495,7 @@ def order_details(order_id):
             flash("No details found for this order.", "warning")
             return render_template('order_details.html', details=[])
 
+        # Передаємо дані в шаблон
         return render_template('order_details.html', details=details)
     except Exception as e:
         logging.error(f"Error loading order details for order_id={order_id}: {str(e)}")
@@ -505,7 +506,6 @@ def order_details(order_id):
             cursor.close()
         if conn:
             conn.close()
-
 
 
 if __name__ == '__main__':

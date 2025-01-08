@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Orders</title>
+    <title>Order Details</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -11,45 +11,37 @@
         <nav>
             <ul>
                 <li><a href="/">Home</a></li>
-                <li><a href="/cart">Cart</a></li>
-                <li><a href="/orders">Orders</a></li>
+                <li><a href="/orders">Back to Orders</a></li>
             </ul>
         </nav>
     </header>
-
     <div class="container">
-        <h1>Your Orders</h1>
-
-        <form method="POST" action="/orders">
-            <input type="text" name="search_article" placeholder="Search by article" value="{{ search_article or '' }}">
-            <button type="submit">Search</button>
-        </form>
-
-        {% if orders %}
+        <h1>Order Details</h1>
+        {% if details %}
         <table>
             <thead>
                 <tr>
                     <th>Order ID</th>
+                    <th>Article</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
                     <th>Total Price</th>
-                    <th>Order Date</th>
-                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for order in orders %}
+                {% for detail in details %}
                 <tr>
-                    <td>{{ order.id }}</td>
-                    <td>{{ order.total_price }}</td>
-                    <td>{{ order.order_date }}</td>
-                    <td>
-                        <a href="/order_details/{{ order.id }}">View Details</a>
-                    </td>
+                    <td>{{ detail.order_id }}</td>
+                    <td>{{ detail.article }}</td>
+                    <td>{{ detail.price }}</td>
+                    <td>{{ detail.quantity }}</td>
+                    <td>{{ detail.total_price }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         {% else %}
-        <p>No orders found.</p>
+        <p>No details available for this order.</p>
         {% endif %}
     </div>
 </body>

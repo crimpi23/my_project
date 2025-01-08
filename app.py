@@ -5,6 +5,7 @@ import psycopg2.extras
 import logging
 import bcrypt
 
+from psycopg2.extras import RealDictCursor
 
 import logging
 from flask import Flask, render_template, request, session, redirect, url_for, flash
@@ -507,23 +508,28 @@ def order_details(order_id):
 @app.route('/admin')
 def admin_panel():
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
-
-    # Отримати всіх користувачів
+    cursor = conn.cursor()  # Використовує DictCursor за замовчуванням
+    
     cursor.execute("""
-        SELECT id, username, email FROM users;
+        SELECT users.id, users.username, users.email, 
+               COALESCE(array_agg(roles.name), '{}') AS roles
+        FROM users
+        LEFT JOIN user_roles ON users.id = user_roles.user_id
+        LEFT JOIN roles ON user_roles.role_id = roles.id
+        GROUP BY users.id;
     """)
     users = cursor.fetchall()
 
     conn.close()
     return render_template('admin_main.html', users=users)
 
+
 @app.route('/admin/assign_roles', methods=['GET', 'POST'])
 def assign_roles():
     conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor = conn.cursor()  # Використовуємо DictCursor за замовчуванням
 
-    # Отримати всіх користувачів і їх ролі
+    # Отримуємо всіх користувачів і їх ролі
     cursor.execute("""
         SELECT users.id AS user_id, users.username, roles.id AS role_id, roles.name AS role_name
         FROM user_roles
@@ -531,12 +537,13 @@ def assign_roles():
         JOIN roles ON user_roles.role_id = roles.id
         ORDER BY users.username;
     """)
-    user_roles = cursor.fetchall()
+    user_roles = cursor.fetchall()  # Результат буде списком об'єктів, подібних до словників
 
-    # Отримати всіх користувачів і доступні ролі
+    # Отримуємо всіх користувачів
     cursor.execute("SELECT id, username FROM users;")
     users = cursor.fetchall()
 
+    # Отримуємо всі ролі
     cursor.execute("SELECT id, name FROM roles;")
     roles = cursor.fetchall()
 
@@ -546,7 +553,7 @@ def assign_roles():
         role_id = request.form['role_id']
 
         if action == 'assign':
-            # Перевірити, чи роль уже призначена
+            # Перевіряємо, чи роль уже призначена
             cursor.execute("""
                 SELECT * FROM user_roles
                 WHERE user_id = %s AND role_id = %s;
@@ -554,7 +561,7 @@ def assign_roles():
             if cursor.fetchone():
                 flash("Role is already assigned to this user.", "warning")
             else:
-                # Додати роль користувачу
+                # Призначаємо роль
                 cursor.execute("""
                     INSERT INTO user_roles (user_id, role_id)
                     VALUES (%s, %s);
@@ -562,7 +569,7 @@ def assign_roles():
                 conn.commit()
                 flash("Role assigned successfully.", "success")
         elif action == 'remove':
-            # Видалити роль у користувача
+            # Видаляємо роль у користувача
             cursor.execute("""
                 DELETE FROM user_roles
                 WHERE user_id = %s AND role_id = %s;
@@ -574,6 +581,7 @@ def assign_roles():
 
     conn.close()
     return render_template('assign_roles.html', user_roles=user_roles, users=users, roles=roles)
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

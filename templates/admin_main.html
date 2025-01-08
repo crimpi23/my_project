@@ -12,6 +12,7 @@
             <ul>
                 <li><a href="/">Home</a></li>
                 <li><a href="/admin">Admin</a></li>
+                <li><a href="/admin/assign_roles">Assign Roles</a></li>
             </ul>
         </nav>
     </header>
@@ -31,15 +32,15 @@
             <tbody>
                 {% for user in users %}
                 <tr>
-                    <td>{{ user.id }}</td>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.email }}</td>
+                    <td>{{ user.id }}</td> <!-- ID користувача -->
+                    <td>{{ user.username }}</td> <!-- Ім'я користувача -->
+                    <td>{{ user.email }}</td> <!-- Електронна пошта -->
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <!-- Кнопка для переходу на сторінку призначення прав -->
+        <!-- Кнопка для переходу на сторінку призначення ролей -->
         <div class="button-container">
             <a href="/admin/assign_roles" class="button">Assign Roles</a>
         </div>

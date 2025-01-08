@@ -46,61 +46,67 @@
         </div>
     </div>
 
-    <script>
-        // Показати/сховати поле для назви нової таблиці
-        document.getElementById('table_name').addEventListener('change', function () {
-            const newTableContainer = document.getElementById('new_table_name_container');
-            if (this.value === 'new') {
-                newTableContainer.style.display = 'block';
-            } else {
-                newTableContainer.style.display = 'none';
-            }
-        });
+	<script>
+		// Показати/сховати поле для назви нової таблиці
+		document.getElementById('table_name').addEventListener('change', function () {
+			const newTableContainer = document.getElementById('new_table_name_container');
+			if (this.value === 'new') {
+				newTableContainer.style.display = 'block';
+			} else {
+				newTableContainer.style.display = 'none';
+			}
+		});
 
-        // Завантаження файлу з прогресом
-        document.getElementById('uploadForm').addEventListener('submit', function (e) {
-            e.preventDefault();
+		// Завантаження файлу з прогресом
+		document.getElementById('uploadForm').addEventListener('submit', function (e) {
+			e.preventDefault();
 
-            const formData = new FormData(this);
-            const progressContainer = document.getElementById('progressContainer');
-            const progressBar = document.getElementById('progressBar');
-            const progressText = document.getElementById('progressText');
+			const formData = new FormData(this);
+			const progressContainer = document.getElementById('progressContainer');
+			const progressBar = document.getElementById('progressBar');
+			const progressText = document.getElementById('progressText');
 
-            progressContainer.style.display = 'block';
-            progressBar.style.width = '0%';
-            progressText.textContent = 'Starting upload...';
+			progressContainer.style.display = 'block';
+			progressBar.style.width = '0%';
+			progressText.textContent = 'Starting upload...';
 
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/admin/upload_price_list', true);
+			const xhr = new XMLHttpRequest();
+			xhr.open('POST', '/admin/upload_price_list', true);
 
-            // Відслідковування прогресу
-            xhr.upload.onprogress = function (event) {
-                if (event.lengthComputable) {
-                    const percent = Math.round((event.loaded / event.total) * 100);
-                    progressBar.style.width = percent + '%';
-                    progressText.textContent = 'Uploading: ' + percent + '%';
-                }
-            };
+			// Відслідковування прогресу
+			xhr.upload.onprogress = function (event) {
+				if (event.lengthComputable) {
+					const percent = Math.round((event.loaded / event.total) * 100);
+					progressBar.style.width = percent + '%';
+					progressText.textContent = 'Uploading: ' + percent + '%';
+				}
+			};
 
-            // Завершення завантаження
-            xhr.onload = function () {
-                if (xhr.status === 200) {
-                    progressText.textContent = 'Upload complete! Processing...';
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000); // Перезавантажити сторінку через 2 секунди
-                } else {
-                    progressText.textContent = 'Error during upload. Please try again.';
-                }
-            };
+			// Завершення завантаження
+			xhr.onload = function () {
+				if (xhr.status === 200) {
+					const response = JSON.parse(xhr.responseText);
+					if (response.status === 'success') {
+						progressText.textContent = response.message;
+						progressBar.style.backgroundColor = 'green';
+					} else {
+						progressText.textContent = response.message;
+						progressBar.style.backgroundColor = 'red';
+					}
+				} else {
+					progressText.textContent = 'Error during upload. Please try again.';
+					progressBar.style.backgroundColor = 'red';
+				}
+			};
 
-            // Обробка помилок
-            xhr.onerror = function () {
-                progressText.textContent = 'Network error. Please try again.';
-            };
+			// Обробка помилок
+			xhr.onerror = function () {
+				progressText.textContent = 'Network error. Please try again.';
+				progressBar.style.backgroundColor = 'red';
+			};
 
-            xhr.send(formData);
-        });
-    </script>
+			xhr.send(formData);
+		});
+	</script>
 </body>
 </html>

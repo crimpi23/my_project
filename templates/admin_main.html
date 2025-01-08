@@ -12,35 +12,13 @@
             <ul>
                 <li><a href="/">Home</a></li>
                 <li><a href="/admin">Admin</a></li>
-                <li><a href="/admin/assign_roles">Assign Roles</a></li>
             </ul>
         </nav>
     </header>
     <div class="container">
         <h1>Admin Panel</h1>
 
-        <!-- Список користувачів -->
-        <h2>Users</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.id }}</td> <!-- ID користувача -->
-                    <td>{{ user.username }}</td> <!-- Ім'я користувача -->
-                    <td>{{ user.email }}</td> <!-- Електронна пошта -->
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <!-- Кнопка для переходу на сторінку призначення ролей -->
+        <!-- Кнопка для переходу на Assign Roles -->
         <div class="button-container">
             <a href="/admin/assign_roles" class="button">Assign Roles</a>
         </div>

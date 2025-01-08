@@ -4,7 +4,8 @@ import psycopg2
 import psycopg2.extras
 import logging
 import bcrypt
-
+import csv
+import io
 from psycopg2.extras import RealDictCursor
 
 import logging
@@ -578,6 +579,101 @@ def assign_roles():
 
     conn.close()
     return render_template('assign_roles.html', user_roles=user_roles, users=users, roles=roles)
+
+# Функція для визначення розділювача
+def detect_delimiter(file_content):
+    delimiters = [',', ';', '\t', ' ']
+    sample_lines = file_content.splitlines()[:5]
+    counts = {delimiter: 0 for delimiter in delimiters}
+
+    for line in sample_lines:
+        for delimiter in delimiters:
+            counts[delimiter] += line.count(delimiter)
+
+    return max(counts, key=counts.get)
+
+@app.route('/admin/upload_price_list', methods=['GET', 'POST'])
+def upload_price_list():
+    if request.method == 'GET':
+        # Отримуємо список таблиць із price_lists
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT table_name FROM price_lists;")
+        price_lists = cursor.fetchall()
+        conn.close()
+        return render_template('upload_price_list.html', price_lists=price_lists)
+
+    if request.method == 'POST':
+        table_name = request.form['table_name']
+        new_table_name = request.form.get('new_table_name', '').strip()
+
+        # Перевіряємо файл
+        if 'file' not in request.files:
+            flash('No file uploaded', 'error')
+            return redirect(url_for('upload_price_list'))
+
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected', 'error')
+            return redirect(url_for('upload_price_list'))
+
+        # Обробляємо файл
+        file_content = file.read().decode('utf-8', errors='ignore')
+        delimiter = detect_delimiter(file_content)
+        reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
+
+        data = []
+        for row in reader:
+            if len(row) < 2:
+                continue
+
+            article = row[0].strip().replace(" ", "").upper()
+            price = row[1].replace(",", ".").strip()
+
+            try:
+                price = float(price)
+            except ValueError:
+                continue
+
+            data.append((article, price))
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Якщо обрана нова таблиця
+        if table_name == 'new':
+            if not new_table_name:
+                flash('New table name is required', 'error')
+                return redirect(url_for('upload_price_list'))
+
+            # Створюємо нову таблицю
+            cursor.execute(f"""
+                CREATE TABLE {new_table_name} (
+                    article TEXT PRIMARY KEY,
+                    price NUMERIC
+                );
+            """)
+            cursor.execute("""
+                INSERT INTO price_lists (table_name, created_at)
+                VALUES (%s, NOW());
+            """, (new_table_name,))
+
+            table_name = new_table_name
+
+        # Очищуємо таблицю перед оновленням
+        cursor.execute(f"DELETE FROM {table_name};")
+
+        # Додаємо нові дані
+        cursor.executemany(
+            f"INSERT INTO {table_name} (article, price) VALUES (%s, %s);", data
+        )
+
+        conn.commit()
+        conn.close()
+
+        flash(f"Uploaded {len(data)} records to table '{table_name}' successfully.", "success")
+        return redirect(url_for('admin_panel'))
+
 
 
 if __name__ == '__main__':

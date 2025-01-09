@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, session, redirect, url_for, flash, get_flashed_messages, jsonify
+
 import os
 import psycopg2
 import psycopg2.extras

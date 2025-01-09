@@ -115,3 +115,200 @@ table tr:hover {
     color: #555;
     text-align: center;
 }
+.clear-search-button {
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.clear-search-button:hover {
+    background-color: #e63946;
+}
+/* Базові стилі */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+header {
+    background: #007bff;
+    color: white;
+    padding: 10px 0;
+}
+
+header nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+}
+
+header nav ul li {
+    margin: 0 15px;
+}
+
+header nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+header nav ul li a:hover {
+    color: #ffcc00;
+}
+
+/* Контейнер */
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Таблиці */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+table th {
+    background: #007bff;
+    color: white;
+}
+
+table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+table tr:hover {
+    background: #f1f1f1;
+}
+
+/* Кнопки */
+button, .button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+button:hover, .button:hover {
+    background: #0056b3;
+}
+
+button.remove-button {
+    background: #ff6b6b;
+}
+
+button.remove-button:hover {
+    background: #e63946;
+}
+
+/* Flash-повідомлення */
+.flash-messages {
+    margin: 10px 0;
+}
+
+.flash-message {
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.flash-message.success {
+    background: #28a745;
+    color: white;
+}
+
+.flash-message.error {
+    background: #dc3545;
+    color: white;
+}
+
+/* Прогрес-бар */
+#progressContainer {
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#progressBar {
+    height: 20px;
+    background: #007bff;
+    width: 0;
+    transition: width 0.4s ease;
+}
+
+
+
+@media (max-width: 768px) {
+    header nav ul {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    table {
+        font-size: 14px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    button, .button {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+}
+#progressContainer {
+    margin-top: 20px;
+    background: #f4f4f9;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 25px;
+    width: 100%;
+    max-width: 600px;
+    border: 1px solid #ccc;
+}
+
+#progressBar {
+    height: 100%;
+    background: #007bff;
+    width: 0;
+    transition: width 0.3s ease;
+}
+
+#progressText {
+    text-align: center;
+    font-size: 14px;
+    margin-top: 5px;
+}

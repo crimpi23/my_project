@@ -154,8 +154,23 @@ def search_articles():
             cursor.close()
         if conn:
             conn.close()
+
+@app.route('/clear_search', methods=['POST'])
+def clear_search():
+    try:
+        logging.debug("Clearing search data from session.")
+        session.pop('grouped_results', None)
+        session.pop('quantities', None)
+        session.pop('missing_articles', None)
+        flash("Search data cleared successfully.", "success")
+    except Exception as e:
+        logging.error(f"Error clearing search data: {str(e)}", exc_info=True)
+        flash("Could not clear search data. Please try again.", "error")
+    return redirect(url_for('index'))
+
+
 # Сторінка кошика
-@app.route('/cart')
+@app.route('/cart', methods=['GET'])
 def cart():
     try:
         user_id = 1  # Замінити на логіку реального користувача
@@ -174,17 +189,17 @@ def cart():
 
         # Логування вмісту кошика
         logging.debug(f"Cart items for user_id={user_id}: {cart_items}")
-        for item in cart_items:
-            logging.debug(
-                f"Cart item: product_id={item['product_id']}, article={item['article']}, "
-                f"price={item['price']}, quantity={item['quantity']}, total_price={item['total_price']}"
-            )
 
         # Розрахунок загальної суми
         total_price = sum(item['total_price'] for item in cart_items)
-        logging.debug(f"Calculated total_price for cart: {total_price}")
+
+        # Очищення непотрібних флеш-повідомлень
+        session.pop('grouped_results', None)
+        session.pop('quantities', None)
+        session.pop('missing_articles', None)
 
         return render_template('cart.html', cart_items=cart_items, total_price=total_price)
+
     except Exception as e:
         logging.error(f"Error in cart for user_id={user_id}: {str(e)}", exc_info=True)
         flash("Could not load your cart. Please try again.", "error")
@@ -195,6 +210,7 @@ def cart():
         if conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 # Додавання в кошик
@@ -688,17 +704,20 @@ def upload_price_list():
             # Очищення таблиці перед оновленням
             logging.info(f"Clearing table: {table_name}")
             cursor.execute(f"DELETE FROM {table_name};")
+            conn.commit()  # Фіксуємо очищення
             deleted_rows = cursor.rowcount
             logging.info(f"Cleared {deleted_rows} rows from table: {table_name}")
 
-            # Додавання нових даних пакетами
+            # Додавання нових даних пакетами з ON CONFLICT
             logging.info(f"Starting batch insertion into table: {table_name}")
             batch_size = 10000
             for i in range(0, len(data), batch_size):
                 batch = data[i:i + batch_size]
-                cursor.executemany(
-                    f"INSERT INTO {table_name} (article, price) VALUES (%s, %s);", batch
-                )
+                cursor.executemany(f"""
+                    INSERT INTO {table_name} (article, price) 
+                    VALUES (%s, %s) 
+                    ON CONFLICT (article) DO UPDATE SET price = EXCLUDED.price;
+                """, batch)
                 conn.commit()  # Фіксуємо транзакцію після кожної партії
                 logging.info(f"Inserted batch {i // batch_size + 1} of {len(data) // batch_size + 1}")
 
@@ -714,6 +733,7 @@ def upload_price_list():
             logging.error(f"Error during POST request: {str(e)}")
             flash("An error occurred during upload.", "error")
             return redirect(url_for('upload_price_list'))
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

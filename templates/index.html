@@ -60,19 +60,24 @@
             </table>
         </div>
         {% endif %}
-
+		{% if grouped_results or missing_articles %}
+		<div class="clear-search-section">
+			<form method="POST" action="/clear_search">
+				<button type="submit" class="clear-search-button">Clear Search Data</button>
+			</form>
+		</div>
+		{% endif %}
         <!-- Повідомлення -->
-        {% if duplicate_articles %}
-        <div class="warning-message">
-            <p>Duplicate articles detected:</p>
-            <ul>
-                {% for article in duplicate_articles %}
-                <li>{{ article }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-
+		{% if missing_articles %}
+		<div class="warning-message">
+			<p>The following articles were not found:</p>
+			<ul>
+				{% for article in missing_articles %}
+				<li>{{ article }}</li>
+				{% endfor %}
+			</ul>
+		</div>
+		{% endif %}
         {% if auto_set_quantities %}
         <div class="info-message">
             <p>Articles with no quantity were set to 1:</p>
@@ -133,6 +138,7 @@
                 </tbody>
             </table>
         </div>
+		
         {% else %}
         <p>Your cart is empty.</p>
         {% endif %}

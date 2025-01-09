@@ -8,6 +8,7 @@ import io
 import time
 from psycopg2.extras import RealDictCursor
 import bcrypt
+import openpyxl
 
 # Налаштування логування (можна додати у верхній частині файлу)
 logging.basicConfig(level=logging.DEBUG)
@@ -828,7 +829,8 @@ def compare_prices():
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(url_for('compare_prices'))
-
+            
+# Експорт в ексель файлу порівняння цін
 def export_to_excel(better_in_first, better_in_second, same_prices):
     try:
         # Створення нового Excel-файлу
@@ -856,17 +858,6 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
         for item in same_prices:
             ws.append([item['article'], item['price'], item['tables']])
 
-        # Автоматичне форматування ширини стовпців
-        for col in ws.columns:
-            max_length = 0
-            col_letter = get_column_letter(col[0].column)
-            for cell in col:
-                try:
-                    max_length = max(max_length, len(str(cell.value)))
-                except Exception:
-                    pass
-            ws.column_dimensions[col_letter].width = max_length + 2
-
         # Збереження Excel-файлу у тимчасовій директорії
         filename = "comparison_results.xlsx"
         filepath = f"/tmp/{filename}"
@@ -879,6 +870,7 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
     except Exception as e:
         logging.error(f"Error during Excel export: {e}", exc_info=True)
         raise
+
 
 
 

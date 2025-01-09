@@ -1,9 +1,9 @@
-/* Загальні стилі */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
+    line-height: 1.6;
     margin: 0;
     padding: 0;
+    background-color: #f9f9f9;
     color: #333;
 }
 
@@ -16,133 +16,10 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Хедер */
-header {
-    background-color: #007BFF;
-    padding: 10px 20px;
-}
-
-header nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-}
-
-header nav ul li {
-    margin-right: 20px;
-}
-
-header nav ul li a {
-    text-decoration: none;
-    color: white;
-    font-weight: bold;
-}
-
-header nav ul li a:hover {
-    text-decoration: underline;
-}
-
-/* Flash-повідомлення */
-.flash-messages {
-    margin-top: 20px;
-    padding: 10px;
-    border-radius: 5px;
-}
-
-.flash-message {
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-}
-
-.flash-message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.flash-message.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-/* Таблиці */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-}
-
-table th,
-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-}
-
-table th {
-    background-color: #007BFF;
-    color: white;
-}
-
-table tr:nth-child(even) {
-    background-color: #f2f2f2;
-}
-
-table tr:hover {
-    background-color: #ddd;
-}
-
-/* Прогрес-бар */
-#progressContainer {
-    width: 100%;
-    background-color: #e0e0e0;
-    border-radius: 8px;
-    margin-top: 20px;
-}
-
-#progressBar {
-    height: 20px;
-    border-radius: 8px;
-    transition: width 0.3s ease;
-}
-
-#progressText {
-    margin-top: 10px;
-    font-size: 14px;
-    color: #555;
-    text-align: center;
-}
-.clear-search-button {
-    background-color: #ff6b6b;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
-}
-
-.clear-search-button:hover {
-    background-color: #e63946;
-}
-/* Базові стилі */
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f9;
-    color: #333;
-}
-
 header {
     background: #007bff;
     color: white;
-    padding: 10px 0;
+    padding: 10px 20px;
 }
 
 header nav ul {
@@ -168,16 +45,6 @@ header nav ul li a:hover {
     color: #ffcc00;
 }
 
-/* Контейнер */
-.container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
 /* Таблиці */
 table {
     width: 100%;
@@ -185,9 +52,10 @@ table {
     margin: 20px 0;
 }
 
-table th, table td {
+table th,
+table td {
     border: 1px solid #ddd;
-    padding: 8px;
+    padding: 10px;
     text-align: center;
 }
 
@@ -202,6 +70,54 @@ table tr:nth-child(even) {
 
 table tr:hover {
     background: #f1f1f1;
+}
+
+/* Flash-повідомлення */
+.flash-messages {
+    margin: 10px 0;
+}
+
+.flash-message {
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.flash-message.success {
+    background: #28a745;
+    color: white;
+}
+
+.flash-message.error {
+    background: #dc3545;
+    color: white;
+}
+
+/* Прогрес-бар */
+#progressContainer {
+    margin-top: 20px;
+    background: #f4f4f9;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 25px;
+    width: 100%;
+    max-width: 600px;
+    border: 1px solid #ccc;
+}
+
+#progressBar {
+    height: 100%;
+    background: #007bff;
+    width: 0;
+    transition: width 0.3s ease;
+}
+
+#progressText {
+    text-align: center;
+    font-size: 14px;
+    margin-top: 5px;
+    color: #555;
 }
 
 /* Кнопки */
@@ -231,45 +147,78 @@ button.remove-button:hover {
     background: #e63946;
 }
 
-/* Flash-повідомлення */
-.flash-messages {
-    margin: 10px 0;
-}
-
-.flash-message {
+.clear-search-button {
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
     padding: 10px 15px;
-    margin-bottom: 10px;
+    cursor: pointer;
     border-radius: 5px;
-    text-align: center;
+    font-size: 14px;
+    transition:
+    background-color 0.3s ease;
 }
 
-.flash-message.success {
-    background: #28a745;
-    color: white;
+.clear-search-button:hover {
+    background-color: #e63946;
 }
 
-.flash-message.error {
-    background: #dc3545;
-    color: white;
+/* Стиль для форми пошуку */
+.search-form {
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Прогрес-бар */
-#progressContainer {
-    margin-top: 20px;
+.form-label {
+    display: block;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.form-textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
     border: 1px solid #ddd;
     border-radius: 5px;
-    overflow: hidden;
+    resize: vertical;
+    background-color: #fff;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-#progressBar {
-    height: 20px;
-    background: #007bff;
-    width: 0;
-    transition: width 0.4s ease;
+.form-textarea:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    outline: none;
 }
 
+.form-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 15px;
+}
 
+.form-button:hover {
+    background-color: #0056b3;
+}
 
+/* Адаптивність */
 @media (max-width: 768px) {
     header nav ul {
         flex-direction: column;
@@ -288,27 +237,4 @@ button.remove-button:hover {
         font-size: 12px;
         padding: 8px 10px;
     }
-}
-#progressContainer {
-    margin-top: 20px;
-    background: #f4f4f9;
-    border-radius: 8px;
-    overflow: hidden;
-    height: 25px;
-    width: 100%;
-    max-width: 600px;
-    border: 1px solid #ccc;
-}
-
-#progressBar {
-    height: 100%;
-    background: #007bff;
-    width: 0;
-    transition: width 0.3s ease;
-}
-
-#progressText {
-    text-align: center;
-    font-size: 14px;
-    margin-top: 5px;
 }

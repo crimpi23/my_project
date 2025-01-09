@@ -90,12 +90,11 @@
         {% endif %}
 
         <!-- Форма пошуку -->
-        <form method="POST" action="/search#results">
-            <label for="articles">Enter Articles and Quantities:</label>
-            <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required></textarea>
-            <button type="submit">Search</button>
-        </form>
-
+		<form method="POST" action="/search#results" class="search-form">
+			<label for="articles" class="form-label">Enter Articles and Quantities:</label>
+			<textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required class="form-textarea"></textarea>
+			<button type="submit" class="form-button">Search</button>
+		</form>
         <!-- Секція кошика -->
         {% if cart_items %}
         <div class="cart-section">

@@ -88,15 +88,4 @@
         <p>Your cart is empty.</p>
         {% endif %}
     </div>
-    <script>
-        setTimeout(() => {
-            const flashMessages = document.querySelectorAll('.flash-message');
-            flashMessages.forEach(msg => {
-                msg.style.transition = 'opacity 0.5s ease';
-                msg.style.opacity = '0';
-                setTimeout(() => msg.remove(), 500);
-            });
-        }, 5000);
-    </script>
-</body>
 </html>

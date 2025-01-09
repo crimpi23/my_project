@@ -736,61 +736,57 @@ def ping():
     return "OK", 200
 
 @app.route('/admin/compare_prices', methods=['GET', 'POST'])
-def export_to_excel(better_in_first, better_in_second, same_prices):
-    try:
-        # Створення нового Excel-файлу
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Comparison Results"
+def compare_prices():
+    if request.method == 'GET':
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("SELECT table_name FROM price_lists;")
+        price_lists = cursor.fetchall()
+        conn.close()
+        logging.info("Fetched price list tables successfully.")
+        return render_template('compare_prices.html', price_lists=price_lists)
 
-        # Заповнення "Better in First Table"
-        ws.append(["Better in First Table"])
-        ws.append(["Article", "Price"])
-        for item in better_in_first:
-            ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок для розділення
+    if request.method == 'POST':
+        articles_input = request.form.get('articles', '').strip()
+        selected_tables = request.form.getlist('price_tables')
 
-        # Заповнення "Better in Second Table"
-        ws.append(["Better in Second Table"])
-        ws.append(["Article", "Price"])
-        for item in better_in_second:
-            ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок для розділення
+        if not articles_input or not selected_tables:
+            flash("Please enter articles and select at least one price table.", "error")
+            return redirect(url_for('compare_prices'))
 
-        # Заповнення "Same Prices"
-        ws.append(["Same Prices"])
-        ws.append(["Article", "Price", "Tables"])
-        for item in same_prices:
-            ws.append([item['article'], item['price'], item['tables']])
-        ws.append([])  # Порожній рядок для розділення
+        articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Автоматичне форматування ширини стовпців
-        for col in ws.columns:
-            max_length = 0
-            col_letter = get_column_letter(col[0].column)
-            for cell in col:
-                try:
-                    max_length = max(max_length, len(str(cell.value)))
-                except Exception:
-                    pass
-            ws.column_dimensions[col_letter].width = max_length + 2
+        # Збираємо результати порівняння
+        results = {}
+        for table in selected_tables:
+            query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
+            cursor.execute(query, (articles,))
+            for row in cursor.fetchall():
+                article = row['article']
+                price = row['price']
+                if article not in results:
+                    results[article] = []
+                results[article].append({'price': price, 'table': table})
 
-        # Збереження Excel-файлу у тимчасовій директорії
-        filename = "comparison_results.xlsx"
-        filepath = f"/tmp/{filename}"
-        wb.save(filepath)
+        conn.close()
 
-        # Надсилання файлу користувачеві
-        logging.info(f"Exported Excel file saved to: {filepath}")
-        logging.info(f"Better in First Table: {better_in_first}")
-        logging.info(f"Better in Second Table: {better_in_second}")
-        logging.info(f"Same Prices: {same_prices}")
-        return send_file(filepath, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        # Обробка результатів
+        better_in_first, better_in_second, same_prices = process_results(results, selected_tables)
 
-    except Exception as e:
-        logging.error(f"Error during POST request: {str(e)}", exc_info=True)
-        flash("An error occurred during comparison.", "error")
-        return redirect(url_for('compare_prices'))
+        logging.info("Comparison completed successfully.")
+        return render_template(
+            'compare_prices_results.html',
+            better_in_first=better_in_first,
+            better_in_second=better_in_second,
+            same_prices=same_prices
+        )
+
+        except Exception as e:
+            logging.error(f"Error during POST request: {str(e)}", exc_info=True)
+            flash("An error occurred during comparison.", "error")
+            return redirect(url_for('compare_prices'))
 
 def export_to_excel(better_in_first, better_in_second, same_prices):
     try:

@@ -17,20 +17,22 @@
     </header>
     <div class="container">
         <h1>Compare Prices</h1>
-        <form method="POST">
-            <label for="articles">Enter Articles:</label>
-            <textarea name="articles" id="articles" rows="10" placeholder="Enter one article per line"></textarea>
+		<form method="POST" action="/admin/compare_prices">
+			<label for="articles">Enter articles (one per line):</label>
+			<textarea id="articles" name="articles" rows="10" required></textarea>
 
-            <h3>Select Price Tables:</h3>
-            {% for table in price_lists %}
-            <div>
-                <input type="checkbox" id="{{ table.table_name }}" name="price_tables" value="{{ table.table_name }}">
-                <label for="{{ table.table_name }}">{{ table.table_name }}</label>
-            </div>
-            {% endfor %}
+			<label for="price_tables">Select price tables for comparison:</label>
+			<div id="price_tables">
+				{% for table in price_lists %}
+				<div>
+					<input type="checkbox" id="{{ table.table_name }}" name="price_tables" value="{{ table.table_name }}">
+					<label for="{{ table.table_name }}">{{ table.table_name }}</label>
+				</div>
+				{% endfor %}
+			</div>
 
-            <button type="submit">Compare Prices</button>
-        </form>
+			<button type="submit">Compare Prices</button>
+		</form>
     </div>
 </body>
 </html>

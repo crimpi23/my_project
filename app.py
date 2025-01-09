@@ -737,56 +737,97 @@ def ping():
 
 @app.route('/admin/compare_prices', methods=['GET', 'POST'])
 def compare_prices():
+    better_in_first = []
+    better_in_second = []
+    same_prices = []
+
     if request.method == 'GET':
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("SELECT table_name FROM price_lists;")
-        price_lists = cursor.fetchall()
-        conn.close()
-        logging.info("Fetched price list tables successfully.")
-        return render_template('compare_prices.html', price_lists=price_lists)
+        try:
+            # Отримуємо список таблиць із прайсами
+            conn = get_db_connection()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            cursor.execute("SELECT table_name FROM price_lists;")
+            price_lists = cursor.fetchall()
+            conn.close()
+            logging.info("Fetched price list tables successfully.")
+            return render_template('compare_prices.html', price_lists=price_lists)
+        except Exception as e:
+            logging.error(f"Error during GET request: {str(e)}", exc_info=True)
+            flash("Failed to load price list tables.", "error")
+            return redirect(url_for('admin_panel'))
 
     if request.method == 'POST':
-        articles_input = request.form.get('articles', '').strip()
-        selected_tables = request.form.getlist('price_tables')
+        try:
+            form_data = request.form.to_dict()
+            logging.info(f"Form data: {form_data}")
 
-        if not articles_input or not selected_tables:
-            flash("Please enter articles and select at least one price table.", "error")
-            return redirect(url_for('compare_prices'))
+            # Перевірка на експорт
+            if 'export_excel' in request.form:
+                logging.info("Export to Excel initiated.")
+                if not (better_in_first or better_in_second or same_prices):
+                    logging.error("No data to export!")
+                    flash("No data to export!", "error")
+                    return redirect(url_for('compare_prices'))
+                return export_to_excel(better_in_first, better_in_second, same_prices)
 
-        articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            # Отримання даних з форми
+            articles_input = request.form.get('articles', '').strip()
+            selected_prices = request.form.getlist('price_tables')
 
-        # Збираємо результати порівняння
-        results = {}
-        for table in selected_tables:
-            query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
-            cursor.execute(query, (articles,))
-            for row in cursor.fetchall():
-                article = row['article']
-                price = row['price']
-                if article not in results:
-                    results[article] = []
-                results[article].append({'price': price, 'table': table})
+            if not articles_input or not selected_prices:
+                flash("Please enter articles and select price tables.", "error")
+                return redirect(url_for('compare_prices'))
 
-        conn.close()
+            # Обробка артикулів
+            articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
+            logging.info(f"Articles to compare: {articles}")
 
-        # Обробка результатів
-        better_in_first, better_in_second, same_prices = process_results(results, selected_tables)
+            conn = get_db_connection()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        logging.info("Comparison completed successfully.")
-        return render_template(
-            'compare_prices_results.html',
-            better_in_first=better_in_first,
-            better_in_second=better_in_second,
-            same_prices=same_prices
-        )
+            # Пошук цін у вибраних таблицях
+            results = {}
+            for table in selected_prices:
+                query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
+                cursor.execute(query, (articles,))
+                for row in cursor.fetchall():
+                    article = row['article']
+                    price = row['price']
+                    if article not in results:
+                        results[article] = []
+                    results[article].append({'price': price, 'table': table})
+
+            conn.close()
+
+            # Логіка порівняння
+            best_prices = {}
+            for article, prices in results.items():
+                min_price = min(prices, key=lambda x: x['price'])
+                best_prices[article] = min_price
+                if len([p for p in prices if p['price'] == min_price['price']]) > 1:
+                    same_prices.append({
+                        'article': article,
+                        'price': min_price['price'],
+                        'tables': ', '.join(p['table'] for p in prices if p['price'] == min_price['price'])
+                    })
+
+            # Формування результатів
+            better_in_first = [p for p in best_prices.values() if p['table'] == selected_prices[0]]
+            better_in_second = [p for p in best_prices.values() if len(selected_prices) > 1 and p['table'] == selected_prices[1]]
+
+            logging.info("Comparison completed successfully.")
+            return render_template(
+                'compare_prices_results.html',
+                better_in_first=better_in_first,
+                better_in_second=better_in_second,
+                same_prices=same_prices
+            )
 
         except Exception as e:
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(url_for('compare_prices'))
+
 
 def export_to_excel(better_in_first, better_in_second, same_prices):
     try:

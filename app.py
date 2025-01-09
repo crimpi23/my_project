@@ -796,25 +796,26 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
         ws = wb.active
         ws.title = "Comparison Results"
 
-        # Додавання даних для першої таблиці
+        # Заповнення "Better in First Table"
         ws.append(["Better in First Table"])
         ws.append(["Article", "Price"])
         for item in better_in_first:
             ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок
+        ws.append([])  # Порожній рядок для розділення
 
-        # Додавання даних для другої таблиці
+        # Заповнення "Better in Second Table"
         ws.append(["Better in Second Table"])
         ws.append(["Article", "Price"])
         for item in better_in_second:
             ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок
+        ws.append([])  # Порожній рядок для розділення
 
-        # Додавання даних для однакових цін
+        # Заповнення "Same Prices"
         ws.append(["Same Prices"])
         ws.append(["Article", "Price", "Tables"])
         for item in same_prices:
             ws.append([item['article'], item['price'], item['tables']])
+        ws.append([])  # Порожній рядок для розділення
 
         # Автоматичне форматування ширини стовпців
         for col in ws.columns:
@@ -839,6 +840,7 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
     except Exception as e:
         logging.error(f"Error during Excel export: {e}", exc_info=True)
         raise
+
 
 
 

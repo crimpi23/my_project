@@ -766,22 +766,44 @@ def compare_prices():
         conn.close()
 
         # Логіка формування таблиць
-        best_prices = {}
+        better_in_first = []
+        better_in_second = []
         same_prices = []
-        for article, prices in results.items():
-            min_price = min(prices, key=lambda x: x['price'])
-            best_prices[article] = min_price
-            if len([p for p in prices if p['price'] == min_price['price']]) > 1:
-                same_prices.append({'article': article, 'price': min_price['price'], 'tables': ', '.join(p['table'] for p in prices if p['price'] == min_price['price'])})
 
-        # Підготовка даних для таблиць
-        better_in_first = [p for p in best_prices.values() if p['table'] == selected_prices[0]]
-        better_in_second = [p for p in best_prices.values() if p['table'] == selected_prices[1]]
+        for article, prices in results.items():
+            # Знаходимо мінімальну ціну
+            min_price = min(prices, key=lambda x: x['price'])
+            min_price_value = min_price['price']
+            best_tables = [p['table'] for p in prices if p['price'] == min_price_value]
+
+            if len(best_tables) > 1:
+                # Якщо ціна однакова в декількох таблицях
+                same_prices.append({
+                    'article': article,
+                    'price': min_price_value,
+                    'tables': ', '.join(best_tables)
+                })
+            else:
+                # Розподіл за таблицями
+                best_table = best_tables[0]
+                if best_table == selected_prices[0]:
+                    better_in_first.append({
+                        'article': article,
+                        'price': min_price_value
+                    })
+                elif best_table == selected_prices[1]:
+                    better_in_second.append({
+                        'article': article,
+                        'price': min_price_value
+                    })
         
-        return render_template('compare_prices_results.html', 
-                               better_in_first=better_in_first, 
-                               better_in_second=better_in_second, 
-                               same_prices=same_prices)
+        return render_template(
+            'compare_prices_results.html', 
+            better_in_first=better_in_first, 
+            better_in_second=better_in_second, 
+            same_prices=same_prices
+        )
+
 
 @app.route('/admin/utilities', methods=['GET'])
 def utilities():

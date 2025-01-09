@@ -9,50 +9,49 @@
 <body>
     <div class="container">
         <h1>Comparison Results</h1>
+		<h2>Better in {{ better_in_first[0]['table'] if better_in_first else '' }}</h2>
+		<table>
+			<tr>
+				<th>Article</th>
+				<th>Price</th>
+			</tr>
+			{% for item in better_in_first %}
+			<tr>
+				<td>{{ item.article }}</td>
+				<td>{{ item.price }}</td>
+			</tr>
+			{% endfor %}
+		</table>
 
-        <h2>Better in {{ better_in_first[0]['table'] if better_in_first else '' }}</h2>
-        <table>
-            <tr>
-                <th>Article</th>
-                <th>Price</th>
-            </tr>
-            {% for item in better_in_first %}
-            <tr>
-                <td>{{ item.article }}</td>
-                <td>{{ item.price }}</td>
-            </tr>
-            {% endfor %}
-        </table>
+		<h2>Better in {{ better_in_second[0]['table'] if better_in_second else '' }}</h2>
+		<table>
+			<tr>
+				<th>Article</th>
+				<th>Price</th>
+			</tr>
+			{% for item in better_in_second %}
+			<tr>
+				<td>{{ item.article }}</td>
+				<td>{{ item.price }}</td>
+			</tr>
+			{% endfor %}
+		</table>
 
-        <h2>Better in {{ better_in_second[0]['table'] if better_in_second else '' }}</h2>
-        <table>
-            <tr>
-                <th>Article</th>
-                <th>Price</th>
-            </tr>
-            {% for item in better_in_second %}
-            <tr>
-                <td>{{ item.article }}</td>
-                <td>{{ item.price }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-
-        <h2>Same Prices</h2>
-        <table>
-            <tr>
-                <th>Article</th>
-                <th>Price</th>
-                <th>Tables</th>
-            </tr>
-            {% for item in same_prices %}
-            <tr>
-                <td>{{ item.article }}</td>
-                <td>{{ item.price }}</td>
-                <td>{{ item.tables }}</td>
-            </tr>
-            {% endfor %}
-        </table>
+		<h2>Same Prices</h2>
+		<table>
+			<tr>
+				<th>Article</th>
+				<th>Price</th>
+				<th>Tables</th>
+			</tr>
+			{% for item in same_prices %}
+			<tr>
+				<td>{{ item.article }}</td>
+				<td>{{ item.price }}</td>
+				<td>{{ item.tables }}</td>
+			</tr>
+			{% endfor %}
+		</table>
     </div>
 </body>
 </html>

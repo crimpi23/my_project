@@ -1,22 +1,134 @@
-from flask import Flask, render_template, request, session, redirect, url_for, flash, get_flashed_messages, jsonify, send_file
+from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, send_file
 import os
 import psycopg2
 import psycopg2.extras
 import logging
 import csv
 import io
-import time
-from psycopg2.extras import RealDictCursor
 import bcrypt
 import openpyxl
 
-# Налаштування логування (можна додати у верхній частині файлу)
+# Налаштування логування
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 
+# Генерує унікальний токен для користувача
+def generate_token():
+    return os.urandom(16).hex()
+
+# Хешує пароль для збереження у базі даних
+def hash_password(password):
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+# Перевіряє відповідність пароля хешу з бази
+def verify_password(stored_hash, password):
+    return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
+
 # Секретний ключ для сесій
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
+
+# Головна сторінка за токеном
+@app.route('/<token>/')
+def index(token): 
+    role = validate_token(token)
+    if not role:
+        flash("Invalid token.", "error")
+        return redirect(url_for('simple_search'))
+
+    # Збереження токена та ролі у сесії
+    session['token'] = token
+    session['role'] = role
+    return render_template('index.html', role=role)
+
+#Запит про токен / Перевірка токена / Декоратор для перевірки токена
+def token_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = session.get('token')
+        if not token:
+            flash("Access denied. Token is required.", "error")
+            return redirect(url_for('simple_search'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Головна сторінка з перевіркою токена
+@app.route('/')
+def index():
+    token = session.get('token')
+    if not token:
+        return render_template('simple_search.html')
+    return render_template('index.html')
+
+#Пошук для користувачів без токену
+@app.route('/simple_search', methods=['GET', 'POST'])
+def simple_search():
+    if request.method == 'POST':
+        article = request.form.get('article')
+        if not article:
+            flash("Please enter an article for search.", "error")
+            return redirect(url_for('simple_search'))
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT article, price FROM some_table
+            WHERE article = %s
+        """, (article,))
+        results = cursor.fetchall()
+        conn.close()
+        return render_template('simple_search_results.html', results=results)
+
+    return render_template('simple_search.html')
+
+#Доступ до адмін-панелі:
+@app.route('/<token>/admin', methods=['GET', 'POST'])
+def admin_panel(token):
+    if not validate_token(token) or validate_token(token) != "admin":
+        flash("Access denied. Admin rights are required.", "error")
+        return redirect(url_for('index', token=token))
+
+    if request.method == 'POST':
+        password = request.form.get('password')
+
+        # Отримуємо хеш пароля адміністратора з бази
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT password_hash FROM users
+            WHERE id = (SELECT user_id FROM user_roles WHERE role_id = (SELECT id FROM roles WHERE name = 'admin'))
+        """)
+        admin_password_hash = cursor.fetchone()['password_hash']
+        conn.close()
+
+        # Перевіряємо пароль
+        if not verify_password(admin_password_hash, password):
+            flash("Incorrect password.", "error")
+            return redirect(url_for('admin_panel', token=token))
+
+        # Зберігаємо авторизацію
+        session['admin_authenticated'] = True
+        return redirect(url_for('admin_dashboard', token=token))
+
+    return render_template('admin_login.html', token=token)
+
+
+
+#Це треба потім описати, теж щось про адмінку
+@app.route('/<token>/admin/dashboard')
+def admin_dashboard(token):
+    role = validate_token(token)
+    if not role or role != "admin":
+        flash("Access denied.", "error")
+        return redirect(url_for('index', token=token))
+
+    if not session.get('admin_authenticated'):
+        flash("Password is required for admin access.", "error")
+        return redirect(url_for('admin_panel', token=token))
+
+    return render_template('admin_main.html')
+
+
 
 # Функція для підключення до бази даних
 def get_db_connection():
@@ -25,32 +137,94 @@ def get_db_connection():
         sslmode="require",
         cursor_factory=psycopg2.extras.DictCursor
     )
-
-# Створення користувача
-@app.route('/register', methods=['POST'])
-def register():
+    
+# Функція для перевірки токена
+def validate_token(token):
     try:
-        username = request.form.get('username')
-        password = request.form.get('password')
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO users (username, password_hash) VALUES (%s, %s)
-        """, (username, hashed_password.decode('utf-8')))
-        conn.commit()
-
-        flash("Registration successful!", "success")
-        return redirect(url_for('index'))
+            SELECT r.name AS role
+            FROM tokens t
+            JOIN user_roles ur ON ur.user_id = t.user_id
+            JOIN roles r ON ur.role_id = r.id
+            WHERE t.token = %s
+        """, (token,))
+        result = cursor.fetchone()
+        conn.close()
+        return result['role'] if result else None
     except Exception as e:
-        flash(f"Error during registration: {str(e)}", "error")
-        return redirect(url_for('index'))
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+        logging.error(f"Error validating token: {e}")
+        return None
+
+#Створення користувача в адмін панелі:
+@app.route('/<token>/admin/create_user', methods=['GET', 'POST'])
+def create_user(token):
+    role = validate_token(token)
+    if not role or role != "admin":
+        flash("Access denied. Admin rights are required.", "error")
+        return redirect(url_for('index', token=token))
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        role_id = request.form.get('role_id')
+
+        if not username or not password or not role_id:
+            flash("All fields are required.", "error")
+            return redirect(url_for('create_user', token=token))
+
+        hashed_password = hash_password(password)  # Шифруємо пароль
+        user_token = generate_token()  # Генеруємо токен
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            # Додаємо користувача
+            cursor.execute("""
+                INSERT INTO users (username, password_hash)
+                VALUES (%s, %s)
+                RETURNING id
+            """, (username, hashed_password))
+            user_id = cursor.fetchone()['id']
+
+            # Додаємо роль користувачу
+            cursor.execute("""
+                INSERT INTO user_roles (user_id, role_id, assigned_at)
+                VALUES (%s, %s, NOW())
+            """, (user_id, role_id))
+
+            # Додаємо токен для користувача
+            cursor.execute("""
+                INSERT INTO tokens (user_id, token)
+                VALUES (%s, %s)
+            """, (user_id, user_token))
+
+            conn.commit()
+            flash(f"User created successfully! Token: {user_token}", "success")
+        except Exception as e:
+            conn.rollback()
+            logging.error(f"Error creating user: {e}")
+            flash("Error creating user.", "error")
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+        return redirect(url_for('create_user', token=token))
+
+    # Отримуємо всі ролі для форми
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name FROM roles")
+    roles = cursor.fetchall()
+    conn.close()
+
+    return render_template('create_user.html', roles=roles, token=token)
+
+
 
 
 # Головна сторінка для пошуку

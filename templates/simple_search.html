@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Search</title>
+</head>
+<body>
+    <h1>Simple Article Search</h1>
+    <form action="/simple_search" method="POST">
+        <label for="article">Enter Article:</label>
+        <input type="text" id="article" name="article" required>
+        <button type="submit">Search</button>
+    </form>
+    {% if results %}
+        <h2>Search Results:</h2>
+        <ul>
+            {% for result in results %}
+                <li>Article: {{ result.article }}, Price: {{ result.price }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>

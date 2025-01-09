@@ -4,27 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
-    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/admin/upload_price_list">Upload Price List</a></li>
-            <li><a href="/admin/assign_roles">Assign Roles</a></li>
-            <li><a href="/admin/utilities">Utilities</a></li>
-            </ul>
-        </nav>
-    </header>
-	<div class="container">
-		<h1>Admin Panel</h1>
+    <h1>Admin Panel</h1>
 
-		<!-- Кнопки для переходу -->
-		<div class="button-container">
-			<a href="/admin/assign_roles" class="button">Assign Roles</a>
-			<a href="/admin/upload_price_list" class="button">Upload Price List</a>
-		</div>
-	</div>
+    <!-- Додана кнопка для створення нового користувача -->
+    <a href="{{ url_for('create_user', token=session.get('token')) }}" class="button">Create New User</a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    <!-- Додати дії для користувачів -->
+                    <form method="POST" action="/<token>/admin/assign_roles">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <button type="submit">Assign Roles</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>

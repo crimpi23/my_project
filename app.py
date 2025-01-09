@@ -15,7 +15,6 @@ import time
 from psycopg2.extras import RealDictCursor
 import bcrypt
 
-
 # Налаштування логування (можна додати у верхній частині файлу)
 logging.basicConfig(level=logging.DEBUG)
 
@@ -736,13 +735,8 @@ def get_import_status():
 def ping():
     return "OK", 200
 
-
 @app.route('/admin/compare_prices', methods=['GET', 'POST'])
 def compare_prices():
-    better_in_first = []
-    better_in_second = []
-    same_prices = []
-
     if request.method == 'GET':
         try:
             # Отримуємо список таблиць із прайсами
@@ -763,16 +757,21 @@ def compare_prices():
             form_data = request.form.to_dict()
             logging.info(f"Form data: {form_data}")
 
-            # Перевірка на експорт
+            # Якщо запит на експорт
             if 'export_excel' in request.form:
                 logging.info("Export to Excel initiated.")
-                if not (better_in_first or better_in_second or same_prices):
+                data = session.get('comparison_results')
+                if not data:
                     logging.error("No data to export!")
                     flash("No data to export!", "error")
                     return redirect(url_for('compare_prices'))
-                return export_to_excel(better_in_first, better_in_second, same_prices)
+                return export_to_excel(
+                    data['better_in_first'],
+                    data['better_in_second'],
+                    data['same_prices']
+                )
 
-            # Отримання даних з форми
+            # Обробка даних для порівняння
             articles_input = request.form.get('articles', '').strip()
             selected_prices = request.form.getlist('price_tables')
 
@@ -780,14 +779,14 @@ def compare_prices():
                 flash("Please enter articles and select price tables.", "error")
                 return redirect(url_for('compare_prices'))
 
-            # Обробка артикулів
+            # Розбиваємо артикулі
             articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
             logging.info(f"Articles to compare: {articles}")
 
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            # Пошук цін у вибраних таблицях
+            # Отримуємо ціни з вибраних таблиць
             results = {}
             for table in selected_prices:
                 query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
@@ -801,21 +800,27 @@ def compare_prices():
 
             conn.close()
 
-            # Логіка порівняння
-            best_prices = {}
+            # Порівняння цін
+            better_in_first, better_in_second, same_prices = [], [], []
             for article, prices in results.items():
                 min_price = min(prices, key=lambda x: x['price'])
-                best_prices[article] = min_price
                 if len([p for p in prices if p['price'] == min_price['price']]) > 1:
                     same_prices.append({
                         'article': article,
                         'price': min_price['price'],
                         'tables': ', '.join(p['table'] for p in prices if p['price'] == min_price['price'])
                     })
+                elif min_price['table'] == selected_prices[0]:
+                    better_in_first.append({'article': article, **min_price})
+                elif min_price['table'] == selected_prices[1]:
+                    better_in_second.append({'article': article, **min_price})
 
-            # Формування результатів
-            better_in_first = [{'article': article, **price} for article, price in best_prices.items() if price['table'] == selected_prices[0]]
-            better_in_second = [{'article': article, **price} for article, price in best_prices.items() if price['table'] == selected_prices[1]]
+            # Зберігаємо результати у сесії
+            session['comparison_results'] = {
+                'better_in_first': better_in_first,
+                'better_in_second': better_in_second,
+                'same_prices': same_prices
+            }
 
             logging.info("Comparison completed successfully.")
             return render_template(
@@ -829,6 +834,7 @@ def compare_prices():
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(url_for('compare_prices'))
+
 
 
 

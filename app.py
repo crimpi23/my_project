@@ -8,9 +8,6 @@ import io
 import time
 from psycopg2.extras import RealDictCursor
 import bcrypt
-from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment
-from openpyxl.utils import get_column_letter
 
 # Налаштування логування (можна додати у верхній частині файлу)
 logging.basicConfig(level=logging.DEBUG)

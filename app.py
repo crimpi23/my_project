@@ -615,6 +615,8 @@ def upload_price_list():
             price_lists = cursor.fetchall()
             conn.close()
             logging.info("Price list tables fetched successfully.")
+            # "Споживаємо" всі Flash-повідомлення після завантаження сторінки
+            get_flashed_messages(with_categories=True)
             return render_template('upload_price_list.html', price_lists=price_lists)
         except Exception as e:
             logging.error(f"Error during GET request: {str(e)}")
@@ -704,9 +706,9 @@ def upload_price_list():
             # Логування часу виконання
             end_time = time.time()
             logging.info(f"Import completed in {end_time - start_time:.2f} seconds.")
-            flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "success")
+            # Flash-повідомлення лише для цієї сторінки
+            flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "upload")
             return jsonify({"status": "success", "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}), 200
-
 
         except Exception as e:
             logging.error(f"Error during POST request: {e}")
@@ -717,6 +719,7 @@ def upload_price_list():
                 cursor.close()
             if 'conn' in locals():
                 conn.close()
+
 
 
 @app.route('/import_status', methods=['GET'])

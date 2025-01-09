@@ -7,9 +7,14 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Comparison Results</h1>
-		<h2>Better in {{ better_in_first[0]['table'] if better_in_first else '' }}</h2>
+	<div class="container">
+		<h1>Comparison Results</h1>
+
+		<form method="POST">
+			<button type="submit" name="export_excel">Export to Excel</button>
+		</form>
+
+		<h2>Better in First Table</h2>
 		<table>
 			<tr>
 				<th>Article</th>
@@ -23,7 +28,7 @@
 			{% endfor %}
 		</table>
 
-		<h2>Better in {{ better_in_second[0]['table'] if better_in_second else '' }}</h2>
+		<h2>Better in Second Table</h2>
 		<table>
 			<tr>
 				<th>Article</th>
@@ -52,6 +57,6 @@
 			</tr>
 			{% endfor %}
 		</table>
-    </div>
+	</div>
 </body>
 </html>

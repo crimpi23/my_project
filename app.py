@@ -782,12 +782,15 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
 
         # Надсилання файлу користувачеві
         logging.info(f"Exported Excel file saved to: {filepath}")
+        logging.info(f"Better in First Table: {better_in_first}")
+        logging.info(f"Better in Second Table: {better_in_second}")
+        logging.info(f"Same Prices: {same_prices}")
         return send_file(filepath, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-        except Exception as e:
-            logging.error(f"Error during POST request: {str(e)}", exc_info=True)
-            flash("An error occurred during comparison.", "error")
-            return redirect(url_for('compare_prices'))
+    except Exception as e:
+        logging.error(f"Error during POST request: {str(e)}", exc_info=True)
+        flash("An error occurred during comparison.", "error")
+        return redirect(url_for('compare_prices'))
 
 def export_to_excel(better_in_first, better_in_second, same_prices):
     try:

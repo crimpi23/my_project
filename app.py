@@ -753,13 +753,9 @@ def compare_prices():
 
     if request.method == 'POST':
         try:
-            form_data = request.form.to_dict()
-            logging.info(f"Form data: {form_data}")
-
-            # Обробка запиту для експорту
+            # Перевіряємо, чи це запит на експорт
             if 'export_excel' in request.form:
                 logging.info("Export to Excel initiated.")
-                # Використання збережених у сесії даних
                 better_in_first = session.get('better_in_first', [])
                 better_in_second = session.get('better_in_second', [])
                 same_prices = session.get('same_prices', [])
@@ -771,7 +767,7 @@ def compare_prices():
 
                 return export_to_excel(better_in_first, better_in_second, same_prices)
 
-            # Інша логіка обробки статті
+            # Обробка введених статей
             articles_input = request.form.get('articles', '').strip()
             selected_prices = request.form.getlist('price_tables')
 
@@ -788,8 +784,11 @@ def compare_prices():
             results = {}
             for table in selected_prices:
                 query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
+                logging.info(f"Executing query: {query} with articles {articles}")
                 cursor.execute(query, (articles,))
-                for row in cursor.fetchall():
+                rows = cursor.fetchall()
+                logging.info(f"Results from table {table}: {rows}")
+                for row in rows:
                     article, price = row
                     if article not in results:
                         results[article] = []
@@ -797,25 +796,36 @@ def compare_prices():
 
             conn.close()
 
+            # Перевірка результатів
+            if not results:
+                logging.warning("No matching results found in the selected price tables.")
+                flash("No matching articles found in the selected price tables.", "warning")
+                return redirect(url_for('compare_prices'))
+
+            # Формуємо результати
             better_in_first = [
-                {"article": article, "price": data[0]['price']}
+                {"article": article, "price": min(data, key=lambda x: x['price'])['price']}
                 for article, data in results.items()
                 if len(data) == 1 and data[0]['table'] == selected_prices[0]
             ]
 
             better_in_second = [
-                {"article": article, "price": data[0]['price']}
+                {"article": article, "price": min(data, key=lambda x: x['price'])['price']}
                 for article, data in results.items()
                 if len(data) == 1 and data[0]['table'] == selected_prices[1]
             ]
 
             same_prices = [
-                {"article": article, "price": data[0]['price'], "tables": ', '.join(d['table'] for d in data)}
+                {
+                    "article": article,
+                    "price": data[0]['price'],
+                    "tables": ', '.join(d['table'] for d in data)
+                }
                 for article, data in results.items()
                 if len(data) > 1 and all(d['price'] == data[0]['price'] for d in data)
             ]
 
-            # Збереження результатів у сесії
+            # Зберігаємо результати у сесію
             session['better_in_first'] = better_in_first
             session['better_in_second'] = better_in_second
             session['same_prices'] = same_prices
@@ -834,6 +844,7 @@ def compare_prices():
             logging.error(f"Error during POST request: {e}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(url_for('compare_prices'))
+
 
 
 

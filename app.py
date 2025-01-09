@@ -789,9 +789,6 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
             flash("An error occurred during comparison.", "error")
             return redirect(url_for('compare_prices'))
 
-
-
-
 def export_to_excel(better_in_first, better_in_second, same_prices):
     try:
         # Створення нового Excel-файлу

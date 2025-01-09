@@ -10,10 +10,10 @@
 	<div class="container">
 		<h1>Comparison Results</h1>
 
-		<form method="POST">
-			<button type="submit" name="export_excel">Export to Excel</button>
+		<form method="POST" action="/admin/compare_prices">
+			<input type="hidden" name="export_excel" value="true">
+			<button type="submit">Export to Excel</button>
 		</form>
-
 		<h2>Better in First Table</h2>
 		<table>
 			<tr>

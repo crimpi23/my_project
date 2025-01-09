@@ -812,46 +812,52 @@ def compare_prices():
 
 
 def export_to_excel(better_in_first, better_in_second, same_prices):
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Comparison Results"
+    try:
+        # Створення Excel-файлу
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Comparison Results"
 
-    # Таблиця: Better in first
-    ws.append(["Better in First Table"])
-    ws.append(["Article", "Price"])
-    for item in better_in_first:
-        ws.append([item['article'], item['price']])
-    ws.append([])  # Пропуск рядка
+        # Таблиця: Better in First Table
+        ws.append(["Better in First Table"])
+        ws.append(["Article", "Price"])
+        for item in better_in_first:
+            ws.append([item['article'], item['price']])
+        ws.append([])  # Пропуск рядка
 
-    # Таблиця: Better in second
-    ws.append(["Better in Second Table"])
-    ws.append(["Article", "Price"])
-    for item in better_in_second:
-        ws.append([item['article'], item['price']])
-    ws.append([])  # Пропуск рядка
+        # Таблиця: Better in Second Table
+        ws.append(["Better in Second Table"])
+        ws.append(["Article", "Price"])
+        for item in better_in_second:
+            ws.append([item['article'], item['price']])
+        ws.append([])  # Пропуск рядка
 
-    # Таблиця: Same Prices
-    ws.append(["Same Prices"])
-    ws.append(["Article", "Price", "Tables"])
-    for item in same_prices:
-        ws.append([item['article'], item['price'], item['tables']])
+        # Таблиця: Same Prices
+        ws.append(["Same Prices"])
+        ws.append(["Article", "Price", "Tables"])
+        for item in same_prices:
+            ws.append([item['article'], item['price'], item['tables']])
 
-    # Автоматичне форматування ширини стовпців
-    for col in ws.columns:
-        max_length = 0
-        col_letter = get_column_letter(col[0].column)
-        for cell in col:
-            try:
-                max_length = max(max_length, len(str(cell.value)))
-            except:
-                pass
-        ws.column_dimensions[col_letter].width = max_length + 2
+        # Автоматичне форматування ширини стовпців
+        for col in ws.columns:
+            max_length = 0
+            col_letter = get_column_letter(col[0].column)
+            for cell in col:
+                try:
+                    max_length = max(max_length, len(str(cell.value)))
+                except:
+                    pass
+            ws.column_dimensions[col_letter].width = max_length + 2
 
-    # Збереження Excel-файлу
-    filename = "comparison_results.xlsx"
-    filepath = f"/tmp/{filename}"
-    wb.save(filepath)
-    return send_file(filepath, as_attachment=True, download_name=filename)
+        # Збереження Excel-файлу
+        filename = "comparison_results.xlsx"
+        filepath = f"/tmp/{filename}"
+        wb.save(filepath)
+        return send_file(filepath, as_attachment=True, download_name=filename)
+    
+    except Exception as e:
+        logging.error(f"Error in export_to_excel: {str(e)}", exc_info=True)
+        return {"status": "error", "message": "Failed to export to Excel."}, 500
 
 
 @app.route('/admin/utilities', methods=['GET'])

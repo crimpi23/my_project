@@ -123,7 +123,6 @@
 				}
 			};
 
-
 			// Обробка помилок
 			xhr.onerror = function () {
 				progressText.textContent = 'Network error. Please try again.';
@@ -132,6 +131,13 @@
 
 			xhr.send(formData);
 		});
+
+		// Keep-alive Ping для підтримки активності сервера
+		setInterval(() => {
+			fetch('/ping')
+				.then(response => console.log('Keep-alive: OK'))
+				.catch(error => console.error('Keep-alive failed', error));
+		}, 300000); // Кожні 5 хвилин (300000 мс)
 	</script>
 </body>
 </html>

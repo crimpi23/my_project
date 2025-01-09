@@ -7,7 +7,7 @@ import bcrypt
 import csv
 import io
 from psycopg2.extras import RealDictCursor
-
+from flask import jsonify
 import logging
 from flask import Flask, render_template, request, session, redirect, url_for, flash
 import os
@@ -734,6 +734,13 @@ def upload_price_list():
             flash("An error occurred during upload.", "error")
             return redirect(url_for('upload_price_list'))
 
+@app.route('/import_status', methods=['GET'])
+def get_import_status():
+    return jsonify({'current_batch': current_batch, 'total_batches': total_batches})
+
+@app.route('/ping', methods=['GET'])
+def ping():
+    return "OK", 200
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

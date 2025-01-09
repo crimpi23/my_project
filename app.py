@@ -751,23 +751,19 @@ def compare_prices():
             flash("Failed to load price list tables.", "error")
             return redirect(url_for('admin_panel'))
 
-    if request.method == 'POST':
-        try:
-            # Перевіряємо, чи це запит на експорт
+if request.method == 'POST':
+    try:
+        form_data = request.form.to_dict()
+        logging.info(f"Form data: {form_data}")
+
             if 'export_excel' in request.form:
                 logging.info("Export to Excel initiated.")
-                better_in_first = session.get('better_in_first', [])
-                better_in_second = session.get('better_in_second', [])
-                same_prices = session.get('same_prices', [])
-                
                 if not (better_in_first or better_in_second or same_prices):
                     logging.error("No data to export!")
                     flash("No data to export!", "error")
                     return redirect(url_for('compare_prices'))
-
                 return export_to_excel(better_in_first, better_in_second, same_prices)
 
-            # Обробка введених статей
             articles_input = request.form.get('articles', '').strip()
             selected_prices = request.form.getlist('price_tables')
 
@@ -784,11 +780,8 @@ def compare_prices():
             results = {}
             for table in selected_prices:
                 query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
-                logging.info(f"Executing query: {query} with articles {articles}")
                 cursor.execute(query, (articles,))
-                rows = cursor.fetchall()
-                logging.info(f"Results from table {table}: {rows}")
-                for row in rows:
+                for row in cursor.fetchall():
                     article, price = row
                     if article not in results:
                         results[article] = []
@@ -796,43 +789,41 @@ def compare_prices():
 
             conn.close()
 
-            # Перевірка результатів
-            if not results:
-                logging.warning("No matching results found in the selected price tables.")
-                flash("No matching articles found in the selected price tables.", "warning")
-                return redirect(url_for('compare_prices'))
+            # Оновлена логіка для формування списків
+            better_in_first = []
+            better_in_second = []
+            same_prices = []
 
-            # Формуємо результати
-            better_in_first = [
-                {"article": article, "price": min(data, key=lambda x: x['price'])['price']}
-                for article, data in results.items()
-                if len(data) == 1 and data[0]['table'] == selected_prices[0]
-            ]
+            for article, prices in results.items():
+                # Знаходимо мінімальну ціну серед всіх таблиць
+                min_price = min(prices, key=lambda x: x['price'])
 
-            better_in_second = [
-                {"article": article, "price": min(data, key=lambda x: x['price'])['price']}
-                for article, data in results.items()
-                if len(data) == 1 and data[0]['table'] == selected_prices[1]
-            ]
-
-            same_prices = [
-                {
-                    "article": article,
-                    "price": data[0]['price'],
-                    "tables": ', '.join(d['table'] for d in data)
-                }
-                for article, data in results.items()
-                if len(data) > 1 and all(d['price'] == data[0]['price'] for d in data)
-            ]
-
-            # Зберігаємо результати у сесію
-            session['better_in_first'] = better_in_first
-            session['better_in_second'] = better_in_second
-            session['same_prices'] = same_prices
+                # Перевіряємо, чи мінімальна ціна єдина
+                tables_with_min_price = [p['table'] for p in prices if p['price'] == min_price['price']]
+                if len(tables_with_min_price) > 1:
+                    # Якщо мінімальна ціна однакова в декількох таблицях, додаємо до "Same Prices"
+                    same_prices.append({
+                        "article": article,
+                        "price": min_price['price'],
+                        "tables": ', '.join(tables_with_min_price)
+                    })
+                else:
+                    # Розподіляємо між першою та другою таблицею
+                    if tables_with_min_price[0] == selected_prices[0]:
+                        better_in_first.append({
+                            "article": article,
+                            "price": min_price['price']
+                        })
+                    elif tables_with_min_price[0] == selected_prices[1]:
+                        better_in_second.append({
+                            "article": article,
+                            "price": min_price['price']
+                        })
 
             logging.info(f"Better in First Table: {better_in_first}")
             logging.info(f"Better in Second Table: {better_in_second}")
             logging.info(f"Same Prices: {same_prices}")
+            logging.info(f"Processed results: {results}")
 
             return render_template(
                 'compare_prices_results.html',

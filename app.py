@@ -739,31 +739,39 @@ def ping():
 def compare_prices():
     if request.method == 'GET':
         try:
+            # Отримуємо список таблиць із прайсами
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor.execute("SELECT table_name FROM price_lists;")
             price_lists = cursor.fetchall()
             conn.close()
-            logging.info(f"Fetched price list tables successfully: {price_lists}")
+            logging.info("Fetched price list tables successfully.")
             return render_template('compare_prices.html', price_lists=price_lists)
         except Exception as e:
-            logging.error(f"Error during GET request: {e}", exc_info=True)
+            logging.error(f"Error during GET request: {str(e)}", exc_info=True)
             flash("Failed to load price list tables.", "error")
             return redirect(url_for('admin_panel'))
 
-if request.method == 'POST':
-    try:
-        form_data = request.form.to_dict()
-        logging.info(f"Form data: {form_data}")
+    if request.method == 'POST':
+        try:
+            form_data = request.form.to_dict()
+            logging.info(f"Form data: {form_data}")
 
+            # Якщо запит на експорт
             if 'export_excel' in request.form:
                 logging.info("Export to Excel initiated.")
-                if not (better_in_first or better_in_second or same_prices):
+                data = session.get('comparison_results')
+                if not data:
                     logging.error("No data to export!")
                     flash("No data to export!", "error")
                     return redirect(url_for('compare_prices'))
-                return export_to_excel(better_in_first, better_in_second, same_prices)
+                return export_to_excel(
+                    data['better_in_first'],
+                    data['better_in_second'],
+                    data['same_prices']
+                )
 
+            # Обробка даних для порівняння
             articles_input = request.form.get('articles', '').strip()
             selected_prices = request.form.getlist('price_tables')
 
@@ -771,73 +779,61 @@ if request.method == 'POST':
                 flash("Please enter articles and select price tables.", "error")
                 return redirect(url_for('compare_prices'))
 
+            # Розбиваємо артикулі
             articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
             logging.info(f"Articles to compare: {articles}")
 
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
+            # Отримуємо ціни з вибраних таблиць
             results = {}
             for table in selected_prices:
                 query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
                 cursor.execute(query, (articles,))
                 for row in cursor.fetchall():
-                    article, price = row
+                    article = row['article']
+                    price = row['price']
                     if article not in results:
                         results[article] = []
                     results[article].append({'price': price, 'table': table})
 
             conn.close()
 
-            # Оновлена логіка для формування списків
-            better_in_first = []
-            better_in_second = []
-            same_prices = []
-
+            # Порівняння цін
+            better_in_first, better_in_second, same_prices = [], [], []
             for article, prices in results.items():
-                # Знаходимо мінімальну ціну серед всіх таблиць
                 min_price = min(prices, key=lambda x: x['price'])
-
-                # Перевіряємо, чи мінімальна ціна єдина
-                tables_with_min_price = [p['table'] for p in prices if p['price'] == min_price['price']]
-                if len(tables_with_min_price) > 1:
-                    # Якщо мінімальна ціна однакова в декількох таблицях, додаємо до "Same Prices"
+                if len([p for p in prices if p['price'] == min_price['price']]) > 1:
                     same_prices.append({
-                        "article": article,
-                        "price": min_price['price'],
-                        "tables": ', '.join(tables_with_min_price)
+                        'article': article,
+                        'price': min_price['price'],
+                        'tables': ', '.join(p['table'] for p in prices if p['price'] == min_price['price'])
                     })
-                else:
-                    # Розподіляємо між першою та другою таблицею
-                    if tables_with_min_price[0] == selected_prices[0]:
-                        better_in_first.append({
-                            "article": article,
-                            "price": min_price['price']
-                        })
-                    elif tables_with_min_price[0] == selected_prices[1]:
-                        better_in_second.append({
-                            "article": article,
-                            "price": min_price['price']
-                        })
+                elif min_price['table'] == selected_prices[0]:
+                    better_in_first.append({'article': article, **min_price})
+                elif min_price['table'] == selected_prices[1]:
+                    better_in_second.append({'article': article, **min_price})
 
-            logging.info(f"Better in First Table: {better_in_first}")
-            logging.info(f"Better in Second Table: {better_in_second}")
-            logging.info(f"Same Prices: {same_prices}")
-            logging.info(f"Processed results: {results}")
+            # Зберігаємо результати у сесії
+            session['comparison_results'] = {
+                'better_in_first': better_in_first,
+                'better_in_second': better_in_second,
+                'same_prices': same_prices
+            }
 
+            logging.info("Comparison completed successfully.")
             return render_template(
                 'compare_prices_results.html',
                 better_in_first=better_in_first,
                 better_in_second=better_in_second,
                 same_prices=same_prices
             )
+
         except Exception as e:
-            logging.error(f"Error during POST request: {e}", exc_info=True)
+            logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(url_for('compare_prices'))
-
-
-
 
 def export_to_excel(better_in_first, better_in_second, same_prices):
     try:
@@ -846,26 +842,25 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
         ws = wb.active
         ws.title = "Comparison Results"
 
-        # Заповнення "Better in First Table"
+        # Додавання даних для першої таблиці
         ws.append(["Better in First Table"])
         ws.append(["Article", "Price"])
         for item in better_in_first:
             ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок для розділення
+        ws.append([])  # Порожній рядок
 
-        # Заповнення "Better in Second Table"
+        # Додавання даних для другої таблиці
         ws.append(["Better in Second Table"])
         ws.append(["Article", "Price"])
         for item in better_in_second:
             ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок для розділення
+        ws.append([])  # Порожній рядок
 
-        # Заповнення "Same Prices"
+        # Додавання даних для однакових цін
         ws.append(["Same Prices"])
         ws.append(["Article", "Price", "Tables"])
         for item in same_prices:
             ws.append([item['article'], item['price'], item['tables']])
-        ws.append([])  # Порожній рядок для розділення
 
         # Автоматичне форматування ширини стовпців
         for col in ws.columns:
@@ -890,7 +885,6 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
     except Exception as e:
         logging.error(f"Error during Excel export: {e}", exc_info=True)
         raise
-
 
 
 

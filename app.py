@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, session, redirect, url_for, f
 import openpyxl
 from openpyxl.utils import get_column_letter
 from flask import send_file
+import openpyxl
+from openpyxl.utils import get_column_letter
+from flask import send_file
 import os
 import psycopg2
 import psycopg2.extras
@@ -735,6 +738,10 @@ def ping():
 
 @app.route('/admin/compare_prices', methods=['GET', 'POST'])
 def compare_prices():
+    better_in_first = []
+    better_in_second = []
+    same_prices = []
+
     if request.method == 'GET':
         try:
             # Отримуємо список таблиць із прайсами
@@ -752,19 +759,20 @@ def compare_prices():
 
     if request.method == 'POST':
         try:
-            logging.info("Received POST request for comparison.")
-            logging.info(f"Form data: {request.form}")
+            form_data = request.form.to_dict()
+            logging.info(f"Form data: {form_data}")
 
+            # Перевірка на експорт
             if 'export_excel' in request.form:
                 logging.info("Export to Excel initiated.")
-                # Перевірка даних перед експортом
+                # Перевіряємо, чи є дані для експорту
                 if not (better_in_first or better_in_second or same_prices):
                     logging.error("No data to export!")
                     flash("No data to export!", "error")
                     return redirect(url_for('compare_prices'))
                 return export_to_excel(better_in_first, better_in_second, same_prices)
 
-            # Отримуємо дані з форми
+            # Отримання даних з форми
             articles_input = request.form.get('articles', '').strip()
             selected_prices = request.form.getlist('price_tables')
 
@@ -775,6 +783,7 @@ def compare_prices():
             # Обробка артикулів
             articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
             logging.info(f"Articles to compare: {articles}")
+
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
@@ -794,7 +803,6 @@ def compare_prices():
 
             # Логіка порівняння
             best_prices = {}
-            same_prices = []
             for article, prices in results.items():
                 min_price = min(prices, key=lambda x: x['price'])
                 best_prices[article] = min_price
@@ -817,61 +825,62 @@ def compare_prices():
                 same_prices=same_prices
             )
 
-        except Exception as e:
+            except Exception as e:
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(url_for('compare_prices'))
 
 
 
+
 def export_to_excel(better_in_first, better_in_second, same_prices):
     try:
+        # Створення нового Excel-файлу
         wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Comparison Results"
+        ws1 = wb.active
+        ws1.title = "Better in First Table"
 
-        # Додати дані: Better in First Table
-        ws.append(["Better in First Table"])
-        ws.append(["Article", "Price"])
+        # Заповнення даними для першої таблиці
+        ws1.append(["Article", "Price"])
         for item in better_in_first:
-            ws.append([item['article'], item['price']])
-        ws.append([])  # Пропуск рядка
+            ws1.append([item['article'], item['price']])
 
-        # Додати дані: Better in Second Table
-        ws.append(["Better in Second Table"])
-        ws.append(["Article", "Price"])
+        # Створення другого аркуша для другої таблиці
+        ws2 = wb.create_sheet(title="Better in Second Table")
+        ws2.append(["Article", "Price"])
         for item in better_in_second:
-            ws.append([item['article'], item['price']])
-        ws.append([])  # Пропуск рядка
+            ws2.append([item['article'], item['price']])
 
-        # Додати дані: Same Prices
-        ws.append(["Same Prices"])
-        ws.append(["Article", "Price", "Tables"])
+        # Створення третього аркуша для однакових цін
+        ws3 = wb.create_sheet(title="Same Prices")
+        ws3.append(["Article", "Price", "Tables"])
         for item in same_prices:
-            ws.append([item['article'], item['price'], item['tables']])
+            ws3.append([item['article'], item['price'], item['tables']])
 
         # Автоматичне форматування ширини стовпців
-        for col in ws.columns:
-            max_length = 0
-            col_letter = get_column_letter(col[0].column)
-            for cell in col:
-                try:
-                    max_length = max(max_length, len(str(cell.value)))
-                except:
-                    pass
-            ws.column_dimensions[col_letter].width = max_length + 2
+        for ws in [ws1, ws2, ws3]:
+            for col in ws.columns:
+                max_length = 0
+                col_letter = get_column_letter(col[0].column)
+                for cell in col:
+                    try:
+                        max_length = max(max_length, len(str(cell.value)))
+                    except Exception:
+                        pass
+                ws.column_dimensions[col_letter].width = max_length + 2
 
-        # Збереження Excel-файлу
+        # Збереження Excel-файлу у тимчасовій директорії
         filename = "comparison_results.xlsx"
         filepath = f"/tmp/{filename}"
         wb.save(filepath)
-        logging.info(f"Excel file saved at {filepath}")
-        return send_file(filepath, as_attachment=True, download_name=filename)
+
+        # Надсилання файлу користувачеві
+        logging.info(f"Exported Excel file saved to: {filepath}")
+        return send_file(filepath, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
     except Exception as e:
-        logging.error(f"Error in export_to_excel: {str(e)}", exc_info=True)
-        flash("Failed to export to Excel.", "error")
-        return redirect(url_for('compare_prices'))
+        logging.error(f"Error during Excel export: {e}", exc_info=True)
+        raise
 
 
 

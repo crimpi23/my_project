@@ -756,6 +756,22 @@ def compare_prices():
             form_data = request.form.to_dict()
             logging.info(f"Form data: {form_data}")
 
+            # Обробка запиту для експорту
+            if 'export_excel' in request.form:
+                logging.info("Export to Excel initiated.")
+                # Використання збережених у сесії даних
+                better_in_first = session.get('better_in_first', [])
+                better_in_second = session.get('better_in_second', [])
+                same_prices = session.get('same_prices', [])
+                
+                if not (better_in_first or better_in_second or same_prices):
+                    logging.error("No data to export!")
+                    flash("No data to export!", "error")
+                    return redirect(url_for('compare_prices'))
+
+                return export_to_excel(better_in_first, better_in_second, same_prices)
+
+            # Інша логіка обробки статті
             articles_input = request.form.get('articles', '').strip()
             selected_prices = request.form.getlist('price_tables')
 
@@ -763,14 +779,12 @@ def compare_prices():
                 flash("Please enter articles and select price tables.", "error")
                 return redirect(url_for('compare_prices'))
 
-            # Обробка артикулів
             articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
             logging.info(f"Articles to compare: {articles}")
 
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            # Пошук даних у вибраних таблицях
             results = {}
             for table in selected_prices:
                 query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
@@ -783,38 +797,28 @@ def compare_prices():
 
             conn.close()
 
-            # Логіка порівняння
-            best_prices = {}
-            same_prices = []
-            for article, prices in results.items():
-                min_price = min(prices, key=lambda x: x['price'])
-                best_prices[article] = min_price
-                if len([p for p in prices if p['price'] == min_price['price']]) > 1:
-                    same_prices.append({
-                        'article': article,
-                        'price': min_price['price'],
-                        'tables': ', '.join(p['table'] for p in prices if p['price'] == min_price['price'])
-                    })
-
             better_in_first = [
-                {"article": article, "price": data["price"]}
-                for article, data in best_prices.items()
-                if data["table"] == selected_prices[0]
-            ]
-            better_in_second = [
-                {"article": article, "price": data["price"]}
-                for article, data in best_prices.items()
-                if data["table"] == selected_prices[1]
+                {"article": article, "price": data[0]['price']}
+                for article, data in results.items()
+                if len(data) == 1 and data[0]['table'] == selected_prices[0]
             ]
 
-            # Експорт до Excel
-            if 'export_excel' in request.form:
-                logging.info("Export to Excel initiated.")
-                if not (better_in_first or better_in_second or same_prices):
-                    logging.error("No data to export!")
-                    flash("No data to export!", "error")
-                    return redirect(url_for('compare_prices'))
-                return export_to_excel(better_in_first, better_in_second, same_prices)
+            better_in_second = [
+                {"article": article, "price": data[0]['price']}
+                for article, data in results.items()
+                if len(data) == 1 and data[0]['table'] == selected_prices[1]
+            ]
+
+            same_prices = [
+                {"article": article, "price": data[0]['price'], "tables": ', '.join(d['table'] for d in data)}
+                for article, data in results.items()
+                if len(data) > 1 and all(d['price'] == data[0]['price'] for d in data)
+            ]
+
+            # Збереження результатів у сесії
+            session['better_in_first'] = better_in_first
+            session['better_in_second'] = better_in_second
+            session['same_prices'] = same_prices
 
             logging.info(f"Better in First Table: {better_in_first}")
             logging.info(f"Better in Second Table: {better_in_second}")
@@ -826,11 +830,11 @@ def compare_prices():
                 better_in_second=better_in_second,
                 same_prices=same_prices
             )
-
         except Exception as e:
             logging.error(f"Error during POST request: {e}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(url_for('compare_prices'))
+
 
 
 def export_to_excel(better_in_first, better_in_second, same_prices):

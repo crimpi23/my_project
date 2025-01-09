@@ -745,7 +745,7 @@ def compare_prices():
 
     if request.method == 'GET':
         try:
-            # Fetch price list tables
+            # Отримуємо список таблиць із прайсами
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor.execute("SELECT table_name FROM price_lists;")
@@ -756,14 +756,14 @@ def compare_prices():
         except Exception as e:
             logging.error(f"Error during GET request: {str(e)}", exc_info=True)
             flash("Failed to load price list tables.", "error")
-            return redirect(url_for('utilities'))
+            return redirect(url_for('admin_panel'))
 
     if request.method == 'POST':
         try:
             form_data = request.form.to_dict()
             logging.info(f"Form data: {form_data}")
 
-            # Check for export request
+            # Перевірка на експорт
             if 'export_excel' in request.form:
                 logging.info("Export to Excel initiated.")
                 if not (better_in_first or better_in_second or same_prices):
@@ -772,7 +772,7 @@ def compare_prices():
                     return redirect(url_for('compare_prices'))
                 return export_to_excel(better_in_first, better_in_second, same_prices)
 
-            # Get form data
+            # Отримання даних з форми
             articles_input = request.form.get('articles', '').strip()
             selected_prices = request.form.getlist('price_tables')
 
@@ -780,14 +780,14 @@ def compare_prices():
                 flash("Please enter articles and select price tables.", "error")
                 return redirect(url_for('compare_prices'))
 
-            # Process articles
+            # Обробка артикулів
             articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
             logging.info(f"Articles to compare: {articles}")
 
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            # Search for prices in selected tables
+            # Пошук цін у вибраних таблицях
             results = {}
             for table in selected_prices:
                 query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
@@ -801,7 +801,7 @@ def compare_prices():
 
             conn.close()
 
-            # Comparison logic
+            # Логіка порівняння
             best_prices = {}
             for article, prices in results.items():
                 min_price = min(prices, key=lambda x: x['price'])
@@ -813,9 +813,9 @@ def compare_prices():
                         'tables': ', '.join(p['table'] for p in prices if p['price'] == min_price['price'])
                     })
 
-            # Prepare results
-            better_in_first = [p for p in best_prices.values() if p['table'] == selected_prices[0]]
-            better_in_second = [p for p in best_prices.values() if p['table'] == selected_prices[1]]
+            # Формування результатів
+            better_in_first = [{'article': article, **price} for article, price in best_prices.items() if price['table'] == selected_prices[0]]
+            better_in_second = [{'article': article, **price} for article, price in best_prices.items() if price['table'] == selected_prices[1]]
 
             logging.info("Comparison completed successfully.")
             return render_template(
@@ -831,54 +831,58 @@ def compare_prices():
             return redirect(url_for('compare_prices'))
 
 
+
 def export_to_excel(better_in_first, better_in_second, same_prices):
     try:
-        # Create a new Excel file
+        # Створення нового Excel-файлу
         wb = openpyxl.Workbook()
-        ws1 = wb.active
-        ws1.title = "Better in First Table"
+        ws = wb.active
+        ws.title = "Comparison Results"
 
-        # Fill data for the first table
-        ws1.append(["Article", "Price"])
+        # Додавання даних для першої таблиці
+        ws.append(["Better in First Table"])
+        ws.append(["Article", "Price"])
         for item in better_in_first:
-            ws1.append([item['article'], item['price']])
+            ws.append([item['article'], item['price']])
+        ws.append([])  # Порожній рядок
 
-        # Create a sheet for the second table
-        ws2 = wb.create_sheet(title="Better in Second Table")
-        ws2.append(["Article", "Price"])
+        # Додавання даних для другої таблиці
+        ws.append(["Better in Second Table"])
+        ws.append(["Article", "Price"])
         for item in better_in_second:
-            ws2.append([item['article'], item['price']])
+            ws.append([item['article'], item['price']])
+        ws.append([])  # Порожній рядок
 
-        # Create a sheet for same prices
-        ws3 = wb.create_sheet(title="Same Prices")
-        ws3.append(["Article", "Price", "Tables"])
+        # Додавання даних для однакових цін
+        ws.append(["Same Prices"])
+        ws.append(["Article", "Price", "Tables"])
         for item in same_prices:
-            ws3.append([item['article'], item['price'], item['tables']])
+            ws.append([item['article'], item['price'], item['tables']])
 
-        # Auto-adjust column widths
-        for ws in [ws1, ws2, ws3]:
-            for col in ws.columns:
-                max_length = 0
-                col_letter = get_column_letter(col[0].column)
-                for cell in col:
-                    try:
-                        max_length = max(max_length, len(str(cell.value)))
-                    except Exception:
-                        pass
-                ws.column_dimensions[col_letter].width = max_length + 2
+        # Автоматичне форматування ширини стовпців
+        for col in ws.columns:
+            max_length = 0
+            col_letter = get_column_letter(col[0].column)
+            for cell in col:
+                try:
+                    max_length = max(max_length, len(str(cell.value)))
+                except Exception:
+                    pass
+            ws.column_dimensions[col_letter].width = max_length + 2
 
-        # Save the Excel file in a temporary directory
+        # Збереження Excel-файлу у тимчасовій директорії
         filename = "comparison_results.xlsx"
         filepath = f"/tmp/{filename}"
         wb.save(filepath)
 
-        # Send file to user
+        # Надсилання файлу користувачеві
         logging.info(f"Exported Excel file saved to: {filepath}")
         return send_file(filepath, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
     except Exception as e:
         logging.error(f"Error during Excel export: {e}", exc_info=True)
         raise
+
 
 
 @app.route('/admin/utilities', methods=['GET'])

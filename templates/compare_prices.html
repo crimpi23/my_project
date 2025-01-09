@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Prices</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/admin">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container">
+        <h1>Compare Prices</h1>
+        <form method="POST">
+            <label for="articles">Enter Articles:</label>
+            <textarea name="articles" id="articles" rows="10" placeholder="Enter one article per line"></textarea>
+
+            <h3>Select Price Tables:</h3>
+            {% for table in price_lists %}
+            <div>
+                <input type="checkbox" id="{{ table.table_name }}" name="price_tables" value="{{ table.table_name }}">
+                <label for="{{ table.table_name }}">{{ table.table_name }}</label>
+            </div>
+            {% endfor %}
+
+            <button type="submit">Compare Prices</button>
+        </form>
+    </div>
+</body>
+</html>

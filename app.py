@@ -749,12 +749,17 @@ def compare_prices():
             cursor.execute("SELECT table_name FROM price_lists;")
             price_lists = cursor.fetchall()
             conn.close()
-            logging.info("Fetched price list tables successfully.")
+
+            # Логування отриманих таблиць
+            logging.info(f"Fetched price list tables successfully: {price_lists}")
+
             return render_template('compare_prices.html', price_lists=price_lists)
         except Exception as e:
+            # Логування помилок
             logging.error(f"Error during GET request: {str(e)}", exc_info=True)
             flash("Failed to load price list tables.", "error")
             return redirect(url_for('admin_panel'))
+
 
     if request.method == 'POST':
         try:
@@ -790,12 +795,15 @@ def compare_prices():
             for table in selected_prices:
                 query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
                 cursor.execute(query, (articles,))
-                for row in cursor.fetchall():
+                table_results = cursor.fetchall()
+                logging.info(f"Results from {table}: {table_results}")  # Логування результатів з таблиці
+                for row in table_results:
                     article = row['article']
                     price = row['price']
                     if article not in results:
                         results[article] = []
                     results[article].append({'price': price, 'table': table})
+            logging.info(f"Aggregated results: {results}")
 
             conn.close()
 

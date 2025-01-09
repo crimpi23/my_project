@@ -223,7 +223,6 @@ def create_user(token):
     conn.close()
 
     return render_template('create_user.html', roles=roles, token=token)
-    )
 
 # Маршрут для пошуку артикулів
 @app.route('/search', methods=['POST'])

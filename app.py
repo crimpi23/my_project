@@ -1,10 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for, flash, get_flashed_messages, jsonify
-import openpyxl
-from openpyxl.utils import get_column_letter
-from flask import send_file
-import openpyxl
-from openpyxl.utils import get_column_letter
-from flask import send_file
+from flask import Flask, render_template, request, session, redirect, url_for, flash, get_flashed_messages, jsonify, send_file
 import os
 import psycopg2
 import psycopg2.extras
@@ -14,6 +8,9 @@ import io
 import time
 from psycopg2.extras import RealDictCursor
 import bcrypt
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+from openpyxl.utils import get_column_letter
 
 # Налаштування логування (можна додати у верхній частині файлу)
 logging.basicConfig(level=logging.DEBUG)

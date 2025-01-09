@@ -835,72 +835,39 @@ def compare_prices():
 def export_to_excel(better_in_first, better_in_second, same_prices):
     try:
         # Створення нового Excel-файлу
-        wb = Workbook()
+        wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Comparison Results"
 
-        # Стиль для заголовків
-        header_font = Font(bold=True)
-        alignment = Alignment(horizontal="center")
-        header_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
-        thin_border = Border(
-            left=Side(style='thin'),
-            right=Side(style='thin'),
-            top=Side(style='thin'),
-            bottom=Side(style='thin')
-        )
-
         # Додавання даних для першої таблиці
         ws.append(["Better in First Table"])
-        header_row = ws.append(["Article", "Price"])
-        for cell in header_row:
-            cell.font = header_font
-            cell.fill = header_fill
-            cell.alignment = alignment
-
+        ws.append(["Article", "Price"])
         for item in better_in_first:
-            row = ws.append([item['article'], item['price']])
-            for cell in row:
-                cell.alignment = alignment
-                cell.border = thin_border
+            ws.append([item['article'], item['price']])
         ws.append([])  # Порожній рядок
 
         # Додавання даних для другої таблиці
         ws.append(["Better in Second Table"])
-        header_row = ws.append(["Article", "Price"])
-        for cell in header_row:
-            cell.font = header_font
-            cell.fill = header_fill
-            cell.alignment = alignment
-
+        ws.append(["Article", "Price"])
         for item in better_in_second:
-            row = ws.append([item['article'], item['price']])
-            for cell in row:
-                cell.alignment = alignment
-                cell.border = thin_border
+            ws.append([item['article'], item['price']])
         ws.append([])  # Порожній рядок
 
         # Додавання даних для однакових цін
         ws.append(["Same Prices"])
-        header_row = ws.append(["Article", "Price", "Tables"])
-        for cell in header_row:
-            cell.font = header_font
-            cell.fill = header_fill
-            cell.alignment = alignment
-
+        ws.append(["Article", "Price", "Tables"])
         for item in same_prices:
-            row = ws.append([item['article'], item['price'], item['tables']])
-            for cell in row:
-                cell.alignment = alignment
-                cell.border = thin_border
+            ws.append([item['article'], item['price'], item['tables']])
 
         # Автоматичне форматування ширини стовпців
         for col in ws.columns:
             max_length = 0
-            col_letter = col[0].column_letter
+            col_letter = get_column_letter(col[0].column)
             for cell in col:
-                if cell.value:
+                try:
                     max_length = max(max_length, len(str(cell.value)))
+                except Exception:
+                    pass
             ws.column_dimensions[col_letter].width = max_length + 2
 
         # Збереження Excel-файлу у тимчасовій директорії
@@ -915,7 +882,6 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
     except Exception as e:
         logging.error(f"Error during Excel export: {e}", exc_info=True)
         raise
-
 
 
 

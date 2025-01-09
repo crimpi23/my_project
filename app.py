@@ -1,19 +1,14 @@
-from flask import Flask, render_template, request, session, redirect, url_for, flash
+from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify
 import os
 import psycopg2
 import psycopg2.extras
 import logging
-import bcrypt
 import csv
 import io
+import time
 from psycopg2.extras import RealDictCursor
-from flask import jsonify
-import logging
-from flask import Flask, render_template, request, session, redirect, url_for, flash
-import os
-import psycopg2
-import psycopg2.extras
 import bcrypt
+
 
 # Налаштування логування (можна додати у верхній частині файлу)
 logging.basicConfig(level=logging.DEBUG)
@@ -612,8 +607,8 @@ def detect_delimiter(file_content):
 @app.route('/admin/upload_price_list', methods=['GET', 'POST'])
 def upload_price_list():
     if request.method == 'GET':
-        flash("This is a test message.", "success")  # Тестове повідомлення
         try:
+            flash("This is a test message.", "success")  # Тестове повідомлення
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT table_name FROM price_lists;")
@@ -628,69 +623,56 @@ def upload_price_list():
     if request.method == 'POST':
         try:
             logging.info("Starting file upload process.")
+            start_time = time.time()  # Початок вимірювання часу
 
+            # Отримання таблиці та файлу
             table_name = request.form['table_name']
             new_table_name = request.form.get('new_table_name', '').strip()
+            file = request.files.get('file')
 
-            # Перевіряємо, чи файл завантажено
-            if 'file' not in request.files:
-                logging.error("No file uploaded.")
-                flash("No file uploaded.", "error")
-                return redirect(url_for('upload_price_list'))
-
-            file = request.files['file']
-            if file.filename == '':
-                logging.error("No file selected.")
-                flash("No file selected.", "error")
+            if not file or file.filename == '':
+                logging.error("No file uploaded or selected.")
+                flash("No file uploaded or selected.", "error")
                 return redirect(url_for('upload_price_list'))
 
             # Обробка файлу
             file_content = file.read().decode('utf-8', errors='ignore')
             delimiter = detect_delimiter(file_content)
-            logging.info(f"File delimiter detected: {delimiter}")
-
             reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
-
-            # Підготовка даних
             data = []
+
             header_skipped = False
             for row in reader:
                 if len(row) < 2:
                     logging.warning(f"Skipping invalid row: {row}")
                     continue
-
                 if not header_skipped and not row[1].replace(',', '').replace('.', '').isdigit():
                     logging.info(f"Skipping header row: {row}")
                     header_skipped = True
                     continue
-
                 article = row[0].strip().replace(" ", "").upper()
-                price = row[1].replace(",", ".").strip()
-
                 try:
-                    price = float(price)
+                    price = float(row[1].replace(",", ".").strip())
                     data.append((article, price))
                 except ValueError:
                     logging.warning(f"Skipping row with invalid price: {row}")
                     continue
 
-            logging.info(f"Number of rows prepared for insertion: {len(data)}")  # Додавання логування
+            logging.info(f"Number of rows prepared: {len(data)}")
 
+            # Підключення до бази даних
             conn = get_db_connection()
             cursor = conn.cursor()
 
-            # Якщо створюється нова таблиця
+            # Якщо створюємо нову таблицю
             if table_name == 'new':
                 if not new_table_name:
                     logging.error("New table name is missing.")
                     flash("New table name is required.", "error")
                     return redirect(url_for('upload_price_list'))
-
-                normalized_table_name = new_table_name.strip().replace(" ", "_").lower()
-                logging.info(f"Creating new table: {normalized_table_name}")
-
+                table_name = new_table_name.strip().replace(" ", "_").lower()
                 cursor.execute(f"""
-                    CREATE TABLE {normalized_table_name} (
+                    CREATE TABLE IF NOT EXISTS {table_name} (
                         article TEXT PRIMARY KEY,
                         price NUMERIC
                     );
@@ -698,45 +680,48 @@ def upload_price_list():
                 cursor.execute("""
                     INSERT INTO price_lists (table_name, created_at)
                     VALUES (%s, NOW());
-                """, (normalized_table_name,))
-                table_name = normalized_table_name
+                """, (table_name,))
+                conn.commit()
 
-            # Очищення таблиці перед оновленням
-            logging.info(f"Clearing table: {table_name}")
-            cursor.execute(f"DELETE FROM {table_name};")
-            conn.commit()  # Фіксуємо очищення
-            deleted_rows = cursor.rowcount
-            logging.info(f"Cleared {deleted_rows} rows from table: {table_name}")
+            # Очищення таблиці
+            logging.info(f"Truncating table: {table_name}")
+            cursor.execute(f"TRUNCATE TABLE {table_name} RESTART IDENTITY;")
+            conn.commit()
 
-            # Додавання нових даних пакетами з ON CONFLICT
-            logging.info(f"Starting batch insertion into table: {table_name}")
-            batch_size = 10000
-            for i in range(0, len(data), batch_size):
-                batch = data[i:i + batch_size]
-                cursor.executemany(f"""
-                    INSERT INTO {table_name} (article, price) 
-                    VALUES (%s, %s) 
-                    ON CONFLICT (article) DO UPDATE SET price = EXCLUDED.price;
-                """, batch)
-                conn.commit()  # Фіксуємо транзакцію після кожної партії
-                logging.info(f"Inserted batch {i // batch_size + 1} of {len(data) // batch_size + 1}")
+            # Імпорт через COPY
+            logging.info(f"Starting COPY into table: {table_name}")
+            output = io.StringIO()
+            for row in data:
+                output.write(f"{row[0]},{row[1]}\n")
+            output.seek(0)
+            cursor.copy_expert(f"""
+                COPY {table_name} (article, price)
+                FROM STDIN
+                WITH (FORMAT CSV);
+            """, output)
+            conn.commit()
 
-            conn.close()
-
-            # Додавання Flash-повідомлення
-            logging.info(f"Successfully uploaded {len(data)} rows to table '{table_name}'.")
+            # Логування часу виконання
+            end_time = time.time()
+            logging.info(f"Import completed in {end_time - start_time:.2f} seconds.")
             flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "success")
-            return redirect(url_for('upload_price_list'))
+            return jsonify({"status": "success", "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}), 200
+
 
         except Exception as e:
-            # Flash-повідомлення про помилку
-            logging.error(f"Error during POST request: {str(e)}")
+            logging.error(f"Error during POST request: {e}")
             flash("An error occurred during upload.", "error")
             return redirect(url_for('upload_price_list'))
+        finally:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+
 
 @app.route('/import_status', methods=['GET'])
 def get_import_status():
-    return jsonify({'current_batch': current_batch, 'total_batches': total_batches})
+    return jsonify({"status": "success", "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}), 200
 
 @app.route('/ping', methods=['GET'])
 def ping():

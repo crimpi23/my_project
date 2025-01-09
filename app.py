@@ -7,6 +7,7 @@ import csv
 import io
 import bcrypt
 import openpyxl
+from functools import wraps
 
 # Налаштування логування
 logging.basicConfig(level=logging.DEBUG)
@@ -30,7 +31,7 @@ app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
 # Головна сторінка за токеном
 @app.route('/<token>/')
-def index(token): 
+def token_index(token): 
     role = validate_token(token)
     if not role:
         flash("Invalid token.", "error")
@@ -46,11 +47,13 @@ def token_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = session.get('token')
-        if not token:
+        role = validate_token(token)
+        if not role:
             flash("Access denied. Token is required.", "error")
             return redirect(url_for('simple_search'))
         return f(*args, **kwargs)
     return decorated_function
+
 
 # Головна сторінка з перевіркою токена
 @app.route('/')
@@ -88,7 +91,7 @@ def admin_panel(token):
         flash("Access denied. Admin rights are required.", "error")
         return redirect(url_for('index', token=token))
 
-    if request.method == 'POST':
+    if request.method == 'POST':    
         password = request.form.get('password')
 
         # Отримуємо хеш пароля адміністратора з бази

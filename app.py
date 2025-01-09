@@ -223,20 +223,6 @@ def create_user(token):
     conn.close()
 
     return render_template('create_user.html', roles=roles, token=token)
-
-
-
-
-# Головна сторінка для пошуку
-@app.route('/')
-def index():
-    return render_template(
-        'index.html',
-        grouped_results=session.get('grouped_results', {}),
-        quantities=session.get('quantities', {}),
-        missing_articles=session.get('missing_articles', []),
-        auto_set_quantities=session.get('auto_set_quantities', []),
-        duplicate_articles=session.get('duplicate_articles', [])
     )
 
 # Маршрут для пошуку артикулів

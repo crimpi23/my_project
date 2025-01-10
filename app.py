@@ -95,12 +95,13 @@ def simple_search():
 
 #Доступ до адмін-панелі:
 @app.route('/<token>/admin', methods=['GET', 'POST'])
-def admin_panel(token):
+def admin_panel_with_token(token):
+    # Логіка для панелі адміністратора
     role = validate_token(token)
     if not role or role != "admin":
         flash("Access denied. Admin rights are required.", "error")
         return redirect(url_for('token_index', token=token))
-
+    
     if request.method == 'POST':
         password = request.form.get('password')
 
@@ -115,27 +116,26 @@ def admin_panel(token):
 
         if not verify_password(admin_password_hash, password):
             flash("Incorrect password.", "error")
-            return redirect(url_for('admin_panel', token=token))
+            return redirect(url_for('admin_panel_with_token', token=token))
 
         session['admin_authenticated'] = True
-        return redirect(url_for('admin_dashboard', token=token))
+        return redirect(url_for('admin_dashboard_with_token', token=token))
 
     return render_template('admin_login.html', token=token)
 
 
 
 #Це треба потім описати, теж щось про адмінку
-@app.route('/<token>/admin/dashboard', methods=['GET'])
-@token_required
-def admin_dashboard(token):
+@app.route('/<token>/admin/dashboard')
+def admin_dashboard_with_token(token):
     role = validate_token(token)
     if not role or role != "admin":
         flash("Access denied.", "error")
         return redirect(url_for('token_index', token=token))
-
+    
     if not session.get('admin_authenticated'):
         flash("Password is required for admin access.", "error")
-        return redirect(url_for('admin_panel', token=token))
+        return redirect(url_for('admin_panel_with_token', token=token))
 
     return render_template('admin_main.html')
 

@@ -4,97 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-            color: #333;
-        }
-        header {
-            background-color: #0056b3;
-            color: #fff;
-            padding: 15px 20px;
-            text-align: center;
-        }
-        header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-        main {
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        .card {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            text-align: center;
-            padding: 20px;
-            transition: box-shadow 0.3s ease;
-        }
-        .card:hover {
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .card a {
-            text-decoration: none;
-            color: #0056b3;
-            font-weight: bold;
-            display: block;
-            margin-top: 10px;
-        }
-        footer {
-            text-align: center;
-            padding: 15px 20px;
-            background-color: #0056b3;
-            color: #fff;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <header>
         <h1>Admin Dashboard</h1>
     </header>
-    <main>
-        <div class="grid-container">
-            <div class="card">
-                <h2>Create New User</h2>
-                <a href="{{ url_for('create_user', token=session.get('token')) }}">Go</a>
-            </div>
-            <div class="card">
-                <h2>Assign Roles</h2>
-                <a href="{{ url_for('assign_roles', token=session.get('token')) }}">Go</a>
-            </div>
-            <div class="card">
-                <h2>Upload Price List</h2>
-                <a href="{{ url_for('upload_price_list') }}">Go</a>
-            </div>
-            <div class="card">
-                <h2>Compare Prices</h2>
-                <a href="{{ url_for('compare_prices') }}">Go</a>
-            </div>
-            <div class="card">
-                <h2>View Orders</h2>
-                <a href="{{ url_for('orders') }}">Go</a>
-            </div>
-            <div class="card">
-                <h2>Manage Cart</h2>
-                <a href="{{ url_for('cart') }}">Go</a>
-            </div>
+
+    <div class="grid-container">
+        <div class="grid-item">
+            <a href="{{ url_for('create_user', token=session.get('token')) }}">Create New User</a>
         </div>
-    </main>
+        <div class="grid-item">
+            <a href="{{ url_for('assign_roles', token=session.get('token')) }}">Assign Roles</a>
+        </div>
+        <div class="grid-item">
+            <a href="{{ url_for('upload_price_list') }}">Upload Price List</a>
+        </div>
+        <div class="grid-item">
+            <a href="{{ url_for('compare_prices') }}">Compare Prices</a>
+        </div>
+        <div class="grid-item">
+            <a href="{{ url_for('orders') }}">View Orders</a>
+        </div>
+        <div class="grid-item">
+            <a href="{{ url_for('cart') }}">Manage Cart</a>
+        </div>
+    </div>
+
+    <h2>Users and Roles</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flashes">
+                        {% for category, message in messages %}
+                            <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.role_name }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('assign_roles', token=session.get('token')) }}">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <button type="submit">Assign Roles</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
     <footer>
-        <p>&copy; 2025 Admin Panel. All rights reserved.</p>
+        Admin Dashboard - All Rights Reserved © 2025
     </footer>
 </body>
 </html>

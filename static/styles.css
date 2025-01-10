@@ -1,582 +1,107 @@
+/* Загальні стилі для всіх сторінок */
 body {
     font-family: Arial, sans-serif;
-    line-height: 1.6;
     margin: 0;
     padding: 0;
-    background-color: #f9f9f9;
-    color: #333;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-header {
-    background: #007bff;
-    color: white;
-    padding: 10px 20px;
-}
-
-header nav ul {
-    list-style: none;
-    display: flex;
-    justify-content: center;
-    padding: 0;
-    margin: 0;
-}
-
-header nav ul li {
-    margin: 0 15px;
-}
-
-header nav ul li a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-    transition: color 0.3s ease;
-}
-
-header nav ul li a:hover {
-    color: #ffcc00;
-}
-
-/* Таблиці */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-}
-
-table th,
-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: center;
-}
-
-table th {
-    background: #007bff;
-    color: white;
-}
-
-table tr:nth-child(even) {
-    background: #f9f9f9;
-}
-
-table tr:hover {
-    background: #f1f1f1;
-}
-
-/* Flash-повідомлення */
-.flash-messages {
-    margin: 10px 0;
-}
-
-.flash-message {
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    text-align: center;
-}
-
-.flash-message.success {
-    background: #28a745;
-    color: white;
-}
-
-.flash-message.error {
-    background: #dc3545;
-    color: white;
-}
-
-/* Прогрес-бар */
-#progressContainer {
-    margin-top: 20px;
-    background: #f4f4f9;
-    border-radius: 8px;
-    overflow: hidden;
-    height: 25px;
-    width: 100%;
-    max-width: 600px;
-    border: 1px solid #ccc;
-}
-
-#progressBar {
-    height: 100%;
-    background: #007bff;
-    width: 0;
-    transition: width 0.3s ease;
-}
-
-#progressText {
-    text-align: center;
-    font-size: 14px;
-    margin-top: 5px;
-    color: #555;
-}
-
-/* Кнопки */
-button, .button {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 14px;
-    transition: background 0.3s ease;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-}
-
-button:hover, .button:hover {
-    background: #0056b3;
-}
-
-button.remove-button {
-    background: #ff6b6b;
-}
-
-button.remove-button:hover {
-    background: #e63946;
-}
-
-.clear-search-button {
-    background-color: #ff6b6b;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 14px;
-    transition:
-    background-color 0.3s ease;
-}
-
-.clear-search-button:hover {
-    background-color: #e63946;
-}
-
-/* Стиль для форми пошуку */
-.search-form {
-    margin: 20px 0;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.form-label {
-    display: block;
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.form-textarea {
-    width: 100%;
-    min-height: 150px;
-    padding: 10px;
-    font-size: 14px;
-    line-height: 1.5;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    resize: vertical;
     background-color: #fff;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    color: #333;
 }
 
-.form-textarea:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    outline: none;
-}
-
-.form-button {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    padding: 10px 15px;
-    font-size: 14px;
-    font-weight: bold;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-top: 15px;
-}
-
-.form-button:hover {
-    background-color: #0056b3;
-}
-
-/* Адаптивність */
-@media (max-width: 768px) {
-    header nav ul {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    table {
-        font-size: 14px;
-    }
-
-    .container {
-        padding: 10px;
-    }
-
-    button, .button {
-        font-size: 12px;
-        padding: 8px 10px;
-    }
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-}
-
-button {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
-
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-    }
-    form {
-        margin-bottom: 20px;
-    }
-</style>
-/* Основні стилі */
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background-color: #f9f9f9;
-}
-
-header {
-    background: #333;
-    color: #fff;
-    padding: 1em 0;
+header, footer {
+    padding: 20px;
     text-align: center;
-}
-
-main {
-    padding: 2em;
-    max-width: 800px;
-    margin: 0 auto;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1em;
-}
-
-table th, table td {
-    padding: 0.8em;
-    text-align: left;
-    border: 1px solid #ddd;
-}
-
-table th {
-    background: #f4f4f4;
-}
-
-.flashes {
-    margin: 1em 0;
-    padding: 0.5em;
-}
-
-.alert {
-    padding: 1em;
-    margin-bottom: 1em;
-    border-radius: 4px;
-}
-
-.alert.error {
-    background-color: #f8d7da;
-    color: #842029;
-    border: 1px solid #f5c2c7;
-}
-
-.alert.success {
-    background-color: #d1e7dd;
-    color: #0f5132;
-    border: 1px solid #badbcc;
+    border-bottom: 1px solid #ddd;
 }
 
 footer {
-    text-align: center;
-    margin-top: 2em;
-    padding: 1em 0;
-    background: #f4f4f4;
-}
-/* General Reset */
-body, h1, p, ul, li {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* Body Styling */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-    color: #333;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-}
-
-/* Container */
-.container {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
-    padding: 20px;
-    text-align: center;
-    width: 100%;
-}
-
-/* Title */
-.title {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 20px;
-}
-
-/* Form Styling */
-.search-form {
-    margin-bottom: 20px;
-}
-
-.form-label {
-    display: block;
-    font-size: 16px;
-    margin-bottom: 8px;
-}
-
-.form-input {
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    padding: 10px;
-    width: 100%;
-    margin-bottom: 10px;
-}
-
-.btn {
-    background-color: #007BFF;
-    border: none;
-    border-radius: 4px;
-    color: #fff;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 10px 20px;
-    text-transform: uppercase;
-    transition: background-color 0.3s ease;
-}
-
-.btn:hover {
-    background-color: #0056b3;
-}
-
-/* Results List */
-.results-list {
-    list-style: none;
-    margin: 20px 0;
-    padding: 0;
-}
-
-.result-item {
-    border-bottom: 1px solid #ddd;
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-}
-
-.article {
-    font-weight: bold;
-}
-
-.price {
-    color: #28a745;
-    font-weight: bold;
-}
-
-/* No Results */
-.no-results {
-    font-size: 18px;
+    border-top: 1px solid #ddd;
+    font-size: 14px;
     color: #666;
 }
 
-/* Back Button */
-.back-btn {
-    display: inline-block;
-    margin-top: 20px;
+/* Основні стилі для заголовків */
+h1, h2 {
+    text-align: center;
+    font-size: 24px;
+    margin: 20px 0;
+    color: #333;
+}
+
+/* Стилі для кнопок і посилань */
+a {
     text-decoration: none;
-    color: #fff;
-    background-color: #007BFF;
-    padding: 10px 20px;
-    border-radius: 4px;
-    font-size: 16px;
-    text-transform: uppercase;
-    transition: background-color 0.3s ease;
-}
-
-.back-btn:hover {
-    background-color: #0056b3;
-}
-/* General Reset */
-body, h1, p, ul, li {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* Body Styling */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
     color: #333;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-}
-
-/* Container */
-.container {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
-    padding: 20px;
-    text-align: center;
-    width: 100%;
-}
-
-/* Title */
-.title {
-    font-size: 24px;
     font-weight: bold;
-    margin-bottom: 20px;
 }
 
-/* Form Styling */
-.search-form {
-    margin-bottom: 20px;
+a:hover {
+    text-decoration: underline;
 }
 
-.form-label {
-    display: block;
-    font-size: 16px;
-    margin-bottom: 8px;
+/* Сітка для елементів */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
 }
 
-.form-input {
+.grid-item {
+    text-align: center;
+    padding: 20px;
     border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    padding: 10px;
-    width: 100%;
-    margin-bottom: 10px;
-}
-
-.btn {
-    background-color: #007BFF;
-    border: none;
-    border-radius: 4px;
-    color: #fff;
+    border-radius: 5px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
-    font-size: 16px;
-    padding: 10px 20px;
-    text-transform: uppercase;
-    transition: background-color 0.3s ease;
+    background-color: #f9f9f9;
 }
 
-.btn:hover {
-    background-color: #0056b3;
+.grid-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Results List */
-.results-list {
-    list-style: none;
-    margin: 20px 0;
+/* Списки та таблиці */
+ul {
+    list-style-type: none;
     padding: 0;
 }
 
-.result-item {
-    border-bottom: 1px solid #ddd;
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
+li {
+    background: #f9f9f9;
+    margin: 5px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }
 
-.article {
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+table th {
+    background-color: #f5f5f5;
     font-weight: bold;
 }
 
-.price {
-    color: #28a745;
-    font-weight: bold;
+table tr:nth-child(even) {
+    background-color: #f9f9f9;
 }
 
-/* No Results */
-.no-results {
-    font-size: 18px;
-    color: #666;
-}
-
-/* Flash Messages */
+/* Стилі для флеш-повідомлень */
 .message {
     padding: 10px;
     margin-bottom: 20px;
     border: 1px solid #ddd;
     border-radius: 5px;
-    font-size: 14px;
-    line-height: 1.5;
 }
 
 .success {
@@ -594,70 +119,11 @@ body {
     color: #0c5460;
 }
 
-/* Back Button */
-.back-btn {
-    display: inline-block;
-    margin-top: 20px;
-    text-decoration: none;
-    color: #fff;
-    background-color: #007BFF;
-    padding: 10px 20px;
-    border-radius: 4px;
-    font-size: 16px;
-    text-transform: uppercase;
-    transition: background-color 0.3s ease;
-}
-
-.back-btn:hover {
-    background-color: #0056b3;
-}
-/* Загальний стиль */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
-    margin: 0;
-    padding: 0;
-    color: #333;
-}
-
-/* Заголовок */
-header {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 20px;
+/* Футер */
+footer {
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px 20px;
+    background-color: #f9f9f9;
+    font-size: 14px;
+    color: #666;
 }
-
-/* Контейнер */
-.container {
-    margin: 20px auto;
-    max-width: 1200px;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Заголовки */
-h1 {
-    font-size: 24px;
-    color: #4CAF50;
-    margin-bottom: 20px;
-}
-
-h2 {
-    font-size: 20px;
-    color: #0056b3;
-    margin-bottom: 15px;
-}
-
-/* Кнопки */
-.button {
-    display: inline-block;
-    padding: 10px 15px;
-    margin: 10px 0;
-    color: white;
-    background-color: #4CAF50;
-    text-decoration: none;
-    border-ra

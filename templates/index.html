@@ -120,29 +120,29 @@
                 </thead>
                 <tbody>
                     {% for item in cart_items %}
-                    <tr>
-                        <td>{{ item.article }}</td>
-                        <td>{{ item.price }}</td>
-                        <td>
-                            <form method="POST" action="/update_cart">
-                                <input type="hidden" name="article" value="{{ item.article }}">
-                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1">
-                                <button type="submit" class="update-button">
-                                    <i class="fas fa-edit"></i> Update
-                                </button>
-                            </form>
-                        </td>
-                        <td>{{ item.total_price }}</td>
-                        <td>
-                            <form method="POST" action="/remove_from_cart">
-                                <input type="hidden" name="article" value="{{ item.article }}">
-                                <button type="submit" class="delete-button">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
+					<tr>
+						<td>{{ item.article }}</td>
+						<td>{{ item.price }}</td>
+						<td>
+							<form method="POST" action="/update_cart">
+								<input type="hidden" name="article" value="{{ item.article }}">
+								<input type="number" name="quantity" value="{{ item.quantity }}" min="1">
+								<button type="submit" class="update-button">
+									<i class="fas fa-edit"></i> Update
+								</button>
+							</form>
+						</td>
+						<td>{{ item.total_price }}</td>
+						<td>
+							<form method="POST" action="/remove_from_cart">
+								<input type="hidden" name="article" value="{{ item.article }}">
+								<button type="submit" class="delete-button">
+									<i class="fas fa-trash"></i> Remove
+								</button>
+							</form>
+						</td>
+					</tr>
+					{% endfor %}
                 </tbody>
             </table>
         </div>

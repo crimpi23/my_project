@@ -115,7 +115,7 @@ def simple_search():
 @app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel(token=None):
     try:
-        # If token is provided
+        # Перевірка токена, якщо передано
         if token:
             logging.debug(f"Token received: {token}")
             role = validate_token(token)
@@ -123,43 +123,45 @@ def admin_panel(token=None):
                 logging.warning(f"Access denied for token: {token}")
                 flash("Access denied. Admin rights are required.", "error")
                 return redirect(request.referrer or url_for('index'))
-            session['token'] = token  # Save token in session
+            session['token'] = token  # Зберігаємо токен у сесії
 
         if request.method == 'POST':
-            # Handle admin password
+            # Обробка введеного пароля
             password = request.form.get('password')
             if not password:
                 flash("Password is required.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
+            # Підключення до бази даних
             conn = get_db_connection()
             cursor = conn.cursor()
+
+            # Отримання хеша пароля адміністратора
             cursor.execute("""
                 SELECT password_hash 
                 FROM users 
-                WHERE id = (
+                WHERE id IN (
                     SELECT user_id 
                     FROM user_roles 
-                    WHERE role_id = (
-                        SELECT id 
-                        FROM roles 
-                        WHERE name = 'admin'
-                        LIMIT 1
-                    )
-                    LIMIT 1
-                )
+                    WHERE role_id = 1 -- Підставляємо ID ролі адміністратора
+                );
             """)
             admin_password_hash = cursor.fetchone()
 
-            if not admin_password_hash or not verify_password(admin_password_hash['password_hash'], password):
+            logging.debug(f"Fetched password hash: {admin_password_hash}")
+
+            # Перевірка хеша пароля
+            if not admin_password_hash or not verify_password(admin_password_hash[0], password):
                 logging.warning("Invalid admin password attempt.")
                 flash("Invalid password.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
+            # Аутентифікація успішна
             session['admin_authenticated'] = True
             logging.info("Admin successfully authenticated.")
             return redirect(url_for('admin_dashboard', token=token))
 
+        # Якщо метод GET, показати форму логіну
         return render_template('admin_login.html', token=token)
 
     except Exception as e:
@@ -170,6 +172,7 @@ def admin_panel(token=None):
     finally:
         if 'conn' in locals() and conn:
             conn.close()
+
 
 
 

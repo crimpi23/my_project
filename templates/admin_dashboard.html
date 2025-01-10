@@ -9,93 +9,92 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f5f5f5;
+            background-color: #f9f9f9;
+            color: #333;
         }
-
         header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 0;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        table td {
-            text-align: center;
-            padding: 20px;
-        }
-
-        .button {
-            display: inline-block;
+            background-color: #0056b3;
+            color: #fff;
             padding: 15px 20px;
-            margin: 5px;
-            background-color: #4CAF50;
-            color: white;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        main {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .card {
+            background-color: #fff;
+            border: 1px solid #ddd;
             border-radius: 5px;
+            text-align: center;
+            padding: 20px;
+            transition: box-shadow 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .card a {
             text-decoration: none;
-            font-size: 16px;
+            color: #0056b3;
             font-weight: bold;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            display: block;
+            margin-top: 10px;
         }
-
-        .button:hover {
-            background-color: #45a049;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
         footer {
             text-align: center;
-            padding: 10px 0;
-            background-color: #4CAF50;
-            color: white;
-            margin-top: 20px;
+            padding: 15px 20px;
+            background-color: #0056b3;
+            color: #fff;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
         }
     </style>
 </head>
 <body>
-    <header>Welcome to Admin Dashboard</header>
-
-    <div class="container">
-        <table>
-            <tr>
-                <td><a href="#" class="button">Create User</a></td>
-                <td><a href="#" class="button">View Users</a></td>
-                <td><a href="#" class="button">Upload Price List</a></td>
-                <td><a href="#" class="button">Compare Prices</a></td>
-            </tr>
-            <tr>
-                <td><a href="#" class="button">View Orders</a></td>
-                <td><a href="#" class="button">Order Details</a></td>
-                <td><a href="#" class="button">Assign Roles</a></td>
-                <td><a href="#" class="button">Utilities</a></td>
-            </tr>
-            <tr>
-                <td><a href="#" class="button">Cart</a></td>
-                <td><a href="#" class="button">Reports</a></td>
-                <td><a href="#" class="button">Settings</a></td>
-                <td><a href="#" class="button">Log Out</a></td>
-            </tr>
-        </table>
-    </div>
-
-    <footer>Footer Information - Admin Dashboard</footer>
+    <header>
+        <h1>Admin Dashboard</h1>
+    </header>
+    <main>
+        <div class="grid-container">
+            <div class="card">
+                <h2>Create New User</h2>
+                <a href="{{ url_for('create_user', token=session.get('token')) }}">Go</a>
+            </div>
+            <div class="card">
+                <h2>Assign Roles</h2>
+                <a href="{{ url_for('assign_roles', token=session.get('token')) }}">Go</a>
+            </div>
+            <div class="card">
+                <h2>Upload Price List</h2>
+                <a href="{{ url_for('upload_price_list') }}">Go</a>
+            </div>
+            <div class="card">
+                <h2>Compare Prices</h2>
+                <a href="{{ url_for('compare_prices') }}">Go</a>
+            </div>
+            <div class="card">
+                <h2>View Orders</h2>
+                <a href="{{ url_for('orders') }}">Go</a>
+            </div>
+            <div class="card">
+                <h2>Manage Cart</h2>
+                <a href="{{ url_for('cart') }}">Go</a>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 Admin Panel. All rights reserved.</p>
+    </footer>
 </body>
 </html>

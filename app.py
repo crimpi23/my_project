@@ -75,25 +75,6 @@ def token_required(f):
 @app.route('/')
 def index():
     token = session.get('token')
-    if not token:
-        return render_template('simple_search.html')
-
-    role = validate_token(token)
-    if role == "admin":
-        return redirect(url_for('admin_dashboard', token=token))
-    elif role == "user":
-        return render_template('index.html', role=role)
-    else:
-        flash("Invalid token or role.", "error")
-        return redirect(url_for('simple_search'))
-
-
-
-# Пошук для користувачів без токену
-# Головна сторінка з перевіркою токена
-@app.route('/')
-def index():
-    token = session.get('token')
     if token:
         role = validate_token(token)
         if role == "admin":
@@ -153,6 +134,7 @@ def simple_search():
 
     # Простий рендер сторінки пошуку
     return render_template('simple_search.html')
+
 
 
 

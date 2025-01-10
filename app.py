@@ -42,7 +42,7 @@ def token_index(token):
     role = validate_token(token)
     if not role:
         flash("Invalid token.", "error")
-         return redirect(request.referrer or url_for('simple_search'))
+       return redirect(request.referrer or url_for('simple_search'))
 
     # Збереження токена та ролі у сесії
     session['token'] = token
@@ -57,7 +57,7 @@ def token_required(f):
         role = validate_token(token)
         if not role:
             flash("Access denied. Token is required.", "error")
-             return redirect(request.referrer or url_for('simple_search'))
+            return redirect(request.referrer or url_for('simple_search'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -79,7 +79,7 @@ def simple_search():
         article = request.form.get('article')
         if not article:
             flash("Please enter an article for search.", "error")
-             return redirect(request.referrer or url_for('simple_search'))
+            return redirect(request.referrer or url_for('simple_search'))
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -100,7 +100,7 @@ def admin_panel_with_token(token):
     role = validate_token(token)
     if not role or role != "admin":
         flash("Access denied. Admin rights are required.", "error")
-         return redirect(request.referrer or url_for('token_index', token=token))
+        return redirect(request.referrer or url_for('token_index', token=token))
     
     if request.method == 'POST':
         password = request.form.get('password')
@@ -116,10 +116,10 @@ def admin_panel_with_token(token):
 
         if not verify_password(admin_password_hash, password):
             flash("Incorrect password.", "error")
-             return redirect(request.referrer or url_for('admin_panel_with_token', token=token))
+            return redirect(request.referrer or url_for('admin_panel_with_token', token=token))
 
         session['admin_authenticated'] = True
-         return redirect(request.referrer or url_for('admin_dashboard_with_token', token=token))
+        return redirect(request.referrer or url_for('admin_dashboard_with_token', token=token))
 
     return render_template('admin_login.html', token=token)
 
@@ -132,11 +132,11 @@ def admin_dashboard(token):
     role = validate_token(token)
     if not role or role != "admin":
         flash("Access denied.", "error")
-         return redirect(request.referrer or url_for('token_index', token=token))
+        return redirect(request.referrer or url_for('token_index', token=token))
 
     if not session.get('admin_authenticated'):
         flash("Password is required for admin access.", "error")
-         return redirect(request.referrer or url_for('admin_panel', token=token))
+        return redirect(request.referrer or url_for('admin_panel', token=token))
 
     return render_template('admin_main.html')
 
@@ -168,7 +168,7 @@ def create_user(token):
     role = validate_token(token)
     if not role or role != "admin":
         flash("Access denied. Admin rights are required.", "error")
-         return redirect(request.referrer or url_for('token_index', token=token))
+        return redirect(request.referrer or url_for('token_index', token=token))
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -177,7 +177,7 @@ def create_user(token):
 
         if not username or not password or not role_id:
             flash("All fields are required.", "error")
-             return redirect(request.referrer or url_for('create_user', token=token))
+            return redirect(request.referrer or url_for('create_user', token=token))
 
         hashed_password = hash_password(password)
         user_token = generate_token()
@@ -215,7 +215,7 @@ def create_user(token):
             if conn:
                 conn.close()
 
-         return redirect(request.referrer or url_for('create_user', token=token))
+        return redirect(request.referrer or url_for('create_user', token=token))
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -238,7 +238,7 @@ def search_articles():
         articles_input = request.form.get('articles')
         if not articles_input:
             flash("Please enter at least one article.", "error")
-             return redirect(request.referrer or url_for('index'))
+            return redirect(request.referrer or url_for('index'))
 
         for line in articles_input.splitlines():
             parts = line.strip().split()
@@ -299,12 +299,12 @@ def search_articles():
         logging.debug("Missing articles: %s", missing_articles)
 
         flash("Search completed successfully!", "success")
-         return redirect(request.referrer or url_for('index'))
+        return redirect(request.referrer or url_for('index'))
 
     except Exception as e:
         logging.error("Error in search_articles: %s", str(e))
         flash(f"Error: {str(e)}", "error")
-         return redirect(request.referrer or url_for('index'))
+        return redirect(request.referrer or url_for('index'))
     finally:
         if cursor:
             cursor.close()
@@ -323,7 +323,7 @@ def clear_search():
     except Exception as e:
         logging.error(f"Error clearing search data: {str(e)}", exc_info=True)
         flash("Could not clear search data. Please try again.", "error")
-     return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('index'))
 
 
 # Сторінка кошика
@@ -360,7 +360,7 @@ def cart():
     except Exception as e:
         logging.error(f"Error in cart for user_id={user_id}: {str(e)}", exc_info=True)
         flash("Could not load your cart. Please try again.", "error")
-         return redirect(request.referrer or url_for('index'))
+        return redirect(request.referrer or url_for('index'))
     finally:
         if cursor:
             cursor.close()
@@ -421,12 +421,12 @@ def add_to_cart():
 
         conn.commit()
         flash("Product added to cart!", "success")
-        return redirect(request.referrer or url_for('index'))
+       return redirect(request.referrer or url_for('index'))
 
     except Exception as e:
         logging.error("Error in add_to_cart: %s", str(e))
         flash("Error adding product to cart.", "error")
-        return redirect(request.referrer or url_for('index'))
+       return redirect(request.referrer or url_for('index'))
 
     finally:
         if cursor:
@@ -447,7 +447,7 @@ def remove_from_cart():
 
         if not product_id:
             flash("Product ID is missing.", "error")
-             return redirect(request.referrer or url_for('cart'))
+            return redirect(request.referrer or url_for('cart'))
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -460,12 +460,12 @@ def remove_from_cart():
 
         logging.info("Product removed: product_id=%s, user_id=%s", product_id, user_id)
         flash("Product removed from cart.", "success")
-         return redirect(request.referrer or url_for('cart'))
+        return redirect(request.referrer or url_for('cart'))
 
     except Exception as e:
         logging.error("Error in remove_from_cart: %s", str(e), exc_info=True)
         flash(f"Error removing product: {str(e)}", "error")
-         return redirect(request.referrer or url_for('cart'))
+        return redirect(request.referrer or url_for('cart'))
 
     finally:
         if cursor:
@@ -484,7 +484,7 @@ def update_cart():
 
         if not product_id or quantity < 1:
             flash("Invalid product ID or quantity.", "error")
-             return redirect(request.referrer or url_for('cart'))
+            return redirect(request.referrer or url_for('cart'))
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -497,12 +497,12 @@ def update_cart():
         conn.commit()
 
         flash("Cart updated successfully!", "success")
-         return redirect(request.referrer or url_for('cart'))
+        return redirect(request.referrer or url_for('cart'))
 
     except Exception as e:
         logging.error("Error updating cart: %s", str(e))
         flash("Error updating cart.", "error")
-         return redirect(request.referrer or url_for('cart'))
+        return redirect(request.referrer or url_for('cart'))
 
     finally:
         if cursor:
@@ -523,11 +523,11 @@ def clear_cart():
         conn.commit()
 
         flash("Cart cleared successfully!", "success")
-         return redirect(request.referrer or url_for('cart'))
+        return redirect(request.referrer or url_for('cart'))
     except Exception as e:
         logging.error("Error clearing cart: %s", str(e))
         flash("Error clearing cart.", "error")
-         return redirect(request.referrer or url_for('cart'))
+        return redirect(request.referrer or url_for('cart'))
     finally:
         if cursor:
             cursor.close()
@@ -555,7 +555,7 @@ def place_order():
         if not cart_items:
             flash("Your cart is empty!", "error")
             logging.error("Cart is empty for user_id=%s", user_id)
-             return redirect(request.referrer or url_for('cart'))
+            return redirect(request.referrer or url_for('cart'))
 
         # Логування вмісту кошика
         logging.debug(f"Cart items for user_id={user_id}: {cart_items}")
@@ -589,13 +589,13 @@ def place_order():
 
         flash("Order placed successfully!", "success")
         logging.info(f"Order successfully placed for user_id={user_id}")
-         return redirect(request.referrer or url_for('cart'))
+        return redirect(request.referrer or url_for('cart'))
 
     except Exception as e:
         conn.rollback()
         logging.error(f"Error placing order for user_id={user_id}: {str(e)}", exc_info=True)
         flash(f"Error placing order: {str(e)}", "error")
-         return redirect(request.referrer or url_for('cart'))
+        return redirect(request.referrer or url_for('cart'))
     finally:
         if cursor:
             cursor.close()
@@ -638,7 +638,7 @@ def orders():
         return render_template('orders.html', orders=orders, search_article=search_article)
     except Exception as e:
         flash(f"Error loading orders: {str(e)}", "error")
-         return redirect(request.referrer or url_for('index'))
+        return redirect(request.referrer or url_for('index'))
     finally:
         if cursor:
             cursor.close()
@@ -672,7 +672,7 @@ def order_details(order_id):
     except Exception as e:
         logging.error(f"Error loading order details for order_id={order_id}: {str(e)}")
         flash("Error loading order details. Please try again.", "error")
-         return redirect(request.referrer or url_for('orders'))
+        return redirect(request.referrer or url_for('orders'))
     finally:
         if cursor:
             cursor.close()
@@ -748,7 +748,7 @@ def assign_roles():
             conn.commit()
             flash("Role removed successfully.", "success")
 
-         return redirect(request.referrer or url_for('assign_roles'))
+        return redirect(request.referrer or url_for('assign_roles'))
 
     conn.close()
     return render_template('assign_roles.html', user_roles=user_roles, users=users, roles=roles)
@@ -797,7 +797,7 @@ def upload_price_list():
             if not file or file.filename == '':
                 logging.error("No file uploaded or selected.")
                 flash("No file uploaded or selected.", "error")
-                 return redirect(request.referrer or url_for('upload_price_list'))
+                return redirect(request.referrer or url_for('upload_price_list'))
 
             # Обробка файлу
             file_content = file.read().decode('utf-8', errors='ignore')
@@ -833,7 +833,7 @@ def upload_price_list():
                 if not new_table_name:
                     logging.error("New table name is missing.")
                     flash("New table name is required.", "error")
-                     return redirect(request.referrer or url_for('upload_price_list'))
+                    return redirect(request.referrer or url_for('upload_price_list'))
                 table_name = new_table_name.strip().replace(" ", "_").lower()
                 cursor.execute(f"""
                     CREATE TABLE IF NOT EXISTS {table_name} (
@@ -875,7 +875,7 @@ def upload_price_list():
         except Exception as e:
             logging.error(f"Error during POST request: {e}")
             flash("An error occurred during upload.", "error")
-             return redirect(request.referrer or url_for('upload_price_list'))
+            return redirect(request.referrer or url_for('upload_price_list'))
         finally:
             if 'cursor' in locals():
                 cursor.close()
@@ -907,7 +907,7 @@ def compare_prices():
         except Exception as e:
             logging.error(f"Error during GET request: {str(e)}", exc_info=True)
             flash("Failed to load price list tables.", "error")
-             return redirect(request.referrer or url_for('admin_panel'))
+            return redirect(request.referrer or url_for('admin_panel'))
 
     if request.method == 'POST':
         try:
@@ -921,7 +921,7 @@ def compare_prices():
                 if not data:
                     logging.error("No data to export!")
                     flash("No data to export!", "error")
-                     return redirect(request.referrer or url_for('compare_prices'))
+                    return redirect(request.referrer or url_for('compare_prices'))
                 return export_to_excel(
                     data['better_in_first'],
                     data['better_in_second'],
@@ -934,7 +934,7 @@ def compare_prices():
 
             if not articles_input or not selected_prices:
                 flash("Please enter articles and select price tables.", "error")
-                 return redirect(request.referrer or url_for('compare_prices'))
+                return redirect(request.referrer or url_for('compare_prices'))
 
             # Розбиваємо артикулі
             articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
@@ -990,7 +990,7 @@ def compare_prices():
         except Exception as e:
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
-             return redirect(request.referrer or url_for('compare_prices'))
+            return redirect(request.referrer or url_for('compare_prices'))
             
 # Експорт в ексель файлу порівняння цін
 def export_to_excel(better_in_first, better_in_second, same_prices):

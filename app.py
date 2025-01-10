@@ -90,11 +90,27 @@ def index():
 
 
 # Пошук для користувачів без токену
+# Головна сторінка з перевіркою токена
+@app.route('/')
+def index():
+    token = session.get('token')
+    if token:
+        role = validate_token(token)
+        if role == "admin":
+            return redirect(url_for('admin_dashboard', token=token))
+        elif role == "user":
+            return render_template('index.html', role=role)
+    # Якщо токену немає, просто перенаправляємо на простий пошук
+    return redirect(url_for('simple_search'))
+
+
+# Пошук для користувачів без токену
 @app.route('/simple_search', methods=['GET', 'POST'])
 def simple_search():
     if request.method == 'POST':
         article = request.form.get('article', '').strip()
         if not article:
+            # Якщо поле порожнє, виводимо повідомлення
             flash("Please enter an article for search.", "error")
             return redirect(url_for('simple_search'))
 
@@ -133,11 +149,11 @@ def simple_search():
                 conn.close()
 
         # Відображення результатів
-        if not results:
-            flash(f"No results found for '{article}'.", "info")
         return render_template('simple_search_results.html', results=results)
 
+    # Простий рендер сторінки пошуку
     return render_template('simple_search.html')
+
 
 
 

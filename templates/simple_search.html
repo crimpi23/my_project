@@ -2,22 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Simple Search</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Article Search</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <h1>Simple Article Search</h1>
-    <form action="/simple_search" method="POST">
-        <label for="article">Enter Article:</label>
-        <input type="text" id="article" name="article" required>
-        <button type="submit">Search</button>
-    </form>
-    {% if results %}
-        <h2>Search Results:</h2>
-        <ul>
-            {% for result in results %}
-                <li>Article: {{ result.article }}, Price: {{ result.price }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+    <div class="container">
+        <h1 class="title">Find Your Article</h1>
+        <form action="/simple_search" method="POST" class="search-form">
+            <label for="article" class="form-label">Enter Article:</label>
+            <input type="text" id="article" name="article" class="form-input" placeholder="e.g., 0XW105101" required>
+            <button type="submit" class="btn">Search</button>
+        </form>
+    </div>
 </body>
 </html>

@@ -8,22 +8,25 @@
 <body>
     <h1>Create New User</h1>
 
-    <form method="POST" action="{{ url_for('create_user', token=token) }}">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-
-        <label for="role_id">Role:</label>
-        <select id="role_id" name="role_id" required>
-            {% for role in roles %}
-            <option value="{{ role.id }}">{{ role.name }}</option>
-            {% endfor %}
-        </select>
-
-        <button type="submit">Create User</button>
-    </form>
+	<form method="POST" action="{{ url_for('create_user', token=token) }}">
+		<label for="username">Username:</label>
+		<input type="text" name="username" required>
+		
+		<label for="email">Email:</label>
+		<input type="email" name="email" required>
+		
+		<label for="password">Password:</label>
+		<input type="password" name="password" required>
+		
+		<label for="role_id">Role:</label>
+		<select name="role_id">
+			{% for role in roles %}
+			<option value="{{ role.id }}">{{ role.name }}</option>
+			{% endfor %}
+		</select>
+		
+		<button type="submit">Create User</button>
+	</form>
 
     <a href="{{ url_for('admin_dashboard', token=token) }}">Back to Dashboard</a>
 </body>

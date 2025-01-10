@@ -49,12 +49,13 @@ def token_index(token):
     role = validate_token(token)
     if not role:
         flash("Invalid token.", "error")
-    return redirect(request.referrer or url_for('simple_search'))
+        return redirect(url_for('index'))  # Якщо токен недійсний, перенаправляємо на головну
 
-    # Збереження токена та ролі у сесії
+    # Якщо токен валідний, зберігаємо роль і токен у сесії
     session['token'] = token
     session['role'] = role
     return render_template('index.html', role=role)
+
 
 
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
@@ -92,18 +93,39 @@ def simple_search():
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("""
-                SELECT article, price FROM articles_table  -- Замініть на вашу таблицю
-                WHERE article = %s
-            """, (article,))
-            results = cursor.fetchall()
+
+            # Отримуємо всі таблиці прайсів
+            cursor.execute("SELECT table_name FROM price_lists;")
+            price_tables = cursor.fetchall()
+
+            results = []
+            for table in price_tables:
+                table_name = table['table_name']
+                query = f"""
+                    SELECT article, price, %s AS table_name
+                    FROM {table_name}
+                    WHERE article = %s
+                """
+                cursor.execute(query, (table_name, article))
+                results.extend(cursor.fetchall())
+
+            if not results:
+                flash("No results found for your search.", "info")
+
+            # Додаємо логування результатів
+            logging.debug(f"Search results for article '{article}': {results}")
+
         except Exception as e:
-            logging.error(f"Error in simple_search: {e}")
+            logging.error(f"Error in simple_search: {e}", exc_info=True)
             flash("An error occurred during the search.", "error")
             results = []
         finally:
             if 'conn' in locals():
                 conn.close()
+
+        return render_template('simple_search_results.html', results=results)
+    return render_template('simple_search.html')
+
 
         if not results:
             flash("No results found for your search.", "info")
@@ -229,10 +251,11 @@ def create_user(token):
 
     if request.method == 'POST':
         username = request.form.get('username')
+        email = request.form.get('email')  # Отримання email
         password = request.form.get('password')
         role_id = request.form.get('role_id')
 
-        if not username or not password or not role_id:
+        if not username or not email or not password or not role_id:
             flash("All fields are required.", "error")
             return redirect(request.referrer or url_for('create_user', token=token))
 
@@ -244,11 +267,12 @@ def create_user(token):
             cursor = conn.cursor()
 
             cursor.execute("""
-                INSERT INTO users (username, password_hash)
-                VALUES (%s, %s)
+                INSERT INTO users (username, email, password_hash)
+                VALUES (%s, %s, %s)
                 RETURNING id
-            """, (username, hashed_password))
+            """, (username, email, hashed_password))  # Додавання email
             user_id = cursor.fetchone()['id']
+
 
             cursor.execute("""
                 INSERT INTO user_roles (user_id, role_id, assigned_at)

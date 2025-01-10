@@ -278,3 +278,73 @@ button:hover {
         margin-bottom: 20px;
     }
 </style>
+/* Основні стилі */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+}
+
+header {
+    background: #333;
+    color: #fff;
+    padding: 1em 0;
+    text-align: center;
+}
+
+main {
+    padding: 2em;
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1em;
+}
+
+table th, table td {
+    padding: 0.8em;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+table th {
+    background: #f4f4f4;
+}
+
+.flashes {
+    margin: 1em 0;
+    padding: 0.5em;
+}
+
+.alert {
+    padding: 1em;
+    margin-bottom: 1em;
+    border-radius: 4px;
+}
+
+.alert.error {
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+}
+
+.alert.success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #badbcc;
+}
+
+footer {
+    text-align: center;
+    margin-top: 2em;
+    padding: 1em 0;
+    background: #f4f4f4;
+}

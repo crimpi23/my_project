@@ -2,28 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <h1>Admin Dashboard</h1>
+    <header>
+        <h1>Admin Dashboard</h1>
+        <nav>
+            <a href="{{ url_for('create_user', token=token) }}">Create User</a>
+            <a href="{{ url_for('assign_roles', token=token) }}">Assign Roles</a>
+            <a href="{{ url_for('upload_price_list') }}">Upload Price List</a>
+            <a href="{{ url_for('compare_prices') }}">Compare Prices</a>
+            <a href="{{ url_for('orders') }}">View Orders</a>
+            <a href="{{ url_for('utilities') }}">Utilities</a>
+        </nav>
+    </header>
 
-    <!-- Посилання на створення нового користувача -->
-    <a href="/{{ token }}/admin/create_user">Create New User</a>
+    <main>
+        <h2>Welcome, Admin!</h2>
+        <p>Use the navigation links above to manage users, prices, and orders.</p>
+    </main>
 
-    <h2>Users and Roles</h2>
-    <table border="1">
-        <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Role</th>
-        </tr>
-        {% for user in users %}
-        <tr>
-            <td>{{ user.id }}</td>
-            <td>{{ user.username }}</td>
-            <td>{{ user.role_name }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <footer>
+        <p>&copy; 2025 My Project. All rights reserved.</p>
+    </footer>
 </body>
 </html>

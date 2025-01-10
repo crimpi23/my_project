@@ -61,12 +61,13 @@ def token_index(token):
 def token_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        token = session.get('token')
-        if not token:
+        token = kwargs.get('token') or session.get('token')
+        if not token or not validate_token(token):
             flash("Access denied. Token is required.", "error")
             return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
+
 
 
 # Головна сторінка з перевіркою токена
@@ -153,9 +154,9 @@ def admin_panel(token):
                 return redirect(url_for('admin_panel', token=token))
 
             session['admin_authenticated'] = True
-            logging.info("Admin successfully authenticated.")
+            logging.info(f"Admin successfully authenticated. Redirecting to dashboard with token: {token}")
             return redirect(url_for('admin_dashboard', token=token))
-
+        
         return render_template('admin_login.html', token=token)
 
     except Exception as e:

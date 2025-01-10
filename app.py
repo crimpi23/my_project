@@ -93,7 +93,7 @@ def index():
 @app.route('/simple_search', methods=['GET', 'POST'])
 def simple_search():
     if request.method == 'POST':
-        article = request.form.get('article')
+        article = request.form.get('article', '').strip()
         if not article:
             flash("Please enter an article for search.", "error")
             return redirect(url_for('simple_search'))
@@ -101,35 +101,44 @@ def simple_search():
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("""
-                SELECT article, price, table_name
-                FROM (
-                    SELECT 'vag' AS table_name, article, price FROM vag
-                    UNION ALL
-                    SELECT 'vag_gtc', article, price FROM vag_gtc
-                    UNION ALL
-                    SELECT 'vag_l_berlin', article, price FROM vag_l_berlin
-                    UNION ALL
-                    SELECT 'vag_ronax', article, price FROM vag_ronax
-                ) subquery
-                WHERE article = %s
-            """, (article,))
-            results = cursor.fetchall()
-        except Exception as e:
-            logging.error(f"Error in simple_search: {e}")
-            flash("An error occurred during the search.", "error")
+
+            # Отримання списку таблиць з price_lists
+            cursor.execute("SELECT table_name FROM price_lists")
+            tables = [row['table_name'] for row in cursor.fetchall()]
+
             results = []
+            # Пошук у кожній таблиці
+            for table in tables:
+                query = f"""
+                    SELECT article, price, '{table}' AS table_name
+                    FROM {table}
+                    WHERE article = %s
+                """
+                cursor.execute(query, (article,))
+                results.extend(cursor.fetchall())
+
+            # Логування результатів
+            if results:
+                logging.debug(f"Search results for article '{article}': {results}")
+            else:
+                logging.debug(f"No results found for article '{article}'.")
+
+        except Exception as e:
+            logging.error(f"Error in simple_search: {e}", exc_info=True)
+            flash("An error occurred during the search. Please try again later.", "error")
+            results = []
+
         finally:
-            if 'conn' in locals():
+            if 'conn' in locals() and conn:
                 conn.close()
 
+        # Відображення результатів
         if not results:
-            flash("No results found for your search.", "info")
-        else:
-            logging.debug(f"Search results for article '{article}': {results}")
-
+            flash(f"No results found for '{article}'.", "info")
         return render_template('simple_search_results.html', results=results)
+
     return render_template('simple_search.html')
+
 
 
 # Доступ до адмін-панелі:

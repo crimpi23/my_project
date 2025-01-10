@@ -28,7 +28,9 @@ def hash_password(password):
 
 
 # Перевіряє відповідність пароля хешу з бази
-def verify_password(stored_hash, password):
+def verify_password(password, stored_hash):
+    logging.debug(f"Password to verify: {password}")
+    logging.debug(f"Stored hash: {stored_hash}")
     return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
 
 

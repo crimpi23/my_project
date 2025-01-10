@@ -3,50 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel</title>
+    <title>Admin Dashboard</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
             margin: 0;
             padding: 0;
+            background-color: #f5f5f5;
         }
 
         header {
             background-color: #4CAF50;
             color: white;
-            padding: 10px 20px;
+            padding: 10px 0;
             text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .container {
-            margin: 20px auto;
             max-width: 1200px;
+            margin: 20px auto;
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-
-        .button {
-            display: inline-block;
-            padding: 10px 15px;
-            margin: 10px 0;
-            color: white;
-            background-color: #4CAF50;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-        }
-
-        .button:hover {
-            background-color: #45a049;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         table {
@@ -55,109 +37,65 @@
             margin-top: 20px;
         }
 
-        table th, table td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+        table td {
+            text-align: center;
+            padding: 20px;
         }
 
-        table th {
-            background-color: #f4f4f4;
-        }
-
-        table tr:hover {
-            background-color: #f9f9f9;
-        }
-
-        .actions button {
-            padding: 5px 10px;
+        .button {
+            display: inline-block;
+            padding: 15px 20px;
+            margin: 5px;
             background-color: #4CAF50;
             color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .actions button:hover {
-            background-color: #45a049;
-        }
-
-        .flashes {
-            list-style: none;
-            padding: 0;
-            margin-bottom: 20px;
-        }
-
-        .flashes li {
-            padding: 10px;
             border-radius: 5px;
-            margin-bottom: 10px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
         }
 
-        .flashes .success {
-            background-color: #d4edda;
-            color: #155724;
+        .button:hover {
+            background-color: #45a049;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
         }
 
-        .flashes .error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .flashes .info {
-            background-color: #d1ecf1;
-            color: #0c5460;
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Admin Panel</h1>
-    </header>
+    <header>Welcome to Admin Dashboard</header>
 
     <div class="container">
-        <a href="{{ url_for('create_user', token=session.get('token')) }}" class="button">Create New User</a>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <ul class="flashes">
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-        {% endwith %}
-
         <table>
-            <thead>
-                <tr>
-                    <th>User ID</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.id }}</td>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.email }}</td>
-                    <td class="actions">
-                        <form method="POST" action="{{ url_for('assign_roles', token=session.get('token')) }}" style="display: inline;">
-                            <input type="hidden" name="user_id" value="{{ user.id }}">
-                            <button type="submit">Assign Roles</button>
-                        </form>
-                        <form method="POST" action="{{ url_for('remove_user', token=session.get('token')) }}" style="display: inline;">
-                            <input type="hidden" name="user_id" value="{{ user.id }}">
-                            <button type="submit" style="background-color: #d9534f;">Remove</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+            <tr>
+                <td><a href="#" class="button">Create User</a></td>
+                <td><a href="#" class="button">View Users</a></td>
+                <td><a href="#" class="button">Upload Price List</a></td>
+                <td><a href="#" class="button">Compare Prices</a></td>
+            </tr>
+            <tr>
+                <td><a href="#" class="button">View Orders</a></td>
+                <td><a href="#" class="button">Order Details</a></td>
+                <td><a href="#" class="button">Assign Roles</a></td>
+                <td><a href="#" class="button">Utilities</a></td>
+            </tr>
+            <tr>
+                <td><a href="#" class="button">Cart</a></td>
+                <td><a href="#" class="button">Reports</a></td>
+                <td><a href="#" class="button">Settings</a></td>
+                <td><a href="#" class="button">Log Out</a></td>
+            </tr>
         </table>
     </div>
+
+    <footer>Footer Information - Admin Dashboard</footer>
 </body>
 </html>

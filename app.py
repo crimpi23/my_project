@@ -427,21 +427,20 @@ def add_to_cart():
                 VALUES (%s, %s, %s, NOW())
             """, (user_id, product_id, quantity))
 
-    conn.commit()
-    flash("Product added to cart!", "success")
-    return redirect(request.referrer or url_for('index'))
+        conn.commit()
+        flash("Product added to cart!", "success")
+        return redirect(request.referrer or url_for('index'))
 
     except Exception as e:
-    logging.error("Error in add_to_cart: %s", str(e))
-    flash("Error adding product to cart.", "error")
-    return redirect(request.referrer or url_for('index'))
+        logging.error("Error in add_to_cart: %s", str(e))
+        flash("Error adding product to cart.", "error")
+        return redirect(request.referrer or url_for('index'))
 
     finally:
-    if cursor:
-        cursor.close()
-    if conn:
-        conn.close()
-
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 # Видалення товару з кошика
 @app.route('/remove_from_cart', methods=['POST'])

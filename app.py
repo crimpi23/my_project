@@ -16,17 +16,21 @@ app = Flask(__name__)
 # Секретний ключ для сесій
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
+
 # Генерує унікальний токен для користувача
 def generate_token():
     return os.urandom(16).hex()
+
 
 # Хешує пароль для збереження у базі даних
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
+
 # Перевіряє відповідність пароля хешу з бази
 def verify_password(stored_hash, password):
     return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
+
 
 # Функція для підключення до бази даних
 def get_db_connection():
@@ -36,20 +40,22 @@ def get_db_connection():
         cursor_factory=psycopg2.extras.DictCursor
     )
 
+
 # Головна сторінка за токеном
 @app.route('/<token>/')
 def token_index(token):
     role = validate_token(token)
     if not role:
         flash("Invalid token.", "error")
-       return redirect(request.referrer or url_for('simple_search'))
+    return redirect(request.referrer or url_for('simple_search'))
 
     # Збереження токена та ролі у сесії
     session['token'] = token
     session['role'] = role
     return render_template('index.html', role=role)
 
-#Запит про токен / Перевірка токена / Декоратор для перевірки токена
+
+# Запит про токен / Перевірка токена / Декоратор для перевірки токена
 def token_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -59,8 +65,8 @@ def token_required(f):
             flash("Access denied. Token is required.", "error")
             return redirect(request.referrer or url_for('simple_search'))
         return f(*args, **kwargs)
-    return decorated_function
 
+    return decorated_function
 
 
 # Головна сторінка з перевіркою токена
@@ -72,7 +78,8 @@ def index():
     role = validate_token(token)
     return render_template('index.html', role=role)
 
-#Пошук для користувачів без токену
+
+# Пошук для користувачів без токену
 @app.route('/simple_search', methods=['GET', 'POST'])
 def simple_search():
     if request.method == 'POST':
@@ -93,7 +100,8 @@ def simple_search():
 
     return render_template('simple_search.html')
 
-#Доступ до адмін-панелі:
+
+# Доступ до адмін-панелі:
 @app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel_with_token(token):
     # Логіка для панелі адміністратора
@@ -101,7 +109,7 @@ def admin_panel_with_token(token):
     if not role or role != "admin":
         flash("Access denied. Admin rights are required.", "error")
         return redirect(request.referrer or url_for('token_index', token=token))
-    
+
     if request.method == 'POST':
         password = request.form.get('password')
 
@@ -124,8 +132,7 @@ def admin_panel_with_token(token):
     return render_template('admin_login.html', token=token)
 
 
-
-#Це треба потім описати, теж щось про адмінку
+# Це треба потім описати, теж щось про адмінку
 @app.route('/<token>/admin/dashboard', methods=['GET'])
 @token_required
 def admin_dashboard(token):
@@ -140,7 +147,7 @@ def admin_dashboard(token):
 
     return render_template('admin_main.html')
 
-  
+
 # Функція для перевірки токена
 def validate_token(token):
     try:
@@ -160,7 +167,8 @@ def validate_token(token):
         logging.error(f"Error validating token: {e}")
         return None
 
-#Створення користувача в адмін панелі:
+
+# Створення користувача в адмін панелі:
 # Створення користувача в адмін-панелі
 @app.route('/<token>/admin/create_user', methods=['GET', 'POST'])
 @token_required
@@ -224,6 +232,7 @@ def create_user(token):
     conn.close()
 
     return render_template('create_user.html', roles=roles, token=token)
+
 
 # Маршрут для пошуку артикулів
 @app.route('/search', methods=['POST'])
@@ -369,7 +378,6 @@ def cart():
         logging.debug("Database connection closed.")
 
 
-
 # Додавання в кошик
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
@@ -419,21 +427,22 @@ def add_to_cart():
                 VALUES (%s, %s, %s, NOW())
             """, (user_id, product_id, quantity))
 
-        conn.commit()
-        flash("Product added to cart!", "success")
-       return redirect(request.referrer or url_for('index'))
+    conn.commit()
+    flash("Product added to cart!", "success")
+    return redirect(request.referrer or url_for('index'))
 
-    except Exception as e:
-        logging.error("Error in add_to_cart: %s", str(e))
-        flash("Error adding product to cart.", "error")
-       return redirect(request.referrer or url_for('index'))
+except Exception as e:
+logging.error("Error in add_to_cart: %s", str(e))
+flash("Error adding product to cart.", "error")
+return redirect(request.referrer or url_for('index'))
 
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-            
+finally:
+if cursor:
+    cursor.close()
+if conn:
+    conn.close()
+
+
 # Видалення товару з кошика
 @app.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart():
@@ -632,7 +641,7 @@ def orders():
                 WHERE user_id = %s
                 ORDER BY order_date DESC
             """, (user_id,))
-        
+
         orders = cursor.fetchall()
 
         return render_template('orders.html', orders=orders, search_article=search_article)
@@ -644,6 +653,7 @@ def orders():
             cursor.close()
         if conn:
             conn.close()
+
 
 @app.route('/order_details/<int:order_id>')
 def order_details(order_id):
@@ -679,11 +689,12 @@ def order_details(order_id):
         if conn:
             conn.close()
 
+
 @app.route('/admin')
 def admin_panel():
     conn = get_db_connection()
     cursor = conn.cursor()  # DictCursor вже використовується у функції get_db_connection
-    
+
     cursor.execute("""
         SELECT users.id, users.username, users.email
         FROM users
@@ -692,7 +703,6 @@ def admin_panel():
 
     conn.close()
     return render_template('admin_main.html', users=users)
-
 
 
 @app.route('/admin/assign_roles', methods=['GET', 'POST'])
@@ -753,6 +763,7 @@ def assign_roles():
     conn.close()
     return render_template('assign_roles.html', user_roles=user_roles, users=users, roles=roles)
 
+
 # Функція для визначення розділювача
 def detect_delimiter(file_content):
     delimiters = [',', ';', '\t', ' ']
@@ -765,7 +776,8 @@ def detect_delimiter(file_content):
 
     return max(counts, key=counts.get)
 
-#Завантаження прайсу в Адмінці
+
+# Завантаження прайсу в Адмінці
 @app.route('/admin/upload_price_list', methods=['GET', 'POST'])
 def upload_price_list():
     if request.method == 'GET':
@@ -870,7 +882,8 @@ def upload_price_list():
             logging.info(f"Import completed in {end_time - start_time:.2f} seconds.")
             # Flash-повідомлення лише для цієї сторінки
             flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "upload")
-            return jsonify({"status": "success", "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}), 200
+            return jsonify({"status": "success",
+                            "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}), 200
 
         except Exception as e:
             logging.error(f"Error during POST request: {e}")
@@ -883,14 +896,16 @@ def upload_price_list():
                 conn.close()
 
 
-
 @app.route('/import_status', methods=['GET'])
 def get_import_status():
-    return jsonify({"status": "success", "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}), 200
+    return jsonify(
+        {"status": "success", "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}), 200
+
 
 @app.route('/ping', methods=['GET'])
 def ping():
     return "OK", 200
+
 
 @app.route('/admin/compare_prices', methods=['GET', 'POST'])
 def compare_prices():
@@ -991,7 +1006,8 @@ def compare_prices():
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(request.referrer or url_for('compare_prices'))
-            
+
+
 # Експорт в ексель файлу порівняння цін
 def export_to_excel(better_in_first, better_in_second, same_prices):
     try:
@@ -1027,13 +1043,12 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
 
         # Надсилання файлу користувачеві
         logging.info(f"Exported Excel file saved to: {filepath}")
-        return send_file(filepath, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        return send_file(filepath, as_attachment=True, download_name=filename,
+                         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
     except Exception as e:
         logging.error(f"Error during Excel export: {e}", exc_info=True)
         raise
-
-
 
 
 @app.route('/admin/utilities', methods=['GET'])

@@ -135,17 +135,11 @@ def simple_search():
 # Доступ до адмін-панелі:
 @app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel(token):
-    # Ваш існуючий код...
-    if request.method == 'POST':
-        # Перевірка пароля
-        # ...
-        session['admin_authenticated'] = True
-        session['user_id'] = user_data['user_id']  # Збереження ID користувача
-        logging.debug(f"Session data after login: {dict(session)}")  # Логування стану сесії
-        return redirect(f'/{token}/admin/dashboard')
-
-
-        session['token'] = token
+    try:
+        role = validate_token(token)
+        if not role or role != "admin":
+            flash("Access denied. Admin rights are required.", "error")
+            return redirect(url_for('index'))
 
         if request.method == 'POST':
             password = request.form.get('password')
@@ -157,23 +151,25 @@ def admin_panel(token):
             cursor = conn.cursor()
 
             cursor.execute("""
-                SELECT password_hash 
-                FROM users
-                WHERE id = %s
-            """, (user_data['user_id'],))
-            admin_password_hash = cursor.fetchone()
+                SELECT id AS user_id, password_hash 
+                FROM users 
+                WHERE id IN (
+                    SELECT user_id 
+                    FROM tokens 
+                    WHERE token = %s
+                )
+            """, (token,))
+            user_data = cursor.fetchone()
 
-            logging.debug(f"Fetched password hash: {admin_password_hash}")
-
-            if not admin_password_hash or not verify_password(password, admin_password_hash[0]):
-                logging.warning("Invalid admin password attempt.")
-                flash("Invalid password.", "error")
+            if not user_data or not verify_password(password, user_data['password_hash']):
+                flash("Invalid credentials.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
             # Успішна аутентифікація
             session['admin_authenticated'] = True
-            session['user_id'] = user_data['user_id']  # Збереження ID користувача у сесії
-            logging.info(f"Admin successfully authenticated. Redirecting to /{token}/admin/dashboard")
+            session['user_id'] = user_data['user_id']
+            session['token'] = token
+            logging.debug(f"Session data after login: {dict(session)}")
             return redirect(f'/{token}/admin/dashboard')
 
         return render_template('admin_login.html', token=token)
@@ -184,8 +180,11 @@ def admin_panel(token):
         return redirect(url_for('index'))
 
     finally:
+        if 'cursor' in locals() and cursor:
+            cursor.close()
         if 'conn' in locals() and conn:
             conn.close()
+
 
 
 

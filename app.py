@@ -201,26 +201,39 @@ def admin_panel(token):
 
 
 # Це треба потім описати, теж щось про адмінку
-@app.route('/<token>/admin/dashboard', methods=['GET'])
-@token_required
+@app.route('/<token>/admin/dashboard')
 def admin_dashboard(token):
-    logging.debug(f"Session data in admin_dashboard: {dict(session)}")  # Логування сесії
-    if not session.get('admin_authenticated'):
-        flash("You need to log in as an admin.", "error")
+    try:
+        # Перевірка, чи користувач аутентифікований
+        if not session.get('admin_authenticated') or session.get('token') != token:
+            flash("Access denied. Please log in as an admin.", "error")
+            return redirect(url_for('admin_panel', token=token))
+
+        # Підключення до бази даних
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Отримання списку користувачів і їх ролей
+        cursor.execute("""
+            SELECT u.id, u.username, r.name AS role_name
+            FROM users u
+            JOIN user_roles ur ON u.id = ur.user_id
+            JOIN roles r ON ur.role_id = r.id
+        """)
+        users = cursor.fetchall()
+
+        # Логування користувачів і їх ролей
+        logging.debug(f"Users and roles passed to dashboard: {users}")
+
+        return render_template('admin_dashboard.html', users=users, token=token)
+    except Exception as e:
+        logging.error(f"Error in admin_dashboard: {e}", exc_info=True)
+        flash("An error occurred while loading the dashboard.", "error")
         return redirect(url_for('admin_panel', token=token))
-    # Ваш існуючий код...
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
 
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Отримуємо список користувачів
-    cursor.execute("SELECT id, username, email FROM users ORDER BY username;")
-    users = cursor.fetchall()
-
-    conn.close()
-
-    return render_template('admin_main.html', token=token)
 
 
 

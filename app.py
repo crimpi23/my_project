@@ -126,15 +126,6 @@ def simple_search():
         return render_template('simple_search_results.html', results=results)
     return render_template('simple_search.html')
 
-
-        if not results:
-            flash("No results found for your search.", "info")
-        return render_template('simple_search_results.html', results=results)
-    return render_template('simple_search.html')
-
-
-
-
 # Доступ до адмін-панелі:
 @app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel(token):

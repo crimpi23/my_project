@@ -60,12 +60,10 @@ def token_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = session.get('token')
-        role = validate_token(token)
-        if not role:
+        if not token:
             flash("Access denied. Token is required.", "error")
-            return redirect(request.referrer or url_for('simple_search'))
+            return redirect(url_for('index'))
         return f(*args, **kwargs)
-
     return decorated_function
 
 
@@ -84,52 +82,93 @@ def index():
 def simple_search():
     if request.method == 'POST':
         article = request.form.get('article')
+        logging.debug(f"Search initiated for article: {article}")
+
         if not article:
             flash("Please enter an article for search.", "error")
-            return redirect(request.referrer or url_for('simple_search'))
+            return redirect(url_for('simple_search'))
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT article, price FROM some_table
-            WHERE article = %s
-        """, (article,))
-        results = cursor.fetchall()
-        conn.close()
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT article, price FROM articles_table -- Замініть на вашу таблицю
+                WHERE article = %s
+            """, (article,))
+            results = cursor.fetchall()
+            logging.debug(f"Search results: {results}")
+        except Exception as e:
+            logging.error(f"Error in simple_search: {e}", exc_info=True)
+            flash("An error occurred during the search.", "error")
+            results = []
+        finally:
+            if 'conn' in locals():
+                conn.close()
+
+        if not results:
+            flash("No results found for your search.", "info")
         return render_template('simple_search_results.html', results=results)
 
     return render_template('simple_search.html')
 
 
+
 # Доступ до адмін-панелі:
+@app.route('/admin', methods=['GET', 'POST'])
 @app.route('/<token>/admin', methods=['GET', 'POST'])
-def admin_panel_with_token(token):
-    # Логіка для панелі адміністратора
-    role = validate_token(token)
-    if not role or role != "admin":
-        flash("Access denied. Admin rights are required.", "error")
-        return redirect(request.referrer or url_for('token_index', token=token))
+def admin_panel(token=None):
+    try:
+        # Якщо використовується токен
+        if token:
+            logging.debug(f"Token received: {token}")
+            role = validate_token(token)
+            if not role or role != "admin":
+                logging.warning(f"Access denied for token: {token}")
+                flash("Access denied. Admin rights are required.", "error")
+                return redirect(request.referrer or url_for('index'))
+            session['token'] = token  # Зберігаємо токен у сесії
 
-    if request.method == 'POST':
-        password = request.form.get('password')
+        if request.method == 'POST':
+            # Обробка введеного пароля
+            password = request.form.get('password')
+            if not password:
+                flash("Password is required.", "error")
+                return redirect(url_for('admin_panel', token=token))
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT password_hash FROM users
-            WHERE id = (SELECT user_id FROM user_roles WHERE role_id = (SELECT id FROM roles WHERE name = 'admin'))
-        """)
-        admin_password_hash = cursor.fetchone()['password_hash']
-        conn.close()
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT password_hash FROM users
+                WHERE id = (
+                    SELECT user_id FROM user_roles
+                    WHERE role_id = (
+                        SELECT id FROM roles WHERE name = 'admin'
+                    )
+                )
+            """)
+            admin_password_hash = cursor.fetchone()
 
-        if not verify_password(admin_password_hash, password):
-            flash("Incorrect password.", "error")
-            return redirect(request.referrer or url_for('admin_panel_with_token', token=token))
+            if not admin_password_hash or not verify_password(admin_password_hash['password_hash'], password):
+                logging.warning("Invalid admin password attempt.")
+                flash("Invalid password.", "error")
+                return redirect(url_for('admin_panel', token=token))
 
-        session['admin_authenticated'] = True
-        return redirect(request.referrer or url_for('admin_dashboard_with_token', token=token))
+            session['admin_authenticated'] = True
+            logging.info("Admin successfully authenticated.")
+            return redirect(url_for('admin_dashboard', token=token))
 
-    return render_template('admin_login.html', token=token)
+        # Для GET-запиту
+        return render_template('admin_login.html', token=token)
+
+    except Exception as e:
+        logging.error(f"Error in admin_panel: {e}", exc_info=True)
+        flash("An error occurred while accessing the admin panel.", "error")
+        return redirect(url_for('index'))
+
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
 
 
 # Це треба потім описати, теж щось про адмінку
@@ -306,6 +345,9 @@ def search_articles():
         logging.debug("Grouped results: %s", grouped_results)
         logging.debug("Quantities: %s", quantities)
         logging.debug("Missing articles: %s", missing_articles)
+        logging.debug(f"Articles to search: {articles}")
+        logging.debug(f"Quantities: {quantities}")
+        logging.debug(f"Grouped results: {grouped_results}")
 
         flash("Search completed successfully!", "success")
         return redirect(request.referrer or url_for('index'))
@@ -388,10 +430,12 @@ def add_to_cart():
         table_name = request.form.get('table_name')
         user_id = 1  # Замінити на логіку реального користувача
 
+        logging.debug(f"Adding to cart: Article={article}, Price={price}, Quantity={quantity}, Table={table_name}, User={user_id}")
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Перевірка існування товару в таблиці products
+        # Перевірка існування товару
         cursor.execute("""
             SELECT id FROM products
             WHERE article = %s AND table_name = %s
@@ -405,10 +449,12 @@ def add_to_cart():
                 RETURNING id
             """, (article, table_name, price))
             product_id = cursor.fetchone()[0]
+            logging.info(f"New product added: ID={product_id}")
         else:
             product_id = product['id']
+            logging.debug(f"Product already exists: ID={product_id}")
 
-        # Перевірка наявності товару в кошику
+        # Додавання або оновлення товару в кошику
         cursor.execute("""
             SELECT id FROM cart
             WHERE user_id = %s AND product_id = %s
@@ -421,18 +467,20 @@ def add_to_cart():
                 SET quantity = quantity + %s
                 WHERE id = %s
             """, (quantity, existing_cart_item['id']))
+            logging.info(f"Cart updated for product ID={product_id}, Quantity={quantity}")
         else:
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, %s, %s, NOW())
             """, (user_id, product_id, quantity))
+            logging.info(f"Product added to cart: Product ID={product_id}, Quantity={quantity}")
 
         conn.commit()
         flash("Product added to cart!", "success")
         return redirect(request.referrer or url_for('index'))
 
     except Exception as e:
-        logging.error("Error in add_to_cart: %s", str(e))
+        logging.error(f"Error in add_to_cart: {e}", exc_info=True)
         flash("Error adding product to cart.", "error")
         return redirect(request.referrer or url_for('index'))
 
@@ -441,6 +489,7 @@ def add_to_cart():
             cursor.close()
         if conn:
             conn.close()
+
 
 # Видалення товару з кошика
 @app.route('/remove_from_cart', methods=['POST'])
@@ -687,21 +736,6 @@ def order_details(order_id):
             cursor.close()
         if conn:
             conn.close()
-
-
-@app.route('/admin')
-def admin_panel():
-    conn = get_db_connection()
-    cursor = conn.cursor()  # DictCursor вже використовується у функції get_db_connection
-
-    cursor.execute("""
-        SELECT users.id, users.username, users.email
-        FROM users
-    """)
-    users = cursor.fetchall()
-
-    conn.close()
-    return render_template('admin_main.html', users=users)
 
 
 @app.route('/admin/assign_roles', methods=['GET', 'POST'])

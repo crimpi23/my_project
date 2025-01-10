@@ -136,14 +136,21 @@ def simple_search():
 @app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel(token):
     try:
+        logging.debug(f"Token received in admin_panel: {token}")
+
+        # Перевірка токена
         role = validate_token(token)
         if not role or role != "admin":
+            logging.warning(f"Access denied. Token: {token}, Role: {role}")
             flash("Access denied. Admin rights are required.", "error")
-            return redirect(url_for('index'))
+            return redirect(url_for('simple_search'))  # Якщо немає прав, редирект на головну сторінку
+
+        session['token'] = token
 
         if request.method == 'POST':
             password = request.form.get('password')
             if not password:
+                logging.warning("Password is required for admin login.")
                 flash("Password is required.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
@@ -151,25 +158,23 @@ def admin_panel(token):
             cursor = conn.cursor()
 
             cursor.execute("""
-                SELECT id AS user_id, password_hash 
-                FROM users 
+                SELECT id AS user_id, password_hash
+                FROM users
                 WHERE id IN (
-                    SELECT user_id 
-                    FROM tokens 
-                    WHERE token = %s
+                    SELECT user_id FROM tokens WHERE token = %s
                 )
             """, (token,))
             user_data = cursor.fetchone()
 
             if not user_data or not verify_password(password, user_data['password_hash']):
+                logging.warning("Invalid admin password attempt.")
                 flash("Invalid credentials.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
             # Успішна аутентифікація
             session['admin_authenticated'] = True
             session['user_id'] = user_data['user_id']
-            session['token'] = token
-            logging.debug(f"Session data after login: {dict(session)}")
+            logging.info(f"Admin authenticated. Redirecting to /{token}/admin/dashboard")
             return redirect(f'/{token}/admin/dashboard')
 
         return render_template('admin_login.html', token=token)
@@ -177,7 +182,7 @@ def admin_panel(token):
     except Exception as e:
         logging.error(f"Error in admin_panel: {e}", exc_info=True)
         flash("An error occurred while accessing the admin panel.", "error")
-        return redirect(url_for('index'))
+        return redirect(url_for('simple_search'))
 
     finally:
         if 'cursor' in locals() and cursor:

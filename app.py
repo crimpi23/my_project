@@ -137,8 +137,9 @@ def simple_search():
 def admin_panel(token):
     try:
         logging.debug(f"Token received: {token}")
-        role = validate_token(token)
-        if not role or role != "admin":
+        # Перевірка ролі через токен
+        user_data = validate_token(token)
+        if not user_data or user_data['role'] != "admin":
             logging.warning(f"Access denied for token: {token}")
             flash("Access denied. Admin rights are required.", "error")
             return redirect(url_for('index'))
@@ -146,6 +147,7 @@ def admin_panel(token):
         session['token'] = token
 
         if request.method == 'POST':
+            # Отримання пароля
             password = request.form.get('password')
             if not password:
                 flash("Password is required.", "error")
@@ -154,27 +156,27 @@ def admin_panel(token):
             conn = get_db_connection()
             cursor = conn.cursor()
 
+            # Отримання хеша пароля адміністратора
             cursor.execute("""
                 SELECT password_hash 
-                FROM users 
-                WHERE id IN (
-                    SELECT user_id 
-                    FROM user_roles 
-                    WHERE role_id = 1
-                );
-            """)
+                FROM users
+                WHERE id = %s
+            """, (user_data['user_id'],))  # Прив'язка до конкретного користувача
             admin_password_hash = cursor.fetchone()
 
             logging.debug(f"Fetched password hash: {admin_password_hash}")
 
+            # Перевірка відповідності пароля
             if not admin_password_hash or not verify_password(password, admin_password_hash[0]):
                 logging.warning("Invalid admin password attempt.")
                 flash("Invalid password.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
+            # Аутентифікація успішна
             session['admin_authenticated'] = True
+            session['user_id'] = user_data['user_id']  # Зберігаємо ID користувача у сесії
             logging.info(f"Admin successfully authenticated. Redirecting to /{token}/admin/dashboard")
-            return redirect(f'/{token}/admin/dashboard')  # Жорстке посилання
+            return redirect(f'/{token}/admin/dashboard')  # Жорстке посилання для уникнення помилок
 
         return render_template('admin_login.html', token=token)
 
@@ -186,6 +188,7 @@ def admin_panel(token):
     finally:
         if 'conn' in locals() and conn:
             conn.close()
+
 
 
 
@@ -222,26 +225,28 @@ def validate_token(token):
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT r.name AS role
+            SELECT u.id AS user_id, r.name AS role
             FROM tokens t
-            JOIN user_roles ur ON ur.user_id = t.user_id
+            JOIN users u ON t.user_id = u.id
+            JOIN user_roles ur ON ur.user_id = u.id
             JOIN roles r ON ur.role_id = r.id
             WHERE t.token = %s
         """, (token,))
         result = cursor.fetchone()
         conn.close()
-        return result['role'] if result else None
+        return result if result else None
     except Exception as e:
         logging.error(f"Error validating token: {e}")
         return None
+
 
 
 # Створення користувача в адмін панелі:
 @app.route('/<token>/admin/create_user', methods=['GET', 'POST'])
 @token_required
 def create_user(token):
-    role = validate_token(token)
-    if not role or role != "admin":
+    user_data = validate_token(token)
+    if not user_data or user_data['role'] != "admin":
         flash("Access denied. Admin rights are required.", "error")
         return redirect(url_for('token_index', token=token))
 

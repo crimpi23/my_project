@@ -80,34 +80,74 @@ def index():
 # Пошук для користувачів без токену
 @app.route('/simple_search', methods=['GET', 'POST'])
 def simple_search():
-    if request.method == 'POST':
-        article = request.form.get('article')
-        if not article:
-            flash("Please enter an article for search.", "error")
-            return redirect(url_for('simple_search'))
+    try:
+        if request.method == 'POST':
+            articles = []
+            quantities = {}
+            auto_set_quantities = []
+            missing_articles = []
 
-        try:
+            articles_input = request.form.get('articles')
+            if not articles_input:
+                flash("Please enter at least one article.", "error")
+                return redirect(url_for('index'))
+
+            for line in articles_input.splitlines():
+                parts = line.strip().split()
+                if len(parts) == 1:
+                    article = parts[0].strip()
+                    articles.append(article)
+                    quantities[article] = 1
+                    auto_set_quantities.append(article)
+                elif len(parts) == 2 and parts[1].isdigit():
+                    article, quantity = parts
+                    articles.append(article)
+                    quantities[article] = int(quantity)
+
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("""
-                SELECT article, price FROM articles_table  -- Замініть на вашу таблицю
-                WHERE article = %s
-            """, (article,))
-            results = cursor.fetchall()
-        except Exception as e:
-            logging.error(f"Error in simple_search: {e}")
-            flash("An error occurred during the search.", "error")
+
+            cursor.execute("SELECT table_name FROM price_lists")
+            tables = cursor.fetchall()
+
             results = []
-        finally:
-            if 'conn' in locals():
-                conn.close()
+            for table in tables:
+                table_name = table['table_name']
+                query = f"""
+                    SELECT article, price, %s AS table_name
+                    FROM {table_name}
+                    WHERE article = ANY(%s)
+                """
+                cursor.execute(query, (table_name, articles))
+                results.extend(cursor.fetchall())
 
-        if not results:
-            flash("No results found for your search.", "info")
-        return render_template('simple_search_results.html', results=results)
-    return render_template('simple_search.html')
+            grouped_results = {}
+            for result in results:
+                article = result['article']
+                grouped_results.setdefault(article, []).append({
+                    'price': result['price'],
+                    'table_name': result['table_name']
+                })
 
+            missing_articles = [article for article in articles if article not in grouped_results]
 
+            flash("Search completed successfully!", "success")
+            return render_template(
+                'simple_search_results.html',
+                grouped_results=grouped_results,
+                missing_articles=missing_articles
+            )
+
+        return render_template('simple_search.html')
+
+    except Exception as e:
+        logging.error(f"Error in simple_search: {e}", exc_info=True)
+        flash("An error occurred while processing your request.", "error")
+        return redirect(url_for('index'))
+
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
 
 
 # Доступ до адмін-панелі:
@@ -115,53 +155,45 @@ def simple_search():
 @app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel(token=None):
     try:
-        # Перевірка токена, якщо передано
         if token:
             logging.debug(f"Token received: {token}")
             role = validate_token(token)
             if not role or role != "admin":
                 logging.warning(f"Access denied for token: {token}")
                 flash("Access denied. Admin rights are required.", "error")
-                return redirect(request.referrer or url_for('index'))
-            session['token'] = token  # Зберігаємо токен у сесії
+                return redirect(url_for('index'))
+            session['token'] = token
 
         if request.method == 'POST':
-            # Обробка введеного пароля
             password = request.form.get('password')
             if not password:
                 flash("Password is required.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
-            # Підключення до бази даних
             conn = get_db_connection()
             cursor = conn.cursor()
-
-            # Отримання хеша пароля адміністратора
             cursor.execute("""
                 SELECT password_hash 
                 FROM users 
                 WHERE id IN (
                     SELECT user_id 
                     FROM user_roles 
-                    WHERE role_id = 1 -- Підставляємо ID ролі адміністратора
+                    WHERE role_id = 1
                 );
             """)
             admin_password_hash = cursor.fetchone()
 
             logging.debug(f"Fetched password hash: {admin_password_hash}")
 
-            # Перевірка хеша пароля
             if not admin_password_hash or not verify_password(admin_password_hash[0], password):
                 logging.warning("Invalid admin password attempt.")
                 flash("Invalid password.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
-            # Аутентифікація успішна
             session['admin_authenticated'] = True
             logging.info("Admin successfully authenticated.")
             return redirect(url_for('admin_dashboard', token=token))
 
-        # Якщо метод GET, показати форму логіну
         return render_template('admin_login.html', token=token)
 
     except Exception as e:
@@ -172,6 +204,7 @@ def admin_panel(token=None):
     finally:
         if 'conn' in locals() and conn:
             conn.close()
+
 
 
 

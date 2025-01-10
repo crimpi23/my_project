@@ -5,16 +5,37 @@
     <title>Simple Search Results</title>
 </head>
 <body>
-    <h1>Simple Search Results</h1>
-    {% if results %}
+    <h1>Search Results</h1>
+    {% if grouped_results %}
+    <table>
+        <thead>
+            <tr>
+                <th>Article</th>
+                <th>Price</th>
+                <th>Table</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for article, details in grouped_results.items() %}
+            {% for detail in details %}
+            <tr>
+                <td>{{ article }}</td>
+                <td>{{ detail.price }}</td>
+                <td>{{ detail.table_name }}</td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if missing_articles %}
+    <h2>Missing Articles:</h2>
     <ul>
-        {% for result in results %}
-        <li>Article: {{ result.article }}, Price: {{ result.price }}</li>
+        {% for article in missing_articles %}
+        <li>{{ article }}</li>
         {% endfor %}
     </ul>
-    {% else %}
-    <p>No results found.</p>
     {% endif %}
-    <a href="/simple_search">Back to search</a>
 </body>
 </html>

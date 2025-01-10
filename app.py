@@ -29,7 +29,11 @@ def hash_password(password):
 
 # Перевіряє відповідність пароля хешу з бази
 def verify_password(stored_hash, password):
-    return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
+    try:
+        return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
+    except ValueError as e:
+        print(f"Error in verifying password: {e}")
+        return False
 
 
 # Функція для підключення до бази даних
@@ -155,6 +159,7 @@ def simple_search():
 @app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel(token=None):
     try:
+        # Перевірка токена, якщо він переданий
         if token:
             logging.debug(f"Token received: {token}")
             role = validate_token(token)
@@ -164,36 +169,53 @@ def admin_panel(token=None):
                 return redirect(url_for('index'))
             session['token'] = token
 
+        # Якщо метод POST (відправлено форму)
         if request.method == 'POST':
             password = request.form.get('password')
             if not password:
                 flash("Password is required.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
+            # Підключення до бази даних
             conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT password_hash 
-                FROM users 
-                WHERE id IN (
-                    SELECT user_id 
-                    FROM user_roles 
-                    WHERE role_id = 1
-                );
-            """)
-            admin_password_hash = cursor.fetchone()
+            try:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT password_hash 
+                    FROM users 
+                    WHERE id IN (
+                        SELECT user_id 
+                        FROM user_roles 
+                        WHERE role_id = 1
+                    );
+                """)
+                admin_password_hash = cursor.fetchone()
 
-            logging.debug(f"Fetched password hash: {admin_password_hash}")
+                logging.debug(f"Fetched password hash: {admin_password_hash}")
 
-            if not admin_password_hash or not verify_password(admin_password_hash[0], password):
-                logging.warning("Invalid admin password attempt.")
-                flash("Invalid password.", "error")
+                if not admin_password_hash:
+                    flash("Admin password is not set.", "error")
+                    return redirect(url_for('admin_panel', token=token))
+
+                # Перевірка пароля
+                if not verify_password(admin_password_hash[0], password):
+                    logging.warning("Invalid admin password attempt.")
+                    flash("Invalid password.", "error")
+                    return redirect(url_for('admin_panel', token=token))
+
+                # Успішна автентифікація
+                session['admin_authenticated'] = True
+                logging.info("Admin successfully authenticated.")
+                return redirect(url_for('admin_dashboard', token=token))
+            except Exception as db_error:
+                logging.error(f"Database error: {db_error}", exc_info=True)
+                flash("Database error occurred.", "error")
                 return redirect(url_for('admin_panel', token=token))
+            finally:
+                # Закриття з'єднання
+                conn.close()
 
-            session['admin_authenticated'] = True
-            logging.info("Admin successfully authenticated.")
-            return redirect(url_for('admin_dashboard', token=token))
-
+        # GET запит: показати сторінку входу
         return render_template('admin_login.html', token=token)
 
     except Exception as e:
@@ -201,9 +223,6 @@ def admin_panel(token=None):
         flash("An error occurred while accessing the admin panel.", "error")
         return redirect(url_for('index'))
 
-    finally:
-        if 'conn' in locals() and conn:
-            conn.close()
 
 
 

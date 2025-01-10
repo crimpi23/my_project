@@ -138,42 +138,43 @@ def admin_panel(token):
     try:
         logging.debug(f"Token received in admin_panel: {token}")
 
-        # Перевірка токена
-        role = validate_token(token)
-        if not role or role != "admin":
-            logging.warning(f"Access denied. Token: {token}, Role: {role}")
-            flash("Access denied. Admin rights are required.", "error")
-            return redirect(url_for('simple_search'))  # Якщо немає прав, редирект на головну сторінку
+        # Виклик validate_token
+        role_data = validate_token(token)
 
+        # Перевірка результату
+        if not role_data or role_data['role'] != 'admin':
+            logging.warning(f"Access denied. Token: {token}, Role: {role_data}")
+            flash("Access denied. Admin rights are required.", "error")
+            return redirect(url_for('simple_search'))
+
+        # Збереження даних у сесію
         session['token'] = token
+        session['user_id'] = role_data['user_id']
 
         if request.method == 'POST':
             password = request.form.get('password')
             if not password:
-                logging.warning("Password is required for admin login.")
                 flash("Password is required.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
             conn = get_db_connection()
             cursor = conn.cursor()
 
+            # Перевірка пароля
             cursor.execute("""
-                SELECT id AS user_id, password_hash
+                SELECT password_hash 
                 FROM users
-                WHERE id IN (
-                    SELECT user_id FROM tokens WHERE token = %s
-                )
-            """, (token,))
-            user_data = cursor.fetchone()
+                WHERE id = %s
+            """, (role_data['user_id'],))
+            admin_password_hash = cursor.fetchone()
 
-            if not user_data or not verify_password(password, user_data['password_hash']):
+            if not admin_password_hash or not verify_password(password, admin_password_hash[0]):
                 logging.warning("Invalid admin password attempt.")
-                flash("Invalid credentials.", "error")
+                flash("Invalid password.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
             # Успішна аутентифікація
             session['admin_authenticated'] = True
-            session['user_id'] = user_data['user_id']
             logging.info(f"Admin authenticated. Redirecting to /{token}/admin/dashboard")
             return redirect(f'/{token}/admin/dashboard')
 
@@ -185,14 +186,8 @@ def admin_panel(token):
         return redirect(url_for('simple_search'))
 
     finally:
-        if 'cursor' in locals() and cursor:
-            cursor.close()
         if 'conn' in locals() and conn:
             conn.close()
-
-
-
-
 
 
 

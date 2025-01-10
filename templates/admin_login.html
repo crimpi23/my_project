@@ -6,11 +6,11 @@
 </head>
 <body>
     <h1>Admin Panel Access</h1>
-    <form action="/admin" method="POST">
-        <label for="password">Enter Admin Password:</label>
-        <input type="password" id="password" name="password" required>
-        <button type="submit">Login</button>
-    </form>
+	<form method="POST" action="/{{ token }}/admin">
+		<label for="password">Admin Password:</label>
+		<input type="password" id="password" name="password" required>
+		<button type="submit">Login</button>
+	</form>
     {% with messages = get_flashed_messages(with_categories=true) %}
 	{% if messages %}
 	<ul class="flashes">

@@ -171,7 +171,6 @@ def admin_panel(token):
 
 
 
-
 # Це треба потім описати, теж щось про адмінку
 @app.route('/<token>/admin/dashboard', methods=['GET'])
 @token_required

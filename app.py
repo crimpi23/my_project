@@ -6,13 +6,15 @@ import logging
 import csv
 import io
 import bcrypt
-import openpyxl
 from functools import wraps
 
 # Налаштування логування
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
+
+# Секретний ключ для сесій
+app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
 # Генерує унікальний токен для користувача
 def generate_token():
@@ -26,12 +28,17 @@ def hash_password(password):
 def verify_password(stored_hash, password):
     return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
 
-# Секретний ключ для сесій
-app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
+# Функція для підключення до бази даних
+def get_db_connection():
+    return psycopg2.connect(
+        dsn=os.environ.get('DATABASE_URL'),
+        sslmode="require",
+        cursor_factory=psycopg2.extras.DictCursor
+    )
 
 # Головна сторінка за токеном
 @app.route('/<token>/')
-def token_index(token): 
+def token_index(token):
     role = validate_token(token)
     if not role:
         flash("Invalid token.", "error")
@@ -55,13 +62,15 @@ def token_required(f):
     return decorated_function
 
 
+
 # Головна сторінка з перевіркою токена
 @app.route('/')
 def index():
     token = session.get('token')
     if not token:
         return render_template('simple_search.html')
-    return render_template('index.html')
+    role = validate_token(token)
+    return render_template('index.html', role=role)
 
 #Пошук для користувачів без токену
 @app.route('/simple_search', methods=['GET', 'POST'])
@@ -87,14 +96,14 @@ def simple_search():
 #Доступ до адмін-панелі:
 @app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel(token):
-    if not validate_token(token) or validate_token(token) != "admin":
+    role = validate_token(token)
+    if not role or role != "admin":
         flash("Access denied. Admin rights are required.", "error")
-        return redirect(url_for('index', token=token))
+        return redirect(url_for('token_index', token=token))
 
-    if request.method == 'POST':    
+    if request.method == 'POST':
         password = request.form.get('password')
 
-        # Отримуємо хеш пароля адміністратора з бази
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
@@ -104,12 +113,10 @@ def admin_panel(token):
         admin_password_hash = cursor.fetchone()['password_hash']
         conn.close()
 
-        # Перевіряємо пароль
         if not verify_password(admin_password_hash, password):
             flash("Incorrect password.", "error")
             return redirect(url_for('admin_panel', token=token))
 
-        # Зберігаємо авторизацію
         session['admin_authenticated'] = True
         return redirect(url_for('admin_dashboard', token=token))
 
@@ -118,12 +125,13 @@ def admin_panel(token):
 
 
 #Це треба потім описати, теж щось про адмінку
-@app.route('/<token>/admin/dashboard')
+@app.route('/<token>/admin/dashboard', methods=['GET'])
+@token_required
 def admin_dashboard(token):
     role = validate_token(token)
     if not role or role != "admin":
         flash("Access denied.", "error")
-        return redirect(url_for('index', token=token))
+        return redirect(url_for('token_index', token=token))
 
     if not session.get('admin_authenticated'):
         flash("Password is required for admin access.", "error")
@@ -131,16 +139,7 @@ def admin_dashboard(token):
 
     return render_template('admin_main.html')
 
-
-
-# Функція для підключення до бази даних
-def get_db_connection():
-    return psycopg2.connect(
-        dsn=os.environ.get('DATABASE_URL'),
-        sslmode="require",
-        cursor_factory=psycopg2.extras.DictCursor
-    )
-    
+  
 # Функція для перевірки токена
 def validate_token(token):
     try:
@@ -161,12 +160,14 @@ def validate_token(token):
         return None
 
 #Створення користувача в адмін панелі:
+# Створення користувача в адмін-панелі
 @app.route('/<token>/admin/create_user', methods=['GET', 'POST'])
+@token_required
 def create_user(token):
     role = validate_token(token)
     if not role or role != "admin":
         flash("Access denied. Admin rights are required.", "error")
-        return redirect(url_for('index', token=token))
+        return redirect(url_for('token_index', token=token))
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -177,14 +178,13 @@ def create_user(token):
             flash("All fields are required.", "error")
             return redirect(url_for('create_user', token=token))
 
-        hashed_password = hash_password(password)  # Шифруємо пароль
-        user_token = generate_token()  # Генеруємо токен
+        hashed_password = hash_password(password)
+        user_token = generate_token()
 
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
 
-            # Додаємо користувача
             cursor.execute("""
                 INSERT INTO users (username, password_hash)
                 VALUES (%s, %s)
@@ -192,13 +192,11 @@ def create_user(token):
             """, (username, hashed_password))
             user_id = cursor.fetchone()['id']
 
-            # Додаємо роль користувачу
             cursor.execute("""
                 INSERT INTO user_roles (user_id, role_id, assigned_at)
                 VALUES (%s, %s, NOW())
             """, (user_id, role_id))
 
-            # Додаємо токен для користувача
             cursor.execute("""
                 INSERT INTO tokens (user_id, token)
                 VALUES (%s, %s)
@@ -218,7 +216,6 @@ def create_user(token):
 
         return redirect(url_for('create_user', token=token))
 
-    # Отримуємо всі ролі для форми
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT id, name FROM roles")

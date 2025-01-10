@@ -7,6 +7,7 @@ import csv
 import io
 import bcrypt
 from functools import wraps
+from flask import get_flashed_messages
 
 # Налаштування логування
 logging.basicConfig(level=logging.DEBUG)
@@ -29,8 +30,7 @@ def hash_password(password):
 
 # Перевіряє відповідність пароля хешу з бази
 def verify_password(password, stored_hash):
-    logging.debug(f"Password to verify: {password}")
-    logging.debug(f"Stored hash: {stored_hash}")
+    logging.debug("Verifying password")
     return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
 
 
@@ -153,7 +153,7 @@ def admin_panel(token=None):
             logging.debug(f"Fetched password hash: {admin_password_hash}")
 
             # Перевірка хеша пароля
-            if not admin_password_hash or not verify_password(admin_password_hash[0], password):
+            if not admin_password_hash or not verify_password(password, admin_password_hash[0]):
                 logging.warning("Invalid admin password attempt.")
                 flash("Invalid password.", "error")
                 return redirect(url_for('admin_panel', token=token))
@@ -747,6 +747,7 @@ def order_details(order_id):
 
 
 @app.route('/admin/assign_roles', methods=['GET', 'POST'])
+@token_required  # Декоратор для перевірки токена
 def assign_roles():
     conn = get_db_connection()
     cursor = conn.cursor()  # Використовуємо DictCursor за замовчуванням

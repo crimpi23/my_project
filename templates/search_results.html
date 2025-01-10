@@ -6,24 +6,34 @@
 </head>
 <body>
     <h1>Search Results</h1>
-    <h2>Grouped Results</h2>
-    <ul>
-        {% for article, details in grouped_results.items() %}
-            <li>
-                <strong>{{ article }}</strong>:
-                <ul>
-                    {% for detail in details %}
-                        <li>{{ detail.table_name }}: {{ detail.price }}</li>
-                    {% endfor %}
-                </ul>
-            </li>
-        {% endfor %}
-    </ul>
-    <h2>Missing Articles</h2>
-    <ul>
-        {% for article in missing_articles %}
-            <li>{{ article }}</li>
-        {% endfor %}
-    </ul>
+	<h2>Grouped Results</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>Article</th>
+				<th>Table Name</th>
+				<th>Price</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for article, details in grouped_results.items() %}
+				{% for detail in details %}
+					<tr>
+						<td>{{ article }}</td>
+						<td>{{ detail.table_name }}</td>
+						<td>{{ detail.price }}</td>
+					</tr>
+				{% endfor %}
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<h2>Missing Articles</h2>
+	<ul>
+		{% for article in missing_articles %}
+			<li>{{ article }}</li>
+		{% endfor %}
+	</ul>
+
 </body>
 </html>

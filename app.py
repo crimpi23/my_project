@@ -378,8 +378,8 @@ def search_articles():
         logging.debug("Missing articles: %s", missing_articles)
 
         if not grouped_results:
-            flash("No results found for the provided articles.", "info")
-            return redirect(url_for('index'))
+            flash("No results found for your search.", "info")
+            return render_template('search_results.html', grouped_results={}, quantities=quantities, missing_articles=missing_articles)
 
         flash("Search completed successfully!", "success")
         return render_template('search_results.html', grouped_results=grouped_results, quantities=quantities, missing_articles=missing_articles)

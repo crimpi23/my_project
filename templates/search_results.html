@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results</title>
+</head>
+<body>
+    <h1>Search Results</h1>
+    <h2>Grouped Results</h2>
+    <ul>
+        {% for article, details in grouped_results.items() %}
+            <li>
+                <strong>{{ article }}</strong>:
+                <ul>
+                    {% for detail in details %}
+                        <li>{{ detail.table_name }}: {{ detail.price }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+    <h2>Missing Articles</h2>
+    <ul>
+        {% for article in missing_articles %}
+            <li>{{ article }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

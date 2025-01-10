@@ -310,17 +310,18 @@ def search_articles():
         quantities = {}
         auto_set_quantities = []
         duplicate_articles = []
-        missing_articles = []  # Ініціалізуємо список
 
         articles_input = request.form.get('articles')
         if not articles_input:
             flash("Please enter at least one article.", "error")
-            return redirect(request.referrer or url_for('index'))
+            return redirect(url_for('index'))
 
         for line in articles_input.splitlines():
             parts = line.strip().split()
+            if not parts:  # Пропустити порожні рядки
+                continue
             if len(parts) == 1:
-                article = parts[0].strip()
+                article = parts[0].strip().upper()  # Артикул у верхньому регістрі
                 if article in quantities:
                     quantities[article] += 1
                     if article not in duplicate_articles:
@@ -330,14 +331,14 @@ def search_articles():
                     quantities[article] = 1
                     auto_set_quantities.append(article)
             elif len(parts) == 2 and parts[1].isdigit():
-                article, quantity = parts
+                article, quantity = parts[0].strip().upper(), int(parts[1])
                 if article in quantities:
-                    quantities[article] += int(quantity)
+                    quantities[article] += quantity
                     if article not in duplicate_articles:
                         duplicate_articles.append(article)
                 else:
                     articles.append(article)
-                    quantities[article] = int(quantity)
+                    quantities[article] = quantity
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -363,6 +364,7 @@ def search_articles():
                 'price': result['price'],
                 'table_name': result['table_name']
             })
+
         missing_articles = [article for article in articles if article not in grouped_results]
 
         # Збереження результатів у сесії
@@ -374,22 +376,24 @@ def search_articles():
         logging.debug("Grouped results: %s", grouped_results)
         logging.debug("Quantities: %s", quantities)
         logging.debug("Missing articles: %s", missing_articles)
-        logging.debug(f"Articles to search: {articles}")
-        logging.debug(f"Quantities: {quantities}")
-        logging.debug(f"Grouped results: {grouped_results}")
+
+        if not grouped_results:
+            flash("No results found for the provided articles.", "info")
+            return redirect(url_for('index'))
 
         flash("Search completed successfully!", "success")
-        return redirect(request.referrer or url_for('index'))
+        return render_template('search_results.html', grouped_results=grouped_results, quantities=quantities, missing_articles=missing_articles)
 
     except Exception as e:
         logging.error("Error in search_articles: %s", str(e))
         flash(f"Error: {str(e)}", "error")
-        return redirect(request.referrer or url_for('index'))
+        return redirect(url_for('index'))
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
+
 
 
 @app.route('/clear_search', methods=['POST'])

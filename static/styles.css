@@ -1,106 +1,78 @@
-/* Загальні стилі для всіх сторінок */
+/* Загальні стилі */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #fff;
-    color: #333;
+    background-color: #ffffff;
+    color: #333333;
+    line-height: 1.6;
 }
 
-header, footer {
+.container {
+    max-width: 800px;
+    margin: 0 auto;
     padding: 20px;
     text-align: center;
-    border-bottom: 1px solid #ddd;
 }
 
-footer {
-    border-top: 1px solid #ddd;
-    font-size: 14px;
-    color: #666;
+.title {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #333333;
 }
 
-/* Основні стилі для заголовків */
-h1, h2 {
-    text-align: center;
-    font-size: 24px;
-    margin: 20px 0;
-    color: #333;
+/* Форма пошуку */
+.search-form {
+    margin-top: 20px;
 }
 
-/* Стилі для кнопок і посилань */
-a {
-    text-decoration: none;
-    color: #333;
-    font-weight: bold;
+.form-label {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    display: block;
+    color: #333333;
 }
 
-a:hover {
-    text-decoration: underline;
-}
-
-/* Сітка для елементів */
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    padding: 20px;
-}
-
-.grid-item {
-    text-align: center;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    cursor: pointer;
-    background-color: #f9f9f9;
-}
-
-.grid-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Списки та таблиці */
-ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-li {
-    background: #f9f9f9;
-    margin: 5px 0;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
-table {
+.form-input {
     width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-}
-
-table th, table td {
-    border: 1px solid #ddd;
     padding: 10px;
-    text-align: left;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    box-sizing: border-box;
 }
 
-table th {
-    background-color: #f5f5f5;
-    font-weight: bold;
+.form-input:focus {
+    border-color: #0056b3;
+    outline: none;
 }
 
-table tr:nth-child(even) {
-    background-color: #f9f9f9;
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: #ffffff;
+    background-color: #0056b3;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
 }
 
-/* Стилі для флеш-повідомлень */
+.btn:hover {
+    background-color: #004494;
+}
+
+.back-btn {
+    margin-top: 20px;
+}
+
+/* Повідомлення */
 .message {
     padding: 10px;
     margin-bottom: 20px;
-    border: 1px solid #ddd;
+    border: 1px solid #dddddd;
     border-radius: 5px;
 }
 
@@ -119,11 +91,31 @@ table tr:nth-child(even) {
     color: #0c5460;
 }
 
-/* Футер */
-footer {
-    text-align: center;
-    padding: 10px 20px;
-    background-color: #f9f9f9;
-    font-size: 14px;
-    color: #666;
+/* Список результатів */
+.results-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.result-item {
+    background: #f9f9f9;
+    margin: 10px 0;
+    padding: 15px;
+    border: 1px solid #dddddd;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+}
+
+.result-item .article,
+.result-item .price {
+    font-size: 1rem;
+}
+
+.no-results {
+    font-size: 1.2rem;
+    color: #555555;
 }

@@ -8,84 +8,87 @@
 </head>
 <body>
     <header>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/admin">Admin</a></li>
-                <li><a href="/admin/assign_roles">Assign Roles</a></li>
-            </ul>
-        </nav>
-    </header>
-    <div class="container">
         <h1>Assign Roles</h1>
+    </header>
 
+    <main>
         <!-- Флеш-повідомлення -->
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for category, message in messages %}
-                        <div class="flash-message {{ category }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
         {% endwith %}
 
-        <!-- Таблиця ролей користувачів -->
-        <h2>User Roles</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-			<tbody>
-				{% for user_role in user_roles %}
-				<tr>
-					<td>{{ user_role.username }}</td> <!-- Ім'я користувача -->
-					<td>{{ user_role.role_name }}</td> <!-- Назва ролі -->
-					<td>
-						<!-- Кнопка для видалення ролі -->
-						<form method="POST" action="/admin/assign_roles">
-							<input type="hidden" name="action" value="remove">
-							<input type="hidden" name="user_id" value="{{ user_role.user_id }}">
-							<input type="hidden" name="role_id" value="{{ user_role.role_id }}">
-							<button type="submit" class="remove-button">Remove</button>
-						</form>
-					</td>
-				</tr>
-				{% endfor %}
-			</tbody>
-        </table>
-        <!-- Форма для призначення ролей -->
-		<h2>Assign Role</h2>
-		<form method="POST" action="/admin/assign_roles">
-			<input type="hidden" name="action" value="assign">
+        <section class="user-roles">
+            <h2>Current User Roles</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user_role in user_roles %}
+                    <tr>
+                        <td>{{ user_role.username }}</td>
+                        <td>{{ user_role.role_name }}</td>
+                        <td>
+                            <!-- Кнопка для видалення ролі -->
+                            <form method="POST" action="{{ url_for('assign_roles', token=token) }}">
+                                <input type="hidden" name="user_id" value="{{ user_role.user_id }}">
+                                <input type="hidden" name="role_id" value="{{ user_role.role_id }}">
+                                <button type="submit" name="action" value="remove" class="btn btn-danger">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
 
-			<!-- Поле для пошуку користувачів -->
-			<label for="user_id">Search User:</label>
-			<input type="text" id="search_user" placeholder="Enter username or email..." oninput="filterUsers()">
+        <section class="assign-role">
+            <h2>Assign a New Role</h2>
+            <form method="POST" action="{{ url_for('assign_roles', token=token) }}">
+                <input type="hidden" name="action" value="assign">
 
-			<!-- Список користувачів -->
-			<label for="user_id">Select User:</label>
-			<select name="user_id" id="user_list" required>
-				{% for user in users %}
-				<option value="{{ user.id }}">{{ user.username }} ({{ user.email }})</option>
-				{% endfor %}
-			</select>
+                <div class="form-group">
+                    <label for="search_user">Search User:</label>
+                    <input type="text" id="search_user" placeholder="Enter username or email..." oninput="filterUsers()">
+                </div>
 
-			<label for="role_id">Role:</label>
-			<select name="role_id" required>
-				{% for role in roles %}
-				<option value="{{ role.id }}">{{ role.name }}</option>
-				{% endfor %}
-			</select>
+                <div class="form-group">
+                    <label for="user_list">Select User:</label>
+                    <select name="user_id" id="user_list" required>
+                        {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.username }} ({{ user.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-			<button type="submit">Assign Role</button>
-		</form>
-    </div>
-    <!-- JavaScript для пошуку -->
+                <div class="form-group">
+                    <label for="role_id">Select Role:</label>
+                    <select name="role_id" id="role_id" required>
+                        {% for role in roles %}
+                        <option value="{{ role.id }}">{{ role.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Assign Role</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>Assign Roles - All Rights Reserved © 2025</p>
+    </footer>
+
     <script>
     function filterUsers() {
         const searchInput = document.getElementById('search_user').value.toLowerCase();
@@ -95,9 +98,9 @@
         for (let i = 0; i < options.length; i++) {
             const user = options[i].text.toLowerCase();
             if (user.includes(searchInput)) {
-                options[i].style.display = ''; // Показуємо відповідний елемент
+                options[i].style.display = '';
             } else {
-                options[i].style.display = 'none'; // Ховаємо невідповідний елемент
+                options[i].style.display = 'none';
             }
         }
     }

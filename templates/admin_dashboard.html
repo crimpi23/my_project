@@ -32,43 +32,6 @@
         </div>
     </div>
 
-    <h2>Users and Roles</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>User ID</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <ul class="flashes">
-                        {% for category, message in messages %}
-                            <li class="{{ category }}">{{ message }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            {% endwith %}
-
-            {% for user in users %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.username }}</td>
-                <td>{{ user.role_name }}</td>
-                <td>
-                    <form method="POST" action="{{ url_for('assign_roles', token=session.get('token')) }}">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
-                        <button type="submit">Assign Roles</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
     <footer>
         Admin Dashboard - All Rights Reserved © 2025
     </footer>

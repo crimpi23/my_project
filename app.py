@@ -82,8 +82,6 @@ def index():
 def simple_search():
     if request.method == 'POST':
         article = request.form.get('article')
-        logging.debug(f"Search initiated for article: {article}")
-
         if not article:
             flash("Please enter an article for search.", "error")
             return redirect(url_for('simple_search'))
@@ -92,13 +90,12 @@ def simple_search():
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT article, price FROM articles_table -- Замініть на вашу таблицю
+                SELECT article, price FROM articles_table  -- Замініть на вашу таблицю
                 WHERE article = %s
             """, (article,))
             results = cursor.fetchall()
-            logging.debug(f"Search results: {results}")
         except Exception as e:
-            logging.error(f"Error in simple_search: {e}", exc_info=True)
+            logging.error(f"Error in simple_search: {e}")
             flash("An error occurred during the search.", "error")
             results = []
         finally:
@@ -108,8 +105,8 @@ def simple_search():
         if not results:
             flash("No results found for your search.", "info")
         return render_template('simple_search_results.html', results=results)
-
     return render_template('simple_search.html')
+
 
 
 
@@ -118,7 +115,7 @@ def simple_search():
 @app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel(token=None):
     try:
-        # Якщо використовується токен
+        # If token is provided
         if token:
             logging.debug(f"Token received: {token}")
             role = validate_token(token)
@@ -126,10 +123,10 @@ def admin_panel(token=None):
                 logging.warning(f"Access denied for token: {token}")
                 flash("Access denied. Admin rights are required.", "error")
                 return redirect(request.referrer or url_for('index'))
-            session['token'] = token  # Зберігаємо токен у сесії
+            session['token'] = token  # Save token in session
 
         if request.method == 'POST':
-            # Обробка введеного пароля
+            # Handle admin password
             password = request.form.get('password')
             if not password:
                 flash("Password is required.", "error")
@@ -138,12 +135,18 @@ def admin_panel(token=None):
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT password_hash FROM users
+                SELECT password_hash 
+                FROM users 
                 WHERE id = (
-                    SELECT user_id FROM user_roles
+                    SELECT user_id 
+                    FROM user_roles 
                     WHERE role_id = (
-                        SELECT id FROM roles WHERE name = 'admin'
+                        SELECT id 
+                        FROM roles 
+                        WHERE name = 'admin'
+                        LIMIT 1
                     )
+                    LIMIT 1
                 )
             """)
             admin_password_hash = cursor.fetchone()
@@ -157,7 +160,6 @@ def admin_panel(token=None):
             logging.info("Admin successfully authenticated.")
             return redirect(url_for('admin_dashboard', token=token))
 
-        # Для GET-запиту
         return render_template('admin_login.html', token=token)
 
     except Exception as e:
@@ -168,6 +170,7 @@ def admin_panel(token=None):
     finally:
         if 'conn' in locals() and conn:
             conn.close()
+
 
 
 

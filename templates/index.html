@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <!-- Хедер із навігацією -->
+    <!-- Header -->
     <header>
         <nav>
             <ul>
@@ -25,10 +25,10 @@
         <h1>Article Price Search</h1>
 
         {% if session.get('token') %}
-        <!-- Для користувачів із токеном -->
+        <!-- For users with token -->
         <p>Welcome to the advanced search system! Use the tools below:</p>
 
-        <!-- Секція результатів пошуку -->
+        <!-- Search Results Section -->
         {% if grouped_results %}
         <div id="results" class="results">
             <h2>Search Results:</h2>
@@ -97,14 +97,14 @@
         </div>
         {% endif %}
 
-        <!-- Форма пошуку -->
+        <!-- Search Form -->
         <form method="POST" action="/search#results" class="search-form">
             <label for="articles" class="form-label">Enter Articles and Quantities:</label>
             <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required class="form-textarea"></textarea>
             <button type="submit" class="form-button">Search</button>
         </form>
 
-        <!-- Секція кошика -->
+        <!-- Cart Section -->
         {% if cart_items %}
         <div class="cart-section">
             <h2>Your Cart</h2>
@@ -134,4 +134,21 @@
                         </td>
                         <td>{{ item.total_price }}</td>
                         <td>
-                     
+                            <form method="POST" action="/remove_from_cart">
+                                <input type="hidden" name="article" value="{{ item.article }}">
+                                <button type="submit" class="delete-button">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% endif %}
+    </div>
+</body>
+</html>

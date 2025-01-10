@@ -122,7 +122,7 @@ def admin_panel(token):
         if not role or role != "admin":
             logging.warning(f"Access denied for token: {token}")
             flash("Access denied. Admin rights are required.", "error")
-            return redirect(request.referrer or url_for('index'))
+            return redirect(url_for('index'))
 
         session['token'] = token
 
@@ -154,9 +154,9 @@ def admin_panel(token):
                 return redirect(url_for('admin_panel', token=token))
 
             session['admin_authenticated'] = True
-            logging.info(f"Admin successfully authenticated. Redirecting to dashboard with token: {token}")
-            return redirect(url_for('admin_dashboard', token=token))
-        
+            logging.info(f"Admin successfully authenticated. Redirecting to /{token}/admin/dashboard")
+            return redirect(f'/{token}/admin/dashboard')  # Жорстке посилання
+
         return render_template('admin_login.html', token=token)
 
     except Exception as e:

@@ -77,12 +77,16 @@ def index():
     token = session.get('token')
     if not token:
         return render_template('simple_search.html')
-    
+
     role = validate_token(token)
     if role == "admin":
         return redirect(url_for('admin_dashboard', token=token))
-    else:
+    elif role == "user":
         return render_template('index.html', role=role)
+    else:
+        flash("Invalid token or role.", "error")
+        return redirect(url_for('simple_search'))
+
 
 
 # Пошук для користувачів без токену
@@ -97,38 +101,36 @@ def simple_search():
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-
-            # Отримуємо всі таблиці прайсів
-            cursor.execute("SELECT table_name FROM price_lists;")
-            price_tables = cursor.fetchall()
-
-            results = []
-            for table in price_tables:
-                table_name = table['table_name']
-                query = f"""
-                    SELECT article, price, %s AS table_name
-                    FROM {table_name}
-                    WHERE article = %s
-                """
-                cursor.execute(query, (table_name, article))
-                results.extend(cursor.fetchall())
-
-            if not results:
-                flash("No results found for your search.", "info")
-
-            # Додаємо логування результатів
-            logging.debug(f"Search results for article '{article}': {results}")
-
+            cursor.execute("""
+                SELECT article, price, table_name
+                FROM (
+                    SELECT 'vag' AS table_name, article, price FROM vag
+                    UNION ALL
+                    SELECT 'vag_gtc', article, price FROM vag_gtc
+                    UNION ALL
+                    SELECT 'vag_l_berlin', article, price FROM vag_l_berlin
+                    UNION ALL
+                    SELECT 'vag_ronax', article, price FROM vag_ronax
+                ) subquery
+                WHERE article = %s
+            """, (article,))
+            results = cursor.fetchall()
         except Exception as e:
-            logging.error(f"Error in simple_search: {e}", exc_info=True)
+            logging.error(f"Error in simple_search: {e}")
             flash("An error occurred during the search.", "error")
             results = []
         finally:
             if 'conn' in locals():
                 conn.close()
 
+        if not results:
+            flash("No results found for your search.", "info")
+        else:
+            logging.debug(f"Search results for article '{article}': {results}")
+
         return render_template('simple_search_results.html', results=results)
     return render_template('simple_search.html')
+
 
 # Доступ до адмін-панелі:
 @app.route('/<token>/admin', methods=['GET', 'POST'])
@@ -764,7 +766,7 @@ def order_details(order_id):
         if conn:
             conn.close()
 
-
+# Ролі користувачеві    
 @app.route('/<token>/admin/assign_roles', methods=['GET', 'POST'])
 @token_required
 def assign_roles(token):
@@ -819,10 +821,12 @@ def assign_roles(token):
             logging.error(f"Error assigning/removing role: {e}", exc_info=True)
             flash("Error assigning/removing role.", "error")
 
+        # Перенаправляємо на ту ж сторінку
         return redirect(url_for('assign_roles', token=token))
 
     conn.close()
     return render_template('assign_roles.html', user_roles=user_roles, users=users, roles=roles, token=token)
+
 
 
 

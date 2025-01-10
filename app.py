@@ -77,8 +77,12 @@ def index():
     token = session.get('token')
     if not token:
         return render_template('simple_search.html')
+    
     role = validate_token(token)
-    return render_template('index.html', role=role)
+    if role == "admin":
+        return redirect(url_for('admin_dashboard', token=token))
+    else:
+        return render_template('index.html', role=role)
 
 
 # Пошук для користувачів без токену
@@ -231,24 +235,22 @@ def validate_token(token):
 
 
 # Створення користувача в адмін панелі:
-# Створення користувача в адмін-панелі
 @app.route('/<token>/admin/create_user', methods=['GET', 'POST'])
 @token_required
 def create_user(token):
     role = validate_token(token)
     if not role or role != "admin":
         flash("Access denied. Admin rights are required.", "error")
-        return redirect(request.referrer or url_for('token_index', token=token))
+        return redirect(url_for('token_index', token=token))
 
     if request.method == 'POST':
         username = request.form.get('username')
-        email = request.form.get('email')  # Отримання email
         password = request.form.get('password')
         role_id = request.form.get('role_id')
 
-        if not username or not email or not password or not role_id:
+        if not username or not password or not role_id:
             flash("All fields are required.", "error")
-            return redirect(request.referrer or url_for('create_user', token=token))
+            return redirect(url_for('create_user', token=token))
 
         hashed_password = hash_password(password)
         user_token = generate_token()
@@ -258,12 +260,11 @@ def create_user(token):
             cursor = conn.cursor()
 
             cursor.execute("""
-                INSERT INTO users (username, email, password_hash)
-                VALUES (%s, %s, %s)
+                INSERT INTO users (username, password_hash)
+                VALUES (%s, %s)
                 RETURNING id
-            """, (username, email, hashed_password))  # Додавання email
+            """, (username, hashed_password))
             user_id = cursor.fetchone()['id']
-
 
             cursor.execute("""
                 INSERT INTO user_roles (user_id, role_id, assigned_at)
@@ -276,18 +277,18 @@ def create_user(token):
             """, (user_id, user_token))
 
             conn.commit()
-            flash(f"User created successfully! Token: {user_token}", "success")
+            flash(f"User '{username}' created successfully! Token: {user_token}", "success")
         except Exception as e:
             conn.rollback()
-            logging.error(f"Error creating user: {e}")
-            flash("Error creating user.", "error")
+            logging.error(f"Error creating user: {e}", exc_info=True)
+            flash("Error creating user. Please check logs.", "error")
         finally:
             if cursor:
                 cursor.close()
             if conn:
                 conn.close()
 
-        return redirect(request.referrer or url_for('create_user', token=token))
+        return redirect(url_for('create_user', token=token))
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -296,6 +297,7 @@ def create_user(token):
     conn.close()
 
     return render_template('create_user.html', roles=roles, token=token)
+
 
 
 # Маршрут для пошуку артикулів
@@ -763,13 +765,13 @@ def order_details(order_id):
             conn.close()
 
 
-@app.route('/admin/assign_roles', methods=['GET', 'POST'])
-@token_required  # Декоратор для перевірки токена
-def assign_roles():
+@app.route('/<token>/admin/assign_roles', methods=['GET', 'POST'])
+@token_required
+def assign_roles(token):
     conn = get_db_connection()
-    cursor = conn.cursor()  # Використовуємо DictCursor за замовчуванням
+    cursor = conn.cursor()
 
-    # Отримуємо всіх користувачів і їх ролі
+    # Отримання користувачів і ролей
     cursor.execute("""
         SELECT users.id AS user_id, users.username, roles.id AS role_id, roles.name AS role_name
         FROM user_roles
@@ -777,13 +779,11 @@ def assign_roles():
         JOIN roles ON user_roles.role_id = roles.id
         ORDER BY users.username;
     """)
-    user_roles = cursor.fetchall()  # Результат буде списком об'єктів, подібних до словників
+    user_roles = cursor.fetchall()
 
-    # Отримуємо всіх користувачів
     cursor.execute("SELECT id, username FROM users;")
     users = cursor.fetchall()
 
-    # Отримуємо всі ролі
     cursor.execute("SELECT id, name FROM roles;")
     roles = cursor.fetchall()
 
@@ -792,35 +792,38 @@ def assign_roles():
         user_id = request.form['user_id']
         role_id = request.form['role_id']
 
-        if action == 'assign':
-            # Перевіряємо, чи роль уже призначена
-            cursor.execute("""
-                SELECT * FROM user_roles
-                WHERE user_id = %s AND role_id = %s;
-            """, (user_id, role_id))
-            if cursor.fetchone():
-                flash("Role is already assigned to this user.", "warning")
-            else:
-                # Призначаємо роль
+        try:
+            if action == 'assign':
                 cursor.execute("""
-                    INSERT INTO user_roles (user_id, role_id)
-                    VALUES (%s, %s);
+                    SELECT * FROM user_roles
+                    WHERE user_id = %s AND role_id = %s;
+                """, (user_id, role_id))
+                if cursor.fetchone():
+                    flash("Role already assigned.", "warning")
+                else:
+                    cursor.execute("""
+                        INSERT INTO user_roles (user_id, role_id)
+                        VALUES (%s, %s);
+                    """, (user_id, role_id))
+                    conn.commit()
+                    flash("Role assigned successfully.", "success")
+            elif action == 'remove':
+                cursor.execute("""
+                    DELETE FROM user_roles
+                    WHERE user_id = %s AND role_id = %s;
                 """, (user_id, role_id))
                 conn.commit()
-                flash("Role assigned successfully.", "success")
-        elif action == 'remove':
-            # Видаляємо роль у користувача
-            cursor.execute("""
-                DELETE FROM user_roles
-                WHERE user_id = %s AND role_id = %s;
-            """, (user_id, role_id))
-            conn.commit()
-            flash("Role removed successfully.", "success")
+                flash("Role removed successfully.", "success")
+        except Exception as e:
+            conn.rollback()
+            logging.error(f"Error assigning/removing role: {e}", exc_info=True)
+            flash("Error assigning/removing role.", "error")
 
-        return redirect(request.referrer or url_for('assign_roles'))
+        return redirect(url_for('assign_roles', token=token))
 
     conn.close()
-    return render_template('assign_roles.html', user_roles=user_roles, users=users, roles=roles)
+    return render_template('assign_roles.html', user_roles=user_roles, users=users, roles=roles, token=token)
+
 
 
 # Функція для визначення розділювача

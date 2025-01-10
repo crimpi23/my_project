@@ -135,19 +135,19 @@ def simple_search():
 # Доступ до адмін-панелі:
 @app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel(token):
-    try:
-        logging.debug(f"Token received: {token}")
-        # Перевірка ролі через токен
-        user_data = validate_token(token)
-        if not user_data or user_data['role'] != "admin":
-            logging.warning(f"Access denied for token: {token}")
-            flash("Access denied. Admin rights are required.", "error")
-            return redirect(url_for('index'))
+    # Ваш існуючий код...
+    if request.method == 'POST':
+        # Перевірка пароля
+        # ...
+        session['admin_authenticated'] = True
+        session['user_id'] = user_data['user_id']  # Збереження ID користувача
+        logging.debug(f"Session data after login: {dict(session)}")  # Логування стану сесії
+        return redirect(f'/{token}/admin/dashboard')
+
 
         session['token'] = token
 
         if request.method == 'POST':
-            # Отримання пароля
             password = request.form.get('password')
             if not password:
                 flash("Password is required.", "error")
@@ -156,27 +156,25 @@ def admin_panel(token):
             conn = get_db_connection()
             cursor = conn.cursor()
 
-            # Отримання хеша пароля адміністратора
             cursor.execute("""
                 SELECT password_hash 
                 FROM users
                 WHERE id = %s
-            """, (user_data['user_id'],))  # Прив'язка до конкретного користувача
+            """, (user_data['user_id'],))
             admin_password_hash = cursor.fetchone()
 
             logging.debug(f"Fetched password hash: {admin_password_hash}")
 
-            # Перевірка відповідності пароля
             if not admin_password_hash or not verify_password(password, admin_password_hash[0]):
                 logging.warning("Invalid admin password attempt.")
                 flash("Invalid password.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
-            # Аутентифікація успішна
+            # Успішна аутентифікація
             session['admin_authenticated'] = True
-            session['user_id'] = user_data['user_id']  # Зберігаємо ID користувача у сесії
+            session['user_id'] = user_data['user_id']  # Збереження ID користувача у сесії
             logging.info(f"Admin successfully authenticated. Redirecting to /{token}/admin/dashboard")
-            return redirect(f'/{token}/admin/dashboard')  # Жорстке посилання для уникнення помилок
+            return redirect(f'/{token}/admin/dashboard')
 
         return render_template('admin_login.html', token=token)
 
@@ -193,18 +191,17 @@ def admin_panel(token):
 
 
 
+
 # Це треба потім описати, теж щось про адмінку
 @app.route('/<token>/admin/dashboard', methods=['GET'])
 @token_required
 def admin_dashboard(token):
-    role = validate_token(token)
-    if not role or role != "admin":
-        flash("Access denied.", "error")
-        return redirect(request.referrer or url_for('token_index', token=token))
-
+    logging.debug(f"Session data in admin_dashboard: {dict(session)}")  # Логування сесії
     if not session.get('admin_authenticated'):
-        flash("Password is required for admin access.", "error")
-        return redirect(request.referrer or url_for('admin_panel', token=token))
+        flash("You need to log in as an admin.", "error")
+        return redirect(url_for('admin_panel', token=token))
+    # Ваш існуючий код...
+
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -215,7 +212,8 @@ def admin_dashboard(token):
 
     conn.close()
 
-    return render_template('admin_main.html', users=users, token=token)
+    return render_template('admin_main.html', token=token)
+
 
 
 

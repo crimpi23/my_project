@@ -431,16 +431,16 @@ def add_to_cart():
     flash("Product added to cart!", "success")
     return redirect(request.referrer or url_for('index'))
 
-except Exception as e:
-logging.error("Error in add_to_cart: %s", str(e))
-flash("Error adding product to cart.", "error")
-return redirect(request.referrer or url_for('index'))
+    except Exception as e:
+    logging.error("Error in add_to_cart: %s", str(e))
+    flash("Error adding product to cart.", "error")
+    return redirect(request.referrer or url_for('index'))
 
-finally:
-if cursor:
-    cursor.close()
-if conn:
-    conn.close()
+    finally:
+    if cursor:
+        cursor.close()
+    if conn:
+        conn.close()
 
 
 # Видалення товару з кошика

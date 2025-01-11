@@ -465,9 +465,9 @@ def clear_search():
 
 
 # Сторінка кошика
-@app.route('/cart', methods=['GET'])
-@requires_token_and_role('user')  # Забезпечує перевірку токена та ролі
-def cart():
+@app.route('/<token>/cart', methods=['GET', 'POST'])
+@requires_token_and_role('admin')
+def cart(token):
     try:
         # Отримання user_id з сесії
         user_id = session.get('user_id')
@@ -1030,8 +1030,8 @@ def ping():
 
 
 @app.route('/<token>/admin/compare_prices', methods=['GET', 'POST'])
-@requires_token_and_role('admin')  # Вкажіть 'admin' або іншу роль
-def compare_prices():
+@requires_token_and_role('admin')
+def compare_prices(token):
     if request.method == 'GET':
         try:
             # Отримуємо список таблиць із прайсами

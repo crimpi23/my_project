@@ -220,3 +220,15 @@ body {
     background-color: #f8d7da;
     color: #721c24;
 }
+.flash-messages {
+    margin: 20px 0;
+    padding: 10px;
+}
+
+.flash-message.success {
+    color: green;
+}
+
+.flash-message.error {
+    color: red;
+}

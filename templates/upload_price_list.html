@@ -23,11 +23,11 @@
         <div class="flash-messages">
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-            {% for category, message in messages %}
-            <div class="flash-message {{ category }}">
-                <strong>{{ category.capitalize() }}:</strong> {{ message }}
-            </div>
-            {% endfor %}
+                {% for category, message in messages %}
+                <div class="flash-message {{ category }}">
+                    <strong>{{ category.capitalize() }}:</strong> {{ message }}
+                </div>
+                {% endfor %}
             {% endif %}
             {% endwith %}
         </div>
@@ -69,17 +69,13 @@
     </footer>
 
     <script>
-        // Toggle new table name field visibility
+        // Toggle visibility of new table name field
         document.getElementById('table_name').addEventListener('change', function () {
             const newTableContainer = document.getElementById('new_table_name_container');
-            if (this.value === 'new') {
-                newTableContainer.style.display = 'block';
-            } else {
-                newTableContainer.style.display = 'none';
-            }
+            newTableContainer.style.display = this.value === 'new' ? 'block' : 'none';
         });
 
-        // File upload with progress
+        // Handle file upload with progress
         document.getElementById('uploadForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
@@ -107,19 +103,13 @@
                 const flashMessages = document.querySelector('.flash-messages');
                 flashMessages.innerHTML = '';
                 if (xhr.status === 200) {
-                    const response = JSON.parse(xhr.responseText);
-                    if (response.status === 'success') {
-                        progressBar.style.backgroundColor = 'green';
-                        progressText.textContent = response.message;
-                        flashMessages.innerHTML = `<div class="flash-message success"><strong>Success:</strong> ${response.message}</div>`;
-                    } else {
-                        progressBar.style.backgroundColor = 'red';
-                        progressText.textContent = response.message;
-                        flashMessages.innerHTML = `<div class="flash-message error"><strong>Error:</strong> ${response.message}</div>`;
-                    }
+                    progressBar.style.backgroundColor = 'green';
+                    progressText.textContent = 'Upload successful!';
+                    flashMessages.innerHTML = `<div class="flash-message success"><strong>Success:</strong> File uploaded successfully.</div>`;
                 } else {
                     progressBar.style.backgroundColor = 'red';
-                    progressText.textContent = 'Error during upload. Please try again.';
+                    progressText.textContent = 'Upload failed.';
+                    flashMessages.innerHTML = `<div class="flash-message error"><strong>Error:</strong> An error occurred while uploading the file.</div>`;
                 }
             };
 

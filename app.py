@@ -441,6 +441,12 @@ def search_articles(token):
         session['quantities'] = quantities
         session['missing_articles'] = missing_articles
 
+        # Логування автоматично встановлених кількостей і дублікатів
+        if auto_set_quantities:
+            logging.info(f"Articles with auto-set quantities: {auto_set_quantities}")
+        if duplicate_articles:
+            logging.info(f"Duplicate articles detected: {duplicate_articles}")
+
         logging.info("Search results successfully processed.")
 
         if not grouped_results:
@@ -460,6 +466,7 @@ def search_articles(token):
         if conn:
             conn.close()
         logging.info("Database connection closed.")
+
 
 
 
@@ -536,10 +543,11 @@ def add_to_cart(token):
         price = float(request.form.get('price'))
         quantity = int(request.form.get('quantity'))
         table_name = request.form.get('table_name')
-        user_id = session.get('user_id')  # Отримати ID поточного користувача з сесії
+        user_id = session.get('user_id')  # Отримання user_id із сесії
 
         if not user_id:
-            flash("User is not authenticated. Please log in.", "error")
+            logging.error("User ID not found in session. Redirecting to index.")
+            flash("Session expired. Please log in again.", "error")
             return redirect(url_for('index'))
 
         logging.debug(f"Adding to cart: Article={article}, Price={price}, Quantity={quantity}, Table={table_name}, User={user_id}")
@@ -561,35 +569,39 @@ def add_to_cart(token):
                 RETURNING id
             """, (article, table_name, price))
             product_id = cursor.fetchone()[0]
-            logging.info(f"New product added: ID={product_id}")
+            logging.info(f"New product added to 'products': ID={product_id}, Article={article}, Table={table_name}, Price={price}")
         else:
-            product_id = product[0]
-            logging.debug(f"Product already exists: ID={product_id}")
+            product_id = product['id']
+            logging.debug(f"Product already exists in 'products': ID={product_id}, Article={article}")
 
         # Додавання або оновлення товару в кошику
         cursor.execute("""
-            SELECT id FROM cart
+            SELECT id, quantity FROM cart
             WHERE user_id = %s AND product_id = %s
         """, (user_id, product_id))
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
+            new_quantity = existing_cart_item['quantity'] + quantity
             cursor.execute("""
                 UPDATE cart
-                SET quantity = quantity + %s
+                SET quantity = %s
                 WHERE id = %s
-            """, (quantity, existing_cart_item[0]))
-            logging.info(f"Cart updated for product ID={product_id}, Quantity={quantity}")
+            """, (new_quantity, existing_cart_item['id']))
+            logging.info(f"Updated cart: Product ID={product_id}, New Quantity={new_quantity}")
         else:
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, %s, %s, NOW())
             """, (user_id, product_id, quantity))
-            logging.info(f"Product added to cart: Product ID={product_id}, Quantity={quantity}")
+            logging.info(f"Product added to cart: Product ID={product_id}, Quantity={quantity}, User ID={user_id}")
 
         conn.commit()
         flash("Product added to cart!", "success")
-        return redirect(request.referrer or url_for('index'))
+
+        # Перенаправлення на результати пошуку
+        logging.debug("Redirecting back to search results.")
+        return redirect(request.referrer or url_for('search_results', token=token))
 
     except Exception as e:
         logging.error(f"Error in add_to_cart: {e}", exc_info=True)
@@ -601,6 +613,7 @@ def add_to_cart(token):
             cursor.close()
         if conn:
             conn.close()
+        logging.debug("Database connection closed after adding to cart.")
 
 
 

@@ -291,17 +291,16 @@ def validate_token(token):
 @app.route('/<token>/admin/create_user', methods=['GET', 'POST'])
 @requires_token_and_role('admin')
 def create_user(token):
-    user_data = validate_token(token)
-    if not user_data or user_data['role'] != "admin":
-        flash("Access denied. Admin rights are required.", "error")
-        return redirect(url_for('admin_dashboard', token=token))
-
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        email = request.form.get('email')  # Отримання email
         role_id = request.form.get('role_id')
 
-        if not username or not password or not role_id:
+    logging.debug(f"Data received in create_user: username={username}, email={email}, role_id={role_id}")
+
+
+        if not username or not password or not email or not role_id:
             flash("All fields are required.", "error")
             return redirect(url_for('create_user', token=token))
 
@@ -314,12 +313,14 @@ def create_user(token):
 
             # Додавання нового користувача
             cursor.execute("""
-                INSERT INTO users (username, password_hash)
-                VALUES (%s, %s)
+                INSERT INTO users (username, email, password_hash)
+                VALUES (%s, %s, %s)
                 RETURNING id
-            """, (username, hashed_password))
+            """, (username, email, hashed_password))
             user_id = cursor.fetchone()['id']
-
+            
+            logging.debug(f"User created with ID={user_id}")
+            
             # Призначення ролі
             cursor.execute("""
                 INSERT INTO user_roles (user_id, role_id, assigned_at)
@@ -353,6 +354,7 @@ def create_user(token):
     conn.close()
 
     return render_template('create_user.html', roles=roles, token=token)
+
 
 
 

@@ -43,22 +43,6 @@ def get_db_connection():
         cursor_factory=psycopg2.extras.DictCursor
     )
 
-
-# Головна сторінка за токеном
-@app.route('/<token>/')
-def token_index(token):
-    role = validate_token(token)
-    if not role:
-        flash("Invalid token.", "error")
-        return redirect(url_for('index'))  # Якщо токен недійсний, перенаправляємо на головну
-
-    # Якщо токен валідний, зберігаємо роль і токен у сесії
-    session['token'] = token
-    session['role'] = role
-    return render_template('index.html', role=role)
-
-
-
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
 def requires_token_and_role(required_role):
     """
@@ -86,13 +70,20 @@ def requires_token_and_role(required_role):
         return wrapper
     return decorator
 
+# Головна сторінка за токеном
+@app.route('/<token>/')
+def token_index(token):
+    role = validate_token(token)
+    if not role:
+        flash("Invalid token.", "error")
+        return redirect(url_for('index'))  # Якщо токен недійсний, перенаправляємо на головну
 
+    # Якщо токен валідний, зберігаємо роль і токен у сесії
+    session['token'] = token
+    session['role'] = role
+    return render_template('index.html', role=role)
 
-
-
-
-
-# Головна сторінка з перевіркою токена
+# Головна сторінка
 @app.route('/')
 def index():
     token = session.get('token')
@@ -365,6 +356,7 @@ def create_user(token):
 
 # Маршрут для пошуку артикулів
 @app.route('/<token>/search', methods=['POST'])
+@requires_token_and_role('user')
 def search_articles():
     try:
         articles = []
@@ -456,7 +448,7 @@ def search_articles():
             conn.close()
 
 
-
+# очищення результату пошуку
 @app.route('/<token>/clear_search', methods=['POST'])
 def clear_search():
     try:
@@ -473,7 +465,7 @@ def clear_search():
 
 # Сторінка кошика
 @app.route('/<token>/cart', methods=['GET', 'POST'])
-@requires_token_and_role('admin')
+@requires_token_and_role('user')
 def cart(token):
     try:
         # Отримання user_id з сесії
@@ -521,7 +513,7 @@ def cart(token):
 
 
 
-# Додавання в кошик
+# Додавання в кошик користувачем
 @app.route('/<token>/add_to_cart', methods=['POST'])
 def add_to_cart():
     try:
@@ -669,7 +661,7 @@ def update_cart():
             conn.close()
 
 
-# Очищення кошика
+# Очищення кошика користувача
 @app.route('/<token>/clear_cart', methods=['POST'])
 def clear_cart():
     try:
@@ -1243,9 +1235,6 @@ def get_import_status():
         {"status": "success", "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}), 200
 
 
-@app.route('/ping', methods=['GET'])
-def ping():
-    return "OK", 200
 
 
 @app.route('/<token>/admin/compare_prices', methods=['GET', 'POST'])
@@ -1397,6 +1386,11 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
 @requires_token_and_role('admin')
 def utilities(token):
     return render_template('utilities.html', token=token)
+
+
+@app.route('/ping', methods=['GET'])
+def ping():
+    return "OK", 200
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

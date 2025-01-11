@@ -934,7 +934,6 @@ def upload_price_list(token):
     if request.method == 'GET':
         try:
             logging.info(f"Accessing upload page for token: {token}")
-            flash("Page loaded successfully.", "info")
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT table_name FROM price_lists;")
@@ -944,7 +943,7 @@ def upload_price_list(token):
             return render_template('upload_price_list.html', price_lists=price_lists, token=token)
         except Exception as e:
             logging.error(f"Error during GET request: {e}")
-            flash("Error loading the upload page. Please try again later.", "error")
+            flash("Error loading the upload page.", "error")
             return redirect(url_for('admin_dashboard', token=token))
 
     if request.method == 'POST':
@@ -957,17 +956,12 @@ def upload_price_list(token):
             new_table_name = request.form.get('new_table_name', '').strip()
             file = request.files.get('file')
 
+            # Логування вхідних даних
             logging.debug(f"Received table_name: {table_name}, new_table_name: {new_table_name}")
 
-            # Перевірка файлу
             if not file or file.filename == '':
                 flash("No file uploaded or selected.", "error")
                 logging.warning("No file uploaded or selected.")
-                return redirect(url_for('upload_price_list', token=token))
-
-            if file.content_length > 50 * 1024 * 1024:  # 50 MB limit
-                flash("File size exceeds the 50MB limit.", "error")
-                logging.warning(f"File size too large: {file.content_length} bytes.")
                 return redirect(url_for('upload_price_list', token=token))
 
             # Читання файлу
@@ -976,7 +970,7 @@ def upload_price_list(token):
             logging.debug(f"Detected delimiter: {delimiter}")
             reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
 
-            # Обробка даних
+            # Обробка даних з файлу
             data = []
             header_skipped = False
             for row in reader:
@@ -995,38 +989,51 @@ def upload_price_list(token):
                     logging.warning(f"Skipping row with invalid price: {row}")
                     continue
 
-            if not data:
-                flash("No valid data found in the uploaded file.", "error")
-                logging.warning("Uploaded file contains no valid data.")
-                return redirect(url_for('upload_price_list', token=token))
-
             logging.info(f"Parsed {len(data)} rows from file. Sample: {data[:5]}")
 
             # Підключення до бази даних
             conn = get_db_connection()
             cursor = conn.cursor()
 
-            # Обробка нової таблиці
+            # Логіка для створення нової таблиці
             if table_name == 'new':
                 if not new_table_name:
                     flash("New table name is required.", "error")
                     logging.error("New table name was not provided.")
                     return redirect(url_for('upload_price_list', token=token))
 
-                if not new_table_name.isalnum():
-                    flash("New table name must contain only letters and numbers.", "error")
-                    logging.warning(f"Invalid table name: {new_table_name}")
+                table_name = new_table_name.strip().replace(" ", "_").lower()
+                if not re.match(r'^[a-z_][a-z0-9_]*$', table_name):
+                    logging.warning(f"Invalid table name: {table_name}")
+                    flash("Invalid table name. Only lowercase letters, numbers, and underscores are allowed.", "error")
                     return redirect(url_for('upload_price_list', token=token))
 
-                table_name = new_table_name.strip().replace(" ", "_").lower()
-                cursor.execute(f"""
-                    CREATE TABLE IF NOT EXISTS {table_name} (
-                        article TEXT PRIMARY KEY,
-                        price NUMERIC
-                    );
-                """)
-                cursor.execute("INSERT INTO price_lists (table_name, created_at) VALUES (%s, NOW());", (table_name,))
-                logging.info(f"Created new table: {table_name}")
+                try:
+                    cursor.execute(f"""
+                        CREATE TABLE IF NOT EXISTS {table_name} (
+                            article TEXT PRIMARY KEY,
+                            price NUMERIC
+                        );
+                    """)
+                    cursor.execute("INSERT INTO price_lists (table_name, created_at) VALUES (%s, NOW());", (table_name,))
+                    conn.commit()
+                    logging.info(f"Created new table: {table_name}")
+                except Exception as e:
+                    logging.error(f"Error creating new table {table_name}: {e}")
+                    flash("Error creating new table. Please check the table name and try again.", "error")
+                    return redirect(url_for('upload_price_list', token=token))
+
+            # Перевірка існування таблиці
+            try:
+                cursor.execute(f"SELECT 1 FROM information_schema.tables WHERE table_name = %s;", (table_name,))
+                if cursor.fetchone() is None:
+                    flash(f"Table '{table_name}' does not exist. Please try again.", "error")
+                    logging.error(f"Table '{table_name}' does not exist.")
+                    return redirect(url_for('upload_price_list', token=token))
+            except Exception as e:
+                logging.error(f"Error checking table existence: {e}")
+                flash("An error occurred while verifying the table. Please try again.", "error")
+                return redirect(url_for('upload_price_list', token=token))
 
             # Очищення таблиці
             cursor.execute(f"TRUNCATE TABLE {table_name} RESTART IDENTITY;")
@@ -1048,12 +1055,13 @@ def upload_price_list(token):
 
         except Exception as e:
             logging.error(f"Error during POST request: {e}")
-            flash("An error occurred during upload. Please try again later.", "error")
+            flash("An error occurred during upload.", "error")
             return redirect(url_for('upload_price_list', token=token))
         finally:
             if 'conn' in locals() and conn:
                 conn.close()
                 logging.info("Database connection closed.")
+
 
 
 

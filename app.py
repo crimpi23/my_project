@@ -59,15 +59,29 @@ def token_index(token):
 
 
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
-def token_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        token = kwargs.get('token') or session.get('token')
-        if not token or not validate_token(token):
-            flash("Access denied. Token is required.", "error")
-            return redirect(url_for('index'))
-        return f(*args, **kwargs)
-    return decorated_function
+def requires_token_and_role(required_role=None):
+    """
+    Декоратор, що перевіряє наявність токена і відповідність ролі.
+    :param required_role: Роль, яка потрібна для доступу (наприклад, 'admin', 'manager').
+    """
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            token = kwargs.get('token') or session.get('token')
+            if not token or not validate_token(token):
+                flash("Access denied. Token is required.", "error")
+                return redirect(url_for('index'))
+
+            if required_role:
+                user_role = session.get('role')
+                if not user_role or user_role != required_role:
+                    flash("Access denied. Insufficient permissions.", "error")
+                    return redirect(url_for('index'))
+
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+
 
 
 
@@ -200,6 +214,7 @@ def admin_panel(token):
 
 # Це треба потім описати, теж щось про адмінку
 @app.route('/<token>/admin/dashboard')
+@requires_token_and_role('admin')
 def admin_dashboard(token):
     try:
         # Перевірка, чи користувач аутентифікований
@@ -260,12 +275,12 @@ def validate_token(token):
 
 # Створення користувача в адмін панелі:
 @app.route('/<token>/admin/create_user', methods=['GET', 'POST'])
-@token_required
+@requires_token_and_role('admin')
 def create_user(token):
     user_data = validate_token(token)
     if not user_data or user_data['role'] != "admin":
         flash("Access denied. Admin rights are required.", "error")
-        return redirect(url_for('token_index', token=token))
+        return redirect(url_for('admin_dashboard', token=token))
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -283,6 +298,7 @@ def create_user(token):
             conn = get_db_connection()
             cursor = conn.cursor()
 
+            # Додавання нового користувача
             cursor.execute("""
                 INSERT INTO users (username, password_hash)
                 VALUES (%s, %s)
@@ -290,11 +306,13 @@ def create_user(token):
             """, (username, hashed_password))
             user_id = cursor.fetchone()['id']
 
+            # Призначення ролі
             cursor.execute("""
                 INSERT INTO user_roles (user_id, role_id, assigned_at)
                 VALUES (%s, %s, NOW())
             """, (user_id, role_id))
 
+            # Додавання токена
             cursor.execute("""
                 INSERT INTO tokens (user_id, token)
                 VALUES (%s, %s)
@@ -717,6 +735,7 @@ def place_order():
 
 
 @app.route('/orders', methods=['GET', 'POST'])
+@requires_token_and_role()
 def orders():
     try:
         user_id = 1  # Ідентифікатор користувача
@@ -759,6 +778,7 @@ def orders():
 
 
 @app.route('/order_details/<int:order_id>')
+@requires_token_and_role()
 def order_details(order_id):
     try:
         conn = get_db_connection()
@@ -794,7 +814,7 @@ def order_details(order_id):
 
 # Ролі користувачеві    
 @app.route('/<token>/admin/assign_roles', methods=['GET', 'POST'])
-@token_required
+@requires_token_and_role()
 def assign_roles(token):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -871,6 +891,7 @@ def detect_delimiter(file_content):
 
 # Завантаження прайсу в Адмінці
 @app.route('/admin/upload_price_list', methods=['GET', 'POST'])
+@requires_token_and_role()
 def upload_price_list():
     if request.method == 'GET':
         try:
@@ -1000,6 +1021,7 @@ def ping():
 
 
 @app.route('/admin/compare_prices', methods=['GET', 'POST'])
+@requires_token_and_role()
 def compare_prices():
     if request.method == 'GET':
         try:
@@ -1144,6 +1166,7 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
 
 
 @app.route('/admin/utilities', methods=['GET'])
+@requires_token_and_role()
 def utilities():
     return render_template('utilities.html')
 

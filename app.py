@@ -928,7 +928,7 @@ def detect_delimiter(file_content):
 
 # Завантаження прайсу в Адмінці
 @app.route('/admin/upload_price_list', methods=['GET', 'POST'])
-@requires_token_and_role()
+@requires_token_and_role('admin')
 def upload_price_list():
     if request.method == 'GET':
         try:
@@ -1203,7 +1203,7 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
 
 
 @app.route('/admin/utilities', methods=['GET'])
-@requires_token_and_role()
+@requires_token_and_role('admin')
 def utilities():
     return render_template('utilities.html')
 

@@ -536,7 +536,11 @@ def add_to_cart(token):
         price = float(request.form.get('price'))
         quantity = int(request.form.get('quantity'))
         table_name = request.form.get('table_name')
-        user_id = 1  # Замінити на логіку реального користувача
+        user_id = session.get('user_id')  # Отримати ID поточного користувача з сесії
+
+        if not user_id:
+            flash("User is not authenticated. Please log in.", "error")
+            return redirect(url_for('index'))
 
         logging.debug(f"Adding to cart: Article={article}, Price={price}, Quantity={quantity}, Table={table_name}, User={user_id}")
 
@@ -559,7 +563,7 @@ def add_to_cart(token):
             product_id = cursor.fetchone()[0]
             logging.info(f"New product added: ID={product_id}")
         else:
-            product_id = product['id']
+            product_id = product[0]
             logging.debug(f"Product already exists: ID={product_id}")
 
         # Додавання або оновлення товару в кошику
@@ -574,7 +578,7 @@ def add_to_cart(token):
                 UPDATE cart
                 SET quantity = quantity + %s
                 WHERE id = %s
-            """, (quantity, existing_cart_item['id']))
+            """, (quantity, existing_cart_item[0]))
             logging.info(f"Cart updated for product ID={product_id}, Quantity={quantity}")
         else:
             cursor.execute("""
@@ -599,6 +603,7 @@ def add_to_cart(token):
             conn.close()
 
 
+
 # Видалення товару з кошика
 @app.route('/<token>/remove_from_cart', methods=['POST'])
 def remove_from_cart(token):
@@ -606,7 +611,11 @@ def remove_from_cart(token):
     cursor = None
     try:
         product_id = request.form.get('product_id')
-        user_id = 1  # Замінити на логіку реального користувача
+        user_id = session.get('user_id')  # Отримати ID поточного користувача з сесії
+
+        if not user_id:
+            flash("User is not authenticated. Please log in.", "error")
+            return redirect(url_for('index'))
 
         logging.debug("Received product_id=%s for removal", product_id)
 
@@ -639,13 +648,18 @@ def remove_from_cart(token):
             conn.close()
 
 
+
 # Оновлення товару в кошику
 @app.route('/<token>/update_cart', methods=['POST'])
 def update_cart(token):
     try:
         product_id = request.form.get('product_id')
         quantity = int(request.form.get('quantity'))
-        user_id = 1  # Заміна на реальну логіку ідентифікації користувача
+        user_id = session.get('user_id')  # Отримати ID поточного користувача з сесії
+
+        if not user_id:
+            flash("User is not authenticated. Please log in.", "error")
+            return redirect(url_for('index'))
 
         if not product_id or quantity < 1:
             flash("Invalid product ID or quantity.", "error")
@@ -665,7 +679,7 @@ def update_cart(token):
         return redirect(request.referrer or url_for('cart'))
 
     except Exception as e:
-        logging.error("Error updating cart: %s", str(e))
+        logging.error("Error updating cart: %s", str(e), exc_info=True)
         flash("Error updating cart.", "error")
         return redirect(request.referrer or url_for('cart'))
 
@@ -674,6 +688,7 @@ def update_cart(token):
             cursor.close()
         if conn:
             conn.close()
+
 
 
 # Очищення кошика користувача
@@ -715,7 +730,12 @@ def clear_cart(token):
 @app.route('/<token>/place_order', methods=['POST'])
 def place_order(token):
     try:
-        user_id = 1  # Замінити на логіку реального користувача
+        user_id = session.get('user_id')  # Отримати ID поточного користувача з сесії
+
+        if not user_id:
+            flash("User is not authenticated. Please log in.", "error")
+            return redirect(url_for('index'))
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -768,7 +788,8 @@ def place_order(token):
         return redirect(request.referrer or url_for('cart'))
 
     except Exception as e:
-        conn.rollback()
+        if conn:
+            conn.rollback()
         logging.error(f"Error placing order for user_id={user_id}: {str(e)}", exc_info=True)
         flash(f"Error placing order: {str(e)}", "error")
         return redirect(request.referrer or url_for('cart'))
@@ -778,6 +799,7 @@ def place_order(token):
         if conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 @app.route('/<token>/orders', methods=['GET'])

@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, send_file
+import time
 import os
 import psycopg2
 import psycopg2.extras
@@ -66,21 +67,26 @@ def requires_token_and_role(required_role):
     def decorator(func):
         @wraps(func)
         def wrapper(token, *args, **kwargs):
+            logging.debug(f"Session token: {session.get('token')}")
+            logging.debug(f"Received token: {token}")
+            
             if session.get('token') != token:
                 flash("Access denied. Token mismatch.", "error")
                 return redirect(url_for('index'))
 
             role_data = validate_token(token)
+            logging.debug(f"Role data from token: {role_data}")
             if not role_data or role_data['role'] != required_role:
                 flash("Access denied. Invalid role or token.", "error")
                 return redirect(url_for('index'))
 
-            # Збереження інформації про користувача в сесію
             session['user_id'] = role_data['user_id']
             session['role'] = role_data['role']
             return func(token, *args, **kwargs)
         return wrapper
     return decorator
+
+
 
 
 
@@ -163,7 +169,7 @@ def simple_search():
 
 
 # Доступ до адмін-панелі:
-@app.route('/<token>/admin', methods=['GET', 'POST'])
+@app.route('/   ', methods=['GET', 'POST'])
 def admin_panel(token):
     try:
         logging.debug(f"Token received in admin_panel: {token}")
@@ -262,6 +268,7 @@ def admin_dashboard(token):
 
 # Функція для перевірки токена
 def validate_token(token):
+    logging.debug(f"Validating token: {token}")
     try:
         conn = get_db_connection()
         cursor = conn.cursor()

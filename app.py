@@ -68,13 +68,23 @@ def requires_token_and_role(required_role):
         @wraps(func)
         def wrapper(*args, **kwargs):
             token = session.get('token')
-            role_data = validate_token(token)
+            logging.debug(f"Token received in session: {token}")
 
-            if not role_data or role_data['role'] != required_role:
+            role_data = validate_token(token)
+            logging.debug(f"Validation result for token: {role_data}")
+
+            # Перевірка валідності токена та ролі
+            if not role_data:
+                logging.warning("Invalid or missing token.")
+                flash("Access denied. Invalid token or role.", "error")
+                return redirect(url_for('index'))
+
+            if role_data['role'] != required_role:
+                logging.warning(f"Access denied. User role '{role_data['role']}' does not match required role '{required_role}'.")
                 flash("Access denied. Insufficient permissions.", "error")
                 return redirect(url_for('index'))
 
-            # Збереження user_id в сесії
+            # Збереження user_id і ролі в сесії
             session['user_id'] = role_data['user_id']
             session['role'] = role_data['role']
             logging.debug(f"Session after validation: {session}")
@@ -82,6 +92,7 @@ def requires_token_and_role(required_role):
             return func(*args, **kwargs)
         return wrapper
     return decorator
+
 
 
 
@@ -840,7 +851,7 @@ def order_details(order_id):
 
 # Ролі користувачеві    
 @app.route('/<token>/admin/assign_roles', methods=['GET', 'POST'])
-@requires_token_and_role()
+@requires_token_and_role('admin')  # Вкажіть 'admin' або іншу роль
 def assign_roles(token):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1047,7 +1058,7 @@ def ping():
 
 
 @app.route('/admin/compare_prices', methods=['GET', 'POST'])
-@requires_token_and_role()
+@requires_token_and_role('admin')  # Вкажіть 'admin' або іншу роль
 def compare_prices():
     if request.method == 'GET':
         try:

@@ -533,17 +533,23 @@ def cart(token):
 
 # Додавання в кошик користувачем
 @app.route('/<token>/add_to_cart', methods=['POST'])
+@requires_token_and_role('user')
 def add_to_cart(token):
+    """
+    Додає товар до кошика користувача.
+    """
+    conn = None
+    cursor = None
     try:
+        # Отримання даних з форми
         article = request.form.get('article')
         price = float(request.form.get('price'))
         quantity = int(request.form.get('quantity'))
         table_name = request.form.get('table_name')
-        user_id = session.get('user_id')  # Отримання user_id із сесії
+        user_id = session.get('user_id')  # Отримання ID користувача із сесії
 
         if not user_id:
-            logging.error("User ID not found in session. Redirecting to index.")
-            flash("Session expired. Please log in again.", "error")
+            flash("User is not authenticated. Please log in.", "error")
             return redirect(url_for('index'))
 
         logging.debug(f"Adding to cart: Article={article}, Price={price}, Quantity={quantity}, Table={table_name}, User={user_id}")
@@ -551,7 +557,7 @@ def add_to_cart(token):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Перевірка існування товару
+        # Перевірка наявності товару у таблиці `products`
         cursor.execute("""
             SELECT id FROM products
             WHERE article = %s AND table_name = %s
@@ -559,6 +565,7 @@ def add_to_cart(token):
         product = cursor.fetchone()
 
         if not product:
+            # Додавання нового продукту в таблицю `products`
             cursor.execute("""
                 INSERT INTO products (article, table_name, price)
                 VALUES (%s, %s, %s)
@@ -568,24 +575,25 @@ def add_to_cart(token):
             logging.info(f"New product added to 'products': ID={product_id}, Article={article}, Table={table_name}, Price={price}")
         else:
             product_id = product['id']
-            logging.debug(f"Product already exists in 'products': ID={product_id}, Article={article}")
+            logging.debug(f"Product already exists: ID={product_id}, Article={article}")
 
-        # Додавання або оновлення товару в кошику
+        # Перевірка, чи товар вже є в кошику
         cursor.execute("""
-            SELECT id, quantity FROM cart
+            SELECT id FROM cart
             WHERE user_id = %s AND product_id = %s
         """, (user_id, product_id))
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
-            new_quantity = existing_cart_item['quantity'] + quantity
+            # Оновлення кількості товару в кошику
             cursor.execute("""
                 UPDATE cart
-                SET quantity = %s
+                SET quantity = quantity + %s
                 WHERE id = %s
-            """, (new_quantity, existing_cart_item['id']))
-            logging.info(f"Updated cart: Product ID={product_id}, New Quantity={new_quantity}")
+            """, (quantity, existing_cart_item['id']))
+            logging.info(f"Cart updated: Product ID={product_id}, Quantity Added={quantity}, User ID={user_id}")
         else:
+            # Додавання нового товару в кошик
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, %s, %s, NOW())
@@ -594,22 +602,19 @@ def add_to_cart(token):
 
         conn.commit()
         flash("Product added to cart!", "success")
-
-        # Перенаправлення на результати пошуку
-        logging.debug("Redirecting back to search results.")
-        return redirect(request.referrer or url_for('search_results', token=token))
-
     except Exception as e:
         logging.error(f"Error in add_to_cart: {e}", exc_info=True)
         flash("Error adding product to cart.", "error")
-        return redirect(request.referrer or url_for('index'))
-
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
-        logging.debug("Database connection closed after adding to cart.")
+            logging.debug("Database connection closed after adding to cart.")
+
+    # Перенаправлення на результати пошуку
+    return redirect(url_for('search_articles', token=token))
+
 
 
 
@@ -702,41 +707,42 @@ def update_cart(token):
 
 # Очищення кошика користувача
 @app.route('/<token>/clear_cart', methods=['POST'])
+@requires_token_and_role('user')
 def clear_cart(token):
     try:
-        # Отримання user_id з сесії
         user_id = session.get('user_id')
+
         if not user_id:
-            flash("You need to log in to clear your cart.", "error")
+            flash("User is not authenticated.", "error")
             return redirect(url_for('index'))
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Видалення всіх товарів з кошика для поточного користувача
+        # Видалення всіх елементів кошика для поточного користувача
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
 
-        # Логування успішного очищення кошика
-        logging.info(f"Cart cleared for user_id={user_id}")
-
-        flash("Cart cleared successfully!", "success")
-        return redirect(request.referrer or url_for('cart'))
+        logging.info(f"Cart cleared for user_id={user_id}.")
+        flash("Cart cleared successfully.", "success")
     except Exception as e:
-        logging.error(f"Error clearing cart for user_id={user_id}: {str(e)}", exc_info=True)
+        logging.error(f"Error clearing cart for user_id={user_id}: {e}", exc_info=True)
         flash("Error clearing cart.", "error")
-        return redirect(request.referrer or url_for('cart'))
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
-        logging.debug("Database connection closed.")
+
+    return redirect(url_for('cart', token=token))
+
+
 
 
 
 # Оформлення замовлення
 @app.route('/<token>/place_order', methods=['POST'])
+@requires_token_and_role('user')
 def place_order(token):
     try:
         user_id = session.get('user_id')  # Отримати ID поточного користувача з сесії
@@ -771,12 +777,12 @@ def place_order(token):
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
         logging.debug(f"Calculated total_price for order: {total_price}")
 
-        # Вставка замовлення в таблицю orders
+        # Вставка замовлення в таблицю orders зі статусом "Pending"
         cursor.execute("""
-            INSERT INTO orders (user_id, total_price, order_date)
-            VALUES (%s, %s, NOW())
+            INSERT INTO orders (user_id, total_price, order_date, status)
+            VALUES (%s, %s, NOW(), %s)
             RETURNING id
-        """, (user_id, total_price))
+        """, (user_id, total_price, "Pending"))
         order_id = cursor.fetchone()['id']
         logging.debug(f"Order created with id={order_id} for user_id={user_id}")
 
@@ -811,6 +817,7 @@ def place_order(token):
 
 
 
+# Замовлення користувача
 @app.route('/<token>/orders', methods=['GET'])
 @requires_token_and_role('user')  # Перевірка токена та ролі
 def orders(token):
@@ -825,9 +832,9 @@ def orders(token):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Отримання замовлень для поточного користувача
+        # Отримання замовлень для поточного користувача разом зі статусом
         cursor.execute("""
-            SELECT id, total_price, order_date
+            SELECT id, total_price, order_date, status
             FROM orders
             WHERE user_id = %s
             ORDER BY order_date DESC
@@ -847,6 +854,7 @@ def orders(token):
 
 
 
+# Окреме замовлення пористувача по id
 @app.route('/<token>/order_details/<int:order_id>')
 @requires_token_and_role('user') 
 def order_details(token, order_id):

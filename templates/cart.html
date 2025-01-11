@@ -80,12 +80,9 @@
 
         <!-- Кнопки для очищення кошика та оформлення замовлення -->
         <div class="cart-actions">
-            <form method="POST" action="/{{ session['token'] }}/clear_cart">
-                <button type="submit" class="clear-cart-button">Clear Cart</button>
-            </form>
-            <form method="POST" action="/{{ session['token'] }}/place_order">
-                <button type="submit" class="place-order-button">Place Order</button>
-            </form>
+			<form method="POST" action="/{{ session['token'] }}/clear_cart">
+				<button type="submit" class="btn btn-danger">Clear Cart</button>
+			</form>
         </div>
         {% else %}
         <p>Your cart is empty.</p>

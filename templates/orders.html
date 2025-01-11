@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orders</title>
+    <title>Your Orders</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <!-- Header -->
     <header>
         <nav>
             <ul>
@@ -17,43 +16,35 @@
             </ul>
         </nav>
     </header>
-
-    <!-- Main Content -->
     <div class="container">
         <h1>Your Orders</h1>
-
-        <!-- Diagnostic Information (Optional, for debugging) -->
-        {% if debug %}
-        <div>
-            <h2>Diagnostic Information:</h2>
-            <pre>{{ orders }}</pre>
-        </div>
-        {% endif %}
-
-        <!-- Orders Table -->
+        
         {% if orders %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Order ID</th>
-                    <th>Total Price</th>
-                    <th>Order Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in orders %}
-                <tr>
-                    <td>{{ order.id }}</td>
-                    <td>{{ order.total_price }}</td>
-                    <td>{{ order.order_date }}</td>
-                    <td>
-                        <a href="/{{ session['token'] }}/order_details/{{ order.id }}" class="btn btn-primary">View Details</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+		<table>
+			<thead>
+				<tr>
+					<th>Order ID</th>
+					<th>Total Price</th>
+					<th>Order Date</th>
+					<th>Status</th> <!-- Додано статус -->
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for order in orders %}
+				<tr>
+					<td>{{ order.id }}</td>
+					<td>{{ order.total_price }}</td>
+					<td>{{ order.order_date }}</td>
+					<td>{{ order.status }}</td> <!-- Відображення статусу -->
+					<td>
+						<a href="/{{ session['token'] }}/order_details/{{ order.id }}">View Details</a>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
         {% else %}
         <p>No orders found. Place an order to see it here.</p>
         {% endif %}

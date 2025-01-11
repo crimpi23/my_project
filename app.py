@@ -937,24 +937,51 @@ def admin_order_details(token, order_id):
     cursor = conn.cursor()
     try:
         # Get order details
-        cursor.execute("SELECT * FROM orders WHERE id = %s;", (order_id,))
+        cursor.execute("SELECT id, user_id, order_date, total_price FROM orders WHERE id = %s;", (order_id,))
         order = cursor.fetchone()
 
         if not order:
             flash("Order not found.", "error")
             return redirect(url_for('admin_orders', token=token))
 
-        # Get order items
-        cursor.execute("SELECT * FROM order_details WHERE order_id = %s;", (order_id,))
-        order_details = cursor.fetchall()
+        # Map order details to a dictionary
+        order_data = {
+            'id': order[0],
+            'user_id': order[1],
+            'order_date': order[2],
+            'total_price': order[3],
+        }
 
-        return render_template('admin_order_details.html', order=order, order_details=order_details, token=token)
+        # Get order items
+        cursor.execute("""
+            SELECT id, product_id, price, quantity, total_price, status, comment
+            FROM order_details
+            WHERE order_id = %s;
+        """, (order_id,))
+        order_items = cursor.fetchall()
+
+        # Map order items to a list of dictionaries
+        order_items_data = [
+            {
+                'id': item[0],
+                'product_id': item[1],
+                'price': item[2],
+                'quantity': item[3],
+                'total_price': item[4],
+                'status': item[5],
+                'comment': item[6],
+            }
+            for item in order_items
+        ]
+
+        return render_template('admin_order_details.html', order=order_data, order_items=order_items_data, token=token)
     except Exception as e:
         logging.error(f"Error fetching order details: {e}")
         flash("Failed to load order details.", "error")
         return redirect(url_for('admin_orders', token=token))
     finally:
         conn.close()
+
 
 @app.route('/<token>/admin/orders', methods=['GET'])
 @requires_token_and_role('admin')

@@ -78,7 +78,7 @@
             <a href="{{ url_for('compare_prices', token=token) }}">Compare Prices</a>
         </div>
         <div class="grid-item">
-            <a href="{{ url_for('orders', token=token) }}">View Orders</a>
+            <a href="/{{ token }}/admin/orders" class="btn btn-primary">View All Orders</a>
         </div>
         <div class="grid-item">
             <a href="{{ url_for('cart', token=token) }}">Manage Cart</a>

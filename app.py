@@ -430,7 +430,8 @@ def search_articles(token):
             article = result['article']
             grouped_results.setdefault(article, []).append({
                 'price': result['price'],
-                'table_name': result['table_name']
+                'table_name': result['table_name'],
+                'quantity': quantities.get(article, 1)  # Додаємо кількість до результатів
             })
 
         missing_articles = [article for article in articles if article not in grouped_results]
@@ -440,12 +441,6 @@ def search_articles(token):
         session['grouped_results'] = grouped_results
         session['quantities'] = quantities
         session['missing_articles'] = missing_articles
-
-        # Логування автоматично встановлених кількостей і дублікатів
-        if auto_set_quantities:
-            logging.info(f"Articles with auto-set quantities: {auto_set_quantities}")
-        if duplicate_articles:
-            logging.info(f"Duplicate articles detected: {duplicate_articles}")
 
         logging.info("Search results successfully processed.")
 
@@ -466,6 +461,7 @@ def search_articles(token):
         if conn:
             conn.close()
         logging.info("Database connection closed.")
+
 
 
 

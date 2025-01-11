@@ -9,10 +9,16 @@
 <body>
     <header>
         <h1>Search Results</h1>
+        <nav>
+            <ul>
+                <li><a href="/{{ session['token'] }}/">Home</a></li>
+                <li><a href="/{{ session['token'] }}/cart">Cart</a></li>
+                <li><a href="/{{ session['token'] }}/orders">Orders</a></li>
+            </ul>
+        </nav>
     </header>
 
     <main>
-        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="flashes">
@@ -23,16 +29,15 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Grouped Results Section -->
         <section>
             <h2>Grouped Results</h2>
-            {% if grouped_results %}
             <table>
                 <thead>
                     <tr>
                         <th>Article</th>
                         <th>Table Name</th>
                         <th>Price</th>
+                        <th>Quantity</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -41,18 +46,18 @@
                         {% for detail in details %}
                             <tr>
                                 {% if loop.index == 1 %}
-                                <td rowspan="{{ details|length }}">{{ article }}</td>
+                                    <td rowspan="{{ details|length }}">{{ article }}</td>
                                 {% endif %}
                                 <td>{{ detail.table_name }}</td>
                                 <td>{{ detail.price }}</td>
+                                <td>{{ detail.quantity }}</td>
                                 <td>
-                                    <!-- Додавання в кошик -->
                                     <form method="POST" action="/{{ session['token'] }}/add_to_cart">
                                         <input type="hidden" name="article" value="{{ article }}">
                                         <input type="hidden" name="price" value="{{ detail.price }}">
                                         <input type="hidden" name="table_name" value="{{ detail.table_name }}">
-                                        <input type="number" name="quantity" value="1" min="1" class="form-input">
-                                        <button type="submit" class="btn btn-primary">Add to Cart</button>
+                                        <input type="number" name="quantity" value="{{ detail.quantity }}" min="1">
+                                        <button type="submit" class="add-to-cart-button">Add to Cart</button>
                                     </form>
                                 </td>
                             </tr>
@@ -60,13 +65,8 @@
                     {% endfor %}
                 </tbody>
             </table>
-            {% else %}
-            <p class="info">No results found. Please try another search.</p>
-            {% endif %}
         </section>
 
-        <!-- Missing Articles Section -->
-        {% if missing_articles %}
         <section>
             <h2>Missing Articles</h2>
             <ul>
@@ -75,7 +75,14 @@
                 {% endfor %}
             </ul>
         </section>
-        {% endif %}
+
+        <!-- Кнопки очищення результатів -->
+        <div class="search-actions">
+            <form method="POST" action="/{{ session['token'] }}/clear_search">
+                <button type="submit" class="btn btn-secondary">Clear Search Results</button>
+            </form>
+            <a href="/{{ session['token'] }}/" class="btn btn-primary">Return to Home</a>
+        </div>
     </main>
 
     <footer>

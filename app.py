@@ -59,31 +59,29 @@ def token_index(token):
 
 
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
-def requires_token_and_role(required_role=None):
+def requires_token_and_role(required_role):
     """
     Декоратор для перевірки токена і ролі користувача.
     :param required_role: Роль, яка потрібна для доступу (admin, manager, user).
     """
-    def decorator(f):
-        @wraps(f)
-        def wrapped(*args, **kwargs):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
             token = session.get('token')
-            role = session.get('role')
+            role_data = validate_token(token)
 
-            logging.debug(f"Token: {token}, Role: {role}, Required Role: {required_role}")
-
-            if not token or not validate_token(token):
-                flash("Access denied. Token is required.", "error")
-                return redirect(url_for('index'))
-
-            if required_role and role != required_role:
+            if not role_data or role_data['role'] != required_role:
                 flash("Access denied. Insufficient permissions.", "error")
                 return redirect(url_for('index'))
 
-            return f(*args, **kwargs)
-        return wrapped
-    return decorator
+            # Збереження user_id в сесії
+            session['user_id'] = role_data['user_id']
+            session['role'] = role_data['role']
+            logging.debug(f"Session after validation: {session}")
 
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 
 
@@ -468,9 +466,15 @@ def clear_search():
 
 # Сторінка кошика
 @app.route('/cart', methods=['GET'])
+@requires_token_and_role('user')  # Забезпечує перевірку токена та ролі
 def cart():
     try:
-        user_id = 1  # Замінити на логіку реального користувача
+        # Отримання user_id з сесії
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("You need to log in to view your cart.", "error")
+            return redirect(url_for('index'))
+
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
@@ -490,7 +494,7 @@ def cart():
         # Розрахунок загальної суми
         total_price = sum(item['total_price'] for item in cart_items)
 
-        # Очищення непотрібних флеш-повідомлень
+        # Очищення непотрібних флеш-повідомлень (опціонально)
         session.pop('grouped_results', None)
         session.pop('quantities', None)
         session.pop('missing_articles', None)
@@ -503,10 +507,11 @@ def cart():
         return redirect(request.referrer or url_for('index'))
     finally:
         if cursor:
-            cursor.close()
+            cursor.close()  # Закриття курсора
         if conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 # Додавання в кошик
@@ -661,17 +666,26 @@ def update_cart():
 @app.route('/clear_cart', methods=['POST'])
 def clear_cart():
     try:
-        user_id = 1
+        # Отримання user_id з сесії
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("You need to log in to clear your cart.", "error")
+            return redirect(url_for('index'))
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Видалення всіх товарів з кошика для поточного користувача
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
+
+        # Логування успішного очищення кошика
+        logging.info(f"Cart cleared for user_id={user_id}")
 
         flash("Cart cleared successfully!", "success")
         return redirect(request.referrer or url_for('cart'))
     except Exception as e:
-        logging.error("Error clearing cart: %s", str(e))
+        logging.error(f"Error clearing cart for user_id={user_id}: {str(e)}", exc_info=True)
         flash("Error clearing cart.", "error")
         return redirect(request.referrer or url_for('cart'))
     finally:
@@ -679,6 +693,8 @@ def clear_cart():
             cursor.close()
         if conn:
             conn.close()
+        logging.debug("Database connection closed.")
+
 
 
 # Оформлення замовлення
@@ -750,56 +766,39 @@ def place_order():
         logging.debug("Database connection closed.")
 
 
-@app.route('/orders', methods=['GET', 'POST'])
-@requires_token_and_role('user')  # Або потрібна роль
+@app.route('/orders', methods=['GET'])
+@requires_token_and_role('user')  # Перевірка токена та ролі
 def orders():
-    try:
-        user_id = session.get('user_id')  # Отримання user_id з сесії
-        logging.debug(f"User ID in session: {user_id}")  # Логування user_id
-        
-        if not user_id:
-            flash("User not authenticated.", "error")
-            return redirect(url_for('index'))
+    user_id = session.get('user_id')
+    logging.debug(f"Fetching orders for user_id: {user_id}")
 
+    if not user_id:
+        flash("You are not authenticated.", "error")
+        return redirect(url_for('index'))
+
+    try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Пошук за артикулом
-        search_article = request.form.get('search_article') if request.method == 'POST' else None
+        # Отримання замовлень для поточного користувача
+        cursor.execute("""
+            SELECT id, total_price, order_date
+            FROM orders
+            WHERE user_id = %s
+            ORDER BY order_date DESC
+        """, (user_id,))
+        user_orders = cursor.fetchall()
 
-        if search_article:
-            # Отримання замовлень, які містять певний артикул
-            cursor.execute("""
-                SELECT DISTINCT o.id, o.total_price, o.order_date
-                FROM orders o
-                JOIN order_details od ON o.id = od.order_id
-                JOIN products p ON od.product_id = p.id
-                WHERE o.user_id = %s AND p.article ILIKE %s
-                ORDER BY o.order_date DESC
-            """, (user_id, f"%{search_article}%"))
-        else:
-            # Отримання всіх замовлень користувача
-            cursor.execute("""
-                SELECT id, total_price, order_date
-                FROM orders
-                WHERE user_id = %s
-                ORDER BY order_date DESC
-            """, (user_id,))
-
-        orders = cursor.fetchall()
-
-        logging.debug(f"Orders for user_id={user_id}: {orders}")  # Логування для перевірки
-
-        return render_template('orders.html', orders=orders, search_article=search_article)
+        logging.debug(f"Orders for user_id={user_id}: {user_orders}")
+        return render_template('orders.html', orders=user_orders)
     except Exception as e:
-        logging.error(f"Error loading orders for user_id={user_id}: {e}")
-        flash("Error loading orders. Please try again.", "error")
+        logging.error(f"Error fetching orders for user_id={user_id}: {e}")
+        flash("Error loading orders.", "error")
         return redirect(url_for('index'))
     finally:
-        if cursor:
-            cursor.close()
         if conn:
             conn.close()
+
 
 
 

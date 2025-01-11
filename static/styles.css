@@ -119,3 +119,30 @@ body {
     font-size: 1.2rem;
     color: #555555;
 }
+.clear-cart-button,
+.place-order-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px;
+}
+
+.clear-cart-button {
+    background-color: #ff4d4d;
+    color: white;
+}
+
+.place-order-button {
+    background-color: #4caf50;
+    color: white;
+}
+
+.clear-cart-button:hover {
+    background-color: #e60000;
+}
+
+.place-order-button:hover {
+    background-color: #45a049;
+}

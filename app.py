@@ -810,7 +810,7 @@ def orders():
 
 
 @app.route('/<token>/order_details/<int:order_id>')
-@requires_token_and_role('user')  # Вкажіть потрібну роль: 'admin', 'user', або іншу
+@requires_token_and_role('user') 
 def order_details(order_id):
     try:
         conn = get_db_connection()
@@ -843,6 +843,126 @@ def order_details(order_id):
             cursor.close()
         if conn:
             conn.close()
+
+@app.route('/<token>/admin/orders/<int:order_id>/update_status', methods=['POST'])
+@requires_token_and_role('admin')
+def update_order_item_status(token, order_id):
+    """
+    Update the status of specific order items.
+    """
+    data = request.json  # Expecting a list of items with new statuses
+    user_id = session.get('user_id')  # Admin ID
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        for item in data.get('items', []):
+            detail_id = item.get('id')
+            new_status = item.get('status')
+            comment = item.get('comment', None)
+
+            # Get current status
+            cursor.execute("SELECT status FROM order_details WHERE id = %s;", (detail_id,))
+            current_status = cursor.fetchone()
+
+            if current_status:
+                current_status = current_status[0]
+
+                # Update item status
+                cursor.execute("""
+                    UPDATE order_details
+                    SET status = %s, comment = %s
+                    WHERE id = %s;
+                """, (new_status, comment, detail_id))
+
+                # Log the change
+                cursor.execute("""
+                    INSERT INTO order_changes (order_id, order_detail_id, field_changed, old_value, new_value, comment, changed_by)
+                    VALUES (%s, %s, 'status', %s, %s, %s, %s);
+                """, (order_id, detail_id, current_status, new_status, comment, user_id))
+
+        conn.commit()
+
+        # Update order status
+        cursor.execute("""
+            SELECT COUNT(*) FILTER (WHERE status = 'new') AS new_count,
+                   COUNT(*) FILTER (WHERE status = 'accepted') AS accepted_count,
+                   COUNT(*) FILTER (WHERE status = 'rejected') AS rejected_count
+            FROM order_details
+            WHERE order_id = %s;
+        """, (order_id,))
+        counts = cursor.fetchone()
+
+        if counts:
+            if counts[0] == 0 and counts[1] == 0:
+                new_order_status = 'canceled'
+            elif counts[1] > 0:
+                new_order_status = 'accepted'
+            else:
+                new_order_status = 'new'
+
+            cursor.execute("UPDATE orders SET status = %s WHERE id = %s;", (new_order_status, order_id))
+            conn.commit()
+
+        flash("Order and item statuses updated successfully.", "success")
+    except Exception as e:
+        conn.rollback()
+        logging.error(f"Error updating item statuses: {e}")
+        flash("Failed to update item statuses.", "error")
+    finally:
+        conn.close()
+
+    return jsonify({"message": "Statuses updated successfully."})
+
+@app.route('/<token>/admin/orders/<int:order_id>', methods=['GET'])
+@requires_token_and_role('admin')
+def admin_order_details(token, order_id):
+    """
+    Display detailed view of a specific order for admin.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Get order details
+        cursor.execute("SELECT * FROM orders WHERE id = %s;", (order_id,))
+        order = cursor.fetchone()
+
+        if not order:
+            flash("Order not found.", "error")
+            return redirect(url_for('admin_orders', token=token))
+
+        # Get order items
+        cursor.execute("SELECT * FROM order_details WHERE order_id = %s;", (order_id,))
+        order_details = cursor.fetchall()
+
+        return render_template('admin_order_details.html', order=order, order_details=order_details, token=token)
+    except Exception as e:
+        logging.error(f"Error fetching order details: {e}")
+        flash("Failed to load order details.", "error")
+        return redirect(url_for('admin_orders', token=token))
+    finally:
+        conn.close()
+
+@app.route('/<token>/admin/orders', methods=['GET'])
+@requires_token_and_role('admin')
+def admin_orders(token):
+    """
+    Display all orders for the admin.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Fetch all orders
+        cursor.execute("SELECT * FROM orders ORDER BY order_date DESC;")
+        orders = cursor.fetchall()
+
+        return render_template('admin_orders.html', orders=orders, token=token)
+    except Exception as e:
+        logging.error(f"Error fetching orders: {e}")
+        flash("Failed to load orders.", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+    finally:
+        conn.close()
 
 
 # Ролі користувачеві    

@@ -169,7 +169,7 @@ def simple_search():
 
 
 # Доступ до адмін-панелі:
-@app.route('/   ', methods=['GET', 'POST'])
+@app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel(token):
     try:
         logging.debug(f"Token received in admin_panel: {token}")
@@ -926,43 +926,53 @@ def detect_delimiter(file_content):
 @app.route('/<token>/admin/upload_price_list', methods=['GET', 'POST'])
 @requires_token_and_role('admin')
 def upload_price_list(token):
+    """
+    Обробляє завантаження прайс-листу.
+    - GET: Повертає сторінку завантаження.
+    - POST: Обробляє завантаження файлу та записує дані в базу.
+    """
     if request.method == 'GET':
         try:
+            logging.info(f"Accessing upload page for token: {token}")
             flash("Page loaded successfully.", "info")  # Тестове повідомлення
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT table_name FROM price_lists;")
             price_lists = cursor.fetchall()
             conn.close()
-            logging.info("Price list tables fetched successfully.")
-            # Повернення сторінки
+            logging.info(f"Fetched price lists: {price_lists}")
             return render_template('upload_price_list.html', price_lists=price_lists, token=token)
         except Exception as e:
-            logging.error(f"Error during GET request: {str(e)}")
+            logging.error(f"Error during GET request: {e}")
             flash("Error loading the upload page.", "error")
             return redirect(url_for('admin_dashboard', token=token))
 
     if request.method == 'POST':
         try:
-            logging.info("Starting file upload process.")
-            start_time = time.time()  # Початок вимірювання часу
+            logging.info(f"Starting file upload for token: {token}")
+            start_time = time.time()
 
-            # Отримання параметрів
+            # Отримання параметрів форми
             table_name = request.form['table_name']
             new_table_name = request.form.get('new_table_name', '').strip()
             file = request.files.get('file')
 
-            # Перевірка файлу
+            # Логування вхідних даних
+            logging.debug(f"Received table_name: {table_name}, new_table_name: {new_table_name}")
+
             if not file or file.filename == '':
                 flash("No file uploaded or selected.", "error")
+                logging.warning("No file uploaded or selected.")
                 return redirect(url_for('upload_price_list', token=token))
 
-            # Обробка файлу
+            # Читання файлу
             file_content = file.read().decode('utf-8', errors='ignore')
             delimiter = detect_delimiter(file_content)
+            logging.debug(f"Detected delimiter: {delimiter}")
             reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
-            data = []
 
+            # Обробка даних з файлу
+            data = []
             header_skipped = False
             for row in reader:
                 if len(row) < 2:
@@ -970,6 +980,7 @@ def upload_price_list(token):
                     continue
                 if not header_skipped and not row[1].replace(',', '').replace('.', '').isdigit():
                     header_skipped = True
+                    logging.info(f"Skipped header row: {row}")
                     continue
                 try:
                     article = row[0].strip().replace(" ", "").upper()
@@ -979,14 +990,17 @@ def upload_price_list(token):
                     logging.warning(f"Skipping row with invalid price: {row}")
                     continue
 
+            logging.info(f"Parsed {len(data)} rows from file.")
+
             # Підключення до бази даних
             conn = get_db_connection()
             cursor = conn.cursor()
 
-            # Обробка нової таблиці
+            # Логіка для створення нової таблиці
             if table_name == 'new':
                 if not new_table_name:
                     flash("New table name is required.", "error")
+                    logging.error("New table name was not provided.")
                     return redirect(url_for('upload_price_list', token=token))
                 table_name = new_table_name.strip().replace(" ", "_").lower()
                 cursor.execute(f"""
@@ -996,11 +1010,12 @@ def upload_price_list(token):
                     );
                 """)
                 cursor.execute("INSERT INTO price_lists (table_name, created_at) VALUES (%s, NOW());", (table_name,))
-                conn.commit()
+                logging.info(f"Created new table: {table_name}")
 
-            # Очищення таблиці перед завантаженням
+            # Очищення таблиці
             cursor.execute(f"TRUNCATE TABLE {table_name} RESTART IDENTITY;")
             conn.commit()
+            logging.info(f"Truncated table: {table_name}")
 
             # Завантаження даних у таблицю
             output = io.StringIO()
@@ -1012,7 +1027,7 @@ def upload_price_list(token):
 
             end_time = time.time()
             flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "success")
-            logging.info(f"Upload completed in {end_time - start_time:.2f} seconds.")
+            logging.info(f"Uploaded {len(data)} rows to table '{table_name}' in {end_time - start_time:.2f} seconds.")
             return redirect(url_for('upload_price_list', token=token))
 
         except Exception as e:
@@ -1022,6 +1037,8 @@ def upload_price_list(token):
         finally:
             if 'conn' in locals() and conn:
                 conn.close()
+                logging.info("Database connection closed.")
+
 
 
 

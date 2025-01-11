@@ -19,19 +19,21 @@
     <div class="container">
         <h1>Upload Price List</h1>
 
-        <!-- Флеш-повідомлення -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
+        <!-- Flash Messages -->
         <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
             {% for category, message in messages %}
-            <div class="flash-message {{ category }}">{{ message }}</div>
+            <div class="flash-message {{ category }}">
+                <strong>{{ category.capitalize() }}:</strong> {{ message }}
+            </div>
             {% endfor %}
+            {% endif %}
+            {% endwith %}
         </div>
-        {% endif %}
-        {% endwith %}
 
-        <!-- Форма завантаження -->
-        <form id="uploadForm" class="form">
+        <!-- Upload Form -->
+        <form id="uploadForm" class="form" method="POST" enctype="multipart/form-data" action="/{{ token }}/admin/upload_price_list">
             <div class="form-group">
                 <label for="table_name">Select Table:</label>
                 <select name="table_name" id="table_name" required>
@@ -55,7 +57,7 @@
             <button type="submit" class="btn btn-primary">Upload</button>
         </form>
 
-        <!-- Прогрес завантаження -->
+        <!-- Upload Progress -->
         <div id="progressContainer" style="display: none; margin-top: 20px;">
             <div id="progressBar" style="width: 0; height: 20px; background: #007bff;"></div>
             <p id="progressText" style="text-align: center;">Starting upload...</p>
@@ -67,7 +69,7 @@
     </footer>
 
     <script>
-        // Показати/сховати поле для нової таблиці
+        // Toggle new table name field visibility
         document.getElementById('table_name').addEventListener('change', function () {
             const newTableContainer = document.getElementById('new_table_name_container');
             if (this.value === 'new') {
@@ -77,7 +79,7 @@
             }
         });
 
-        // Завантаження файлу з прогресом
+        // File upload with progress
         document.getElementById('uploadForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
@@ -109,11 +111,11 @@
                     if (response.status === 'success') {
                         progressBar.style.backgroundColor = 'green';
                         progressText.textContent = response.message;
-                        flashMessages.innerHTML = `<div class="flash-message success">${response.message}</div>`;
+                        flashMessages.innerHTML = `<div class="flash-message success"><strong>Success:</strong> ${response.message}</div>`;
                     } else {
                         progressBar.style.backgroundColor = 'red';
                         progressText.textContent = response.message;
-                        flashMessages.innerHTML = `<div class="flash-message error">${response.message}</div>`;
+                        flashMessages.innerHTML = `<div class="flash-message error"><strong>Error:</strong> ${response.message}</div>`;
                     }
                 } else {
                     progressBar.style.backgroundColor = 'red';
@@ -129,12 +131,12 @@
             xhr.send(formData);
         });
 
-        // Keep-alive Ping для сервера
+        // Keep-alive ping for server
         setInterval(() => {
             fetch('/ping')
                 .then(() => console.log('Keep-alive: OK'))
                 .catch(() => console.error('Keep-alive failed'));
-        }, 300000); // Кожні 5 хвилин
+        }, 300000); // Every 5 minutes
     </script>
 </body>
 </html>

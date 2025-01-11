@@ -70,50 +70,55 @@
     </footer>
 
     <script>
-        document.querySelectorAll('.update-status-form').forEach(form => {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
+		document.querySelectorAll('.update-status-form').forEach(form => {
+			form.addEventListener('submit', function (e) {
+				e.preventDefault();
 
-                const formData = new FormData(this);
-                const data = {
-                    item_id: formData.get('item_id'),
-                    new_status: formData.get('new_status'),
-                    comment: formData.get('comment') || null,
-                };
+				const formData = new FormData(this);
+				const data = {
+					items: [
+						{
+							id: formData.get('item_id'),
+							status: formData.get('new_status'),
+							comment: formData.get('comment') || null,
+						},
+					],
+				};
 
-                const button = this.querySelector('button');
-                button.disabled = true;
-                button.textContent = 'Updating...';
+				const button = this.querySelector('button');
+				button.disabled = true;
+				button.textContent = 'Updating...';
 
-                fetch(this.action, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.json().then(err => {
-                                throw new Error(err.error || 'Failed to update status.');
-                            });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        alert('Status updated successfully!');
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        alert(error.message || 'Error updating status.');
-                    })
-                    .finally(() => {
-                        button.disabled = false;
-                        button.textContent = 'Update';
-                    });
-            });
-        });
+				fetch(this.action, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(data),
+				})
+					.then(response => {
+						if (!response.ok) {
+							return response.json().then(err => {
+								throw new Error(err.error || 'Failed to update status.');
+							});
+						}
+						return response.json();
+					})
+					.then(data => {
+						alert('Status updated successfully!');
+						location.reload();
+					})
+					.catch(error => {
+						console.error(error);
+						alert(error.message || 'Error updating status.');
+					})
+					.finally(() => {
+						button.disabled = false;
+						button.textContent = 'Update';
+					});
+			});
+		});
+
     </script>
 </body>
 </html>

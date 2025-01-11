@@ -850,16 +850,20 @@ def update_order_item_status(token, order_id):
     """
     Update the status of specific order items.
     """
-    data = request.json  # Очікуємо JSON-дані
-    user_id = session.get('user_id')  # ID адміністратора
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    logging.info(f"Received data for order {order_id}: {data}")
-
     try:
+        data = request.json  # Очікуємо JSON-дані
+        if not data:
+            logging.warning("No JSON data received.")
+            return jsonify({"error": "Invalid JSON data."}), 400
+        
+        user_id = session.get('user_id')  # ID адміністратора
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        logging.info(f"Received data for order {order_id}: {data}")
+
         # Перевіряємо наявність елементів
-        if not data or not data.get('items'):
+        if not data.get('items'):
             logging.warning("No items found in request data.")
             return jsonify({"error": "No items provided."}), 400
 
@@ -868,6 +872,7 @@ def update_order_item_status(token, order_id):
             new_status = item.get('status')
             comment = item.get('comment', None)
 
+            # Перевіряємо обов'язкові поля
             if not detail_id or not new_status:
                 logging.warning(f"Missing required fields for item: {item}")
                 continue
@@ -920,14 +925,15 @@ def update_order_item_status(token, order_id):
 
         flash("Order and item statuses updated successfully.", "success")
     except Exception as e:
-        conn.rollback()
-        logging.error(f"Error updating item statuses for order {order_id}: {e}")
-        flash("Failed to update item statuses.", "error")
+        logging.error(f"Error in updating order items for order {order_id}: {e}")
+        return jsonify({"error": "An error occurred while processing the request."}), 500
     finally:
-        conn.close()
-        logging.info(f"Database connection closed for order {order_id}.")
+        if conn:
+            conn.close()
+            logging.info(f"Database connection closed for order {order_id}.")
 
     return jsonify({"message": "Statuses updated successfully."})
+
 
 
 

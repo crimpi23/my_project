@@ -10,14 +10,33 @@
     <header>
         <nav>
             <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/admin">Admin</a></li>
+                <li><a href="{{ url_for('home', token=token) }}">Home</a></li>
+                <li><a href="{{ url_for('admin_dashboard', token=token) }}">Admin Dashboard</a></li>
             </ul>
         </nav>
     </header>
     <div class="container">
         <h1>Utilities</h1>
-        <a href="/admin/compare_prices" class="button">Compare Prices</a>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Utility Links -->
+        <div class="utility-actions">
+            <a href="{{ url_for('compare_prices', token=token) }}" class="button">Compare Prices</a>
+            <a href="{{ url_for('upload_price_list', token=token) }}" class="button">Upload Price List</a>
+        </div>
     </div>
+    <footer>
+        <p>Utilities - All Rights Reserved © 2025</p>
+    </footer>
 </body>
 </html>

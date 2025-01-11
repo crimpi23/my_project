@@ -5,6 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        /* Додаткові стилі для покращення вигляду */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+        }
+        h1 {
+            margin: 0;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 2rem;
+        }
+        .grid-item {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            padding: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .grid-item a {
+            text-decoration: none;
+            color: #007bff;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .grid-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        footer {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            margin-top: auto;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -13,22 +66,22 @@
 
     <div class="grid-container">
         <div class="grid-item">
-            <a href="{{ url_for('create_user', token=session.get('token')) }}">Create New User</a>
+            <a href="{{ url_for('create_user', token=token) }}">Create New User</a>
         </div>
         <div class="grid-item">
-            <a href="{{ url_for('assign_roles', token=session.get('token')) }}">Assign Roles</a>
+            <a href="{{ url_for('assign_roles', token=token) }}">Assign Roles</a>
         </div>
         <div class="grid-item">
-            <a href="{{ url_for('upload_price_list') }}">Upload Price List</a>
+            <a href="{{ url_for('upload_price_list', token=token) }}">Upload Price List</a>
         </div>
         <div class="grid-item">
-            <a href="{{ url_for('compare_prices') }}">Compare Prices</a>
+            <a href="{{ url_for('compare_prices', token=token) }}">Compare Prices</a>
         </div>
         <div class="grid-item">
-            <a href="{{ url_for('orders') }}">View Orders</a>
+            <a href="{{ url_for('orders', token=token) }}">View Orders</a>
         </div>
         <div class="grid-item">
-            <a href="{{ url_for('cart') }}">Manage Cart</a>
+            <a href="{{ url_for('cart', token=token) }}">Manage Cart</a>
         </div>
     </div>
 

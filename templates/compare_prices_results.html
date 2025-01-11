@@ -7,85 +7,105 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+    <header>
+        <nav>
+            <ul class="nav">
+                <li><a href="/">Home</a></li>
+                <li><a href="/{{ token }}/admin/dashboard">Dashboard</a></li>
+                <li><a href="/{{ token }}/admin/compare_prices">Compare Prices</a></li>
+            </ul>
+        </nav>
+    </header>
+
     <div class="container">
         <h1>Comparison Results</h1>
 
         <!-- Експорт в Excel -->
-        <form method="POST" action="/admin/compare_prices">
+        <form method="POST" action="{{ url_for('compare_prices', token=token) }}" class="form-export">
             <input type="hidden" name="export_excel" value="true">
-            <button type="submit">Export to Excel</button>
+            <button type="submit" class="btn btn-secondary">Export to Excel</button>
         </form>
 
         <!-- Розділ Better in First Table -->
-        <h2>Better in First Table</h2>
-        {% if better_in_first %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Article</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in better_in_first %}
-                <tr>
-                    <td>{{ item.article }}</td>
-                    <td>{{ item.price }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No data available for the first table.</p>
-        {% endif %}
+        <section>
+            <h2>Better in First Table</h2>
+            {% if better_in_first %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in better_in_first %}
+                    <tr>
+                        <td>{{ item.article }}</td>
+                        <td>{{ item.price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No data available for the first table.</p>
+            {% endif %}
+        </section>
 
         <!-- Розділ Better in Second Table -->
-        <h2>Better in Second Table</h2>
-        {% if better_in_second %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Article</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in better_in_second %}
-                <tr>
-                    <td>{{ item.article }}</td>
-                    <td>{{ item.price }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No data available for the second table.</p>
-        {% endif %}
+        <section>
+            <h2>Better in Second Table</h2>
+            {% if better_in_second %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in better_in_second %}
+                    <tr>
+                        <td>{{ item.article }}</td>
+                        <td>{{ item.price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No data available for the second table.</p>
+            {% endif %}
+        </section>
 
         <!-- Розділ Same Prices -->
-        <h2>Same Prices</h2>
-        {% if same_prices %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Article</th>
-                    <th>Price</th>
-                    <th>Tables</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in same_prices %}
-                <tr>
-                    <td>{{ item.article }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>{{ item.tables }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No articles with the same prices found.</p>
-        {% endif %}
+        <section>
+            <h2>Same Prices</h2>
+            {% if same_prices %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Tables</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in same_prices %}
+                    <tr>
+                        <td>{{ item.article }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>{{ item.tables }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No articles with the same prices found.</p>
+            {% endif %}
+        </section>
     </div>
+
+    <footer>
+        <p>Comparison Results - All Rights Reserved © 2025</p>
+    </footer>
 </body>
 </html>

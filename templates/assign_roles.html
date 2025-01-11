@@ -11,7 +11,7 @@
         <h1>Assign Roles</h1>
     </header>
 
-    <main>
+    <main class="container">
         <!-- Флеш-повідомлення -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -25,7 +25,7 @@
 
         <section class="user-roles">
             <h2>Current User Roles</h2>
-            <table>
+            <table class="table">
                 <thead>
                     <tr>
                         <th>Username</th>
@@ -39,7 +39,6 @@
                         <td>{{ user_role.username }}</td>
                         <td>{{ user_role.role_name }}</td>
                         <td>
-                            <!-- Кнопка для видалення ролі -->
                             <form method="POST" action="{{ url_for('assign_roles', token=token) }}">
                                 <input type="hidden" name="user_id" value="{{ user_role.user_id }}">
                                 <input type="hidden" name="role_id" value="{{ user_role.role_id }}">
@@ -54,17 +53,17 @@
 
         <section class="assign-role">
             <h2>Assign a New Role</h2>
-            <form method="POST" action="{{ url_for('assign_roles', token=token) }}">
+            <form method="POST" action="{{ url_for('assign_roles', token=token) }}" class="form-container">
                 <input type="hidden" name="action" value="assign">
 
                 <div class="form-group">
                     <label for="search_user">Search User:</label>
-                    <input type="text" id="search_user" placeholder="Enter username or email..." oninput="filterUsers()">
+                    <input type="text" id="search_user" placeholder="Enter username or email..." oninput="filterUsers()" class="form-control">
                 </div>
 
                 <div class="form-group">
                     <label for="user_list">Select User:</label>
-                    <select name="user_id" id="user_list" required>
+                    <select name="user_id" id="user_list" class="form-control" required>
                         {% for user in users %}
                         <option value="{{ user.id }}">{{ user.username }} ({{ user.email }})</option>
                         {% endfor %}
@@ -73,7 +72,7 @@
 
                 <div class="form-group">
                     <label for="role_id">Select Role:</label>
-                    <select name="role_id" id="role_id" required>
+                    <select name="role_id" id="role_id" class="form-control" required>
                         {% for role in roles %}
                         <option value="{{ role.id }}">{{ role.name }}</option>
                         {% endfor %}

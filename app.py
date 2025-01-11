@@ -918,37 +918,37 @@ def detect_delimiter(file_content):
 # Завантаження прайсу в Адмінці
 @app.route('/<token>/admin/upload_price_list', methods=['GET', 'POST'])
 @requires_token_and_role('admin')
-def upload_price_list():
+def upload_price_list(token):
     if request.method == 'GET':
         try:
-            flash("This is a test message.", "success")  # Тестове повідомлення
+            flash("Page loaded successfully.", "info")  # Тестове повідомлення
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT table_name FROM price_lists;")
             price_lists = cursor.fetchall()
             conn.close()
             logging.info("Price list tables fetched successfully.")
-            # "Споживаємо" всі Flash-повідомлення після завантаження сторінки
-            get_flashed_messages(with_categories=True)
-            return render_template('upload_price_list.html', price_lists=price_lists)
+            # Повернення сторінки
+            return render_template('upload_price_list.html', price_lists=price_lists, token=token)
         except Exception as e:
             logging.error(f"Error during GET request: {str(e)}")
-            return {"status": "error", "message": "Error loading the page."}, 500
+            flash("Error loading the upload page.", "error")
+            return redirect(url_for('admin_dashboard', token=token))
 
     if request.method == 'POST':
         try:
             logging.info("Starting file upload process.")
             start_time = time.time()  # Початок вимірювання часу
 
-            # Отримання таблиці та файлу
+            # Отримання параметрів
             table_name = request.form['table_name']
             new_table_name = request.form.get('new_table_name', '').strip()
             file = request.files.get('file')
 
+            # Перевірка файлу
             if not file or file.filename == '':
-                logging.error("No file uploaded or selected.")
                 flash("No file uploaded or selected.", "error")
-                return redirect(request.referrer or url_for('upload_price_list'))
+                return redirect(url_for('upload_price_list', token=token))
 
             # Обробка файлу
             file_content = file.read().decode('utf-8', errors='ignore')
@@ -962,29 +962,25 @@ def upload_price_list():
                     logging.warning(f"Skipping invalid row: {row}")
                     continue
                 if not header_skipped and not row[1].replace(',', '').replace('.', '').isdigit():
-                    logging.info(f"Skipping header row: {row}")
                     header_skipped = True
                     continue
-                article = row[0].strip().replace(" ", "").upper()
                 try:
+                    article = row[0].strip().replace(" ", "").upper()
                     price = float(row[1].replace(",", ".").strip())
                     data.append((article, price))
                 except ValueError:
                     logging.warning(f"Skipping row with invalid price: {row}")
                     continue
 
-            logging.info(f"Number of rows prepared: {len(data)}")
-
             # Підключення до бази даних
             conn = get_db_connection()
             cursor = conn.cursor()
 
-            # Якщо створюємо нову таблицю
+            # Обробка нової таблиці
             if table_name == 'new':
                 if not new_table_name:
-                    logging.error("New table name is missing.")
                     flash("New table name is required.", "error")
-                    return redirect(request.referrer or url_for('upload_price_list'))
+                    return redirect(url_for('upload_price_list', token=token))
                 table_name = new_table_name.strip().replace(" ", "_").lower()
                 cursor.execute(f"""
                     CREATE TABLE IF NOT EXISTS {table_name} (
@@ -992,47 +988,34 @@ def upload_price_list():
                         price NUMERIC
                     );
                 """)
-                cursor.execute("""
-                    INSERT INTO price_lists (table_name, created_at)
-                    VALUES (%s, NOW());
-                """, (table_name,))
+                cursor.execute("INSERT INTO price_lists (table_name, created_at) VALUES (%s, NOW());", (table_name,))
                 conn.commit()
 
-            # Очищення таблиці
-            logging.info(f"Truncating table: {table_name}")
+            # Очищення таблиці перед завантаженням
             cursor.execute(f"TRUNCATE TABLE {table_name} RESTART IDENTITY;")
             conn.commit()
 
-            # Імпорт через COPY
-            logging.info(f"Starting COPY into table: {table_name}")
+            # Завантаження даних у таблицю
             output = io.StringIO()
             for row in data:
                 output.write(f"{row[0]},{row[1]}\n")
             output.seek(0)
-            cursor.copy_expert(f"""
-                COPY {table_name} (article, price)
-                FROM STDIN
-                WITH (FORMAT CSV);
-            """, output)
+            cursor.copy_expert(f"COPY {table_name} (article, price) FROM STDIN WITH (FORMAT CSV);", output)
             conn.commit()
 
-            # Логування часу виконання
             end_time = time.time()
-            logging.info(f"Import completed in {end_time - start_time:.2f} seconds.")
-            # Flash-повідомлення лише для цієї сторінки
-            flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "upload")
-            return jsonify({"status": "success",
-                            "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}), 200
+            flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "success")
+            logging.info(f"Upload completed in {end_time - start_time:.2f} seconds.")
+            return redirect(url_for('upload_price_list', token=token))
 
         except Exception as e:
             logging.error(f"Error during POST request: {e}")
             flash("An error occurred during upload.", "error")
-            return redirect(request.referrer or url_for('upload_price_list'))
+            return redirect(url_for('upload_price_list', token=token))
         finally:
-            if 'cursor' in locals():
-                cursor.close()
-            if 'conn' in locals():
+            if 'conn' in locals() and conn:
                 conn.close()
+
 
 
 @app.route('/import_status', methods=['GET'])
@@ -1191,11 +1174,10 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
         raise
 
 
-@app.route('/<token>/admin/utilities', methods=['GET'])
+@app.route('/<token>/admin/utilities')
 @requires_token_and_role('admin')
-def utilities():
-    return render_template('utilities.html')
-
+def utilities(token):
+    return render_template('utilities.html', token=token)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

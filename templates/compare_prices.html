@@ -9,30 +9,54 @@
 <body>
     <header>
         <nav>
-            <ul>
+            <ul class="nav">
                 <li><a href="/">Home</a></li>
-                <li><a href="/admin">Admin</a></li>
+                <li><a href="/{{ token }}/admin">Admin</a></li>
+                <li><a href="/{{ token }}/admin/dashboard">Dashboard</a></li>
             </ul>
         </nav>
     </header>
+
     <div class="container">
         <h1>Compare Prices</h1>
-		<form method="POST" action="/admin/compare_prices">
-			<label for="articles">Enter articles (one per line):</label>
-			<textarea id="articles" name="articles" rows="10" required></textarea>
 
-			<label for="price_tables">Select price tables for comparison:</label>
-			<div id="price_tables">
-				{% for table in price_lists %}
-				<div>
-					<input type="checkbox" id="{{ table.table_name }}" name="price_tables" value="{{ table.table_name }}">
-					<label for="{{ table.table_name }}">{{ table.table_name }}</label>
-				</div>
-				{% endfor %}
-			</div>
+        <!-- Флеш-повідомлення -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
 
-			<button type="submit">Compare Prices</button>
-		</form>
+        <form method="POST" action="{{ url_for('compare_prices', token=token) }}" class="form-container">
+            <div class="form-group">
+                <label for="articles">Enter articles (one per line):</label>
+                <textarea id="articles" name="articles" rows="10" class="form-control" placeholder="Enter articles here..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="price_tables">Select price tables for comparison:</label>
+                <div id="price_tables" class="checkbox-group">
+                    {% for table in price_lists %}
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="{{ table.table_name }}" name="price_tables" value="{{ table.table_name }}">
+                        <label for="{{ table.table_name }}">{{ table.table_name }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Compare Prices</button>
+            </div>
+        </form>
     </div>
+
+    <footer>
+        <p>Compare Prices - All Rights Reserved © 2025</p>
+    </footer>
 </body>
 </html>

@@ -9,137 +9,132 @@
 <body>
     <header>
         <nav>
-            <ul>
+            <ul class="nav">
                 <li><a href="/">Home</a></li>
-                <li><a href="/admin">Admin</a></li>
+                <li><a href="/{{ token }}/admin/dashboard">Dashboard</a></li>
             </ul>
         </nav>
     </header>
+
     <div class="container">
         <h1>Upload Price List</h1>
-        <!-- Блок для Flash-повідомлень -->
-        <div class="flash-messages">
-			{% with messages = get_flashed_messages(with_categories=true) %}
-				{% if messages %}
-					<div class="flash-messages">
-						{% for category, message in messages %}
-							<div class="flash-message {{ category }}">{{ message }}</div>
-						{% endfor %}
-					</div>
-				{% endif %}
-			{% endwith %}
-        </div>
-        <!-- Форма завантаження файлу -->
-        <form id="uploadForm">
-            <label for="table_name">Select Table:</label>
-            <select name="table_name" id="table_name" required>
-                {% for table in price_lists %}
-                <option value="{{ table.table_name }}">{{ table.table_name }}</option>
-                {% endfor %}
-                <option value="new">New Table</option>
-            </select>
 
-            <div id="new_table_name_container" style="display: none;">
+        <!-- Флеш-повідомлення -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Форма завантаження -->
+        <form id="uploadForm" class="form">
+            <div class="form-group">
+                <label for="table_name">Select Table:</label>
+                <select name="table_name" id="table_name" required>
+                    {% for table in price_lists %}
+                    <option value="{{ table.table_name }}">{{ table.table_name }}</option>
+                    {% endfor %}
+                    <option value="new">New Table</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="new_table_name_container" style="display: none;">
                 <label for="new_table_name">New Table Name:</label>
                 <input type="text" name="new_table_name" id="new_table_name">
             </div>
 
-            <label for="file">Choose File:</label>
-            <input type="file" name="file" id="file" accept=".csv,.txt" required>
+            <div class="form-group">
+                <label for="file">Choose File:</label>
+                <input type="file" name="file" id="file" accept=".csv,.txt" required>
+            </div>
 
-            <button type="submit">Upload</button>
+            <button type="submit" class="btn btn-primary">Upload</button>
         </form>
 
-        <!-- Індикатор прогресу -->
+        <!-- Прогрес завантаження -->
         <div id="progressContainer" style="display: none; margin-top: 20px;">
             <div id="progressBar" style="width: 0; height: 20px; background: #007bff;"></div>
             <p id="progressText" style="text-align: center;">Starting upload...</p>
         </div>
     </div>
 
-	<script>
-		// Показати/сховати поле для назви нової таблиці
-		document.getElementById('table_name').addEventListener('change', function () {
-			const newTableContainer = document.getElementById('new_table_name_container');
-			if (this.value === 'new') {
-				newTableContainer.style.display = 'block';
-			} else {
-				newTableContainer.style.display = 'none';
-			}
-		});
+    <footer>
+        <p>Upload Price List - All Rights Reserved © 2025</p>
+    </footer>
 
-		// Завантаження файлу з прогресом
-		document.getElementById('uploadForm').addEventListener('submit', function (e) {
-			e.preventDefault();
+    <script>
+        // Показати/сховати поле для нової таблиці
+        document.getElementById('table_name').addEventListener('change', function () {
+            const newTableContainer = document.getElementById('new_table_name_container');
+            if (this.value === 'new') {
+                newTableContainer.style.display = 'block';
+            } else {
+                newTableContainer.style.display = 'none';
+            }
+        });
 
-			const formData = new FormData(this);
-			const progressContainer = document.getElementById('progressContainer');
-			const progressBar = document.getElementById('progressBar');
-			const progressText = document.getElementById('progressText');
+        // Завантаження файлу з прогресом
+        document.getElementById('uploadForm').addEventListener('submit', function (e) {
+            e.preventDefault();
 
-			progressContainer.style.display = 'block';
-			progressBar.style.width = '0%';
-			progressText.textContent = 'Starting upload...';
+            const formData = new FormData(this);
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
 
-			const xhr = new XMLHttpRequest();
-			xhr.open('POST', '/admin/upload_price_list', true);
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = 'Starting upload...';
 
-			// Відслідковування прогресу
-			xhr.upload.onprogress = function (event) {
-				if (event.lengthComputable) {
-					const percent = Math.round((event.loaded / event.total) * 100);
-					progressBar.style.width = percent + '%';
-					progressText.textContent = 'Uploading: ' + percent + '%';
-				}
-			};
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/{{ token }}/admin/upload_price_list', true);
 
-			// Завершення завантаження
-			xhr.onload = function () {
-				if (xhr.status === 200) {
-					const response = JSON.parse(xhr.responseText);
-					const flashMessages = document.querySelector('.flash-messages');
-					flashMessages.innerHTML = ''; // Очищуємо старі повідомлення
+            xhr.upload.onprogress = function (event) {
+                if (event.lengthComputable) {
+                    const percent = Math.round((event.loaded / event.total) * 100);
+                    progressBar.style.width = percent + '%';
+                    progressText.textContent = `Uploading: ${percent}%`;
+                }
+            };
 
-					if (response.status === 'success') {
-						progressText.textContent = response.message;
-						progressBar.style.backgroundColor = 'green';
+            xhr.onload = function () {
+                const flashMessages = document.querySelector('.flash-messages');
+                flashMessages.innerHTML = '';
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.status === 'success') {
+                        progressBar.style.backgroundColor = 'green';
+                        progressText.textContent = response.message;
+                        flashMessages.innerHTML = `<div class="flash-message success">${response.message}</div>`;
+                    } else {
+                        progressBar.style.backgroundColor = 'red';
+                        progressText.textContent = response.message;
+                        flashMessages.innerHTML = `<div class="flash-message error">${response.message}</div>`;
+                    }
+                } else {
+                    progressBar.style.backgroundColor = 'red';
+                    progressText.textContent = 'Error during upload. Please try again.';
+                }
+            };
 
-						// Додаємо Flash-повідомлення
-						const successMessage = document.createElement('div');
-						successMessage.className = 'flash-message success';
-						successMessage.textContent = response.message;
-						flashMessages.appendChild(successMessage);
-					} else {
-						progressText.textContent = response.message;
-						progressBar.style.backgroundColor = 'red';
+            xhr.onerror = function () {
+                progressBar.style.backgroundColor = 'red';
+                progressText.textContent = 'Network error. Please try again.';
+            };
 
-						// Додаємо Flash-повідомлення
-						const errorMessage = document.createElement('div');
-						errorMessage.className = 'flash-message error';
-						errorMessage.textContent = response.message;
-						flashMessages.appendChild(errorMessage);
-					}
-				} else {
-					progressText.textContent = 'Error during upload. Please try again.';
-					progressBar.style.backgroundColor = 'red';
-				}
-			};
+            xhr.send(formData);
+        });
 
-			// Обробка помилок
-			xhr.onerror = function () {
-				progressText.textContent = 'Network error. Please try again.';
-				progressBar.style.backgroundColor = 'red';
-			};
-
-			xhr.send(formData);
-		});
-
-		// Keep-alive Ping для підтримки активності сервера
-		setInterval(() => {
-			fetch('/ping')
-				.then(response => console.log('Keep-alive: OK'))
-				.catch(error => console.error('Keep-alive failed', error));
-		}, 300000); // Кожні 5 хвилин (300000 мс)
-	</script>
+        // Keep-alive Ping для сервера
+        setInterval(() => {
+            fetch('/ping')
+                .then(() => console.log('Keep-alive: OK'))
+                .catch(() => console.error('Keep-alive failed'));
+        }, 300000); // Кожні 5 хвилин
+    </script>
 </body>
 </html>

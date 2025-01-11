@@ -59,7 +59,7 @@ def token_index(token):
 
 
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
-def requires_token_and_role(required_role=None):
+def requires_token_and_role(required_role):
     """
     Декоратор, що перевіряє наявність токена і відповідність ролі.
     :param required_role: Роль, яка потрібна для доступу (наприклад, 'admin', 'manager').
@@ -67,17 +67,14 @@ def requires_token_and_role(required_role=None):
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            token = kwargs.get('token') or session.get('token')
-            if not token or not validate_token(token):
-                flash("Access denied. Token is required.", "error")
+            token = session.get('token')
+            role = session.get('role')
+            logging.debug(f"Token: {token}, Role: {role}, Required Role: {required_role}")  # Логування перед перевіркою
+
+            if not token or role != required_role:
+                logging.warning(f"Access denied. Token: {token}, Role: {role}, Required Role: {required_role}")
+                flash("Access denied. Insufficient permissions.", "error")
                 return redirect(url_for('index'))
-
-            if required_role:
-                user_role = session.get('role')
-                if not user_role or user_role != required_role:
-                    flash("Access denied. Insufficient permissions.", "error")
-                    return redirect(url_for('index'))
-
             return f(*args, **kwargs)
         return wrapped
     return decorator
@@ -89,14 +86,22 @@ def requires_token_and_role(required_role=None):
 @app.route('/')
 def index():
     token = session.get('token')
-    if token:
-        role = validate_token(token)
-        if role == "admin":
-            return redirect(url_for('admin_dashboard', token=token))
-        elif role == "user":
-            return render_template('index.html', role=role)
-    # Якщо токену немає, просто перенаправляємо на простий пошук
-    return redirect(url_for('simple_search'))
+    logging.debug(f"Session data in index: {dict(session)}")  # Логування стану сесії
+
+    if not token:
+        return render_template('simple_search.html')
+
+    role = session.get('role')
+    logging.debug(f"Role in index: {role}")  # Логування ролі користувача
+
+    if role == "admin":
+        return redirect(url_for('admin_dashboard', token=token))
+    elif role == "user":
+        return render_template('index.html', role=role)
+    else:
+        flash("Invalid token or role.", "error")
+        return redirect(url_for('simple_search'))
+
 
 
 # Пошук для користувачів без токену
@@ -159,21 +164,23 @@ def admin_panel(token):
     try:
         logging.debug(f"Token received in admin_panel: {token}")
 
-        # Виклик validate_token
         role_data = validate_token(token)
+        logging.debug(f"Role data after validation: {role_data}")  # Логування результату перевірки токена
 
-        # Перевірка результату
         if not role_data or role_data['role'] != 'admin':
-            logging.warning(f"Access denied. Token: {token}, Role: {role_data}")
+            logging.warning(f"Access denied for token: {token}, Role data: {role_data}")
             flash("Access denied. Admin rights are required.", "error")
             return redirect(url_for('simple_search'))
 
-        # Збереження даних у сесію
         session['token'] = token
         session['user_id'] = role_data['user_id']
+        session['role'] = role_data['role']  # Збереження ролі в сесії
+        logging.debug(f"Session after saving role: {dict(session)}")  # Логування стану сесії
 
         if request.method == 'POST':
             password = request.form.get('password')
+            logging.debug(f"Password entered: {'******' if password else 'None'}")  # Логування введеного пароля
+
             if not password:
                 flash("Password is required.", "error")
                 return redirect(url_for('admin_panel', token=token))
@@ -181,22 +188,21 @@ def admin_panel(token):
             conn = get_db_connection()
             cursor = conn.cursor()
 
-            # Перевірка пароля
             cursor.execute("""
                 SELECT password_hash 
                 FROM users
                 WHERE id = %s
             """, (role_data['user_id'],))
             admin_password_hash = cursor.fetchone()
+            logging.debug(f"Fetched admin password hash: {admin_password_hash}")  # Логування хешу пароля
 
             if not admin_password_hash or not verify_password(password, admin_password_hash[0]):
                 logging.warning("Invalid admin password attempt.")
                 flash("Invalid password.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
-            # Успішна аутентифікація
             session['admin_authenticated'] = True
-            logging.info(f"Admin authenticated. Redirecting to /{token}/admin/dashboard")
+            logging.info(f"Admin authenticated for token: {token}")
             return redirect(f'/{token}/admin/dashboard')
 
         return render_template('admin_login.html', token=token)
@@ -212,21 +218,22 @@ def admin_panel(token):
 
 
 
+
 # Це треба потім описати, теж щось про адмінку
 @app.route('/<token>/admin/dashboard')
 @requires_token_and_role('admin')
 def admin_dashboard(token):
     try:
-        # Перевірка, чи користувач аутентифікований
+        logging.debug(f"Session in admin_dashboard: {dict(session)}")  # Логування стану сесії
+
         if not session.get('admin_authenticated') or session.get('token') != token:
+            logging.warning("Access denied. Admin not authenticated or token mismatch.")
             flash("Access denied. Please log in as an admin.", "error")
             return redirect(url_for('admin_panel', token=token))
 
-        # Підключення до бази даних
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримання списку користувачів і їх ролей
         cursor.execute("""
             SELECT u.id, u.username, r.name AS role_name
             FROM users u
@@ -234,9 +241,7 @@ def admin_dashboard(token):
             JOIN roles r ON ur.role_id = r.id
         """)
         users = cursor.fetchall()
-
-        # Логування користувачів і їх ролей
-        logging.debug(f"Users and roles passed to dashboard: {users}")
+        logging.debug(f"Fetched users and roles for dashboard: {users}")  # Логування даних користувачів
 
         return render_template('admin_dashboard.html', users=users, token=token)
     except Exception as e:
@@ -265,11 +270,15 @@ def validate_token(token):
             WHERE t.token = %s
         """, (token,))
         result = cursor.fetchone()
+        
+        logging.debug(f"Token validation result: {result} for token: {token}")  # Додати це
+        
         conn.close()
         return result if result else None
     except Exception as e:
         logging.error(f"Error validating token: {e}")
         return None
+
 
 
 

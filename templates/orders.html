@@ -7,26 +7,32 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-	<header>
-		<nav>
-			<ul>
-				<li><a href="/{{ session['token'] }}/">Home</a></li>
-				<li><a href="/{{ session['token'] }}/cart">Cart</a></li>
-				<li><a href="/{{ session['token'] }}/orders">Orders</a></li>
-			</ul>
-		</nav>
-	</header>
+    <!-- Header -->
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/{{ session['token'] }}/">Home</a></li>
+                <li><a href="/{{ session['token'] }}/cart">Cart</a></li>
+                <li><a href="/{{ session['token'] }}/orders">Orders</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
     <div class="container">
         <h1>Your Orders</h1>
-        
-        <!-- Перевірка даних -->
+
+        <!-- Diagnostic Information (Optional, for debugging) -->
+        {% if debug %}
         <div>
             <h2>Diagnostic Information:</h2>
             <pre>{{ orders }}</pre>
         </div>
-        
+        {% endif %}
+
+        <!-- Orders Table -->
         {% if orders %}
-        <table>
+        <table class="table">
             <thead>
                 <tr>
                     <th>Order ID</th>
@@ -42,7 +48,7 @@
                     <td>{{ order.total_price }}</td>
                     <td>{{ order.order_date }}</td>
                     <td>
-                        <a href="/{{ session['token'] }}/order_details/{{ order.id }}">View Details</a>
+                        <a href="/{{ session['token'] }}/order_details/{{ order.id }}" class="btn btn-primary">View Details</a>
                     </td>
                 </tr>
                 {% endfor %}

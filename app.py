@@ -465,7 +465,7 @@ def search_articles(token):
 
 # очищення результату пошуку
 @app.route('/<token>/clear_search', methods=['POST'])
-def clear_search():
+def clear_search(token):
     try:
         logging.debug("Clearing search data from session.")
         session.pop('grouped_results', None)
@@ -530,7 +530,7 @@ def cart(token):
 
 # Додавання в кошик користувачем
 @app.route('/<token>/add_to_cart', methods=['POST'])
-def add_to_cart():
+def add_to_cart(token):
     try:
         article = request.form.get('article')
         price = float(request.form.get('price'))
@@ -601,7 +601,7 @@ def add_to_cart():
 
 # Видалення товару з кошика
 @app.route('/<token>/remove_from_cart', methods=['POST'])
-def remove_from_cart():
+def remove_from_cart(token):
     conn = None
     cursor = None
     try:
@@ -641,7 +641,7 @@ def remove_from_cart():
 
 # Оновлення товару в кошику
 @app.route('/<token>/update_cart', methods=['POST'])
-def update_cart():
+def update_cart(token):
     try:
         product_id = request.form.get('product_id')
         quantity = int(request.form.get('quantity'))
@@ -678,7 +678,7 @@ def update_cart():
 
 # Очищення кошика користувача
 @app.route('/<token>/clear_cart', methods=['POST'])
-def clear_cart():
+def clear_cart(token):
     try:
         # Отримання user_id з сесії
         user_id = session.get('user_id')
@@ -713,7 +713,7 @@ def clear_cart():
 
 # Оформлення замовлення
 @app.route('/<token>/place_order', methods=['POST'])
-def place_order():
+def place_order(token):
     try:
         user_id = 1  # Замінити на логіку реального користувача
         conn = get_db_connection()
@@ -818,7 +818,7 @@ def orders(token):
 
 @app.route('/<token>/order_details/<int:order_id>')
 @requires_token_and_role('user') 
-def order_details(order_id):
+def order_details(token, order_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -1243,9 +1243,10 @@ def upload_price_list(token):
 
 
 
-
+# 
 @app.route('/import_status', methods=['GET'])
 def get_import_status():
+    logging.info("get_import_status function called.")
     return jsonify(
         {"status": "success", "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}), 200
 
@@ -1405,6 +1406,7 @@ def utilities(token):
 
 @app.route('/ping', methods=['GET'])
 def ping():
+    logging.info("ping function called.")  
     return "OK", 200
 
 if __name__ == '__main__':

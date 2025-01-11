@@ -62,34 +62,23 @@ def token_index(token):
 def requires_token_and_role(required_role):
     """
     Декоратор для перевірки токена і ролі користувача.
-    :param required_role: Роль, яка потрібна для доступу (admin, manager, user).
     """
     def decorator(func):
         @wraps(func)
-        def wrapper(*args, **kwargs):
-            token = session.get('token')
-            logging.debug(f"Token received in session: {token}")
+        def wrapper(token, *args, **kwargs):
+            if session.get('token') != token:
+                flash("Access denied. Token mismatch.", "error")
+                return redirect(url_for('index'))
 
             role_data = validate_token(token)
-            logging.debug(f"Validation result for token: {role_data}")
-
-            # Перевірка валідності токена та ролі
-            if not role_data:
-                logging.warning("Invalid or missing token.")
-                flash("Access denied. Invalid token or role.", "error")
+            if not role_data or role_data['role'] != required_role:
+                flash("Access denied. Invalid role or token.", "error")
                 return redirect(url_for('index'))
 
-            if role_data['role'] != required_role:
-                logging.warning(f"Access denied. User role '{role_data['role']}' does not match required role '{required_role}'.")
-                flash("Access denied. Insufficient permissions.", "error")
-                return redirect(url_for('index'))
-
-            # Збереження user_id і ролі в сесії
+            # Збереження інформації про користувача в сесію
             session['user_id'] = role_data['user_id']
             session['role'] = role_data['role']
-            logging.debug(f"Session after validation: {session}")
-
-            return func(*args, **kwargs)
+            return func(token, *args, **kwargs)
         return wrapper
     return decorator
 
@@ -368,7 +357,7 @@ def create_user(token):
 
 
 # Маршрут для пошуку артикулів
-@app.route('/search', methods=['POST'])
+@app.route('/<token>/search', methods=['POST'])
 def search_articles():
     try:
         articles = []
@@ -461,7 +450,7 @@ def search_articles():
 
 
 
-@app.route('/clear_search', methods=['POST'])
+@app.route('/<token>/clear_search', methods=['POST'])
 def clear_search():
     try:
         logging.debug("Clearing search data from session.")
@@ -526,7 +515,7 @@ def cart():
 
 
 # Додавання в кошик
-@app.route('/add_to_cart', methods=['POST'])
+@app.route('/<token>/add_to_cart', methods=['POST'])
 def add_to_cart():
     try:
         article = request.form.get('article')
@@ -597,7 +586,7 @@ def add_to_cart():
 
 
 # Видалення товару з кошика
-@app.route('/remove_from_cart', methods=['POST'])
+@app.route('/<token>/remove_from_cart', methods=['POST'])
 def remove_from_cart():
     conn = None
     cursor = None
@@ -637,7 +626,7 @@ def remove_from_cart():
 
 
 # Оновлення товару в кошику
-@app.route('/update_cart', methods=['POST'])
+@app.route('/<token>/update_cart', methods=['POST'])
 def update_cart():
     try:
         product_id = request.form.get('product_id')
@@ -674,7 +663,7 @@ def update_cart():
 
 
 # Очищення кошика
-@app.route('/clear_cart', methods=['POST'])
+@app.route('/<token>/clear_cart', methods=['POST'])
 def clear_cart():
     try:
         # Отримання user_id з сесії
@@ -709,7 +698,7 @@ def clear_cart():
 
 
 # Оформлення замовлення
-@app.route('/place_order', methods=['POST'])
+@app.route('/<token>/place_order', methods=['POST'])
 def place_order():
     try:
         user_id = 1  # Замінити на логіку реального користувача
@@ -777,7 +766,7 @@ def place_order():
         logging.debug("Database connection closed.")
 
 
-@app.route('/orders', methods=['GET'])
+@app.route('/<token>/orders', methods=['GET'])
 @requires_token_and_role('user')  # Перевірка токена та ролі
 def orders():
     user_id = session.get('user_id')
@@ -813,7 +802,7 @@ def orders():
 
 
 
-@app.route('/order_details/<int:order_id>')
+@app.route('/<token>/order_details/<int:order_id>')
 @requires_token_and_role('user')  # Вкажіть потрібну роль: 'admin', 'user', або іншу
 def order_details(order_id):
     try:
@@ -927,7 +916,7 @@ def detect_delimiter(file_content):
 
 
 # Завантаження прайсу в Адмінці
-@app.route('/admin/upload_price_list', methods=['GET', 'POST'])
+@app.route('/<token>/admin/upload_price_list', methods=['GET', 'POST'])
 @requires_token_and_role('admin')
 def upload_price_list():
     if request.method == 'GET':
@@ -1057,7 +1046,7 @@ def ping():
     return "OK", 200
 
 
-@app.route('/admin/compare_prices', methods=['GET', 'POST'])
+@app.route('/<token>/admin/compare_prices', methods=['GET', 'POST'])
 @requires_token_and_role('admin')  # Вкажіть 'admin' або іншу роль
 def compare_prices():
     if request.method == 'GET':
@@ -1202,7 +1191,7 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
         raise
 
 
-@app.route('/admin/utilities', methods=['GET'])
+@app.route('/<token>/admin/utilities', methods=['GET'])
 @requires_token_and_role('admin')
 def utilities():
     return render_template('utilities.html')

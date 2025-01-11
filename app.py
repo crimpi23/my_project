@@ -803,7 +803,7 @@ def orders():
 
 
 @app.route('/order_details/<int:order_id>')
-@requires_token_and_role()
+@requires_token_and_role('user')  # Вкажіть потрібну роль: 'admin', 'user', або іншу
 def order_details(order_id):
     try:
         conn = get_db_connection()
@@ -836,6 +836,7 @@ def order_details(order_id):
             cursor.close()
         if conn:
             conn.close()
+
 
 # Ролі користувачеві    
 @app.route('/<token>/admin/assign_roles', methods=['GET', 'POST'])

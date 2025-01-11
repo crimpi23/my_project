@@ -848,38 +848,39 @@ def order_details(order_id):
 @requires_token_and_role('admin')
 def update_order_item_status(token, order_id):
     """
-    Update the status of specific order items with additional validations.
+    Update the status of specific order items.
     """
+    data = request.json  # Очікуємо JSON-дані
+    user_id = session.get('user_id')  # ID адміністратора
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    logging.info(f"Received data for order {order_id}: {data}")
+
     try:
-        # Перевірка формату вхідних даних
-        if request.content_type != 'application/json':
-            return jsonify({"error": "Invalid Content-Type. Expected application/json"}), 415
+        # Перевіряємо наявність елементів
+        if not data or not data.get('items'):
+            logging.warning("No items found in request data.")
+            return jsonify({"error": "No items provided."}), 400
 
-        data = request.json  # Отримання даних з POST-запиту
-        if not data or not isinstance(data, dict) or 'items' not in data:
-            return jsonify({"error": "Invalid request format"}), 400
-
-        items = data.get('items', [])
-        user_id = session.get('user_id')  # ID адміністратора
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        for item in items:
+        for item in data.get('items', []):
             detail_id = item.get('id')
             new_status = item.get('status')
-            comment = item.get('comment', '').strip()
+            comment = item.get('comment', None)
 
             if not detail_id or not new_status:
-                continue  # Пропустити позиції з некоректними даними
+                logging.warning(f"Missing required fields for item: {item}")
+                continue
 
-            # Отримання поточного статусу
+            # Отримуємо поточний статус
             cursor.execute("SELECT status FROM order_details WHERE id = %s;", (detail_id,))
             current_status = cursor.fetchone()
 
             if current_status:
                 current_status = current_status[0]
+                logging.info(f"Updating item {detail_id}: {current_status} -> {new_status}")
 
-                # Оновлення статусу та коментаря
+                # Оновлюємо статус елемента
                 cursor.execute("""
                     UPDATE order_details
                     SET status = %s, comment = %s
@@ -888,12 +889,14 @@ def update_order_item_status(token, order_id):
 
                 # Логування змін
                 cursor.execute("""
-                    INSERT INTO order_changes (
-                        order_id, order_detail_id, field_changed, old_value, new_value, comment, changed_by
-                    ) VALUES (%s, %s, 'status', %s, %s, %s, %s);
+                    INSERT INTO order_changes (order_id, order_detail_id, field_changed, old_value, new_value, comment, changed_by)
+                    VALUES (%s, %s, 'status', %s, %s, %s, %s);
                 """, (order_id, detail_id, current_status, new_status, comment, user_id))
 
-        # Оновлення загального статусу замовлення
+        conn.commit()
+        logging.info(f"Item statuses for order {order_id} updated successfully.")
+
+        # Оновлення статусу замовлення
         cursor.execute("""
             SELECT COUNT(*) FILTER (WHERE status = 'new') AS new_count,
                    COUNT(*) FILTER (WHERE status = 'accepted') AS accepted_count,
@@ -905,26 +908,27 @@ def update_order_item_status(token, order_id):
 
         if counts:
             if counts[0] == 0 and counts[1] == 0:
-                new_order_status = 'canceled'
+                new_order_status = 'cancelled'
             elif counts[1] > 0:
                 new_order_status = 'accepted'
             else:
                 new_order_status = 'new'
 
             cursor.execute("UPDATE orders SET status = %s WHERE id = %s;", (new_order_status, order_id))
+            conn.commit()
+            logging.info(f"Order {order_id} status updated to {new_order_status}.")
 
-        conn.commit()
-        return jsonify({"message": "Statuses updated successfully."}), 200
-
+        flash("Order and item statuses updated successfully.", "success")
     except Exception as e:
-        logging.error(f"Error updating order item statuses: {e}")
-        if 'conn' in locals():
-            conn.rollback()
-        return jsonify({"error": "Failed to update item statuses"}), 500
-
+        conn.rollback()
+        logging.error(f"Error updating item statuses for order {order_id}: {e}")
+        flash("Failed to update item statuses.", "error")
     finally:
-        if 'conn' in locals():
-            conn.close()
+        conn.close()
+        logging.info(f"Database connection closed for order {order_id}.")
+
+    return jsonify({"message": "Statuses updated successfully."})
+
 
 
 @app.route('/<token>/admin/orders/<int:order_id>', methods=['GET'])

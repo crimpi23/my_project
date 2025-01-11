@@ -70,40 +70,41 @@
     </footer>
 
     <script>
-        document.querySelectorAll('.update-status-form').forEach(form => {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
+		document.querySelectorAll('.update-status-form').forEach(form => {
+			form.addEventListener('submit', function (e) {
+				e.preventDefault();
 
-                const formData = new FormData(this);
-                const data = {
-                    item_id: formData.get('item_id'),
-                    new_status: formData.get('new_status'),
-                    comment: formData.get('comment'),
-                };
+				const formData = new FormData(this);
+				const data = {
+					item_id: formData.get('item_id'),
+					new_status: formData.get('new_status'),
+					comment: formData.get('comment'),
+				};
 
-                fetch(this.action, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Failed to update status.');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        alert('Status updated successfully!');
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        alert('Error updating status.');
-                    });
-            });
-        });
-    </script>
+				fetch(this.action, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(data),
+				})
+					.then(response => {
+						if (!response.ok) {
+							throw new Error('Failed to update status.');
+						}
+						return response.json();
+					})
+					.then(data => {
+						alert('Status updated successfully!');
+						location.reload();
+					})
+					.catch(error => {
+						console.error(error);
+						alert('Error updating status.');
+					});
+			});
+		});
+	</script>
+
 </body>
 </html>

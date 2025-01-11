@@ -358,23 +358,31 @@ def create_user(token):
 @app.route('/<token>/search', methods=['POST'])
 @requires_token_and_role('user')
 def search_articles():
+    """
+    Маршрут для пошуку артикулів.
+    """
     try:
+        logging.info("Processing search request...")
         articles = []
         quantities = {}
         auto_set_quantities = []
         duplicate_articles = []
 
         articles_input = request.form.get('articles')
+        logging.debug(f"Received articles input: {articles_input}")
+
         if not articles_input:
+            logging.warning("No articles provided.")
             flash("Please enter at least one article.", "error")
             return redirect(url_for('index'))
 
+        # Обробка вхідних даних
         for line in articles_input.splitlines():
             parts = line.strip().split()
-            if not parts:  # Пропустити порожні рядки
-                continue
+            if not parts:
+                continue  # Пропустити порожні рядки
             if len(parts) == 1:
-                article = parts[0].strip().upper()  # Артикул у верхньому регістрі
+                article = parts[0].strip().upper()
                 if article in quantities:
                     quantities[article] += 1
                     if article not in duplicate_articles:
@@ -393,15 +401,21 @@ def search_articles():
                     articles.append(article)
                     quantities[article] = quantity
 
+        logging.debug(f"Processed articles: {articles}")
+        logging.debug(f"Quantities: {quantities}")
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Отримання таблиць з прайс-листами
         cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
+        logging.debug(f"Fetched price list tables: {tables}")
 
         results = []
         for table in tables:
             table_name = table['table_name']
+            logging.debug(f"Querying table: {table_name}")
             query = f"""
                 SELECT article, price, %s AS table_name
                 FROM {table_name}
@@ -409,6 +423,7 @@ def search_articles():
             """
             cursor.execute(query, (table_name, articles))
             results.extend(cursor.fetchall())
+            logging.debug(f"Results from table {table_name}: {cursor.rowcount}")
 
         grouped_results = {}
         for result in results:
@@ -419,16 +434,14 @@ def search_articles():
             })
 
         missing_articles = [article for article in articles if article not in grouped_results]
+        logging.info(f"Missing articles: {missing_articles}")
 
         # Збереження результатів у сесії
         session['grouped_results'] = grouped_results
         session['quantities'] = quantities
         session['missing_articles'] = missing_articles
 
-        # Логування діагностики
-        logging.debug("Grouped results: %s", grouped_results)
-        logging.debug("Quantities: %s", quantities)
-        logging.debug("Missing articles: %s", missing_articles)
+        logging.info("Search results successfully processed.")
 
         if not grouped_results:
             flash("No results found for your search.", "info")
@@ -438,7 +451,7 @@ def search_articles():
         return render_template('search_results.html', grouped_results=grouped_results, quantities=quantities, missing_articles=missing_articles)
 
     except Exception as e:
-        logging.error("Error in search_articles: %s", str(e))
+        logging.error(f"Error in search_articles: {str(e)}", exc_info=True)
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('index'))
     finally:
@@ -446,6 +459,8 @@ def search_articles():
             cursor.close()
         if conn:
             conn.close()
+        logging.info("Database connection closed.")
+
 
 
 # очищення результату пошуку

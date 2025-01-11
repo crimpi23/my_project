@@ -64,26 +64,27 @@
         <h1>Admin Dashboard</h1>
     </header>
 
-    <div class="grid-container">
-        <div class="grid-item">
-            <a href="{{ url_for('create_user', token=token) }}">Create New User</a>
-        </div>
-        <div class="grid-item">
-            <a href="{{ url_for('assign_roles', token=token) }}">Assign Roles</a>
-        </div>
-        <div class="grid-item">
-            <a href="{{ url_for('upload_price_list', token=token) }}">Upload Price List</a>
-        </div>
-        <div class="grid-item">
-            <a href="{{ url_for('compare_prices', token=token) }}">Compare Prices</a>
-        </div>
-        <div class="grid-item">
-            <a href="/{{ token }}/admin/orders" class="btn btn-primary">View All Orders</a>
-        </div>
-        <div class="grid-item">
-            <a href="{{ url_for('cart', token=token) }}">Manage Cart</a>
-        </div>
-    </div>
+	<div class="grid-container">
+		<div class="grid-item">
+			<a href="{{ url_for('create_user', token=token) }}" class="btn btn-primary">Create New User</a>
+		</div>
+		<div class="grid-item">
+			<a href="{{ url_for('assign_roles', token=token) }}" class="btn btn-primary">Assign Roles</a>
+		</div>
+		<div class="grid-item">
+			<a href="{{ url_for('upload_price_list', token=token) }}" class="btn btn-primary">Upload Price List</a>
+		</div>
+		<div class="grid-item">
+			<a href="{{ url_for('compare_prices', token=token) }}" class="btn btn-primary">Compare Prices</a>
+		</div>
+		<div class="grid-item">
+			<a href="{{ url_for('admin_orders', token=token) }}" class="btn btn-primary">View All Orders</a>
+		</div>
+		<div class="grid-item">
+			<a href="{{ url_for('cart', token=token) }}" class="btn btn-primary">Manage Cart</a>
+		</div>
+	</div>
+
 
     <footer>
         Admin Dashboard - All Rights Reserved © 2025

@@ -10,7 +10,6 @@
     <header>
         <nav>
             <ul class="nav">
-                <li><a href="/">Home</a></li>
                 <li><a href="/{{ token }}/admin/dashboard">Dashboard</a></li>
                 <li><a href="/{{ token }}/admin/orders">Orders</a></li>
             </ul>
@@ -18,73 +17,91 @@
     </header>
 
     <div class="container">
-        <h1>Order Details - Order #{{ order.id }}</h1>
-        <p><strong>Customer ID:</strong> {{ order.user_id }}</p>
+        <h1>Order #{{ order.id }} Details</h1>
+        <p><strong>User ID:</strong> {{ order.user_id }}</p>
         <p><strong>Order Date:</strong> {{ order.order_date }}</p>
-        <p><strong>Total Price:</strong> ${{ order.total_price }}</p>
-        <p><strong>Status:</strong> {{ order.status | capitalize }}</p>
+        <p><strong>Total Price:</strong> {{ order.total_price }}</p>
 
-        <h2>Order Items</h2>
-        <table>
-			<thead>
-				<tr>
-					<th>Product</th>
-					<th>Price</th>
-					<th>Quantity</th>
-					<th>Total</th>
-					<th>Status</th>
-					<th>Actions</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for item in order_details %}
-				<tr>
-					<td>{{ item.product_name }}</td>
-					<td>{{ item.price }}</td>
-					<td>{{ item.quantity }}</td>
-					<td>{{ item.total_price }}</td>
-					<td>{{ item.status }}</td>
-					<td>
-						<!-- Випадаючий список для зміни статусу -->
-						<form method="POST" action="/{{ token }}/admin/orders/{{ order.id }}/update_status">
-							<input type="hidden" name="item_id" value="{{ item.id }}">
-							
-							<select name="status" required>
-								<option value="">Select status</option>
-								<option value="new" {% if item.status == 'new' %}selected{% endif %}>New</option>
-								<option value="accepted" {% if item.status == 'accepted' %}selected{% endif %}>Accepted</option>
-								<option value="completed" {% if item.status == 'completed' %}selected{% endif %}>Completed</option>
-								<option value="cancelled" {% if item.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
-							</select>
-
-							<!-- Поле для коментаря -->
-							<textarea name="reason" placeholder="Reason for change (required if cancelled)" rows="2"></textarea>
-							
-							<button type="submit" class="btn btn-primary">Update</button>
-						</form>
-					</td>
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Item ID</th>
+                    <th>Product ID</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total Price</th>
+                    <th>Status</th>
+                    <th>Comment</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order_items %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.product_id }}</td>
+                    <td>{{ item.price }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.total_price }}</td>
+                    <td>{{ item.status }}</td>
+                    <td>{{ item.comment }}</td>
+                    <td>
+                        <form class="update-status-form" action="/{{ token }}/admin/orders/{{ order.id }}/update_status" method="POST">
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            <select name="new_status" required>
+                                <option value="">Select Status</option>
+                                <option value="new">New</option>
+                                <option value="accepted">Accepted</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                            <input type="text" name="comment" placeholder="Reason (optional)">
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <footer>
-        <p>Admin Panel - All Rights Reserved © 2025</p>
+        <p>Admin Order Details - All Rights Reserved © 2025</p>
     </footer>
 
     <script>
-        // Add interactivity if necessary (e.g., confirmation modals, AJAX updates)
-        document.querySelectorAll('.status-dropdown').forEach(dropdown => {
-            dropdown.addEventListener('change', function () {
-                const row = this.closest('tr');
-                const commentInput = row.querySelector('.input-comment');
-                if (this.value === 'rejected') {
-                    commentInput.setAttribute('required', 'required');
-                } else {
-                    commentInput.removeAttribute('required');
-                }
+        document.querySelectorAll('.update-status-form').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                const data = {
+                    item_id: formData.get('item_id'),
+                    new_status: formData.get('new_status'),
+                    comment: formData.get('comment'),
+                };
+
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to update status.');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        alert('Status updated successfully!');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        alert('Error updating status.');
+                    });
             });
         });
     </script>

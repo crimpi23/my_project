@@ -848,42 +848,52 @@ def order_details(order_id):
 @requires_token_and_role('admin')
 def update_order_item_status(token, order_id):
     """
-    Update the status of specific order items.
+    Update the status of specific order items with additional validations.
     """
-    data = request.json  # Expecting a list of items with new statuses
-    user_id = session.get('user_id')  # Admin ID
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     try:
-        for item in data.get('items', []):
+        # Перевірка формату вхідних даних
+        if request.content_type != 'application/json':
+            return jsonify({"error": "Invalid Content-Type. Expected application/json"}), 415
+
+        data = request.json  # Отримання даних з POST-запиту
+        if not data or not isinstance(data, dict) or 'items' not in data:
+            return jsonify({"error": "Invalid request format"}), 400
+
+        items = data.get('items', [])
+        user_id = session.get('user_id')  # ID адміністратора
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        for item in items:
             detail_id = item.get('id')
             new_status = item.get('status')
-            comment = item.get('comment', None)
+            comment = item.get('comment', '').strip()
 
-            # Get current status
+            if not detail_id or not new_status:
+                continue  # Пропустити позиції з некоректними даними
+
+            # Отримання поточного статусу
             cursor.execute("SELECT status FROM order_details WHERE id = %s;", (detail_id,))
             current_status = cursor.fetchone()
 
             if current_status:
                 current_status = current_status[0]
 
-                # Update item status
+                # Оновлення статусу та коментаря
                 cursor.execute("""
                     UPDATE order_details
                     SET status = %s, comment = %s
                     WHERE id = %s;
                 """, (new_status, comment, detail_id))
 
-                # Log the change
+                # Логування змін
                 cursor.execute("""
-                    INSERT INTO order_changes (order_id, order_detail_id, field_changed, old_value, new_value, comment, changed_by)
-                    VALUES (%s, %s, 'status', %s, %s, %s, %s);
+                    INSERT INTO order_changes (
+                        order_id, order_detail_id, field_changed, old_value, new_value, comment, changed_by
+                    ) VALUES (%s, %s, 'status', %s, %s, %s, %s);
                 """, (order_id, detail_id, current_status, new_status, comment, user_id))
 
-        conn.commit()
-
-        # Update order status
+        # Оновлення загального статусу замовлення
         cursor.execute("""
             SELECT COUNT(*) FILTER (WHERE status = 'new') AS new_count,
                    COUNT(*) FILTER (WHERE status = 'accepted') AS accepted_count,
@@ -902,17 +912,20 @@ def update_order_item_status(token, order_id):
                 new_order_status = 'new'
 
             cursor.execute("UPDATE orders SET status = %s WHERE id = %s;", (new_order_status, order_id))
-            conn.commit()
 
-        flash("Order and item statuses updated successfully.", "success")
+        conn.commit()
+        return jsonify({"message": "Statuses updated successfully."}), 200
+
     except Exception as e:
-        conn.rollback()
-        logging.error(f"Error updating item statuses: {e}")
-        flash("Failed to update item statuses.", "error")
-    finally:
-        conn.close()
+        logging.error(f"Error updating order item statuses: {e}")
+        if 'conn' in locals():
+            conn.rollback()
+        return jsonify({"error": "Failed to update item statuses"}), 500
 
-    return jsonify({"message": "Statuses updated successfully."})
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
 
 @app.route('/<token>/admin/orders/<int:order_id>', methods=['GET'])
 @requires_token_and_role('admin')

@@ -59,25 +59,31 @@ def token_index(token):
 
 
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
-def requires_token_and_role(required_role):
+def requires_token_and_role(required_role=None):
     """
-    Декоратор, що перевіряє наявність токена і відповідність ролі.
-    :param required_role: Роль, яка потрібна для доступу (наприклад, 'admin', 'manager').
+    Декоратор для перевірки токена і ролі користувача.
+    :param required_role: Роль, яка потрібна для доступу (admin, manager, user).
     """
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
             token = session.get('token')
             role = session.get('role')
-            logging.debug(f"Token: {token}, Role: {role}, Required Role: {required_role}")  # Логування перед перевіркою
 
-            if not token or role != required_role:
-                logging.warning(f"Access denied. Token: {token}, Role: {role}, Required Role: {required_role}")
+            logging.debug(f"Token: {token}, Role: {role}, Required Role: {required_role}")
+
+            if not token or not validate_token(token):
+                flash("Access denied. Token is required.", "error")
+                return redirect(url_for('index'))
+
+            if required_role and role != required_role:
                 flash("Access denied. Insufficient permissions.", "error")
                 return redirect(url_for('index'))
+
             return f(*args, **kwargs)
         return wrapped
     return decorator
+
 
 
 
@@ -270,14 +276,13 @@ def validate_token(token):
             WHERE t.token = %s
         """, (token,))
         result = cursor.fetchone()
-        
-        logging.debug(f"Token validation result: {result} for token: {token}")  # Додати це
-        
+        logging.debug(f"Validation result: {result} for token: {token}")
         conn.close()
         return result if result else None
     except Exception as e:
         logging.error(f"Error validating token: {e}")
         return None
+
 
 
 

@@ -357,7 +357,7 @@ def create_user(token):
 # Маршрут для пошуку артикулів
 @app.route('/<token>/search', methods=['POST'])
 @requires_token_and_role('user')
-def search_articles():
+def search_articles(token):
     """
     Маршрут для пошуку артикулів.
     """
@@ -782,7 +782,7 @@ def place_order():
 
 @app.route('/<token>/orders', methods=['GET'])
 @requires_token_and_role('user')  # Перевірка токена та ролі
-def orders():
+def orders(token):
     user_id = session.get('user_id')
     logging.debug(f"Fetching orders for user_id: {user_id}")
 

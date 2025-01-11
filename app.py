@@ -276,14 +276,16 @@ def validate_token(token):
             WHERE t.token = %s
         """, (token,))
         result = cursor.fetchone()
-        logging.debug(f"Validation result: {result} for token: {token}")
+
+        if result:
+            session['user_id'] = result['user_id']  # Збереження user_id в сесію
+            logging.debug(f"User ID stored in session: {result['user_id']}")  # Логування
+
         conn.close()
         return result if result else None
     except Exception as e:
         logging.error(f"Error validating token: {e}")
         return None
-
-
 
 
 
@@ -749,10 +751,16 @@ def place_order():
 
 
 @app.route('/orders', methods=['GET', 'POST'])
-@requires_token_and_role()
+@requires_token_and_role('user')  # Або потрібна роль
 def orders():
     try:
-        user_id = 1  # Ідентифікатор користувача
+        user_id = session.get('user_id')  # Отримання user_id з сесії
+        logging.debug(f"User ID in session: {user_id}")  # Логування user_id
+        
+        if not user_id:
+            flash("User not authenticated.", "error")
+            return redirect(url_for('index'))
+
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
@@ -780,15 +788,19 @@ def orders():
 
         orders = cursor.fetchall()
 
+        logging.debug(f"Orders for user_id={user_id}: {orders}")  # Логування для перевірки
+
         return render_template('orders.html', orders=orders, search_article=search_article)
     except Exception as e:
-        flash(f"Error loading orders: {str(e)}", "error")
-        return redirect(request.referrer or url_for('index'))
+        logging.error(f"Error loading orders for user_id={user_id}: {e}")
+        flash("Error loading orders. Please try again.", "error")
+        return redirect(url_for('index'))
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
+
 
 
 @app.route('/order_details/<int:order_id>')

@@ -51,7 +51,7 @@
                     <td>{{ item.article }}</td>
                     <td>{{ item.price }}</td>
                     <td>
-                        <form method="POST" action="/update_cart">
+                        <form method="POST" action="/{{ session['token'] }}/update_cart">
                             <input type="hidden" name="product_id" value="{{ item.product_id }}">
                             <input type="number" name="quantity" value="{{ item.quantity }}" min="1">
                             <button type="submit" class="update-button">
@@ -61,7 +61,7 @@
                     </td>
                     <td>{{ item.total_price }}</td>
                     <td>
-                        <form method="POST" action="/remove_from_cart">
+                        <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
                             <input type="hidden" name="product_id" value="{{ item.product_id }}">
                             <button type="submit" class="remove-button">
                                 <i class="fas fa-trash"></i> Remove
@@ -80,10 +80,10 @@
 
         <!-- Кнопки для очищення кошика та оформлення замовлення -->
         <div class="cart-actions">
-            <form method="POST" action="/clear_cart">
+            <form method="POST" action="/{{ session['token'] }}/clear_cart">
                 <button type="submit" class="clear-cart-button">Clear Cart</button>
             </form>
-            <form method="POST" action="/place_order">
+            <form method="POST" action="/{{ session['token'] }}/place_order">
                 <button type="submit" class="place-order-button">Place Order</button>
             </form>
         </div>

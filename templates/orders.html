@@ -10,9 +10,9 @@
 	<header>
 		<nav>
 			<ul>
-				<li><a href="/">Home</a></li>
-				<li><a href="/cart">Cart</a></li>
-				<li><a href="/orders">Orders</a></li>
+				<li><a href="/{{ session['token'] }}/">Home</a></li>
+				<li><a href="/{{ session['token'] }}/cart">Cart</a></li>
+				<li><a href="/{{ session['token'] }}/orders">Orders</a></li>
 			</ul>
 		</nav>
 	</header>
@@ -42,7 +42,7 @@
                     <td>{{ order.total_price }}</td>
                     <td>{{ order.order_date }}</td>
                     <td>
-                        <a href="/order_details/{{ order.id }}">View Details</a>
+                        <a href="/{{ session['token'] }}/order_details/{{ order.id }}">View Details</a>
                     </td>
                 </tr>
                 {% endfor %}

@@ -12,10 +12,10 @@
     <header>
         <nav>
             <ul>
-                <li><a href="/">Home</a></li>
+                <li><a href="/{{ session['token'] }}/">Home</a></li>
                 {% if session.get('token') %}
-                <li><a href="/cart">Cart</a></li>
-                <li><a href="/orders">Orders</a></li>
+                <li><a href="/{{ session['token'] }}/cart">Cart</a></li>
+                <li><a href="/{{ session['token'] }}/orders">Orders</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -98,7 +98,7 @@
         {% endif %}
 
         <!-- Search Form -->
-        <form method="POST" action="/search#results" class="search-form">
+        <form method="POST" action="/{{ session['token'] }}/search#results" class="search-form">
             <label for="articles" class="form-label">Enter Articles and Quantities:</label>
             <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required class="form-textarea"></textarea>
             <button type="submit" class="form-button">Search</button>
@@ -134,7 +134,7 @@
 						<td>{{ item.article }}</td>
 						<td>{{ item.price }}</td>
 						<td>
-							<form method="POST" action="/update_cart">
+							<form method="POST" action="/{{ session['token'] }}/update_cart">
 								<input type="hidden" name="article" value="{{ item.article }}">
 								<input type="number" name="quantity" value="{{ item.quantity }}" min="1">
 								<button type="submit" class="update-button">
@@ -144,7 +144,7 @@
 						</td>
 						<td>{{ item.total_price }}</td>
 						<td>
-							<form method="POST" action="/remove_from_cart">
+							<form method="POST" action="/{{ session['token'] }}/remove_from_cart">
 								<input type="hidden" name="article" value="{{ item.article }}">
 								<button type="submit" class="delete-button">
 									<i class="fas fa-trash"></i> Remove

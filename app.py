@@ -297,8 +297,7 @@ def create_user(token):
         email = request.form.get('email')  # Отримання email
         role_id = request.form.get('role_id')
 
-    logging.debug(f"Data received in create_user: username={username}, email={email}, role_id={role_id}")
-
+        logging.debug(f"Data received in create_user: username={username}, email={email}, role_id={role_id}")
 
         if not username or not password or not email or not role_id:
             flash("All fields are required.", "error")
@@ -318,9 +317,7 @@ def create_user(token):
                 RETURNING id
             """, (username, email, hashed_password))
             user_id = cursor.fetchone()['id']
-            
-            logging.debug(f"User created with ID={user_id}")
-            
+
             # Призначення ролі
             cursor.execute("""
                 INSERT INTO user_roles (user_id, role_id, assigned_at)
@@ -354,6 +351,7 @@ def create_user(token):
     conn.close()
 
     return render_template('create_user.html', roles=roles, token=token)
+
 
 
 

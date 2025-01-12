@@ -101,9 +101,10 @@
             <label for="status">Filter by Status:</label>
             <select id="status" name="status">
                 <option value="">Select Status</option>
-                <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
-                <option value="shipped" {% if request.args.get('status') == 'shipped' %}selected{% endif %}>Shipped</option>
-                <option value="delivered" {% if request.args.get('status') == 'delivered' %}selected{% endif %}>Delivered</option>
+                <option value="new" {% if request.args.get('status') == 'new' %}selected{% endif %}>New</option>
+                <option value="cancelled" {% if request.args.get('status') == 'cancelled' %}selected{% endif %}>Cancelled</option>
+				<option value="accepted" {% if request.args.get('status') == 'accepted' %}selected{% endif %}>Accepted</option>
+                <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Completed</option>
             </select>
             <label for="start_date">Start Date:</label>
             <input type="date" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">

@@ -499,11 +499,11 @@ def cart(token):
 
         # Отримання товарів у кошику
         cursor.execute("""
-            SELECT c.product_id, p.article, p.price, c.quantity,
-                   (p.price * c.quantity) AS total_price
+            SELECT c.product_id, p.article, p.price, c.quantity, c.added_at
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
+            ORDER BY c.added_at
         """, (user_id,))
         cart_items = cursor.fetchall()
 

@@ -42,28 +42,29 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for article, details in grouped_results.items() %}
-                    {% for detail in details %}
-                    <tr>
-                        {% if loop.index == 1 %}
-                        <td rowspan="{{ details|length }}">{{ article }}</td>
-                        {% endif %}
-                        <td>{{ detail.price }}</td>
-                        <td>{{ detail.table_name }}</td>
-                        <td>
-							<form method="POST" action="/{{ session['token'] }}/add_to_cart">
-								<input type="hidden" name="article" value="{{ article }}">
-								<input type="hidden" name="price" value="{{ detail.price }}">
-								<input type="hidden" name="table_name" value="{{ detail.table_name }}">
-								<input type="number" name="quantity" value="1" min="1" required class="quantity-input">
-								<button type="submit" class="btn btn-primary">Add to Cart</button>
-							</form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% endfor %}
-                </tbody>
+					<tbody>
+						{% for article, details in grouped_results.items() %}
+						{% for detail in details %}
+						<tr>
+							{% if loop.index == 1 %}
+							<td rowspan="{{ details|length }}">{{ article }}</td>
+							{% endif %}
+							<td>{{ detail.price }}</td>
+							<td>{{ detail.table_name }}</td>
+							<td>
+								<form method="POST" action="/{{ session['token'] }}/add_to_cart">
+									<input type="hidden" name="article" value="{{ article }}">
+									<input type="hidden" name="price" value="{{ detail.price }}">
+									<input type="hidden" name="table_name" value="{{ detail.table_name }}">
+									<input type="number" name="quantity" value="{{ detail.quantity }}" min="1" required class="quantity-input">
+									<button type="submit" class="btn btn-primary">Add to Cart</button>
+								</form>
+							</td>
+						</tr>
+						{% endfor %}
+						{% endfor %}
+					</tbody>
+
             </table>
             {% endif %}
 

@@ -357,7 +357,7 @@ def create_user(token):
 # Маршрут для пошуку артикулів
 @app.route('/<token>/search', methods=['POST'])
 @requires_token_and_role('user')
-def search_articles(token):
+def search_articles(token):  
     """
     Маршрут для пошуку артикулів.
     """
@@ -368,13 +368,11 @@ def search_articles(token):
         articles = []
         quantities = {}
         auto_set_quantities = []
-        duplicate_articles = []
 
         articles_input = request.form.get('articles')
         logging.debug(f"Received articles input: {articles_input}")
 
         if not articles_input:
-            logging.warning("No articles provided.")
             flash("Please enter at least one article.", "error")
             return redirect(url_for('index'))
 
@@ -387,18 +385,14 @@ def search_articles(token):
                 article = parts[0].strip().upper()
                 if article in quantities:
                     quantities[article] += 1
-                    if article not in duplicate_articles:
-                        duplicate_articles.append(article)
                 else:
                     articles.append(article)
-                    quantities[article] = 1
+                    quantities[article] = 1  # За замовчуванням додаємо 1
                     auto_set_quantities.append(article)
             elif len(parts) == 2 and parts[1].isdigit():
                 article, quantity = parts[0].strip().upper(), int(parts[1])
                 if article in quantities:
                     quantities[article] += quantity
-                    if article not in duplicate_articles:
-                        duplicate_articles.append(article)
                 else:
                     articles.append(article)
                     quantities[article] = quantity
@@ -463,6 +457,7 @@ def search_articles(token):
         if conn:
             conn.close()
         logging.info("Database connection closed.")
+
 
 
 

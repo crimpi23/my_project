@@ -550,7 +550,7 @@ def add_to_cart(token):
         # Отримання даних з форми
         article = request.form.get('article')
         price = float(request.form.get('price'))
-        quantity = int(request.form.get('quantity'))  # Кількість товару з форми
+        quantity = int(request.form.get('quantity'))  # Перевіряємо кількість товару
         table_name = request.form.get('table_name')
         user_id = session.get('user_id')  # Отримання ID користувача із сесії
 
@@ -678,10 +678,10 @@ def remove_from_cart(token):
 @requires_token_and_role('user')
 def update_cart(token):
     conn = None
-    cursor = None  # Ініціалізація cursor на початку
+    cursor = None
     try:
-        # Логіка оновлення товару в кошику
-        article = request.form.get('article')
+        # Отримання даних з форми
+        article = request.form.get('article')  # Вам, можливо, потрібно змінити це на 'product_id'
         quantity = int(request.form.get('quantity'))
         user_id = session.get('user_id')
 
@@ -696,8 +696,8 @@ def update_cart(token):
         cursor.execute("""
             UPDATE cart
             SET quantity = %s
-            WHERE user_id = %s AND article = %s
-        """, (quantity, user_id, article))
+            WHERE user_id = %s AND product_id = %s
+        """, (quantity, user_id, article))  # Замість 'article' тут має бути 'product_id'
         
         conn.commit()
         flash("Cart updated successfully.", "success")
@@ -837,7 +837,7 @@ def orders(token):
         flash("User is not authenticated.", "error")
         return redirect(url_for('index'))
 
-    # Отримання фільтрів з запиту
+    # Отримуємо фільтри з запиту
     article_filter = request.args.get('article', '')
     status_filter = request.args.get('status', '')
     start_date = request.args.get('start_date', '')
@@ -850,27 +850,29 @@ def orders(token):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Початковий запит
+        # Початковий запит до таблиці orders
         query = """
         SELECT * FROM orders
         WHERE user_id = %s
         """
         params = [user_id]
 
-        # Додавання умов для фільтрів
-
+        # Якщо фільтр по артикулу
         if article_filter:
             query += " AND EXISTS (SELECT 1 FROM order_items WHERE order_id = orders.id AND article LIKE %s)"
             params.append(f"%{article_filter}%")
 
+        # Якщо фільтр по статусу
         if status_filter:
             query += " AND status = %s"
             params.append(status_filter)
 
+        # Якщо фільтр по даті початку
         if start_date:
             query += " AND order_date >= %s"
             params.append(start_date)
 
+        # Якщо фільтр по даті кінця
         if end_date:
             query += " AND order_date <= %s"
             params.append(end_date)

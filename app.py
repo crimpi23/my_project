@@ -357,7 +357,7 @@ def create_user(token):
 # Маршрут для пошуку артикулів
 @app.route('/<token>/search', methods=['POST'])
 @requires_token_and_role('user')
-def search_articles(token):  
+def search_articles(token):
     """
     Маршрут для пошуку артикулів.
     """
@@ -380,14 +380,14 @@ def search_articles(token):
         for line in articles_input.splitlines():
             parts = line.strip().split()
             if not parts:
-                continue  # Пропустити порожні рядки
+                continue
             if len(parts) == 1:
                 article = parts[0].strip().upper()
                 if article in quantities:
                     quantities[article] += 1
                 else:
                     articles.append(article)
-                    quantities[article] = 1  # За замовчуванням додаємо 1
+                    quantities[article] = 1
                     auto_set_quantities.append(article)
             elif len(parts) == 2 and parts[1].isdigit():
                 article, quantity = parts[0].strip().upper(), int(parts[1])
@@ -427,25 +427,19 @@ def search_articles(token):
             grouped_results.setdefault(article, []).append({
                 'price': result['price'],
                 'table_name': result['table_name'],
-                'quantity': quantities.get(article, 1)  # Додаємо кількість до результатів
+                'quantity': quantities.get(article, 1)
             })
 
         missing_articles = [article for article in articles if article not in grouped_results]
         logging.info(f"Missing articles: {missing_articles}")
 
-        # Збереження результатів у сесії
-        session['grouped_results'] = grouped_results
-        session['quantities'] = quantities
-        session['missing_articles'] = missing_articles
-
-        logging.info("Search results successfully processed.")
-
-        if not grouped_results:
-            flash("No results found for your search.", "info")
-            return render_template('search_results.html', grouped_results={}, quantities=quantities, missing_articles=missing_articles)
-
-        flash("Search completed successfully!", "success")
-        return render_template('search_results.html', grouped_results=grouped_results, quantities=quantities, missing_articles=missing_articles)
+        # Повертаємо результати на сторінку
+        return render_template(
+            'search_results.html',
+            grouped_results=grouped_results,
+            quantities=quantities,
+            missing_articles=missing_articles
+        )
 
     except Exception as e:
         logging.error(f"Error in search_articles: {str(e)}", exc_info=True)
@@ -456,7 +450,6 @@ def search_articles(token):
             cursor.close()
         if conn:
             conn.close()
-        logging.info("Database connection closed.")
 
 
 

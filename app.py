@@ -459,6 +459,7 @@ def search_articles(token):
         logging.info("Database connection closed.")
 
 
+
 # Додавання артикула по чекбоксу
 @app.route('/<token>/add_selected_to_cart', methods=['POST'])
 @requires_token_and_role('user')
@@ -466,7 +467,7 @@ def add_selected_to_cart(token):
     """
     Обробляє додавання вибраних товарів до кошика.
     """
-    conn = None  # Ініціалізуємо conn на початку
+    conn = None
     cursor = None
     try:
         user_id = session.get('user_id')  # Отримуємо ID користувача з сесії
@@ -490,7 +491,7 @@ def add_selected_to_cart(token):
 
         for selected in selected_prices:
             price, table_name = selected.split('|')
-            article = table_name.split('_')[0]  # Можливо, треба отримати з форми
+            article = table_name.split('_')[0]  # Передбачається, що article можна отримати з table_name
 
             # Перевіряємо кількість
             quantity = int(quantities.get(article, [1])[0])
@@ -502,8 +503,8 @@ def add_selected_to_cart(token):
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 SELECT %s, p.id, %s, NOW()
                 FROM products p
-                WHERE p.article = %s AND p.price = %s AND p.table_name = %s
-                """, (user_id, quantity, article, price, table_name))
+                WHERE p.article = %s AND p.price = %s
+            """, (user_id, quantity, article, price))
 
         conn.commit()
         flash("Selected items added to cart.", "success")

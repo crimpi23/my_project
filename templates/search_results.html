@@ -65,15 +65,16 @@
         .btn-warning:hover {
             background-color: #e0a800;
         }
-        .btn-success {
-            background-color: #28a745;
-            color: white;
+        .highlight {
+            background-color: #e7f9e7; /* Слабкий зелений колір */
         }
-        .btn-success:hover {
-            background-color: #218838;
+        .checkbox-select-all {
+            margin-bottom: 10px;
         }
-        tr[data-article] {
-            transition: background-color 0.3s ease;
+        .quantity-input {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
         }
         @media (max-width: 768px) {
             header ul {
@@ -85,57 +86,6 @@
             }
         }
     </style>
-    <script>
-        function selectLowestPrices() {
-            // Отримуємо всі рядки таблиці
-            const rows = document.querySelectorAll('tbody tr');
-            const articleGroups = {};
-
-            // Групуємо ціни за артикулом
-            rows.forEach(row => {
-                const article = row.getAttribute('data-article');
-                const priceInput = row.querySelector('.price-checkbox');
-                const price = parseFloat(priceInput.getAttribute('data-price'));
-
-                if (!articleGroups[article] || price < articleGroups[article].price) {
-                    if (articleGroups[article]) {
-                        articleGroups[article].checkbox.checked = false;
-                    }
-                    articleGroups[article] = { price: price, checkbox: priceInput };
-                }
-            });
-
-            // Вибираємо найнижчі ціни
-            Object.values(articleGroups).forEach(group => {
-                group.checkbox.checked = true;
-            });
-        }
-
-        function highlightLowerPrices() {
-            const rows = document.querySelectorAll('tbody tr');
-            rows.forEach(row => {
-                const article = row.getAttribute('data-article');
-                const priceInput = row.querySelector('.price-checkbox');
-                const price = parseFloat(priceInput.getAttribute('data-price'));
-
-                // Отримуємо найнижчу ціну для артикулу
-                const minPrice = Math.min(...Array.from(document.querySelectorAll(`tbody tr[data-article="${article}"] .price-checkbox`))
-                    .map(input => parseFloat(input.getAttribute('data-price'))));
-
-                // Підсвічуємо рядок, якщо ціна дорівнює мінімальній
-                if (price === minPrice) {
-                    row.style.backgroundColor = '#d4edda'; // Слабо зелений
-                } else {
-                    row.style.backgroundColor = '';
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Підсвічуємо мінімальні ціни після завантаження сторінки
-            highlightLowerPrices();
-        });
-    </script>
 </head>
 <body>
     <header>
@@ -150,31 +100,39 @@
 
     <main class="container">
         <h1>Search Results</h1>
-        {% if grouped_results %}
-        <!-- Кнопка для вибору найнижчих цін -->
-        <button class="btn btn-success" onclick="selectLowestPrices()">Select Lowest Prices</button>
-        <form method="POST" action="/{{ session['token'] }}/add_selected_to_cart">
+
+        <form method="POST" action="/{{ session['token'] }}/add_selected_to_cart" id="add-to-cart-form">
+            {% if grouped_results %}
+            <div class="checkbox-select-all">
+                <button type="button" class="btn btn-warning" id="select-all-min-prices">Select All Minimum Prices</button>
+            </div>
             <table>
                 <thead>
                     <tr>
                         <th>Article</th>
                         <th>Price</th>
                         <th>Table</th>
+                        <th>Quantity</th>
                         <th>Select</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for article, details in grouped_results.items() %}
+                    {% set min_price = details | min(attribute='price') %}
                     {% for detail in details %}
-                    <tr data-article="{{ article }}">
+                    <tr class="{% if detail.price == min_price %}highlight{% endif %}">
                         {% if loop.index == 1 %}
                         <td rowspan="{{ details|length }}">{{ article }}</td>
                         {% endif %}
                         <td>{{ detail.price }}</td>
                         <td>{{ detail.table_name }}</td>
                         <td>
-                            <input type="checkbox" class="price-checkbox" name="selected_price" value="{{ detail.price }}|{{ detail.table_name }}" data-price="{{ detail.price }}">
-                            <input type="hidden" name="quantities[{{ article }}]" value="{{ quantities.get(article, 1) }}">
+                            <input type="number" name="quantities[{{ article }}]" class="quantity-input" value="{{ quantities.get(article, 1) }}" min="1" required>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="selected_price" value="{{ detail.price }}|{{ detail.table_name }}" 
+                                   class="article-checkbox" data-article="{{ article }}" 
+                                   data-price="{{ detail.price }}" data-table="{{ detail.table_name }}">
                         </td>
                     </tr>
                     {% endfor %}
@@ -182,10 +140,10 @@
                 </tbody>
             </table>
             <button type="submit" class="btn btn-primary">Add Selected to Cart</button>
+            {% else %}
+            <p>No results found. Try another search.</p>
+            {% endif %}
         </form>
-        {% else %}
-        <p>No results found. Try another search.</p>
-        {% endif %}
 
         <form method="POST" action="/{{ session['token'] }}/clear_search" style="margin-top: 20px;">
             <button type="submit" class="btn btn-warning">Clear Search</button>
@@ -195,5 +153,20 @@
     <footer>
         <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
     </footer>
+
+    <script>
+        document.getElementById('select-all-min-prices').addEventListener('click', function () {
+            const articles = new Set();
+            document.querySelectorAll('.article-checkbox').forEach(checkbox => {
+                const article = checkbox.dataset.article;
+                if (!articles.has(article) && checkbox.closest('tr').classList.contains('highlight')) {
+                    checkbox.checked = true;
+                    articles.add(article);
+                } else {
+                    checkbox.checked = false;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

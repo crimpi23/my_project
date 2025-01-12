@@ -464,7 +464,8 @@ def search_articles(token):
 @requires_token_and_role('user')
 def add_selected_to_cart(token):
     """
-    Обробляє додавання вибраних товарів до кошика з додатковим логуванням.
+    Обробляє додавання вибраних товарів до кошика.
+    Перенаправляє в кошик або повертає на сторінку пошуку.
     """
     conn = None
     cursor = None
@@ -475,63 +476,56 @@ def add_selected_to_cart(token):
             logging.warning("User is not authenticated.")
             return redirect(url_for('index'))
 
-        # Збирання даних з форми
+        # Отримання даних з форми
         selected_prices = request.form.getlist('selected_price')
         all_quantities = request.form.to_dict(flat=False).get('quantities', {})
         referrer = request.referrer
 
-        logging.debug(f"Request URL: {request.url}")
-        logging.debug(f"Request Referrer: {referrer}")
         logging.debug(f"Selected prices: {selected_prices}")
         logging.debug(f"All quantities: {all_quantities}")
+        logging.debug(f"Request Referrer: {referrer}")
 
         if not selected_prices:
-            flash("No items selected.", "error")
-            return redirect(url_for('search_articles', token=token))
+            flash("No items selected. Returning to search results.", "error")
+            return redirect(f"{referrer or url_for('index')}#results")
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
         for selected in selected_prices:
-            try:
-                price, table_name = selected.split('|')
-                article = table_name.split('_')[0]
+            price, table_name = selected.split('|')
+            article = table_name.split('_')[0]
+            quantity = int(all_quantities.get(article, [1])[0])
+            if quantity <= 0:
+                logging.warning(f"Invalid quantity for article {article}. Skipping.")
+                continue
 
-                # Перевіряємо кількість для цього артикула
-                quantity = int(all_quantities.get(article, [1])[0])
-                if quantity <= 0:
-                    logging.warning(f"Invalid quantity for article {article}: {quantity}. Skipping.")
-                    continue
-
-                # Додаємо товар до кошика
-                cursor.execute("""
-                    INSERT INTO cart (user_id, product_id, quantity, added_at)
-                    SELECT %s, p.id, %s, NOW()
-                    FROM products p
-                    WHERE p.article = %s AND p.price = %s AND p.table_name = %s
-                """, (user_id, quantity, article, price, table_name))
-                logging.debug(f"Added article {article} with quantity {quantity} to cart.")
-            except Exception as cart_error:
-                logging.error(f"Error adding article to cart: {cart_error}")
+            # Додавання товару до кошика
+            cursor.execute("""
+                INSERT INTO cart (user_id, product_id, quantity, added_at)
+                SELECT %s, p.id, %s, NOW()
+                FROM products p
+                WHERE p.article = %s AND p.price = %s AND p.table_name = %s
+            """, (user_id, quantity, article, price, table_name))
+            logging.debug(f"Added article {article} with quantity {quantity} to cart.")
 
         conn.commit()
         flash("Selected items added to cart.", "success")
+
+        # Перенаправляємо до кошика
+        return redirect(url_for('cart', token=token))
+
     except Exception as e:
         if conn:
             conn.rollback()
-        logging.error(f"Error adding selected items to cart: {e}", exc_info=True)
+        logging.error(f"Error adding items to cart: {e}", exc_info=True)
         flash("Error adding selected items to cart.", "error")
+        return redirect(f"{referrer or url_for('index')}#results")
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
-
-    # Очищення хешу з реферера (якщо є) і перенаправлення
-    clean_referrer = referrer.split('#')[0] if referrer else None
-    logging.debug(f"Clean referrer: {clean_referrer}")
-
-    return redirect(clean_referrer or url_for('cart', token=token))
 
 
 

@@ -975,3 +975,43 @@ footer {
     color: white;
     font-size: 0.9rem;
 }
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 16px;
+    text-align: left;
+}
+
+.results-table th, .results-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.results-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.quantity-input {
+    width: 50px;
+    text-align: center;
+}
+
+.btn {
+    padding: 10px 15px;
+    text-decoration: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: white;
+}

@@ -471,6 +471,7 @@ def search_articles(token):
 
 # очищення результату пошуку
 @app.route('/<token>/clear_search', methods=['POST'])
+@requires_token_and_role('user')
 def clear_search(token):
     try:
         logging.debug("Clearing search data from session.")
@@ -550,7 +551,7 @@ def add_to_cart(token):
         # Отримання даних з форми
         article = request.form.get('article')
         price = float(request.form.get('price'))
-        quantity = int(request.form.get('quantity'))  # Перевіряємо кількість товару
+        quantity = int(request.form.get('quantity'))
         table_name = request.form.get('table_name')
         user_id = session.get('user_id')  # Отримання ID користувача із сесії
 
@@ -585,19 +586,20 @@ def add_to_cart(token):
 
         # Перевірка, чи товар вже є в кошику
         cursor.execute("""
-            SELECT id FROM cart
+            SELECT id, quantity FROM cart
             WHERE user_id = %s AND product_id = %s
         """, (user_id, product_id))
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
             # Оновлення кількості товару в кошику
+            new_quantity = existing_cart_item['quantity'] + quantity
             cursor.execute("""
                 UPDATE cart
-                SET quantity = quantity + %s
+                SET quantity = %s, updated_at = NOW()
                 WHERE id = %s
-            """, (quantity, existing_cart_item['id']))
-            logging.info(f"Cart updated: Product ID={product_id}, Quantity Added={quantity}, User ID={user_id}")
+            """, (new_quantity, existing_cart_item['id']))
+            logging.info(f"Cart updated: Product ID={product_id}, New Quantity={new_quantity}, User ID={user_id}")
         else:
             # Додавання нового товару в кошик
             cursor.execute("""
@@ -606,11 +608,12 @@ def add_to_cart(token):
             """, (user_id, product_id, quantity))
             logging.info(f"Product added to cart: Product ID={product_id}, Quantity={quantity}, User ID={user_id}")
 
+        # Збереження змін у базі даних
         conn.commit()
-        flash("Product added to cart!", "success")
+        flash("Product successfully added to cart!", "success")
     except Exception as e:
         logging.error(f"Error in add_to_cart: {e}", exc_info=True)
-        flash("Error adding product to cart.", "error")
+        flash("An error occurred while adding the product to the cart.", "error")
     finally:
         if cursor:
             cursor.close()
@@ -618,7 +621,7 @@ def add_to_cart(token):
             conn.close()
             logging.debug("Database connection closed after adding to cart.")
 
-    # Перенаправлення на сторінку результатів пошуку
+    # Перенаправлення на сторінку результатів пошуку з оновленими даними
     return render_template(
         'search_results.html',
         grouped_results=session.get('grouped_results', {}),

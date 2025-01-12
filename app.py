@@ -883,27 +883,36 @@ def orders(token):
         """
         params = [user_id]
 
-        # Якщо фільтр по артикулу
+        # Фільтр по артикулу
         if article_filter:
             logging.debug(f"Applying article filter: {article_filter}")
-            query += " AND EXISTS (SELECT 1 FROM order_items WHERE order_id = orders.id AND article LIKE %s)"
+            query += """
+            AND EXISTS (
+                SELECT 1 
+                FROM order_details 
+                WHERE order_id = orders.id 
+                AND product_id IN (SELECT id FROM products WHERE article LIKE %s)
+            )
+            """
             params.append(f"%{article_filter}%")
 
+        # Фільтр по статусу
         if status_filter:
             logging.debug(f"Applying status filter: {status_filter}")
             query += " AND status = %s"
             params.append(status_filter)
 
+        # Фільтр по даті початку
         if start_date:
             logging.debug(f"Applying start date filter: {start_date}")
             query += " AND order_date >= %s"
             params.append(start_date)
 
+        # Фільтр по даті кінця
         if end_date:
             logging.debug(f"Applying end date filter: {end_date}")
             query += " AND order_date <= %s"
             params.append(end_date)
-
 
         # Логування сформованого запиту
         logging.debug(f"Executing query: {query} with params: {params}")

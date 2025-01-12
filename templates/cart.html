@@ -5,6 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Cart</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        header {
+            background-color: #007bff;
+            padding: 10px;
+        }
+        header ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        header a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+        }
+        .container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        h1, h2 {
+            color: #007bff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: black;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        @media (max-width: 768px) {
+            header ul {
+                flex-direction: column;
+                text-align: center;
+            }
+            table {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -18,73 +95,56 @@
     </header>
 
     <main class="container">
-        <section class="intro">
-            <h1>Shopping Cart</h1>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                <ul class="flashes">
-                    {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            {% endwith %}
-        </section>
-
+        <h1>Shopping Cart</h1>
         {% if cart_items %}
-        <section id="cart-details">
-            <table class="cart-table">
-                <thead>
-                    <tr>
-                        <th>Article</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Total</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in cart_items %}
-                    <tr>
-                        <td>{{ item.article }}</td>
-                        <td>{{ item.price }}</td>
-                        <td>
-                            <form method="POST" action="/{{ session['token'] }}/update_cart">
-                                <input type="hidden" name="product_id" value="{{ item.product_id }}">
-                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
-                                <button type="submit" class="btn btn-warning">Update</button>
-                            </form>
-                        </td>
-                        <td>{{ item.price * item.quantity }}</td>
-                        <td>
-                            <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
-                                <input type="hidden" name="product_id" value="{{ item.product_id }}">
-                                <button type="submit" class="btn btn-danger">Remove</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <div class="cart-actions">
-                <form method="POST" action="/{{ session['token'] }}/clear_cart">
-                    <button type="submit" class="btn btn-secondary">Clear Cart</button>
-                </form>
-                <form method="POST" action="/{{ session['token'] }}/place_order">
-                    <button type="submit" class="btn btn-success">Place Order</button>
-                </form>
-            </div>
-        </section>
+        <table>
+            <thead>
+                <tr>
+                    <th>Article</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                <tr>
+                    <td>{{ item.article }}</td>
+                    <td>{{ item.price }}</td>
+                    <td>
+                        <form method="POST" action="/{{ session['token'] }}/update_cart">
+                            <input type="hidden" name="product_id" value="{{ item.product_id }}">
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
+                            <button type="submit" class="btn btn-warning">Update</button>
+                        </form>
+                    </td>
+                    <td>{{ item.price * item.quantity }}</td>
+                    <td>
+                        <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
+                            <input type="hidden" name="article" value="{{ item.article }}">
+                            <button type="submit" class="btn btn-danger">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div>
+            <form method="POST" action="/{{ session['token'] }}/clear_cart" style="display:inline;">
+                <button type="submit" class="btn btn-warning">Clear Cart</button>
+            </form>
+            <form method="POST" action="/{{ session['token'] }}/place_order" style="display:inline;">
+                <button type="submit" class="btn btn-primary">Place Order</button>
+            </form>
+        </div>
         {% else %}
-        <section id="empty-cart">
-            <p>Your cart is empty. <a href="/{{ session['token'] }}/search">Search for products</a> to add them to your cart.</p>
-        </section>
+        <p>Your cart is empty. <a href="/{{ session['token'] }}/">Search for products</a> to add them to your cart.</p>
         {% endif %}
-
-        <footer>
-            <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
-        </footer>
     </main>
+
+    <footer>
+        <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
+    </footer>
 </body>
 </html>

@@ -5,6 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Details</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        header {
+            background-color: #007bff;
+            padding: 10px;
+        }
+        header ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        header a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+        }
+        .container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        h1 {
+            color: #007bff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .btn-info:hover {
+            background-color: #117a8b;
+        }
+        @media (max-width: 768px) {
+            header ul {
+                flex-direction: column;
+                text-align: center;
+            }
+            table {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -17,45 +80,39 @@
     </header>
 
     <main class="container">
-        <section class="intro">
-            <h1>Order Details</h1>
-            <p>Below are the details for the selected order.</p>
-        </section>
+        <h1>Order Details</h1>
+        <p>Below are the details for the selected order.</p>
 
         {% if details %}
-        <section id="order-details">
-            <table class="details-table">
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Article</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Total Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for detail in details %}
-                    <tr>
-                        <td>{{ detail.order_id }}</td>
-                        <td>{{ detail.article }}</td>
-                        <td>{{ detail.price }}</td>
-                        <td>{{ detail.quantity }}</td>
-                        <td>{{ detail.total_price }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Article</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for detail in details %}
+                <tr>
+                    <td>{{ detail.order_id }}</td>
+                    <td>{{ detail.article }}</td>
+                    <td>{{ detail.price }}</td>
+                    <td>{{ detail.quantity }}</td>
+                    <td>{{ detail.total_price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         {% else %}
-        <section id="no-details">
-            <p>No details available for this order. Please contact support if you think this is an error.</p>
-        </section>
+        <p>No details available for this order. Please contact support if you think this is an error.</p>
         {% endif %}
-
-        <footer>
-            <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
-        </footer>
     </main>
+
+    <footer>
+        <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
+    </footer>
 </body>
 </html>

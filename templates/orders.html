@@ -5,6 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Orders</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        header {
+            background-color: #007bff;
+            padding: 10px;
+        }
+        header ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        header a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+        }
+        .container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        h1 {
+            color: #007bff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .btn-info:hover {
+            background-color: #117a8b;
+        }
+        form label {
+            margin-right: 10px;
+        }
+        form input, form select, form button {
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            header ul {
+                flex-direction: column;
+                text-align: center;
+            }
+            table {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -18,70 +94,54 @@
     </header>
 
     <main class="container">
-        <section class="intro">
-            <h1>Your Orders</h1>
-            <p>View your past orders and their details.</p>
-        </section>
-
-        <section id="filters">
-            <form method="GET" action="/{{ session['token'] }}/orders" class="filter-form">
-                <label for="article">Search by Article:</label>
-                <input type="text" id="article" name="article" placeholder="Enter article" value="{{ request.args.get('article', '') }}">
-
-                <label for="status">Filter by Status:</label>
-                <select id="status" name="status">
-                    <option value="">Select Status</option>
-                    <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
-                    <option value="shipped" {% if request.args.get('status') == 'shipped' %}selected{% endif %}>Shipped</option>
-                    <option value="delivered" {% if request.args.get('status') == 'delivered' %}selected{% endif %}>Delivered</option>
-                </select>
-
-                <label for="start_date">Start Date:</label>
-                <input type="date" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
-
-                <label for="end_date">End Date:</label>
-                <input type="date" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
-
-                <button type="submit" class="btn btn-primary">Apply Filters</button>
-            </form>
-        </section>
+        <h1>Your Orders</h1>
+        <form method="GET" action="/{{ session['token'] }}/orders" class="filter-form">
+            <label for="article">Search by Article:</label>
+            <input type="text" id="article" name="article" placeholder="Enter article" value="{{ request.args.get('article', '') }}">
+            <label for="status">Filter by Status:</label>
+            <select id="status" name="status">
+                <option value="">Select Status</option>
+                <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="shipped" {% if request.args.get('status') == 'shipped' %}selected{% endif %}>Shipped</option>
+                <option value="delivered" {% if request.args.get('status') == 'delivered' %}selected{% endif %}>Delivered</option>
+            </select>
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+            <label for="end_date">End Date:</label>
+            <input type="date" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+        </form>
 
         {% if orders %}
-        <section id="orders-list">
-            <table class="orders-table">
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Total Price</th>
-                        <th>Order Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders %}
-                    <tr>
-                        <td>{{ order.id }}</td>
-                        <td>{{ order.total_price }}</td>
-                        <td>{{ order.order_date }}</td>
-                        <td>{{ order.status }}</td>
-                        <td>
-                            <a href="/{{ session['token'] }}/order_details/{{ order.id }}" class="btn btn-info">View Details</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Total Price</th>
+                    <th>Order Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.total_price }}</td>
+                    <td>{{ order.order_date }}</td>
+                    <td>{{ order.status }}</td>
+                    <td><a href="/{{ session['token'] }}/order_details/{{ order.id }}" class="btn btn-info">View Details</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         {% else %}
-        <section id="no-orders">
-            <p>No orders found. Place an order to see it here.</p>
-        </section>
+        <p>No orders found. Try refining your search or place a new order.</p>
         {% endif %}
-
-        <footer>
-            <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
-        </footer>
     </main>
+
+    <footer>
+        <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
+    </footer>
 </body>
 </html>

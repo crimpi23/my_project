@@ -460,6 +460,71 @@ def search_articles(token):
 
 
 
+@app.route('/<token>/add_selected_to_cart', methods=['POST'])
+@requires_token_and_role('user')
+def add_selected_to_cart(token):
+    """
+    Додає вибрані товари до кошика.
+    """
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("User is not authenticated. Please log in.", "error")
+            return redirect(url_for('index'))
+
+        selected_items = request.form.getlist('selected_items')
+        quantities = request.form.get('quantities', {})
+        
+        if not selected_items:
+            flash("No items selected to add to the cart.", "error")
+            return redirect(request.referrer or url_for('search_results', token=token))
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        for article in selected_items:
+            quantity = int(quantities.get(article, 1))
+            
+            # Отримуємо продукт із таблиці `products`
+            cursor.execute("""
+                SELECT id, price FROM products WHERE article = %s;
+            """, (article,))
+            product = cursor.fetchone()
+            
+            if not product:
+                flash(f"Product with article {article} not found.", "error")
+                continue
+
+            product_id, price = product
+
+            # Перевіряємо, чи товар вже в кошику
+            cursor.execute("""
+                SELECT id FROM cart WHERE user_id = %s AND product_id = %s;
+            """, (user_id, product_id))
+            cart_item = cursor.fetchone()
+
+            if cart_item:
+                # Оновлюємо кількість
+                cursor.execute("""
+                    UPDATE cart SET quantity = quantity + %s WHERE id = %s;
+                """, (quantity, cart_item[0]))
+            else:
+                # Додаємо товар до кошика
+                cursor.execute("""
+                    INSERT INTO cart (user_id, product_id, quantity, added_at)
+                    VALUES (%s, %s, %s, NOW());
+                """, (user_id, product_id, quantity))
+        
+        conn.commit()
+        flash("Selected items added to the cart successfully!", "success")
+    except Exception as e:
+        logging.error(f"Error adding selected items to the cart: {e}", exc_info=True)
+        flash("Error adding selected items to the cart.", "error")
+    finally:
+        if conn:
+            conn.close()
+
+    return redirect(url_for('search_results', token=token))
 
 
 

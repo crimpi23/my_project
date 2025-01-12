@@ -65,6 +65,12 @@
         .btn-warning:hover {
             background-color: #e0a800;
         }
+        .btn-submit {
+            display: block;
+            margin: 20px auto;
+            padding: 15px 20px;
+            font-size: 16px;
+        }
         @media (max-width: 768px) {
             header ul {
                 flex-direction: column;
@@ -90,38 +96,41 @@
     <main class="container">
         <h1>Search Results</h1>
         {% if grouped_results %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Article</th>
-                    <th>Price</th>
-                    <th>Table</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for article, details in grouped_results.items() %}
-                {% for detail in details %}
-                <tr>
-                    {% if loop.index == 1 %}
-                    <td rowspan="{{ details|length }}">{{ article }}</td>
-                    {% endif %}
-                    <td>{{ detail.price }}</td>
-                    <td>{{ detail.table_name }}</td>
-                    <td>
-                        <form method="POST" action="/{{ session['token'] }}/add_to_cart">
-                            <input type="hidden" name="article" value="{{ article }}">
-                            <input type="hidden" name="price" value="{{ detail.price }}">
-                            <input type="hidden" name="table_name" value="{{ detail.table_name }}">
-                            <input type="number" name="quantity" value="{{ quantities.get(article, 1) }}" min="1" required>
-                            <button type="submit" class="btn btn-primary">Add to Cart</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-                {% endfor %}
-            </tbody>
-        </table>
+        <form method="POST" action="/{{ session['token'] }}/add_selected_to_cart">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all"></th>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Table</th>
+                        <th>Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article, details in grouped_results.items() %}
+                    {% for detail in details %}
+                    <tr>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{ details|length }}">
+                            <input type="checkbox" name="selected_items" value="{{ article }}">
+                        </td>
+                        <td rowspan="{{ details|length }}">{{ article }}</td>
+                        {% endif %}
+                        <td>{{ detail.price }}</td>
+                        <td>{{ detail.table_name }}</td>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{ details|length }}">
+                            <input type="number" name="quantities[{{ article }}]" value="{{ quantities.get(article, 1) }}" min="1" required>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-primary btn-submit">Add Selected to Cart</button>
+        </form>
         {% else %}
         <p>No results found. Try another search.</p>
         {% endif %}
@@ -134,5 +143,13 @@
     <footer>
         <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
     </footer>
+
+    <script>
+        // Select all checkboxes
+        document.getElementById('select-all').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('input[name="selected_items"]');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+    </script>
 </body>
 </html>

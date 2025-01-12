@@ -877,31 +877,33 @@ def orders(token):
 
         # Початковий запит до таблиці orders
         query = """
-        SELECT * FROM orders
+        SELECT id, total_price, TO_CHAR(order_date, 'YYYY-MM-DD') AS order_date, status
+        FROM orders
         WHERE user_id = %s
-        ORDER BY order_date DESC
         """
         params = [user_id]
 
         # Якщо фільтр по артикулу
         if article_filter:
+            logging.debug(f"Applying article filter: {article_filter}")
             query += " AND EXISTS (SELECT 1 FROM order_items WHERE order_id = orders.id AND article LIKE %s)"
             params.append(f"%{article_filter}%")
 
-        # Якщо фільтр по статусу
         if status_filter:
+            logging.debug(f"Applying status filter: {status_filter}")
             query += " AND status = %s"
             params.append(status_filter)
 
-        # Якщо фільтр по даті початку
         if start_date:
+            logging.debug(f"Applying start date filter: {start_date}")
             query += " AND order_date >= %s"
             params.append(start_date)
 
-        # Якщо фільтр по даті кінця
         if end_date:
+            logging.debug(f"Applying end date filter: {end_date}")
             query += " AND order_date <= %s"
             params.append(end_date)
+
 
         # Логування сформованого запиту
         logging.debug(f"Executing query: {query} with params: {params}")

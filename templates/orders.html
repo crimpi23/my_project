@@ -22,6 +22,28 @@
         <section class="intro">
             <h1>Your Orders</h1>
 
+            <!-- Search and Filter Form -->
+            <form method="GET" action="/{{ session['token'] }}/orders" class="filter-form">
+                <label for="article">Search by Article:</label>
+                <input type="text" id="article" name="article" placeholder="Enter article" value="{{ request.args.get('article', '') }}">
+
+                <label for="status">Filter by Status:</label>
+                <select id="status" name="status">
+                    <option value="">Select Status</option>
+                    <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="shipped" {% if request.args.get('status') == 'shipped' %}selected{% endif %}>Shipped</option>
+                    <option value="delivered" {% if request.args.get('status') == 'delivered' %}selected{% endif %}>Delivered</option>
+                </select>
+
+                <label for="start_date">Start Date:</label>
+                <input type="date" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+
+                <label for="end_date">End Date:</label>
+                <input type="date" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+            </form>
+
             {% if orders %}
             <table class="orders-table">
                 <thead>

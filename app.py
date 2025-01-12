@@ -547,7 +547,7 @@ def add_to_cart(token):
         # Отримання даних з форми
         article = request.form.get('article')
         price = float(request.form.get('price'))
-        quantity = int(request.form.get('quantity'))
+        quantity = int(request.form.get('quantity'))  # Кількість має бути з форми
         table_name = request.form.get('table_name')
         user_id = session.get('user_id')  # Отримання ID користувача із сесії
 
@@ -622,8 +622,6 @@ def add_to_cart(token):
         quantities=session.get('quantities', {}),
         missing_articles=session.get('missing_articles', []),
     )
-
-
 
 
 
@@ -714,6 +712,7 @@ def update_cart(token):
 
 
 
+
 # Очищення кошика користувача
 @app.route('/<token>/clear_cart', methods=['POST'])
 @requires_token_and_role('user')
@@ -743,7 +742,8 @@ def clear_cart(token):
         if conn:
             conn.close()
 
-    return redirect(url_for('cart', token=token))
+    return redirect(url_for('cart', token=token))  # Перенаправлення на сторінку кошика
+
 
 
 
@@ -828,37 +828,60 @@ def place_order(token):
 
 # Замовлення користувача
 @app.route('/<token>/orders', methods=['GET'])
-@requires_token_and_role('user')  # Перевірка токена та ролі
+@requires_token_and_role('user')
 def orders(token):
     user_id = session.get('user_id')
-    logging.debug(f"Fetching orders for user_id: {user_id}")
-
     if not user_id:
-        flash("You are not authenticated.", "error")
+        flash("User is not authenticated.", "error")
         return redirect(url_for('index'))
+
+    article_filter = request.args.get('article', '')
+    status_filter = request.args.get('status', '')
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor = conn.cursor()
 
-        # Отримання замовлень для поточного користувача разом зі статусом
-        cursor.execute("""
-            SELECT id, total_price, order_date, status
-            FROM orders
-            WHERE user_id = %s
-            ORDER BY order_date DESC
-        """, (user_id,))
-        user_orders = cursor.fetchall()
+        query = """
+        SELECT * FROM orders
+        WHERE user_id = %s
+        """
 
-        logging.debug(f"Orders for user_id={user_id}: {user_orders}")
-        return render_template('orders.html', orders=user_orders)
+        params = [user_id]
+
+        # Apply article filter if provided
+        if article_filter:
+            query += " AND EXISTS (SELECT 1 FROM order_items WHERE order_id = orders.id AND article LIKE %s)"
+            params.append(f"%{article_filter}%")
+
+        # Apply status filter if provided
+        if status_filter:
+            query += " AND status = %s"
+            params.append(status_filter)
+
+        # Apply date filters if provided
+        if start_date:
+            query += " AND order_date >= %s"
+            params.append(start_date)
+        if end_date:
+            query += " AND order_date <= %s"
+            params.append(end_date)
+
+        cursor.execute(query, params)
+        orders = cursor.fetchall()
+
+        logging.debug(f"Orders retrieved for user_id={user_id} with filters: {article_filter}, {status_filter}, {start_date}, {end_date}")
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return render_template('orders.html', orders=orders)
     except Exception as e:
-        logging.error(f"Error fetching orders for user_id={user_id}: {e}")
-        flash("Error loading orders.", "error")
-        return redirect(url_for('index'))
-    finally:
-        if conn:
-            conn.close()
+        logging.error(f"Error fetching orders: {e}", exc_info=True)
+        flash("Error fetching orders.", "error")
+        return redirect(url_for('orders', token=token))
 
 
 

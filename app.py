@@ -361,6 +361,8 @@ def search_articles(token):
     """
     Маршрут для пошуку артикулів.
     """
+    conn = None
+    cursor = None
     try:
         logging.info("Processing search request...")
         articles = []
@@ -461,6 +463,7 @@ def search_articles(token):
         if conn:
             conn.close()
         logging.info("Database connection closed.")
+
 
 
 
@@ -613,7 +616,8 @@ def add_to_cart(token):
             logging.debug("Database connection closed after adding to cart.")
 
     # Перенаправлення на результати пошуку
-    return redirect(url_for('search_articles', token=token))
+    return redirect(request.referrer or url_for('search_articles', token=token) + "#results")
+
 
 
 

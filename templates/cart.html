@@ -49,11 +49,11 @@
                         <td>{{ item.article }}</td>
                         <td>{{ item.price }}</td>
                         <td>
-                            <form method="POST" action="/{{ session['token'] }}/update_cart">
-                                <input type="hidden" name="article" value="{{ item.article }}">
-                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
-                                <button type="submit" class="btn btn-primary">Update</button>
-                            </form>
+							<form method="POST" action="/{{ session['token'] }}/update_cart">
+								<input type="hidden" name="product_id" value="{{ item.product_id }}">
+								<input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
+								<button type="submit" class="btn btn-primary">Update</button>
+							</form>
                         </td>
                         <td>{{ item.price * item.quantity }}</td>
                         <td>

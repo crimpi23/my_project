@@ -680,13 +680,26 @@ def update_cart(token):
     cursor = None
     try:
         # Отримуємо дані з форми
-        product_id = int(request.form.get('product_id'))
-        quantity = int(request.form.get('quantity'))
+        product_id = request.form.get('product_id')
+        quantity = request.form.get('quantity')
         user_id = session.get('user_id')  # Отримання ID користувача із сесії
 
         if not user_id:
             flash("User is not authenticated. Please log in.", "error")
             return redirect(url_for('index'))
+
+        if not product_id or not quantity:
+            flash("Invalid input: product_id or quantity missing.", "error")
+            logging.error("Missing product_id or quantity in update_cart form.")
+            return redirect(url_for('cart', token=token))
+
+        product_id = int(product_id)
+        quantity = int(quantity)
+
+        if quantity < 1:
+            flash("Quantity must be at least 1.", "error")
+            logging.error(f"Invalid quantity: {quantity}")
+            return redirect(url_for('cart', token=token))
 
         logging.debug(f"Updating cart: Product ID={product_id}, Quantity={quantity}, User={user_id}")
 
@@ -714,6 +727,7 @@ def update_cart(token):
 
     # Повернення до кошика
     return redirect(url_for('cart', token=token))
+
 
 
 
@@ -857,6 +871,7 @@ def orders(token):
         query = """
         SELECT * FROM orders
         WHERE user_id = %s
+        ORDER BY order_date DESC
         """
         params = [user_id]
 

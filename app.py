@@ -464,8 +464,8 @@ def search_articles(token):
 @requires_token_and_role('user')
 def add_selected_to_cart(token):
     """
-    Обробляє додавання вибраних товарів до кошика.
-    Перенаправляє в кошик або повертає на сторінку пошуку.
+    Додавання вибраних товарів до кошика.
+    Після виконання перенаправляє до кошика або повертає на сторінку пошуку.
     """
     conn = None
     cursor = None
@@ -473,10 +473,8 @@ def add_selected_to_cart(token):
         user_id = session.get('user_id')
         if not user_id:
             flash("User is not authenticated. Please log in.", "error")
-            logging.warning("User is not authenticated.")
             return redirect(url_for('index'))
 
-        # Отримання даних з форми
         selected_prices = request.form.getlist('selected_price')
         all_quantities = request.form.to_dict(flat=False).get('quantities', {})
         referrer = request.referrer
@@ -512,8 +510,12 @@ def add_selected_to_cart(token):
         conn.commit()
         flash("Selected items added to cart.", "success")
 
-        # Перенаправляємо до кошика
-        return redirect(url_for('cart', token=token))
+        # Логіка перенаправлення
+        redirect_to_cart = request.form.get('redirect_to_cart', 'false') == 'true'
+        if redirect_to_cart:
+            return redirect(url_for('cart', token=token))
+        else:
+            return redirect(f"{referrer or url_for('index')}#results")
 
     except Exception as e:
         if conn:
@@ -526,6 +528,7 @@ def add_selected_to_cart(token):
             cursor.close()
         if conn:
             conn.close()
+
 
 
 

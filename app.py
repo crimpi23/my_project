@@ -464,7 +464,7 @@ def search_articles(token):
 @requires_token_and_role('user')
 def add_selected_to_cart(token):
     """
-    Обробляє додавання вибраних товарів до кошика з покращеним логуванням.
+    Обробляє додавання вибраних товарів до кошика з додатковим логуванням.
     """
     conn = None
     cursor = None
@@ -480,7 +480,8 @@ def add_selected_to_cart(token):
         all_quantities = request.form.to_dict(flat=False).get('quantities', {})
         referrer = request.referrer
 
-        logging.debug(f"Referrer: {referrer}")
+        logging.debug(f"Request URL: {request.url}")
+        logging.debug(f"Request Referrer: {referrer}")
         logging.debug(f"Selected prices: {selected_prices}")
         logging.debug(f"All quantities: {all_quantities}")
 
@@ -494,7 +495,6 @@ def add_selected_to_cart(token):
         for selected in selected_prices:
             try:
                 price, table_name = selected.split('|')
-                # Витягуємо артикул із таблиці
                 article = table_name.split('_')[0]
 
                 # Перевіряємо кількість для цього артикула

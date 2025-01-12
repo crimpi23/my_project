@@ -481,7 +481,7 @@ def clear_search(token):
     except Exception as e:
         logging.error(f"Error clearing search data: {str(e)}", exc_info=True)
         flash("Could not clear search data. Please try again.", "error")
-    return redirect(request.referrer or url_for('index'))
+    return redirect(url_for('home', token=token))   
 
 
 # Сторінка кошика
@@ -547,7 +547,7 @@ def add_to_cart(token):
         # Отримання даних з форми
         article = request.form.get('article')
         price = float(request.form.get('price'))
-        quantity = int(request.form.get('quantity'))  # Кількість має бути з форми
+        quantity = int(request.form.get('quantity'))  # Кількість товару з форми
         table_name = request.form.get('table_name')
         user_id = session.get('user_id')  # Отримання ID користувача із сесії
 
@@ -622,6 +622,7 @@ def add_to_cart(token):
         quantities=session.get('quantities', {}),
         missing_articles=session.get('missing_articles', []),
     )
+
 
 
 
@@ -835,39 +836,46 @@ def orders(token):
         flash("User is not authenticated.", "error")
         return redirect(url_for('index'))
 
+    # Отримання фільтрів з запиту
     article_filter = request.args.get('article', '')
     status_filter = request.args.get('status', '')
     start_date = request.args.get('start_date', '')
     end_date = request.args.get('end_date', '')
 
+    # Логування отриманих фільтрів
+    logging.debug(f"Received filters: Article: {article_filter}, Status: {status_filter}, Start Date: {start_date}, End Date: {end_date}")
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Початковий запит
         query = """
         SELECT * FROM orders
         WHERE user_id = %s
         """
-
         params = [user_id]
 
-        # Apply article filter if provided
+        # Додавання умов для фільтрів
+
         if article_filter:
             query += " AND EXISTS (SELECT 1 FROM order_items WHERE order_id = orders.id AND article LIKE %s)"
             params.append(f"%{article_filter}%")
 
-        # Apply status filter if provided
         if status_filter:
             query += " AND status = %s"
             params.append(status_filter)
 
-        # Apply date filters if provided
         if start_date:
             query += " AND order_date >= %s"
             params.append(start_date)
+
         if end_date:
             query += " AND order_date <= %s"
             params.append(end_date)
+
+        # Логування сформованого запиту
+        logging.debug(f"Executing query: {query} with params: {params}")
 
         cursor.execute(query, params)
         orders = cursor.fetchall()

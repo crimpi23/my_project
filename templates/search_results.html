@@ -52,13 +52,13 @@
                         <td>{{ detail.price }}</td>
                         <td>{{ detail.table_name }}</td>
                         <td>
-                            <form method="POST" action="/{{ session['token'] }}/add_to_cart">
-                                <input type="hidden" name="article" value="{{ article }}">
-                                <input type="hidden" name="price" value="{{ detail.price }}">
-                                <input type="hidden" name="table_name" value="{{ detail.table_name }}">
-                                <input type="number" name="quantity" value="1" min="1" required class="quantity-input">
-                                <button type="submit" class="btn btn-primary">Add to Cart</button>
-                            </form>
+							<form method="POST" action="/{{ session['token'] }}/add_to_cart">
+								<input type="hidden" name="article" value="{{ article }}">
+								<input type="hidden" name="price" value="{{ detail.price }}">
+								<input type="hidden" name="table_name" value="{{ detail.table_name }}">
+								<input type="number" name="quantity" value="1" min="1" required class="quantity-input">
+								<button type="submit" class="btn btn-primary">Add to Cart</button>
+							</form>
                         </td>
                     </tr>
                     {% endfor %}
@@ -78,9 +78,9 @@
             </div>
             {% endif %}
 
-            <form method="POST" action="/{{ session['token'] }}/clear_search">
-                <button type="submit" class="btn btn-warning">Clear Search</button>
-            </form>
+			<form method="POST" action="/{{ session['token'] }}/clear_search">
+				<button type="submit" class="btn btn-warning">Clear Search</button>
+			</form>
         </section>
     </main>
 </body>

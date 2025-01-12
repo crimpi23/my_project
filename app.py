@@ -459,72 +459,68 @@ def search_articles(token):
         logging.info("Database connection closed.")
 
 
-
+# Додавання артикула по чекбоксу
 @app.route('/<token>/add_selected_to_cart', methods=['POST'])
 @requires_token_and_role('user')
 def add_selected_to_cart(token):
     """
-    Додає вибрані товари до кошика.
+    Обробляє додавання вибраних товарів до кошика.
     """
+    conn = None  # Ініціалізуємо conn на початку
+    cursor = None
     try:
-        user_id = session.get('user_id')
+        user_id = session.get('user_id')  # Отримуємо ID користувача з сесії
         if not user_id:
             flash("User is not authenticated. Please log in.", "error")
             return redirect(url_for('index'))
 
-        selected_items = request.form.getlist('selected_items')
-        quantities = request.form.get('quantities', {})
-        
-        if not selected_items:
-            flash("No items selected to add to the cart.", "error")
-            return redirect(request.referrer or url_for('search_results', token=token))
+        # Отримуємо дані з форми
+        selected_prices = request.form.getlist('selected_price')
+        quantities = request.form.to_dict(flat=False).get('quantities', {})
+
+        if not selected_prices:
+            flash("No items selected.", "error")
+            return redirect(request.referrer or url_for('search_results'))
+
+        logging.debug(f"Selected prices: {selected_prices}")
+        logging.debug(f"Quantities: {quantities}")
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        for article in selected_items:
-            quantity = int(quantities.get(article, 1))
-            
-            # Отримуємо продукт із таблиці `products`
-            cursor.execute("""
-                SELECT id, price FROM products WHERE article = %s;
-            """, (article,))
-            product = cursor.fetchone()
-            
-            if not product:
-                flash(f"Product with article {article} not found.", "error")
+        for selected in selected_prices:
+            price, table_name = selected.split('|')
+            article = table_name.split('_')[0]  # Можливо, треба отримати з форми
+
+            # Перевіряємо кількість
+            quantity = int(quantities.get(article, [1])[0])
+            if quantity <= 0:
                 continue
 
-            product_id, price = product
-
-            # Перевіряємо, чи товар вже в кошику
+            # Додаємо товар до кошика
             cursor.execute("""
-                SELECT id FROM cart WHERE user_id = %s AND product_id = %s;
-            """, (user_id, product_id))
-            cart_item = cursor.fetchone()
+                INSERT INTO cart (user_id, product_id, quantity, added_at)
+                SELECT %s, p.id, %s, NOW()
+                FROM products p
+                WHERE p.article = %s AND p.price = %s AND p.table_name = %s
+                """, (user_id, quantity, article, price, table_name))
 
-            if cart_item:
-                # Оновлюємо кількість
-                cursor.execute("""
-                    UPDATE cart SET quantity = quantity + %s WHERE id = %s;
-                """, (quantity, cart_item[0]))
-            else:
-                # Додаємо товар до кошика
-                cursor.execute("""
-                    INSERT INTO cart (user_id, product_id, quantity, added_at)
-                    VALUES (%s, %s, %s, NOW());
-                """, (user_id, product_id, quantity))
-        
         conn.commit()
-        flash("Selected items added to the cart successfully!", "success")
+        flash("Selected items added to cart.", "success")
     except Exception as e:
-        logging.error(f"Error adding selected items to the cart: {e}", exc_info=True)
-        flash("Error adding selected items to the cart.", "error")
+        if conn:
+            conn.rollback()
+        logging.error(f"Error adding selected items to cart: {e}", exc_info=True)
+        flash("Error adding selected items to cart.", "error")
     finally:
+        if cursor:
+            cursor.close()
         if conn:
             conn.close()
+            logging.debug("Database connection closed after adding items to cart.")
 
-    return redirect(url_for('search_results', token=token))
+    return redirect(request.referrer or url_for('search_results'))
+
 
 
 

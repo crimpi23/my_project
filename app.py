@@ -355,19 +355,25 @@ def create_user(token):
 
 
 # Маршрут для пошуку артикулів
-@app.route('/<token>/search', methods=['POST'])
+@app.route('/<token>/search', methods=['GET', 'POST'])
 @requires_token_and_role('user')
 def search_articles(token):
     """
-    Маршрут для пошуку артикулів з розширеним логуванням.
+    Маршрут для пошуку артикулів.
     """
     conn = None
     cursor = None
+
+    # Обробка GET-запитів
+    if request.method == 'GET':
+        flash("Please perform a search to view results.", "info")
+        return redirect(url_for('index'))
+
+    # Обробка POST-запитів
     try:
         logging.info("Processing search request...")
         articles = []
         quantities = {}
-        auto_set_quantities = []
 
         articles_input = request.form.get('articles')
         logging.debug(f"Received articles input: {articles_input}")
@@ -387,7 +393,6 @@ def search_articles(token):
                 quantities[article] = quantities.get(article, 0) + 1
                 if article not in articles:
                     articles.append(article)
-                    auto_set_quantities.append(article)
             elif len(parts) == 2 and parts[1].isdigit():
                 article, quantity = parts[0].strip().upper(), int(parts[1])
                 quantities[article] = quantities.get(article, 0) + quantity
@@ -439,6 +444,7 @@ def search_articles(token):
             quantities=quantities,
             missing_articles=missing_articles
         )
+
     except Exception as e:
         logging.error(f"Error in search_articles: {str(e)}", exc_info=True)
         flash(f"Error: {str(e)}", "error")
@@ -452,12 +458,13 @@ def search_articles(token):
 
 
 
+
 # Додавання артикула по чекбоксу
 @app.route('/<token>/add_selected_to_cart', methods=['POST'])
 @requires_token_and_role('user')
 def add_selected_to_cart(token):
     """
-    Обробляє додавання вибраних товарів до кошика.
+    Обробляє додавання вибраних товарів до кошика з покращеним логуванням.
     """
     conn = None
     cursor = None
@@ -465,18 +472,21 @@ def add_selected_to_cart(token):
         user_id = session.get('user_id')
         if not user_id:
             flash("User is not authenticated. Please log in.", "error")
+            logging.warning("User is not authenticated.")
             return redirect(url_for('index'))
 
         # Збирання даних з форми
         selected_prices = request.form.getlist('selected_price')
         all_quantities = request.form.to_dict(flat=False).get('quantities', {})
+        referrer = request.referrer
+
+        logging.debug(f"Referrer: {referrer}")
+        logging.debug(f"Selected prices: {selected_prices}")
+        logging.debug(f"All quantities: {all_quantities}")
 
         if not selected_prices:
             flash("No items selected.", "error")
-            return redirect(request.referrer or url_for('search_articles', token=token))
-
-        logging.debug(f"Selected prices: {selected_prices}")
-        logging.debug(f"All quantities: {all_quantities}")
+            return redirect(url_for('search_articles', token=token))
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -484,8 +494,8 @@ def add_selected_to_cart(token):
         for selected in selected_prices:
             try:
                 price, table_name = selected.split('|')
-                # Витягуємо артикул на основі структури таблиці
-                article = table_name.split('_')[0]  
+                # Витягуємо артикул із таблиці
+                article = table_name.split('_')[0]
 
                 # Перевіряємо кількість для цього артикула
                 quantity = int(all_quantities.get(article, [1])[0])
@@ -517,8 +527,11 @@ def add_selected_to_cart(token):
         if conn:
             conn.close()
 
-    # Перенаправлення до результатів пошуку
-    return redirect(request.referrer or url_for('search_articles', token=token))
+    # Очищення хешу з реферера (якщо є) і перенаправлення
+    clean_referrer = referrer.split('#')[0] if referrer else None
+    logging.debug(f"Clean referrer: {clean_referrer}")
+
+    return redirect(clean_referrer or url_for('cart', token=token))
 
 
 

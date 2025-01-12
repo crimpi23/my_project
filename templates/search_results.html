@@ -100,10 +100,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th><input type="checkbox" id="select-all"></th>
                         <th>Article</th>
                         <th>Price</th>
                         <th>Table</th>
+                        <th>Select</th>
                         <th>Quantity</th>
                     </tr>
                 </thead>
@@ -112,16 +112,20 @@
                     {% for detail in details %}
                     <tr>
                         {% if loop.index == 1 %}
-                        <td rowspan="{{ details|length }}">
-                            <input type="checkbox" name="selected_items" value="{{ article }}">
-                        </td>
                         <td rowspan="{{ details|length }}">{{ article }}</td>
                         {% endif %}
                         <td>{{ detail.price }}</td>
                         <td>{{ detail.table_name }}</td>
+                        <td>
+                            <input type="radio" name="selected_price[{{ article }}]" 
+                                   value="{{ detail.price }}|{{ detail.table_name }}" 
+                                   required>
+                        </td>
                         {% if loop.index == 1 %}
                         <td rowspan="{{ details|length }}">
-                            <input type="number" name="quantities[{{ article }}]" value="{{ quantities.get(article, 1) }}" min="1" required>
+                            <input type="number" name="quantities[{{ article }}]" 
+                                   value="{{ quantities.get(article, 1) }}" 
+                                   min="1" required>
                         </td>
                         {% endif %}
                     </tr>
@@ -143,13 +147,5 @@
     <footer>
         <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
     </footer>
-
-    <script>
-        // Select all checkboxes
-        document.getElementById('select-all').addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('input[name="selected_items"]');
-            checkboxes.forEach(cb => cb.checked = this.checked);
-        });
-    </script>
 </body>
 </html>

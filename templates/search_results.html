@@ -127,7 +127,8 @@
 						<td>{{ detail.price }}</td>
 						<td>{{ detail.table_name }}</td>
 						<td>
-							<input type="number" name="quantities[{{ article }}]" class="quantity-input" value="{{ quantities.get(article, 1) }}" min="1" required>
+							<input type="number" name="quantities[{{ article }}]" class="quantity-input" 
+								   value="{{ quantities.get(article, 1) }}" min="1" required>
 						</td>
 						<td>
 							<input type="checkbox" name="selected_price" value="{{ detail.price }}|{{ detail.table_name }}" 
@@ -138,6 +139,7 @@
 					{% endfor %}
 					{% endfor %}
 				</tbody>
+
 			</table>
 			<button type="submit" class="btn btn-primary">Add Selected to Cart</button>
 			{% else %}

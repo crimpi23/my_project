@@ -457,28 +457,26 @@ def search_articles(token):
 @requires_token_and_role('user')
 def add_selected_to_cart(token):
     """
-    Обробляє додавання вибраних товарів до кошика з розширеним логуванням.
+    Обробляє додавання вибраних товарів до кошика.
     """
     conn = None
     cursor = None
     try:
-        user_id = session.get('user_id')  # Отримуємо ID користувача з сесії
+        user_id = session.get('user_id')
         if not user_id:
             flash("User is not authenticated. Please log in.", "error")
-            logging.warning("User is not authenticated.")
             return redirect(url_for('index'))
 
-        # Отримуємо дані з форми
+        # Збирання даних з форми
         selected_prices = request.form.getlist('selected_price')
-        quantities = request.form.to_dict(flat=False).get('quantities', {})
+        all_quantities = request.form.to_dict(flat=False).get('quantities', {})
 
         if not selected_prices:
             flash("No items selected.", "error")
-            logging.warning("No items were selected in the form.")
             return redirect(request.referrer or url_for('search_articles', token=token))
 
         logging.debug(f"Selected prices: {selected_prices}")
-        logging.debug(f"Quantities: {quantities}")
+        logging.debug(f"All quantities: {all_quantities}")
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -486,10 +484,11 @@ def add_selected_to_cart(token):
         for selected in selected_prices:
             try:
                 price, table_name = selected.split('|')
-                article = table_name.split('_')[0]  # Витягуємо артикул із таблиці
+                # Витягуємо артикул на основі структури таблиці
+                article = table_name.split('_')[0]  
 
-                # Перевіряємо кількість
-                quantity = int(quantities.get(article, [1])[0])
+                # Перевіряємо кількість для цього артикула
+                quantity = int(all_quantities.get(article, [1])[0])
                 if quantity <= 0:
                     logging.warning(f"Invalid quantity for article {article}: {quantity}. Skipping.")
                     continue
@@ -517,9 +516,9 @@ def add_selected_to_cart(token):
             cursor.close()
         if conn:
             conn.close()
-            logging.debug("Database connection closed after adding items to cart.")
 
-    return redirect(url_for('search_articles', token=token))
+    # Перенаправлення до результатів пошуку
+    return redirect(request.referrer or url_for('search_articles', token=token))
 
 
 

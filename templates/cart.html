@@ -7,75 +7,78 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+    <!-- Header -->
     <header>
         <nav>
             <ul>
-                <li><a href="/{{ session['token'] }}/">Home</a></li>
-                <li><a href="/{{ session['token'] }}/">Search</a></li>
-                <li><a href="/{{ session['token'] }}/orders">Orders</a></li>
+                <li><a href="/{{ session['token'] }}/" class="nav-link">Home</a></li>
+                <li><a href="/{{ session['token'] }}/" class="nav-link">Search</a></li>
+                <li><a href="/{{ session['token'] }}/orders" class="nav-link">Orders</a></li>
             </ul>
         </nav>
     </header>
 
-    <div class="container">
-        <h1>Shopping Cart</h1>
+    <main class="container">
+        <section class="intro">
+            <h1>Shopping Cart</h1>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flashes">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flashes">
+                        {% for category, message in messages %}
+                            <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            {% if cart_items %}
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.article }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/update_cart">
+                                <input type="hidden" name="article" value="{{ item.article }}">
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
+                                <button type="submit" class="btn btn-primary">Update</button>
+                            </form>
+                        </td>
+                        <td>{{ item.price * item.quantity }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
+                                <input type="hidden" name="article" value="{{ item.article }}">
+                                <button type="submit" class="btn btn-danger">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
                     {% endfor %}
-                </ul>
+                </tbody>
+            </table>
+
+            <div class="cart-actions">
+                <form method="POST" action="/{{ session['token'] }}/clear_cart">
+                    <button type="submit" class="btn btn-warning"><i class="fas fa-trash"></i> Clear Cart</button>
+                </form>
+                <form method="POST" action="/{{ session['token'] }}/place_order">
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Place Order</button>
+                </form>
+            </div>
+            {% else %}
+            <p>Your cart is empty. <a href="/{{ session['token'] }}/">Search for products</a> to add them to your cart.</p>
             {% endif %}
-        {% endwith %}
-
-        {% if cart_items %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Article</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Total</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in cart_items %}
-                <tr>
-                    <td>{{ item.article }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>
-                        <form method="POST" action="/{{ session['token'] }}/update_cart">
-                            <input type="hidden" name="article" value="{{ item.article }}">
-                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
-                            <button type="submit" class="btn btn-primary">Update</button>
-                        </form>
-                    </td>
-                    <td>{{ item.price * item.quantity }}</td>
-                    <td>
-                        <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
-                            <input type="hidden" name="article" value="{{ item.article }}">
-                            <button type="submit" class="btn btn-danger">Remove</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <div class="cart-actions">
-            <form method="POST" action="/{{ session['token'] }}/clear_cart">
-                <button type="submit" class="btn btn-warning"><i class="fas fa-trash"></i> Clear Cart</button>
-            </form>
-            <form method="POST" action="/{{ session['token'] }}/place_order">
-                <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Place Order</button>
-            </form>
-        </div>
-        {% else %}
-        <p>Your cart is empty. <a href="/{{ session['token'] }}/">Search for products</a> to add them to your cart.</p>
-        {% endif %}
-    </div>
+        </section>
+    </main>
 </body>
 </html>

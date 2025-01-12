@@ -7,77 +7,81 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+    <!-- Header -->
     <header>
         <nav>
             <ul>
-                <li><a href="/{{ session['token'] }}/">Home</a></li>
-                <li><a href="/{{ session['token'] }}/cart">Cart</a></li>
-                <li><a href="/{{ session['token'] }}/orders">Orders</a></li>
+                <li><a href="/{{ session['token'] }}/" class="nav-link">Home</a></li>
+                <li><a href="/{{ session['token'] }}/cart" class="nav-link">Cart</a></li>
+                <li><a href="/{{ session['token'] }}/orders" class="nav-link">Orders</a></li>
             </ul>
         </nav>
     </header>
-    <div class="container">
-        <h1>Search Results</h1>
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flashes">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
+
+    <main class="container">
+        <section class="intro">
+            <h1>Search Results</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flashes">
+                        {% for category, message in messages %}
+                            <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            {% if grouped_results %}
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Table</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article, details in grouped_results.items() %}
+                    {% for detail in details %}
+                    <tr>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{ details|length }}">{{ article }}</td>
+                        {% endif %}
+                        <td>{{ detail.price }}</td>
+                        <td>{{ detail.table_name }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/add_to_cart">
+                                <input type="hidden" name="article" value="{{ article }}">
+                                <input type="hidden" name="price" value="{{ detail.price }}">
+                                <input type="hidden" name="table_name" value="{{ detail.table_name }}">
+                                <input type="number" name="quantity" value="1" min="1" required class="quantity-input">
+                                <button type="submit" class="btn btn-primary">Add to Cart</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            {% if missing_articles %}
+            <div class="warning-message">
+                <p>Missing Articles:</p>
+                <ul>
+                    {% for article in missing_articles %}
+                    <li>{{ article }}</li>
                     {% endfor %}
                 </ul>
+            </div>
             {% endif %}
-        {% endwith %}
 
-        {% if grouped_results %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Article</th>
-                    <th>Price</th>
-                    <th>Table</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for article, details in grouped_results.items() %}
-                {% for detail in details %}
-                <tr>
-                    {% if loop.index == 1 %}
-                    <td rowspan="{{ details|length }}">{{ article }}</td>
-                    {% endif %}
-                    <td>{{ detail.price }}</td>
-                    <td>{{ detail.table_name }}</td>
-                    <td>
-                        <form method="POST" action="/{{ session['token'] }}/add_to_cart">
-                            <input type="hidden" name="article" value="{{ article }}">
-                            <input type="hidden" name="price" value="{{ detail.price }}">
-                            <input type="hidden" name="table_name" value="{{ detail.table_name }}">
-                            <input type="number" name="quantity" value="1" min="1" required>
-                            <button type="submit" class="btn btn-primary">Add to Cart</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-                {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
-
-        {% if missing_articles %}
-        <div class="warning-message">
-            <p>Missing Articles:</p>
-            <ul>
-                {% for article in missing_articles %}
-                <li>{{ article }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-
-        <form method="POST" action="/{{ session['token'] }}/clear_search">
-            <button type="submit" class="btn btn-warning">Clear Search</button>
-        </form>
-    </div>
+            <form method="POST" action="/{{ session['token'] }}/clear_search">
+                <button type="submit" class="btn btn-warning">Clear Search</button>
+            </form>
+        </section>
+    </main>
 </body>
 </html>

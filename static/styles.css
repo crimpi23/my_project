@@ -732,3 +732,246 @@ tr:nth-child(even) {
     border-radius: 4px;
     color: #856404;
 }
+/* General styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.container {
+    width: 80%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1, h2 {
+    font-size: 2rem;
+    color: #333;
+}
+
+section {
+    margin-bottom: 20px;
+}
+
+/* Header and Navigation */
+header {
+    background-color: #333;
+    color: white;
+    padding: 15px 0;
+}
+
+nav ul {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+nav ul li {
+    margin: 0 15px;
+}
+
+.nav-link {
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.nav-link:hover {
+    color: #ff6347;
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: white;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f8f9fa;
+}
+
+td {
+    background-color: white;
+}
+
+/* Quantity input */
+.quantity-input {
+    width: 60px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+/* Flash messages */
+.flashes {
+    margin: 20px 0;
+    padding: 10px;
+    list-style-type: none;
+}
+
+.flashes li {
+    padding: 5px;
+    margin-bottom: 5px;
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.flashes .success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+/* Diagnostic and Warning messages */
+.diagnostic-info {
+    background-color: #fff3cd;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 20px;
+    border: 1px solid #ffeeba;
+}
+
+.diagnostic-info pre {
+    background-color: #f8d7da;
+    padding: 10px;
+    border-radius: 5px;
+    color: #721c24;
+}
+
+.warning-message {
+    background-color: #fff3cd;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 20px;
+    border: 1px solid #ffeeba;
+}
+
+.warning-message p {
+    font-weight: bold;
+}
+
+.warning-message ul {
+    margin-top: 10px;
+}
+
+.warning-message li {
+    color: #856404;
+}
+
+/* No Orders or Details Message */
+p {
+    font-size: 1rem;
+    color: #777;
+}
+
+/* Containers for pages */
+.container {
+    width: 80%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Flashes */
+.flashes {
+    margin: 20px 0;
+    padding: 10px;
+    list-style-type: none;
+}
+
+.flashes li {
+    padding: 5px;
+    margin-bottom: 5px;
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.flashes .success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+/* No Details Message */
+.details-table {
+    margin-top: 20px;
+}
+
+/* Footer Section */
+footer {
+    text-align: center;
+    margin-top: 50px;
+    padding: 20px;
+    background-color: #333;
+    color: white;
+    font-size: 0.9rem;
+}

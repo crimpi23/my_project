@@ -12,25 +12,26 @@
     <header>
         <nav>
             <ul>
-                <li><a href="/{{ session['token'] }}/">Home</a></li>
+                <li><a href="/{{ session['token'] }}/" class="nav-link">Home</a></li>
                 {% if session.get('token') %}
-                <li><a href="/{{ session['token'] }}/cart">Cart</a></li>
-                <li><a href="/{{ session['token'] }}/orders">Orders</a></li>
+                <li><a href="/{{ session['token'] }}/cart" class="nav-link">Cart</a></li>
+                <li><a href="/{{ session['token'] }}/orders" class="nav-link">Orders</a></li>
                 {% endif %}
             </ul>
         </nav>
     </header>
 
-    <div class="container">
-        <h1>Article Price Search</h1>
-
-        {% if session.get('token') %}
-        <!-- For users with token -->
-        <p>Welcome to the advanced search system! Use the tools below:</p>
+    <main class="container">
+        <section class="intro">
+            <h1>Article Price Search</h1>
+            {% if session.get('token') %}
+            <p>Welcome to the advanced search system! Use the tools below:</p>
+            {% endif %}
+        </section>
 
         <!-- Search Results Section -->
         {% if grouped_results %}
-        <div id="results" class="results">
+        <section id="results" class="results">
             <h2>Search Results:</h2>
             <table>
                 <thead>
@@ -55,8 +56,8 @@
                                 <input type="hidden" name="article" value="{{ article }}">
                                 <input type="hidden" name="price" value="{{ detail.price }}">
                                 <input type="hidden" name="table_name" value="{{ detail.table_name }}">
-                                <input type="number" name="quantity" value="1" min="1">
-                                <button type="submit" class="add-to-cart-button">Add to Cart</button>
+                                <input type="number" name="quantity" value="1" min="1" class="quantity-input">
+                                <button type="submit" class="btn btn-primary">Add to Cart</button>
                             </form>
                         </td>
                     </tr>
@@ -64,49 +65,51 @@
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
+        </section>
         {% endif %}
 
         {% if grouped_results or missing_articles %}
-        <div class="clear-search-section">
+        <section class="clear-search-section">
             <form method="POST" action="/clear_search">
-                <button type="submit" class="clear-search-button">Clear Search Data</button>
+                <button type="submit" class="btn btn-secondary">Clear Search Data</button>
             </form>
-        </div>
+        </section>
         {% endif %}
 
         {% if missing_articles %}
-        <div class="warning-message">
+        <section class="warning-message">
             <p>The following articles were not found:</p>
             <ul>
                 {% for article in missing_articles %}
                 <li>{{ article }}</li>
                 {% endfor %}
             </ul>
-        </div>
+        </section>
         {% endif %}
 
         {% if auto_set_quantities %}
-        <div class="info-message">
+        <section class="info-message">
             <p>Articles with no quantity were set to 1:</p>
             <ul>
                 {% for article in auto_set_quantities %}
                 <li>{{ article }}</li>
                 {% endfor %}
             </ul>
-        </div>
+        </section>
         {% endif %}
 
         <!-- Search Form -->
-        <form method="POST" action="/{{ session['token'] }}/search#results" class="search-form">
-            <label for="articles" class="form-label">Enter Articles and Quantities:</label>
-            <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required class="form-textarea"></textarea>
-            <button type="submit" class="form-button">Search</button>
-        </form>
+        <section class="search-form-section">
+            <form method="POST" action="/{{ session['token'] }}/search#results" class="search-form">
+                <label for="articles" class="form-label">Enter Articles and Quantities:</label>
+                <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required class="form-textarea"></textarea>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </section>
 
         <!-- Cart Section -->
         {% if cart_items %}
-        <div class="cart-section">
+        <section class="cart-section">
             <h2>Your Cart</h2>
             <table>
                 <thead>
@@ -119,46 +122,34 @@
                     </tr>
                 </thead>
                 <tbody>
-				{% with messages = get_flashed_messages(with_categories=true) %}
-				  {% if messages %}
-					<ul class="flashes">
-					  {% for category, message in messages %}
-						<li class="{{ category }}">{{ message }}</li>
-					  {% endfor %}
-					</ul>
-				  {% endif %}
-				{% endwith %}
-
                     {% for item in cart_items %}
-					<tr>
-						<td>{{ item.article }}</td>
-						<td>{{ item.price }}</td>
-						<td>
-							<form method="POST" action="/{{ session['token'] }}/update_cart">
-								<input type="hidden" name="article" value="{{ item.article }}">
-								<input type="number" name="quantity" value="{{ item.quantity }}" min="1">
-								<button type="submit" class="update-button">
-									<i class="fas fa-edit"></i> Update
-								</button>
-							</form>
-						</td>
-						<td>{{ item.total_price }}</td>
-						<td>
-							<form method="POST" action="/{{ session['token'] }}/remove_from_cart">
-								<input type="hidden" name="article" value="{{ item.article }}">
-								<button type="submit" class="delete-button">
-									<i class="fas fa-trash"></i> Remove
-								</button>
-							</form>
-						</td>
-					</tr>
-					{% endfor %}
+                    <tr>
+                        <td>{{ item.article }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/update_cart">
+                                <input type="hidden" name="article" value="{{ item.article }}">
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i> Update
+                                </button>
+                            </form>
+                        </td>
+                        <td>{{ item.total_price }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
+                                <input type="hidden" name="article" value="{{ item.article }}">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
-        </div>
+        </section>
         {% endif %}
-
-        {% endif %}
-    </div>
+    </main>
 </body>
 </html>

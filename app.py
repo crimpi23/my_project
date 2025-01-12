@@ -483,8 +483,9 @@ def add_selected_to_cart(token):
         cursor = conn.cursor()
 
         for selected in selected_prices:
+            # Розділяємо значення форми
             price, table_name = selected.split('|')
-            article = table_name.split('_')[0]  # Передбачається, що article можна отримати з table_name
+            article = table_name.split('_')[0]  # Витягуємо артикул із таблиці
 
             # Перевіряємо кількість
             quantity = int(quantities.get(article, [1])[0])
@@ -496,8 +497,8 @@ def add_selected_to_cart(token):
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 SELECT %s, p.id, %s, NOW()
                 FROM products p
-                WHERE p.article = %s AND p.price = %s
-            """, (user_id, quantity, article, price))
+                WHERE p.article = %s AND p.price = %s AND p.table_name = %s
+            """, (user_id, quantity, article, price, table_name))
 
         conn.commit()
         flash("Selected items added to cart.", "success")
@@ -513,7 +514,8 @@ def add_selected_to_cart(token):
             conn.close()
             logging.debug("Database connection closed after adding items to cart.")
 
-    return redirect(request.referrer or url_for('search_results'))
+    # Повертаємо користувача до результатів пошуку
+    return redirect(url_for('search_articles', token=token))
 
 
 

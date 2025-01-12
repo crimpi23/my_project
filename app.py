@@ -615,8 +615,10 @@ def add_to_cart(token):
             conn.close()
             logging.debug("Database connection closed after adding to cart.")
 
-    # Перенаправлення на результати пошуку
-    return redirect(request.referrer or url_for('search_articles', token=token) + "#results")
+    # Перенаправлення на результати пошуку із збереженням стану
+    referrer = request.referrer or url_for('search_articles', token=token) + "#results"
+    logging.debug(f"Redirecting back to: {referrer}")
+    return redirect(referrer)
 
 
 

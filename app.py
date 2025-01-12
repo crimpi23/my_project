@@ -481,7 +481,10 @@ def clear_search(token):
     except Exception as e:
         logging.error(f"Error clearing search data: {str(e)}", exc_info=True)
         flash("Could not clear search data. Please try again.", "error")
-    return redirect(url_for('home', token=token))   
+    
+    # Перенаправлення на головну сторінку
+    return redirect(url_for('token_index', token=token))
+
 
 
 # Сторінка кошика
@@ -625,7 +628,6 @@ def add_to_cart(token):
 
 
 
-
 # Видалення товару з кошика
 @app.route('/<token>/remove_from_cart', methods=['POST'])
 def remove_from_cart(token):
@@ -673,43 +675,42 @@ def remove_from_cart(token):
 
 # Оновлення товару в кошику
 @app.route('/<token>/update_cart', methods=['POST'])
+@requires_token_and_role('user')
 def update_cart(token):
+    conn = None
+    cursor = None  # Ініціалізація cursor на початку
     try:
-        product_id = request.form.get('product_id')
+        # Логіка оновлення товару в кошику
+        article = request.form.get('article')
         quantity = int(request.form.get('quantity'))
-        user_id = session.get('user_id')  # Отримати ID поточного користувача з сесії
+        user_id = session.get('user_id')
 
         if not user_id:
-            flash("User is not authenticated. Please log in.", "error")
+            flash("User is not authenticated.", "error")
             return redirect(url_for('index'))
-
-        if not product_id or quantity < 1:
-            flash("Invalid product ID or quantity.", "error")
-            return redirect(request.referrer or url_for('cart'))
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Оновлення кількості товару в кошику
         cursor.execute("""
             UPDATE cart
             SET quantity = %s
-            WHERE user_id = %s AND product_id = %s
-        """, (quantity, user_id, product_id))
+            WHERE user_id = %s AND article = %s
+        """, (quantity, user_id, article))
+        
         conn.commit()
-
-        flash("Cart updated successfully!", "success")
-        return redirect(request.referrer or url_for('cart'))
-
+        flash("Cart updated successfully.", "success")
     except Exception as e:
-        logging.error("Error updating cart: %s", str(e), exc_info=True)
+        logging.error(f"Error updating cart: {e}", exc_info=True)
         flash("Error updating cart.", "error")
-        return redirect(request.referrer or url_for('cart'))
-
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
+
+    return redirect(url_for('cart', token=token))
 
 
 

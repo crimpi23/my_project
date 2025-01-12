@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <!-- Header -->
     <header>
         <nav>
             <ul>
@@ -21,18 +20,12 @@
     <main class="container">
         <section class="intro">
             <h1>Search Results</h1>
+            <p>Here are the results for your search query.</p>
+        </section>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <ul class="flashes">
-                        {% for category, message in messages %}
-                            <li class="{{ category }}">{{ message }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            {% endwith %}
-
-            {% if grouped_results %}
+        {% if grouped_results %}
+        <section id="results">
+            <h2>Results:</h2>
             <table class="results-table">
                 <thead>
                     <tr>
@@ -42,46 +35,39 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-					<tbody>
-						{% for article, details in grouped_results.items() %}
-						{% for detail in details %}
-						<tr>
-							{% if loop.index == 1 %}
-							<td rowspan="{{ details|length }}">{{ article }}</td>
-							{% endif %}
-							<td>{{ detail.price }}</td>
-							<td>{{ detail.table_name }}</td>
-							<td>
-								<form method="POST" action="/{{ session['token'] }}/add_to_cart">
-									<input type="hidden" name="article" value="{{ article }}">
-									<input type="hidden" name="price" value="{{ detail.price }}">
-									<input type="hidden" name="table_name" value="{{ detail.table_name }}">
-									<input type="number" name="quantity" value="{{ quantities.get(article, 1) }}" min="1" required class="quantity-input">
-									<button type="submit" class="btn btn-primary">Add to Cart</button>
-								</form>
-							</td>
-						</tr>
-						{% endfor %}
-						{% endfor %}
-					</tbody>
-
-            </table>
-            {% endif %}
-
-            {% if missing_articles %}
-            <div class="warning-message">
-                <p>Missing Articles:</p>
-                <ul>
-                    {% for article in missing_articles %}
-                    <li>{{ article }}</li>
+                <tbody>
+                    {% for article, details in grouped_results.items() %}
+                    {% for detail in details %}
+                    <tr>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{ details|length }}">{{ article }}</td>
+                        {% endif %}
+                        <td>{{ detail.price }}</td>
+                        <td>{{ detail.table_name }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/add_to_cart">
+                                <input type="hidden" name="article" value="{{ article }}">
+                                <input type="hidden" name="price" value="{{ detail.price }}">
+                                <input type="hidden" name="table_name" value="{{ detail.table_name }}">
+                                <input type="number" name="quantity" value="1" min="1" required>
+                                <button type="submit" class="btn btn-primary">Add to Cart</button>
+                            </form>
+                        </td>
+                    </tr>
                     {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-			<form method="POST" action="/{{ session['token'] }}/clear_search">
-				<button type="submit" class="btn btn-warning">Clear Search</button>
-			</form>
+                    {% endfor %}
+                </tbody>
+            </table>
         </section>
+        {% else %}
+        <section id="no-results">
+            <p>No results found for your search. Try modifying your query.</p>
+        </section>
+        {% endif %}
+
+        <footer>
+            <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
+        </footer>
     </main>
 </body>
 </html>

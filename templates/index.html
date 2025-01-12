@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <!-- Header -->
     <header>
         <nav>
             <ul>
@@ -29,7 +28,6 @@
             {% endif %}
         </section>
 
-        <!-- Search Results Section -->
         {% if grouped_results %}
         <section id="results" class="results">
             <h2>Search Results:</h2>
@@ -98,7 +96,6 @@
         </section>
         {% endif %}
 
-        <!-- Search Form -->
         <section class="search-form-section">
             <form method="POST" action="/{{ session['token'] }}/search#results" class="search-form">
                 <label for="articles" class="form-label">Enter Articles and Quantities:</label>
@@ -107,7 +104,6 @@
             </form>
         </section>
 
-        <!-- Cart Section -->
         {% if cart_items %}
         <section class="cart-section">
             <h2>Your Cart</h2>
@@ -151,5 +147,9 @@
         </section>
         {% endif %}
     </main>
+
+    <footer>
+        <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
+    </footer>
 </body>
 </html>

@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <!-- Header -->
     <header>
         <nav>
             <ul>
@@ -21,8 +20,10 @@
     <main class="container">
         <section class="intro">
             <h1>Your Orders</h1>
+            <p>View your past orders and their details.</p>
+        </section>
 
-            <!-- Search and Filter Form -->
+        <section id="filters">
             <form method="GET" action="/{{ session['token'] }}/orders" class="filter-form">
                 <label for="article">Search by Article:</label>
                 <input type="text" id="article" name="article" placeholder="Enter article" value="{{ request.args.get('article', '') }}">
@@ -43,8 +44,10 @@
 
                 <button type="submit" class="btn btn-primary">Apply Filters</button>
             </form>
+        </section>
 
-            {% if orders %}
+        {% if orders %}
+        <section id="orders-list">
             <table class="orders-table">
                 <thead>
                     <tr>
@@ -69,10 +72,16 @@
                     {% endfor %}
                 </tbody>
             </table>
-            {% else %}
-            <p>No orders found. Place an order to see it here.</p>
-            {% endif %}
         </section>
+        {% else %}
+        <section id="no-orders">
+            <p>No orders found. Place an order to see it here.</p>
+        </section>
+        {% endif %}
+
+        <footer>
+            <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
+        </footer>
     </main>
 </body>
 </html>

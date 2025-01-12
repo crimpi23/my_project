@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <!-- Header -->
     <header>
         <nav>
             <ul>
@@ -20,18 +19,11 @@
     <main class="container">
         <section class="intro">
             <h1>Order Details</h1>
+            <p>Below are the details for the selected order.</p>
+        </section>
 
-            <p>Below are the details for the selected order. If no details are shown, there might be an issue fetching the data.</p>
-
-            <!-- Diagnostic Block -->
-            <div class="diagnostic-info">
-                <h2>Diagnostic Information:</h2>
-                <p>Order ID: {{ request.view_args.get('order_id', 'Unknown') }}</p>
-                <pre>{{ details }}</pre>
-            </div>
-
-            <!-- Order Details Table -->
-            {% if details %}
+        {% if details %}
+        <section id="order-details">
             <table class="details-table">
                 <thead>
                     <tr>
@@ -54,10 +46,16 @@
                     {% endfor %}
                 </tbody>
             </table>
-            {% else %}
-            <p>No details available for this order. Please contact support if you think this is an error.</p>
-            {% endif %}
         </section>
+        {% else %}
+        <section id="no-details">
+            <p>No details available for this order. Please contact support if you think this is an error.</p>
+        </section>
+        {% endif %}
+
+        <footer>
+            <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
+        </footer>
     </main>
 </body>
 </html>

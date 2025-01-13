@@ -5,51 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results</title>
     <link rel="stylesheet" href="/static/styles.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            padding: 20px;
-            max-width: 1200px;
-            margin: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #f4f4f4;
-        }
-        .btn {
-            padding: 8px 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .btn:hover {
-            background-color: #0056b3;
-        }
-        .quantity-input {
-            width: 50px;
-            text-align: center;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/{{ session['token'] }}/">Home</a></li>
+                <li><a href="/{{ session['token'] }}/cart">Cart</a></li>
+                <li><a href="/{{ session['token'] }}/orders">Orders</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
         <h1>Search Results</h1>
-        {% if grouped_results %}
         <table>
             <thead>
                 <tr>
@@ -62,30 +31,31 @@
             </thead>
             <tbody>
                 {% for article, details in grouped_results.items() %}
-                {% for detail in details %}
-                <tr>
-                    {% if loop.index == 1 %}
-                    <td rowspan="{{ details|length }}">{{ article }}</td>
-                    {% endif %}
-                    <td>{{ detail.price }}</td>
-                    <td>{{ detail.table_name }}</td>
-                    <td>
-                        <form method="POST" action="/{{ session['token'] }}/add_to_cart" style="display:inline;">
-                            <input type="hidden" name="article" value="{{ article }}">
-                            <input type="hidden" name="price" value="{{ detail.price }}">
-                            <input type="hidden" name="table_name" value="{{ detail.table_name }}">
-                            <input type="number" name="quantity" class="quantity-input" value="1" min="1" required>
-                            <button type="submit" class="btn">Add to Cart</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
+                    {% for detail in details %}
+                    <tr>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{ details|length }}">{{ article }}</td>
+                        {% endif %}
+                        <td>{{ detail.price }}</td>
+                        <td>{{ detail.table_name }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/add_to_cart">
+                                <input type="hidden" name="article" value="{{ article }}">
+                                <input type="hidden" name="price" value="{{ detail.price }}">
+                                <input type="hidden" name="table_name" value="{{ detail.table_name }}">
+                                <input type="number" name="quantity" value="1" min="1" required>
+                                <button type="submit" class="btn btn-primary">Add to Cart</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 {% endfor %}
             </tbody>
         </table>
-        {% else %}
-        <p>No results found. Try another search.</p>
-        {% endif %}
-    </div>
+    </main>
+
+    <footer>
+        <p>Website designed by crimpi23 - Example B2B Auto Parts Store</p>
+    </footer>
 </body>
 </html>

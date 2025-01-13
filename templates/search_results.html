@@ -1,22 +1,50 @@
-<main>
-    <h1>Search Results</h1>
-    {% if missing_articles %}
-    <div>
-        <p>The following articles were not found: {{ ', '.join(missing_articles) }}</p>
-    </div>
-    {% endif %}
-    <table>
-        <thead>
-            <tr>
-                <th>Article</th>
-                <th>Price</th>
-                <th>Table</th>
-                <th>Quantity</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for article, details in grouped_results.items() %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/{{ session['token'] }}/">Home</a></li>
+                <li><a href="/{{ session['token'] }}/cart">Cart</a></li>
+                <li><a href="/{{ session['token'] }}/orders">Orders</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <h1>Search Results</h1>
+        {% if grouped_results %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Article</th>
+                    <th>Price</th>
+                    <th>Table</th>
+                    <th>Quantity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article, details in grouped_results.items() %}
                 {% for detail in details %}
                 <tr>
                     {% if loop.index == 1 %}
@@ -24,19 +52,27 @@
                     {% endif %}
                     <td>{{ detail.price }}</td>
                     <td>{{ detail.table_name }}</td>
-                    <td>{{ detail.quantity }}</td>
                     <td>
                         <form method="POST" action="/{{ session['token'] }}/add_to_cart">
                             <input type="hidden" name="article" value="{{ article }}">
                             <input type="hidden" name="price" value="{{ detail.price }}">
                             <input type="hidden" name="table_name" value="{{ detail.table_name }}">
-                            <input type="number" name="quantity" value="{{ detail.quantity }}" min="1" required>
-                            <button type="submit">Add to Cart</button>
+                            <input type="number" name="quantity" value="1" min="1" required>
+                            <button type="submit" class="btn btn-primary">Add to Cart</button>
                         </form>
                     </td>
                 </tr>
                 {% endfor %}
-            {% endfor %}
-        </tbody>
-    </table>
-</main>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No results found for your search. Please refine your query and try again.</p>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>&copy; 2025 - B2B Auto Parts System</p>
+    </footer>
+</body>
+</html>

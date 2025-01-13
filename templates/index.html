@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Article Search and Import</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <header>
@@ -11,12 +12,25 @@
     </header>
 
     <main>
+        <!-- Відображення флеш-повідомлень -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
         <section>
             <h2>Search Articles</h2>
             <form method="POST" action="/{{ session['token'] }}/search#results">
                 <label for="articles">Enter up to 100 articles (one per line):</label><br>
                 <textarea id="articles" name="articles" rows="5" required></textarea><br>
-                <button type="submit">Search</button>
+                <button type="submit" class="btn btn-primary">Search</button>
             </form>
         </section>
 
@@ -25,7 +39,7 @@
             <form method="POST" enctype="multipart/form-data" action="/{{ session['token'] }}/import_excel">
                 <label for="file">Upload Excel file:</label><br>
                 <input type="file" id="file" name="file" accept=".xlsx" required><br>
-                <button type="submit">Import</button>
+                <button type="submit" class="btn btn-secondary">Import</button>
             </form>
         </section>
 
@@ -56,7 +70,7 @@
                                 <input type="hidden" name="price" value="{{ detail.price }}">
                                 <input type="hidden" name="table_name" value="{{ detail.table_name }}">
                                 <input type="number" name="quantity" value="1" min="1" required>
-                                <button type="submit">Add to Cart</button>
+                                <button type="submit" class="btn btn-primary">Add to Cart</button>
                             </form>
                         </td>
                     </tr>

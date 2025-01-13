@@ -645,19 +645,17 @@ def add_to_cart(token):
         price = float(request.form.get('price'))
         quantity = int(request.form.get('quantity'))
         table_name = request.form.get('table_name')
-        redirect_page = request.form.get('redirect', 'cart')  # Де перенаправити після виконання
         user_id = session.get('user_id')
+        redirect_url = request.form.get('redirect', f"/{token}/")
 
         if not user_id:
             flash("User is not authenticated. Please log in.", "error")
             return redirect(url_for('index'))
 
-        logging.debug(f"Adding to cart: Article={article}, Price={price}, Quantity={quantity}, Table={table_name}, User={user_id}")
-
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Перевірка чи товар вже є у базі
+        # Перевірка наявності товару у таблиці `products`
         cursor.execute("""
             SELECT id FROM products
             WHERE article = %s AND table_name = %s
@@ -674,19 +672,19 @@ def add_to_cart(token):
         else:
             product_id = product['id']
 
-        # Додавання товару в кошик
+        # Перевірка, чи товар вже є в кошику
         cursor.execute("""
             SELECT id FROM cart
             WHERE user_id = %s AND product_id = %s
         """, (user_id, product_id))
-        existing_item = cursor.fetchone()
+        existing_cart_item = cursor.fetchone()
 
-        if existing_item:
+        if existing_cart_item:
             cursor.execute("""
                 UPDATE cart
                 SET quantity = quantity + %s
                 WHERE id = %s
-            """, (quantity, existing_item['id']))
+            """, (quantity, existing_cart_item['id']))
         else:
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
@@ -705,10 +703,9 @@ def add_to_cart(token):
         if conn:
             conn.close()
 
-    # Повертаємося на результати пошуку
-    if redirect_page == "search_results":
-        return redirect(url_for('search', token=token))
-    return redirect(url_for('cart', token=token))
+    # Перенаправлення назад до результатів пошуку
+    return redirect(redirect_url)
+
 
 
 

@@ -45,6 +45,7 @@
                                 <input type="hidden" name="table_name" value="{{ detail.table_name }}">
                                 <input type="number" name="quantity" value="1" min="1" required>
                                 <button type="submit" class="btn btn-primary">Add to Cart</button>
+                                <input type="hidden" name="redirect" value="/{{ session['token'] }}/search#results">
                             </form>
                         </td>
                     </tr>

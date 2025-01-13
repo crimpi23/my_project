@@ -31,7 +31,7 @@
         {% endif %}
         {% endwith %}
 
-        <form method="POST" action="/{{ token }}/admin/compare_prices" class="form-container">
+        <form method="POST" action="{{ url_for('compare_prices', token=token) }}" class="form-container">
             <div class="form-group">
                 <label for="articles">Enter articles (one per line):</label>
                 <textarea id="articles" name="articles" rows="10" class="form-control" placeholder="Enter articles here..." required></textarea>

@@ -501,7 +501,7 @@ def add_selected_to_cart(token):
                     product = cursor.fetchone()
 
                     if not product:
-                        flash(f"Product {article} not found in table {table_name}.", "error")
+                        logging.error(f"Product {article} with price {price} in table {table_name} not found.")
                         continue
 
                     product_id = product['id']

@@ -461,87 +461,85 @@ def search_articles(token):
 
 # Додавання артикула по чекбоксу
 @app.route('/<token>/add_selected_to_cart', methods=['POST'])
-@requires_token_and_role('user')
 def add_selected_to_cart(token):
-    """
-    Додавання вибраних товарів до кошика.
-    """
-    conn = None
-    cursor = None
     try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash("User is not authenticated. Please log in.", "error")
+        # Перевірка токена
+        session_token = session.get('token')
+        if session_token != token:
+            logging.warning("Invalid session token")
+            flash("Invalid session token", "error")
             return redirect(url_for('index'))
 
-        # Отримання даних із форми
-        selected_prices = request.form.getlist('selected_price')
-        all_quantities = request.form.to_dict(flat=False).get('quantities', {})
-        referrer = request.referrer or url_for('index')
+        user_id = session.get('user_id')
+        if not user_id:
+            logging.warning("User not logged in")
+            flash("Please log in to add items to the cart.", "error")
+            return redirect(url_for('index'))
 
-        logging.debug(f"Selected prices: {selected_prices}")
-        logging.debug(f"All quantities: {all_quantities}")
-
+        # Отримуємо обрані ціни з форми
+        selected_prices = request.form.getlist('selected_prices')
         if not selected_prices:
-            flash("No items selected. Returning to search results.", "error")
-            return redirect(f"{referrer}#results")
+            logging.warning("No items selected")
+            flash("No items selected to add to the cart.", "error")
+            return redirect(url_for('search', token=token))
+
+        all_quantities = {key: int(value) for key, value in request.form.items() if key != 'selected_prices'}
+        logging.debug(f"All quantities: {all_quantities}")
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
         for selected in selected_prices:
             try:
+                # Розділяємо дані для вибраної позиції
                 price, table_name = selected.split('|')
-                # Витягуємо article з форми
-                article = all_quantities.keys()[0]  # Припущення: перший ключ відповідає артикулу
-                quantity = int(all_quantities.get(article, [1])[0])
-                
-                if quantity <= 0:
-                    logging.warning(f"Invalid quantity for article {article}. Skipping.")
-                    continue
+                price = float(price)
 
-                logging.debug(f"Attempting to add article {article} with quantity {quantity}.")
+                # Обробка всіх артикулів у формі
+                for article, quantity in all_quantities.items():
+                    logging.debug(f"Attempting to add article {article} with quantity {quantity}.")
 
-                cursor.execute("""
-                    INSERT INTO cart (user_id, product_id, quantity, added_at)
-                    SELECT %s, p.id, %s, NOW()
-                    FROM products p
-                    WHERE p.article = %s AND p.price = %s AND p.table_name = %s
-                    LIMIT 1
-                """, (user_id, quantity, article, price, table_name))
+                    # Отримуємо інформацію про товар
+                    cursor.execute(
+                        """
+                        SELECT article, name, price, table_name 
+                        FROM products 
+                        WHERE article = %s AND price = %s AND table_name = %s
+                        """,
+                        (article, price, table_name)
+                    )
+                    product = cursor.fetchone()
 
-                if cursor.rowcount == 0:
-                    logging.warning(f"No product found for article {article}, price {price}, table {table_name}.")
-                    flash(f"Product {article} not added to cart due to missing data.", "warning")
-                else:
-                    logging.debug(f"Added article {article} to cart successfully.")
-                    flash(f"Product {article} added to cart.", "success")
+                    if not product:
+                        logging.warning(f"No product found for article {article}, price {price}, table {table_name}.")
+                        flash(f"Product {article} not added to cart due to missing data.", "error")
+                        continue
+
+                    # Додаємо товар у кошик
+                    cursor.execute(
+                        """
+                        INSERT INTO cart (user_id, article, name, price, quantity, table_name) 
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        """,
+                        (user_id, product[0], product[1], product[2], quantity, product[3])
+                    )
+                    logging.info(f"Added article {article} to cart.")
+                    flash(f"Product {article} added to cart successfully!", "success")
 
             except Exception as e:
-                logging.error(f"Error adding article {selected} to cart: {e}", exc_info=True)
+                logging.error(f"Error adding article {selected} to cart: {e}")
                 flash(f"Error adding article {selected} to cart.", "error")
 
-
         conn.commit()
+        cursor.close()
+        conn.close()
 
-        # Перенаправлення
-        redirect_to_cart = request.form.get('redirect_to_cart', 'false') == 'true'
-        if redirect_to_cart:
-            return redirect(url_for('cart', token=token))
-        else:
-            return redirect(f"{referrer}#results")
-
+        return redirect(url_for('cart', token=token))
     except Exception as e:
-        if conn:
-            conn.rollback()
-        logging.error(f"Critical error adding items to cart: {e}", exc_info=True)
-        flash("Error adding items to cart.", "error")
-        return redirect(f"{referrer}#results")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+        logging.error(f"Unexpected error: {e}")
+        flash("An unexpected error occurred.", "error")
+        return redirect(url_for('index'))
+
 
 
 

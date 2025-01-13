@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Orders</title>
-    <link rel="stylesheet" href="/static/styles.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,18 +14,17 @@
         }
         header {
             background-color: #007bff;
+            color: white;
             padding: 10px;
+            text-align: center;
         }
-        header ul {
-            list-style: none;
-            padding: 0;
-            display: flex;
-            justify-content: space-between;
-        }
-        header a {
+        header nav a {
             color: white;
             text-decoration: none;
-            padding: 5px 10px;
+            margin: 0 15px;
+        }
+        header nav a:hover {
+            text-decoration: underline;
         }
         .container {
             padding: 20px;
@@ -36,47 +34,84 @@
         h1 {
             color: #007bff;
         }
+        form {
+            margin-bottom: 20px;
+        }
+        form label {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        form input, form select {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        form button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #0056b3;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
         }
         table th, table td {
-            padding: 10px;
             border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
         }
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
+        table th {
+            background-color: #f1f1f1;
         }
         .btn-info {
+            padding: 5px 10px;
             background-color: #17a2b8;
             color: white;
+            text-decoration: none;
+            border-radius: 3px;
         }
         .btn-info:hover {
             background-color: #117a8b;
         }
-        form label {
-            margin-right: 10px;
+        .flash-messages {
+            margin-bottom: 20px;
         }
-        form input, form select, form button {
+        .flash-message {
+            padding: 10px;
+            border-radius: 5px;
             margin-bottom: 10px;
         }
+        .flash-message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .flash-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .flash-message.warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        footer {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            margin-top: 20px;
+        }
         @media (max-width: 768px) {
-            header ul {
-                flex-direction: column;
-                text-align: center;
+            form label, form input, form select {
+                display: block;
+                width: 100%;
+                margin-bottom: 10px;
             }
-            table {
+            table th, table td {
                 font-size: 14px;
             }
         }
@@ -84,18 +119,26 @@
 </head>
 <body>
     <header>
+        <h1>Your Orders</h1>
         <nav>
-            <ul>
-                <li><a href="/{{ session['token'] }}/" class="nav-link">Home</a></li>
-                <li><a href="/{{ session['token'] }}/cart" class="nav-link">Cart</a></li>
-                <li><a href="/{{ session['token'] }}/orders" class="nav-link">Orders</a></li>
-            </ul>
+            <a href="/{{ session['token'] }}/">Home</a>
+            <a href="/{{ session['token'] }}/cart">Cart</a>
+            <a href="/{{ session['token'] }}/orders">Orders</a>
         </nav>
     </header>
 
     <main class="container">
-        <h1>Your Orders</h1>
-        <form method="GET" action="/{{ session['token'] }}/orders" class="filter-form">
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form method="GET" action="/{{ session['token'] }}/orders">
             <label for="article">Search by Article:</label>
             <input type="text" id="article" name="article" placeholder="Enter article" value="{{ request.args.get('article', '') }}">
             <label for="status">Filter by Status:</label>
@@ -103,14 +146,14 @@
                 <option value="">Select Status</option>
                 <option value="new" {% if request.args.get('status') == 'new' %}selected{% endif %}>New</option>
                 <option value="cancelled" {% if request.args.get('status') == 'cancelled' %}selected{% endif %}>Cancelled</option>
-				<option value="accepted" {% if request.args.get('status') == 'accepted' %}selected{% endif %}>Accepted</option>
+                <option value="accepted" {% if request.args.get('status') == 'accepted' %}selected{% endif %}>Accepted</option>
                 <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Completed</option>
             </select>
             <label for="start_date">Start Date:</label>
             <input type="date" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
             <label for="end_date">End Date:</label>
             <input type="date" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
-            <button type="submit" class="btn btn-primary">Apply Filters</button>
+            <button type="submit">Apply Filters</button>
         </form>
 
         {% if orders %}
@@ -131,7 +174,7 @@
                     <td>{{ order.total_price }}</td>
                     <td>{{ order.order_date }}</td>
                     <td>{{ order.status }}</td>
-                    <td><a href="/{{ session['token'] }}/order_details/{{ order.id }}" class="btn btn-info">View Details</a></td>
+                    <td><a href="/{{ session['token'] }}/order_details/{{ order.id }}" class="btn-info">View Details</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -142,7 +185,7 @@
     </main>
 
     <footer>
-        <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
+        &copy; 2025 - B2B Auto Parts System
     </footer>
 </body>
 </html>

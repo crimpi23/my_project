@@ -4,22 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Article Search and Import</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        header nav a {
+            margin: 0 10px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        header nav a:hover {
+            text-decoration: underline;
+        }
+        main {
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        textarea, input[type="file"], button {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .flash-messages .flash-message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .flash-messages .flash-message.info {
+            background-color: #e7f3fe;
+            color: #31708f;
+        }
+        .flash-messages .flash-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
 </head>
 <body>
     <header>
         <h1>Article Search and Import</h1>
+        <nav>
+            <a href="/{{ session['token'] }}/">Home</a>
+            <a href="/{{ session['token'] }}/cart">Cart</a>
+            <a href="/{{ session['token'] }}/orders">Orders</a>
+        </nav>
     </header>
 
     <main>
-        <!-- Відображення флеш-повідомлень -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% with messages = get_flashed_messages(with_categories=True) %}
         {% if messages %}
         <div class="flash-messages">
             {% for category, message in messages %}
-            <div class="flash flash-{{ category }}">
-                {{ message }}
-            </div>
+            <div class="flash-message {{ category }}">{{ message }}</div>
             {% endfor %}
         </div>
         {% endif %}
@@ -28,62 +86,24 @@
         <section>
             <h2>Search Articles</h2>
             <form method="POST" action="/{{ session['token'] }}/search#results">
-                <label for="articles">Enter up to 100 articles (one per line):</label><br>
-                <textarea id="articles" name="articles" rows="5" required></textarea><br>
-                <button type="submit" class="btn btn-primary">Search</button>
+                <label for="articles">Enter up to 100 articles (one per line):</label>
+                <textarea id="articles" name="articles" rows="5" required></textarea>
+                <button type="submit">Search</button>
             </form>
         </section>
 
         <section>
             <h2>Import Articles via Excel</h2>
             <form method="POST" enctype="multipart/form-data" action="/{{ session['token'] }}/import_excel">
-                <label for="file">Upload Excel file:</label><br>
-                <input type="file" id="file" name="file" accept=".xlsx" required><br>
-                <button type="submit" class="btn btn-secondary">Import</button>
+                <label for="file">Upload Excel file:</label>
+                <input type="file" id="file" name="file" accept=".xlsx" required>
+                <button type="submit">Import</button>
             </form>
         </section>
-
-        {% if grouped_results %}
-        <section>
-            <h2>Search Results</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Article</th>
-                        <th>Price</th>
-                        <th>Table</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for article, details in grouped_results.items() %}
-                    {% for detail in details %}
-                    <tr>
-                        {% if loop.index == 1 %}
-                        <td rowspan="{{ details|length }}">{{ article }}</td>
-                        {% endif %}
-                        <td>{{ detail.price }}</td>
-                        <td>{{ detail.table_name }}</td>
-                        <td>
-							<form method="POST" action="/{{ session['token'] }}/add_to_cart">
-								<input type="hidden" name="article" value="{{ article }}">
-								<input type="hidden" name="price" value="{{ detail.price }}">
-								<input type="hidden" name="table_name" value="{{ detail.table_name }}">
-								<input type="number" name="quantity" value="{{ detail.quantity }}" min="1" required>
-								<button type="submit" class="btn btn-primary">Add to Cart</button>
-							</form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-        {% endif %}
     </main>
 
-    <footer>
-        <p>&copy; 2025 - B2B Auto Parts System</p>
+    <footer style="text-align: center; padding: 10px; background-color: #007bff; color: white;">
+        &copy; 2025 - B2B Auto Parts System
     </footer>
 </body>
 </html>

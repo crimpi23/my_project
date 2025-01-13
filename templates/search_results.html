@@ -8,86 +8,47 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
             margin: 0;
             padding: 0;
-            color: #333;
-        }
-        header {
-            background-color: #007bff;
-            padding: 10px;
-        }
-        header ul {
-            list-style: none;
-            padding: 0;
-            display: flex;
-            justify-content: space-between;
-        }
-        header a {
-            color: white;
-            text-decoration: none;
-            padding: 5px 10px;
         }
         .container {
             padding: 20px;
             max-width: 1200px;
             margin: auto;
         }
-        h1 {
-            color: #007bff;
-        }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
+            margin-bottom: 20px;
         }
-        table th, table td {
-            padding: 10px;
+        th, td {
             border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
         }
         .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn-primary {
+            padding: 8px 12px;
             background-color: #007bff;
             color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
         }
-        .btn-primary:hover {
+        .btn:hover {
             background-color: #0056b3;
         }
         .quantity-input {
-            width: 60px;
-            padding: 5px;
+            width: 50px;
             text-align: center;
-        }
-        @media (max-width: 768px) {
-            header ul {
-                flex-direction: column;
-                text-align: center;
-            }
-            table {
-                font-size: 14px;
-            }
         }
     </style>
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/{{ session['token'] }}/" class="nav-link">Home</a></li>
-                <li><a href="/{{ session['token'] }}/cart" class="nav-link">Cart</a></li>
-                <li><a href="/{{ session['token'] }}/orders" class="nav-link">Orders</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <main class="container">
+    <div class="container">
         <h1>Search Results</h1>
-
         {% if grouped_results %}
         <table>
             <thead>
@@ -109,12 +70,12 @@
                     <td>{{ detail.price }}</td>
                     <td>{{ detail.table_name }}</td>
                     <td>
-                        <form method="POST" action="/{{ session['token'] }}/add_to_cart" style="display: inline;">
+                        <form method="POST" action="/{{ session['token'] }}/add_to_cart" style="display:inline;">
                             <input type="hidden" name="article" value="{{ article }}">
                             <input type="hidden" name="price" value="{{ detail.price }}">
                             <input type="hidden" name="table_name" value="{{ detail.table_name }}">
                             <input type="number" name="quantity" class="quantity-input" value="1" min="1" required>
-                            <button type="submit" class="btn btn-primary">Add to Cart</button>
+                            <button type="submit" class="btn">Add to Cart</button>
                         </form>
                     </td>
                 </tr>
@@ -125,14 +86,6 @@
         {% else %}
         <p>No results found. Try another search.</p>
         {% endif %}
-
-        <form method="POST" action="/{{ session['token'] }}/clear_search" style="margin-top: 20px;">
-            <button type="submit" class="btn btn-warning">Clear Search</button>
-        </form>
-    </main>
-
-    <footer>
-        <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
-    </footer>
+    </div>
 </body>
 </html>

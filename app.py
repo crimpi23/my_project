@@ -643,9 +643,10 @@ def add_to_cart(token):
         # Отримання даних з форми
         article = request.form.get('article')
         price = float(request.form.get('price'))
-        quantity = int(request.form.get('quantity'))  # Перевіряємо кількість товару
+        quantity = int(request.form.get('quantity'))
         table_name = request.form.get('table_name')
-        user_id = session.get('user_id')  # Отримання ID користувача із сесії
+        redirect_page = request.form.get('redirect', 'cart')  # Де перенаправити після виконання
+        user_id = session.get('user_id')
 
         if not user_id:
             flash("User is not authenticated. Please log in.", "error")
@@ -656,7 +657,7 @@ def add_to_cart(token):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Перевірка наявності товару у таблиці `products`
+        # Перевірка чи товар вже є у базі
         cursor.execute("""
             SELECT id FROM products
             WHERE article = %s AND table_name = %s
@@ -664,43 +665,37 @@ def add_to_cart(token):
         product = cursor.fetchone()
 
         if not product:
-            # Додавання нового продукту в таблицю `products`
             cursor.execute("""
                 INSERT INTO products (article, table_name, price)
                 VALUES (%s, %s, %s)
                 RETURNING id
             """, (article, table_name, price))
             product_id = cursor.fetchone()[0]
-            logging.info(f"New product added to 'products': ID={product_id}, Article={article}, Table={table_name}, Price={price}")
         else:
             product_id = product['id']
-            logging.debug(f"Product already exists: ID={product_id}, Article={article}")
 
-        # Перевірка, чи товар вже є в кошику
+        # Додавання товару в кошик
         cursor.execute("""
             SELECT id FROM cart
             WHERE user_id = %s AND product_id = %s
         """, (user_id, product_id))
-        existing_cart_item = cursor.fetchone()
+        existing_item = cursor.fetchone()
 
-        if existing_cart_item:
-            # Оновлення кількості товару в кошику
+        if existing_item:
             cursor.execute("""
                 UPDATE cart
                 SET quantity = quantity + %s
                 WHERE id = %s
-            """, (quantity, existing_cart_item['id']))
-            logging.info(f"Cart updated: Product ID={product_id}, Quantity Added={quantity}, User ID={user_id}")
+            """, (quantity, existing_item['id']))
         else:
-            # Додавання нового товару в кошик
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, %s, %s, NOW())
             """, (user_id, product_id, quantity))
-            logging.info(f"Product added to cart: Product ID={product_id}, Quantity={quantity}, User ID={user_id}")
 
         conn.commit()
         flash("Product added to cart!", "success")
+
     except Exception as e:
         logging.error(f"Error in add_to_cart: {e}", exc_info=True)
         flash("Error adding product to cart.", "error")
@@ -709,15 +704,12 @@ def add_to_cart(token):
             cursor.close()
         if conn:
             conn.close()
-            logging.debug("Database connection closed after adding to cart.")
 
-    # Перенаправлення на сторінку результатів пошуку
-    return render_template(
-        'search_results.html',
-        grouped_results=session.get('grouped_results', {}),
-        quantities=session.get('quantities', {}),
-        missing_articles=session.get('missing_articles', []),
-    )
+    # Повертаємося на результати пошуку
+    if redirect_page == "search_results":
+        return redirect(url_for('search', token=token))
+    return redirect(url_for('cart', token=token))
+
 
 
 

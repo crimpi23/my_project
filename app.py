@@ -483,19 +483,23 @@ def add_selected_to_cart(token):
             flash("No items selected to add to the cart.", "error")
             return redirect(url_for('search', token=token))
 
-        all_quantities = {key: int(value) for key, value in request.form.items() if key != 'selected_prices'}
+        # Отримуємо всі кількості з форми, перевіряючи значення
+        all_quantities = {}
+        for key, value in request.form.items():
+            if key != 'selected_prices' and value.isdigit():
+                all_quantities[key] = int(value)
         logging.debug(f"All quantities: {all_quantities}")
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        errors = []
         for selected in selected_prices:
             try:
                 # Розділяємо дані для вибраної позиції
                 price, table_name = selected.split('|')
                 price = float(price)
 
-                # Обробка всіх артикулів у формі
                 for article, quantity in all_quantities.items():
                     logging.debug(f"Attempting to add article {article} with quantity {quantity}.")
 
@@ -512,7 +516,7 @@ def add_selected_to_cart(token):
 
                     if not product:
                         logging.warning(f"No product found for article {article}, price {price}, table {table_name}.")
-                        flash(f"Product {article} not added to cart due to missing data.", "error")
+                        errors.append(f"Product {article} not added to cart due to missing data.")
                         continue
 
                     # Додаємо товар у кошик
@@ -528,7 +532,11 @@ def add_selected_to_cart(token):
 
             except Exception as e:
                 logging.error(f"Error adding article {selected} to cart: {e}")
-                flash(f"Error adding article {selected} to cart.", "error")
+                errors.append(f"Error adding article {selected} to cart.")
+
+        # Показуємо всі помилки одночасно
+        if errors:
+            flash(" ".join(errors), "error")
 
         conn.commit()
         cursor.close()

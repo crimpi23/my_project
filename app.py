@@ -6,6 +6,7 @@ import psycopg2.extras
 import logging
 import csv
 import io
+import re
 import bcrypt
 from functools import wraps
 from flask import get_flashed_messages
@@ -1312,7 +1313,7 @@ def upload_price_list(token):
             logging.info(f"Fetched price lists: {price_lists}")
             return render_template('upload_price_list.html', price_lists=price_lists, token=token)
         except Exception as e:
-            logging.error(f"Error during GET request: {e}")
+            logging.error(f"Error during GET request: {e}", exc_info=True)
             flash("Error loading the upload page.", "error")
             return redirect(url_for('admin_dashboard', token=token))
 
@@ -1389,7 +1390,7 @@ def upload_price_list(token):
                     conn.commit()
                     logging.info(f"Created new table: {table_name}")
                 except Exception as e:
-                    logging.error(f"Error creating new table {table_name}: {e}")
+                    logging.error(f"Error creating new table {table_name}: {e}", exc_info=True)
                     flash("Error creating new table. Please check the table name and try again.", "error")
                     return redirect(url_for('upload_price_list', token=token))
 
@@ -1401,7 +1402,7 @@ def upload_price_list(token):
                     logging.error(f"Table '{table_name}' does not exist.")
                     return redirect(url_for('upload_price_list', token=token))
             except Exception as e:
-                logging.error(f"Error checking table existence: {e}")
+                logging.error(f"Error checking table existence: {e}", exc_info=True)
                 flash("An error occurred while verifying the table. Please try again.", "error")
                 return redirect(url_for('upload_price_list', token=token))
 
@@ -1424,13 +1425,14 @@ def upload_price_list(token):
             return redirect(url_for('upload_price_list', token=token))
 
         except Exception as e:
-            logging.error(f"Error during POST request: {e}")
+            logging.error(f"Error during POST request: {e}", exc_info=True)
             flash("An error occurred during upload.", "error")
             return redirect(url_for('upload_price_list', token=token))
         finally:
             if 'conn' in locals() and conn:
                 conn.close()
                 logging.info("Database connection closed.")
+
 
 
 

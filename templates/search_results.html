@@ -155,15 +155,43 @@
         <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
     </footer>
 
-    <script>
-        const selectButton = document.getElementById('select-all-min-prices');
-        if (selectButton) {
-            selectButton.addEventListener('click', function () {
-                document.querySelectorAll('.article-checkbox[data-min-price="true"]').forEach(checkbox => {
-                    checkbox.checked = true;
-                });
-            });
-        }
-    </script>
+	<script>
+		const selectButton = document.getElementById('select-all-min-prices');
+		if (selectButton) {
+			selectButton.addEventListener('click', function () {
+				// Зберігати оброблені артикули, щоб уникнути повторів
+				const selectedArticles = new Set();
+
+				document.querySelectorAll('tr.highlight').forEach(row => {
+					const article = row.querySelector('.article-checkbox').dataset.article;
+					const price = parseFloat(row.querySelector('.article-checkbox').dataset.price);
+
+					// Вибираємо тільки мінімальну ціну для кожного артикула
+					if (!selectedArticles.has(article)) {
+						const checkboxes = document.querySelectorAll(`.article-checkbox[data-article="${article}"]`);
+						let minCheckbox = null;
+						let minPrice = Infinity;
+
+						checkboxes.forEach(checkbox => {
+							const checkboxPrice = parseFloat(checkbox.dataset.price);
+							if (checkboxPrice < minPrice) {
+								minPrice = checkboxPrice;
+								minCheckbox = checkbox;
+							}
+						});
+
+						// Встановлюємо флажок для мінімальної ціни
+						if (minCheckbox) {
+							minCheckbox.checked = true;
+						}
+
+						// Додаємо артикул до оброблених
+						selectedArticles.add(article);
+					}
+				});
+			});
+		}
+	</script>
+
 </body>
 </html>

@@ -492,15 +492,16 @@ def add_selected_to_cart(token):
         for selected in selected_prices:
             try:
                 price, table_name = selected.split('|')
-                article = table_name.split('_')[0]  # Припущення: article передбачено в table_name
+                # Витягуємо article з форми
+                article = all_quantities.keys()[0]  # Припущення: перший ключ відповідає артикулу
                 quantity = int(all_quantities.get(article, [1])[0])
+                
                 if quantity <= 0:
                     logging.warning(f"Invalid quantity for article {article}. Skipping.")
                     continue
 
                 logging.debug(f"Attempting to add article {article} with quantity {quantity}.")
 
-                # SQL-запит для додавання в кошик
                 cursor.execute("""
                     INSERT INTO cart (user_id, product_id, quantity, added_at)
                     SELECT %s, p.id, %s, NOW()
@@ -519,6 +520,7 @@ def add_selected_to_cart(token):
             except Exception as e:
                 logging.error(f"Error adding article {selected} to cart: {e}", exc_info=True)
                 flash(f"Error adding article {selected} to cart.", "error")
+
 
         conn.commit()
 

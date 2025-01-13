@@ -461,6 +461,7 @@ def search_articles(token):
 
 # Додавання артикула по чекбоксу
 @app.route('/<token>/add_selected_to_cart', methods=['POST'])
+@requires_token_and_role('user')
 def add_selected_to_cart(token):
     try:
         # Перевірка токена

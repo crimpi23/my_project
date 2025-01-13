@@ -464,47 +464,36 @@ def search_articles(token):
 @requires_token_and_role('user')
 def add_selected_to_cart(token):
     try:
-        # Перевірка токена
-        session_token = session.get('token')
-        if session_token != token:
-            logging.warning("Invalid session token")
-            flash("Invalid session token", "error")
-            return redirect(url_for('index'))
-
         user_id = session.get('user_id')
         if not user_id:
-            logging.warning("User not logged in")
             flash("Please log in to add items to the cart.", "error")
             return redirect(url_for('index'))
 
-        # Отримуємо обрані ціни з форми
+        # Логування отриманих даних форми
+        logging.debug(f"Form data received: {request.form}")
+
         selected_prices = request.form.getlist('selected_prices')
         if not selected_prices:
-            logging.warning("No items selected")
             flash("No items selected to add to the cart.", "error")
             return redirect(url_for('search', token=token))
 
-        # Отримуємо всі кількості з форми, перевіряючи значення
-        all_quantities = {}
-        for key, value in request.form.items():
-            if key != 'selected_prices' and value.isdigit():
-                all_quantities[key] = int(value)
-        logging.debug(f"All quantities: {all_quantities}")
+        all_quantities = {
+            key: int(value) for key, value in request.form.items()
+            if key != 'selected_prices' and value.isdigit()
+        }
+        if not all_quantities:
+            flash("No quantities provided.", "error")
+            return redirect(url_for('search', token=token))
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        errors = []
         for selected in selected_prices:
             try:
-                # Розділяємо дані для вибраної позиції
                 price, table_name = selected.split('|')
                 price = float(price)
 
                 for article, quantity in all_quantities.items():
-                    logging.debug(f"Attempting to add article {article} with quantity {quantity}.")
-
-                    # Отримуємо інформацію про товар
                     cursor.execute(
                         """
                         SELECT article, name, price, table_name 
@@ -516,11 +505,9 @@ def add_selected_to_cart(token):
                     product = cursor.fetchone()
 
                     if not product:
-                        logging.warning(f"No product found for article {article}, price {price}, table {table_name}.")
-                        errors.append(f"Product {article} not added to cart due to missing data.")
+                        flash(f"Product {article} not found in table {table_name}.", "error")
                         continue
 
-                    # Додаємо товар у кошик
                     cursor.execute(
                         """
                         INSERT INTO cart (user_id, article, name, price, quantity, table_name) 
@@ -528,22 +515,18 @@ def add_selected_to_cart(token):
                         """,
                         (user_id, product[0], product[1], product[2], quantity, product[3])
                     )
-                    logging.info(f"Added article {article} to cart.")
                     flash(f"Product {article} added to cart successfully!", "success")
 
             except Exception as e:
                 logging.error(f"Error adding article {selected} to cart: {e}")
-                errors.append(f"Error adding article {selected} to cart.")
-
-        # Показуємо всі помилки одночасно
-        if errors:
-            flash(" ".join(errors), "error")
+                flash(f"Error adding article {selected} to cart.", "error")
 
         conn.commit()
         cursor.close()
         conn.close()
 
         return redirect(url_for('cart', token=token))
+
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
         flash("An unexpected error occurred.", "error")

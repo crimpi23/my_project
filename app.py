@@ -850,81 +850,99 @@ def clear_cart(token):
 
 
 
-
-# Оформлення замовлення
-@app.route('/<token>/place_order', methods=['POST'])
+@app.route('/<token>/add_selected_to_cart', methods=['POST'])
 @requires_token_and_role('user')
-def place_order(token):
+def add_selected_to_cart(token):
+    """
+    Додає вибрані товари до кошика.
+    """
     try:
-        user_id = session.get('user_id')  # Отримати ID поточного користувача з сесії
-
+        user_id = session.get('user_id')
         if not user_id:
-            flash("User is not authenticated. Please log in.", "error")
+            flash("Please log in to add items to the cart.", "error")
             return redirect(url_for('index'))
+
+        # Логування отриманих даних форми
+        logging.debug(f"Form data received: {request.form}")
+
+        # Отримання вибраних цін та таблиць
+        selected_prices = request.form.getlist('selected_prices')
+        if not selected_prices:
+            flash("No items selected to add to the cart.", "error")
+            return redirect(url_for('search_articles', token=token))  # Перенаправляємо на пошук
+
+        # Отримання кількості товарів
+        all_quantities = {
+            key.split('[')[1].strip(']'): int(value)  # Витягуємо назву артикулу з "quantities[ART]"
+            for key, value in request.form.items()
+            if key.startswith('quantities') and value.isdigit()
+        }
+        if not all_quantities:
+            flash("No quantities provided.", "error")
+            return redirect(url_for('search_articles', token=token))  # Перенаправляємо на пошук
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримання товарів із кошика
-        cursor.execute("""
-            SELECT c.product_id, p.price, c.quantity
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = %s
-        """, (user_id,))
-        cart_items = cursor.fetchall()
+        for selected in selected_prices:
+            try:
+                price, table_name = selected.split('|')
+                price = float(price)  # Конвертуємо ціну в число
 
-        if not cart_items:
-            flash("Your cart is empty!", "error")
-            logging.error("Cart is empty for user_id=%s", user_id)
-            return redirect(request.referrer or url_for('cart'))
+                for article, quantity in all_quantities.items():
+                    # Перевіряємо, чи товар існує у таблиці `products`
+                    cursor.execute(
+                        """
+                        SELECT id, article, name, price, table_name
+                        FROM products
+                        WHERE article = %s AND table_name = %s
+                        """,
+                        (article, table_name)
+                    )
+                    product = cursor.fetchone()
 
-        # Логування вмісту кошика
-        logging.debug(f"Cart items for user_id={user_id}: {cart_items}")
-        for item in cart_items:
-            logging.debug(f"Item: product_id={item['product_id']}, price={item['price']}, quantity={item['quantity']}")
+                    if not product:
+                        # Якщо товар не знайдено, додаємо його у таблицю `products`
+                        cursor.execute(
+                            """
+                            INSERT INTO products (article, name, price, table_name)
+                            VALUES (%s, %s, %s, %s)
+                            RETURNING id
+                            """,
+                            (article, f"Product {article}", price, table_name)
+                        )
+                        product_id = cursor.fetchone()[0]
+                        logging.info(f"New product added to 'products': {article} in {table_name}")
+                    else:
+                        product_id = product[0]  # Отримуємо `id` продукту
 
-        # Розрахунок загальної суми
-        total_price = sum(item['price'] * item['quantity'] for item in cart_items)
-        logging.debug(f"Calculated total_price for order: {total_price}")
+                    # Додаємо товар до кошика
+                    cursor.execute(
+                        """
+                        INSERT INTO cart (user_id, product_id, quantity, added_at)
+                        VALUES (%s, %s, %s, NOW())
+                        ON CONFLICT (user_id, product_id)
+                        DO UPDATE SET quantity = cart.quantity + %s
+                        """,
+                        (user_id, product_id, quantity, quantity)
+                    )
+                    logging.info(f"Product {article} added to cart for user_id={user_id}")
 
-        # Вставка замовлення в таблицю orders зі статусом "Pending"
-        cursor.execute("""
-            INSERT INTO orders (user_id, total_price, order_date, status)
-            VALUES (%s, %s, NOW(), %s)
-            RETURNING id
-        """, (user_id, total_price, "Pending"))
-        order_id = cursor.fetchone()['id']
-        logging.debug(f"Order created with id={order_id} for user_id={user_id}")
+            except Exception as e:
+                logging.error(f"Error adding article {selected} to cart: {e}")
+                flash(f"Error adding article {selected} to cart.", "error")
 
-        # Вставка деталей замовлення
-        for item in cart_items:
-            cursor.execute("""
-                INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (order_id, item['product_id'], item['price'], item['quantity'], item['price'] * item['quantity']))
-            logging.debug(f"Inserted order detail: order_id={order_id}, product_id={item['product_id']}")
-
-        # Очищення кошика
-        cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
+        cursor.close()
+        conn.close()
 
-        flash("Order placed successfully!", "success")
-        logging.info(f"Order successfully placed for user_id={user_id}")
-        return redirect(request.referrer or url_for('cart'))
+        flash("Selected items added to the cart successfully!", "success")
+        return redirect(url_for('cart', token=token))
 
     except Exception as e:
-        if conn:
-            conn.rollback()
-        logging.error(f"Error placing order for user_id={user_id}: {str(e)}", exc_info=True)
-        flash(f"Error placing order: {str(e)}", "error")
-        return redirect(request.referrer or url_for('cart'))
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-        logging.debug("Database connection closed.")
+        logging.error(f"Unexpected error: {e}")
+        flash("An unexpected error occurred while adding items to the cart.", "error")
+        return redirect(url_for('index'))
 
 
 

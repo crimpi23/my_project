@@ -4,46 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results</title>
+    <script>
+        function selectMinPrices() {
+            const rows = document.querySelectorAll("tbody > tr");
+            const seenArticles = new Set();
+
+            rows.forEach(row => {
+                const articleCell = row.querySelector("td:first-child");
+                const radioInput = row.querySelector("input[type='radio']");
+
+                if (articleCell && radioInput) {
+                    const article = articleCell.textContent.trim();
+                    if (!seenArticles.has(article)) {
+                        radioInput.checked = true;
+                        seenArticles.add(article);
+                    }
+                }
+            });
+        }
+    </script>
 </head>
 <body>
     <header>
         <h1>Search Results</h1>
+        <nav>
+            <a href="/{{ session['token'] }}/">Home</a>
+            <a href="/{{ session['token'] }}/cart">Cart</a>
+            <a href="/{{ session['token'] }}/orders">Orders</a>
+        </nav>
     </header>
+
     <main>
+        <!-- Флеш-повідомлення -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
         <form method="POST" action="/{{ session['token'] }}/add_selected_to_cart">
+            <button type="button" onclick="selectMinPrices()">Select Minimum Prices</button>
             <table>
                 <thead>
                     <tr>
                         <th>Article</th>
                         <th>Price</th>
                         <th>Table</th>
-                        <th>Quantity</th>
                         <th>Select</th>
+                        <th>Quantity</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for article, details in grouped_results.items() %}
-                        {% for detail in details %}
-                        <tr>
-                            {% if loop.index == 1 %}
-                            <td rowspan="{{ details|length }}">{{ article }}</td>
-                            {% endif %}
-                            <td>{{ detail.price }}</td>
-                            <td>{{ detail.table_name }}</td>
-                            <td>
-                                <input type="number" name="quantities[{{ article }}]" value="{{ detail.quantity }}" min="1" required>
-                            </td>
-                            <td>
-                                <input type="radio" name="selected_prices[{{ article }}]" value="{{ detail.price }}|{{ detail.table_name }}" required>
-                            </td>
-                        </tr>
-                        {% endfor %}
+                    {% set sorted_details = details|sort(attribute='price') %}
+                    {% for detail in sorted_details %}
+                    <tr>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{ details|length }}">{{ article }}</td>
+                        {% endif %}
+                        <td>{{ detail.price }}</td>
+                        <td>{{ detail.table_name }}</td>
+                        <td>
+                            <input type="radio" name="selected_price[{{ article }}]" value="{{ detail.price }}|{{ detail.table_name }}" {% if loop.index == 1 %}checked{% endif %}>
+                        </td>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{ details|length }}">
+                            <input type="number" name="quantity[{{ article }}]" value="{{ detail.quantity }}" min="1" required>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
                     {% endfor %}
                 </tbody>
             </table>
             <button type="submit">Add Selected to Cart</button>
         </form>
     </main>
+
     <footer>
         <p>&copy; 2025 - B2B Auto Parts System</p>
     </footer>

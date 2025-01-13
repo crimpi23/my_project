@@ -166,7 +166,7 @@
             <button type="submit">Apply Filters</button>
         </form>
 
-        {% if orders %}
+        {% if orders and orders|length > 0 %}
         <form method="POST" action="/{{ session['token'] }}/process_orders">
             <table>
                 <thead>
@@ -182,7 +182,7 @@
                 <tbody>
                     {% for order in orders %}
                     <tr>
-                        <td><input type="checkbox" name="selected_orders" value="{{ order.id }}"></td>
+                        <td><input type="checkbox" name="selected_orders[]" value="{{ order.id }}"></td>
                         <td>{{ order.id }}</td>
                         <td>{{ order.total_price }}</td>
                         <td>{{ order.order_date }}</td>

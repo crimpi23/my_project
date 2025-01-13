@@ -465,7 +465,6 @@ def search_articles(token):
 def add_selected_to_cart(token):
     """
     Додавання вибраних товарів до кошика.
-    Після виконання перенаправляє до кошика або повертає на сторінку пошуку.
     """
     conn = None
     cursor = None
@@ -475,54 +474,67 @@ def add_selected_to_cart(token):
             flash("User is not authenticated. Please log in.", "error")
             return redirect(url_for('index'))
 
+        # Отримання даних із форми
         selected_prices = request.form.getlist('selected_price')
         all_quantities = request.form.to_dict(flat=False).get('quantities', {})
-        referrer = request.referrer
+        referrer = request.referrer or url_for('index')
 
         logging.debug(f"Selected prices: {selected_prices}")
         logging.debug(f"All quantities: {all_quantities}")
-        logging.debug(f"Request Referrer: {referrer}")
 
         if not selected_prices:
             flash("No items selected. Returning to search results.", "error")
-            return redirect(f"{referrer or url_for('index')}#results")
+            return redirect(f"{referrer}#results")
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
         for selected in selected_prices:
-            price, table_name = selected.split('|')
-            article = table_name.split('_')[0]
-            quantity = int(all_quantities.get(article, [1])[0])
-            if quantity <= 0:
-                logging.warning(f"Invalid quantity for article {article}. Skipping.")
-                continue
+            try:
+                price, table_name = selected.split('|')
+                article = table_name.split('_')[0]  # Припущення: article передбачено в table_name
+                quantity = int(all_quantities.get(article, [1])[0])
+                if quantity <= 0:
+                    logging.warning(f"Invalid quantity for article {article}. Skipping.")
+                    continue
 
-            # Додавання товару до кошика
-            cursor.execute("""
-                INSERT INTO cart (user_id, product_id, quantity, added_at)
-                SELECT %s, p.id, %s, NOW()
-                FROM products p
-                WHERE p.article = %s AND p.price = %s AND p.table_name = %s
-            """, (user_id, quantity, article, price, table_name))
-            logging.debug(f"Added article {article} with quantity {quantity} to cart.")
+                logging.debug(f"Attempting to add article {article} with quantity {quantity}.")
+
+                # SQL-запит для додавання в кошик
+                cursor.execute("""
+                    INSERT INTO cart (user_id, product_id, quantity, added_at)
+                    SELECT %s, p.id, %s, NOW()
+                    FROM products p
+                    WHERE p.article = %s AND p.price = %s AND p.table_name = %s
+                    LIMIT 1
+                """, (user_id, quantity, article, price, table_name))
+
+                if cursor.rowcount == 0:
+                    logging.warning(f"No product found for article {article}, price {price}, table {table_name}.")
+                    flash(f"Product {article} not added to cart due to missing data.", "warning")
+                else:
+                    logging.debug(f"Added article {article} to cart successfully.")
+                    flash(f"Product {article} added to cart.", "success")
+
+            except Exception as e:
+                logging.error(f"Error adding article {selected} to cart: {e}", exc_info=True)
+                flash(f"Error adding article {selected} to cart.", "error")
 
         conn.commit()
-        flash("Selected items added to cart.", "success")
 
-        # Логіка перенаправлення
+        # Перенаправлення
         redirect_to_cart = request.form.get('redirect_to_cart', 'false') == 'true'
         if redirect_to_cart:
             return redirect(url_for('cart', token=token))
         else:
-            return redirect(f"{referrer or url_for('index')}#results")
+            return redirect(f"{referrer}#results")
 
     except Exception as e:
         if conn:
             conn.rollback()
-        logging.error(f"Error adding items to cart: {e}", exc_info=True)
-        flash("Error adding selected items to cart.", "error")
-        return redirect(f"{referrer or url_for('index')}#results")
+        logging.error(f"Critical error adding items to cart: {e}", exc_info=True)
+        flash("Error adding items to cart.", "error")
+        return redirect(f"{referrer}#results")
     finally:
         if cursor:
             cursor.close()

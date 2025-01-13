@@ -132,9 +132,9 @@
                         </td>
                         <td>
                             <input type="checkbox" name="selected_prices" value="{{ detail.price }}|{{ detail.table_name }}" 
-                                   class="article-checkbox" data-article="{{ article }}" 
-                                   data-price="{{ detail.price }}" data-table="{{ detail.table_name }}" 
-                                   {% if detail.price == min_price %}data-min-price="true"{% endif %}>
+							   class="article-checkbox" data-article="{{ article }}" 
+							   data-price="{{ detail.price }}" data-table="{{ detail.table_name }}">
+	
                         </td>
                     </tr>
                     {% endfor %}
@@ -156,40 +156,32 @@
     </footer>
 
 	<script>
-		const selectButton = document.getElementById('select-all-min-prices');
-		if (selectButton) {
-			selectButton.addEventListener('click', function () {
-				const selectedArticles = new Set(); // Запобігання дублюванню
-				document.querySelectorAll('.article-checkbox').forEach(checkbox => {
-					const article = checkbox.dataset.article;
-					const price = parseFloat(checkbox.dataset.price);
-					const tableName = checkbox.dataset.table;
+		document.getElementById('select-all-min-prices').addEventListener('click', function () {
+			const articles = new Set(); // Збереження обраних артикулів
+			document.querySelectorAll('.article-checkbox').forEach(checkbox => {
+				const article = checkbox.dataset.article; // Отримуємо артикул
 
-					// Обираємо тільки мінімальну ціну для кожного артикула
-					if (!selectedArticles.has(article)) {
-						const checkboxes = document.querySelectorAll(`.article-checkbox[data-article="${article}"]`);
-						let minCheckbox = null;
-						let minPrice = Infinity;
+				if (!articles.has(article)) {
+					const articleCheckboxes = document.querySelectorAll(`.article-checkbox[data-article="${article}"]`);
+					let minPriceCheckbox = null;
+					let minPrice = Infinity;
 
-						checkboxes.forEach(cb => {
-							const cbPrice = parseFloat(cb.dataset.price);
-							if (cbPrice < minPrice) {
-								minPrice = cbPrice;
-								minCheckbox = cb;
-							}
-						});
-
-						if (minCheckbox) {
-							minCheckbox.checked = true; // Ставимо чек
+					articleCheckboxes.forEach(cb => {
+						const cbPrice = parseFloat(cb.dataset.price);
+						if (cbPrice < minPrice) {
+							minPrice = cbPrice;
+							minPriceCheckbox = cb;
 						}
+					});
 
-						selectedArticles.add(article);
-					} else {
-						checkbox.checked = false; // Вимикаємо всі інші
+					if (minPriceCheckbox) {
+						minPriceCheckbox.checked = true; // Вибираємо мінімальну ціну
 					}
-				});
+
+					articles.add(article); // Додаємо артикул до обраних
+				}
 			});
-		}
+		});
 	</script>
 
 </body>

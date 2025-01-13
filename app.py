@@ -462,42 +462,38 @@ def search_articles(token):
 @requires_token_and_role('user')
 def add_selected_to_cart(token):
     """
-    Додає вибрані товари до кошика користувача.
+    Додає обрані товари до кошика користувача, обробляючи вибрані ціни та кількості.
     """
     conn = None
     cursor = None
     try:
-        selected_prices = request.form.getlist('selected_prices')
-        quantities = request.form.get('quantities', {})
-        user_id = session.get('user_id')  # Отримання ID користувача із сесії
+        # Отримуємо обрані товари
+        selected_items = request.form.getlist('selected_items')
+        user_id = session.get('user_id')  # ID користувача із сесії
 
-        if not selected_prices:
+        if not selected_items:
             flash("No items selected to add to the cart.", "error")
             return redirect(url_for('search_articles', token=token))
 
-        logging.info(f"Selected items to add: {selected_prices}")
+        logging.info(f"Selected items to add: {selected_items}")
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        for item in selected_prices:
-            # Розділення даних (price і table_name)
-            price, table_name = item.split('|')
+        for item in selected_items:
+            # Розділяємо дані з HTML (article, price, table_name, quantity)
+            article, price, table_name, quantity = item.split('|')
             price = float(price)
+            quantity = int(quantity)
 
-            # Отримання артикулу
-            article = next(
-                (key for key, value in request.form.items() if value == item), None
-            )
-            quantity = int(quantities.get(article, 1))
-
-            # Перевірка існування в products
+            # Перевіряємо, чи існує товар у таблиці `products`
             cursor.execute("""
                 SELECT id FROM products
-                WHERE article = %s AND table_name = %s
-            """, (article, table_name))
+                WHERE article = %s AND table_name = %s AND price = %s
+            """, (article, table_name, price))
             product = cursor.fetchone()
 
+            # Додаємо новий товар у таблицю `products`, якщо його немає
             if not product:
                 cursor.execute("""
                     INSERT INTO products (article, table_name, price)
@@ -505,16 +501,16 @@ def add_selected_to_cart(token):
                     RETURNING id
                 """, (article, table_name, price))
                 product_id = cursor.fetchone()[0]
-                logging.info(f"New product added to 'products': {article}, {table_name}, {price}")
+                logging.info(f"New product added: Article={article}, Table={table_name}, Price={price}")
             else:
                 product_id = product['id']
 
-            # Додавання до кошика
+            # Додаємо товар до кошика
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, %s, %s, NOW())
             """, (user_id, product_id, quantity))
-            logging.info(f"Product added to cart: {article}, {table_name}, {price}, {quantity}")
+            logging.info(f"Product added to cart: User={user_id}, Product ID={product_id}, Quantity={quantity}")
 
         conn.commit()
         flash("Selected items added to the cart successfully!", "success")
@@ -528,7 +524,6 @@ def add_selected_to_cart(token):
             conn.close()
 
     return redirect(url_for('search_articles', token=token))
-
 
 
 

@@ -3,144 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Article Price Search</title>
-    <link rel="stylesheet" href="/static/styles.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-        header {
-            background-color: #007bff;
-            padding: 10px;
-        }
-        header ul {
-            list-style: none;
-            padding: 0;
-            display: flex;
-            justify-content: space-between;
-        }
-        header a {
-            color: white;
-            text-decoration: none;
-            padding: 5px 10px;
-        }
-        .container {
-            padding: 20px;
-            max-width: 1200px;
-            margin: auto;
-        }
-        h1, h2 {
-            color: #007bff;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        table th, table td {
-            padding: 10px;
-            border: 1px solid #ddd;
-        }
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            resize: none;
-        }
-        @media (max-width: 768px) {
-            header ul {
-                flex-direction: column;
-                text-align: center;
-            }
-            table {
-                font-size: 14px;
-            }
-        }
-    </style>
+    <title>Article Search and Import</title>
 </head>
 <body>
     <header>
-        <nav>
-            <ul>
-                <li><a href="/{{ session['token'] }}/">Home</a></li>
-                {% if session.get('token') %}
-                <li><a href="/{{ session['token'] }}/cart">Cart</a></li>
-                <li><a href="/{{ session['token'] }}/orders">Orders</a></li>
-                {% endif %}
-            </ul>
-        </nav>
+        <h1>Article Search and Import</h1>
     </header>
 
-    <main class="container">
-        <h1>Article Price Search</h1>
-        <p>Welcome to the advanced search system! Use the tools below:</p>
-        <form method="POST" action="/{{ session['token'] }}/search#results">
-            <label for="articles">Enter Articles and Quantities:</label>
-            <textarea id="articles" name="articles" rows="5" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required></textarea>
-            <button type="submit" class="btn btn-primary">Search</button>
-        </form>
+    <main>
+        <section>
+            <h2>Search Articles</h2>
+            <form method="POST" action="/{{ session['token'] }}/search#results">
+                <label for="articles">Enter up to 100 articles (one per line):</label><br>
+                <textarea id="articles" name="articles" rows="5" required></textarea><br>
+                <button type="submit">Search</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Import Articles via Excel</h2>
+            <form method="POST" enctype="multipart/form-data" action="/{{ session['token'] }}/import_excel">
+                <label for="file">Upload Excel file:</label><br>
+                <input type="file" id="file" name="file" accept=".xlsx" required><br>
+                <button type="submit">Import</button>
+            </form>
+        </section>
 
         {% if grouped_results %}
-        <h2>Search Results</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Article</th>
-                    <th>Price</th>
-                    <th>Table</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for article, details in grouped_results.items() %}
-                {% for detail in details %}
-                <tr>
-                    {% if loop.index == 1 %}
-                    <td rowspan="{{ details|length }}">{{ article }}</td>
-                    {% endif %}
-                    <td>{{ detail.price }}</td>
-                    <td>{{ detail.table_name }}</td>
-                    <td>
-                        <form method="POST" action="/add_to_cart">
-                            <input type="hidden" name="article" value="{{ article }}">
-                            <input type="hidden" name="price" value="{{ detail.price }}">
-                            <input type="hidden" name="table_name" value="{{ detail.table_name }}">
-                            <input type="number" name="quantity" value="1" min="1" class="quantity-input">
-                            <button type="submit" class="btn btn-primary">Add to Cart</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-                {% endfor %}
-            </tbody>
-        </table>
+        <section>
+            <h2>Search Results</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Table</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article, details in grouped_results.items() %}
+                    {% for detail in details %}
+                    <tr>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{ details|length }}">{{ article }}</td>
+                        {% endif %}
+                        <td>{{ detail.price }}</td>
+                        <td>{{ detail.table_name }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/add_to_cart">
+                                <input type="hidden" name="article" value="{{ article }}">
+                                <input type="hidden" name="price" value="{{ detail.price }}">
+                                <input type="hidden" name="table_name" value="{{ detail.table_name }}">
+                                <input type="number" name="quantity" value="1" min="1" required>
+                                <button type="submit">Add to Cart</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
         {% endif %}
     </main>
 
     <footer>
-        <p style="text-align: center;">Website designed by crimpi23 - Example B2B Auto Parts Store</p>
+        <p>&copy; 2025 - B2B Auto Parts System</p>
     </footer>
 </body>
 </html>

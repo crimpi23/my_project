@@ -360,72 +360,69 @@ def create_user(token):
 @requires_token_and_role('user')
 def search_articles(token):
     """
-    Маршрут для пошуку артикулів.
+    Маршрут для пошуку артикулів із перевіркою кількості та довжини.
     """
     conn = None
     cursor = None
 
-    # Обробка GET-запитів
     if request.method == 'GET':
         flash("Please perform a search to view results.", "info")
         return redirect(url_for('index'))
 
-    # Обробка POST-запитів
     try:
         logging.info("Processing search request...")
         articles = []
         quantities = {}
 
-        articles_input = request.form.get('articles')
-        logging.debug(f"Received articles input: {articles_input}")
-
+        # Розбиваємо введені дані
+        articles_input = request.form.get('articles', '').strip()
         if not articles_input:
             flash("Please enter at least one article.", "error")
-            logging.warning("No articles input provided.")
             return redirect(url_for('index'))
 
-        # Обробка вхідних даних
+        # Обробка введеного списку
         for line in articles_input.splitlines():
             parts = line.strip().split()
             if not parts:
                 continue
+
+            if len(parts[0]) > 50:
+                flash(f"Article '{parts[0]}' exceeds the maximum length of 50 characters.", "error")
+                return redirect(url_for('index'))
+
             if len(parts) == 1:
                 article = parts[0].strip().upper()
-                quantities[article] = quantities.get(article, 0) + 1
-                if article not in articles:
-                    articles.append(article)
+                quantities[article] = 1
             elif len(parts) == 2 and parts[1].isdigit():
-                article, quantity = parts[0].strip().upper(), int(parts[1])
-                quantities[article] = quantities.get(article, 0) + quantity
-                if article not in articles:
-                    articles.append(article)
+                article = parts[0].strip().upper()
+                quantities[article] = int(parts[1])
+            else:
+                flash(f"Invalid format for article: '{line}'. Please check your input.", "error")
+                return redirect(url_for('index'))
 
-        logging.debug(f"Processed articles: {articles}")
-        logging.debug(f"Quantities: {quantities}")
+            articles.append(article)
+
+        # Перевірка кількості артикулів
+        if len(articles) > 100:
+            flash("Too many articles entered. The maximum allowed is 100.", "error")
+            return redirect(url_for('index'))
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримання таблиць з прайс-листами
+        # Отримання таблиць із прайсами
         cursor.execute("SELECT table_name FROM price_lists")
         tables = [row[0] for row in cursor.fetchall()]
-        logging.debug(f"Fetched price list tables: {tables}")
 
         results = []
         for table in tables:
-            try:
-                logging.debug(f"Querying table: {table}")
-                query = f"""
-                    SELECT article, price, %s AS table_name
-                    FROM {table}
-                    WHERE article = ANY(%s)
-                """
-                cursor.execute(query, (table, articles))
-                table_results = cursor.fetchall()
-                results.extend(table_results)
-                logging.debug(f"Results from table {table}: {table_results}")
-            except Exception as table_error:
-                logging.error(f"Error querying table {table}: {table_error}")
+            query = f"""
+                SELECT article, price, '{table}' AS table_name
+                FROM {table}
+                WHERE article = ANY(%s)
+            """
+            cursor.execute(query, (articles,))
+            results.extend(cursor.fetchall())
 
         grouped_results = {}
         for result in results:
@@ -437,18 +434,18 @@ def search_articles(token):
             })
 
         missing_articles = [article for article in articles if article not in grouped_results]
-        logging.info(f"Missing articles: {missing_articles}")
+        if missing_articles:
+            logging.warning(f"Missing articles: {missing_articles}")
+            flash(f"The following articles were not found: {', '.join(missing_articles)}", "warning")
 
         return render_template(
             'search_results.html',
             grouped_results=grouped_results,
-            quantities=quantities,
             missing_articles=missing_articles
         )
-
     except Exception as e:
-        logging.error(f"Error in search_articles: {str(e)}", exc_info=True)
-        flash(f"Error: {str(e)}", "error")
+        logging.error(f"Error in search_articles: {e}", exc_info=True)
+        flash("Error performing search.", "error")
         return redirect(url_for('index'))
     finally:
         if cursor:
@@ -635,22 +632,23 @@ def cart(token):
 @requires_token_and_role('user')
 def add_to_cart(token):
     """
-    Додає товар до кошика користувача.
+    Додає товар до кошика користувача. Інформує про дублікати в кошику.
     """
     conn = None
     cursor = None
     try:
-        # Отримання даних з форми
+        # Отримання даних із форми
         article = request.form.get('article')
         price = float(request.form.get('price'))
-        quantity = int(request.form.get('quantity'))
+        quantity = int(request.form.get('quantity'))  # Кількість товару
         table_name = request.form.get('table_name')
-        user_id = session.get('user_id')
-        redirect_url = request.form.get('redirect', f"/{token}/")
+        user_id = session.get('user_id')  # Отримання ID користувача із сесії
 
         if not user_id:
             flash("User is not authenticated. Please log in.", "error")
             return redirect(url_for('index'))
+
+        logging.debug(f"Adding to cart: Article={article}, Price={price}, Quantity={quantity}, Table={table_name}, User={user_id}")
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -658,42 +656,49 @@ def add_to_cart(token):
         # Перевірка наявності товару у таблиці `products`
         cursor.execute("""
             SELECT id FROM products
-            WHERE article = %s AND table_name = %s
-        """, (article, table_name))
+            WHERE article = %s AND table_name = %s AND price = %s
+        """, (article, table_name, price))
         product = cursor.fetchone()
 
         if not product:
+            # Додавання нового продукту в таблицю `products`
             cursor.execute("""
                 INSERT INTO products (article, table_name, price)
                 VALUES (%s, %s, %s)
                 RETURNING id
             """, (article, table_name, price))
             product_id = cursor.fetchone()[0]
+            logging.info(f"New product added to 'products': ID={product_id}, Article={article}, Table={table_name}, Price={price}")
         else:
             product_id = product['id']
+            logging.debug(f"Product already exists: ID={product_id}, Article={article}, Price={price}")
 
-        # Перевірка, чи товар вже є в кошику
+        # Перевірка, чи товар із тією ж ціною вже є в кошику
         cursor.execute("""
-            SELECT id FROM cart
+            SELECT id, quantity FROM cart
             WHERE user_id = %s AND product_id = %s
         """, (user_id, product_id))
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
+            # Оновлення кількості товару в кошику
             cursor.execute("""
                 UPDATE cart
                 SET quantity = quantity + %s
                 WHERE id = %s
             """, (quantity, existing_cart_item['id']))
+            logging.info(f"Cart updated: Product ID={product_id}, Quantity Added={quantity}, User ID={user_id}")
+            flash(f"Product with the same price is already in the cart. Added {quantity} more.", "info")
         else:
+            # Додавання нового товару в кошик
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, %s, %s, NOW())
             """, (user_id, product_id, quantity))
+            logging.info(f"Product added to cart: Product ID={product_id}, Quantity={quantity}, User ID={user_id}")
 
         conn.commit()
-        flash("Product added to cart!", "success")
-
+        flash("Product added to cart successfully!", "success")
     except Exception as e:
         logging.error(f"Error in add_to_cart: {e}", exc_info=True)
         flash("Error adding product to cart.", "error")
@@ -702,9 +707,10 @@ def add_to_cart(token):
             cursor.close()
         if conn:
             conn.close()
+            logging.debug("Database connection closed after adding to cart.")
 
-    # Перенаправлення назад до результатів пошуку
-    return redirect(redirect_url)
+    return redirect(request.referrer or url_for('index'))
+
 
 
 
@@ -1605,6 +1611,33 @@ def export_to_excel(better_in_first, better_in_second, same_prices):
     except Exception as e:
         logging.error(f"Error during Excel export: {e}", exc_info=True)
         raise
+
+@app.route('/<token>/import_excel', methods=['GET', 'POST'])
+@requires_token_and_role('user')
+def import_excel(token):
+    if request.method == 'POST':
+        file = request.files.get('file')
+        if not file or not file.filename.endswith('.xlsx'):
+            flash("Please upload a valid Excel file.", "error")
+            return redirect(url_for('index'))
+        
+        # Обробка файлу, наприклад, за допомогою pandas
+        import pandas as pd
+        df = pd.read_excel(file)
+        
+        # Валідація даних
+        if 'article' not in df.columns or 'quantity' not in df.columns:
+            flash("Invalid template. Ensure 'article' and 'quantity' columns are present.", "error")
+            return redirect(url_for('index'))
+        
+        # Зберегти дані в базі або сесії
+        articles = df.to_dict('records')
+        session['imported_articles'] = articles
+        flash("Articles imported successfully.", "success")
+        return redirect(url_for('index'))
+    
+    return render_template('import_excel.html')
+
 
 
 @app.route('/<token>/admin/utilities')

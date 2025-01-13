@@ -101,51 +101,48 @@
     <main class="container">
         <h1>Search Results</h1>
 
-        <form method="POST" action="/{{ session['token'] }}/add_selected_to_cart" id="add-to-cart-form">
-            {% if grouped_results %}
-            <div class="checkbox-select-all">
-                <button type="button" class="btn btn-warning" id="select-all-min-prices">Select All Minimum Prices</button>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Article</th>
-                        <th>Price</th>
-                        <th>Table</th>
-                        <th>Quantity</th>
-                        <th>Select</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for article, details in grouped_results.items() %}
-                    {% set min_price = details | min(attribute='price') %}
-                    {% for detail in details %}
-                    <tr class="{% if detail.price == min_price %}highlight{% endif %}">
-                        {% if loop.index == 1 %}
-                        <td rowspan="{{ details|length }}">{{ article }}</td>
-                        {% endif %}
-                        <td>{{ detail.price }}</td>
-                        <td>{{ detail.table_name }}</td>
-                        <td>
-                            <input type="number" name="quantities[{{ article }}]" class="quantity-input" 
-                                   value="{{ quantities.get(article, 1) }}" min="1" required>
-                        </td>
-                        <td>
-                            <input type="checkbox" name="selected_prices" value="{{ detail.price }}|{{ detail.table_name }}" 
-							   class="article-checkbox" data-article="{{ article }}" 
-							   data-price="{{ detail.price }}" data-table="{{ detail.table_name }}">
-	
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% endfor %}
-                </tbody>
-            </table>
-            <button type="submit" class="btn btn-primary">Add Selected to Cart</button>
-            {% else %}
-            <p>No results found. Try another search.</p>
-            {% endif %}
-        </form>
+		<form method="POST" action="/{{ session['token'] }}/add_selected_to_cart" id="add-to-cart-form">
+			{% if grouped_results %}
+			<div class="checkbox-select-all">
+				<button type="button" class="btn btn-warning" id="select-all-min-prices">Select All Minimum Prices</button>
+			</div>
+			<table>
+				<thead>
+					<tr>
+						<th>Article</th>
+						<th>Price</th>
+						<th>Table</th>
+						<th>Quantity</th>
+						<th>Select</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for article, details in grouped_results.items() %}
+					{% set min_price = details | min(attribute='price') %}
+					{% for detail in details %}
+					<tr class="{% if detail.price == min_price %}highlight{% endif %}">
+						{% if loop.index == 1 %}
+						<td rowspan="{{ details|length }}">{{ article }}</td>
+						{% endif %}
+						<td>{{ detail.price }}</td>
+						<td>{{ detail.table_name }}</td>
+						<td>
+							<input type="number" name="quantities[{{ article }}]" class="quantity-input" value="{{ quantities.get(article, 1) }}" min="1" required>
+						</td>
+						<td>
+							<input type="checkbox" name="selected_prices" value="{{ detail.price }}|{{ detail.table_name }}" class="article-checkbox" data-article="{{ article }}" data-price="{{ detail.price }}">
+						</td>
+					</tr>
+					{% endfor %}
+					{% endfor %}
+				</tbody>
+			</table>
+			<button type="submit" class="btn btn-primary">Add Selected to Cart</button>
+			{% else %}
+			<p>No results found. Try another search.</p>
+			{% endif %}
+		</form>
+
         <form method="POST" action="/{{ session['token'] }}/clear_search" style="margin-top: 20px;">
             <button type="submit" class="btn btn-warning">Clear Search</button>
         </form>
@@ -157,7 +154,9 @@
 
 	<script>
 		document.getElementById('select-all-min-prices').addEventListener('click', function () {
-			const articles = new Set(); // Збереження обраних артикулів
+			const articles = new Set(); // Для збереження обраних артикулів
+
+			// Знаходимо всі чекбокси
 			document.querySelectorAll('.article-checkbox').forEach(checkbox => {
 				const article = checkbox.dataset.article; // Отримуємо артикул
 
@@ -166,6 +165,7 @@
 					let minPriceCheckbox = null;
 					let minPrice = Infinity;
 
+					// Знаходимо чекбокс із мінімальною ціною
 					articleCheckboxes.forEach(cb => {
 						const cbPrice = parseFloat(cb.dataset.price);
 						if (cbPrice < minPrice) {
@@ -175,14 +175,20 @@
 					});
 
 					if (minPriceCheckbox) {
-						minPriceCheckbox.checked = true; // Вибираємо мінімальну ціну
+						minPriceCheckbox.checked = true; // Вибираємо чекбокс із мінімальною ціною
 					}
 
 					articles.add(article); // Додаємо артикул до обраних
 				}
 			});
 		});
-	</script>
 
+		// Логування даних, що передаються у форму, для відлагодження
+		document.getElementById('add-to-cart-form').addEventListener('submit', function (e) {
+			const formData = new FormData(this);
+			const selectedPrices = formData.getAll('selected_prices');
+			console.log('Selected Prices:', selectedPrices); // Вивід обраних чекбоксів у консоль
+		});
+	</script>
 </body>
 </html>

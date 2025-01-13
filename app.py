@@ -467,10 +467,8 @@ def add_selected_to_cart(token):
     """
     Додає вибрані товари до кошика користувача.
     """
-    conn = None
-    cursor = None
     try:
-        user_id = session.get('user_id')  # Отримання ID користувача
+        user_id = session.get('user_id')
         if not user_id:
             flash("Please log in to add items to the cart.", "error")
             return redirect(url_for('index'))
@@ -478,16 +476,18 @@ def add_selected_to_cart(token):
         # Логування отриманих даних форми
         logging.debug(f"Form data received: {request.form}")
 
-        selected_prices = request.form.getlist('selected_prices')  # Отримати вибрані ціни та таблиці
+        selected_prices = request.form.getlist('selected_prices')
         if not selected_prices:
             flash("No items selected to add to the cart.", "error")
             return redirect(url_for('search', token=token))
 
+        # Отримуємо кількості для кожного артикула
         all_quantities = {
-            key.split('[')[1].rstrip(']'): int(value)  # Отримати кількості товарів
+            key.replace("quantities[", "").replace("]", ""): int(value)
             for key, value in request.form.items()
-            if key.startswith('quantities[') and value.isdigit()
+            if key.startswith("quantities[") and value.isdigit()
         }
+
         if not all_quantities:
             flash("No quantities provided.", "error")
             return redirect(url_for('search', token=token))
@@ -495,70 +495,68 @@ def add_selected_to_cart(token):
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Обробка кожного вибраного товару
         for selected in selected_prices:
-            try:
-                price, table_name = selected.split('|')
-                price = float(price)
+            price, table_name = selected.split('|')
+            price = float(price)
 
-                for article, quantity in all_quantities.items():
-                    # Перевірка, чи існує товар у таблиці `products`
-                    cursor.execute("""
-                        SELECT id FROM products
-                        WHERE article = %s AND table_name = %s
-                    """, (article, table_name))
-                    product = cursor.fetchone()
+            for article, quantity in all_quantities.items():
+                # Перевірка, чи існує товар у базі
+                cursor.execute(
+                    """
+                    SELECT id, article, price, table_name 
+                    FROM products 
+                    WHERE article = %s AND price = %s AND table_name = %s
+                    """,
+                    (article, price, table_name)
+                )
+                product = cursor.fetchone()
 
-                    if not product:
-                        # Додавання нового продукту в таблицю `products`
-                        cursor.execute("""
-                            INSERT INTO products (article, table_name, price)
-                            VALUES (%s, %s, %s)
-                            RETURNING id
-                        """, (article, table_name, price))
-                        product_id = cursor.fetchone()[0]
-                    else:
-                        product_id = product['id']
+                if not product:
+                    flash(f"Product {article} not found in table {table_name}.", "error")
+                    continue
 
-                    # Перевірка, чи товар вже є в кошику
-                    cursor.execute("""
-                        SELECT id, quantity FROM cart
-                        WHERE user_id = %s AND product_id = %s
-                    """, (user_id, product_id))
-                    existing_cart_item = cursor.fetchone()
+                # Перевірка, чи товар вже є в кошику
+                cursor.execute(
+                    """
+                    SELECT id, quantity FROM cart
+                    WHERE user_id = %s AND product_id = %s
+                    """,
+                    (user_id, product['id'])
+                )
+                existing_cart_item = cursor.fetchone()
 
-                    if existing_cart_item:
-                        # Оновлення кількості товару
-                        new_quantity = existing_cart_item['quantity'] + quantity
-                        cursor.execute("""
-                            UPDATE cart
-                            SET quantity = %s
-                            WHERE id = %s
-                        """, (new_quantity, existing_cart_item['id']))
-                        logging.info(f"Cart updated: Product ID={product_id}, New Quantity={new_quantity}, User ID={user_id}")
-                    else:
-                        # Додавання нового товару в кошик
-                        cursor.execute("""
-                            INSERT INTO cart (user_id, product_id, quantity, added_at)
-                            VALUES (%s, %s, %s, NOW())
-                        """, (user_id, product_id, quantity))
-                        logging.info(f"Product added to cart: Product ID={product_id}, Quantity={quantity}, User ID={user_id}")
-
-            except Exception as e:
-                logging.error(f"Error adding article {selected} to cart: {e}")
-                flash(f"Error adding article {selected} to cart.", "error")
+                if existing_cart_item:
+                    # Оновлення кількості, якщо товар вже в кошику
+                    cursor.execute(
+                        """
+                        UPDATE cart
+                        SET quantity = quantity + %s
+                        WHERE id = %s
+                        """,
+                        (quantity, existing_cart_item['id'])
+                    )
+                else:
+                    # Додавання нового товару в кошик
+                    cursor.execute(
+                        """
+                        INSERT INTO cart (user_id, product_id, quantity, added_at)
+                        VALUES (%s, %s, %s, NOW())
+                        """,
+                        (user_id, product['id'], quantity)
+                    )
 
         conn.commit()
-        flash("Selected items added to cart successfully!", "success")
-
+        flash("Selected items added to the cart successfully!", "success")
     except Exception as e:
-        logging.error(f"Unexpected error in add_selected_to_cart: {e}", exc_info=True)
+        logging.error(f"Error in add_selected_to_cart: {e}", exc_info=True)
         flash("An unexpected error occurred while adding items to the cart.", "error")
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
-            logging.debug("Database connection closed after adding selected items to cart.")
+            logging.debug("Database connection closed after adding selected items.")
 
     return redirect(url_for('cart', token=token))
 

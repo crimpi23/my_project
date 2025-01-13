@@ -159,34 +159,33 @@
 		const selectButton = document.getElementById('select-all-min-prices');
 		if (selectButton) {
 			selectButton.addEventListener('click', function () {
-				// Зберігати оброблені артикули, щоб уникнути повторів
-				const selectedArticles = new Set();
+				const selectedArticles = new Set(); // Запобігання дублюванню
+				document.querySelectorAll('.article-checkbox').forEach(checkbox => {
+					const article = checkbox.dataset.article;
+					const price = parseFloat(checkbox.dataset.price);
+					const tableName = checkbox.dataset.table;
 
-				document.querySelectorAll('tr.highlight').forEach(row => {
-					const article = row.querySelector('.article-checkbox').dataset.article;
-					const price = parseFloat(row.querySelector('.article-checkbox').dataset.price);
-
-					// Вибираємо тільки мінімальну ціну для кожного артикула
+					// Обираємо тільки мінімальну ціну для кожного артикула
 					if (!selectedArticles.has(article)) {
 						const checkboxes = document.querySelectorAll(`.article-checkbox[data-article="${article}"]`);
 						let minCheckbox = null;
 						let minPrice = Infinity;
 
-						checkboxes.forEach(checkbox => {
-							const checkboxPrice = parseFloat(checkbox.dataset.price);
-							if (checkboxPrice < minPrice) {
-								minPrice = checkboxPrice;
-								minCheckbox = checkbox;
+						checkboxes.forEach(cb => {
+							const cbPrice = parseFloat(cb.dataset.price);
+							if (cbPrice < minPrice) {
+								minPrice = cbPrice;
+								minCheckbox = cb;
 							}
 						});
 
-						// Встановлюємо флажок для мінімальної ціни
 						if (minCheckbox) {
-							minCheckbox.checked = true;
+							minCheckbox.checked = true; // Ставимо чек
 						}
 
-						// Додаємо артикул до оброблених
 						selectedArticles.add(article);
+					} else {
+						checkbox.checked = false; // Вимикаємо всі інші
 					}
 				});
 			});

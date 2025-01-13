@@ -1449,6 +1449,8 @@ def get_import_status():
 @app.route('/<token>/admin/compare_prices', methods=['GET', 'POST'])
 @requires_token_and_role('admin')
 def compare_prices(token):
+    logging.debug(f"Token in route: {token}")
+
     if request.method == 'GET':
         try:
             # Отримуємо список таблиць із прайсами
@@ -1458,16 +1460,17 @@ def compare_prices(token):
             price_lists = cursor.fetchall()
             conn.close()
             logging.info("Fetched price list tables successfully.")
-            return render_template('compare_prices.html', price_lists=price_lists)
+            logging.debug(f"Price lists fetched: {price_lists}")
+            return render_template('compare_prices.html', price_lists=price_lists, token=token)
         except Exception as e:
             logging.error(f"Error during GET request: {str(e)}", exc_info=True)
             flash("Failed to load price list tables.", "error")
-            return redirect(request.referrer or url_for('admin_panel'))
+            return redirect(request.referrer or url_for('admin_panel', token=token))
 
     if request.method == 'POST':
         try:
             form_data = request.form.to_dict()
-            logging.info(f"Form data: {form_data}")
+            logging.info(f"Form data received: {form_data}")
 
             # Якщо запит на експорт
             if 'export_excel' in request.form:
@@ -1476,7 +1479,7 @@ def compare_prices(token):
                 if not data:
                     logging.error("No data to export!")
                     flash("No data to export!", "error")
-                    return redirect(request.referrer or url_for('compare_prices'))
+                    return redirect(request.referrer or url_for('compare_prices', token=token))
                 return export_to_excel(
                     data['better_in_first'],
                     data['better_in_second'],
@@ -1486,10 +1489,13 @@ def compare_prices(token):
             # Обробка даних для порівняння
             articles_input = request.form.get('articles', '').strip()
             selected_prices = request.form.getlist('price_tables')
+            logging.debug(f"Articles input: {articles_input}")
+            logging.debug(f"Selected price tables: {selected_prices}")
 
             if not articles_input or not selected_prices:
+                logging.warning("Articles or price tables not provided.")
                 flash("Please enter articles and select price tables.", "error")
-                return redirect(request.referrer or url_for('compare_prices'))
+                return redirect(request.referrer or url_for('compare_prices', token=token))
 
             # Розбиваємо артикулі
             articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
@@ -1501,6 +1507,7 @@ def compare_prices(token):
             # Отримуємо ціни з вибраних таблиць
             results = {}
             for table in selected_prices:
+                logging.debug(f"Querying table: {table}")
                 query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
                 cursor.execute(query, (articles,))
                 for row in cursor.fetchall():
@@ -1509,13 +1516,16 @@ def compare_prices(token):
                     if article not in results:
                         results[article] = []
                     results[article].append({'price': price, 'table': table})
+                logging.debug(f"Results from {table}: {results}")
 
             conn.close()
+            logging.info("Fetched all price comparisons successfully.")
 
             # Порівняння цін
             better_in_first, better_in_second, same_prices = [], [], []
             for article, prices in results.items():
                 min_price = min(prices, key=lambda x: x['price'])
+                logging.debug(f"Minimum price for {article}: {min_price}")
                 if len([p for p in prices if p['price'] == min_price['price']]) > 1:
                     same_prices.append({
                         'article': article,
@@ -1533,8 +1543,9 @@ def compare_prices(token):
                 'better_in_second': better_in_second,
                 'same_prices': same_prices
             }
-
+            logging.debug("Comparison results saved to session.")
             logging.info("Comparison completed successfully.")
+
             return render_template(
                 'compare_prices_results.html',
                 better_in_first=better_in_first,
@@ -1545,7 +1556,7 @@ def compare_prices(token):
         except Exception as e:
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
-            return redirect(request.referrer or url_for('compare_prices'))
+            return redirect(request.referrer or url_for('compare_prices', token=token))
 
 
 # Експорт в ексель файлу порівняння цін

@@ -15,26 +15,7 @@
         button { padding: 10px 20px; color: white; background: #007bff; border: none; cursor: pointer; }
         button:hover { background: #0056b3; }
         footer { text-align: center; padding: 10px; background: #007bff; color: white; margin-top: 20px; }
-        .flash-messages .flash-message { margin-bottom: 10px; padding: 10px; border-radius: 5px; }
-        .flash-messages .flash-message.success { background: #d4edda; color: #155724; }
-        .flash-messages .flash-message.error { background: #f8d7da; color: #721c24; }
     </style>
-    <script>
-        function handleArticleSelection(article) {
-            const checkboxes = document.querySelectorAll(`input[name="selected_items_${article}"]`);
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function () {
-                    if (this.checked) {
-                        checkboxes.forEach(cb => {
-                            if (cb !== this) {
-                                cb.checked = false;
-                            }
-                        });
-                    }
-                });
-            });
-        }
-    </script>
 </head>
 <body>
     <header>
@@ -79,16 +60,13 @@
                         <td>{{ detail.price }}</td>
                         <td>{{ detail.table_name }}</td>
                         <td>
-                            <input type="number" name="quantities_{{ article }}" value="{{ detail.quantity }}" min="1" required>
+                            <input type="number" name="quantities[{{ article }}]" value="{{ detail.quantity }}" min="1" required>
                         </td>
                         <td>
-                            <input type="checkbox" name="selected_items_{{ article }}" value="{{ article }}|{{ detail.price }}|{{ detail.table_name }}|{{ detail.quantity }}">
+                            <input type="radio" name="selected_prices[{{ article }}]" value="{{ article }}|{{ detail.price }}|{{ detail.table_name }}">
                         </td>
                     </tr>
                     {% endfor %}
-                    <script>
-                        handleArticleSelection('{{ article }}');
-                    </script>
                     {% endfor %}
                 </tbody>
             </table>

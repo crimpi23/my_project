@@ -4,115 +4,95 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .results-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .article-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fefefe;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .article-header {
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .price-table th, .price-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .price-table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        .price-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .submit-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/{{ session['token'] }}/" class="nav-link">Home</a></li>
-                <li><a href="/{{ session['token'] }}/cart" class="nav-link">Cart</a></li>
-                <li><a href="/{{ session['token'] }}/orders" class="nav-link">Orders</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <main class="container">
-        <section class="intro">
-            <h1>Search Results</h1>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <ul class="flashes">
-                        {% for category, message in messages %}
-                            <li class="{{ category }}">{{ message }}</li>
+    <div class="results-container">
+        <h1>Search Results</h1>
+        {% for article, prices in grouped_results.items() %}
+            <div class="article-group">
+                <div class="article-header">Артикул: {{ article }}</div>
+                <table class="price-table">
+                    <thead>
+                        <tr>
+                            <th>Ціна</th>
+                            <th>Постачальник</th>
+                            <th>Вибір</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for price_info in prices %}
+                            <tr>
+                                <td>{{ price_info.price }}</td>
+                                <td>{{ price_info.table_name }}</td>
+                                <td>
+                                    <input type="radio" name="selected_{{ article }}" value="{{ price_info.table_name }}">
+                                </td>
+                            </tr>
                         {% endfor %}
-                    </ul>
-                {% endif %}
-            {% endwith %}
-
-            {% if grouped_results %}
-            <table class="results-table">
-                <thead>
-                    <tr>
-                        <th>Article</th>
-                        <th>Price</th>
-                        <th>Table</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-					<tbody>
-						{% for article, details in grouped_results.items() %}
-						{% for detail in details %}
-						<tr>
-							{% if loop.index == 1 %}
-							<td rowspan="{{ details|length }}">{{ article }}</td>
-							{% endif %}
-							<td>{{ detail.price }}</td>
-							<td>{{ detail.table_name }}</td>
-							<td>
-								<form method="POST" action="/process_selection">
-									<table class="result-table">
-										<thead>
-											<tr>
-												<th>Артикул</th>
-												<th>Ціна</th>
-												<th>Постачальник</th>
-												<th>Вибір</th>
-											</tr>
-										</thead>
-										<tbody>
-											{% for article, prices in grouped_results.items() %}
-												<tr class="article-header">
-													<td colspan="4"><strong>Артикул: {{ article }}</strong></td>
-												</tr>
-												{% for price_data in prices %}
-												<tr>
-													<td></td> <!-- Порожня клітинка для відступу -->
-													<td>{{ price_data.price }}</td>
-													<td>{{ price_data.table_name }}</td>
-													<td>
-														<input type="radio" 
-															   name="selected_price_{{ article }}" 
-															   value="{{ price_data.table_name }}:{{ price_data.price }}">
-													</td>
-												</tr>
-												{% endfor %}
-											{% endfor %}
-										</tbody>
-									</table>
-									<button type="submit" class="submit-button">Підтвердити вибір</button>
-								</form>
-
-
-
-
-
-
- 							</td>
-						</tr>
-						{% endfor %}
-						{% endfor %}
-					</tbody>
-
-            </table>
-            {% endif %}
-
-            {% if missing_articles %}
-            <div class="warning-message">
-                <p>Missing Articles:</p>
-                <ul>
-                    {% for article in missing_articles %}
-                    <li>{{ article }}</li>
-                    {% endfor %}
-                </ul>
+                    </tbody>
+                </table>
             </div>
-            {% endif %}
-			<form method="POST" action="/{{ session['token'] }}/clear_search">
-				<button type="submit" class="btn btn-warning">Clear Search</button>
-			</form>
-        </section>
-    </main>
+        {% endfor %}
+        <button class="submit-button">Підтвердити вибір</button>
+    </div>
 </body>
 </html>

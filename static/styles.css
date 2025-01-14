@@ -149,3 +149,38 @@ h1 {
         width: 50px;
     }
 }
+.article-group {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.article-header {
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+.price-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.price-table th, .price-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.price-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.price-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}

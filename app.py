@@ -210,13 +210,35 @@ def add_to_buffer(token):
 
         conn = get_db_connection()
         cursor = conn.cursor()
+
         for item in selected_items:
             article, price, table_name = item.split('|')
             quantity = quantities.get(article, 1)
+
+            # Перевірка наявності запису
             cursor.execute("""
-                INSERT INTO selection_buffer (user_id, article, price, table_name, quantity)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (user_id, article, price, table_name, quantity))
+                SELECT quantity FROM selection_buffer
+                WHERE user_id = %s AND article = %s AND price = %s AND table_name = %s
+            """, (user_id, article, price, table_name))
+            existing = cursor.fetchone()
+
+            if existing:
+                # Оновлення кількості
+                new_quantity = existing[0] + quantity
+                cursor.execute("""
+                    UPDATE selection_buffer
+                    SET quantity = %s
+                    WHERE user_id = %s AND article = %s AND price = %s AND table_name = %s
+                """, (new_quantity, user_id, article, price, table_name))
+                logging.debug(f"Updated quantity for {article}: {new_quantity}")
+            else:
+                # Додавання нового запису
+                cursor.execute("""
+                    INSERT INTO selection_buffer (user_id, article, price, table_name, quantity)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (user_id, article, price, table_name, quantity))
+                logging.debug(f"Inserted new buffer entry for {article}")
+
         conn.commit()
         flash("Items added to buffer.", "success")
     except Exception as e:
@@ -228,6 +250,7 @@ def add_to_buffer(token):
         if conn:
             conn.close()
     return redirect(url_for('view_buffer', token=token))
+
 
 
 

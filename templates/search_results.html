@@ -55,29 +55,36 @@
 								<form method="POST" action="/process_selection">
 									{% for article, prices in grouped_results.items() %}
 										<div class="article-group">
-											<h3>Артикул: {{ article }}</h3>
-											<table>
-												<tr>
-													<th>Постачальник</th>
-													<th>Ціна</th>
-													<th>Кількість</th>
-													<th>Вибрати</th>
-												</tr>
-												{% for price_data in prices %}
-												<tr>
-													<td>{{ price_data.table_name }}</td>
-													<td>{{ price_data.price }}</td>
-													<td>{{ price_data.quantity }}</td>
-													<td>
-														<input type="radio" name="selected_price_{{ article }}" value="{{ price_data.table_name }}:{{ price_data.price }}">
-													</td>
-												</tr>
-												{% endfor %}
+											<h3 class="article-header">Артикул: {{ article }}</h3>
+											<table class="price-table">
+												<thead>
+													<tr>
+														<th>Постачальник</th>
+														<th>Ціна</th>
+														<th>Кількість</th>
+														<th>Вибір</th>
+													</tr>
+												</thead>
+												<tbody>
+													{% for price_data in prices %}
+													<tr>
+														<td>{{ price_data.table_name }}</td>
+														<td>{{ price_data.price }}</td>
+														<td>{{ price_data.quantity }}</td>
+														<td>
+															<input type="radio" 
+																   name="selected_price_{{ article }}" 
+																   value="{{ price_data.table_name }}:{{ price_data.price }}">
+														</td>
+													</tr>
+													{% endfor %}
+												</tbody>
 											</table>
 										</div>
 									{% endfor %}
-									<button type="submit">Підтвердити вибір</button>
+									<button type="submit" class="submit-button">Підтвердити вибір</button>
 								</form>
+
  							</td>
 						</tr>
 						{% endfor %}

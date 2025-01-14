@@ -1033,3 +1033,82 @@ th, td {
 th {
     background-color: #f4f4f4;
 }
+/* Загальні стилі */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+}
+
+/* Група артикула */
+.article-group {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Заголовок артикула */
+.article-header {
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Таблиця з цінами */
+.price-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.price-table thead th {
+    background-color: #f4f4f4;
+    color: #333;
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+    border: 1px solid #ddd;
+}
+
+.price-table tbody td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.price-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Кнопка */
+.submit-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.submit-button:hover {
+    background-color: #0056b3;
+}
+@media (max-width: 768px) {
+    .price-table {
+        font-size: 14px;
+    }
+    .article-header {
+        font-size: 16px;
+    }
+    .submit-button {
+        width: 100%;
+        font-size: 14px;
+    }
+}

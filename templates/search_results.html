@@ -52,28 +52,21 @@
 				</thead>
 				<tbody>
 					{% for article, details in grouped_results.items() %}
-					{% for detail in details %}
 					<tr>
-						{% if loop.index == 1 %}
-						<td rowspan="{{ details|length }}">{{ article }}</td>
-						{% endif %}
-						<td>
-							<input type="radio" 
-								   name="selected_items[{{ article }}]" 
-								   value="{{ detail.price }}|{{ detail.table_name }}" 
-								   required>
+						<td rowspan="{{ details|length }}">
+							<!-- Checkbox для вибору однієї ціни на артикул -->
+							<input type="checkbox" name="selected_items" 
+								   value="{{ article }}|{{ details[0].price }}|{{ details[0].table_name }}" required>
 						</td>
-						<td>{{ detail.price }}</td>
-						<td>{{ detail.table_name }}</td>
+						<td>{{ article }}</td>
 						<td>
-							<input type="number" 
-								   name="quantities[{{ article }}]" 
-								   value="{{ detail.quantity }}" 
-								   min="1" 
-								   required>
+							<select name="quantities[{{ article }}]" required>
+								{% for detail in details %}
+								<option value="{{ detail.price }}">{{ detail.price }} - {{ detail.table_name }}</option>
+								{% endfor %}
+							</select>
 						</td>
 					</tr>
-					{% endfor %}
 					{% endfor %}
 				</tbody>
 			</table>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buffer</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f9; }
+        header { background: #007bff; color: white; padding: 10px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin: 20px auto; }
+        table th, table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        table th { background: #f1f1f1; }
+        footer { text-align: center; padding: 10px; background: #007bff; color: white; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Buffer</h1>
+    </header>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% if buffer_items %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Article</th>
+                    <th>Price</th>
+                    <th>Table</th>
+                    <th>Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in buffer_items %}
+                <tr>
+                    <td>{{ item.article }}</td>
+                    <td>{{ item.price }}</td>
+                    <td>{{ item.table_name }}</td>
+                    <td>{{ item.quantity }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No items in buffer.</p>
+        {% endif %}
+    </main>
+    <footer>
+        &copy; 2025 - Buffer Management System
+    </footer>
+</body>
+</html>

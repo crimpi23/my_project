@@ -251,6 +251,76 @@ def add_to_buffer(token):
             conn.close()
     return redirect(url_for('view_buffer', token=token))
 
+@app.route('/<token>/update_buffer', methods=['POST'])
+@requires_token_and_role('user')
+def update_buffer(token):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("You need to log in.", "error")
+            return redirect(url_for('index'))
+
+        updated_quantities = request.form.get('quantities')
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        for item_id, quantity in updated_quantities.items():
+            cursor.execute("""
+                UPDATE selection_buffer
+                SET quantity = %s
+                WHERE id = %s AND user_id = %s
+            """, (quantity, item_id, user_id))
+        
+        conn.commit()
+        flash("Buffer updated successfully.", "success")
+    except Exception as e:
+        logging.error(f"Error in update_buffer: {e}", exc_info=True)
+        flash("Failed to update the buffer.", "error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+    return redirect(url_for('view_buffer', token=token))
+
+
+@app.route('/<token>/move_to_cart', methods=['POST'])
+@requires_token_and_role('user')
+def move_to_cart(token):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("You need to log in.", "error")
+            return redirect(url_for('index'))
+
+        selected_items = request.form.getlist('selected_items')
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        for item_id in selected_items:
+            cursor.execute("""
+                INSERT INTO cart (user_id, article, price, table_name, quantity)
+                SELECT user_id, article, price, table_name, quantity
+                FROM selection_buffer
+                WHERE id = %s AND user_id = %s
+            """, (item_id, user_id))
+            cursor.execute("""
+                DELETE FROM selection_buffer
+                WHERE id = %s AND user_id = %s
+            """, (item_id, user_id))
+        
+        conn.commit()
+        flash("Items moved to cart successfully.", "success")
+    except Exception as e:
+        logging.error(f"Error in move_to_cart: {e}", exc_info=True)
+        flash("Failed to move items to cart.", "error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+    return redirect(url_for('view_cart', token=token))
+
 
 
 

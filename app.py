@@ -467,7 +467,7 @@ def add_selected_to_cart(token):
     conn = None
     cursor = None
     try:
-        # Отримуємо обрані товари
+        # Отримуємо вибрані товари
         selected_items = request.form.getlist('selected_items')
         user_id = session.get('user_id')  # ID користувача із сесії
 
@@ -481,19 +481,19 @@ def add_selected_to_cart(token):
         cursor = conn.cursor()
 
         for item in selected_items:
-            # Розділяємо дані
+            # Розділяємо дані з HTML (article, price, table_name, quantity)
             article, price, table_name, quantity = item.split('|')
             price = float(price)
             quantity = int(quantity)
 
-            # Перевірка існування у таблиці `products`
+            # Перевіряємо, чи існує товар у таблиці `products`
             cursor.execute("""
                 SELECT id FROM products
                 WHERE article = %s AND table_name = %s AND price = %s
             """, (article, table_name, price))
             product = cursor.fetchone()
 
-            # Додавання нового продукту у `products`, якщо його немає
+            # Додаємо новий товар у таблицю `products`, якщо його немає
             if not product:
                 cursor.execute("""
                     INSERT INTO products (article, table_name, price)
@@ -503,9 +503,9 @@ def add_selected_to_cart(token):
                 product_id = cursor.fetchone()[0]
                 logging.info(f"New product added: {article}, {table_name}, {price}")
             else:
-                product_id = product[0]
+                product_id = product['id']
 
-            # Додавання продукту до кошика
+            # Додаємо товар до кошика
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, %s, %s, NOW())
@@ -523,7 +523,8 @@ def add_selected_to_cart(token):
         if conn:
             conn.close()
 
-    return redirect(url_for('view_cart', token=token))
+    # Перенаправлення на маршрут `cart`
+    return redirect(url_for('cart', token=token))
 
 
 

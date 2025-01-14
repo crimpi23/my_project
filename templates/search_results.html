@@ -43,11 +43,11 @@
 			<table>
 				<thead>
 					<tr>
+						<th>Select</th>
 						<th>Article</th>
 						<th>Price</th>
 						<th>Table</th>
 						<th>Quantity</th>
-						<th>Select</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -57,13 +57,20 @@
 						{% if loop.index == 1 %}
 						<td rowspan="{{ details|length }}">{{ article }}</td>
 						{% endif %}
+						<td>
+							<input type="radio" 
+								   name="selected_items[{{ article }}]" 
+								   value="{{ detail.price }}|{{ detail.table_name }}" 
+								   required>
+						</td>
 						<td>{{ detail.price }}</td>
 						<td>{{ detail.table_name }}</td>
 						<td>
-							<input type="number" name="quantities[{{ article }}]" value="{{ detail.quantity }}" min="1" required>
-						</td>
-						<td>
-							<input type="radio" name="selected_prices[{{ article }}]" value="{{ detail.price }}|{{ detail.table_name }}">
+							<input type="number" 
+								   name="quantities[{{ article }}]" 
+								   value="{{ detail.quantity }}" 
+								   min="1" 
+								   required>
 						</td>
 					</tr>
 					{% endfor %}
@@ -72,8 +79,6 @@
 			</table>
 			<button type="submit">Add Selected to Cart</button>
 		</form>
-
-
         {% else %}
         <p>No results found. Try adjusting your search or uploading an Excel file.</p>
         {% endif %}

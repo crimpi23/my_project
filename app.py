@@ -462,23 +462,23 @@ def search_articles(token):
 @requires_token_and_role('user')
 def add_selected_to_cart(token):
     """
-    Додає обрані товари до кошика користувача, обробляючи вибрані ціни та кількості.
+    Додає обрані товари до кошика користувача, дозволяючи вибрати одну ціну для кожного артикула.
     """
     conn = None
     cursor = None
     try:
-        selected_prices = request.form.to_dict(flat=False).get('selected_prices', {})
+        selected_items = request.form.to_dict(flat=False).get('selected_items', {})
         quantities = request.form.to_dict(flat=False).get('quantities', {})
         user_id = session.get('user_id')  # ID користувача із сесії
 
-        if not selected_prices:
+        if not selected_items:
             flash("No items selected to add to the cart.", "error")
             return redirect(url_for('search_articles', token=token))
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        for article, price_table_list in selected_prices.items():
+        for article, price_table_list in selected_items.items():
             price, table_name = price_table_list[0].split('|')
             price = float(price)
             quantity = int(quantities.get(article, [1])[0])

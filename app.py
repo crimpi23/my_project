@@ -416,7 +416,6 @@ def submit_selection(token):
         return redirect(f'/{token}/search')
 
     except Exception as e:
-        # Логування інших помилок
         app.logger.error(f"Error during selection submission: {e}")
         flash("An error occurred while processing your selection. Please try again.", "error")
         return redirect(f'/{token}/search')

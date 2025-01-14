@@ -66,37 +66,40 @@
 <body>
     <div class="results-container">
         <h1>Search Results</h1>
-        <form method="POST" action="/{{ token }}/submit_selection">
-            {% for article, prices in grouped_results.items() %}
-                <div class="article-group">
-                    <!-- Display the article once -->
-                    <div class="article-header">Article: {{ article }}</div>
-                    <!-- Table with price options -->
-                    <table class="price-table">
-                        <thead>
-                            <tr>
-                                <th>Price</th>
-                                <th>Supplier</th>
-                                <th>Select</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for price_info in prices %}
-                                <tr>
-                                    <td>{{ price_info.price }}</td>
-                                    <td>{{ price_info.table_name }}</td>
-                                    <td>
-                                        <!-- Radio button for selecting one price -->
-                                        <input type="radio" name="selected_{{ article }}" value="{{ price_info.price }}|{{ price_info.table_name }}">
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endfor %}
-            <button type="submit" class="submit-button">Submit Selection</button>
-        </form>
+		<form method="POST" action="/{{ token }}/submit_selection">
+			{% for article, prices in grouped_results.items() %}
+				<div class="article-group">
+					<!-- Article header -->
+					<div class="article-header">Article: {{ article }}</div>
+					<!-- Table displaying price options -->
+					<table class="price-table">
+						<thead>
+							<tr>
+								<th>Price</th>
+								<th>Supplier</th>
+								<th>Select</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for price_info in prices %}
+								<tr>
+									<td>{{ price_info.price }}</td>
+									<td>{{ price_info.table_name }}</td>
+									<td>
+										<!-- Radio button for the current price option -->
+										<input type="radio" name="selected_{{ article }}" 
+											   value="{{ price_info.price }}|{{ price_info.table_name }}">
+									</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			{% endfor %}
+			<!-- Submit button -->
+			<button type="submit" class="submit-button">Submit Selection</button>
+		</form>
+
     </div>
 </body>
 </html>

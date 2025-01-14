@@ -458,79 +458,71 @@ def search_articles(token):
 
 
 # Додавання артикула по чекбоксу
-@app.route('/<token>/add_selected_to_cart', methods=['POST'])
+@app.route('/<token>/cart', methods=['GET', 'POST'])
 @requires_token_and_role('user')
-def add_selected_to_cart(token):
+def cart(token):
     """
-    Додає обрані товари до кошика користувача, обробляючи вибрані ціни та кількості.
+    Відображення кошика для користувача.
     """
     conn = None
     cursor = None
     try:
-        # Отримання даних із форми
-        selected_items = request.form.to_dict(flat=False).get('selected_items', {})
-        quantities = request.form.to_dict(flat=False).get('quantities', {})
-        user_id = session.get('user_id')  # ID користувача із сесії
+        # Отримання user_id з сесії
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("You need to log in to view your cart.", "error")
+            return redirect(url_for('index'))
+        
+        logging.debug(f"User ID from session: {user_id}")
 
-        # Логування вхідних даних
-        logging.debug(f"Received selected_items: {selected_items}")
-        logging.debug(f"Received quantities: {quantities}")
-
-        if not selected_items:
-            flash("No items selected to add to the cart.", "error")
-            return redirect(url_for('search_articles', token=token))
-
+        # Підключення до бази даних
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        for article, price_table_list in selected_items.items():
-            # Логування оброблюваного товару
-            logging.debug(f"Processing article: {article}, price_table_list: {price_table_list}")
+        # Отримання товарів у кошику
+        query = """
+            SELECT c.product_id, p.article, p.price, c.quantity,
+                   (p.price * c.quantity) AS total_price, c.added_at
+            FROM cart c
+            JOIN products p ON c.product_id = p.id
+            WHERE c.user_id = %s
+            ORDER BY c.added_at
+        """
+        cursor.execute(query, (user_id,))
+        cart_items = cursor.fetchall()
 
-            price, table_name = price_table_list[0].split('|')
-            price = float(price)
-            quantity = int(quantities.get(article, [1])[0])
+        # Логування для перевірки структури даних
+        logging.debug(f"Cart items retrieved for user_id={user_id}: {cart_items}")
 
-            # Перевірка існування товару
-            cursor.execute("""
-                SELECT id FROM products
-                WHERE article = %s AND table_name = %s AND price = %s
-            """, (article, table_name, price))
-            product = cursor.fetchone()
+        # Розрахунок загальної вартості
+        try:
+            total_price = sum(item['total_price'] for item in cart_items)
+            logging.debug(f"Total price calculated for user_id={user_id}: {total_price}")
+        except KeyError as e:
+            logging.error(f"Missing key in cart item: {e}")
+            total_price = sum(item['price'] * item['quantity'] for item in cart_items)
+            logging.warning("Recalculating total_price in Python.")
 
-            # Логування статусу товару
-            if not product:
-                logging.debug(f"Product not found in 'products': {article}, {table_name}, {price}")
-                cursor.execute("""
-                    INSERT INTO products (article, table_name, price)
-                    VALUES (%s, %s, %s)
-                    RETURNING id
-                """, (article, table_name, price))
-                product_id = cursor.fetchone()[0]
-                logging.debug(f"New product added with ID: {product_id}")
-            else:
-                product_id = product['id']
-                logging.debug(f"Existing product found with ID: {product_id}")
+        # Очищення непотрібних даних із сесії
+        session.pop('grouped_results', None)
+        session.pop('quantities', None)
+        session.pop('missing_articles', None)
 
-            # Додавання товару до кошика
-            cursor.execute("""
-                INSERT INTO cart (user_id, product_id, quantity, added_at)
-                VALUES (%s, %s, %s, NOW())
-            """, (user_id, product_id, quantity))
-            logging.info(f"Product added to cart: User={user_id}, Product ID={product_id}, Quantity={quantity}")
+        return render_template('cart.html', cart_items=cart_items, total_price=total_price)
 
-        conn.commit()
-        flash("Selected items added to the cart successfully!", "success")
     except Exception as e:
-        logging.error(f"Error in add_selected_to_cart: {e}", exc_info=True)
-        flash("Error adding selected items to cart.", "error")
+        logging.error(f"Error in cart for user_id={user_id}: {str(e)}", exc_info=True)
+        flash("Could not load your cart. Please try again.", "error")
+        return redirect(request.referrer or url_for('index'))
+
     finally:
+        # Закриття курсора і з'єднання
         if cursor:
             cursor.close()
+            logging.debug("Database cursor closed.")
         if conn:
             conn.close()
-
-    return redirect(url_for('view_cart', token=token))
+            logging.debug("Database connection closed.")
 
 
 

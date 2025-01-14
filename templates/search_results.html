@@ -53,18 +53,16 @@
 				<tbody>
 					{% for article, details in grouped_results.items() %}
 					<tr>
-						<td rowspan="{{ details|length }}">
-							<input type="hidden" name="quantities[{{ article }}]" value="1">
-						</td>
+						<td colspan="5"><strong>{{ article }}</strong></td>
 					</tr>
 					{% for detail in details %}
 					<tr>
 						<td>
 							<input type="radio"
 								   name="selected_items[{{ article }}]"
-								   value="{{ detail.price }}|{{ detail.table_name }}"
-								   required>
+								   value="{{ detail.price }}|{{ detail.table_name }}">
 						</td>
+						<td>{{ article }}</td>
 						<td>{{ detail.price }}</td>
 						<td>{{ detail.table_name }}</td>
 						<td>

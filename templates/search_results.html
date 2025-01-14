@@ -59,13 +59,13 @@
 												<th>Артикул</th>
 												<th>Ціна</th>
 												<th>Постачальник</th>
-												<th>Вибрати</th>
+												<th>Вибір</th>
 											</tr>
 										</thead>
 										<tbody>
 											{% for article, prices in grouped_results.items() %}
 												{% for price_data in prices %}
-												<tr>
+												<tr class="{% if loop.first %}new-article-row{% endif %}">
 													{% if loop.first %}
 													<td rowspan="{{ prices|length }}">{{ article }}</td>
 													{% endif %}
@@ -83,6 +83,8 @@
 									</table>
 									<button type="submit" class="submit-button">Підтвердити вибір</button>
 								</form>
+
+
 
 
  							</td>

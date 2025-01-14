@@ -1154,3 +1154,56 @@ body {
 .submit-button:hover {
     background-color: #0056b3;
 }
+.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.result-table th, .result-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.result-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+    text-align: center;
+}
+
+.result-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.submit-button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.submit-button:hover {
+    background-color: #0056b3;
+}
+grouped_results = {
+    "11127935580": [
+        {"price": 1.25, "table_name": "vag"},
+        {"price": 12.15, "table_name": "vag2"},
+        {"price": 123.5, "table_name": "bmw"},
+        {"price": 26.35, "table_name": "wer"}
+    ],
+    "22222222222": [
+        {"price": 5.0, "table_name": "vag"},
+        {"price": 15.2, "table_name": "bmw"}
+    ]
+}
+/* Відступ між групами артикулів */
+.result-table tbody tr.new-article-row td {
+    padding-top: 15px; /* Відступ перед новим артикулом */
+    border-top: 2px solid #ddd; /* Розділювальна лінія */
+}

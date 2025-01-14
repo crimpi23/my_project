@@ -4,88 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Cart</title>
-    <style>
-        /* Inserted styles */
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f9f9f9; }
-        header { background: #007bff; color: white; text-align: center; padding: 10px 0; }
-        nav a { margin: 0 15px; color: white; text-decoration: none; }
-        nav a:hover { text-decoration: underline; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        table th, table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        table th { background: #f1f1f1; }
-        button { padding: 10px 20px; color: white; background: #007bff; border: none; cursor: pointer; }
-        button:hover { background: #0056b3; }
-    </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+    <!-- Header -->
     <header>
-        <h1>Shopping Cart</h1>
         <nav>
-            <a href="/{{ session['token'] }}/">Home</a>
-            <a href="/{{ session['token'] }}/cart">Cart</a>
-            <a href="/{{ session['token'] }}/orders">Orders</a>
+            <ul>
+                <li><a href="/{{ session['token'] }}/" class="nav-link">Home</a></li>
+                <li><a href="/{{ session['token'] }}/" class="nav-link">Search</a></li>
+                <li><a href="/{{ session['token'] }}/orders" class="nav-link">Orders</a></li>
+            </ul>
         </nav>
     </header>
 
-    <main>
-        <!-- Flash messages -->
-        {% with messages = get_flashed_messages(with_categories=True) %}
-        {% if messages %}
-        <div class="flash-messages">
-            {% for category, message in messages %}
-            <div class="flash-message {{ category }}">{{ message }}</div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% endwith %}
+    <main class="container">
+        <section class="intro">
+            <h1>Shopping Cart</h1>
 
-        {% if cart_items %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Article</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Total</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in cart_items %}
-                <tr>
-                    <td>{{ item.article }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>
-                        <form method="POST" action="/{{ session['token'] }}/update_cart">
-                            <input type="hidden" name="product_id" value="{{ item.product_id }}">
-                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" required>
-                            <button>Update</button>
-                        </form>
-                    </td>
-                    <td>{{ item.price * item.quantity }}</td>
-                    <td>
-                        <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
-                            <input type="hidden" name="product_id" value="{{ item.product_id }}">
-                            <button>Remove</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <form method="POST" action="/{{ session['token'] }}/clear_cart">
-            <button>Clear Cart</button>
-        </form>
-        <form method="POST" action="/{{ session['token'] }}/place_order">
-            <button>Place Order</button>
-        </form>
-        {% else %}
-        <p>Your cart is empty. <a href="/{{ session['token'] }}/">Search for products</a>.</p>
-        {% endif %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flashes">
+                        {% for category, message in messages %}
+                            <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            {% if cart_items %}
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.article }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>
+							<form method="POST" action="/{{ session['token'] }}/update_cart">
+								<input type="hidden" name="product_id" value="{{ item.product_id }}">
+								<input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
+								<button type="submit" class="btn btn-primary">Update</button>
+							</form>
+                        </td>
+                        <td>{{ item.price * item.quantity }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
+                                <input type="hidden" name="article" value="{{ item.article }}">
+                                <button type="submit" class="btn btn-danger">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="cart-actions">
+                <form method="POST" action="/{{ session['token'] }}/clear_cart">
+                    <button type="submit" class="btn btn-warning"><i class="fas fa-trash"></i> Clear Cart</button>
+                </form>
+                <form method="POST" action="/{{ session['token'] }}/place_order">
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Place Order</button>
+                </form>
+            </div>
+            {% else %}
+            <p>Your cart is empty. <a href="/{{ session['token'] }}/">Search for products</a> to add them to your cart.</p>
+            {% endif %}
+        </section>
     </main>
-
-    <footer style="text-align: center; padding: 10px; background: #007bff; color: white;">
-        &copy; 2025 - B2B Auto Parts System
-    </footer>
 </body>
 </html>

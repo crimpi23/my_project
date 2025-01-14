@@ -3,107 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Article Search and Import</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
-        }
-        header {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-        }
-        header nav a {
-            margin: 0 10px;
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        header nav a:hover {
-            text-decoration: underline;
-        }
-        main {
-            padding: 20px;
-        }
-        h1, h2 {
-            color: #333;
-        }
-        textarea, input[type="file"], button {
-            display: block;
-            margin: 10px 0;
-            padding: 10px;
-            font-size: 16px;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .flash-messages .flash-message {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .flash-messages .flash-message.info {
-            background-color: #e7f3fe;
-            color: #31708f;
-        }
-        .flash-messages .flash-message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-    </style>
+    <title>Article Price Search</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <!-- Header -->
     <header>
-        <h1>Article Search and Import</h1>
         <nav>
-            <a href="/{{ session['token'] }}/">Home</a>
-            <a href="/{{ session['token'] }}/cart">Cart</a>
-            <a href="/{{ session['token'] }}/orders">Orders</a>
+            <ul>
+                <li><a href="/{{ session['token'] }}/" class="nav-link">Home</a></li>
+                {% if session.get('token') %}
+                <li><a href="/{{ session['token'] }}/cart" class="nav-link">Cart</a></li>
+                <li><a href="/{{ session['token'] }}/orders" class="nav-link">Orders</a></li>
+                {% endif %}
+            </ul>
         </nav>
     </header>
 
-    <main>
-        {% with messages = get_flashed_messages(with_categories=True) %}
-        {% if messages %}
-        <div class="flash-messages">
-            {% for category, message in messages %}
-            <div class="flash-message {{ category }}">{{ message }}</div>
-            {% endfor %}
-        </div>
+    <main class="container">
+        <section class="intro">
+            <h1>Article Price Search</h1>
+            {% if session.get('token') %}
+            <p>Welcome to the advanced search system! Use the tools below:</p>
+            {% endif %}
+        </section>
+
+        <!-- Search Results Section -->
+        {% if grouped_results %}
+        <section id="results" class="results">
+            <h2>Search Results:</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Table</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article, details in grouped_results.items() %}
+                    {% for detail in details %}
+                    <tr>
+                        {% if loop.index == 1 %}
+                        <td rowspan="{{ details|length }}">{{ article }}</td>
+                        {% endif %}
+                        <td>{{ detail.price }}</td>
+                        <td>{{ detail.table_name }}</td>
+                        <td>
+                            <form method="POST" action="/add_to_cart">
+                                <input type="hidden" name="article" value="{{ article }}">
+                                <input type="hidden" name="price" value="{{ detail.price }}">
+                                <input type="hidden" name="table_name" value="{{ detail.table_name }}">
+                                <input type="number" name="quantity" value="1" min="1" class="quantity-input">
+                                <button type="submit" class="btn btn-primary">Add to Cart</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
         {% endif %}
-        {% endwith %}
 
-        <section>
-            <h2>Search Articles</h2>
-            <form method="POST" action="/{{ session['token'] }}/search#results">
-                <label for="articles">Enter up to 100 articles (one per line):</label>
-                <textarea id="articles" name="articles" rows="5" required></textarea>
-                <button type="submit">Search</button>
+        {% if grouped_results or missing_articles %}
+        <section class="clear-search-section">
+            <form method="POST" action="/clear_search">
+                <button type="submit" class="btn btn-secondary">Clear Search Data</button>
+            </form>
+        </section>
+        {% endif %}
+
+        {% if missing_articles %}
+        <section class="warning-message">
+            <p>The following articles were not found:</p>
+            <ul>
+                {% for article in missing_articles %}
+                <li>{{ article }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        {% if auto_set_quantities %}
+        <section class="info-message">
+            <p>Articles with no quantity were set to 1:</p>
+            <ul>
+                {% for article in auto_set_quantities %}
+                <li>{{ article }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        <!-- Search Form -->
+        <section class="search-form-section">
+            <form method="POST" action="/{{ session['token'] }}/search#results" class="search-form">
+                <label for="articles" class="form-label">Enter Articles and Quantities:</label>
+                <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required class="form-textarea"></textarea>
+                <button type="submit" class="btn btn-primary">Search</button>
             </form>
         </section>
 
-        <section>
-            <h2>Import Articles via Excel</h2>
-            <form method="POST" enctype="multipart/form-data" action="/{{ session['token'] }}/import_excel">
-                <label for="file">Upload Excel file:</label>
-                <input type="file" id="file" name="file" accept=".xlsx" required>
-                <button type="submit">Import</button>
-            </form>
+        <!-- Cart Section -->
+        {% if cart_items %}
+        <section class="cart-section">
+            <h2>Your Cart</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.article }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/update_cart">
+                                <input type="hidden" name="article" value="{{ item.article }}">
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i> Update
+                                </button>
+                            </form>
+                        </td>
+                        <td>{{ item.total_price }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
+                                <input type="hidden" name="article" value="{{ item.article }}">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </section>
+        {% endif %}
     </main>
-
-    <footer style="text-align: center; padding: 10px; background-color: #007bff; color: white;">
-        &copy; 2025 - B2B Auto Parts System
-    </footer>
 </body>
 </html>

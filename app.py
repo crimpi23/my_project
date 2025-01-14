@@ -6,7 +6,6 @@ import psycopg2.extras
 import logging
 import csv
 import io
-import re
 import bcrypt
 from functools import wraps
 from flask import get_flashed_messages
@@ -20,46 +19,29 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
 
-
-# Функція для визначення розділювача
-def detect_delimiter(file_content):
-    delimiters = [',', ';', '\t', ' ']
-    sample_lines = file_content.splitlines()[:5]
-    counts = {delimiter: 0 for delimiter in delimiters}
-
-    for line in sample_lines:
-        for delimiter in delimiters:
-            counts[delimiter] += line.count(delimiter)
-
-    return max(counts, key=counts.get)
+# Генерує унікальний токен для користувача
+def generate_token():
+    return os.urandom(16).hex()
 
 
-# Функція для перевірки токена
-def validate_token(token):
-    logging.debug(f"Validating token: {token}")
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT u.id AS user_id, r.name AS role
-            FROM tokens t
-            JOIN users u ON t.user_id = u.id
-            JOIN user_roles ur ON ur.user_id = u.id
-            JOIN roles r ON ur.role_id = r.id
-            WHERE t.token = %s
-        """, (token,))
-        result = cursor.fetchone()
+# Хешує пароль для збереження у базі даних
+def hash_password(password):
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-        if result:
-            session['user_id'] = result['user_id']  # Збереження user_id в сесію
-            logging.debug(f"User ID stored in session: {result['user_id']}")  # Логування
 
-        conn.close()
-        return result if result else None
-    except Exception as e:
-        logging.error(f"Error validating token: {e}")
-        return None
+# Перевіряє відповідність пароля хешу з бази
+def verify_password(password, stored_hash):
+    logging.debug("Verifying password")
+    return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
 
+
+# Функція для підключення до бази даних
+def get_db_connection():
+    return psycopg2.connect(
+        dsn=os.environ.get('DATABASE_URL'),
+        sslmode="require",
+        cursor_factory=psycopg2.extras.DictCursor
+    )
 
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
 def requires_token_and_role(required_role):
@@ -87,279 +69,6 @@ def requires_token_and_role(required_role):
             return func(token, *args, **kwargs)
         return wrapper
     return decorator
-
-# Генерує унікальний токен для користувача
-def generate_token():
-    return os.urandom(16).hex()
-
-
-# Хешує пароль для збереження у базі даних
-def hash_password(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-
-# Перевіряє відповідність пароля хешу з бази
-def verify_password(password, stored_hash):
-    logging.debug("Verifying password")
-    return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
-
-
-# Функція для підключення до бази даних
-def get_db_connection():
-    return psycopg2.connect(
-        dsn=os.environ.get('DATABASE_URL'),
-        sslmode="require",
-        cursor_factory=psycopg2.extras.DictCursor
-    )
-
-
-
-# Зчитування вибраних товарів для користувача:
-def get_buffered_selection(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    try:
-        cursor.execute("""
-            SELECT article, price, table_name, quantity
-            FROM selection_buffer
-            WHERE user_id = %s
-            ORDER BY added_at;
-        """, (user_id,))
-        return cursor.fetchall()
-    finally:
-        cursor.close()
-        conn.close()
-
-# Очистка буфера після підтвердження:
-def clear_buffer(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s;", (user_id,))
-        conn.commit()
-    finally:
-        cursor.close()
-        conn.close()
-
-
-
-# Експорт в ексель файлу порівняння цін
-def export_to_excel(better_in_first, better_in_second, same_prices):
-    try:
-        # Створення нового Excel-файлу
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Comparison Results"
-
-        # Додавання даних для першої таблиці
-        ws.append(["Better in First Table"])
-        ws.append(["Article", "Price"])
-        for item in better_in_first:
-            ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок
-
-        # Додавання даних для другої таблиці
-        ws.append(["Better in Second Table"])
-        ws.append(["Article", "Price"])
-        for item in better_in_second:
-            ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок
-
-        # Додавання даних для однакових цін
-        ws.append(["Same Prices"])
-        ws.append(["Article", "Price", "Tables"])
-        for item in same_prices:
-            ws.append([item['article'], item['price'], item['tables']])
-
-        # Збереження Excel-файлу у тимчасовій директорії
-        filename = "comparison_results.xlsx"
-        filepath = f"/tmp/{filename}"
-        wb.save(filepath)
-
-        # Надсилання файлу користувачеві
-        logging.info(f"Exported Excel file saved to: {filepath}")
-        return send_file(filepath, as_attachment=True, download_name=filename,
-                         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-
-    except Exception as e:
-        logging.error(f"Error during Excel export: {e}", exc_info=True)
-        raise
-
-# Логіка вибору товарів, При додаванні товару у буфер
-@app.route('/<token>/add_to_buffer', methods=['POST'])
-@requires_token_and_role('user')
-def add_to_buffer(token):
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash("You need to log in.", "error")
-            return redirect(url_for('index'))
-
-        selected_items = request.form.getlist('selected_items')
-        raw_quantities = request.form.get('quantities', {})
-        logging.debug(f"Received raw_quantities: {raw_quantities}")
-
-        quantities = {}
-        for key, value in request.form.items():
-            if key.startswith('quantities[') and key.endswith(']'):
-                article = key[len('quantities['):-1]
-                quantities[article] = int(value) if value.isdigit() else 1
-
-        logging.debug(f"Processed quantities: {quantities}")
-        logging.debug(f"Received selected_items: {selected_items}")
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        for item in selected_items:
-            article, price, table_name = item.split('|')
-            quantity = quantities.get(article, 1)
-
-            # Перевірка наявності запису
-            cursor.execute("""
-                SELECT quantity FROM selection_buffer
-                WHERE user_id = %s AND article = %s AND price = %s AND table_name = %s
-            """, (user_id, article, price, table_name))
-            existing = cursor.fetchone()
-
-            if existing:
-                # Оновлення кількості
-                new_quantity = existing[0] + quantity
-                cursor.execute("""
-                    UPDATE selection_buffer
-                    SET quantity = %s
-                    WHERE user_id = %s AND article = %s AND price = %s AND table_name = %s
-                """, (new_quantity, user_id, article, price, table_name))
-                logging.debug(f"Updated quantity for {article}: {new_quantity}")
-            else:
-                # Додавання нового запису
-                cursor.execute("""
-                    INSERT INTO selection_buffer (user_id, article, price, table_name, quantity)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, (user_id, article, price, table_name, quantity))
-                logging.debug(f"Inserted new buffer entry for {article}")
-
-        conn.commit()
-        flash("Items added to buffer.", "success")
-    except Exception as e:
-        logging.error(f"Error in add_to_buffer: {e}", exc_info=True)
-        flash("Failed to add items to buffer.", "error")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-    return redirect(url_for('view_buffer', token=token))
-
-@app.route('/<token>/update_buffer', methods=['POST'])
-@requires_token_and_role('user')
-def update_buffer(token):
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash("You need to log in.", "error")
-            return redirect(url_for('index'))
-
-        updated_quantities = request.form.to_dict(flat=False).get('quantities', {})
-        logging.debug(f"Received updated quantities: {updated_quantities}")
-        logging.debug(f"Updated quantities received: {updated_quantities}")
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        for item_id, quantity in updated_quantities.items():
-            quantity = int(quantity[0])  # Беремо значення з форми
-            cursor.execute("""
-                UPDATE selection_buffer
-                SET quantity = %s
-                WHERE id = %s AND user_id = %s
-            """, (quantity, item_id, user_id))
-        
-        conn.commit()
-        flash("Buffer updated successfully.", "success")
-    except Exception as e:
-        logging.error(f"Error in update_buffer: {e}", exc_info=True)
-        flash("Failed to update the buffer.", "error")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-    return redirect(url_for('view_buffer', token=token))
-
-
-
-@app.route('/<token>/move_to_cart', methods=['POST'])
-@requires_token_and_role('user')
-def move_to_cart(token):
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash("You need to log in.", "error")
-            return redirect(url_for('index'))
-
-        selected_items = request.form.getlist('selected_items')
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        for item_id in selected_items:
-            cursor.execute("""
-                INSERT INTO cart (user_id, article, price, table_name, quantity)
-                SELECT user_id, article, price, table_name, quantity
-                FROM selection_buffer
-                WHERE id = %s AND user_id = %s
-            """, (item_id, user_id))
-            cursor.execute("""
-                DELETE FROM selection_buffer
-                WHERE id = %s AND user_id = %s
-            """, (item_id, user_id))
-        
-        conn.commit()
-        flash("Items moved to cart successfully.", "success")
-    except Exception as e:
-        logging.error(f"Error in move_to_cart: {e}", exc_info=True)
-        flash("Failed to move items to cart.", "error")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-    return redirect(url_for('cart', token=token))
-
-
-
-
-@app.route('/<token>/view_buffer', methods=['GET'])
-@requires_token_and_role('user')
-def view_buffer(token):
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash("You need to log in to view the buffer.", "error")
-            return redirect(url_for('index'))
-
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("""
-            SELECT article, price, table_name, quantity
-            FROM selection_buffer
-            WHERE user_id = %s
-            ORDER BY added_at DESC
-        """, (user_id,))
-        buffer_items = cursor.fetchall()
-
-        return render_template('buffer.html', buffer_items=buffer_items)
-    except Exception as e:
-        logging.error(f"Error viewing buffer: {e}", exc_info=True)
-        flash("Failed to load the buffer.", "error")
-        return redirect(url_for('index'))
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-
 
 # Головна сторінка за токеном
 @app.route('/<token>/')
@@ -548,6 +257,33 @@ def admin_dashboard(token):
 
 
 
+# Функція для перевірки токена
+def validate_token(token):
+    logging.debug(f"Validating token: {token}")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT u.id AS user_id, r.name AS role
+            FROM tokens t
+            JOIN users u ON t.user_id = u.id
+            JOIN user_roles ur ON ur.user_id = u.id
+            JOIN roles r ON ur.role_id = r.id
+            WHERE t.token = %s
+        """, (token,))
+        result = cursor.fetchone()
+
+        if result:
+            session['user_id'] = result['user_id']  # Збереження user_id в сесію
+            logging.debug(f"User ID stored in session: {result['user_id']}")  # Логування
+
+        conn.close()
+        return result if result else None
+    except Exception as e:
+        logging.error(f"Error validating token: {e}")
+        return None
+
+
 
 # Створення користувача в адмін панелі:
 @app.route('/<token>/admin/create_user', methods=['GET', 'POST'])
@@ -728,86 +464,6 @@ def search_articles(token):
 
 
 
-# Додавання артикула по чекбоксу
-@app.route('/<token>/add_selected_to_cart', methods=['POST'])
-@requires_token_and_role('user')
-def add_selected_to_cart(token):
-    """
-    Додає обрані товари до кошика користувача, обробляючи вибрані ціни та кількості.
-    """
-    conn = None
-    cursor = None
-    try:
-        # Отримання даних із форми
-        selected_items = request.form.to_dict(flat=False).get('selected_items', {})
-        quantities = request.form.to_dict(flat=False).get('quantities', {})
-        user_id = session.get('user_id')  # ID користувача із сесії
-
-        # Логування вхідних даних
-        logging.debug(f"Received selected_items: {selected_items}")
-        logging.debug(f"Received quantities: {quantities}")
-
-        if not selected_items:
-            flash("No items selected to add to the cart.", "error")
-            return redirect(url_for('search_articles', token=token))
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        for article, price_table_list in selected_items.items():
-            # Логування оброблюваного товару
-            logging.debug(f"Processing article: {article}, price_table_list: {price_table_list}")
-
-            price, table_name = price_table_list[0].split('|')
-            price = float(price)
-            quantity = int(quantities.get(article, [1])[0])
-
-            # Перевірка існування товару
-            cursor.execute("""
-                SELECT id FROM products
-                WHERE article = %s AND table_name = %s AND price = %s
-            """, (article, table_name, price))
-            product = cursor.fetchone()
-
-            # Логування статусу товару
-            if not product:
-                logging.debug(f"Product not found in 'products': {article}, {table_name}, {price}")
-                cursor.execute("""
-                    INSERT INTO products (article, table_name, price)
-                    VALUES (%s, %s, %s)
-                    RETURNING id
-                """, (article, table_name, price))
-                product_id = cursor.fetchone()[0]
-                logging.debug(f"New product added with ID: {product_id}")
-            else:
-                product_id = product['id']
-                logging.debug(f"Existing product found with ID: {product_id}")
-
-            # Додавання товару до кошика
-            cursor.execute("""
-                INSERT INTO cart (user_id, product_id, quantity, added_at)
-                VALUES (%s, %s, %s, NOW())
-            """, (user_id, product_id, quantity))
-            logging.info(f"Product added to cart: User={user_id}, Product ID={product_id}, Quantity={quantity}")
-
-        conn.commit()
-        flash("Selected items added to the cart successfully!", "success")
-    except Exception as e:
-        logging.error(f"Error in add_selected_to_cart: {e}", exc_info=True)
-        flash("Error adding selected items to cart.", "error")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-    return redirect(url_for('view_cart', token=token))
-
-
-
-
-
-
 # очищення результату пошуку
 @app.route('/<token>/clear_search', methods=['POST'])
 @requires_token_and_role('user')
@@ -831,49 +487,33 @@ def clear_search(token):
 @app.route('/<token>/cart', methods=['GET', 'POST'])
 @requires_token_and_role('user')
 def cart(token):
-    """
-    Відображення кошика для користувача.
-    """
-    conn = None
-    cursor = None
     try:
         # Отримання user_id з сесії
         user_id = session.get('user_id')
         if not user_id:
             flash("You need to log in to view your cart.", "error")
             return redirect(url_for('index'))
-        
-        logging.debug(f"User ID from session: {user_id}")
 
-        # Підключення до бази даних
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         # Отримання товарів у кошику
-        query = """
-            SELECT c.product_id, p.article, p.price, c.quantity,
-                   (p.price * c.quantity) AS total_price, c.added_at
+        cursor.execute("""
+            SELECT c.product_id, p.article, p.price, c.quantity, c.added_at
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
             ORDER BY c.added_at
-        """
-        cursor.execute(query, (user_id,))
+        """, (user_id,))
         cart_items = cursor.fetchall()
 
-        # Логування для перевірки структури даних
-        logging.debug(f"Cart items retrieved for user_id={user_id}: {cart_items}")
+        # Логування вмісту кошика
+        logging.debug(f"Cart items for user_id={user_id}: {cart_items}")
 
-        # Розрахунок загальної вартості
-        try:
-            total_price = sum(item['total_price'] for item in cart_items)
-            logging.debug(f"Total price calculated for user_id={user_id}: {total_price}")
-        except KeyError as e:
-            logging.error(f"Missing key in cart item: {e}")
-            total_price = sum(item['price'] * item['quantity'] for item in cart_items)
-            logging.warning("Recalculating total_price in Python.")
+        # Розрахунок загальної суми
+        total_price = sum(item['total_price'] for item in cart_items)
 
-        # Очищення непотрібних даних із сесії
+        # Очищення непотрібних флеш-повідомлень (опціонально)
         session.pop('grouped_results', None)
         session.pop('quantities', None)
         session.pop('missing_articles', None)
@@ -884,16 +524,12 @@ def cart(token):
         logging.error(f"Error in cart for user_id={user_id}: {str(e)}", exc_info=True)
         flash("Could not load your cart. Please try again.", "error")
         return redirect(request.referrer or url_for('index'))
-
     finally:
-        # Закриття курсора і з'єднання
         if cursor:
-            cursor.close()
-            logging.debug("Database cursor closed.")
+            cursor.close()  # Закриття курсора
         if conn:
             conn.close()
-            logging.debug("Database connection closed.")
-
+        logging.debug("Database connection closed.")
 
 
 
@@ -907,12 +543,11 @@ def add_to_cart(token):
     conn = None
     cursor = None
     try:
-        # Отримання даних із форми
+        # Отримання даних з форми
         article = request.form.get('article')
         price = float(request.form.get('price'))
-        quantity = int(request.form.get('quantity'))  # Кількість товару
+        quantity = int(request.form.get('quantity'))  # Перевіряємо кількість товару
         table_name = request.form.get('table_name')
-        redirect_url = request.referrer  # Перенаправлення на попередню сторінку
         user_id = session.get('user_id')  # Отримання ID користувача із сесії
 
         if not user_id:
@@ -946,21 +581,19 @@ def add_to_cart(token):
 
         # Перевірка, чи товар вже є в кошику
         cursor.execute("""
-            SELECT id, quantity FROM cart
+            SELECT id FROM cart
             WHERE user_id = %s AND product_id = %s
         """, (user_id, product_id))
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
             # Оновлення кількості товару в кошику
-            new_quantity = existing_cart_item['quantity'] + quantity
             cursor.execute("""
                 UPDATE cart
-                SET quantity = %s
+                SET quantity = quantity + %s
                 WHERE id = %s
-            """, (new_quantity, existing_cart_item['id']))
-            flash(f"Item already in cart. Quantity updated to {new_quantity}.", "info")
-            logging.info(f"Cart updated: Product ID={product_id}, New Quantity={new_quantity}, User ID={user_id}")
+            """, (quantity, existing_cart_item['id']))
+            logging.info(f"Cart updated: Product ID={product_id}, Quantity Added={quantity}, User ID={user_id}")
         else:
             # Додавання нового товару в кошик
             cursor.execute("""
@@ -968,9 +601,9 @@ def add_to_cart(token):
                 VALUES (%s, %s, %s, NOW())
             """, (user_id, product_id, quantity))
             logging.info(f"Product added to cart: Product ID={product_id}, Quantity={quantity}, User ID={user_id}")
-            flash("Product added to cart!", "success")
 
         conn.commit()
+        flash("Product added to cart!", "success")
     except Exception as e:
         logging.error(f"Error in add_to_cart: {e}", exc_info=True)
         flash("Error adding product to cart.", "error")
@@ -981,10 +614,13 @@ def add_to_cart(token):
             conn.close()
             logging.debug("Database connection closed after adding to cart.")
 
-    return redirect(redirect_url if redirect_url else url_for('index'))
-
-
-
+    # Перенаправлення на сторінку результатів пошуку
+    return render_template(
+        'search_results.html',
+        grouped_results=session.get('grouped_results', {}),
+        quantities=session.get('quantities', {}),
+        missing_articles=session.get('missing_articles', []),
+    )
 
 
 
@@ -1233,48 +869,37 @@ def orders(token):
 
         # Початковий запит до таблиці orders
         query = """
-        SELECT DISTINCT o.id, o.total_price, TO_CHAR(o.order_date, 'YYYY-MM-DD') AS order_date, o.status
-        FROM orders o
-        WHERE o.user_id = %s
+        SELECT * FROM orders
+        WHERE user_id = %s
+        ORDER BY order_date DESC
         """
         params = [user_id]
 
-        # Додати фільтр по даті
+        # Якщо фільтр по артикулу
+        if article_filter:
+            query += " AND EXISTS (SELECT 1 FROM order_items WHERE order_id = orders.id AND article LIKE %s)"
+            params.append(f"%{article_filter}%")
+
+        # Якщо фільтр по статусу
+        if status_filter:
+            query += " AND status = %s"
+            params.append(status_filter)
+
+        # Якщо фільтр по даті початку
         if start_date:
-            logging.debug(f"Applying start date filter: {start_date}")
-            query += " AND o.order_date >= %s"
+            query += " AND order_date >= %s"
             params.append(start_date)
 
+        # Якщо фільтр по даті кінця
         if end_date:
-            logging.debug(f"Applying end date filter: {end_date}")
-            query += " AND o.order_date <= %s"
+            query += " AND order_date <= %s"
             params.append(end_date)
 
-        # Додати фільтр по артикулу або статусу
-        if article_filter or status_filter:
-            query += """
-            AND EXISTS (
-                SELECT 1
-                FROM order_details d
-                JOIN products p ON d.product_id = p.id
-                WHERE d.order_id = o.id
-            """
-            if article_filter:
-                logging.debug(f"Applying article filter: {article_filter}")
-                query += " AND p.article LIKE %s"
-                params.append(f"%{article_filter}%")
-            if status_filter:
-                logging.debug(f"Applying status filter: {status_filter}")
-                query += " AND d.status = %s"
-                params.append(status_filter)
-            query += ")"
-
-        # Логування запиту
+        # Логування сформованого запиту
         logging.debug(f"Executing query: {query} with params: {params}")
 
         cursor.execute(query, params)
         orders = cursor.fetchall()
-
 
         logging.debug(f"Orders retrieved for user_id={user_id} with filters: {article_filter}, {status_filter}, {start_date}, {end_date}")
         conn.commit()
@@ -1561,6 +1186,19 @@ def assign_roles(token):
 
 
 
+# Функція для визначення розділювача
+def detect_delimiter(file_content):
+    delimiters = [',', ';', '\t', ' ']
+    sample_lines = file_content.splitlines()[:5]
+    counts = {delimiter: 0 for delimiter in delimiters}
+
+    for line in sample_lines:
+        for delimiter in delimiters:
+            counts[delimiter] += line.count(delimiter)
+
+    return max(counts, key=counts.get)
+
+
 # Завантаження прайсу в Адмінці
 @app.route('/<token>/admin/upload_price_list', methods=['GET', 'POST'])
 @requires_token_and_role('admin')
@@ -1581,7 +1219,7 @@ def upload_price_list(token):
             logging.info(f"Fetched price lists: {price_lists}")
             return render_template('upload_price_list.html', price_lists=price_lists, token=token)
         except Exception as e:
-            logging.error(f"Error during GET request: {e}", exc_info=True)
+            logging.error(f"Error during GET request: {e}")
             flash("Error loading the upload page.", "error")
             return redirect(url_for('admin_dashboard', token=token))
 
@@ -1658,7 +1296,7 @@ def upload_price_list(token):
                     conn.commit()
                     logging.info(f"Created new table: {table_name}")
                 except Exception as e:
-                    logging.error(f"Error creating new table {table_name}: {e}", exc_info=True)
+                    logging.error(f"Error creating new table {table_name}: {e}")
                     flash("Error creating new table. Please check the table name and try again.", "error")
                     return redirect(url_for('upload_price_list', token=token))
 
@@ -1670,7 +1308,7 @@ def upload_price_list(token):
                     logging.error(f"Table '{table_name}' does not exist.")
                     return redirect(url_for('upload_price_list', token=token))
             except Exception as e:
-                logging.error(f"Error checking table existence: {e}", exc_info=True)
+                logging.error(f"Error checking table existence: {e}")
                 flash("An error occurred while verifying the table. Please try again.", "error")
                 return redirect(url_for('upload_price_list', token=token))
 
@@ -1693,14 +1331,13 @@ def upload_price_list(token):
             return redirect(url_for('upload_price_list', token=token))
 
         except Exception as e:
-            logging.error(f"Error during POST request: {e}", exc_info=True)
+            logging.error(f"Error during POST request: {e}")
             flash("An error occurred during upload.", "error")
             return redirect(url_for('upload_price_list', token=token))
         finally:
             if 'conn' in locals() and conn:
                 conn.close()
                 logging.info("Database connection closed.")
-
 
 
 
@@ -1719,8 +1356,6 @@ def get_import_status():
 @app.route('/<token>/admin/compare_prices', methods=['GET', 'POST'])
 @requires_token_and_role('admin')
 def compare_prices(token):
-    logging.debug(f"Token in route: {token}")
-
     if request.method == 'GET':
         try:
             # Отримуємо список таблиць із прайсами
@@ -1730,17 +1365,16 @@ def compare_prices(token):
             price_lists = cursor.fetchall()
             conn.close()
             logging.info("Fetched price list tables successfully.")
-            logging.debug(f"Price lists fetched: {price_lists}")
-            return render_template('compare_prices.html', price_lists=price_lists, token=token)
+            return render_template('compare_prices.html', price_lists=price_lists)
         except Exception as e:
             logging.error(f"Error during GET request: {str(e)}", exc_info=True)
             flash("Failed to load price list tables.", "error")
-            return redirect(request.referrer or url_for('admin_panel', token=token))
+            return redirect(request.referrer or url_for('admin_panel'))
 
     if request.method == 'POST':
         try:
             form_data = request.form.to_dict()
-            logging.info(f"Form data received: {form_data}")
+            logging.info(f"Form data: {form_data}")
 
             # Якщо запит на експорт
             if 'export_excel' in request.form:
@@ -1749,7 +1383,7 @@ def compare_prices(token):
                 if not data:
                     logging.error("No data to export!")
                     flash("No data to export!", "error")
-                    return redirect(request.referrer or url_for('compare_prices', token=token))
+                    return redirect(request.referrer or url_for('compare_prices'))
                 return export_to_excel(
                     data['better_in_first'],
                     data['better_in_second'],
@@ -1759,13 +1393,10 @@ def compare_prices(token):
             # Обробка даних для порівняння
             articles_input = request.form.get('articles', '').strip()
             selected_prices = request.form.getlist('price_tables')
-            logging.debug(f"Articles input: {articles_input}")
-            logging.debug(f"Selected price tables: {selected_prices}")
 
             if not articles_input or not selected_prices:
-                logging.warning("Articles or price tables not provided.")
                 flash("Please enter articles and select price tables.", "error")
-                return redirect(request.referrer or url_for('compare_prices', token=token))
+                return redirect(request.referrer or url_for('compare_prices'))
 
             # Розбиваємо артикулі
             articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
@@ -1777,7 +1408,6 @@ def compare_prices(token):
             # Отримуємо ціни з вибраних таблиць
             results = {}
             for table in selected_prices:
-                logging.debug(f"Querying table: {table}")
                 query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
                 cursor.execute(query, (articles,))
                 for row in cursor.fetchall():
@@ -1786,16 +1416,13 @@ def compare_prices(token):
                     if article not in results:
                         results[article] = []
                     results[article].append({'price': price, 'table': table})
-                logging.debug(f"Results from {table}: {results}")
 
             conn.close()
-            logging.info("Fetched all price comparisons successfully.")
 
             # Порівняння цін
             better_in_first, better_in_second, same_prices = [], [], []
             for article, prices in results.items():
                 min_price = min(prices, key=lambda x: x['price'])
-                logging.debug(f"Minimum price for {article}: {min_price}")
                 if len([p for p in prices if p['price'] == min_price['price']]) > 1:
                     same_prices.append({
                         'article': article,
@@ -1813,9 +1440,8 @@ def compare_prices(token):
                 'better_in_second': better_in_second,
                 'same_prices': same_prices
             }
-            logging.debug("Comparison results saved to session.")
-            logging.info("Comparison completed successfully.")
 
+            logging.info("Comparison completed successfully.")
             return render_template(
                 'compare_prices_results.html',
                 better_in_first=better_in_first,
@@ -1826,35 +1452,50 @@ def compare_prices(token):
         except Exception as e:
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
-            return redirect(request.referrer or url_for('compare_prices', token=token))
+            return redirect(request.referrer or url_for('compare_prices'))
 
 
-@app.route('/<token>/import_excel', methods=['GET', 'POST'])
-@requires_token_and_role('user')
-def import_excel(token):
-    if request.method == 'POST':
-        file = request.files.get('file')
-        if not file or not file.filename.endswith('.xlsx'):
-            flash("Please upload a valid Excel file.", "error")
-            return redirect(url_for('index'))
-        
-        # Обробка файлу, наприклад, за допомогою pandas
-        import pandas as pd
-        df = pd.read_excel(file)
-        
-        # Валідація даних
-        if 'article' not in df.columns or 'quantity' not in df.columns:
-            flash("Invalid template. Ensure 'article' and 'quantity' columns are present.", "error")
-            return redirect(url_for('index'))
-        
-        # Зберегти дані в базі або сесії
-        articles = df.to_dict('records')
-        session['imported_articles'] = articles
-        flash("Articles imported successfully.", "success")
-        return redirect(url_for('index'))
-    
-    return render_template('import_excel.html')
+# Експорт в ексель файлу порівняння цін
+def export_to_excel(better_in_first, better_in_second, same_prices):
+    try:
+        # Створення нового Excel-файлу
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Comparison Results"
 
+        # Додавання даних для першої таблиці
+        ws.append(["Better in First Table"])
+        ws.append(["Article", "Price"])
+        for item in better_in_first:
+            ws.append([item['article'], item['price']])
+        ws.append([])  # Порожній рядок
+
+        # Додавання даних для другої таблиці
+        ws.append(["Better in Second Table"])
+        ws.append(["Article", "Price"])
+        for item in better_in_second:
+            ws.append([item['article'], item['price']])
+        ws.append([])  # Порожній рядок
+
+        # Додавання даних для однакових цін
+        ws.append(["Same Prices"])
+        ws.append(["Article", "Price", "Tables"])
+        for item in same_prices:
+            ws.append([item['article'], item['price'], item['tables']])
+
+        # Збереження Excel-файлу у тимчасовій директорії
+        filename = "comparison_results.xlsx"
+        filepath = f"/tmp/{filename}"
+        wb.save(filepath)
+
+        # Надсилання файлу користувачеві
+        logging.info(f"Exported Excel file saved to: {filepath}")
+        return send_file(filepath, as_attachment=True, download_name=filename,
+                         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+    except Exception as e:
+        logging.error(f"Error during Excel export: {e}", exc_info=True)
+        raise
 
 
 @app.route('/<token>/admin/utilities')

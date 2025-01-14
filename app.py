@@ -260,11 +260,15 @@ def update_buffer(token):
             flash("You need to log in.", "error")
             return redirect(url_for('index'))
 
-        updated_quantities = request.form.get('quantities')
+        updated_quantities = request.form.to_dict(flat=False).get('quantities', {})
+        logging.debug(f"Received updated quantities: {updated_quantities}")
+        logging.debug(f"Updated quantities received: {updated_quantities}")
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
         for item_id, quantity in updated_quantities.items():
+            quantity = int(quantity[0])  # Беремо значення з форми
             cursor.execute("""
                 UPDATE selection_buffer
                 SET quantity = %s
@@ -282,6 +286,7 @@ def update_buffer(token):
         if conn:
             conn.close()
     return redirect(url_for('view_buffer', token=token))
+
 
 
 @app.route('/<token>/move_to_cart', methods=['POST'])
@@ -319,7 +324,7 @@ def move_to_cart(token):
             cursor.close()
         if conn:
             conn.close()
-    return redirect(url_for('view_cart', token=token))
+    return redirect(url_for('cart', token=token))
 
 
 

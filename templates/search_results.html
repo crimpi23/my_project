@@ -63,8 +63,8 @@
 						{% endif %}
 						<td>
 							<input type="radio" 
-								   name="selected_prices_{{ article }}" 
-								   value="{{ detail.price }}|{{ detail.table_name }}" 
+								   name="selected_items" 
+								   value="{{ article }}|{{ detail.price }}|{{ detail.table_name }}|{{ detail.quantity }}" 
 								   required>
 						</td>
 						<td>{{ detail.price }}</td>

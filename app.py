@@ -363,29 +363,47 @@ def create_user(token):
 
     return render_template('create_user.html', roles=roles, token=token)
 
-@app.route('/submit_selection', methods=['POST'])
-def submit_selection():
-    # Отримуємо дані з форми
+@app.route('/<token>/submit_selection', methods=['POST'])
+@requires_token_and_role('user')
+def submit_selection(token):
+    # Перевірка токену
+    if 'user_id' not in session or session.get('token') != token:
+        flash("Unauthorized access. Please log in.", "error")
+        return redirect(url_for('index'))
+
+    # Підключення до бази даних
+    conn = psycopg2.connect(
+        dbname="your_database",
+        user="your_user",
+        password="your_password",
+        host="your_host",
+        port="your_port"
+    )
+    cursor = conn.cursor()
+
+    # Отримання даних з форми
     selected_items = {}
     for key, value in request.form.items():
         if key.startswith("selected_"):
-            article = key.replace("selected_", "")  # Витягуємо артикул
-            price, table_name = value.split("|")  # Розділяємо ціну і постачальника
+            article = key.replace("selected_", "")
+            price, table_name = value.split("|")
             selected_items[article] = {"price": price, "table_name": table_name}
 
-    # Зберігаємо вибір у базу даних або обробляємо далі
+    # Збереження у таблицю
     for article, details in selected_items.items():
-        print(f"Article: {article}, Price: {details['price']}, Supplier: {details['table_name']}")
-        # Приклад збереження у таблицю selection_buffer
         query = """
             INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
             VALUES (%s, %s, %s, %s, %s, NOW())
         """
         cursor.execute(query, (session['user_id'], article, details['price'], details['table_name'], 1))
-        conn.commit()
+
+    conn.commit()
+    cursor.close()
+    conn.close()
 
     flash("Your selection has been successfully submitted!", "success")
-    return redirect(url_for('search_results'))
+    return redirect(url_for('search_results', token=token))
+
 
 
 @app.route('/process_selection', methods=['POST'])
@@ -425,7 +443,7 @@ def process_selection():
 
 @app.route('/search_results', methods=['GET', 'POST'])
 @requires_token_and_role('user')
-def search_results():
+def search_results(token):
     user_id = session.get('user_id')
     if not user_id:
         flash("You need to log in to view search results.", "error")

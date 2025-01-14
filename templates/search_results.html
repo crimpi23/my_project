@@ -64,11 +64,12 @@
 										</thead>
 										<tbody>
 											{% for article, prices in grouped_results.items() %}
+												<tr class="article-header">
+													<td colspan="4"><strong>Артикул: {{ article }}</strong></td>
+												</tr>
 												{% for price_data in prices %}
-												<tr class="{% if loop.first %}new-article-row{% endif %}">
-													{% if loop.first %}
-													<td rowspan="{{ prices|length }}">{{ article }}</td>
-													{% endif %}
+												<tr>
+													<td></td> <!-- Порожня клітинка для відступу -->
 													<td>{{ price_data.price }}</td>
 													<td>{{ price_data.table_name }}</td>
 													<td>
@@ -83,6 +84,8 @@
 									</table>
 									<button type="submit" class="submit-button">Підтвердити вибір</button>
 								</form>
+
+
 
 
 

@@ -468,23 +468,30 @@ def add_selected_to_cart(token):
     cursor = None
     try:
         # Отримуємо обрані товари
-        selected_items = request.form.getlist('selected_items')
+        selected_prices = request.form.getlist('selected_prices')
+        quantities = request.form.to_dict(flat=False).get('quantities', {})
         user_id = session.get('user_id')  # ID користувача із сесії
 
-        if not selected_items:
+        if not selected_prices:
             flash("No items selected to add to the cart.", "error")
             return redirect(url_for('search_articles', token=token))
 
-        logging.info(f"Selected items to add: {selected_items}")
+        logging.info(f"Selected items to add: {selected_prices}")
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        for item in selected_items:
-            # Розділяємо дані з HTML (article, price, table_name, quantity)
-            article, price, table_name, quantity = item.split('|')
+        for item in selected_prices:
+            # Розділяємо дані з HTML (price, table_name)
+            article_price_table = item.split('|')
+            if len(article_price_table) != 3:
+                logging.error(f"Invalid data format in item: {item}")
+                flash("Invalid item format received.", "error")
+                return redirect(url_for('search_articles', token=token))
+
+            price, table_name, article = article_price_table
             price = float(price)
-            quantity = int(quantity)
+            quantity = int(quantities.get(article, [1])[0])  # Отримуємо кількість, або 1 за замовчуванням
 
             # Перевіряємо, чи існує товар у таблиці `products`
             cursor.execute("""
@@ -503,7 +510,7 @@ def add_selected_to_cart(token):
                 product_id = cursor.fetchone()[0]
                 logging.info(f"New product added: Article={article}, Table={table_name}, Price={price}")
             else:
-                product_id = product['id']
+                product_id = product[0]
 
             # Додаємо товар до кошика
             cursor.execute("""
@@ -524,7 +531,6 @@ def add_selected_to_cart(token):
             conn.close()
 
     return redirect(url_for('view_cart', token=token))
-
 
 
 

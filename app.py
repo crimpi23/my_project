@@ -367,63 +367,79 @@ def create_user(token):
 @requires_token_and_role('user')
 def submit_selection(token):
     """
-    Обробляє вибір користувача та зберігає його в таблиці `selection_buffer`.
+    Processes the user's selection and saves it to the `selection_buffer` table.
     """
+    app.logger.debug(f"Token received: {token}")
+    
     try:
-        # Отримання даних користувача із сесії
+        # Get user ID from session
         user_id = session.get('user_id')
         if not user_id:
             flash("User not authenticated", "error")
             return redirect(f'/{token}/search')
 
-        # Отримання вибраних артикулів із форми
-        selected_articles = request.form.getlist('article')  # Імена полів повинні бути "article"
+        # Get selected articles from the form
+        selected_articles = request.form.getlist('article')  # The names of the fields must be "article"
         if not selected_articles:
             flash("No articles selected", "error")
             return redirect(f'/{token}/search')
 
-        # Підключення до бази даних
+        # Connect to the database
         with psycopg2.connect(**DATABASE_CONFIG) as conn:
             cursor = conn.cursor()
 
-            # Цикл для кожного вибраного артикулу
+            # Iterate through each selected article
             for article_data in selected_articles:
-                # Очікується формат: "article,price,table_name"
-                article, price, table_name = article_data.split(',')
+                # Expected format: "article,price,table_name"
+                try:
+                    article, price, table_name = article_data.split(',')
+                except ValueError:
+                    app.logger.error(f"Invalid data format for article: {article_data}")
+                    flash("Invalid selection data format", "error")
+                    continue
 
                 query = """
                     INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (
+                params = (
                     user_id,
                     article,
                     float(price),
                     table_name,
-                    1,  # Кількість за замовчуванням
+                    1,  # Default quantity
                     datetime.now()
-                ))
+                )
+                
+                # Log the query and parameters
+                app.logger.debug(f"Executing query: {query}")
+                app.logger.debug(f"With parameters: {params}")
+
+                try:
+                    cursor.execute(query, params)
+                except psycopg2.Error as db_error:
+                    app.logger.error(f"Error executing query for article {article}: {db_error}")
+                    flash(f"Database error for article {article}: {db_error}", "error")
+                    continue
+
             conn.commit()
 
-        # Успішне завершення
+        # Successful completion
         flash("Selection successfully submitted!", "success")
         return redirect(f'/{token}/search')
 
     except psycopg2.Error as db_error:
-        # Логування помилок бази даних
-        app.logger.error(f"Database error during selection submission: {db_error}")
+        # Log database errors
+        app.logger.error(f"Database connection error: {db_error}")
         flash("Database error occurred. Please try again later.", "error")
         return redirect(f'/{token}/search')
 
     except Exception as e:
-        app.logger.error(f"Error during selection submission: {e}")
-        flash("An error occurred while processing your selection. Please try again.", "error")
+        app.logger.error(f"Unexpected error during selection submission: {e}")
+        flash("An unexpected error occurred. Please try again.", "error")
         return redirect(f'/{token}/search')
 
-    finally:
-        # Завершення з'єднання з базою, якщо воно відкрите
-        if 'conn' in locals() and conn:
-            conn.close()
+
 
 
 

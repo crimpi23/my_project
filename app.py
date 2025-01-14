@@ -62,6 +62,33 @@ def add_to_buffer(user_id, article, price, table_name, quantity):
         conn.close()
 
 
+# Запит про токен / Перевірка токена / Декоратор для перевірки токена
+def requires_token_and_role(required_role):
+    """
+    Декоратор для перевірки токена і ролі користувача.
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(token, *args, **kwargs):
+            logging.debug(f"Session token: {session.get('token')}")
+            logging.debug(f"Received token: {token}")
+            
+            if session.get('token') != token:
+                flash("Access denied. Token mismatch.", "error")
+                return redirect(url_for('index'))
+
+            role_data = validate_token(token)
+            logging.debug(f"Role data from token: {role_data}")
+            if not role_data or role_data['role'] != required_role:
+                flash("Access denied. Invalid role or token.", "error")
+                return redirect(url_for('index'))
+
+            session['user_id'] = role_data['user_id']
+            session['role'] = role_data['role']
+            return func(token, *args, **kwargs)
+        return wrapper
+    return decorator
+
 # Зчитування вибраних товарів для користувача:
 def get_buffered_selection(user_id):
     conn = get_db_connection()
@@ -128,32 +155,6 @@ def add_to_buffer(token):
 
 
 
-# Запит про токен / Перевірка токена / Декоратор для перевірки токена
-def requires_token_and_role(required_role):
-    """
-    Декоратор для перевірки токена і ролі користувача.
-    """
-    def decorator(func):
-        @wraps(func)
-        def wrapper(token, *args, **kwargs):
-            logging.debug(f"Session token: {session.get('token')}")
-            logging.debug(f"Received token: {token}")
-            
-            if session.get('token') != token:
-                flash("Access denied. Token mismatch.", "error")
-                return redirect(url_for('index'))
-
-            role_data = validate_token(token)
-            logging.debug(f"Role data from token: {role_data}")
-            if not role_data or role_data['role'] != required_role:
-                flash("Access denied. Invalid role or token.", "error")
-                return redirect(url_for('index'))
-
-            session['user_id'] = role_data['user_id']
-            session['role'] = role_data['role']
-            return func(token, *args, **kwargs)
-        return wrapper
-    return decorator
 
 # Головна сторінка за токеном
 @app.route('/<token>/')

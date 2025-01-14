@@ -20,6 +20,74 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
 
+
+# Функція для визначення розділювача
+def detect_delimiter(file_content):
+    delimiters = [',', ';', '\t', ' ']
+    sample_lines = file_content.splitlines()[:5]
+    counts = {delimiter: 0 for delimiter in delimiters}
+
+    for line in sample_lines:
+        for delimiter in delimiters:
+            counts[delimiter] += line.count(delimiter)
+
+    return max(counts, key=counts.get)
+
+
+# Функція для перевірки токена
+def validate_token(token):
+    logging.debug(f"Validating token: {token}")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT u.id AS user_id, r.name AS role
+            FROM tokens t
+            JOIN users u ON t.user_id = u.id
+            JOIN user_roles ur ON ur.user_id = u.id
+            JOIN roles r ON ur.role_id = r.id
+            WHERE t.token = %s
+        """, (token,))
+        result = cursor.fetchone()
+
+        if result:
+            session['user_id'] = result['user_id']  # Збереження user_id в сесію
+            logging.debug(f"User ID stored in session: {result['user_id']}")  # Логування
+
+        conn.close()
+        return result if result else None
+    except Exception as e:
+        logging.error(f"Error validating token: {e}")
+        return None
+
+
+# Запит про токен / Перевірка токена / Декоратор для перевірки токена
+def requires_token_and_role(required_role):
+    """
+    Декоратор для перевірки токена і ролі користувача.
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(token, *args, **kwargs):
+            logging.debug(f"Session token: {session.get('token')}")
+            logging.debug(f"Received token: {token}")
+            
+            if session.get('token') != token:
+                flash("Access denied. Token mismatch.", "error")
+                return redirect(url_for('index'))
+
+            role_data = validate_token(token)
+            logging.debug(f"Role data from token: {role_data}")
+            if not role_data or role_data['role'] != required_role:
+                flash("Access denied. Invalid role or token.", "error")
+                return redirect(url_for('index'))
+
+            session['user_id'] = role_data['user_id']
+            session['role'] = role_data['role']
+            return func(token, *args, **kwargs)
+        return wrapper
+    return decorator
+
 # Генерує унікальний токен для користувача
 def generate_token():
     return os.urandom(16).hex()
@@ -44,6 +112,78 @@ def get_db_connection():
         cursor_factory=psycopg2.extras.DictCursor
     )
 
+
+
+# Зчитування вибраних товарів для користувача:
+def get_buffered_selection(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    try:
+        cursor.execute("""
+            SELECT article, price, table_name, quantity
+            FROM selection_buffer
+            WHERE user_id = %s
+            ORDER BY added_at;
+        """, (user_id,))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
+# Очистка буфера після підтвердження:
+def clear_buffer(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s;", (user_id,))
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+# Експорт в ексель файлу порівняння цін
+def export_to_excel(better_in_first, better_in_second, same_prices):
+    try:
+        # Створення нового Excel-файлу
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Comparison Results"
+
+        # Додавання даних для першої таблиці
+        ws.append(["Better in First Table"])
+        ws.append(["Article", "Price"])
+        for item in better_in_first:
+            ws.append([item['article'], item['price']])
+        ws.append([])  # Порожній рядок
+
+        # Додавання даних для другої таблиці
+        ws.append(["Better in Second Table"])
+        ws.append(["Article", "Price"])
+        for item in better_in_second:
+            ws.append([item['article'], item['price']])
+        ws.append([])  # Порожній рядок
+
+        # Додавання даних для однакових цін
+        ws.append(["Same Prices"])
+        ws.append(["Article", "Price", "Tables"])
+        for item in same_prices:
+            ws.append([item['article'], item['price'], item['tables']])
+
+        # Збереження Excel-файлу у тимчасовій директорії
+        filename = "comparison_results.xlsx"
+        filepath = f"/tmp/{filename}"
+        wb.save(filepath)
+
+        # Надсилання файлу користувачеві
+        logging.info(f"Exported Excel file saved to: {filepath}")
+        return send_file(filepath, as_attachment=True, download_name=filename,
+                         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+    except Exception as e:
+        logging.error(f"Error during Excel export: {e}", exc_info=True)
+        raise
 
 # Логіка вибору товарів, При додаванні товару у буфер
 @app.route('/<token>/add_to_buffer', methods=['POST'])
@@ -82,64 +222,8 @@ def add_to_buffer(token):
             conn.close()
     return redirect(url_for('search_articles', token=token))
 
-# Зчитування вибраних товарів для користувача:
-def get_buffered_selection(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    try:
-        cursor.execute("""
-            SELECT article, price, table_name, quantity
-            FROM selection_buffer
-            WHERE user_id = %s
-            ORDER BY added_at;
-        """, (user_id,))
-        return cursor.fetchall()
-    finally:
-        cursor.close()
-        conn.close()
-
-# Очистка буфера після підтвердження:
-def clear_buffer(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s;", (user_id,))
-        conn.commit()
-    finally:
-        cursor.close()
-        conn.close()
 
 
-
-
-
-
-# Запит про токен / Перевірка токена / Декоратор для перевірки токена
-def requires_token_and_role(required_role):
-    """
-    Декоратор для перевірки токена і ролі користувача.
-    """
-    def decorator(func):
-        @wraps(func)
-        def wrapper(token, *args, **kwargs):
-            logging.debug(f"Session token: {session.get('token')}")
-            logging.debug(f"Received token: {token}")
-            
-            if session.get('token') != token:
-                flash("Access denied. Token mismatch.", "error")
-                return redirect(url_for('index'))
-
-            role_data = validate_token(token)
-            logging.debug(f"Role data from token: {role_data}")
-            if not role_data or role_data['role'] != required_role:
-                flash("Access denied. Invalid role or token.", "error")
-                return redirect(url_for('index'))
-
-            session['user_id'] = role_data['user_id']
-            session['role'] = role_data['role']
-            return func(token, *args, **kwargs)
-        return wrapper
-    return decorator
 
 # Головна сторінка за токеном
 @app.route('/<token>/')
@@ -326,33 +410,6 @@ def admin_dashboard(token):
 
 
 
-
-
-# Функція для перевірки токена
-def validate_token(token):
-    logging.debug(f"Validating token: {token}")
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT u.id AS user_id, r.name AS role
-            FROM tokens t
-            JOIN users u ON t.user_id = u.id
-            JOIN user_roles ur ON ur.user_id = u.id
-            JOIN roles r ON ur.role_id = r.id
-            WHERE t.token = %s
-        """, (token,))
-        result = cursor.fetchone()
-
-        if result:
-            session['user_id'] = result['user_id']  # Збереження user_id в сесію
-            logging.debug(f"User ID stored in session: {result['user_id']}")  # Логування
-
-        conn.close()
-        return result if result else None
-    except Exception as e:
-        logging.error(f"Error validating token: {e}")
-        return None
 
 
 
@@ -1368,19 +1425,6 @@ def assign_roles(token):
 
 
 
-# Функція для визначення розділювача
-def detect_delimiter(file_content):
-    delimiters = [',', ';', '\t', ' ']
-    sample_lines = file_content.splitlines()[:5]
-    counts = {delimiter: 0 for delimiter in delimiters}
-
-    for line in sample_lines:
-        for delimiter in delimiters:
-            counts[delimiter] += line.count(delimiter)
-
-    return max(counts, key=counts.get)
-
-
 # Завантаження прайсу в Адмінці
 @app.route('/<token>/admin/upload_price_list', methods=['GET', 'POST'])
 @requires_token_and_role('admin')
@@ -1648,48 +1692,6 @@ def compare_prices(token):
             flash("An error occurred during comparison.", "error")
             return redirect(request.referrer or url_for('compare_prices', token=token))
 
-
-# Експорт в ексель файлу порівняння цін
-def export_to_excel(better_in_first, better_in_second, same_prices):
-    try:
-        # Створення нового Excel-файлу
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Comparison Results"
-
-        # Додавання даних для першої таблиці
-        ws.append(["Better in First Table"])
-        ws.append(["Article", "Price"])
-        for item in better_in_first:
-            ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок
-
-        # Додавання даних для другої таблиці
-        ws.append(["Better in Second Table"])
-        ws.append(["Article", "Price"])
-        for item in better_in_second:
-            ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок
-
-        # Додавання даних для однакових цін
-        ws.append(["Same Prices"])
-        ws.append(["Article", "Price", "Tables"])
-        for item in same_prices:
-            ws.append([item['article'], item['price'], item['tables']])
-
-        # Збереження Excel-файлу у тимчасовій директорії
-        filename = "comparison_results.xlsx"
-        filepath = f"/tmp/{filename}"
-        wb.save(filepath)
-
-        # Надсилання файлу користувачеві
-        logging.info(f"Exported Excel file saved to: {filepath}")
-        return send_file(filepath, as_attachment=True, download_name=filename,
-                         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-
-    except Exception as e:
-        logging.error(f"Error during Excel export: {e}", exc_info=True)
-        raise
 
 @app.route('/<token>/import_excel', methods=['GET', 'POST'])
 @requires_token_and_role('user')

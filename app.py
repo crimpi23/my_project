@@ -70,6 +70,19 @@ def requires_token_and_role(required_role):
         return wrapper
     return decorator
 
+#  отримання даних з selection_buffer 
+def get_selection_buffer(user_id):
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            cursor.execute("""
+                SELECT article, price, table_name, quantity
+                FROM selection_buffer
+                WHERE user_id = %s
+                ORDER BY article, price;
+            """, (user_id,))
+            return cursor.fetchall()
+
+
 # Головна сторінка за токеном
 @app.route('/<token>/')
 def token_index(token):
@@ -350,7 +363,64 @@ def create_user(token):
 
     return render_template('create_user.html', roles=roles, token=token)
 
+@app.route('/process_selection', methods=['POST'])
+@requires_token_and_role('user')
+def process_selection():
+    try:
+        selected_prices = {}
+        for key, value in request.form.items():
+            if key.startswith('selected_price_'):
+                article = key.replace('selected_price_', '')
+                table_name, price = value.split(':')
+                selected_prices[article] = {'table_name': table_name, 'price': float(price)}
 
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("User is not authenticated.", "error")
+            return redirect(url_for('index'))
+
+        # Очищення старих записів і додавання нових
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s", (user_id,))
+
+                for article, data in selected_prices.items():
+                    cursor.execute("""
+                        INSERT INTO selection_buffer (user_id, article, table_name, price, quantity, added_at)
+                        VALUES (%s, %s, %s, %s, 1, NOW());
+                    """, (user_id, article, data['table_name'], data['price']))
+
+        flash("Ваш вибір успішно збережено!", "success")
+    except Exception as e:
+        logging.error(f"Error processing selection: {str(e)}")
+        flash("Сталася помилка при обробці вибору. Спробуйте ще раз.", "error")
+
+    return redirect(url_for('search_results'))
+
+
+@app.route('/search_results', methods=['GET', 'POST'])
+@requires_token_and_role('user')
+def search_results():
+    user_id = session.get('user_id')
+    if not user_id:
+        flash("You need to log in to view search results.", "error")
+        return redirect(url_for('index'))
+
+    results = get_selection_buffer(user_id)
+
+    # Групуємо результати за артикулом
+    grouped_results = {}
+    for row in results:
+        article = row['article']
+        if article not in grouped_results:
+            grouped_results[article] = []
+        grouped_results[article].append({
+            'price': row['price'],
+            'table_name': row['table_name'],
+            'quantity': row['quantity'],
+        })
+
+    return render_template('search_results.html', grouped_results=grouped_results)
 
 
 

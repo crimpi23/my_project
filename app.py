@@ -196,10 +196,17 @@ def add_to_buffer(token):
             return redirect(url_for('index'))
 
         selected_items = request.form.getlist('selected_items')
-        quantities = request.form.get('quantities', {})
-        
+        raw_quantities = request.form.get('quantities', {})
+        logging.debug(f"Received raw_quantities: {raw_quantities}")
+
+        quantities = {}
+        for key, value in request.form.items():
+            if key.startswith('quantities[') and key.endswith(']'):
+                article = key[len('quantities['):-1]
+                quantities[article] = int(value) if value.isdigit() else 1
+
+        logging.debug(f"Processed quantities: {quantities}")
         logging.debug(f"Received selected_items: {selected_items}")
-        logging.debug(f"Received quantities: {quantities}")
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -220,9 +227,38 @@ def add_to_buffer(token):
             cursor.close()
         if conn:
             conn.close()
-    return redirect(url_for('search_articles', token=token))
+    return redirect(url_for('view_buffer', token=token))
 
 
+@app.route('/<token>/view_buffer', methods=['GET'])
+@requires_token_and_role('user')
+def view_buffer(token):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("You need to log in to view the buffer.", "error")
+            return redirect(url_for('index'))
+
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("""
+            SELECT article, price, table_name, quantity
+            FROM selection_buffer
+            WHERE user_id = %s
+            ORDER BY added_at DESC
+        """, (user_id,))
+        buffer_items = cursor.fetchall()
+
+        return render_template('buffer.html', buffer_items=buffer_items)
+    except Exception as e:
+        logging.error(f"Error viewing buffer: {e}", exc_info=True)
+        flash("Failed to load the buffer.", "error")
+        return redirect(url_for('index'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 # Головна сторінка за токеном

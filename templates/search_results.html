@@ -43,34 +43,39 @@
 
         {% if grouped_results %}
 		<form method="POST" action="/{{ session['token'] }}/add_to_buffer">
-				<table>
-					<thead>
-						<tr>
-							<th>Article</th>
-							<th>Price</th>
-							<th>Table</th>
-						</tr>
-					</thead>
-					<tbody>
-						{% for article, details in grouped_results.items() %}
-							<tr>
-								<td>{{ article }}</td>
-								<td>
-									<select name="selected_items">
-										{% for detail in details %}
-										<option value="{{ article }}|{{ detail.price }}|{{ detail.table_name }}">
-											{{ detail.price }} - {{ detail.table_name }}
-										</option>
-										{% endfor %}
-									</select>
-								</td>
-							</tr>
-						{% endfor %}
-					</tbody>
-				</table>
-
-			<button type="submit">Add to Buffer</button>
+			<table>
+				<thead>
+					<tr>
+						<th>Select</th>
+						<th>Article</th>
+						<th>Price</th>
+						<th>Table</th>
+						<th>Quantity</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for article, details in grouped_results.items() %}
+					<tr>
+						<td>
+							<select name="selected_items">
+								{% for detail in details %}
+								<option value="{{ article }}|{{ detail.price }}|{{ detail.table_name }}">
+									{{ detail.price }} - {{ detail.table_name }}
+								</option>
+								{% endfor %}
+							</select>
+						</td>
+						<td>{{ article }}</td>
+						<td>
+							<input type="number" name="quantities[{{ article }}]" value="{{ details[0].quantity }}" min="1">
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+			<button type="submit">Add Selected to Buffer</button>
 		</form>
+
 
         {% else %}
         <p>No results found. Try adjusting your search or uploading an Excel file.</p>

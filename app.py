@@ -523,7 +523,7 @@ def add_selected_to_cart(token):
         if conn:
             conn.close()
 
-    return redirect(url_for('search_articles', token=token))
+    return redirect(url_for('view_cart', token=token))
 
 
 

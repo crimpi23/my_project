@@ -58,18 +58,31 @@
 					{% for article, details in grouped_results.items() %}
 					{% for detail in details %}
 					<tr>
+						{% if loop.index == 1 %}
+						<td rowspan="{{ details|length }}">{{ article }}</td>
+						{% endif %}
 						<td>
-							<input type="checkbox" name="selected_items" value="{{ article }}|{{ detail.price }}|{{ detail.table_name }}|{{ detail.quantity }}">
+							<input type="radio" 
+								   name="selected_prices_{{ article }}" 
+								   value="{{ detail.price }}|{{ detail.table_name }}" 
+								   required>
 						</td>
-						<td>{{ article }}</td>
 						<td>{{ detail.price }}</td>
 						<td>{{ detail.table_name }}</td>
-						<td>{{ detail.quantity }}</td>
+						<td>
+							<input type="number" 
+								   name="quantities[{{ article }}]" 
+								   value="{{ detail.quantity }}" 
+								   min="1" 
+								   required>
+						</td>
 					</tr>
 					{% endfor %}
 					{% endfor %}
 				</tbody>
 			</table>
+<button type="submit">Add Selected to Cart</button>
+
 			<button type="submit">Add Selected to Cart</button>
 		</form>
         {% else %}

@@ -43,9 +43,8 @@
 			<table>
 				<thead>
 					<tr>
-						<th>Select</th>
 						<th>Article</th>
-						<th>Price</th>
+						<th>Select Price</th>
 						<th>Table</th>
 						<th>Quantity</th>
 					</tr>
@@ -53,18 +52,29 @@
 				<tbody>
 					{% for article, details in grouped_results.items() %}
 					<tr>
-						<td rowspan="{{ details|length }}">
-							<!-- Checkbox для вибору однієї ціни на артикул -->
-							<input type="checkbox" name="selected_items" 
-								   value="{{ article }}|{{ details[0].price }}|{{ details[0].table_name }}" required>
-						</td>
-						<td>{{ article }}</td>
+						<td rowspan="{{ details|length }}">{{ article }}</td>
 						<td>
-							<select name="quantities[{{ article }}]" required>
-								{% for detail in details %}
-								<option value="{{ detail.price }}">{{ detail.price }} - {{ detail.table_name }}</option>
-								{% endfor %}
-							</select>
+							{% for detail in details %}
+							<div>
+								<input type="radio" 
+									   name="selected_items" 
+									   value="{{ article }}|{{ detail.price }}|{{ detail.table_name }}" 
+									   required>
+								{{ detail.price }}
+							</div>
+							{% endfor %}
+						</td>
+						<td rowspan="{{ details|length }}">
+							{% for detail in details %}
+							<div>{{ detail.table_name }}</div>
+							{% endfor %}
+						</td>
+						<td rowspan="{{ details|length }}">
+							<input type="number" 
+								   name="quantities[{{ article }}]" 
+								   value="1" 
+								   min="1" 
+								   required>
 						</td>
 					</tr>
 					{% endfor %}

@@ -116,42 +116,69 @@ def clear_buffer(user_id):
         cursor.close()
         conn.close()
 
-
+# Буфер перед додаванням в кошик
 @app.route('/<token>/add_to_buffer', methods=['POST'])
 @requires_token_and_role('user')
 def add_to_buffer(token):
     try:
+        # Отримання user_id з сесії
         user_id = session.get('user_id')
         if not user_id:
-            flash("You need to log in.", "error")
-            return redirect(url_for('index'))
+            flash("You need to log in to add items to the buffer.", "error")
+            return redirect(url_for('search', token=token))
 
-        selected_items = request.form.getlist('selected_items')
-        quantities = request.form.get('quantities', {})
-        
-        logging.debug(f"Received selected_items: {selected_items}")
-        logging.debug(f"Received quantities: {quantities}")
+        # Отримання даних з форми
+        selected_items = request.form.getlist('selected_items[]')
+        quantities = request.form.to_dict(flat=False).get('quantities', {})
 
+        # Логування вхідних даних
+        logging.debug(f"Selected items: {selected_items}")
+        logging.debug(f"Quantities: {quantities}")
+
+        if not selected_items or not quantities:
+            flash("No items selected or quantities provided.", "error")
+            return redirect(url_for('search', token=token))
+
+        # Підключення до бази даних
         conn = get_db_connection()
         cursor = conn.cursor()
+
+        # Додавання кожного обраного елементу до буфера
         for item in selected_items:
             article, price, table_name = item.split('|')
-            quantity = quantities.get(article, 1)
+            quantity = quantities.get(article, [1])[0]  # Кількість за замовчуванням 1
+
+            logging.debug(f"Adding to buffer: article={article}, price={price}, table={table_name}, quantity={quantity}")
+
+            # SQL для додавання до буфера
             cursor.execute("""
-                INSERT INTO selection_buffer (user_id, article, price, table_name, quantity)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO buffer (user_id, article, price, table_name, quantity, added_at)
+                VALUES (%s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (user_id, article, table_name)
+                DO UPDATE SET quantity = buffer.quantity + EXCLUDED.quantity
             """, (user_id, article, price, table_name, quantity))
+
+        # Збереження змін
         conn.commit()
-        flash("Items added to buffer.", "success")
+
+        # Логування завершення
+        logging.info(f"Items successfully added to buffer for user_id={user_id}")
+
+        flash("Items successfully added to buffer.", "success")
+        return redirect(url_for('search', token=token))
+
     except Exception as e:
         logging.error(f"Error in add_to_buffer: {e}", exc_info=True)
-        flash("Failed to add items to buffer.", "error")
+        flash("An error occurred while adding items to the buffer.", "error")
+        return redirect(url_for('search', token=token))
+
     finally:
+        # Закриття з'єднання
         if cursor:
             cursor.close()
         if conn:
             conn.close()
-    return redirect(url_for('search_articles', token=token))
+        logging.debug("Database connection closed.")
 
 
 

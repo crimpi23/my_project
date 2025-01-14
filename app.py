@@ -230,6 +230,7 @@ def add_to_buffer(token):
     return redirect(url_for('view_buffer', token=token))
 
 
+
 @app.route('/<token>/view_buffer', methods=['GET'])
 @requires_token_and_role('user')
 def view_buffer(token):
@@ -259,6 +260,7 @@ def view_buffer(token):
             cursor.close()
         if conn:
             conn.close()
+
 
 
 # Головна сторінка за токеном

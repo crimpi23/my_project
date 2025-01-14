@@ -24,8 +24,7 @@
             padding: 15px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            background-color: #fefefe;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
         }
         .article-header {
             margin-bottom: 10px;
@@ -67,32 +66,37 @@
 <body>
     <div class="results-container">
         <h1>Search Results</h1>
-        {% for article, prices in grouped_results.items() %}
-            <div class="article-group">
-                <div class="article-header">Артикул: {{ article }}</div>
-                <table class="price-table">
-                    <thead>
-                        <tr>
-                            <th>Ціна</th>
-                            <th>Постачальник</th>
-                            <th>Вибір</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for price_info in prices %}
+        <form method="POST" action="/submit_selection">
+            {% for article, prices in grouped_results.items() %}
+                <div class="article-group">
+                    <!-- Display the article once -->
+                    <div class="article-header">Article: {{ article }}</div>
+                    <!-- Table with price options -->
+                    <table class="price-table">
+                        <thead>
                             <tr>
-                                <td>{{ price_info.price }}</td>
-                                <td>{{ price_info.table_name }}</td>
-                                <td>
-                                    <input type="radio" name="selected_{{ article }}" value="{{ price_info.table_name }}">
-                                </td>
+                                <th>Price</th>
+                                <th>Supplier</th>
+                                <th>Select</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endfor %}
-        <button class="submit-button">Підтвердити вибір</button>
+                        </thead>
+                        <tbody>
+                            {% for price_info in prices %}
+                                <tr>
+                                    <td>{{ price_info.price }}</td>
+                                    <td>{{ price_info.table_name }}</td>
+                                    <td>
+                                        <!-- Radio button for selecting one price -->
+                                        <input type="radio" name="selected_{{ article }}" value="{{ price_info.price }}|{{ price_info.table_name }}">
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+            <button type="submit" class="submit-button">Submit Selection</button>
+        </form>
     </div>
 </body>
 </html>

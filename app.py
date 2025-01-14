@@ -363,6 +363,31 @@ def create_user(token):
 
     return render_template('create_user.html', roles=roles, token=token)
 
+@app.route('/submit_selection', methods=['POST'])
+def submit_selection():
+    # Отримуємо дані з форми
+    selected_items = {}
+    for key, value in request.form.items():
+        if key.startswith("selected_"):
+            article = key.replace("selected_", "")  # Витягуємо артикул
+            price, table_name = value.split("|")  # Розділяємо ціну і постачальника
+            selected_items[article] = {"price": price, "table_name": table_name}
+
+    # Зберігаємо вибір у базу даних або обробляємо далі
+    for article, details in selected_items.items():
+        print(f"Article: {article}, Price: {details['price']}, Supplier: {details['table_name']}")
+        # Приклад збереження у таблицю selection_buffer
+        query = """
+            INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
+            VALUES (%s, %s, %s, %s, %s, NOW())
+        """
+        cursor.execute(query, (session['user_id'], article, details['price'], details['table_name'], 1))
+        conn.commit()
+
+    flash("Your selection has been successfully submitted!", "success")
+    return redirect(url_for('search_results'))
+
+
 @app.route('/process_selection', methods=['POST'])
 @requires_token_and_role('user')
 def process_selection():

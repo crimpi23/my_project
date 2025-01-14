@@ -42,7 +42,7 @@
         {% endwith %}
 
         {% if grouped_results %}
-		 <form method="POST" action="/{{ session['token'] }}/add_selected_to_cart">
+		<form method="POST" action="/{{ session['token'] }}/add_to_buffer">
 			<table>
 				<thead>
 					<tr>
@@ -59,7 +59,7 @@
 					<tr>
 						<td>
 							<input type="checkbox" 
-								   name="selected_items" 
+								   name="selected_items[]" 
 								   value="{{ article }}|{{ detail.price }}|{{ detail.table_name }}">
 						</td>
 						<td>{{ article }}</td>
@@ -69,15 +69,14 @@
 							<input type="number" 
 								   name="quantities[{{ article }}|{{ detail.price }}|{{ detail.table_name }}]" 
 								   value="1" 
-								   min="1" 
-								   required>
+								   min="1">
 						</td>
 					</tr>
 					{% endfor %}
 					{% endfor %}
 				</tbody>
 			</table>
-			<button type="submit">Add Selected to Cart</button>
+			<button type="submit">Add to Buffer</button>
 		</form>
 
         {% else %}

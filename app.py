@@ -46,48 +46,41 @@ def get_db_connection():
 
 
 # Логіка вибору товарів, При додаванні товару у буфер
-def add_to_buffer(user_id, article, price, table_name, quantity):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+@app.route('/<token>/add_to_buffer', methods=['POST'])
+@requires_token_and_role('user')
+def add_to_buffer(token):
     try:
-        cursor.execute("""
-            INSERT INTO selection_buffer (user_id, article, price, table_name, quantity)
-            VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (user_id, article, price, table_name)
-            DO UPDATE SET quantity = selection_buffer.quantity + EXCLUDED.quantity;
-        """, (user_id, article, price, table_name, quantity))
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("You need to log in.", "error")
+            return redirect(url_for('index'))
+
+        selected_items = request.form.getlist('selected_items')
+        quantities = request.form.get('quantities', {})
+        
+        logging.debug(f"Received selected_items: {selected_items}")
+        logging.debug(f"Received quantities: {quantities}")
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        for item in selected_items:
+            article, price, table_name = item.split('|')
+            quantity = quantities.get(article, 1)
+            cursor.execute("""
+                INSERT INTO selection_buffer (user_id, article, price, table_name, quantity)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (user_id, article, price, table_name, quantity))
         conn.commit()
+        flash("Items added to buffer.", "success")
+    except Exception as e:
+        logging.error(f"Error in add_to_buffer: {e}", exc_info=True)
+        flash("Failed to add items to buffer.", "error")
     finally:
-        cursor.close()
-        conn.close()
-
-
-# Запит про токен / Перевірка токена / Декоратор для перевірки токена
-def requires_token_and_role(required_role):
-    """
-    Декоратор для перевірки токена і ролі користувача.
-    """
-    def decorator(func):
-        @wraps(func)
-        def wrapper(token, *args, **kwargs):
-            logging.debug(f"Session token: {session.get('token')}")
-            logging.debug(f"Received token: {token}")
-            
-            if session.get('token') != token:
-                flash("Access denied. Token mismatch.", "error")
-                return redirect(url_for('index'))
-
-            role_data = validate_token(token)
-            logging.debug(f"Role data from token: {role_data}")
-            if not role_data or role_data['role'] != required_role:
-                flash("Access denied. Invalid role or token.", "error")
-                return redirect(url_for('index'))
-
-            session['user_id'] = role_data['user_id']
-            session['role'] = role_data['role']
-            return func(token, *args, **kwargs)
-        return wrapper
-    return decorator
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+    return redirect(url_for('search_articles', token=token))
 
 # Зчитування вибраних товарів для користувача:
 def get_buffered_selection(user_id):
@@ -116,72 +109,37 @@ def clear_buffer(user_id):
         cursor.close()
         conn.close()
 
-# Буфер перед додаванням в кошик
-@app.route('/<token>/add_to_buffer', methods=['POST'])
-@requires_token_and_role('user')
-def add_to_buffer(token):
-    try:
-        # Отримання user_id з сесії
-        user_id = session.get('user_id')
-        if not user_id:
-            flash("You need to log in to add items to the buffer.", "error")
-            return redirect(url_for('search', token=token))
-
-        # Отримання даних з форми
-        selected_items = request.form.getlist('selected_items[]')
-        quantities = request.form.to_dict(flat=False).get('quantities', {})
-
-        # Логування вхідних даних
-        logging.debug(f"Selected items: {selected_items}")
-        logging.debug(f"Quantities: {quantities}")
-
-        if not selected_items or not quantities:
-            flash("No items selected or quantities provided.", "error")
-            return redirect(url_for('search', token=token))
-
-        # Підключення до бази даних
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Додавання кожного обраного елементу до буфера
-        for item in selected_items:
-            article, price, table_name = item.split('|')
-            quantity = quantities.get(article, [1])[0]  # Кількість за замовчуванням 1
-
-            logging.debug(f"Adding to buffer: article={article}, price={price}, table={table_name}, quantity={quantity}")
-
-            # SQL для додавання до буфера
-            cursor.execute("""
-                INSERT INTO buffer (user_id, article, price, table_name, quantity, added_at)
-                VALUES (%s, %s, %s, %s, %s, NOW())
-                ON CONFLICT (user_id, article, table_name)
-                DO UPDATE SET quantity = buffer.quantity + EXCLUDED.quantity
-            """, (user_id, article, price, table_name, quantity))
-
-        # Збереження змін
-        conn.commit()
-
-        # Логування завершення
-        logging.info(f"Items successfully added to buffer for user_id={user_id}")
-
-        flash("Items successfully added to buffer.", "success")
-        return redirect(url_for('search', token=token))
-
-    except Exception as e:
-        logging.error(f"Error in add_to_buffer: {e}", exc_info=True)
-        flash("An error occurred while adding items to the buffer.", "error")
-        return redirect(url_for('search', token=token))
-
-    finally:
-        # Закриття з'єднання
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-        logging.debug("Database connection closed.")
 
 
 
+
+
+# Запит про токен / Перевірка токена / Декоратор для перевірки токена
+def requires_token_and_role(required_role):
+    """
+    Декоратор для перевірки токена і ролі користувача.
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(token, *args, **kwargs):
+            logging.debug(f"Session token: {session.get('token')}")
+            logging.debug(f"Received token: {token}")
+            
+            if session.get('token') != token:
+                flash("Access denied. Token mismatch.", "error")
+                return redirect(url_for('index'))
+
+            role_data = validate_token(token)
+            logging.debug(f"Role data from token: {role_data}")
+            if not role_data or role_data['role'] != required_role:
+                flash("Access denied. Invalid role or token.", "error")
+                return redirect(url_for('index'))
+
+            session['user_id'] = role_data['user_id']
+            session['role'] = role_data['role']
+            return func(token, *args, **kwargs)
+        return wrapper
+    return decorator
 
 # Головна сторінка за токеном
 @app.route('/<token>/')
@@ -468,73 +426,71 @@ def create_user(token):
 
 
 # Маршрут для пошуку артикулів
-@app.route('/<token>/search', methods=['GET', 'POST'])
+@app.route('/<token>/search', methods=['POST'])
 @requires_token_and_role('user')
-def search_articles(token):
+def search_articles(token):  
     """
-    Маршрут для пошуку артикулів із перевіркою кількості та довжини.
+    Маршрут для пошуку артикулів.
     """
     conn = None
     cursor = None
-
-    if request.method == 'GET':
-        flash("Please perform a search to view results.", "info")
-        return redirect(url_for('index'))
-
     try:
         logging.info("Processing search request...")
         articles = []
         quantities = {}
+        auto_set_quantities = []
 
-        # Розбиваємо введені дані
-        articles_input = request.form.get('articles', '').strip()
+        articles_input = request.form.get('articles')
+        logging.debug(f"Received articles input: {articles_input}")
+
         if not articles_input:
             flash("Please enter at least one article.", "error")
             return redirect(url_for('index'))
 
-        # Обробка введеного списку
+        # Обробка вхідних даних
         for line in articles_input.splitlines():
             parts = line.strip().split()
             if not parts:
-                continue
-
-            if len(parts[0]) > 50:
-                flash(f"Article '{parts[0]}' exceeds the maximum length of 50 characters.", "error")
-                return redirect(url_for('index'))
-
+                continue  # Пропустити порожні рядки
             if len(parts) == 1:
                 article = parts[0].strip().upper()
-                quantities[article] = 1
+                if article in quantities:
+                    quantities[article] += 1
+                else:
+                    articles.append(article)
+                    quantities[article] = 1  # За замовчуванням додаємо 1
+                    auto_set_quantities.append(article)
             elif len(parts) == 2 and parts[1].isdigit():
-                article = parts[0].strip().upper()
-                quantities[article] = int(parts[1])
-            else:
-                flash(f"Invalid format for article: '{line}'. Please check your input.", "error")
-                return redirect(url_for('index'))
+                article, quantity = parts[0].strip().upper(), int(parts[1])
+                if article in quantities:
+                    quantities[article] += quantity
+                else:
+                    articles.append(article)
+                    quantities[article] = quantity
 
-            articles.append(article)
-
-        # Перевірка кількості артикулів
-        if len(articles) > 100:
-            flash("Too many articles entered. The maximum allowed is 100.", "error")
-            return redirect(url_for('index'))
+        logging.debug(f"Processed articles: {articles}")
+        logging.debug(f"Quantities: {quantities}")
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримання таблиць із прайсами
+        # Отримання таблиць з прайс-листами
         cursor.execute("SELECT table_name FROM price_lists")
-        tables = [row[0] for row in cursor.fetchall()]
+        tables = cursor.fetchall()
+        logging.debug(f"Fetched price list tables: {tables}")
 
         results = []
         for table in tables:
+            table_name = table['table_name']
+            logging.debug(f"Querying table: {table_name}")
             query = f"""
-                SELECT article, price, '{table}' AS table_name
-                FROM {table}
+                SELECT article, price, %s AS table_name
+                FROM {table_name}
                 WHERE article = ANY(%s)
             """
-            cursor.execute(query, (articles,))
+            cursor.execute(query, (table_name, articles))
             results.extend(cursor.fetchall())
+            logging.debug(f"Results from table {table_name}: {cursor.rowcount}")
 
         grouped_results = {}
         for result in results:
@@ -542,28 +498,38 @@ def search_articles(token):
             grouped_results.setdefault(article, []).append({
                 'price': result['price'],
                 'table_name': result['table_name'],
-                'quantity': quantities.get(article, 1)
+                'quantity': quantities.get(article, 1)  # Додаємо кількість до результатів
             })
 
         missing_articles = [article for article in articles if article not in grouped_results]
-        if missing_articles:
-            logging.warning(f"Missing articles: {missing_articles}")
-            flash(f"The following articles were not found: {', '.join(missing_articles)}", "warning")
+        logging.info(f"Missing articles: {missing_articles}")
 
-        return render_template(
-            'search_results.html',
-            grouped_results=grouped_results,
-            missing_articles=missing_articles
-        )
+        # Збереження результатів у сесії
+        session['grouped_results'] = grouped_results
+        session['quantities'] = quantities
+        session['missing_articles'] = missing_articles
+
+        logging.info("Search results successfully processed.")
+
+        if not grouped_results:
+            flash("No results found for your search.", "info")
+            return render_template('search_results.html', grouped_results={}, quantities=quantities, missing_articles=missing_articles)
+
+        flash("Search completed successfully!", "success")
+        return render_template('search_results.html', grouped_results=grouped_results, quantities=quantities, missing_articles=missing_articles)
+
     except Exception as e:
-        logging.error(f"Error in search_articles: {e}", exc_info=True)
-        flash("Error performing search.", "error")
+        logging.error(f"Error in search_articles: {str(e)}", exc_info=True)
+        flash(f"Error: {str(e)}", "error")
         return redirect(url_for('index'))
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
+        logging.info("Database connection closed.")
+
+
 
 
 

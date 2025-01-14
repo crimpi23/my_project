@@ -467,8 +467,8 @@ def add_selected_to_cart(token):
     conn = None
     cursor = None
     try:
-        selected_prices = request.form.getlist('selected_prices')
-        quantities = request.form.get('quantities', {})
+        selected_prices = request.form.to_dict(flat=False).get('selected_prices', [])
+        quantities = request.form.to_dict(flat=False).get('quantities', {})
         user_id = session.get('user_id')  # Отримання ID користувача із сесії
 
         if not selected_prices:
@@ -480,13 +480,10 @@ def add_selected_to_cart(token):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        for item in selected_prices:
-            # Розділення даних (article, price, table_name)
-            article, price, table_name = item.split('|')
+        for article, price_table_list in selected_prices.items():
+            price, table_name = price_table_list[0].split('|')
             price = float(price)
-
-            # Отримання кількості
-            quantity = int(quantities.get(article, 1))
+            quantity = int(quantities.get(article, [1])[0])
 
             # Перевірка існування в таблиці `products`
             cursor.execute("""
@@ -502,7 +499,7 @@ def add_selected_to_cart(token):
                     RETURNING id
                 """, (article, table_name, price))
                 product_id = cursor.fetchone()[0]
-                logging.info(f"New product added to 'products': {article}, {table_name}, {price}")
+                logging.info(f"New product added: {article}, {table_name}, {price}")
             else:
                 product_id = product['id']
 

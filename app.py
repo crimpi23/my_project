@@ -44,6 +44,8 @@ def get_db_connection():
         cursor_factory=psycopg2.extras.DictCursor
     )
 
+
+# Логіка вибору товарів, При додаванні товару у буфер
 def add_to_buffer(user_id, article, price, table_name, quantity):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -59,6 +61,8 @@ def add_to_buffer(user_id, article, price, table_name, quantity):
         cursor.close()
         conn.close()
 
+
+# Зчитування вибраних товарів для користувача:
 def get_buffered_selection(user_id):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -74,6 +78,7 @@ def get_buffered_selection(user_id):
         cursor.close()
         conn.close()
 
+# Очистка буфера після підтвердження:
 def clear_buffer(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -84,20 +89,43 @@ def clear_buffer(user_id):
         cursor.close()
         conn.close()
 
+
 @app.route('/<token>/add_to_buffer', methods=['POST'])
 @requires_token_and_role('user')
-def add_to_buffer_route(token):
-    user_id = session.get('user_id')
-    selected_items = request.form.getlist('selected_items')
-    quantities = request.form.get('quantities', {})
-    
-    for item in selected_items:
-        article, price, table_name = item.split('|')
-        quantity = int(quantities.get(item, 1))
-        add_to_buffer(user_id, article, float(price), table_name, quantity)
-    
-    flash("Selected items have been added to your buffer.", "success")
-    return redirect(url_for('view_cart', token=token))
+def add_to_buffer(token):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("You need to log in.", "error")
+            return redirect(url_for('index'))
+
+        selected_items = request.form.getlist('selected_items')
+        quantities = request.form.get('quantities', {})
+        
+        logging.debug(f"Received selected_items: {selected_items}")
+        logging.debug(f"Received quantities: {quantities}")
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        for item in selected_items:
+            article, price, table_name = item.split('|')
+            quantity = quantities.get(article, 1)
+            cursor.execute("""
+                INSERT INTO selection_buffer (user_id, article, price, table_name, quantity)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (user_id, article, price, table_name, quantity))
+        conn.commit()
+        flash("Items added to buffer.", "success")
+    except Exception as e:
+        logging.error(f"Error in add_to_buffer: {e}", exc_info=True)
+        flash("Failed to add items to buffer.", "error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+    return redirect(url_for('search_articles', token=token))
+
 
 
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
@@ -517,9 +545,18 @@ def search_articles(token):
 @app.route('/<token>/add_selected_to_cart', methods=['POST'])
 @requires_token_and_role('user')
 def add_selected_to_cart(token):
+    """
+    Додає обрані товари до кошика користувача, обробляючи вибрані ціни та кількості.
+    """
+    conn = None
+    cursor = None
     try:
-        selected_items = request.form.getlist('selected_items')
-        quantities = request.form.get('quantities', {})
+        # Отримання даних із форми
+        selected_items = request.form.to_dict(flat=False).get('selected_items', {})
+        quantities = request.form.to_dict(flat=False).get('quantities', {})
+        user_id = session.get('user_id')  # ID користувача із сесії
+
+        # Логування вхідних даних
         logging.debug(f"Received selected_items: {selected_items}")
         logging.debug(f"Received quantities: {quantities}")
 
@@ -527,46 +564,57 @@ def add_selected_to_cart(token):
             flash("No items selected to add to the cart.", "error")
             return redirect(url_for('search_articles', token=token))
 
-        user_id = session.get('user_id')
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        for item in selected_items:
-            article, price, table_name = item.split('|')
-            quantity = int(quantities.get(article, 1))
+        for article, price_table_list in selected_items.items():
+            # Логування оброблюваного товару
+            logging.debug(f"Processing article: {article}, price_table_list: {price_table_list}")
 
+            price, table_name = price_table_list[0].split('|')
+            price = float(price)
+            quantity = int(quantities.get(article, [1])[0])
+
+            # Перевірка існування товару
             cursor.execute("""
-                SELECT id FROM products WHERE article = %s AND table_name = %s AND price = %s
+                SELECT id FROM products
+                WHERE article = %s AND table_name = %s AND price = %s
             """, (article, table_name, price))
             product = cursor.fetchone()
 
+            # Логування статусу товару
             if not product:
+                logging.debug(f"Product not found in 'products': {article}, {table_name}, {price}")
                 cursor.execute("""
                     INSERT INTO products (article, table_name, price)
-                    VALUES (%s, %s, %s) RETURNING id
+                    VALUES (%s, %s, %s)
+                    RETURNING id
                 """, (article, table_name, price))
                 product_id = cursor.fetchone()[0]
+                logging.debug(f"New product added with ID: {product_id}")
             else:
-                product_id = product[0]
+                product_id = product['id']
+                logging.debug(f"Existing product found with ID: {product_id}")
 
+            # Додавання товару до кошика
             cursor.execute("""
                 INSERT INTO cart (user_id, product_id, quantity, added_at)
                 VALUES (%s, %s, %s, NOW())
             """, (user_id, product_id, quantity))
+            logging.info(f"Product added to cart: User={user_id}, Product ID={product_id}, Quantity={quantity}")
 
         conn.commit()
         flash("Selected items added to the cart successfully!", "success")
-
     except Exception as e:
         logging.error(f"Error in add_selected_to_cart: {e}", exc_info=True)
-        flash("Error adding items to cart. Please try again.", "error")
+        flash("Error adding selected items to cart.", "error")
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
 
-    return redirect(url_for('cart', token=token))
+    return redirect(url_for('view_cart', token=token))
 
 
 

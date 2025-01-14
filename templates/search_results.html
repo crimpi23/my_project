@@ -42,37 +42,44 @@
         {% endwith %}
 
         {% if grouped_results %}
-        <form method="POST" action="/{{ session['token'] }}/add_selected_to_cart">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Select</th>
-                        <th>Article</th>
-                        <th>Price</th>
-                        <th>Table</th>
-                        <th>Quantity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for article, details in grouped_results.items() %}
-                    {% for detail in details %}
-                    <tr>
-                        <td>
-                            <input type="checkbox" name="selected_items" value="{{ article }}|{{ detail.price }}|{{ detail.table_name }}">
-                        </td>
-                        <td>{{ article }}</td>
-                        <td>{{ detail.price }}</td>
-                        <td>{{ detail.table_name }}</td>
-                        <td>
-                            <input type="number" name="quantities[{{ article }}]" value="1" min="1" required>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% endfor %}
-                </tbody>
-            </table>
-            <button type="submit">Add Selected to Cart</button>
-        </form>
+		 <form method="POST" action="/{{ session['token'] }}/add_selected_to_cart">
+			<table>
+				<thead>
+					<tr>
+						<th>Select</th>
+						<th>Article</th>
+						<th>Price</th>
+						<th>Table</th>
+						<th>Quantity</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for article, details in grouped_results.items() %}
+					{% for detail in details %}
+					<tr>
+						<td>
+							<input type="checkbox" 
+								   name="selected_items" 
+								   value="{{ article }}|{{ detail.price }}|{{ detail.table_name }}">
+						</td>
+						<td>{{ article }}</td>
+						<td>{{ detail.price }}</td>
+						<td>{{ detail.table_name }}</td>
+						<td>
+							<input type="number" 
+								   name="quantities[{{ article }}|{{ detail.price }}|{{ detail.table_name }}]" 
+								   value="1" 
+								   min="1" 
+								   required>
+						</td>
+					</tr>
+					{% endfor %}
+					{% endfor %}
+				</tbody>
+			</table>
+			<button type="submit">Add Selected to Cart</button>
+		</form>
+
         {% else %}
         <p>No results found. Try adjusting your search or uploading an Excel file.</p>
         {% endif %}

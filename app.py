@@ -44,6 +44,62 @@ def get_db_connection():
         cursor_factory=psycopg2.extras.DictCursor
     )
 
+def add_to_buffer(user_id, article, price, table_name, quantity):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO selection_buffer (user_id, article, price, table_name, quantity)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (user_id, article, price, table_name)
+            DO UPDATE SET quantity = selection_buffer.quantity + EXCLUDED.quantity;
+        """, (user_id, article, price, table_name, quantity))
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_buffered_selection(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    try:
+        cursor.execute("""
+            SELECT article, price, table_name, quantity
+            FROM selection_buffer
+            WHERE user_id = %s
+            ORDER BY added_at;
+        """, (user_id,))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
+def clear_buffer(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s;", (user_id,))
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/<token>/add_to_buffer', methods=['POST'])
+@requires_token_and_role('user')
+def add_to_buffer_route(token):
+    user_id = session.get('user_id')
+    selected_items = request.form.getlist('selected_items')
+    quantities = request.form.get('quantities', {})
+    
+    for item in selected_items:
+        article, price, table_name = item.split('|')
+        quantity = int(quantities.get(item, 1))
+        add_to_buffer(user_id, article, float(price), table_name, quantity)
+    
+    flash("Selected items have been added to your buffer.", "success")
+    return redirect(url_for('view_cart', token=token))
+
+
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
 def requires_token_and_role(required_role):
     """

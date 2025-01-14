@@ -366,43 +366,66 @@ def create_user(token):
 @app.route('/<token>/submit_selection', methods=['POST'])
 @requires_token_and_role('user')
 def submit_selection(token):
-    # Перевірка токену
-    if 'user_id' not in session or session.get('token') != token:
-        flash("Unauthorized access. Please log in.", "error")
-        return redirect(url_for('index'))
+    """
+    Обробляє вибір користувача та зберігає його в таблиці `selection_buffer`.
+    """
+    try:
+        # Отримання даних користувача із сесії
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("User not authenticated", "error")
+            return redirect(f'/{token}/search')
 
-    # Підключення до бази даних
-    conn = psycopg2.connect(
-        dbname="your_database",
-        user="your_user",
-        password="your_password",
-        host="your_host",
-        port="your_port"
-    )
-    cursor = conn.cursor()
+        # Отримання вибраних артикулів із форми
+        selected_articles = request.form.getlist('article')  # Імена полів повинні бути "article"
+        if not selected_articles:
+            flash("No articles selected", "error")
+            return redirect(f'/{token}/search')
 
-    # Отримання даних з форми
-    selected_items = {}
-    for key, value in request.form.items():
-        if key.startswith("selected_"):
-            article = key.replace("selected_", "")
-            price, table_name = value.split("|")
-            selected_items[article] = {"price": price, "table_name": table_name}
+        # Підключення до бази даних
+        with psycopg2.connect(**DATABASE_CONFIG) as conn:
+            cursor = conn.cursor()
 
-    # Збереження у таблицю
-    for article, details in selected_items.items():
-        query = """
-            INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
-            VALUES (%s, %s, %s, %s, %s, NOW())
-        """
-        cursor.execute(query, (session['user_id'], article, details['price'], details['table_name'], 1))
+            # Цикл для кожного вибраного артикулу
+            for article_data in selected_articles:
+                # Очікується формат: "article,price,table_name"
+                article, price, table_name = article_data.split(',')
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+                query = """
+                    INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query, (
+                    user_id,
+                    article,
+                    float(price),
+                    table_name,
+                    1,  # Кількість за замовчуванням
+                    datetime.now()
+                ))
+            conn.commit()
 
-    flash("Your selection has been successfully submitted!", "success")
-    return redirect(url_for('search_results', token=token))
+        # Успішне завершення
+        flash("Selection successfully submitted!", "success")
+        return redirect(f'/{token}/search')
+
+    except psycopg2.Error as db_error:
+        # Логування помилок бази даних
+        app.logger.error(f"Database error during selection submission: {db_error}")
+        flash("Database error occurred. Please try again later.", "error")
+        return redirect(f'/{token}/search')
+
+    except Exception as e:
+        # Логування інших помилок
+        app.logger.error(f"Error during selection submission: {e}")
+        flash("An error occurred while processing your selection. Please try again.", "error")
+        return redirect(f'/{token}/search')
+
+    finally:
+        # Завершення з'єднання з базою, якщо воно відкрите
+        if 'conn' in locals() and conn:
+            conn.close()
+
 
 
 

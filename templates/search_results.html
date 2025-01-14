@@ -43,8 +43,9 @@
 			<table>
 				<thead>
 					<tr>
+						<th>Select</th>
 						<th>Article</th>
-						<th>Select Price</th>
+						<th>Price</th>
 						<th>Table</th>
 						<th>Quantity</th>
 					</tr>
@@ -52,31 +53,29 @@
 				<tbody>
 					{% for article, details in grouped_results.items() %}
 					<tr>
-						<td rowspan="{{ details|length }}">{{ article }}</td>
+						<td rowspan="{{ details|length }}">
+							<input type="hidden" name="quantities[{{ article }}]" value="1">
+						</td>
+					</tr>
+					{% for detail in details %}
+					<tr>
 						<td>
-							{% for detail in details %}
-							<div>
-								<input type="radio" 
-									   name="selected_items" 
-									   value="{{ article }}|{{ detail.price }}|{{ detail.table_name }}" 
-									   required>
-								{{ detail.price }}
-							</div>
-							{% endfor %}
+							<input type="radio"
+								   name="selected_items[{{ article }}]"
+								   value="{{ detail.price }}|{{ detail.table_name }}"
+								   required>
 						</td>
-						<td rowspan="{{ details|length }}">
-							{% for detail in details %}
-							<div>{{ detail.table_name }}</div>
-							{% endfor %}
-						</td>
-						<td rowspan="{{ details|length }}">
-							<input type="number" 
-								   name="quantities[{{ article }}]" 
-								   value="1" 
-								   min="1" 
+						<td>{{ detail.price }}</td>
+						<td>{{ detail.table_name }}</td>
+						<td>
+							<input type="number"
+								   name="quantities[{{ article }}]"
+								   value="1"
+								   min="1"
 								   required>
 						</td>
 					</tr>
+					{% endfor %}
 					{% endfor %}
 				</tbody>
 			</table>

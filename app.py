@@ -488,7 +488,6 @@ def clear_search(token):
 @requires_token_and_role('user')
 def cart(token):
     try:
-        # Отримання user_id з сесії
         user_id = session.get('user_id')
         if not user_id:
             flash("You need to log in to view your cart.", "error")
@@ -497,9 +496,14 @@ def cart(token):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Отримання товарів у кошику
         cursor.execute("""
-            SELECT c.product_id, p.article, p.price, c.quantity, c.added_at
+            SELECT 
+                c.product_id, 
+                p.article, 
+                p.price, 
+                c.quantity, 
+                (p.price * c.quantity) AS total_price, 
+                c.added_at
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
@@ -513,11 +517,6 @@ def cart(token):
         # Розрахунок загальної суми
         total_price = sum(item['total_price'] for item in cart_items)
 
-        # Очищення непотрібних флеш-повідомлень (опціонально)
-        session.pop('grouped_results', None)
-        session.pop('quantities', None)
-        session.pop('missing_articles', None)
-
         return render_template('cart.html', cart_items=cart_items, total_price=total_price)
 
     except Exception as e:
@@ -526,7 +525,7 @@ def cart(token):
         return redirect(request.referrer or url_for('index'))
     finally:
         if cursor:
-            cursor.close()  # Закриття курсора
+            cursor.close()
         if conn:
             conn.close()
         logging.debug("Database connection closed.")

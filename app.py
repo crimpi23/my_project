@@ -1732,6 +1732,7 @@ def upload_file(token):
 
 
 
+
 @app.route('/<token>/confirm_articles', methods=['POST'])
 @requires_token_and_role('user')
 def confirm_articles(token):

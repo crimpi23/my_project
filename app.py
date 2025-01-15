@@ -369,18 +369,13 @@ def submit_selection(token):
     logging.debug(f"Submit Selection Called with token: {token}")
     app.logger.debug(f"Form data received: {request.form}")
 
-    """
-    Обробляє вибір користувача та зберігає його в таблиці `selection_buffer`.
-    """
     try:
-        # Отримання ID користувача із сесії
         user_id = session.get('user_id')
         if not user_id:
             flash("User not authenticated", "error")
             logging.warning("User not authenticated. Redirecting to search.")
             return redirect(f'/{token}/search')
 
-        # Отримання вибраних артикулів із форми
         selected_articles = []
         for key, value in request.form.items():
             if key.startswith('selected_'):
@@ -395,33 +390,57 @@ def submit_selection(token):
             logging.info("No articles were selected by the user. Redirecting to search.")
             return redirect(f'/{token}/search')
 
-        # Підключення до бази даних
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
             # Додавання вибраних артикулів до `selection_buffer`
             for article, price, table_name in selected_articles:
-                query = """
+                cursor.execute("""
                     INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
                     VALUES (%s, %s, %s, %s, %s, NOW())
-                """
-                params = (user_id, article, price, table_name, 1)
-                cursor.execute(query, params)
-                logging.debug(f"Inserted to selection_buffer: {params}")
+                """, (user_id, article, price, table_name, 1))
+                logging.debug(f"Inserted to selection_buffer: (user_id={user_id}, article={article}, price={price}, table_name={table_name})")
+
+                # Перевірка, чи товар вже є в кошику
+                cursor.execute("""
+                    SELECT id FROM cart
+                    WHERE user_id = %s AND product_id = (
+                        SELECT id FROM products WHERE article = %s AND table_name = %s
+                    )
+                """, (user_id, article, table_name))
+                existing_cart_item = cursor.fetchone()
+
+                if existing_cart_item:
+                    # Оновлення кількості
+                    cursor.execute("""
+                        UPDATE cart
+                        SET quantity = quantity + 1
+                        WHERE id = %s
+                    """, (existing_cart_item['id'],))
+                    logging.debug(f"Updated quantity for article {article} in cart.")
+                else:
+                    # Додавання нового запису в кошик
+                    cursor.execute("""
+                        INSERT INTO cart (user_id, product_id, quantity, added_at)
+                        VALUES (
+                            %s,
+                            (SELECT id FROM products WHERE article = %s AND table_name = %s),
+                            %s,
+                            NOW()
+                        )
+                    """, (user_id, article, table_name, 1))
+                    logging.debug(f"Added new item to cart for article {article}.")
 
             conn.commit()
             logging.info(f"Selection successfully submitted for user_id={user_id}.")
 
         flash("Selection successfully submitted!", "success")
-        # Перенаправлення до кошика
-        logging.info(f"Redirecting to cart for token: {token}.")
         return redirect(url_for('cart', token=token))
 
     except Exception as e:
         logging.error(f"Error in submit_selection: {e}", exc_info=True)
         flash("An error occurred during submission. Please try again.", "error")
         return redirect(f'/{token}/search')
-
 
 
 

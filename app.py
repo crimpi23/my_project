@@ -370,12 +370,14 @@ def submit_selection(token):
     app.logger.debug(f"Form data received: {request.form}")
 
     try:
+        # Отримання ID користувача із сесії
         user_id = session.get('user_id')
         if not user_id:
             flash("User not authenticated", "error")
             logging.warning("User not authenticated. Redirecting to search.")
             return redirect(f'/{token}/search')
 
+        # Збір вибраних артикулів
         selected_articles = []
         for key, value in request.form.items():
             if key.startswith('selected_'):
@@ -390,16 +392,20 @@ def submit_selection(token):
             logging.info("No articles were selected by the user. Redirecting to search.")
             return redirect(f'/{token}/search')
 
+        # Підключення до бази даних
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            # Додавання вибраних артикулів до `selection_buffer`
+            # Обробка кожного вибраного артикулу
             for article, price, table_name in selected_articles:
+                # Вставка або оновлення у таблицю selection_buffer
                 cursor.execute("""
                     INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
                     VALUES (%s, %s, %s, %s, %s, NOW())
+                    ON CONFLICT (user_id, article, price, table_name)
+                    DO UPDATE SET quantity = selection_buffer.quantity + EXCLUDED.quantity
                 """, (user_id, article, price, table_name, 1))
-                logging.debug(f"Inserted to selection_buffer: (user_id={user_id}, article={article}, price={price}, table_name={table_name})")
+                logging.debug(f"Upserted into selection_buffer: (user_id={user_id}, article={article}, price={price}, table_name={table_name})")
 
                 # Перевірка, чи товар вже є в кошику
                 cursor.execute("""
@@ -411,7 +417,7 @@ def submit_selection(token):
                 existing_cart_item = cursor.fetchone()
 
                 if existing_cart_item:
-                    # Оновлення кількості
+                    # Оновлення кількості у кошику
                     cursor.execute("""
                         UPDATE cart
                         SET quantity = quantity + 1
@@ -419,7 +425,7 @@ def submit_selection(token):
                     """, (existing_cart_item['id'],))
                     logging.debug(f"Updated quantity for article {article} in cart.")
                 else:
-                    # Додавання нового запису в кошик
+                    # Додавання нового запису до кошика
                     cursor.execute("""
                         INSERT INTO cart (user_id, product_id, quantity, added_at)
                         VALUES (

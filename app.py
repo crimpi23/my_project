@@ -366,18 +366,18 @@ def create_user(token):
 @app.route('/<token>/submit_selection', methods=['POST'])
 @requires_token_and_role('user')
 def submit_selection(token):
-    app.logger.debug(f"Token received: {token}")
+    logging.debug(f"Submit Selection Called with token: {token}")
     app.logger.debug(f"Form data received: {request.form}")
+
     """
     Обробляє вибір користувача та зберігає його в таблиці `selection_buffer`.
     """
-    app.logger.debug(f"Token received: {token}")
-
     try:
         # Отримання ID користувача із сесії
         user_id = session.get('user_id')
         if not user_id:
             flash("User not authenticated", "error")
+            logging.warning("User not authenticated. Redirecting to search.")
             return redirect(f'/{token}/search')
 
         # Отримання вибраних артикулів із форми
@@ -388,8 +388,11 @@ def submit_selection(token):
                 price, table_name = value.split('|')
                 selected_articles.append((article, float(price), table_name))
 
+        logging.debug(f"Parsed selected articles: {selected_articles}")
+
         if not selected_articles:
             flash("No articles selected.", "error")
+            logging.info("No articles were selected by the user. Redirecting to search.")
             return redirect(f'/{token}/search')
 
         # Підключення до бази даних
@@ -404,18 +407,20 @@ def submit_selection(token):
                 """
                 params = (user_id, article, price, table_name, 1)
                 cursor.execute(query, params)
-                app.logger.debug(f"Inserted to selection_buffer: {params}")
+                logging.debug(f"Inserted to selection_buffer: {params}")
 
             conn.commit()
+            logging.info(f"Selection successfully submitted for user_id={user_id}.")
 
         flash("Selection successfully submitted!", "success")
-        return redirect(f'/{token}/search')
+        # Перенаправлення до кошика
+        logging.info(f"Redirecting to cart for token: {token}.")
+        return redirect(url_for('cart', token=token))
 
     except Exception as e:
-        app.logger.error(f"Error in submit_selection: {e}", exc_info=True)
+        logging.error(f"Error in submit_selection: {e}", exc_info=True)
         flash("An error occurred during submission. Please try again.", "error")
         return redirect(f'/{token}/search')
-
 
 
 
@@ -479,7 +484,7 @@ def search_results(token):
 
 
 # Маршрут для пошуку артикулів
-@app.route('/<token>/search', methods=['POST'])
+@app.route('/<token>/search', methods=['GET', 'POST'])
 @requires_token_and_role('user')
 def search_articles(token):
     logging.info(f"Started search_articles with token: {token}")

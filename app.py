@@ -1632,13 +1632,12 @@ def upload_file(token):
             return redirect(f'/{token}/')
 
         file = request.files['file']
-
         if not file.filename.endswith('.xlsx'):
             flash("Invalid file format. Please upload an Excel file.", "error")
             return redirect(f'/{token}/')
 
         try:
-            df = pd.read_excel(file, header=None)
+            df = pd.read_excel(file, header=None)  # Завантаження без заголовків
         except Exception as e:
             logging.error(f"Error reading Excel file: {e}", exc_info=True)
             flash("Error reading the file. Please check the format.", "error")
@@ -1663,32 +1662,38 @@ def upload_file(token):
 
                     article = str(row[0]).strip()
                     quantity = int(row[1])
-                    table_name = str(row[2]).strip() if len(row) > 2 and not pd.isna(row[2]) else None
+                    table_name = str(row[2]).strip() if len(row) > 2 else None
 
                     if table_name:
                         cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
                         result = cursor.fetchone()
+
                         if result:
                             price = result['price']
                             items_with_table.append((article, price, table_name, quantity))
+                            logging.debug(f"Article {article} found in {table_name} with price {price}.")
                         else:
                             missing_articles.append(article)
+                            logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                     else:
                         found = False
                         for table in get_all_price_list_tables():
                             cursor.execute(f"SELECT article, price FROM {table} WHERE article = %s", (article,))
                             result = cursor.fetchone()
+
                             if result:
                                 price = result['price']
                                 items_without_table.append((article, price, table, quantity))
                                 found = True
                                 break
+
                         if not found:
                             missing_articles.append(article)
                 except Exception as e:
                     logging.warning(f"Error processing row {row.tolist()}: {e}")
                     continue
 
+            # Додавання до кошика артикулів із таблицею
             for article, price, table_name, quantity in items_with_table:
                 cursor.execute("""
                     INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
@@ -1708,13 +1713,20 @@ def upload_file(token):
                     ON CONFLICT (user_id, product_id) DO UPDATE SET
                     quantity = cart.quantity + EXCLUDED.quantity
                 """, (user_id, article, table_name, quantity))
+                logging.debug(f"Added article {article} to cart from table {table_name}.")
+
             conn.commit()
 
-        session['items_with_table'] = items_with_table
-        session['items_without_table'] = items_without_table
-        session['missing_articles'] = missing_articles
-
-        return redirect(url_for('intermediate_results', token=token))
+        if not items_without_table and not missing_articles:
+            # Якщо всі артикули додано до кошика
+            flash("All articles were successfully added to the cart.", "success")
+            return redirect(url_for('cart', token=token))
+        else:
+            # Якщо є артикули без таблиць або відсутні артикули
+            session['items_with_table'] = items_with_table
+            session['items_without_table'] = items_without_table
+            session['missing_articles'] = missing_articles
+            return redirect(url_for('intermediate_results', token=token))
 
     except Exception as e:
         logging.error(f"Error in upload_file: {e}", exc_info=True)
@@ -1723,6 +1735,7 @@ def upload_file(token):
 
 
 
+# проміжкова функція, для визначення таблиць при імпорті excel
 @app.route('/<token>/intermediate_results', methods=['GET'])
 @requires_token_and_role('user')
 def intermediate_results(token):

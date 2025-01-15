@@ -481,7 +481,8 @@ def search_results(token):
 # Маршрут для пошуку артикулів
 @app.route('/<token>/search', methods=['POST'])
 @requires_token_and_role('user')
-def search_articles(token):  
+def search_articles(token):
+    logging.info(f"Started search_articles with token: {token}")
     """
     Маршрут для пошуку артикулів.
     """

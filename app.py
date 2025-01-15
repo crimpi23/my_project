@@ -1723,6 +1723,41 @@ def upload_file(token):
 
 
 
+@app.route('/<token>/intermediate_results', methods=['GET'])
+@requires_token_and_role('user')
+def intermediate_results(token):
+    """
+    Відображає проміжні результати після завантаження файлу.
+    - Артикули з таблицею вже додані до кошика.
+    - Артикули без таблиці потребують вибору таблиці користувачем.
+    - Відсутні артикули відображаються окремо.
+    """
+    try:
+        # Отримання даних із сесії
+        items_with_table = session.pop('items_with_table', [])
+        items_without_table = session.pop('items_without_table', [])
+        missing_articles = session.pop('missing_articles', [])
+
+        logging.debug(f"Items with table: {items_with_table}")
+        logging.debug(f"Items without table: {items_without_table}")
+        logging.debug(f"Missing articles: {missing_articles}")
+
+        # Завантаження списку таблиць
+        price_lists = get_all_price_list_tables()
+        logging.debug(f"Available price lists: {price_lists}")
+
+        return render_template(
+            'intermediate_results.html',
+            token=token,
+            items_with_table=items_with_table,
+            items_without_table=items_without_table,
+            missing_articles=missing_articles,
+            price_lists=price_lists
+        )
+    except Exception as e:
+        logging.error(f"Error in intermediate_results: {e}", exc_info=True)
+        flash("An error occurred while processing intermediate results.", "error")
+        return redirect(url_for('upload_file', token=token))
 
 
 

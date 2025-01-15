@@ -1661,37 +1661,46 @@ def upload_file(token):
             cursor = conn.cursor()
 
             for _, row in df.iterrows():
-                article = str(row[0]).strip()
-                quantity = int(row[1])
-                table_name = str(row[2]).strip() if len(row) > 2 else None
+                try:
+                    # Пропуск рядків, які не мають числових значень у другому стовпці
+                    if not str(row[1]).isdigit():
+                        logging.info(f"Skipped header or invalid row: {row.tolist()}")
+                        continue
 
-                if table_name:
-                    # Перевірка артикула в зазначеній таблиці
-                    cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
-                    result = cursor.fetchone()
+                    article = str(row[0]).strip()
+                    quantity = int(row[1])
+                    table_name = str(row[2]).strip() if len(row) > 2 else None
 
-                    if result:
-                        price = result['price']
-                        items_with_table.append((article, price, table_name, quantity))
-                        logging.debug(f"Article {article} found in {table_name} with price {price}.")
-                    else:
-                        missing_articles.append(article)
-                        logging.warning(f"Article {article} not found in {table_name}. Skipping.")
-                else:
-                    # Перевірка артикула у всіх таблицях
-                    found = False
-                    for table in get_all_price_list_tables():
-                        cursor.execute(f"SELECT article, price FROM {table} WHERE article = %s", (article,))
+                    if table_name:
+                        # Перевірка артикула в зазначеній таблиці
+                        cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
                         result = cursor.fetchone()
 
                         if result:
                             price = result['price']
-                            items_without_table.append((article, price, table, quantity))
-                            found = True
-                            break
+                            items_with_table.append((article, price, table_name, quantity))
+                            logging.debug(f"Article {article} found in {table_name} with price {price}.")
+                        else:
+                            missing_articles.append(article)
+                            logging.warning(f"Article {article} not found in {table_name}. Skipping.")
+                    else:
+                        # Перевірка артикула у всіх таблицях
+                        found = False
+                        for table in get_all_price_list_tables():
+                            cursor.execute(f"SELECT article, price FROM {table} WHERE article = %s", (article,))
+                            result = cursor.fetchone()
 
-                    if not found:
-                        missing_articles.append(article)
+                            if result:
+                                price = result['price']
+                                items_without_table.append((article, price, table, quantity))
+                                found = True
+                                break
+
+                        if not found:
+                            missing_articles.append(article)
+                except Exception as e:
+                    logging.warning(f"Error processing row {row.tolist()}: {e}")
+                    continue
 
             # Додавання до кошика артикулів із таблицею
             for article, price, table_name, quantity in items_with_table:
@@ -1728,6 +1737,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

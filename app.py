@@ -483,13 +483,9 @@ def search_results(token):
 @requires_token_and_role('user')
 def search_articles(token):
     logging.info(f"Started search_articles with token: {token}")
-    """
-    Маршрут для пошуку артикулів.
-    """
     conn = None
     cursor = None
     try:
-        logging.info("Processing search request...")
         articles = []
         quantities = {}
         auto_set_quantities = []
@@ -501,18 +497,17 @@ def search_articles(token):
             flash("Please enter at least one article.", "error")
             return redirect(url_for('index'))
 
-        # Обробка вхідних даних
         for line in articles_input.splitlines():
             parts = line.strip().split()
             if not parts:
-                continue  # Пропустити порожні рядки
+                continue
             if len(parts) == 1:
                 article = parts[0].strip().upper()
                 if article in quantities:
                     quantities[article] += 1
                 else:
                     articles.append(article)
-                    quantities[article] = 1  # За замовчуванням додаємо 1
+                    quantities[article] = 1
                     auto_set_quantities.append(article)
             elif len(parts) == 2 and parts[1].isdigit():
                 article, quantity = parts[0].strip().upper(), int(parts[1])
@@ -527,8 +522,8 @@ def search_articles(token):
 
         conn = get_db_connection()
         cursor = conn.cursor()
+        logging.info("Database connection established.")
 
-        # Отримання таблиць з прайс-листами
         cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
         logging.debug(f"Fetched price list tables: {tables}")
@@ -542,6 +537,7 @@ def search_articles(token):
                 FROM {table_name}
                 WHERE article = ANY(%s)
             """
+            logging.debug(f"Executing query: {query}")
             cursor.execute(query, (table_name, articles))
             results.extend(cursor.fetchall())
             logging.debug(f"Results from table {table_name}: {cursor.rowcount}")
@@ -552,13 +548,13 @@ def search_articles(token):
             grouped_results.setdefault(article, []).append({
                 'price': result['price'],
                 'table_name': result['table_name'],
-                'quantity': quantities.get(article, 1)  # Додаємо кількість до результатів
+                'quantity': quantities.get(article, 1)
             })
 
         missing_articles = [article for article in articles if article not in grouped_results]
         logging.info(f"Missing articles: {missing_articles}")
+        logging.debug(f"Grouped results: {grouped_results}")
 
-        # Збереження результатів у сесії
         session['grouped_results'] = grouped_results
         session['quantities'] = quantities
         session['missing_articles'] = missing_articles
@@ -582,8 +578,6 @@ def search_articles(token):
         if conn:
             conn.close()
         logging.info("Database connection closed.")
-
-
 
 
 

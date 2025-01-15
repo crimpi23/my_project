@@ -1691,7 +1691,13 @@ def upload_file(token):
 
                     article = str(row[0]).strip()
                     quantity = int(row[1])
-                    table_name = str(row[2]).strip() if len(row) > 2 else None
+                    table_name = str(row[2]).strip() if len(row) > 2 and pd.notna(row[2]) else None
+
+                    # Перевірка формату артикула (ігнорування без початкових нулів)
+                    if not article.isdigit() or article.lstrip("0") == article:
+                        logging.info(f"Article {article} ignored due to invalid format.")
+                        missing_articles.append(article)
+                        continue
 
                     if table_name:
                         # Перевірка артикула в зазначеній таблиці
@@ -1759,6 +1765,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

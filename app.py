@@ -366,6 +366,8 @@ def create_user(token):
 @app.route('/<token>/submit_selection', methods=['POST'])
 @requires_token_and_role('user')
 def submit_selection(token):
+    app.logger.debug(f"Token received: {token}")
+    app.logger.debug(f"Form data received: {request.form}")
     """
     Обробляє вибір користувача та зберігає його в таблиці `selection_buffer`.
     """
@@ -454,7 +456,7 @@ def process_selection():
     return redirect(url_for('search_results'))
 
 
-@app.route('/search_results', methods=['GET', 'POST'])
+@app.route('/<token>/search_results', methods=['GET'])
 @requires_token_and_role('user')
 def search_results(token):
     user_id = session.get('user_id')
@@ -463,20 +465,16 @@ def search_results(token):
         return redirect(url_for('index'))
 
     results = get_selection_buffer(user_id)
-
-    # Групуємо результати за артикулом
     grouped_results = {}
     for row in results:
-        article = row['article']
-        if article not in grouped_results:
-            grouped_results[article] = []
-        grouped_results[article].append({
+        grouped_results.setdefault(row['article'], []).append({
             'price': row['price'],
             'table_name': row['table_name'],
             'quantity': row['quantity'],
         })
 
-    return render_template('search_results.html', grouped_results=grouped_results)
+    return render_template('search_results.html', grouped_results=grouped_results, token=token)
+
 
 
 

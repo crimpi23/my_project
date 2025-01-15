@@ -1642,85 +1642,87 @@ def upload_file(token):
 
         # Завантаження даних з файлу
         try:
-            df = pd.read_excel(file)
+            df = pd.read_excel(file, header=None)  # Завантаження без заголовків
         except Exception as e:
             logging.error(f"Error reading Excel file: {e}", exc_info=True)
             flash("Error reading the file. Please check the format.", "error")
             return redirect(f'/{token}/')
 
-        # Перевірка колонок
-        required_columns = {'article', 'quantity', 'table_name'}
-        if not required_columns.issubset(df.columns):
-            flash(f"Invalid file structure. Required columns: {', '.join(required_columns)}.", "error")
+        # Перевірка мінімальної кількості колонок
+        if df.shape[1] < 2:
+            flash("Invalid file structure. Ensure the file has at least two columns.", "error")
             return redirect(f'/{token}/')
 
-        # Обробка кожного рядка
-        items_to_add = []
+        items_with_table = []      # Артикули з таблицею
+        items_without_table = []   # Артикули без таблиці
+        missing_articles = []      # Відсутні артикули
+
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
             for _, row in df.iterrows():
-                article = str(row['article']).strip()
-                quantity = int(row['quantity'])
-                table_name = str(row['table_name']).strip()
+                article = str(row[0]).strip()
+                quantity = int(row[1])
+                table_name = str(row[2]).strip() if len(row) > 2 else None
 
-                # Перевірка, чи артикул існує в зазначеній таблиці
-                cursor.execute(f"""
-                    SELECT article, price FROM {table_name}
-                    WHERE article = %s
-                """, (article,))
-                result = cursor.fetchone()
+                if table_name:
+                    # Перевірка артикула в зазначеній таблиці
+                    cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
+                    result = cursor.fetchone()
 
-                if result:
-                    price = result['price']
-                    items_to_add.append((article, price, table_name, quantity))
-                    logging.debug(f"Article {article} found in {table_name} with price {price}.")
+                    if result:
+                        price = result['price']
+                        items_with_table.append((article, price, table_name, quantity))
+                        logging.debug(f"Article {article} found in {table_name} with price {price}.")
+                    else:
+                        missing_articles.append(article)
+                        logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                 else:
-                    logging.warning(f"Article {article} not found in {table_name}. Skipping.")
+                    # Перевірка артикула у всіх таблицях
+                    found = False
+                    for table in get_all_price_list_tables():
+                        cursor.execute(f"SELECT article, price FROM {table} WHERE article = %s", (article,))
+                        result = cursor.fetchone()
 
-            # Додавання до selection_buffer і cart
-            for article, price, table_name, quantity in items_to_add:
-                # Перевіряємо, чи існує продукт у таблиці products
-                cursor.execute("""
-                    SELECT id FROM products WHERE article = %s AND table_name = %s
-                """, (article, table_name))
-                product = cursor.fetchone()
+                        if result:
+                            price = result['price']
+                            items_without_table.append((article, price, table, quantity))
+                            found = True
+                            break
 
-                if not product:
-                    # Якщо продукту немає, додаємо його до таблиці products
-                    cursor.execute("""
-                        INSERT INTO products (article, table_name, price, created_at)
-                        VALUES (%s, %s, %s, NOW())
-                        RETURNING id
-                    """, (article, table_name, price))
-                    product_id = cursor.fetchone()['id']
-                    logging.debug(f"Added new product to products: {article} in {table_name} with price {price}.")
-                else:
-                    product_id = product['id']
+                    if not found:
+                        missing_articles.append(article)
 
-                # Додаємо товар до selection_buffer
+            # Додавання до кошика артикулів із таблицею
+            for article, price, table_name, quantity in items_with_table:
                 cursor.execute("""
                     INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
                     VALUES (%s, %s, %s, %s, %s, NOW())
                     ON CONFLICT (user_id, article, price, table_name) DO UPDATE SET
                     quantity = selection_buffer.quantity + EXCLUDED.quantity
                 """, (user_id, article, price, table_name, quantity))
-                logging.debug(f"Upserted into selection_buffer: (user_id={user_id}, article={article}, price={price}, table_name={table_name}, quantity={quantity})")
 
-                # Додаємо товар до кошика
                 cursor.execute("""
                     INSERT INTO cart (user_id, product_id, quantity, added_at)
-                    VALUES (%s, %s, %s, NOW())
+                    VALUES (
+                        %s,
+                        (SELECT id FROM products WHERE article = %s AND table_name = %s),
+                        %s,
+                        NOW()
+                    )
                     ON CONFLICT (user_id, product_id) DO UPDATE SET
                     quantity = cart.quantity + EXCLUDED.quantity
-                """, (user_id, product_id, quantity))
-                logging.debug(f"Upserted into cart: (user_id={user_id}, product_id={product_id}, quantity={quantity}).")
+                """, (user_id, article, table_name, quantity))
+                logging.debug(f"Added article {article} to cart from table {table_name}.")
 
             conn.commit()
-            logging.info(f"File successfully processed and items added to cart for user_id={user_id}.")
 
-        flash("File successfully processed! Items added to your cart.", "success")
-        return redirect(url_for('cart', token=token))
+        # Перенаправлення на проміжну сторінку
+        session['items_with_table'] = items_with_table
+        session['items_without_table'] = items_without_table
+        session['missing_articles'] = missing_articles
+
+        return redirect(url_for('intermediate_results', token=token))
 
     except Exception as e:
         logging.error(f"Error in upload_file: {e}", exc_info=True)
@@ -1728,6 +1730,71 @@ def upload_file(token):
         return redirect(f'/{token}/')
 
 
+
+
+@app.route('/<token>/confirm_articles', methods=['POST'])
+@requires_token_and_role('user')
+def confirm_articles(token):
+    """
+    Обробляє артикули без зазначеної таблиці після підтвердження користувачем.
+    """
+    logging.debug(f"Confirm Articles Called with token: {token}")
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("User not authenticated", "error")
+            return redirect(f'/{token}/')
+
+        # Отримання даних з форми
+        articles = request.form.getlist('article[]')
+        quantities = request.form.getlist('quantity[]')
+        table_names = request.form.getlist('table_name[]')
+
+        if not (articles and quantities and table_names):
+            flash("Invalid data submitted.", "error")
+            return redirect(f'/{token}/')
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+
+            for article, quantity, table_name in zip(articles, quantities, table_names):
+                # Перевіряємо наявність артикулу в зазначеній таблиці
+                cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
+                result = cursor.fetchone()
+
+                if result:
+                    price = result['price']
+                    quantity = int(quantity)
+                    # Додаємо до `selection_buffer` та `cart`
+                    cursor.execute("""
+                        INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
+                        VALUES (%s, %s, %s, %s, %s, NOW())
+                        ON CONFLICT (user_id, article, price, table_name) DO UPDATE SET
+                        quantity = selection_buffer.quantity + EXCLUDED.quantity
+                    """, (user_id, article, price, table_name, quantity))
+
+                    cursor.execute("""
+                        INSERT INTO cart (user_id, product_id, quantity, added_at)
+                        VALUES (
+                            %s,
+                            (SELECT id FROM products WHERE article = %s AND table_name = %s),
+                            %s,
+                            NOW()
+                        )
+                        ON CONFLICT (user_id, product_id) DO UPDATE SET
+                        quantity = cart.quantity + EXCLUDED.quantity
+                    """, (user_id, article, table_name, quantity))
+                    logging.debug(f"Confirmed and added to cart: {article}, {table_name}, {quantity}")
+
+            conn.commit()
+
+        flash("Articles successfully added to your cart.", "success")
+        return redirect(f'/{token}/cart')
+
+    except Exception as e:
+        logging.error(f"Error in confirm_articles: {e}", exc_info=True)
+        flash("An error occurred during article confirmation.", "error")
+        return redirect(f'/{token}/')
 
 
 

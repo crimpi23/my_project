@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intermediate Results</title>
+</head>
+<body>
+    <h1>Processing Results</h1>
+
+    <!-- Артикули з зазначеною таблицею -->
+    <h2>Articles Added to Cart</h2>
+    <ul>
+        {% for article, price, table_name, quantity in items_with_table %}
+        <li>{{ article }} ({{ table_name }}) - Quantity: {{ quantity }} - Price: {{ price }}</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Артикули без зазначеної таблиці -->
+    <h2>Articles Without Table</h2>
+    <form method="POST" action="/{{ token }}/confirm_articles">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Article</th>
+                    <th>Suggested Table</th>
+                    <th>Quantity</th>
+                    <th>Confirm Table</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article, price, table_name, quantity in items_without_table %}
+                <tr>
+                    <td>{{ article }}</td>
+                    <td>{{ table_name }}</td>
+                    <td>{{ quantity }}</td>
+                    <td>
+                        <input type="hidden" name="article[]" value="{{ article }}">
+                        <input type="hidden" name="quantity[]" value="{{ quantity }}">
+                        <select name="table_name[]">
+                            <option value="{{ table_name }}">{{ table_name }}</option>
+                            {% for table in all_price_tables %}
+                            {% if table != table_name %}
+                            <option value="{{ table }}">{{ table }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit">Confirm and Add to Cart</button>
+    </form>
+
+    <!-- Артикули, яких немає в базі -->
+    <h2>Missing Articles</h2>
+    <ul>
+        {% for article in missing_articles %}
+        <li>{{ article }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

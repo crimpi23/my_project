@@ -403,40 +403,46 @@ def submit_selection(token):
                 """, (user_id, article, price, table_name, 1))
                 logging.debug(f"Upserted into selection_buffer: (user_id={user_id}, article={article}, price={price}, table_name={table_name})")
 
-                # Отримання product_id з таблиці products
+                # Перевірка наявності артикула в таблиці products
                 cursor.execute("""
                     SELECT id FROM products WHERE article = %s AND table_name = %s
                 """, (article, table_name))
                 product = cursor.fetchone()
 
-                if product:
-                    product_id = product['id']
-                    logging.debug(f"Found product_id={product_id} for article={article}.")
-
-                    # Перевірка, чи товар вже є в кошику
+                if not product:
+                    # Додавання нового запису до products
                     cursor.execute("""
-                        SELECT id FROM cart
-                        WHERE user_id = %s AND product_id = %s
-                    """, (user_id, product_id))
-                    existing_cart_item = cursor.fetchone()
+                        INSERT INTO products (article, table_name, price, created_at)
+                        VALUES (%s, %s, %s, NOW())
+                        RETURNING id
+                    """, (article, table_name, price))
+                    product = cursor.fetchone()
+                    logging.info(f"Added new product to products: article={article}, table_name={table_name}, price={price}")
 
-                    if existing_cart_item:
-                        # Оновлення кількості в кошику
-                        cursor.execute("""
-                            UPDATE cart
-                            SET quantity = quantity + 1
-                            WHERE id = %s
-                        """, (existing_cart_item['id'],))
-                        logging.debug(f"Updated quantity for article {article} in cart.")
-                    else:
-                        # Додавання нового запису в кошик
-                        cursor.execute("""
-                            INSERT INTO cart (user_id, product_id, quantity, added_at)
-                            VALUES (%s, %s, %s, NOW())
-                        """, (user_id, product_id, 1))
-                        logging.debug(f"Added new item to cart for article {article}.")
+                product_id = product['id']
+
+                # Перевірка, чи товар вже є в кошику
+                cursor.execute("""
+                    SELECT id FROM cart
+                    WHERE user_id = %s AND product_id = %s
+                """, (user_id, product_id))
+                existing_cart_item = cursor.fetchone()
+
+                if existing_cart_item:
+                    # Оновлення кількості в кошику
+                    cursor.execute("""
+                        UPDATE cart
+                        SET quantity = quantity + 1
+                        WHERE id = %s
+                    """, (existing_cart_item['id'],))
+                    logging.debug(f"Updated quantity for article {article} in cart.")
                 else:
-                    logging.warning(f"Product not found for article={article}, table_name={table_name}. Skipping cart insertion.")
+                    # Додавання нового запису до кошика
+                    cursor.execute("""
+                        INSERT INTO cart (user_id, product_id, quantity, added_at)
+                        VALUES (%s, %s, %s, NOW())
+                    """, (user_id, product_id, 1))
+                    logging.debug(f"Added new item to cart for article {article}.")
 
             conn.commit()
             logging.info(f"Selection successfully submitted for user_id={user_id}.")

@@ -4,8 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Article Price Search</title>
-    <link rel="stylesheet" href="/static/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #fff; /* Білий фон */
+            color: #000; /* Чорний текст */
+        }
+        header nav ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            gap: 10px;
+        }
+        header nav ul li {
+            display: inline;
+        }
+        header nav ul li a {
+            text-decoration: none;
+            color: #007bff;
+            padding: 5px 10px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+        }
+        header nav ul li a:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            text-align: center;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #a71d2a;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        .form-textarea, .quantity-input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        h1, h2 {
+            font-size: 24px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -31,7 +112,7 @@
 
         <!-- Search Results Section -->
         {% if grouped_results %}
-        <section id="results" class="results">
+        <section id="results">
             <h2>Search Results:</h2>
             <table>
                 <thead>
@@ -57,7 +138,7 @@
                                 <input type="hidden" name="price" value="{{ detail.price }}">
                                 <input type="hidden" name="table_name" value="{{ detail.table_name }}">
                                 <input type="number" name="quantity" value="1" min="1" class="quantity-input">
-                                <button type="submit" class="btn btn-primary">Add to Cart</button>
+                                <button type="submit" class="btn">Add to Cart</button>
                             </form>
                         </td>
                     </tr>
@@ -68,17 +149,9 @@
         </section>
         {% endif %}
 
-        {% if grouped_results or missing_articles %}
-        <section class="clear-search-section">
-            <form method="POST" action="/clear_search">
-                <button type="submit" class="btn btn-secondary">Clear Search Data</button>
-            </form>
-        </section>
-        {% endif %}
-
         {% if missing_articles %}
-        <section class="warning-message">
-            <p>The following articles were not found:</p>
+        <section>
+            <h2>Missing Articles:</h2>
             <ul>
                 {% for article in missing_articles %}
                 <li>{{ article }}</li>
@@ -87,69 +160,14 @@
         </section>
         {% endif %}
 
-        {% if auto_set_quantities %}
-        <section class="info-message">
-            <p>Articles with no quantity were set to 1:</p>
-            <ul>
-                {% for article in auto_set_quantities %}
-                <li>{{ article }}</li>
-                {% endfor %}
-            </ul>
-        </section>
-        {% endif %}
-
         <!-- Search Form -->
-        <section class="search-form-section">
-            <form method="POST" action="/{{ session['token'] }}/search#results" class="search-form">
-                <label for="articles" class="form-label">Enter Articles and Quantities:</label>
+        <section>
+            <form method="POST" action="/{{ session['token'] }}/search#results">
+                <label for="articles">Enter Articles and Quantities:</label>
                 <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required class="form-textarea"></textarea>
-                <button type="submit" class="btn btn-primary">Search</button>
+                <button type="submit" class="btn">Search</button>
             </form>
         </section>
-
-        <!-- Cart Section -->
-        {% if cart_items %}
-        <section class="cart-section">
-            <h2>Your Cart</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Article</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Total</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in cart_items %}
-                    <tr>
-                        <td>{{ item.article }}</td>
-                        <td>{{ item.price }}</td>
-                        <td>
-                            <form method="POST" action="/{{ session['token'] }}/update_cart">
-                                <input type="hidden" name="article" value="{{ item.article }}">
-                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
-                                <button type="submit" class="btn btn-warning">
-                                    <i class="fas fa-edit"></i> Update
-                                </button>
-                            </form>
-                        </td>
-                        <td>{{ item.total_price }}</td>
-                        <td>
-                            <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
-                                <input type="hidden" name="article" value="{{ item.article }}">
-                                <button type="submit" class="btn btn-danger">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-        {% endif %}
     </main>
 </body>
 </html>

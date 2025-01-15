@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, send_file
+from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, send_file, get_flashed_messages
 import time
 import os
 import psycopg2
@@ -7,8 +7,9 @@ import logging
 import csv
 import io
 import bcrypt
+import pandas as pd
 from functools import wraps
-from flask import get_flashed_messages
+
 
 # Налаштування логування
 logging.basicConfig(level=logging.DEBUG)
@@ -1612,47 +1613,104 @@ def compare_prices(token):
             return redirect(request.referrer or url_for('compare_prices'))
 
 
-# Експорт в ексель файлу порівняння цін
-def export_to_excel(better_in_first, better_in_second, same_prices):
+
+@app.route('/<token>/upload_file', methods=['POST'])
+@requires_token_and_role('user')
+def upload_file(token):
+    """
+    Завантажує файл із товарами, обробляє його та додає товари в кошик.
+    """
+    logging.debug(f"Upload File Called with token: {token}")
     try:
-        # Створення нового Excel-файлу
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Comparison Results"
+        # Отримання ID користувача
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("User not authenticated", "error")
+            return redirect(f'/{token}/')
 
-        # Додавання даних для першої таблиці
-        ws.append(["Better in First Table"])
-        ws.append(["Article", "Price"])
-        for item in better_in_first:
-            ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок
+        # Перевірка наявності файлу
+        if 'file' not in request.files:
+            flash("No file uploaded", "error")
+            return redirect(f'/{token}/')
 
-        # Додавання даних для другої таблиці
-        ws.append(["Better in Second Table"])
-        ws.append(["Article", "Price"])
-        for item in better_in_second:
-            ws.append([item['article'], item['price']])
-        ws.append([])  # Порожній рядок
+        file = request.files['file']
 
-        # Додавання даних для однакових цін
-        ws.append(["Same Prices"])
-        ws.append(["Article", "Price", "Tables"])
-        for item in same_prices:
-            ws.append([item['article'], item['price'], item['tables']])
+        # Перевірка формату файлу
+        if not file.filename.endswith('.xlsx'):
+            flash("Invalid file format. Please upload an Excel file.", "error")
+            return redirect(f'/{token}/')
 
-        # Збереження Excel-файлу у тимчасовій директорії
-        filename = "comparison_results.xlsx"
-        filepath = f"/tmp/{filename}"
-        wb.save(filepath)
+        # Завантаження даних з файлу
+        try:
+            df = pd.read_excel(file)
+        except Exception as e:
+            logging.error(f"Error reading Excel file: {e}", exc_info=True)
+            flash("Error reading the file. Please check the format.", "error")
+            return redirect(f'/{token}/')
 
-        # Надсилання файлу користувачеві
-        logging.info(f"Exported Excel file saved to: {filepath}")
-        return send_file(filepath, as_attachment=True, download_name=filename,
-                         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        # Перевірка колонок
+        required_columns = {'article', 'quantity', 'table_name'}
+        if not required_columns.issubset(df.columns):
+            flash(f"Invalid file structure. Required columns: {', '.join(required_columns)}.", "error")
+            return redirect(f'/{token}/')
+
+        # Обробка кожного рядка
+        items_to_add = []
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+
+            for _, row in df.iterrows():
+                article = row['article']
+                quantity = int(row['quantity'])
+                table_name = row['table_name']
+
+                # Перевірка, чи артикул існує в зазначеній таблиці
+                cursor.execute(f"""
+                    SELECT article, price FROM {table_name}
+                    WHERE article = %s
+                """, (article,))
+                result = cursor.fetchone()
+
+                if result:
+                    price = result['price']
+                    items_to_add.append((article, price, table_name, quantity))
+                    logging.debug(f"Article {article} found in {table_name} with price {price}.")
+                else:
+                    logging.warning(f"Article {article} not found in {table_name}. Skipping.")
+
+            # Додавання до selection_buffer і cart
+            for article, price, table_name, quantity in items_to_add:
+                cursor.execute("""
+                    INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                    ON CONFLICT (user_id, article, price, table_name) DO UPDATE SET
+                    quantity = selection_buffer.quantity + EXCLUDED.quantity
+                """, (user_id, article, price, table_name, quantity))
+                logging.debug(f"Upserted into selection_buffer: (user_id={user_id}, article={article}, price={price}, table_name={table_name}, quantity={quantity})")
+
+                cursor.execute("""
+                    INSERT INTO cart (user_id, product_id, quantity, added_at)
+                    VALUES (
+                        %s,
+                        (SELECT id FROM products WHERE article = %s AND table_name = %s),
+                        %s,
+                        NOW()
+                    )
+                    ON CONFLICT (user_id, product_id) DO UPDATE SET
+                    quantity = cart.quantity + EXCLUDED.quantity
+                """, (user_id, article, table_name, quantity))
+                logging.debug(f"Upserted into cart: (user_id={user_id}, article={article}, table_name={table_name}, quantity={quantity})")
+
+            conn.commit()
+            logging.info(f"File successfully processed and items added to cart for user_id={user_id}.")
+
+        flash("File successfully processed! Items added to your cart.", "success")
+        return redirect(url_for('cart', token=token))
 
     except Exception as e:
-        logging.error(f"Error during Excel export: {e}", exc_info=True)
-        raise
+        logging.error(f"Error in upload_file: {e}", exc_info=True)
+        flash("An error occurred during file upload. Please try again.", "error")
+        return redirect(f'/{token}/')
 
 
 @app.route('/<token>/admin/utilities')

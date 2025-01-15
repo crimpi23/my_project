@@ -1613,7 +1613,7 @@ def compare_prices(token):
             return redirect(request.referrer or url_for('compare_prices'))
 
 
-
+# Завантаження файлу для замовлення
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
@@ -1642,7 +1642,7 @@ def upload_file(token):
 
         # Завантаження даних з файлу
         try:
-            df = pd.read_excel(file)
+            df = pd.read_excel(file, dtype={'article': str, 'table_name': str})  # Примусове встановлення типів
         except Exception as e:
             logging.error(f"Error reading Excel file: {e}", exc_info=True)
             flash("Error reading the file. Please check the format.", "error")
@@ -1654,6 +1654,11 @@ def upload_file(token):
             flash(f"Invalid file structure. Required columns: {', '.join(required_columns)}.", "error")
             return redirect(f'/{token}/')
 
+        # Переведення всіх колонок у правильний тип
+        df['article'] = df['article'].astype(str)  # Приведення артикулів до тексту
+        df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').fillna(1).astype(int)  # Приведення кількості до чисел
+        df['table_name'] = df['table_name'].astype(str)  # Приведення імен таблиць до тексту
+
         # Обробка кожного рядка
         items_to_add = []
         with get_db_connection() as conn:
@@ -1661,7 +1666,7 @@ def upload_file(token):
 
             for _, row in df.iterrows():
                 article = row['article']
-                quantity = int(row['quantity'])
+                quantity = row['quantity']
                 table_name = row['table_name']
 
                 # Перевірка, чи артикул існує в зазначеній таблиці
@@ -1711,6 +1716,8 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
+
 
 
 @app.route('/<token>/admin/utilities')

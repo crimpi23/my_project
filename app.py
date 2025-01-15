@@ -1622,111 +1622,82 @@ def upload_file(token):
     """
     logging.debug(f"Upload File Called with token: {token}")
     try:
-        # Отримання ID користувача
         user_id = session.get('user_id')
         if not user_id:
             flash("User not authenticated", "error")
             return redirect(f'/{token}/')
 
-        # Перевірка наявності файлу
         if 'file' not in request.files:
             flash("No file uploaded", "error")
             return redirect(f'/{token}/')
 
         file = request.files['file']
 
-        # Перевірка формату файлу
         if not file.filename.endswith('.xlsx'):
             flash("Invalid file format. Please upload an Excel file.", "error")
             return redirect(f'/{token}/')
 
-        # Завантаження даних з файлу
         try:
-            df = pd.read_excel(file, header=None)  # Завантаження без заголовків
+            df = pd.read_excel(file, header=None)
         except Exception as e:
             logging.error(f"Error reading Excel file: {e}", exc_info=True)
             flash("Error reading the file. Please check the format.", "error")
             return redirect(f'/{token}/')
 
-        # Перевірка мінімальної кількості колонок
         if df.shape[1] < 2:
             flash("Invalid file structure. Ensure the file has at least two columns.", "error")
             return redirect(f'/{token}/')
 
-        items_with_table = []      # Артикули з таблицею
-        items_without_table = []   # Артикули без таблиці
-        missing_articles = []      # Відсутні артикули
+        items_with_table = []
+        items_without_table = []
+        missing_articles = []
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
-
             for _, row in df.iterrows():
                 try:
-                    # Пропуск рядків, які не мають числових значень у другому стовпці
                     if not str(row[1]).isdigit():
                         logging.info(f"Skipped header or invalid row: {row.tolist()}")
                         continue
 
                     article = str(row[0]).strip()
                     quantity = int(row[1])
-                    table_name = str(row[2]).strip() if len(row) > 2 else None
+                    table_name = str(row[2]).strip() if len(row) > 2 and not pd.isna(row[2]) else None
 
                     if table_name:
-                        # Перевірка артикула в зазначеній таблиці
-                        cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
-                        result = cursor.fetchone()
-
-                        if result:
-                            price = result['price']
-                            items_with_table.append((article, price, table_name, quantity))
-                            logging.debug(f"Article {article} found in {table_name} with price {price}.")
-                        else:
-                            missing_articles.append(article)
-                            logging.warning(f"Article {article} not found in {table_name}. Skipping.")
-                    else:
-                        # Перевірка артикула у всіх таблицях
-                        found = False
-                        for table in get_all_price_list_tables():
-                            cursor.execute(f"SELECT article, price FROM {table} WHERE article = %s", (article,))
+                        try:
+                            cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
                             result = cursor.fetchone()
-
                             if result:
                                 price = result['price']
-                                items_without_table.append((article, price, table, quantity))
-                                found = True
-                                break
+                                items_with_table.append((article, price, table_name, quantity))
+                            else:
+                                missing_articles.append(article)
+                        except Exception as e:
+                            logging.warning(f"Error processing table {table_name}: {e}")
+                    else:
+                        found = False
+                        for table in get_all_price_list_tables():
+                            try:
+                                cursor.execute(f"SELECT article, price FROM {table} WHERE article = %s", (article,))
+                                result = cursor.fetchone()
+                                if result:
+                                    price = result['price']
+                                    items_without_table.append((article, price, table, quantity))
+                                    found = True
+                                    break
+                            except Exception as e:
+                                logging.warning(f"Error processing table {table}: {e}")
 
                         if not found:
                             missing_articles.append(article)
+
                 except Exception as e:
                     logging.warning(f"Error processing row {row.tolist()}: {e}")
                     continue
 
-            # Додавання до кошика артикулів із таблицею
-            for article, price, table_name, quantity in items_with_table:
-                cursor.execute("""
-                    INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
-                    VALUES (%s, %s, %s, %s, %s, NOW())
-                    ON CONFLICT (user_id, article, price, table_name) DO UPDATE SET
-                    quantity = selection_buffer.quantity + EXCLUDED.quantity
-                """, (user_id, article, price, table_name, quantity))
-
-                cursor.execute("""
-                    INSERT INTO cart (user_id, product_id, quantity, added_at)
-                    VALUES (
-                        %s,
-                        (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                        %s,
-                        NOW()
-                    )
-                    ON CONFLICT (user_id, product_id) DO UPDATE SET
-                    quantity = cart.quantity + EXCLUDED.quantity
-                """, (user_id, article, table_name, quantity))
-                logging.debug(f"Added article {article} to cart from table {table_name}.")
-
             conn.commit()
 
-        # Перенаправлення на проміжну сторінку
         session['items_with_table'] = items_with_table
         session['items_without_table'] = items_without_table
         session['missing_articles'] = missing_articles
@@ -1737,6 +1708,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

@@ -1633,9 +1633,9 @@ def compare_prices(token):
 @requires_token_and_role('user')
 def upload_file(token):
     """
-    Завантажує файл із товарами, обробляє його та пропонує відповідні дії для артикула:
+    Завантажує файл із товарами, обробляє його та виконує точний збіг для артикула:
     - Артикули з вказаною таблицею додаються до кошика.
-    - Артикули без таблиці отримують список таблиць, де вони присутні.
+    - Артикули без таблиці отримують список таблиць, де вони присутні (за точним збігом).
     - Артикули, яких немає в базі, додаються до списку "відсутніх".
     """
     logging.debug(f"Upload File Called with token: {token}")
@@ -1691,16 +1691,10 @@ def upload_file(token):
 
                     article = str(row[0]).strip()
                     quantity = int(row[1])
-                    table_name = str(row[2]).strip() if len(row) > 2 and pd.notna(row[2]) else None
-
-                    # Перевірка формату артикула (ігнорування без початкових нулів)
-                    if not article.isdigit() or article.lstrip("0") == article:
-                        logging.info(f"Article {article} ignored due to invalid format.")
-                        missing_articles.append(article)
-                        continue
+                    table_name = str(row[2]).strip() if len(row) > 2 else None
 
                     if table_name:
-                        # Перевірка артикула в зазначеній таблиці
+                        # Перевірка артикула в зазначеній таблиці (точний збіг)
                         cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
                         result = cursor.fetchone()
 
@@ -1712,7 +1706,7 @@ def upload_file(token):
                             missing_articles.append(article)
                             logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                     else:
-                        # Перевірка артикула у всіх таблицях
+                        # Перевірка артикула у всіх таблицях (точний збіг)
                         matching_tables = []
                         for table in all_tables:
                             cursor.execute(f"SELECT article FROM {table} WHERE article = %s", (article,))
@@ -1765,6 +1759,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

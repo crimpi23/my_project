@@ -46,21 +46,6 @@
             text-align: center;
             color: #333;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-        th, td {
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #f4f4f4;
-        }
         .btn {
             padding: 10px 20px;
             border: none;
@@ -74,27 +59,6 @@
         }
         .btn-primary:hover {
             background-color: #0056b3;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        .btn-warning {
-            background-color: #ffc107;
-            color: white;
-        }
-        .btn-warning:hover {
-            background-color: #e0a800;
-        }
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-        .btn-danger:hover {
-            background-color: #c82333;
         }
         .form-label {
             display: block;
@@ -140,12 +104,12 @@
         <!-- File Upload Section -->
         <section class="upload-form">
             <h2>Upload Articles File</h2>
-			<form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data">
-				<label for="file" class="form-label">Select a file to upload:</label>
-				<input type="file" id="file" name="file" required>
-				<button type="submit" class="btn btn-primary">Upload and Search</button>
-			</form>
-
+            <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data">
+                <label for="file" class="form-label">Select a file to upload:</label>
+                <input type="file" id="file" name="file" accept=".xlsx" required>
+                <button type="submit" class="btn btn-primary">Upload and Search</button>
+            </form>
+        </section>
 
         <!-- Search Form -->
         <section class="search-form-section">
@@ -157,88 +121,18 @@
             </form>
         </section>
 
-        <!-- Existing Sections -->
-        {% if grouped_results %}
-        <section id="results" class="results">
-            <h2>Search Results:</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Article</th>
-                        <th>Price</th>
-                        <th>Table</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for article, details in grouped_results.items() %}
-                    {% for detail in details %}
-                    <tr>
-                        {% if loop.index == 1 %}
-                        <td rowspan="{{ details|length }}">{{ article }}</td>
-                        {% endif %}
-                        <td>{{ detail.price }}</td>
-                        <td>{{ detail.table_name }}</td>
-                        <td>
-                            <form method="POST" action="/add_to_cart">
-                                <input type="hidden" name="article" value="{{ article }}">
-                                <input type="hidden" name="price" value="{{ detail.price }}">
-                                <input type="hidden" name="table_name" value="{{ detail.table_name }}">
-                                <input type="number" name="quantity" value="1" min="1" class="quantity-input">
-                                <button type="submit" class="btn btn-primary">Add to Cart</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- Flash Messages Section -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <section class="flash-messages">
+            <ul>
+                {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
         </section>
         {% endif %}
-
-        <!-- Cart Section -->
-        {% if cart_items %}
-        <section class="cart-section">
-            <h2>Your Cart</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Article</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Total</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in cart_items %}
-                    <tr>
-                        <td>{{ item.article }}</td>
-                        <td>{{ item.price }}</td>
-                        <td>
-                            <form method="POST" action="/{{ session['token'] }}/update_cart">
-                                <input type="hidden" name="article" value="{{ item.article }}">
-                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
-                                <button type="submit" class="btn btn-warning">
-                                    <i class="fas fa-edit"></i> Update
-                                </button>
-                            </form>
-                        </td>
-                        <td>{{ item.total_price }}</td>
-                        <td>
-                            <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
-                                <input type="hidden" name="article" value="{{ item.article }}">
-                                <button type="submit" class="btn btn-danger">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-        {% endif %}
+        {% endwith %}
     </main>
 </body>
 </html>

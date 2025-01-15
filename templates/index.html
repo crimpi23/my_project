@@ -7,84 +7,111 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #ffffff;
             margin: 0;
-            padding: 20px;
-            background-color: #fff; /* Білий фон */
-            color: #000; /* Чорний текст */
+            padding: 0;
         }
-        header nav ul {
-            list-style: none;
+        header {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        nav ul {
+            list-style-type: none;
+            margin: 0;
             padding: 0;
             display: flex;
-            gap: 10px;
+            gap: 15px;
         }
-        header nav ul li {
+        nav ul li {
             display: inline;
         }
-        header nav ul li a {
+        nav ul li a {
             text-decoration: none;
             color: #007bff;
-            padding: 5px 10px;
-            border: 1px solid #007bff;
-            border-radius: 5px;
+            font-weight: bold;
         }
-        header nav ul li a:hover {
-            background-color: #007bff;
-            color: #fff;
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #ffffff;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            padding: 10px;
             text-align: center;
         }
         th {
             background-color: #f4f4f4;
         }
         .btn {
-            display: inline-block;
-            padding: 10px 15px;
-            text-align: center;
-            color: #fff;
-            background-color: #007bff;
+            padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            text-decoration: none;
+            font-size: 14px;
         }
-        .btn:hover {
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
             background-color: #0056b3;
         }
-        .btn-danger {
-            background-color: #dc3545;
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
         }
-        .btn-danger:hover {
-            background-color: #a71d2a;
+        .btn-secondary:hover {
+            background-color: #5a6268;
         }
         .btn-warning {
             background-color: #ffc107;
-            color: #000;
+            color: white;
         }
         .btn-warning:hover {
             background-color: #e0a800;
         }
-        .form-textarea, .quantity-input {
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .form-textarea {
             width: 100%;
-            padding: 8px;
-            margin: 5px 0;
-            border: 1px solid #ccc;
+            padding: 10px;
+            border: 1px solid #ddd;
             border-radius: 5px;
         }
-        h1, h2 {
-            font-size: 24px;
+        .upload-form {
+            margin-top: 20px;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
+        .upload-form input[type="file"] {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -110,9 +137,29 @@
             {% endif %}
         </section>
 
-        <!-- Search Results Section -->
+        <!-- File Upload Section -->
+        <section class="upload-form">
+            <h2>Upload Articles File</h2>
+            <form method="POST" action="/{{ session['token'] }}/upload_articles" enctype="multipart/form-data">
+                <label for="file" class="form-label">Select a file to upload:</label>
+                <input type="file" id="file" name="file" required>
+                <button type="submit" class="btn btn-primary">Upload and Search</button>
+            </form>
+        </section>
+
+        <!-- Search Form -->
+        <section class="search-form-section">
+            <h2>Search Articles</h2>
+            <form method="POST" action="/{{ session['token'] }}/search#results" class="search-form">
+                <label for="articles" class="form-label">Enter Articles and Quantities:</label>
+                <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required class="form-textarea"></textarea>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </section>
+
+        <!-- Existing Sections -->
         {% if grouped_results %}
-        <section id="results">
+        <section id="results" class="results">
             <h2>Search Results:</h2>
             <table>
                 <thead>
@@ -138,7 +185,7 @@
                                 <input type="hidden" name="price" value="{{ detail.price }}">
                                 <input type="hidden" name="table_name" value="{{ detail.table_name }}">
                                 <input type="number" name="quantity" value="1" min="1" class="quantity-input">
-                                <button type="submit" class="btn">Add to Cart</button>
+                                <button type="submit" class="btn btn-primary">Add to Cart</button>
                             </form>
                         </td>
                     </tr>
@@ -149,25 +196,49 @@
         </section>
         {% endif %}
 
-        {% if missing_articles %}
-        <section>
-            <h2>Missing Articles:</h2>
-            <ul>
-                {% for article in missing_articles %}
-                <li>{{ article }}</li>
-                {% endfor %}
-            </ul>
+        <!-- Cart Section -->
+        {% if cart_items %}
+        <section class="cart-section">
+            <h2>Your Cart</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.article }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/update_cart">
+                                <input type="hidden" name="article" value="{{ item.article }}">
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i> Update
+                                </button>
+                            </form>
+                        </td>
+                        <td>{{ item.total_price }}</td>
+                        <td>
+                            <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
+                                <input type="hidden" name="article" value="{{ item.article }}">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </section>
         {% endif %}
-
-        <!-- Search Form -->
-        <section>
-            <form method="POST" action="/{{ session['token'] }}/search#results">
-                <label for="articles">Enter Articles and Quantities:</label>
-                <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required class="form-textarea"></textarea>
-                <button type="submit" class="btn">Search</button>
-            </form>
-        </section>
     </main>
 </body>
 </html>

@@ -381,7 +381,8 @@ def submit_selection(token):
             if key.startswith('selected_'):
                 article = key.replace('selected_', '')
                 price, table_name = value.split('|')
-                selected_articles.append((article, float(price), table_name))
+                quantity = int(request.form.get(f'quantity_{article}', 1))  # Отримання кількості
+                selected_articles.append((article, float(price), table_name, quantity))
 
         logging.debug(f"Parsed selected articles: {selected_articles}")
 
@@ -393,15 +394,15 @@ def submit_selection(token):
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            for article, price, table_name in selected_articles:
+            for article, price, table_name, quantity in selected_articles:
                 # Вставка або оновлення у selection_buffer
                 cursor.execute("""
                     INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
                     VALUES (%s, %s, %s, %s, %s, NOW())
                     ON CONFLICT (user_id, article, price, table_name)
                     DO UPDATE SET quantity = selection_buffer.quantity + EXCLUDED.quantity
-                """, (user_id, article, price, table_name, 1))
-                logging.debug(f"Upserted into selection_buffer: (user_id={user_id}, article={article}, price={price}, table_name={table_name})")
+                """, (user_id, article, price, table_name, quantity))
+                logging.debug(f"Upserted into selection_buffer: (user_id={user_id}, article={article}, price={price}, table_name={table_name}, quantity={quantity})")
 
                 # Перевірка наявності артикула в таблиці products
                 cursor.execute("""
@@ -432,17 +433,17 @@ def submit_selection(token):
                     # Оновлення кількості в кошику
                     cursor.execute("""
                         UPDATE cart
-                        SET quantity = quantity + 1
+                        SET quantity = quantity + %s
                         WHERE id = %s
-                    """, (existing_cart_item['id'],))
+                    """, (quantity, existing_cart_item['id']))
                     logging.debug(f"Updated quantity for article {article} in cart.")
                 else:
                     # Додавання нового запису до кошика
                     cursor.execute("""
                         INSERT INTO cart (user_id, product_id, quantity, added_at)
                         VALUES (%s, %s, %s, NOW())
-                    """, (user_id, product_id, 1))
-                    logging.debug(f"Added new item to cart for article {article}.")
+                    """, (user_id, product_id, quantity))
+                    logging.debug(f"Added new item to cart for article {article} with quantity {quantity}.")
 
             conn.commit()
             logging.info(f"Selection successfully submitted for user_id={user_id}.")

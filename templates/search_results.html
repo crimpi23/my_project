@@ -94,8 +94,15 @@
 					</table>
 				</div>
 			{% endfor %}
+			
+			<!-- Hidden input fields for quantities -->
+			{% for article, prices in grouped_results.items() %}
+			  <input type="hidden" name="quantity_{{ article }}" value="{{ quantities[article] }}">
+			{% endfor %}
+
 			<button type="submit" class="submit-button">Submit Selection</button>
 		</form>
+
     </div>
 </body>
 </html>

@@ -1786,79 +1786,65 @@ def upload_file(token):
 @requires_token_and_role('user')
 def intermediate_results(token):
     """
-    Відображає результати для артикулів без таблиць та відсутніх у базі.
+    Обробляє статті без таблиці, надає можливість вибрати таблиці,
+    а потім додає вибрані статті до кошика.
     """
-    logging.debug(f"Accessing intermediate results for token: {token}")
     try:
-        # Отримання даних із сесії
-        items_without_table = session.get('items_without_table', [])
-        missing_articles = session.get('missing_articles', [])
-        all_tables = session.get('all_tables', [])
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("User not authenticated", "error")
+            return redirect(f'/{token}/')
 
         if request.method == 'POST':
-            # Обробка вибору таблиць користувачем
-            selections = request.form.to_dict()
-            logging.debug(f"User selections: {selections}")
+            # Отримання вибору користувача
+            user_selections = {key.split('_')[1]: value for key, value in request.form.items() if key.startswith('table_')}
+            logging.debug(f"User selections: {user_selections}")
 
-            items_to_add = []
+            items_without_table = session.get('items_without_table', [])
+            added_to_cart = []
+
             with get_db_connection() as conn:
                 cursor = conn.cursor()
 
-                for item in items_without_table:
-                    article, quantity, _ = item
-                    selected_table = selections.get(f"table_{article}")
+                for article, quantity, valid_tables in items_without_table:
+                    selected_table = user_selections.get(article)
+                    if selected_table and selected_table in valid_tables:
+                        # Перевірка, чи стаття існує в обраній таблиці
+                        cursor.execute("SELECT id, price FROM products WHERE article = %s AND table_name = %s", (article, selected_table))
+                        product = cursor.fetchone()
 
-                    if selected_table in all_tables:
-                        cursor.execute(f"SELECT article, price FROM {selected_table} WHERE article = %s", (article,))
-                        result = cursor.fetchone()
-
-                        if result:
-                            price = result['price']
-                            items_to_add.append((article, price, selected_table, quantity))
-                            logging.debug(f"Article {article} found in {selected_table} with price {price}.")
-                        else:
-                            missing_articles.append(article)
-                            logging.warning(f"Article {article} not found in {selected_table}. Skipping.")
-                    else:
-                        logging.warning(f"Invalid table selected for article {article}: {selected_table}")
-
-                # Додавання вибраних артикулів до кошика
-                for article, price, table_name, quantity in items_to_add:
-                    cursor.execute("""
-                        INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
-                        VALUES (%s, %s, %s, %s, %s, NOW())
-                        ON CONFLICT (user_id, article, price, table_name) DO UPDATE SET
-                        quantity = selection_buffer.quantity + EXCLUDED.quantity
-                    """, (session['user_id'], article, price, table_name, quantity))
-
-                    cursor.execute("""
-                        INSERT INTO cart (user_id, product_id, quantity, added_at)
-                        VALUES (
-                            %s,
-                            (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                            %s,
-                            NOW()
-                        )
-                        ON CONFLICT (user_id, product_id) DO UPDATE SET
-                        quantity = cart.quantity + EXCLUDED.quantity
-                    """, (session['user_id'], article, table_name, quantity))
-                    logging.debug(f"Added article {article} to cart from table {table_name}.")
+                        if product:
+                            product_id, price = product
+                            # Додавання до кошика
+                            cursor.execute("""
+                                INSERT INTO cart (user_id, product_id, quantity, added_at)
+                                VALUES (%s, %s, %s, NOW())
+                                ON CONFLICT (user_id, product_id) DO UPDATE SET
+                                quantity = cart.quantity + EXCLUDED.quantity
+                            """, (user_id, product_id, quantity))
+                            added_to_cart.append(article)
+                            logging.info(f"Added article {article} to cart from table {selected_table}.")
 
                 conn.commit()
 
-            flash("Selected articles have been added to your cart.", "success")
+            # Оновлення сесії та результатів
+            items_without_table = [item for item in items_without_table if item[0] not in added_to_cart]
+            session['items_without_table'] = items_without_table
+
+            if items_without_table:
+                flash("Some articles still need a table. Please review.", "warning")
+                return redirect(url_for('intermediate_results', token=token))
+
+            flash("All selected articles have been added to your cart.", "success")
             return redirect(url_for('cart', token=token))
 
-        return render_template(
-            'intermediate.html',
-            items_without_table=items_without_table,
-            missing_articles=missing_articles,
-            all_tables=all_tables,
-            token=token
-        )
+        # GET запит: повертає сторінку з проміжними результатами
+        items_without_table = session.get('items_without_table', [])
+        return render_template('intermediate_results.html', token=token, items_without_table=items_without_table)
+
     except Exception as e:
         logging.error(f"Error in intermediate_results: {e}", exc_info=True)
-        flash("An error occurred while processing intermediate results.", "error")
+        flash("An error occurred while processing your selection. Please try again.", "error")
         return redirect(f'/{token}/')
 
 

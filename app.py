@@ -367,76 +367,51 @@ def create_user(token):
 @requires_token_and_role('user')
 def submit_selection(token):
     """
-    Processes the user's selection and saves it to the `selection_buffer` table.
+    Обробляє вибір користувача та зберігає його в таблиці `selection_buffer`.
     """
     app.logger.debug(f"Token received: {token}")
-    
+
     try:
-        # Get user ID from session
+        # Отримання ID користувача із сесії
         user_id = session.get('user_id')
         if not user_id:
             flash("User not authenticated", "error")
             return redirect(f'/{token}/search')
 
-        # Get selected articles from the form
-        selected_articles = request.form.getlist('article')  # The names of the fields must be "article"
+        # Отримання вибраних артикулів із форми
+        selected_articles = []
+        for key, value in request.form.items():
+            if key.startswith('selected_'):
+                article = key.replace('selected_', '')
+                price, table_name = value.split('|')
+                selected_articles.append((article, float(price), table_name))
+
         if not selected_articles:
-            flash("No articles selected", "error")
+            flash("No articles selected.", "error")
             return redirect(f'/{token}/search')
 
-        # Connect to the database
-        with psycopg2.connect(**DATABASE_CONFIG) as conn:
+        # Підключення до бази даних
+        with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            # Iterate through each selected article
-            for article_data in selected_articles:
-                # Expected format: "article,price,table_name"
-                try:
-                    article, price, table_name = article_data.split(',')
-                except ValueError:
-                    app.logger.error(f"Invalid data format for article: {article_data}")
-                    flash("Invalid selection data format", "error")
-                    continue
-
+            # Додавання вибраних артикулів до `selection_buffer`
+            for article, price, table_name in selected_articles:
                 query = """
                     INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
                 """
-                params = (
-                    user_id,
-                    article,
-                    float(price),
-                    table_name,
-                    1,  # Default quantity
-                    datetime.now()
-                )
-                
-                # Log the query and parameters
-                app.logger.debug(f"Executing query: {query}")
-                app.logger.debug(f"With parameters: {params}")
-
-                try:
-                    cursor.execute(query, params)
-                except psycopg2.Error as db_error:
-                    app.logger.error(f"Error executing query for article {article}: {db_error}")
-                    flash(f"Database error for article {article}: {db_error}", "error")
-                    continue
+                params = (user_id, article, price, table_name, 1)
+                cursor.execute(query, params)
+                app.logger.debug(f"Inserted to selection_buffer: {params}")
 
             conn.commit()
 
-        # Successful completion
         flash("Selection successfully submitted!", "success")
         return redirect(f'/{token}/search')
 
-    except psycopg2.Error as db_error:
-        # Log database errors
-        app.logger.error(f"Database connection error: {db_error}")
-        flash("Database error occurred. Please try again later.", "error")
-        return redirect(f'/{token}/search')
-
     except Exception as e:
-        app.logger.error(f"Unexpected error during selection submission: {e}")
-        flash("An unexpected error occurred. Please try again.", "error")
+        app.logger.error(f"Error in submit_selection: {e}", exc_info=True)
+        flash("An error occurred during submission. Please try again.", "error")
         return redirect(f'/{token}/search')
 
 

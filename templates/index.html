@@ -140,12 +140,12 @@
         <!-- File Upload Section -->
         <section class="upload-form">
             <h2>Upload Articles File</h2>
-            <form method="POST" action="/{{ session['token'] }}/upload_articles" enctype="multipart/form-data">
-                <label for="file" class="form-label">Select a file to upload:</label>
-                <input type="file" id="file" name="file" required>
-                <button type="submit" class="btn btn-primary">Upload and Search</button>
-            </form>
-        </section>
+			<form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data">
+				<label for="file" class="form-label">Select a file to upload:</label>
+				<input type="file" id="file" name="file" required>
+				<button type="submit" class="btn btn-primary">Upload and Search</button>
+			</form>
+
 
         <!-- Search Form -->
         <section class="search-form-section">

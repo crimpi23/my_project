@@ -35,6 +35,21 @@ def verify_password(password, stored_hash):
     logging.debug("Verifying password")
     return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
 
+def get_all_price_list_tables():
+    """
+    Отримує список усіх таблиць із таблиці price_lists.
+    """
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT table_name FROM price_lists;")
+            tables = [row[0] for row in cursor.fetchall()]
+            logging.debug(f"Fetched tables from price_lists: {tables}")
+            return tables
+    except Exception as e:
+        logging.error(f"Error fetching price list tables: {e}", exc_info=True)
+        return []
+
 
 # Функція для підключення до бази даних
 def get_db_connection():
@@ -1819,72 +1834,6 @@ def intermediate_results(token):
 
 
 
-
-
-
-@app.route('/<token>/confirm_articles', methods=['POST'])
-@requires_token_and_role('user')
-def confirm_articles(token):
-    """
-    Обробляє артикули без зазначеної таблиці після підтвердження користувачем.
-    """
-    logging.debug(f"Confirm Articles Called with token: {token}")
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash("User not authenticated", "error")
-            return redirect(f'/{token}/')
-
-        # Отримання даних з форми
-        articles = request.form.getlist('article[]')
-        quantities = request.form.getlist('quantity[]')
-        table_names = request.form.getlist('table_name[]')
-
-        if not (articles and quantities and table_names):
-            flash("Invalid data submitted.", "error")
-            return redirect(f'/{token}/')
-
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-
-            for article, quantity, table_name in zip(articles, quantities, table_names):
-                # Перевіряємо наявність артикулу в зазначеній таблиці
-                cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
-                result = cursor.fetchone()
-
-                if result:
-                    price = result['price']
-                    quantity = int(quantity)
-                    # Додаємо до `selection_buffer` та `cart`
-                    cursor.execute("""
-                        INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
-                        VALUES (%s, %s, %s, %s, %s, NOW())
-                        ON CONFLICT (user_id, article, price, table_name) DO UPDATE SET
-                        quantity = selection_buffer.quantity + EXCLUDED.quantity
-                    """, (user_id, article, price, table_name, quantity))
-
-                    cursor.execute("""
-                        INSERT INTO cart (user_id, product_id, quantity, added_at)
-                        VALUES (
-                            %s,
-                            (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                            %s,
-                            NOW()
-                        )
-                        ON CONFLICT (user_id, product_id) DO UPDATE SET
-                        quantity = cart.quantity + EXCLUDED.quantity
-                    """, (user_id, article, table_name, quantity))
-                    logging.debug(f"Confirmed and added to cart: {article}, {table_name}, {quantity}")
-
-            conn.commit()
-
-        flash("Articles successfully added to your cart.", "success")
-        return redirect(f'/{token}/cart')
-
-    except Exception as e:
-        logging.error(f"Error in confirm_articles: {e}", exc_info=True)
-        flash("An error occurred during article confirmation.", "error")
-        return redirect(f'/{token}/')
 
 
 

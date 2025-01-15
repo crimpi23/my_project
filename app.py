@@ -1654,6 +1654,7 @@ def upload_file(token):
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
+
             for _, row in df.iterrows():
                 try:
                     if not str(row[1]).isdigit():
@@ -1665,37 +1666,48 @@ def upload_file(token):
                     table_name = str(row[2]).strip() if len(row) > 2 and not pd.isna(row[2]) else None
 
                     if table_name:
-                        try:
-                            cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
-                            result = cursor.fetchone()
-                            if result:
-                                price = result['price']
-                                items_with_table.append((article, price, table_name, quantity))
-                            else:
-                                missing_articles.append(article)
-                        except Exception as e:
-                            logging.warning(f"Error processing table {table_name}: {e}")
+                        cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
+                        result = cursor.fetchone()
+                        if result:
+                            price = result['price']
+                            items_with_table.append((article, price, table_name, quantity))
+                        else:
+                            missing_articles.append(article)
                     else:
                         found = False
                         for table in get_all_price_list_tables():
-                            try:
-                                cursor.execute(f"SELECT article, price FROM {table} WHERE article = %s", (article,))
-                                result = cursor.fetchone()
-                                if result:
-                                    price = result['price']
-                                    items_without_table.append((article, price, table, quantity))
-                                    found = True
-                                    break
-                            except Exception as e:
-                                logging.warning(f"Error processing table {table}: {e}")
-
+                            cursor.execute(f"SELECT article, price FROM {table} WHERE article = %s", (article,))
+                            result = cursor.fetchone()
+                            if result:
+                                price = result['price']
+                                items_without_table.append((article, price, table, quantity))
+                                found = True
+                                break
                         if not found:
                             missing_articles.append(article)
-
                 except Exception as e:
                     logging.warning(f"Error processing row {row.tolist()}: {e}")
                     continue
 
+            for article, price, table_name, quantity in items_with_table:
+                cursor.execute("""
+                    INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                    ON CONFLICT (user_id, article, price, table_name) DO UPDATE SET
+                    quantity = selection_buffer.quantity + EXCLUDED.quantity
+                """, (user_id, article, price, table_name, quantity))
+
+                cursor.execute("""
+                    INSERT INTO cart (user_id, product_id, quantity, added_at)
+                    VALUES (
+                        %s,
+                        (SELECT id FROM products WHERE article = %s AND table_name = %s),
+                        %s,
+                        NOW()
+                    )
+                    ON CONFLICT (user_id, product_id) DO UPDATE SET
+                    quantity = cart.quantity + EXCLUDED.quantity
+                """, (user_id, article, table_name, quantity))
             conn.commit()
 
         session['items_with_table'] = items_with_table
@@ -1708,6 +1720,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

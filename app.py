@@ -1642,7 +1642,7 @@ def upload_file(token):
 
         # Завантаження даних з файлу
         try:
-            df = pd.read_excel(file, dtype={'article': str, 'table_name': str})  # Примусове встановлення типів
+            df = pd.read_excel(file)
         except Exception as e:
             logging.error(f"Error reading Excel file: {e}", exc_info=True)
             flash("Error reading the file. Please check the format.", "error")
@@ -1654,20 +1654,15 @@ def upload_file(token):
             flash(f"Invalid file structure. Required columns: {', '.join(required_columns)}.", "error")
             return redirect(f'/{token}/')
 
-        # Переведення всіх колонок у правильний тип
-        df['article'] = df['article'].astype(str)  # Приведення артикулів до тексту
-        df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').fillna(1).astype(int)  # Приведення кількості до чисел
-        df['table_name'] = df['table_name'].astype(str)  # Приведення імен таблиць до тексту
-
         # Обробка кожного рядка
         items_to_add = []
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
             for _, row in df.iterrows():
-                article = row['article']
-                quantity = row['quantity']
-                table_name = row['table_name']
+                article = str(row['article']).strip()
+                quantity = int(row['quantity'])
+                table_name = str(row['table_name']).strip()
 
                 # Перевірка, чи артикул існує в зазначеній таблиці
                 cursor.execute(f"""
@@ -1685,6 +1680,25 @@ def upload_file(token):
 
             # Додавання до selection_buffer і cart
             for article, price, table_name, quantity in items_to_add:
+                # Перевіряємо, чи існує продукт у таблиці products
+                cursor.execute("""
+                    SELECT id FROM products WHERE article = %s AND table_name = %s
+                """, (article, table_name))
+                product = cursor.fetchone()
+
+                if not product:
+                    # Якщо продукту немає, додаємо його до таблиці products
+                    cursor.execute("""
+                        INSERT INTO products (article, table_name, price, created_at)
+                        VALUES (%s, %s, %s, NOW())
+                        RETURNING id
+                    """, (article, table_name, price))
+                    product_id = cursor.fetchone()['id']
+                    logging.debug(f"Added new product to products: {article} in {table_name} with price {price}.")
+                else:
+                    product_id = product['id']
+
+                # Додаємо товар до selection_buffer
                 cursor.execute("""
                     INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
                     VALUES (%s, %s, %s, %s, %s, NOW())
@@ -1693,18 +1707,14 @@ def upload_file(token):
                 """, (user_id, article, price, table_name, quantity))
                 logging.debug(f"Upserted into selection_buffer: (user_id={user_id}, article={article}, price={price}, table_name={table_name}, quantity={quantity})")
 
+                # Додаємо товар до кошика
                 cursor.execute("""
                     INSERT INTO cart (user_id, product_id, quantity, added_at)
-                    VALUES (
-                        %s,
-                        (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                        %s,
-                        NOW()
-                    )
+                    VALUES (%s, %s, %s, NOW())
                     ON CONFLICT (user_id, product_id) DO UPDATE SET
                     quantity = cart.quantity + EXCLUDED.quantity
-                """, (user_id, article, table_name, quantity))
-                logging.debug(f"Upserted into cart: (user_id={user_id}, article={article}, table_name={table_name}, quantity={quantity})")
+                """, (user_id, product_id, quantity))
+                logging.debug(f"Upserted into cart: (user_id={user_id}, product_id={product_id}, quantity={quantity}).")
 
             conn.commit()
             logging.info(f"File successfully processed and items added to cart for user_id={user_id}.")
@@ -1716,6 +1726,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

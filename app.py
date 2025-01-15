@@ -1633,7 +1633,10 @@ def compare_prices(token):
 @requires_token_and_role('user')
 def upload_file(token):
     """
-    Завантажує файл із товарами, обробляє його та додає товари в кошик.
+    Завантажує файл із товарами, обробляє його та пропонує відповідні дії для артикула:
+    - Артикули з вказаною таблицею додаються до кошика.
+    - Артикули без таблиці отримують список таблиць, де вони присутні.
+    - Артикули, яких немає в базі, додаються до списку "відсутніх".
     """
     logging.debug(f"Upload File Called with token: {token}")
     try:
@@ -1668,24 +1671,29 @@ def upload_file(token):
             flash("Invalid file structure. Ensure the file has at least two columns.", "error")
             return redirect(f'/{token}/')
 
-        # Отримання списку доступних таблиць
-        all_tables = get_all_price_list_tables()
-
-        # Групування даних
-        items_with_table = []      # Артикули з валідною таблицею
-        items_without_table = []   # Артикули без таблиці або з некоректною таблицею
-        missing_articles = []      # Відсутні артикули в базі
+        items_with_table = []      # Артикули з таблицею
+        items_without_table = []   # Артикули без таблиці
+        missing_articles = []      # Відсутні артикули
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
+            # Отримання всіх таблиць з price_lists
+            cursor.execute("SELECT table_name FROM price_lists;")
+            all_tables = [row[0] for row in cursor.fetchall()]
+
             for _, row in df.iterrows():
                 try:
+                    # Пропуск рядків, які не мають числових значень у другому стовпці
+                    if not str(row[1]).isdigit():
+                        logging.info(f"Skipped header or invalid row: {row.tolist()}")
+                        continue
+
                     article = str(row[0]).strip()
                     quantity = int(row[1])
                     table_name = str(row[2]).strip() if len(row) > 2 else None
 
-                    if table_name in all_tables:
+                    if table_name:
                         # Перевірка артикула в зазначеній таблиці
                         cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
                         result = cursor.fetchone()
@@ -1698,51 +1706,54 @@ def upload_file(token):
                             missing_articles.append(article)
                             logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                     else:
-                        # Додавання до списку для ручного вибору таблиці
-                        items_without_table.append((article, quantity, table_name))
+                        # Перевірка артикула у всіх таблицях
+                        matching_tables = []
+                        for table in all_tables:
+                            cursor.execute(f"SELECT article FROM {table} WHERE article = %s", (article,))
+                            if cursor.fetchone():
+                                matching_tables.append(table)
+
+                        if matching_tables:
+                            items_without_table.append((article, quantity, matching_tables))
+                        else:
+                            missing_articles.append(article)
                 except Exception as e:
                     logging.warning(f"Error processing row {row.tolist()}: {e}")
                     continue
 
-            # Додавання до кошика артикулів із валідною таблицею
+            # Додавання до кошика артикулів із таблицею
             for article, price, table_name, quantity in items_with_table:
-                try:
-                    cursor.execute("""
-                        INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
-                        VALUES (%s, %s, %s, %s, %s, NOW())
-                        ON CONFLICT (user_id, article, price, table_name) DO UPDATE SET
-                        quantity = selection_buffer.quantity + EXCLUDED.quantity
-                    """, (user_id, article, price, table_name, quantity))
+                cursor.execute("""
+                    INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                    ON CONFLICT (user_id, article, price, table_name) DO UPDATE SET
+                    quantity = selection_buffer.quantity + EXCLUDED.quantity
+                """, (user_id, article, price, table_name, quantity))
 
-                    cursor.execute("""
-                        INSERT INTO cart (user_id, product_id, quantity, added_at)
-                        VALUES (
-                            %s,
-                            (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                            %s,
-                            NOW()
-                        )
-                        ON CONFLICT (user_id, product_id) DO UPDATE SET
-                        quantity = cart.quantity + EXCLUDED.quantity
-                    """, (user_id, article, table_name, quantity))
-                    logging.debug(f"Added article {article} to cart from table {table_name}.")
-                except Exception as e:
-                    logging.warning(f"Error adding article {article} to cart: {e}")
-                    conn.rollback()
-                    continue
+                cursor.execute("""
+                    INSERT INTO cart (user_id, product_id, quantity, added_at)
+                    VALUES (
+                        %s,
+                        (SELECT id FROM products WHERE article = %s AND table_name = %s),
+                        %s,
+                        NOW()
+                    )
+                    ON CONFLICT (user_id, product_id) DO UPDATE SET
+                    quantity = cart.quantity + EXCLUDED.quantity
+                """, (user_id, article, table_name, quantity))
+                logging.debug(f"Added article {article} to cart from table {table_name}.")
 
             conn.commit()
 
-        # Збереження даних для проміжної сторінки
-        session['items_with_table'] = items_with_table
+        # Збереження результатів у сесії для проміжної сторінки
         session['items_without_table'] = items_without_table
         session['missing_articles'] = missing_articles
-        session['all_tables'] = all_tables
 
-        if items_without_table or missing_articles:
+        if items_without_table:
             return redirect(url_for('intermediate_results', token=token))
-        else:
-            return redirect(url_for('cart', token=token))
+
+        flash("File processed successfully and items added to your cart.", "success")
+        return redirect(url_for('cart', token=token))
 
     except Exception as e:
         logging.error(f"Error in upload_file: {e}", exc_info=True)

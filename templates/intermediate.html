@@ -21,19 +21,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for article, quantity, _ in items_without_table %}
-                    <tr>
-                        <td>{{ article }}</td>
-                        <td>{{ quantity }}</td>
-                        <td>
-                            <select name="table_{{ article }}">
-                                {% for table in all_tables %}
-                                <option value="{{ table }}">{{ table }}</option>
-                                {% endfor %}
-                            </select>
-                        </td>
-                    </tr>
-                    {% endfor %}
+					{% for article, quantity, tables in items_without_table %}
+					<tr>
+						<td>{{ article }}</td>
+						<td>{{ quantity }}</td>
+						<td>
+							<select name="table_{{ article }}" required>
+								{% for table in tables %}
+								<option value="{{ table }}">{{ table }}</option>
+								{% endfor %}
+							</select>
+						</td>
+					</tr>
+					{% endfor %}
+
                 </tbody>
             </table>
             <button type="submit">Submit</button>

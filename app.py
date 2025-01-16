@@ -1862,10 +1862,6 @@ def intermediate_results(token):
 
 
 
-
-
-
-
 @app.route('/<token>/admin/utilities')
 @requires_token_and_role('admin')
 def utilities(token):

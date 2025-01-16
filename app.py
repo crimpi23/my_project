@@ -911,31 +911,36 @@ def update_cart(token):
 @requires_token_and_role('user')
 def clear_cart(token):
     try:
+        # Отримання user_id з сесії
         user_id = session.get('user_id')
+        logging.debug(f"Clear Cart: Retrieved user_id={user_id} from session.")
 
         if not user_id:
             flash("User is not authenticated.", "error")
             return redirect(url_for('index'))
 
+        # Встановлення з'єднання з базою
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Видалення всіх елементів кошика для поточного користувача
+        # Видалення всіх елементів з кошика користувача
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
+        rows_deleted = cursor.rowcount  # Перевірка кількості видалених рядків
         conn.commit()
 
-        logging.info(f"Cart cleared for user_id={user_id}.")
+        logging.info(f"Cart cleared for user_id={user_id}. Rows deleted: {rows_deleted}")
         flash("Cart cleared successfully.", "success")
     except Exception as e:
         logging.error(f"Error clearing cart for user_id={user_id}: {e}", exc_info=True)
         flash("Error clearing cart.", "error")
     finally:
-        if cursor:
+        if 'cursor' in locals():
             cursor.close()
-        if conn:
+        if 'conn' in locals():
             conn.close()
 
     return redirect(url_for('cart', token=token))  # Перенаправлення на сторінку кошика
+
 
 
 

@@ -4,78 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Intermediate Results</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 900px;
-            margin: 30px auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        h1, h2 {
-            text-align: center;
-            color: #333;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        table th, table td {
-            padding: 10px;
-            text-align: left;
-            border: 1px solid #ddd;
-        }
-        table th {
-            background-color: #f4f4f4;
-            font-weight: bold;
-        }
-        select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .btn {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn:hover {
-            background-color: #0056b3;
-        }
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-        ul li {
-            background: #f4f4f4;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 5px;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>Intermediate Results</h1>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">MySite</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/cart">Cart</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/orders">Orders</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-        <!-- Articles without tables -->
+    <!-- Main Content -->
+    <main class="container mt-5">
+        <h1 class="text-center mb-4">Intermediate Results</h1>
+
         <section>
             <h2>Articles Without Table</h2>
-            <form method="POST">
-                <table>
-                    <thead>
+            <form method="POST" action="/{{ session['token'] }}/intermediate_results">
+                <table class="table table-bordered">
+                    <thead class="table-light">
                         <tr>
                             <th>Article</th>
                             <th>Quantity</th>
@@ -88,7 +45,7 @@
                             <td>{{ article }}</td>
                             <td>{{ quantity }}</td>
                             <td>
-                                <select name="table_{{ article }}" required>
+                                <select name="table_{{ article }}" class="form-select" required>
                                     {% for table in tables %}
                                     <option value="{{ table }}">{{ table }}</option>
                                     {% endfor %}
@@ -98,19 +55,22 @@
                         {% endfor %}
                     </tbody>
                 </table>
-                <button type="submit" class="btn">Submit</button>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
             </form>
         </section>
 
-        <!-- Missing articles -->
-        <section>
+        <section class="mt-5">
             <h2>Missing Articles</h2>
-            <ul>
+            <ul class="list-group">
                 {% for article in missing_articles %}
-                <li>{{ article }}</li>
+                <li class="list-group-item">{{ article }}</li>
                 {% endfor %}
             </ul>
         </section>
-    </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

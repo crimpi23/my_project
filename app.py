@@ -799,6 +799,7 @@ def add_to_cart(token):
 
 # Видалення товару з кошика
 @app.route('/<token>/remove_from_cart', methods=['POST'])
+@requires_token_and_role('user')
 def remove_from_cart(token):
     conn = None
     cursor = None

@@ -1636,6 +1636,8 @@ def upload_file(token):
     Завантажує файл із товарами, обробляє його та виконує точний збіг для артикула:
     - Перевіряє значення в третій колонці на відповідність списку таблиць.
     - Якщо таблиця некоректна, артикул додається до списку "незнайдених".
+    - Некоректні рядки та артикули з невідомими таблицями логуються.
+    - Формується деталізоване повідомлення для користувача.
     """
     logging.debug(f"Upload File Called with token: {token}")
     try:
@@ -1692,9 +1694,9 @@ def upload_file(token):
 
             for index, row in df.iterrows():
                 try:
-                    # Пропуск рядків, які не мають числових значень у другому стовпці
-                    if not str(row[1]).isdigit():
-                        logging.warning(f"Skipped header or invalid row at index {index}: {row.tolist()}")
+                    # Пропуск некоректних рядків
+                    if len(row) < 2 or not str(row[1]).isdigit():
+                        logging.warning(f"Skipped invalid row at index {index}: {row.tolist()}")
                         continue
 
                     article = str(row[0]).strip()
@@ -1761,11 +1763,13 @@ def upload_file(token):
         session['items_without_table'] = items_without_table
         session['missing_articles'] = missing_articles
 
+        # Формування повідомлення для користувача
         if items_without_table:
+            flash(f"{len(items_without_table)} articles need table selection.", "warning")
             logging.info(f"Redirecting to intermediate_results. Items without table: {len(items_without_table)}")
             return redirect(url_for('intermediate_results', token=token))
 
-        flash("File processed successfully and items added to your cart.", "success")
+        flash(f"File processed successfully. {len(items_with_table)} items added to cart. {len(missing_articles)} missing articles.", "success")
         logging.info(f"File processed successfully for user_id={user_id}.")
         return redirect(url_for('cart', token=token))
 
@@ -1773,6 +1777,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 # проміжкова функція, для визначення таблиць при імпорті excel

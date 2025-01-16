@@ -1820,20 +1820,24 @@ def intermediate_results(token):
                             """, (user_id, product_id, quantity))
                             added_to_cart.append(article)
                             logging.info(f"Added article {article} to cart from table {selected_table}.")
+                        else:
+                            logging.warning(f"Article {article} not found in the selected table {selected_table}. Skipping.")
+                    else:
+                        logging.warning(f"Invalid or missing table for article {article}. Skipping.")
 
                 conn.commit()
+                logging.info("Database operations committed successfully.")
 
             # Видалення оброблених артикулів із списку
             items_without_table = [item for item in items_without_table if item[0] not in added_to_cart]
+            logging.debug(f"Updated items_without_table: {items_without_table}")
             session['items_without_table'] = items_without_table
 
             if items_without_table:
                 flash("Some articles still need a table. Please review.", "warning")
-                logging.debug(f"Remaining articles without table: {items_without_table}")
                 return redirect(url_for('intermediate_results', token=token))
 
             flash("All selected articles have been added to your cart.", "success")
-            logging.info("All articles successfully processed and added to cart.")
             return redirect(url_for('cart', token=token))
 
         # GET запит: повертає сторінку з проміжними результатами

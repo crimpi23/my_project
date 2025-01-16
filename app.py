@@ -1840,7 +1840,7 @@ def intermediate_results(token):
 
         # GET запит: повертає сторінку з проміжними результатами
         items_without_table = session.get('items_without_table', [])
-        return render_template('intermediate_results.html', token=token, items_without_table=items_without_table)
+        return render_template('intermediate.html', token=token, items_without_table=items_without_table)
 
     except Exception as e:
         logging.error(f"Error in intermediate_results: {e}", exc_info=True)

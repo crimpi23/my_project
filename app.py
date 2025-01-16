@@ -546,15 +546,14 @@ def search_results(token):
         flash("You need to log in to view search results.", "error")
         return redirect(url_for('index'))
 
-    # Отримання націнки для користувача
-    user_markup = get_markup_percentage(user_id)
+    user_markup = Decimal(get_markup_percentage(user_id))
     logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
 
     results = get_selection_buffer(user_id)
     grouped_results = {}
     for row in results:
-        base_price = row['price']
-        final_price = calculate_price(base_price, user_markup)  # Розрахунок фінальної ціни
+        base_price = Decimal(row['price'])
+        final_price = round(base_price * (Decimal(1) + user_markup / Decimal(100)), 2)
         grouped_results.setdefault(row['article'], []).append({
             'price': final_price,
             'table_name': row['table_name'],
@@ -562,6 +561,7 @@ def search_results(token):
         })
 
     return render_template('search_results.html', grouped_results=grouped_results, token=token)
+
 
 
 
@@ -707,9 +707,7 @@ def cart(token):
             flash("You need to log in to view your cart.", "error")
             return redirect(url_for('index'))
 
-        # Отримання націнки для користувача
-        user_markup = get_markup_percentage(user_id)
-        logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
+        user_markup = Decimal(get_markup_percentage(user_id))  # Отримання націнки
 
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -718,8 +716,9 @@ def cart(token):
             SELECT 
                 c.product_id, 
                 p.article, 
-                p.price AS base_price, 
+                p.price, 
                 c.quantity, 
+                (p.price * c.quantity) AS total_price, 
                 c.added_at
             FROM cart c
             JOIN products p ON c.product_id = p.id
@@ -727,15 +726,14 @@ def cart(token):
             ORDER BY c.added_at
         """, (user_id,))
         cart_items = cursor.fetchall()
+        cart_items = [dict(row) for row in cart_items]  # Конвертуємо DictRow у словники
 
-        # Розрахунок `final_price` та `total_final_price`
-        from decimal import Decimal
-        markup_decimal = Decimal(user_markup) / Decimal(100)
+        # Додавання final_price
         for item in cart_items:
-            item['final_price'] = round(item['base_price'] * (Decimal(1) + markup_decimal), 2)
+            markup_decimal = user_markup / Decimal(100)
+            item['final_price'] = round(item['price'] * (Decimal(1) + markup_decimal), 2)
             item['total_final_price'] = round(item['final_price'] * item['quantity'], 2)
 
-        # Розрахунок загальної суми
         total_price = sum(item['total_final_price'] for item in cart_items)
 
         return render_template('cart.html', cart_items=cart_items, total_price=total_price)
@@ -750,6 +748,7 @@ def cart(token):
         if conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 
@@ -1685,13 +1684,6 @@ def compare_prices(token):
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
-    """
-    Завантажує файл із товарами, обробляє його та виконує точний збіг для артикула:
-    - Перевіряє значення в третій колонці на відповідність списку таблиць.
-    - Якщо таблиця некоректна, артикул додається до списку "незнайдених".
-    - Некоректні рядки та артикули з невідомими таблицями логуються.
-    - Формується деталізоване повідомлення для користувача.
-    """
     logging.debug(f"Upload File Called with token: {token}")
     try:
         # Отримання ID користувача
@@ -1703,8 +1695,8 @@ def upload_file(token):
 
         logging.info(f"User ID: {user_id} started file upload.")
 
-        # Отримання націнки для користувача
-        user_markup = get_markup_percentage(user_id)
+        # Отримання націнки для користувача (Decimal)
+        user_markup = Decimal(get_markup_percentage(user_id))
         logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
 
         # Перевірка наявності файлу
@@ -1716,7 +1708,6 @@ def upload_file(token):
         file = request.files['file']
         logging.info(f"Uploaded file: {file.filename}")
 
-        # Перевірка формату файлу
         if not file.filename.endswith('.xlsx'):
             logging.error("Invalid file format. Only .xlsx files are allowed.")
             flash("Invalid file format. Please upload an Excel file.", "error")
@@ -1724,34 +1715,31 @@ def upload_file(token):
 
         # Завантаження даних з файлу
         try:
-            df = pd.read_excel(file, header=None)  # Завантаження без заголовків
+            df = pd.read_excel(file, header=None)
             logging.info(f"File read successfully. Shape: {df.shape}")
         except Exception as e:
             logging.error(f"Error reading Excel file: {e}", exc_info=True)
             flash("Error reading the file. Please check the format.", "error")
             return redirect(f'/{token}/')
 
-        # Перевірка мінімальної кількості колонок
         if df.shape[1] < 2:
             logging.error("Invalid file structure. Less than two columns found.")
             flash("Invalid file structure. Ensure the file has at least two columns.", "error")
             return redirect(f'/{token}/')
 
-        items_with_table = []      # Артикули з таблицею
-        items_without_table = []   # Артикули без таблиці
-        missing_articles = []      # Відсутні артикули
+        items_with_table = []
+        items_without_table = []
+        missing_articles = []
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            # Отримання всіх таблиць з price_lists
             cursor.execute("SELECT table_name FROM price_lists;")
             all_tables = [row[0] for row in cursor.fetchall()]
             logging.info(f"Fetched tables from price_lists: {all_tables}")
 
             for index, row in df.iterrows():
                 try:
-                    # Пропуск некоректних рядків
                     if len(row) < 2 or not str(row[1]).isdigit():
                         logging.warning(f"Skipped invalid row at index {index}: {row.tolist()}")
                         continue
@@ -1763,26 +1751,23 @@ def upload_file(token):
                     logging.debug(f"Processing article: {article}, quantity: {quantity}, table: {table_name}")
 
                     if table_name:
-                        # Перевірка, чи таблиця існує в списку price_lists
                         if table_name not in all_tables:
                             logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
                             missing_articles.append(article)
                             continue
 
-                        # Перевірка артикула в зазначеній таблиці (точний збіг)
                         cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
                         result = cursor.fetchone()
 
                         if result:
-                            base_price = result[1]
-                            final_price = calculate_price(base_price, user_markup)
+                            base_price = Decimal(result[1])
+                            final_price = round(base_price * (Decimal(1) + user_markup / Decimal(100)), 2)
                             items_with_table.append((article, final_price, table_name, quantity))
                             logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
                         else:
                             missing_articles.append(article)
                             logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                     else:
-                        # Перевірка артикула у всіх таблицях (точний збіг)
                         matching_tables = []
                         for table in all_tables:
                             cursor.execute(f"SELECT article FROM {table} WHERE article = %s", (article,))
@@ -1799,7 +1784,6 @@ def upload_file(token):
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}")
                     continue
 
-            # Додавання до кошика артикулів із таблицею
             for article, price, table_name, quantity in items_with_table:
                 cursor.execute("""
                     INSERT INTO cart (user_id, product_id, quantity, added_at)
@@ -1817,11 +1801,9 @@ def upload_file(token):
             conn.commit()
             logging.info("Database operations committed successfully.")
 
-        # Збереження результатів у сесії для проміжної сторінки
         session['items_without_table'] = items_without_table
         session['missing_articles'] = missing_articles
 
-        # Формування повідомлення для користувача
         if items_without_table:
             flash(f"{len(items_without_table)} articles need table selection.", "warning")
             logging.info(f"Redirecting to intermediate_results. Items without table: {len(items_without_table)}")
@@ -1835,6 +1817,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

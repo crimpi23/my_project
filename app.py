@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, send_file, get_flashed_messages
+from decimal import Decimal
 import time
 import os
 import psycopg2
@@ -105,8 +106,8 @@ def calculate_price(base_price, markup_percentage):
     """
     base_price = float(base_price)  # Перетворення Decimal на float
      # Визначте відсоток націнки для ролі
-    final_price = base_price * (1 + markup_percentage / 100)
-    return round(final_price, 2)
+    markup_decimal = Decimal(user_markup) / Decimal(100)
+    return round(base_price * (Decimal(1) + markup_decimal), 2)
 
 
 def get_markup_by_role(role_name):
@@ -719,18 +720,20 @@ def cart(token):
                 p.article, 
                 p.price AS base_price, 
                 c.quantity, 
-                (p.price * %s) AS final_price_per_unit, 
-                (p.price * %s * c.quantity) AS total_final_price, 
                 c.added_at
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
             ORDER BY c.added_at
-        """, (1 + user_markup / 100, 1 + user_markup / 100, user_id))
+        """, (user_id,))
         cart_items = cursor.fetchall()
 
-        # Логування вмісту кошика
-        logging.debug(f"Cart items for user_id={user_id}: {cart_items}")
+        # Розрахунок `final_price` та `total_final_price`
+        from decimal import Decimal
+        markup_decimal = Decimal(user_markup) / Decimal(100)
+        for item in cart_items:
+            item['final_price'] = round(item['base_price'] * (Decimal(1) + markup_decimal), 2)
+            item['total_final_price'] = round(item['final_price'] * item['quantity'], 2)
 
         # Розрахунок загальної суми
         total_price = sum(item['total_final_price'] for item in cart_items)

@@ -1796,50 +1796,60 @@ def intermediate_results(token):
             return redirect(f'/{token}/')
 
         if request.method == 'POST':
-            # Отримання вибору користувача
-            user_selections = {key.split('_')[1]: value for key, value in request.form.items() if key.startswith('table_')}
-            logging.debug(f"User selections: {user_selections}")
+            try:
+                # Отримання вибору користувача
+                user_selections = {key.split('_')[1]: value for key, value in request.form.items() if key.startswith('table_')}
+                logging.debug(f"User selections: {user_selections}")
 
-            items_without_table = session.get('items_without_table', [])
-            added_to_cart = []
+                items_without_table = session.get('items_without_table', [])
+                added_to_cart = []
 
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
+                with get_db_connection() as conn:
+                    cursor = conn.cursor()
 
-                for article, quantity, valid_tables in items_without_table:
-                    selected_table = user_selections.get(article)
-                    if selected_table and selected_table in valid_tables:
-                        # Перевірка, чи стаття існує в обраній таблиці
-                        cursor.execute("SELECT id, price FROM products WHERE article = %s AND table_name = %s", (article, selected_table))
-                        product = cursor.fetchone()
+                    for article, quantity, valid_tables in items_without_table:
+                        selected_table = user_selections.get(article)
+                        if selected_table and selected_table in valid_tables:
+                            # Перевірка, чи стаття існує в обраній таблиці
+                            cursor.execute("SELECT id, price FROM products WHERE article = %s AND table_name = %s", (article, selected_table))
+                            product = cursor.fetchone()
 
-                        if product:
-                            product_id, price = product
-                            # Додавання до кошика
-                            cursor.execute("""
-                                INSERT INTO cart (user_id, product_id, quantity, added_at)
-                                VALUES (%s, %s, %s, NOW())
-                                ON CONFLICT (user_id, product_id) DO UPDATE SET
-                                quantity = cart.quantity + EXCLUDED.quantity
-                            """, (user_id, product_id, quantity))
-                            added_to_cart.append(article)
-                            logging.info(f"Added article {article} to cart from table {selected_table}.")
+                            if product:
+                                product_id, price = product
+                                # Додавання до кошика
+                                cursor.execute("""
+                                    INSERT INTO cart (user_id, product_id, quantity, added_at)
+                                    VALUES (%s, %s, %s, NOW())
+                                    ON CONFLICT (user_id, product_id) DO UPDATE SET
+                                    quantity = cart.quantity + EXCLUDED.quantity
+                                """, (user_id, product_id, quantity))
+                                added_to_cart.append(article)
+                                logging.info(f"Added article {article} to cart from table {selected_table}.")
 
-                conn.commit()
+                    conn.commit()
+                    logging.info("Database operations committed successfully.")
 
-            # Оновлення сесії та результатів
-            items_without_table = [item for item in items_without_table if item[0] not in added_to_cart]
-            session['items_without_table'] = items_without_table
+                # Оновлення сесії та результатів
+                items_without_table = [item for item in items_without_table if item[0] not in added_to_cart]
+                session['items_without_table'] = items_without_table
 
-            if items_without_table:
-                flash("Some articles still need a table. Please review.", "warning")
+                if items_without_table:
+                    logging.info("Some articles still need a table. Returning to intermediate results.")
+                    flash("Some articles still need a table. Please review.", "warning")
+                    return redirect(url_for('intermediate_results', token=token))
+
+                logging.info("All selected articles have been added to the cart.")
+                flash("All selected articles have been added to your cart.", "success")
+                return redirect(url_for('cart', token=token))
+
+            except Exception as e:
+                logging.error(f"Error in intermediate_results POST handling: {e}", exc_info=True)
+                flash("An error occurred while processing your selection. Please try again.", "error")
                 return redirect(url_for('intermediate_results', token=token))
-
-            flash("All selected articles have been added to your cart.", "success")
-            return redirect(url_for('cart', token=token))
 
         # GET запит: повертає сторінку з проміжними результатами
         items_without_table = session.get('items_without_table', [])
+        logging.debug(f"Rendering intermediate results page. Items without table: {len(items_without_table)}")
         return render_template('intermediate.html', token=token, items_without_table=items_without_table)
 
     except Exception as e:

@@ -7,14 +7,14 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #ffffff;
+            background-color: #f5f5f5;
             margin: 0;
             padding: 0;
         }
         header {
-            background-color: #f9f9f9;
+            background-color: #007bff;
             padding: 15px;
-            border-bottom: 1px solid #ddd;
+            color: white;
         }
         nav ul {
             list-style-type: none;
@@ -23,24 +23,21 @@
             display: flex;
             gap: 15px;
         }
-        nav ul li {
-            display: inline;
-        }
         nav ul li a {
             text-decoration: none;
-            color: #007bff;
+            color: white;
             font-weight: bold;
         }
         nav ul li a:hover {
             text-decoration: underline;
         }
         .container {
-            max-width: 900px;
-            margin: 20px auto;
+            max-width: 800px;
+            margin: 30px auto;
             padding: 20px;
-            border: 1px solid #ddd;
+            background: white;
             border-radius: 8px;
-            background-color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         h1, h2 {
             text-align: center;
@@ -60,22 +57,24 @@
         .btn-primary:hover {
             background-color: #0056b3;
         }
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        .form-textarea {
+        textarea, input[type="file"] {
             width: 100%;
             padding: 10px;
+            margin-bottom: 15px;
             border: 1px solid #ddd;
             border-radius: 5px;
         }
-        .upload-form {
+        .flash-messages {
             margin-top: 20px;
+            padding: 15px;
+            background-color: #ffefc5;
+            border: 1px solid #ffeeba;
+            border-radius: 5px;
         }
-        .upload-form input[type="file"] {
-            margin-bottom: 10px;
+        .flash-messages ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
     </style>
 </head>
@@ -84,53 +83,47 @@
     <header>
         <nav>
             <ul>
-                <li><a href="/{{ session['token'] }}/" class="nav-link">Home</a></li>
-                {% if session.get('token') %}
-                <li><a href="/{{ session['token'] }}/cart" class="nav-link">Cart</a></li>
-                <li><a href="/{{ session['token'] }}/orders" class="nav-link">Orders</a></li>
-                {% endif %}
+                <li><a href="/{{ session['token'] }}/">Home</a></li>
+                <li><a href="/{{ session['token'] }}/cart">Cart</a></li>
+                <li><a href="/{{ session['token'] }}/orders">Orders</a></li>
             </ul>
         </nav>
     </header>
 
     <main class="container">
-        <section class="intro">
+        <section>
             <h1>Article Price Search</h1>
-            {% if session.get('token') %}
-            <p>Welcome to the advanced search system! Use the tools below:</p>
-            {% endif %}
+            <p>Welcome to the advanced search system! Use the tools below to upload or search for articles.</p>
         </section>
 
         <!-- File Upload Section -->
-        <section class="upload-form">
+        <section>
             <h2>Upload Articles File</h2>
             <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data">
-                <label for="file" class="form-label">Select a file to upload:</label>
-                <input type="file" id="file" name="file" accept=".xlsx" required>
+                <input type="file" name="file" accept=".xlsx" required>
                 <button type="submit" class="btn btn-primary">Upload and Search</button>
             </form>
         </section>
 
         <!-- Search Form -->
-        <section class="search-form-section">
+        <section>
             <h2>Search Articles</h2>
-            <form method="POST" action="/{{ session['token'] }}/search#results" class="search-form">
-                <label for="articles" class="form-label">Enter Articles and Quantities:</label>
-                <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required class="form-textarea"></textarea>
+            <form method="POST" action="/{{ session['token'] }}/search#results">
+                <textarea name="articles" rows="6" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required></textarea>
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
         </section>
 
-        <!-- Flash Messages Section -->
+        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <section class="flash-messages">
+        <div class="flash-messages">
             <ul>
                 {% for category, message in messages %}
                 <li class="{{ category }}">{{ message }}</li>
                 {% endfor %}
             </ul>
-        </section>
+        </div>
         {% endif %}
         {% endwith %}
     </main>

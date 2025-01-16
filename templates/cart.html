@@ -17,7 +17,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/cart">Cart</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/">Search</a></li>
                     <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/orders">Orders</a></li>
                 </ul>
             </div>
@@ -27,6 +27,16 @@
     <!-- Main Content -->
     <main class="container mt-5">
         <h1 class="text-center mb-4">Shopping Cart</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-info">
+                    {% for category, message in messages %}
+                        <div>{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
 
         {% if cart_items %}
         <table class="table table-bordered">
@@ -43,15 +53,15 @@
                 {% for item in cart_items %}
                 <tr>
                     <td>{{ item.article }}</td>
-                    <td>{{ item.price }}</td>
+                    <td>${{ item.price }}</td>
                     <td>
-                        <form method="POST" action="/{{ session['token'] }}/update_cart">
+                        <form method="POST" action="/{{ session['token'] }}/update_cart" class="d-flex">
                             <input type="hidden" name="product_id" value="{{ item.product_id }}">
-                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control w-50 d-inline-block">
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control w-50 me-2" style="max-width: 80px;">
                             <button type="submit" class="btn btn-primary btn-sm">Update</button>
                         </form>
                     </td>
-                    <td>{{ item.price * item.quantity }}</td>
+                    <td>${{ item.price * item.quantity }}</td>
                     <td>
                         <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
                             <input type="hidden" name="article" value="{{ item.article }}">
@@ -72,7 +82,7 @@
             </form>
         </div>
         {% else %}
-        <p class="text-center">Your cart is empty. <a href="/{{ session['token'] }}/">Search for products</a> to add them to your cart.</p>
+        <div class="alert alert-warning text-center">Your cart is empty. <a href="/{{ session['token'] }}/">Search for products</a> to add them to your cart.</div>
         {% endif %}
     </main>
 

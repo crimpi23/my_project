@@ -17,8 +17,10 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/">Home</a></li>
+                    {% if session.get('token') %}
                     <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/cart">Cart</a></li>
                     <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/orders">Orders</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -26,33 +28,39 @@
 
     <!-- Main Content -->
     <main class="container mt-5">
-        <div class="jumbotron text-center bg-primary text-white p-5 rounded">
-            <h1>Welcome to Article Price Search</h1>
-            <p class="lead">Find and manage your articles easily.</p>
-            <a href="/{{ session['token'] }}/search" class="btn btn-light btn-lg">Start Searching</a>
+        <h1 class="text-center mb-4">Article Price Search</h1>
+
+        {% if session.get('token') %}
+        <p class="text-center">Welcome to the advanced search system! Use the tools below:</p>
+        {% endif %}
+
+        <!-- File Upload Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title">Upload Articles File</h2>
+                <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select a file to upload:</label>
+                        <input type="file" id="file" name="file" accept=".xlsx" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Upload and Search</button>
+                </form>
+            </div>
         </div>
 
-        <section class="mt-5">
-            <h2>Upload Articles File</h2>
-            <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data" class="mb-4">
-                <div class="mb-3">
-                    <label for="file" class="form-label">Select a file:</label>
-                    <input type="file" id="file" name="file" class="form-control" accept=".xlsx" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Upload and Search</button>
-            </form>
-        </section>
-
-        <section>
-            <h2>Search Articles</h2>
-            <form method="POST" action="/{{ session['token'] }}/search#results">
-                <div class="mb-3">
-                    <label for="articles" class="form-label">Enter Articles and Quantities:</label>
-                    <textarea id="articles" name="articles" rows="6" class="form-control" placeholder="Example: 0XW105101\n03H133201N 2" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">Search</button>
-            </form>
-        </section>
+        <!-- Search Form -->
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">Search Articles</h2>
+                <form method="POST" action="/{{ session['token'] }}/search#results">
+                    <div class="mb-3">
+                        <label for="articles" class="form-label">Enter Articles and Quantities:</label>
+                        <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" class="form-control" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </form>
+            </div>
+        </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

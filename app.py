@@ -1783,7 +1783,7 @@ def upload_file(token):
 def intermediate_results(token):
     """
     Обробляє статті без таблиці, надає можливість вибрати таблиці,
-    а потім додає вибрані статті до кошика.
+    а потім додає вибрані статті до таблиці `products` і кошика.
     """
     try:
         user_id = session.get('user_id')
@@ -1806,11 +1806,28 @@ def intermediate_results(token):
                     selected_table = user_selections.get(article)
                     if selected_table and selected_table in valid_tables:
                         # Перевірка, чи стаття існує в обраній таблиці
-                        cursor.execute("SELECT id, price FROM products WHERE article = %s AND table_name = %s", (article, selected_table))
-                        product = cursor.fetchone()
+                        cursor.execute("SELECT price FROM {} WHERE article = %s".format(selected_table), (article,))
+                        result = cursor.fetchone()
 
-                        if product:
-                            product_id, price = product
+                        if result:
+                            price = result[0]
+
+                            # Перевірка, чи є запис у `products`
+                            cursor.execute("SELECT id FROM products WHERE article = %s AND table_name = %s", (article, selected_table))
+                            product = cursor.fetchone()
+
+                            if not product:
+                                # Додавання запису до `products`
+                                cursor.execute("""
+                                    INSERT INTO products (article, price, table_name, created_at)
+                                    VALUES (%s, %s, %s, NOW())
+                                    RETURNING id
+                                """, (article, price, selected_table))
+                                product_id = cursor.fetchone()[0]
+                                logging.info(f"Added article {article} to products with price {price} in table {selected_table}.")
+                            else:
+                                product_id = product[0]
+
                             # Додавання до кошика
                             cursor.execute("""
                                 INSERT INTO cart (user_id, product_id, quantity, added_at)
@@ -1820,17 +1837,12 @@ def intermediate_results(token):
                             """, (user_id, product_id, quantity))
                             added_to_cart.append(article)
                             logging.info(f"Added article {article} to cart from table {selected_table}.")
-                        else:
-                            logging.warning(f"Article {article} not found in the selected table {selected_table}. Skipping.")
-                    else:
-                        logging.warning(f"Invalid or missing table for article {article}. Skipping.")
 
                 conn.commit()
                 logging.info("Database operations committed successfully.")
 
-            # Видалення оброблених артикулів із списку
+            # Оновлення сесії та результатів
             items_without_table = [item for item in items_without_table if item[0] not in added_to_cart]
-            logging.debug(f"Updated items_without_table: {items_without_table}")
             session['items_without_table'] = items_without_table
 
             if items_without_table:
@@ -1842,13 +1854,13 @@ def intermediate_results(token):
 
         # GET запит: повертає сторінку з проміжними результатами
         items_without_table = session.get('items_without_table', [])
-        logging.debug(f"Rendering intermediate results page. Items without table: {len(items_without_table)}")
         return render_template('intermediate.html', token=token, items_without_table=items_without_table)
 
     except Exception as e:
         logging.error(f"Error in intermediate_results: {e}", exc_info=True)
         flash("An error occurred while processing your selection. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

@@ -101,13 +101,10 @@ def get_selection_buffer(user_id):
 
 # функція націнки для користувачів
 def calculate_price(base_price, markup_percentage):
-    """
-    Розраховує фінальну ціну з націнкою.
-    """
-    base_price = float(base_price)  # Перетворення Decimal на float
-     # Визначте відсоток націнки для ролі
-    markup_decimal = Decimal(user_markup) / Decimal(100)
-    return round(base_price * (Decimal(1) + markup_decimal), 2)
+    # Розрахунок кінцевої ціни з урахуванням націнки
+    markup_multiplier = Decimal(1) + (Decimal(markup_percentage) / Decimal(100))
+    return round(base_price * markup_multiplier, 2)
+
 
 
 def get_markup_by_role(role_name):

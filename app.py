@@ -98,16 +98,16 @@ def get_selection_buffer(user_id):
             """, (user_id,))
             return cursor.fetchall()
 
-
-def calculate_price(base_price, user_role):
+# функція націнки для користувачів
+def calculate_price(base_price, markup_percentage):
     """
-    Обчислення ціни з націнкою залежно від ролі користувача.
+    Розраховує фінальну ціну з націнкою.
     """
-    # Визначте відсоток націнки для ролі
-    markup_percentage = get_markup_by_role(user_role)
-    # Обчисліть кінцеву ціну
+    base_price = float(base_price)  # Перетворення Decimal на float
+     # Визначте відсоток націнки для ролі
     final_price = base_price * (1 + markup_percentage / 100)
     return round(final_price, 2)
+
 
 def get_markup_by_role(role_name):
     """

@@ -4,128 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Article Price Search</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #007bff;
-            padding: 15px;
-            color: white;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            gap: 15px;
-        }
-        nav ul li a {
-            text-decoration: none;
-            color: white;
-            font-weight: bold;
-        }
-        nav ul li a:hover {
-            text-decoration: underline;
-        }
-        .container {
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        h1, h2 {
-            text-align: center;
-            color: #333;
-        }
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-        textarea, input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .flash-messages {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #ffefc5;
-            border: 1px solid #ffeeba;
-            border-radius: 5px;
-        }
-        .flash-messages ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <!-- Header -->
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/{{ session['token'] }}/">Home</a></li>
-                <li><a href="/{{ session['token'] }}/cart">Cart</a></li>
-                <li><a href="/{{ session['token'] }}/orders">Orders</a></li>
-            </ul>
-        </nav>
-    </header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">MySite</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/cart">Cart</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/orders">Orders</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-    <main class="container">
-        <section>
-            <h1>Article Price Search</h1>
-            <p>Welcome to the advanced search system! Use the tools below to upload or search for articles.</p>
-        </section>
+    <!-- Main Content -->
+    <main class="container mt-5">
+        <div class="jumbotron text-center bg-primary text-white p-5 rounded">
+            <h1>Welcome to Article Price Search</h1>
+            <p class="lead">Find and manage your articles easily.</p>
+            <a href="/{{ session['token'] }}/search" class="btn btn-light btn-lg">Start Searching</a>
+        </div>
 
-        <!-- File Upload Section -->
-        <section>
+        <section class="mt-5">
             <h2>Upload Articles File</h2>
-            <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data">
-                <input type="file" name="file" accept=".xlsx" required>
+            <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data" class="mb-4">
+                <div class="mb-3">
+                    <label for="file" class="form-label">Select a file:</label>
+                    <input type="file" id="file" name="file" class="form-control" accept=".xlsx" required>
+                </div>
                 <button type="submit" class="btn btn-primary">Upload and Search</button>
             </form>
         </section>
 
-        <!-- Search Form -->
         <section>
             <h2>Search Articles</h2>
             <form method="POST" action="/{{ session['token'] }}/search#results">
-                <textarea name="articles" rows="6" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" required></textarea>
+                <div class="mb-3">
+                    <label for="articles" class="form-label">Enter Articles and Quantities:</label>
+                    <textarea id="articles" name="articles" rows="6" class="form-control" placeholder="Example: 0XW105101\n03H133201N 2" required></textarea>
+                </div>
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
         </section>
-
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div class="flash-messages">
-            <ul>
-                {% for category, message in messages %}
-                <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-        {% endwith %}
     </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

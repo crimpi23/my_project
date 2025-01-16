@@ -99,6 +99,58 @@ def get_selection_buffer(user_id):
             return cursor.fetchall()
 
 
+def calculate_price(base_price, user_role):
+    """
+    Обчислення ціни з націнкою залежно від ролі користувача.
+    """
+    # Визначте відсоток націнки для ролі
+    markup_percentage = get_markup_by_role(user_role)
+    # Обчисліть кінцеву ціну
+    final_price = base_price * (1 + markup_percentage / 100)
+    return round(final_price, 2)
+
+def get_markup_by_role(role_name):
+    """
+    Отримання націнки за роллю.
+    """
+    # Приклад: націнки для ролей
+    role_markup_mapping = {
+        "admin_user": 0,   # без націнки
+        "manager_user": 35,
+        "user_29": 29,
+        "user_25": 25,
+    }
+    return role_markup_mapping.get(role_name, 35)  # стандартна націнка 35%
+
+
+# Функція для перевірки токена
+def validate_token(token):
+    logging.debug(f"Validating token: {token}")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT u.id AS user_id, r.name AS role
+            FROM tokens t
+            JOIN users u ON t.user_id = u.id
+            JOIN user_roles ur ON ur.user_id = u.id
+            JOIN roles r ON ur.role_id = r.id
+            WHERE t.token = %s
+        """, (token,))
+        result = cursor.fetchone()
+
+        if result:
+            session['user_id'] = result['user_id']  # Збереження user_id в сесію
+            logging.debug(f"User ID stored in session: {result['user_id']}")  # Логування
+
+        conn.close()
+        return result if result else None
+    except Exception as e:
+        logging.error(f"Error validating token: {e}")
+        return None
+
+
+
 # Головна сторінка за токеном
 @app.route('/<token>/')
 def token_index(token):
@@ -285,32 +337,6 @@ def admin_dashboard(token):
 
 
 
-
-# Функція для перевірки токена
-def validate_token(token):
-    logging.debug(f"Validating token: {token}")
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT u.id AS user_id, r.name AS role
-            FROM tokens t
-            JOIN users u ON t.user_id = u.id
-            JOIN user_roles ur ON ur.user_id = u.id
-            JOIN roles r ON ur.role_id = r.id
-            WHERE t.token = %s
-        """, (token,))
-        result = cursor.fetchone()
-
-        if result:
-            session['user_id'] = result['user_id']  # Збереження user_id в сесію
-            logging.debug(f"User ID stored in session: {result['user_id']}")  # Логування
-
-        conn.close()
-        return result if result else None
-    except Exception as e:
-        logging.error(f"Error validating token: {e}")
-        return None
 
 
 
@@ -519,11 +545,17 @@ def search_results(token):
         flash("You need to log in to view search results.", "error")
         return redirect(url_for('index'))
 
+    # Отримання націнки для користувача
+    user_markup = get_markup_percentage(user_id)
+    logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
+
     results = get_selection_buffer(user_id)
     grouped_results = {}
     for row in results:
+        base_price = row['price']
+        final_price = calculate_price(base_price, user_markup)  # Розрахунок фінальної ціни
         grouped_results.setdefault(row['article'], []).append({
-            'price': row['price'],
+            'price': final_price,
             'table_name': row['table_name'],
             'quantity': row['quantity'],
         })
@@ -552,6 +584,7 @@ def search_articles(token):
             flash("Please enter at least one article.", "error")
             return redirect(url_for('index'))
 
+        # Обробка введених артикулів
         for line in articles_input.splitlines():
             parts = line.strip().split()
             if not parts:
@@ -579,6 +612,11 @@ def search_articles(token):
         cursor = conn.cursor()
         logging.info("Database connection established.")
 
+        # Отримання націнки для користувача
+        user_markup = get_markup_percentage(session['user_id'])
+        logging.debug(f"Markup percentage for user_id={session['user_id']}: {user_markup}%")
+
+        # Отримання таблиць із прайсами
         cursor.execute("SELECT table_name FROM price_lists")
         tables = cursor.fetchall()
         logging.debug(f"Fetched price list tables: {tables}")
@@ -600,8 +638,10 @@ def search_articles(token):
         grouped_results = {}
         for result in results:
             article = result['article']
+            base_price = result['price']
+            final_price = calculate_price(base_price, user_markup)  # Розрахунок ціни з націнкою
             grouped_results.setdefault(article, []).append({
-                'price': result['price'],
+                'price': final_price,
                 'table_name': result['table_name'],
                 'quantity': quantities.get(article, 1)
             })
@@ -638,6 +678,7 @@ def search_articles(token):
 
 
 
+
 # очищення результату пошуку
 @app.route('/<token>/clear_search', methods=['POST'])
 @requires_token_and_role('user')
@@ -656,8 +697,6 @@ def clear_search(token):
     return redirect(url_for('token_index', token=token))
 
 
-
-# Сторінка кошика
 @app.route('/<token>/cart', methods=['GET', 'POST'])
 @requires_token_and_role('user')
 def cart(token):
@@ -667,6 +706,10 @@ def cart(token):
             flash("You need to log in to view your cart.", "error")
             return redirect(url_for('index'))
 
+        # Отримання націнки для користувача
+        user_markup = get_markup_percentage(user_id)
+        logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
+
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
@@ -674,22 +717,23 @@ def cart(token):
             SELECT 
                 c.product_id, 
                 p.article, 
-                p.price, 
+                p.price AS base_price, 
                 c.quantity, 
-                (p.price * c.quantity) AS total_price, 
+                (p.price * %s) AS final_price_per_unit, 
+                (p.price * %s * c.quantity) AS total_final_price, 
                 c.added_at
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
             ORDER BY c.added_at
-        """, (user_id,))
+        """, (1 + user_markup / 100, 1 + user_markup / 100, user_id))
         cart_items = cursor.fetchall()
 
         # Логування вмісту кошика
         logging.debug(f"Cart items for user_id={user_id}: {cart_items}")
 
         # Розрахунок загальної суми
-        total_price = sum(item['total_price'] for item in cart_items)
+        total_price = sum(item['total_final_price'] for item in cart_items)
 
         return render_template('cart.html', cart_items=cart_items, total_price=total_price)
 
@@ -1656,6 +1700,10 @@ def upload_file(token):
 
         logging.info(f"User ID: {user_id} started file upload.")
 
+        # Отримання націнки для користувача
+        user_markup = get_markup_percentage(user_id)
+        logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
+
         # Перевірка наявності файлу
         if 'file' not in request.files:
             logging.error("No file uploaded.")
@@ -1723,9 +1771,10 @@ def upload_file(token):
                         result = cursor.fetchone()
 
                         if result:
-                            price = result[1]
-                            items_with_table.append((article, price, table_name, quantity))
-                            logging.info(f"Article {article} found in {table_name} with price {price}.")
+                            base_price = result[1]
+                            final_price = calculate_price(base_price, user_markup)
+                            items_with_table.append((article, final_price, table_name, quantity))
+                            logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
                         else:
                             missing_articles.append(article)
                             logging.warning(f"Article {article} not found in {table_name}. Skipping.")
@@ -1786,6 +1835,7 @@ def upload_file(token):
 
 
 
+
 # проміжкова функція, для визначення таблиць при імпорті excel
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
 @requires_token_and_role('user')
@@ -1799,6 +1849,10 @@ def intermediate_results(token):
         if not user_id:
             flash("User not authenticated", "error")
             return redirect(f'/{token}/')
+
+        # Отримання націнки для користувача
+        user_markup = get_markup_percentage(user_id)
+        logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
 
         if request.method == 'POST':
             # Отримання вибору користувача
@@ -1819,7 +1873,8 @@ def intermediate_results(token):
                         result = cursor.fetchone()
 
                         if result:
-                            price = result[0]
+                            base_price = result[0]
+                            final_price = calculate_price(base_price, user_markup)
 
                             # Перевірка, чи є запис у `products`
                             cursor.execute("SELECT id FROM products WHERE article = %s AND table_name = %s", (article, selected_table))
@@ -1831,9 +1886,9 @@ def intermediate_results(token):
                                     INSERT INTO products (article, price, table_name, created_at)
                                     VALUES (%s, %s, %s, NOW())
                                     RETURNING id
-                                """, (article, price, selected_table))
+                                """, (article, base_price, selected_table))
                                 product_id = cursor.fetchone()[0]
-                                logging.info(f"Added article {article} to products with price {price} in table {selected_table}.")
+                                logging.info(f"Added article {article} to products with price {base_price} in table {selected_table}.")
                             else:
                                 product_id = product[0]
 
@@ -1863,6 +1918,15 @@ def intermediate_results(token):
 
         # GET запит: повертає сторінку з проміжними результатами
         items_without_table = session.get('items_without_table', [])
+        # Додайте обчислення фінальної ціни для кожного артикула
+        for item in items_without_table:
+            article, quantity, valid_tables = item
+            for table in valid_tables:
+                cursor.execute("SELECT price FROM {} WHERE article = %s".format(table), (article,))
+                result = cursor.fetchone()
+                if result:
+                    item['final_price'] = calculate_price(result[0], user_markup)
+
         return render_template('intermediate.html', token=token, items_without_table=items_without_table)
 
     except Exception as e:
@@ -1870,6 +1934,25 @@ def intermediate_results(token):
         flash("An error occurred while processing your selection. Please try again.", "error")
         return redirect(f'/{token}/')
 
+
+def get_markup_percentage(user_id):
+    """
+    Отримує відсоток націнки для користувача за його роллю.
+    """
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT r.markup_percentage
+                FROM user_roles ur
+                JOIN roles r ON ur.role_id = r.id
+                WHERE ur.user_id = %s
+            """, (user_id,))
+            result = cursor.fetchone()
+            return result[0] if result else 35  # За замовчуванням 35%
+    except Exception as e:
+        logging.error(f"Error fetching markup percentage for user_id={user_id}: {e}", exc_info=True)
+        return 35  # Повертає стандартну націнку у разі помилки
 
 
 

@@ -28,6 +28,7 @@
     <main class="container mt-5">
         <h1 class="text-center mb-4">Intermediate Results</h1>
 
+        <!-- Articles Without Table Section -->
         <section>
             <h2>Articles Without Table</h2>
             <form method="POST" action="/{{ session['token'] }}/intermediate_results">
@@ -36,16 +37,27 @@
                         <tr>
                             <th>Article</th>
                             <th>Quantity</th>
+                            <th>Possible Tables</th>
+                            <th>Final Price</th>
                             <th>Select Table</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for article, quantity, tables in items_without_table %}
+                        {% for article, quantity, tables, final_price in items_without_table %}
                         <tr>
                             <td>{{ article }}</td>
                             <td>{{ quantity }}</td>
                             <td>
+                                <ul class="list-unstyled">
+                                    {% for table in tables %}
+                                    <li>{{ table }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>{{ final_price or 'N/A' }}</td>
+                            <td>
                                 <select name="table_{{ article }}" class="form-select" required>
+                                    <option value="" disabled selected>Select Table</option>
                                     {% for table in tables %}
                                     <option value="{{ table }}">{{ table }}</option>
                                     {% endfor %}
@@ -61,6 +73,7 @@
             </form>
         </section>
 
+        <!-- Missing Articles Section -->
         <section class="mt-5">
             <h2>Missing Articles</h2>
             <ul class="list-group">

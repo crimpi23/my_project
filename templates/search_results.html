@@ -38,7 +38,8 @@
                     <table class="table table-bordered">
                         <thead class="table-light">
                             <tr>
-                                <th>Price</th>
+                                <th>Base Price</th>
+                                <th>Final Price</th>
                                 <th>Supplier</th>
                                 <th>Select</th>
                             </tr>
@@ -46,7 +47,8 @@
                         <tbody>
                             {% for price_info in prices %}
                             <tr>
-                                <td>{{ price_info.price }}</td>
+                                <td>${{ price_info.base_price }}</td>
+                                <td>${{ price_info.price }}</td>
                                 <td>{{ price_info.table_name }}</td>
                                 <td>
                                     <input type="radio" name="selected_{{ article }}" value="{{ price_info.price }}|{{ price_info.table_name }}">

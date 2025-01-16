@@ -7,49 +7,53 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
+            background-color: #f5f5f5;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
         .results-container {
-            max-width: 800px;
-            margin: 0 auto;
+            max-width: 900px;
+            margin: 30px auto;
             padding: 20px;
-            background: #fff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background: white;
             border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
         }
         .article-group {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             padding: 15px;
             border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #fff;
+            border-radius: 8px;
+            background-color: #f9f9f9;
         }
         .article-header {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             font-size: 18px;
             font-weight: bold;
             color: #333;
         }
-        .price-table {
+        table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 15px;
         }
-        .price-table th, .price-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
+        table th, table td {
+            padding: 10px;
             text-align: center;
+            border: 1px solid #ddd;
         }
-        .price-table th {
+        table th {
             background-color: #f4f4f4;
             font-weight: bold;
         }
-        .price-table tr:nth-child(even) {
+        table tr:nth-child(even) {
             background-color: #f9f9f9;
         }
         .submit-button {
-            margin-top: 20px;
             padding: 10px 20px;
             background-color: #007bff;
             color: white;
@@ -66,43 +70,40 @@
 <body>
     <div class="results-container">
         <h1>Search Results</h1>
-        <!-- Debugging token display -->
-        <p>Token: {{ token }}</p>
-		<form method="POST" action="{{ url_for('submit_selection', token=token) }}">
-			{% for article, prices in grouped_results.items() %}
-				<div class="article-group">
-					<div class="article-header">Article: {{ article }}</div>
-					<table class="price-table">
-						<thead>
-							<tr>
-								<th>Price</th>
-								<th>Supplier</th>
-								<th>Select</th>
-							</tr>
-						</thead>
-						<tbody>
-							{% for price_info in prices %}
-								<tr>
-									<td>{{ price_info.price }}</td>
-									<td>{{ price_info.table_name }}</td>
-									<td>
-										<input type="radio" name="selected_{{ article }}" value="{{ price_info.price }}|{{ price_info.table_name }}">
-									</td>
-								</tr>
-							{% endfor %}
-						</tbody>
-					</table>
-				</div>
-			{% endfor %}
-			
-			<!-- Hidden input fields for quantities -->
-			{% for article, prices in grouped_results.items() %}
-			  <input type="hidden" name="quantity_{{ article }}" value="{{ quantities[article] }}">
-			{% endfor %}
+        <form method="POST" action="{{ url_for('submit_selection', token=token) }}">
+            {% for article, prices in grouped_results.items() %}
+            <div class="article-group">
+                <div class="article-header">Article: {{ article }}</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Price</th>
+                            <th>Supplier</th>
+                            <th>Select</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for price_info in prices %}
+                        <tr>
+                            <td>{{ price_info.price }}</td>
+                            <td>{{ price_info.table_name }}</td>
+                            <td>
+                                <input type="radio" name="selected_{{ article }}" value="{{ price_info.price }}|{{ price_info.table_name }}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
 
-			<button type="submit" class="submit-button">Submit Selection</button>
-		</form>
+            <!-- Hidden input fields for quantities -->
+            {% for article, prices in grouped_results.items() %}
+            <input type="hidden" name="quantity_{{ article }}" value="{{ quantities[article] }}">
+            {% endfor %}
 
+            <button type="submit" class="submit-button">Submit Selection</button>
+        </form>
     </div>
 </body>
 </html>

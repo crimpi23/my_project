@@ -1634,9 +1634,8 @@ def compare_prices(token):
 def upload_file(token):
     """
     Завантажує файл із товарами, обробляє його та виконує точний збіг для артикула:
-    - Артикули з вказаною таблицею додаються до кошика.
-    - Артикули без таблиці отримують список таблиць, де вони присутні (за точним збігом).
-    - Артикули, яких немає в базі, додаються до списку "відсутніх".
+    - Перевіряє значення в третій колонці на відповідність списку таблиць.
+    - Якщо таблиця некоректна, артикул додається до списку "незнайдених".
     """
     logging.debug(f"Upload File Called with token: {token}")
     try:
@@ -1705,12 +1704,18 @@ def upload_file(token):
                     logging.debug(f"Processing article: {article}, quantity: {quantity}, table: {table_name}")
 
                     if table_name:
+                        # Перевірка, чи таблиця існує в списку price_lists
+                        if table_name not in all_tables:
+                            logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
+                            missing_articles.append(article)
+                            continue
+
                         # Перевірка артикула в зазначеній таблиці (точний збіг)
                         cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
                         result = cursor.fetchone()
 
                         if result:
-                            price = result['price']
+                            price = result[1]
                             items_with_table.append((article, price, table_name, quantity))
                             logging.info(f"Article {article} found in {table_name} with price {price}.")
                         else:
@@ -1736,13 +1741,6 @@ def upload_file(token):
 
             # Додавання до кошика артикулів із таблицею
             for article, price, table_name, quantity in items_with_table:
-                cursor.execute("""
-                    INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
-                    VALUES (%s, %s, %s, %s, %s, NOW())
-                    ON CONFLICT (user_id, article, price, table_name) DO UPDATE SET
-                    quantity = selection_buffer.quantity + EXCLUDED.quantity
-                """, (user_id, article, price, table_name, quantity))
-
                 cursor.execute("""
                     INSERT INTO cart (user_id, product_id, quantity, added_at)
                     VALUES (

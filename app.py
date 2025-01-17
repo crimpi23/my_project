@@ -1758,6 +1758,19 @@ def upload_file(token):
                         if result:
                             base_price = Decimal(result[1])
                             final_price = round(base_price * (Decimal(1) + user_markup / Decimal(100)), 2)
+
+                            # Оновлення або вставка в таблицю products
+                            cursor.execute(
+                                """
+                                INSERT INTO products (article, price, table_name, created_at)
+                                VALUES (%s, %s, %s, NOW())
+                                ON CONFLICT (article, table_name) DO UPDATE SET
+                                price = EXCLUDED.price,
+                                created_at = EXCLUDED.created_at
+                                """,
+                                (article, base_price, table_name)
+                            )
+
                             items_with_table.append((article, final_price, table_name, quantity))
                             logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
                         else:
@@ -1816,6 +1829,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

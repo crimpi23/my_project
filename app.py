@@ -405,7 +405,7 @@ def create_user(token):
 
 
 
-# проміжковий єтап після /cart
+# проміжковий єтап після cart
 @app.route('/<token>/submit_selection', methods=['POST'])
 @requires_token_and_role('user')
 def submit_selection(token):
@@ -678,7 +678,7 @@ def clear_search(token):
 
 @app.route('/<token>/cart', methods=['GET', 'POST'])
 @requires_token_and_role('user')
-def cart(token):
+def user_cart(token):  # Змінено ім'я функції з `cart` на `user_cart`
     try:
         user_id = session.get('user_id')
         if not user_id:
@@ -689,7 +689,6 @@ def cart(token):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Якщо це POST-запит, обробляємо дії з кошиком (наприклад, видалення)
         if request.method == 'POST':
             action = request.form.get('action')
             product_id = request.form.get('product_id')
@@ -705,14 +704,13 @@ def cart(token):
                 flash("Item removed from cart.", "success")
                 logging.info(f"Product {product_id} removed from cart for user_id {user_id}.")
 
-        # Отримуємо товари з кошика
         logging.debug(f"Fetching cart items for user_id: {user_id}.")
         cursor.execute("""
             SELECT 
                 c.product_id, 
                 p.article, 
-                COALESCE(c.base_price, 0) AS base_price, -- Використання COALESCE для уникнення NULL
-                COALESCE(c.final_price, 0) AS final_price, -- Використання COALESCE для уникнення NULL
+                COALESCE(c.base_price, 0) AS base_price,
+                COALESCE(c.final_price, 0) AS final_price,
                 c.quantity,
                 ROUND(COALESCE(c.final_price, 0) * c.quantity, 2) AS total_price
             FROM cart c
@@ -733,7 +731,6 @@ def cart(token):
             })
         logging.debug(f"Cart items fetched: {cart_items}")
 
-        # Підрахунок загальної суми
         total_price = sum(item['total_price'] for item in cart_items)
         logging.debug(f"Total price calculated: {total_price}. Preparing to render cart page.")
 
@@ -750,6 +747,7 @@ def cart(token):
         if 'conn' in locals() and conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 

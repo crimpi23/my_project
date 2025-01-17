@@ -43,22 +43,26 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for article, quantity, tables, final_price in items_without_table %}
+                        {% for item in items_without_table %}
                         <tr>
-                            <td>{{ article }}</td>
-                            <td>{{ quantity }}</td>
+                            <td>{{ item.article }}</td>
+                            <td>{{ item.quantity }}</td>
                             <td>
                                 <ul class="list-unstyled">
-                                    {% for table in tables %}
+                                    {% for table in item.valid_tables %}
                                     <li>{{ table }}</li>
                                     {% endfor %}
                                 </ul>
                             </td>
-                            <td>{{ final_price or 'N/A' }}</td>
                             <td>
-                                <select name="table_{{ article }}" class="form-select" required>
+                                {% for price in item.prices %}
+                                <div>{{ price.table }}: {{ price.final_price }}</div>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <select name="table_{{ item.article }}" class="form-select" required>
                                     <option value="" disabled selected>Select Table</option>
-                                    {% for table in tables %}
+                                    {% for table in item.valid_tables %}
                                     <option value="{{ table }}">{{ table }}</option>
                                     {% endfor %}
                                 </select>
@@ -71,16 +75,6 @@
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </div>
             </form>
-        </section>
-
-        <!-- Missing Articles Section -->
-        <section class="mt-5">
-            <h2>Missing Articles</h2>
-            <ul class="list-group">
-                {% for article in missing_articles %}
-                <li class="list-group-item">{{ article }}</li>
-                {% endfor %}
-            </ul>
         </section>
     </main>
 

@@ -1699,8 +1699,6 @@ def compare_prices(token):
 
 
 # Завантаження файлу для замовлення
-# Завантаження даних з файлу
-# Завантаження даних з файлу
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
@@ -1846,11 +1844,7 @@ def upload_file(token):
         return redirect(url_for('cart', token=token))
 
     except Exception as e:
-        logging.error(f"Error in upload_file: {e}", exc_info=True)
-        flash("An error occurred during file upload. Please try again.", "error")
-        return redirect(f'/{token}/')
-
-
+        logging.error(f"Error in
 
 
 
@@ -1869,7 +1863,7 @@ def intermediate_results(token):
             return redirect(f'/{token}/')
 
         # Отримання націнки для користувача
-        user_markup = get_markup_percentage(user_id)
+        user_markup = Decimal(get_markup_percentage(user_id))
         logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
 
         if request.method == 'POST':
@@ -1896,8 +1890,8 @@ def intermediate_results(token):
                             result = cursor.fetchone()
 
                             if result:
-                                base_price = result[0]
-                                final_price = calculate_price(base_price, user_markup)
+                                base_price = Decimal(result[0])
+                                final_price = round(base_price * (1 + user_markup / 100), 2)
 
                                 # Перевірка, чи є запис у `products`
                                 cursor.execute(
@@ -1952,9 +1946,9 @@ def intermediate_results(token):
 
         # GET запит: повертає сторінку з проміжними результатами
         items_without_table = session.get('items_without_table', [])
+        enriched_items = []
 
         # Готуємо результати з розрахунком фінальної ціни
-        enriched_items = []
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
                 for article, quantity, valid_tables in items_without_table:
@@ -1966,7 +1960,8 @@ def intermediate_results(token):
                         )
                         result = cursor.fetchone()
                         if result:
-                            final_price = calculate_price(result[0], user_markup)
+                            base_price = Decimal(result[0])
+                            final_price = round(base_price * (1 + user_markup / 100), 2)
                             item_prices.append({'table': table, 'final_price': final_price})
                     enriched_items.append({
                         'article': article,
@@ -1975,7 +1970,7 @@ def intermediate_results(token):
                         'prices': item_prices
                     })
 
-        return render_template('intermediate.html', token=token, items_without_table=enriched_items)
+        return render_template('intermediate_results.html', token=token, items_without_table=enriched_items)
 
     except Exception as e:
         logging.error(f"Error in intermediate_results: {e}", exc_info=True)

@@ -1757,48 +1757,44 @@ def upload_file(token):
 
             for index, row in df.iterrows():
                 try:
-                    if len(row) < 2 or not str(row[1]).isdigit():
+                    if len(row) < 3 or not str(row[1]).isdigit():
                         logging.warning(f"Skipped invalid row at index {index}: {row.tolist()}")
                         continue
 
                     article = str(row[0]).strip().upper()
                     quantity = int(row[1])
-                    table_name = str(row[2]).strip() if len(row) > 2 and pd.notna(row[2]) else None
+                    table_name = str(row[2]).strip().lower()
 
                     logging.debug(f"Processing article: {article}, Quantity: {quantity}, Table: {table_name}")
 
-                    if table_name:
-                        if table_name not in all_tables:
-                            logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
-                            missing_articles.append(article)
-                            continue
+                    if table_name not in all_tables:
+                        logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
+                        missing_articles.append(article)
+                        continue
 
-                        cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
-                        result = cursor.fetchone()
+                    cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
+                    result = cursor.fetchone()
 
-                        if result:
-                            base_price = Decimal(result[1])
-                            final_price = round(base_price * (1 + user_markup / 100), 2)
+                    if result:
+                        base_price = Decimal(result[1])
+                        final_price = round(base_price * (1 + user_markup / 100), 2)
 
-                            # Додавання в таблицю products
-                            cursor.execute(
-                                """
-                                INSERT INTO products (article, price, table_name, created_at)
-                                VALUES (%s, %s, %s, NOW())
-                                ON CONFLICT (article, table_name) DO UPDATE SET
+                        cursor.execute(
+                            """
+                            INSERT INTO products (article, price, table_name, created_at)
+                            VALUES (%s, %s, %s, NOW())
+                            ON CONFLICT (article, table_name) DO UPDATE SET
                                 price = EXCLUDED.price,
                                 created_at = EXCLUDED.created_at
-                                """,
-                                (article, base_price, table_name)
-                            )
-                            items_with_table.append((article, final_price, table_name, quantity))
-                            logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
-                        else:
-                            missing_articles.append(article)
-                            logging.warning(f"Article {article} not found in {table_name}. Skipping.")
+                            """,
+                            (article, base_price, table_name)
+                        )
+
+                        items_with_table.append((article, final_price, table_name, quantity))
+                        logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
                     else:
-                        logging.warning(f"No table specified for article {article}. Skipping.")
                         missing_articles.append(article)
+                        logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                 except Exception as e:
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}")
                     continue
@@ -1834,6 +1830,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

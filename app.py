@@ -1702,12 +1702,8 @@ def compare_prices(token):
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
-    """
-    Завантажує файл із товарами, перевіряє їх і додає в кошик.
-    """
     logging.debug(f"Upload File Called with token: {token}")
     try:
-        # Отримання ID користувача
         user_id = session.get('user_id')
         if not user_id:
             logging.error("User not authenticated.")
@@ -1716,49 +1712,41 @@ def upload_file(token):
 
         logging.info(f"User ID: {user_id} started file upload.")
 
-        # Перевірка наявності файлу
         if 'file' not in request.files:
             logging.error("No file uploaded.")
             flash("No file uploaded", "error")
             return redirect(f'/{token}/')
 
         file = request.files['file']
-        logging.info(f"Uploaded file: {file.filename}")
-
-        # Перевірка формату файлу
         if not file.filename.endswith('.xlsx'):
             logging.error("Invalid file format. Only .xlsx files are allowed.")
             flash("Invalid file format. Please upload an Excel file.", "error")
             return redirect(f'/{token}/')
 
-        # Завантаження даних з файлу
         try:
             df = pd.read_excel(file, header=None)
             logging.info(f"File read successfully. Shape: {df.shape}")
         except Exception as e:
-            logging.error(f"Error reading Excel file: {e}", exc_info=True)
+            logging.error(f"Error reading Excel file: {e}")
             flash("Error reading the file. Please check the format.", "error")
             return redirect(f'/{token}/')
 
-        # Перевірка мінімальної кількості колонок
         if df.shape[1] < 3:
             logging.error("Invalid file structure. Less than three columns found.")
             flash("Invalid file structure. Ensure the file has three columns.", "error")
             return redirect(f'/{token}/')
 
-        # Пропуск заголовка, якщо виявлено
+        # Пропуск заголовків, якщо вони є
         first_row = df.iloc[0].tolist()
         if first_row == ['article', 'quantity', 'table_name']:
             df = df.iloc[1:]
             logging.info("Header row detected and skipped.")
 
-        missing_articles = []  # Відсутні артикули
-        items_with_table = []  # Артикули, знайдені в таблицях
+        missing_articles = []
+        items_with_table = []
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
-
-            # Отримання таблиць із прайсами
             cursor.execute("SELECT table_name FROM price_lists;")
             all_tables = {row[0] for row in cursor.fetchall()}
             logging.info(f"Fetched tables from price_lists: {all_tables}")
@@ -1769,60 +1757,60 @@ def upload_file(token):
                     quantity = int(row[1])
                     table_name = str(row[2]).strip().lower()
 
-                    logging.debug(f"Processing article: {article}, Quantity: {quantity}, Table: {table_name}")
-
-                    # Перевірка, чи таблиця існує
                     if table_name not in all_tables:
-                        logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
+                        logging.warning(f"Invalid table name '{table_name}' for article {article}. Skipping.")
                         missing_articles.append(article)
                         continue
 
                     # Перевірка артикула в таблиці
-                    cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
+                    cursor.execute(f"SELECT id, price FROM {table_name} WHERE article = %s", (article,))
                     result = cursor.fetchone()
 
                     if result:
-                        price = Decimal(result[1])
-                        items_with_table.append((article, price, table_name, quantity))
-                        logging.info(f"Article {article} found in {table_name} with price {price}.")
+                        product_id, price = result
                     else:
-                        missing_articles.append(article)
-                        logging.warning(f"Article {article} not found in {table_name}. Skipping.")
+                        # Якщо артикул не знайдено в таблиці
+                        logging.info(f"Article {article} not found in {table_name}. Adding to products.")
+                        cursor.execute(
+                            """
+                            INSERT INTO products (article, table_name, price, created_at)
+                            VALUES (%s, %s, 0, NOW())
+                            RETURNING id
+                            """,
+                            (article, table_name)
+                        )
+                        product_id = cursor.fetchone()[0]
+                        price = Decimal(0)
+
+                    items_with_table.append((product_id, price, quantity))
+                    logging.info(f"Processed article {article} with price {price} from table {table_name}.")
                 except Exception as e:
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}")
                     continue
 
-            # Додавання знайдених артикулів до кошика
-            for article, price, table_name, quantity in items_with_table:
+            for product_id, price, quantity in items_with_table:
                 try:
                     cursor.execute(
                         """
                         INSERT INTO cart (user_id, product_id, quantity, added_at)
-                        VALUES (
-                            %s,
-                            (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                            %s,
-                            NOW()
-                        )
+                        VALUES (%s, %s, %s, NOW())
                         ON CONFLICT (user_id, product_id) DO UPDATE SET
                         quantity = cart.quantity + EXCLUDED.quantity
                         """,
-                        (user_id, article, table_name, quantity)
+                        (user_id, product_id, quantity)
                     )
-                    logging.info(f"Added article {article} to cart from table {table_name}.")
+                    logging.info(f"Added product_id {product_id} to cart.")
                 except Exception as e:
-                    logging.error(f"Failed to add article {article} to cart: {e}")
+                    logging.error(f"Failed to add product_id {product_id} to cart: {e}")
 
             conn.commit()
             logging.info("Database operations committed successfully.")
 
-        # Формування повідомлення для користувача
         flash(f"File processed successfully. {len(items_with_table)} items added to cart. {len(missing_articles)} missing articles.", "success")
-        logging.info(f"File processed successfully for user_id={user_id}.")
         return redirect(url_for('cart', token=token))
 
     except Exception as e:
-        logging.error(f"Error in upload_file: {e}", exc_info=True)
+        logging.error(f"Error in upload_file: {e}")
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
 

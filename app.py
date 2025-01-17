@@ -437,7 +437,7 @@ def submit_selection(token):
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            for article, price, table_name, quantity in selected_articles:
+            for article, final_price, table_name, quantity in selected_articles:
                 # Перевірка наявності артикула в таблиці products
                 cursor.execute("""
                     SELECT id FROM products WHERE article = %s AND table_name = %s
@@ -450,9 +450,9 @@ def submit_selection(token):
                         INSERT INTO products (article, table_name, price, created_at)
                         VALUES (%s, %s, %s, NOW())
                         RETURNING id
-                    """, (article, table_name, price))
+                    """, (article, table_name, final_price))
                     product = cursor.fetchone()
-                    logging.info(f"Added new product to products: article={article}, table_name={table_name}, price={price}")
+                    logging.info(f"Added new product to products: article={article}, table_name={table_name}, price={final_price}")
 
                 product_id = product['id']
 
@@ -464,19 +464,19 @@ def submit_selection(token):
                 existing_cart_item = cursor.fetchone()
 
                 if existing_cart_item:
-                    # Оновлення кількості та ціни в кошику
+                    # Оновлення кількості в кошику
                     cursor.execute("""
                         UPDATE cart
-                        SET quantity = quantity + %s, base_price = %s, final_price = %s
+                        SET quantity = quantity + %s
                         WHERE id = %s
-                    """, (quantity, price, price, existing_cart_item['id']))
-                    logging.debug(f"Updated quantity and price for article {article} in cart.")
+                    """, (quantity, existing_cart_item['id']))
+                    logging.debug(f"Updated quantity for article {article} in cart.")
                 else:
                     # Додавання нового запису до кошика
                     cursor.execute("""
-                        INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, added_at)
-                        VALUES (%s, %s, %s, %s, %s, NOW())
-                    """, (user_id, product_id, quantity, price, price))
+                        INSERT INTO cart (user_id, product_id, quantity, final_price, added_at)
+                        VALUES (%s, %s, %s, %s, NOW())
+                    """, (user_id, product_id, quantity, final_price))
                     logging.debug(f"Added new item to cart for article {article} with quantity {quantity}.")
 
             conn.commit()
@@ -489,7 +489,6 @@ def submit_selection(token):
         logging.error(f"Error in submit_selection: {e}", exc_info=True)
         flash("An error occurred during submission. Please try again.", "error")
         return redirect(f'/{token}/search')
-
 
 
 
@@ -699,36 +698,28 @@ def cart(token):
             logging.warning("Attempt to access cart without user ID.")
             return redirect(url_for('index'))
 
-        user_markup = Decimal(get_markup_percentage(user_id))
-        logging.debug(f"User ID: {user_id}, Markup percentage: {user_markup}.")
-
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         logging.debug(f"Fetching cart items for user_id: {user_id}.")
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT 
                 c.product_id, 
                 p.article, 
-                p.price AS base_price, 
-                ROUND(p.price * (1 + %s / 100.0), 2) AS final_price,
+                c.final_price, 
                 c.quantity,
-                ROUND(ROUND(p.price * (1 + %s / 100.0), 2) * c.quantity, 2) AS total_price
+                ROUND(c.final_price * c.quantity, 2) AS total_price
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
             ORDER BY c.added_at
-            """,
-            (user_markup, user_markup, user_id)
-        )
+        """, (user_id,))
 
         cart_items = []
         for row in cursor.fetchall():
             cart_items.append({
                 'product_id': row['product_id'],
                 'article': row['article'],
-                'base_price': float(row['base_price']),
                 'final_price': float(row['final_price']),
                 'quantity': row['quantity'],
                 'total_price': float(row['total_price'])

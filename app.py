@@ -1744,7 +1744,7 @@ def upload_file(token):
                     quantity = int(row[1])
                     table_name = str(row[2]).strip() if len(row) > 2 and pd.notna(row[2]) else None
 
-                    logging.debug(f"Processing article: {article}, quantity: {quantity}, table: {table_name}")
+                    logging.debug(f"Processing article: {article}, Quantity: {quantity}, Table: {table_name}")
 
                     if table_name:
                         if table_name not in all_tables:
@@ -1781,7 +1781,8 @@ def upload_file(token):
                     continue
 
             for article, price, table_name, quantity in items_with_table:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO cart (user_id, product_id, quantity, added_at)
                     VALUES (
                         %s,
@@ -1791,7 +1792,9 @@ def upload_file(token):
                     )
                     ON CONFLICT (user_id, product_id) DO UPDATE SET
                     quantity = cart.quantity + EXCLUDED.quantity
-                """, (user_id, article, table_name, quantity))
+                    """,
+                    (user_id, article, table_name, quantity)
+                )
                 logging.info(f"Added article {article} to cart from table {table_name}.")
 
             conn.commit()
@@ -1801,8 +1804,8 @@ def upload_file(token):
         session['missing_articles'] = missing_articles
 
         if items_without_table:
-            flash(f"{len(items_without_table)} articles need table selection.", "warning")
             logging.info(f"Redirecting to intermediate_results. Items without table: {len(items_without_table)}")
+            flash(f"{len(items_without_table)} articles need table selection.", "warning")
             return redirect(url_for('intermediate_results', token=token))
 
         flash(f"File processed successfully. {len(items_with_table)} items added to cart. {len(missing_articles)} missing articles.", "success")

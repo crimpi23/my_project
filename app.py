@@ -1702,102 +1702,84 @@ def compare_prices(token):
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
+    """
+    Завантажує файл із товарами, очищує таблицю `products` для поточного користувача перед завантаженням,
+    а потім додає нові дані.
+    """
     logging.debug(f"Upload File Called with token: {token}")
     try:
+        # Отримання ID користувача
         user_id = session.get('user_id')
         if not user_id:
+            logging.error("User not authenticated.")
             flash("User not authenticated", "error")
             return redirect(f'/{token}/')
 
         logging.info(f"User ID: {user_id} started file upload.")
 
-        # Перевірка файлу
-        file = request.files.get('file')
-        if not file or file.filename == '':
+        # Перевірка наявності файлу
+        if 'file' not in request.files or not request.files['file'].filename:
+            logging.error("No file uploaded.")
             flash("No file uploaded", "error")
             return redirect(f'/{token}/')
 
+        file = request.files['file']
+        logging.info(f"Uploaded file: {file.filename}")
+
+        # Перевірка формату файлу
         if not file.filename.endswith('.xlsx'):
+            logging.error("Invalid file format. Only .xlsx files are allowed.")
             flash("Invalid file format. Please upload an Excel file.", "error")
             return redirect(f'/{token}/')
 
-        # Завантаження файлу
+        # Завантаження даних з файлу
         try:
-            df = pd.read_excel(file, header=None)
+            df = pd.read_excel(file, header=None)  # Завантаження без заголовків
             logging.info(f"File read successfully. Shape: {df.shape}")
         except Exception as e:
-            logging.error(f"Error reading file: {e}")
+            logging.error(f"Error reading Excel file: {e}", exc_info=True)
             flash("Error reading the file. Please check the format.", "error")
             return redirect(f'/{token}/')
 
-        if df.shape[1] < 2:  # Лише дві колонки потрібні
+        # Перевірка мінімальної кількості колонок
+        if df.shape[1] < 2:
+            logging.error("Invalid file structure. Less than two columns found.")
             flash("Invalid file structure. Ensure the file has at least two columns.", "error")
             return redirect(f'/{token}/')
-
-        # Підготовка даних
-        items = []
-        for _, row in df.iterrows():
-            try:
-                article = str(row[0]).strip()
-                quantity = int(float(row[1]))
-                items.append((article, quantity))
-            except Exception as e:
-                logging.warning(f"Skipped invalid row: {row.tolist()} - {e}")
-                continue
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            # Отримання всіх таблиць
-            cursor.execute("SELECT table_name FROM price_lists;")
-            all_tables = [row[0] for row in cursor.fetchall()]
+            # Очищення таблиці `products` для цього користувача
+            cursor.execute("""
+                DELETE FROM products WHERE id IN (
+                    SELECT p.id 
+                    FROM products p
+                    JOIN cart c ON p.id = c.product_id
+                    WHERE c.user_id = %s
+                )
+            """, (user_id,))
+            conn.commit()
+            logging.info(f"Cleared products for user_id={user_id}.")
 
-            missing_articles = []
-            for article, quantity in items:
-                found = False
-                for table in all_tables:
-                    cursor.execute(f"SELECT article, price FROM {table} WHERE article = %s", (article,))
-                    result = cursor.fetchone()
-                    if result:
-                        price = result[1]
-                        final_price = calculate_price(price, get_markup_percentage(user_id))
-
-                        # Додавання в products
-                        cursor.execute("""
-                            INSERT INTO products (article, price, table_name, created_at)
-                            VALUES (%s, %s, %s, NOW())
-                            ON CONFLICT (article, table_name) DO NOTHING
-                        """, (article, price, table))
-
-                        # Додавання в cart
-                        cursor.execute("""
-                            INSERT INTO cart (user_id, product_id, quantity, added_at)
-                            VALUES (
-                                %s,
-                                (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                                %s,
-                                NOW()
-                            )
-                            ON CONFLICT (user_id, product_id) DO UPDATE SET
-                            quantity = cart.quantity + EXCLUDED.quantity
-                        """, (user_id, article, table, quantity))
-
-                        found = True
-                        break
-
-                if not found:
-                    missing_articles.append(article)
+            # Додавання нових записів
+            for index, row in df.iterrows():
+                try:
+                    article = str(row[0]).strip()
+                    price = float(row[1])
+                    # Вставка нового запису в `products`
+                    cursor.execute("""
+                        INSERT INTO products (article, price, created_at)
+                        VALUES (%s, %s, NOW())
+                    """, (article, price))
+                except Exception as e:
+                    logging.error(f"Error processing row {index}: {row.tolist()} - {e}")
 
             conn.commit()
-            logging.info("Database operations committed successfully.")
+            logging.info(f"Inserted {len(df)} rows into products for user_id={user_id}.")
 
-        # Повідомлення для користувача
-        if missing_articles:
-            flash(f"Some articles were not found: {', '.join(missing_articles)}", "warning")
-        else:
-            flash("File processed successfully!", "success")
-
-        return redirect(url_for('cart', token=token))
+        flash("File uploaded and processed successfully!", "success")
+        return redirect(f'/{token}/')
 
     except Exception as e:
         logging.error(f"Error in upload_file: {e}", exc_info=True)

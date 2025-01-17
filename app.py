@@ -616,12 +616,14 @@ def search_articles(token):
 
         # Отримання таблиць із прайсами
         cursor.execute("SELECT table_name FROM price_lists")
-        tables = cursor.fetchall()
+        tables = [table[0] for table in cursor.fetchall()]
         logging.debug(f"Fetched price list tables: {tables}")
 
         results = []
-        for table in tables:
-            table_name = table['table_name']
+        for table_name in tables:
+            if table_name not in tables:
+                logging.warning(f"Skipping invalid table name: {table_name}")
+                continue
             logging.debug(f"Querying table: {table_name}")
             query = f"""
                 SELECT article, price, %s AS table_name
@@ -630,8 +632,9 @@ def search_articles(token):
             """
             logging.debug(f"Executing query: {query}")
             cursor.execute(query, (table_name, articles))
-            results.extend(cursor.fetchall())
-            logging.debug(f"Results from table {table_name}: {cursor.rowcount}")
+            fetched = cursor.fetchall()
+            results.extend(fetched)
+            logging.debug(f"Results from table {table_name}: {len(fetched)} rows")
 
         grouped_results = {}
         for result in results:
@@ -640,6 +643,7 @@ def search_articles(token):
             final_price = calculate_price(base_price, user_markup)  # Розрахунок ціни з націнкою
             grouped_results.setdefault(article, []).append({
                 'price': final_price,
+                'base_price': base_price,
                 'table_name': result['table_name'],
                 'quantity': quantities.get(article, 1)
             })

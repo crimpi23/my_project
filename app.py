@@ -1699,9 +1699,13 @@ def compare_prices(token):
 
 
 # Завантаження файлу для замовлення
+# Завантаження даних з файлу
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
+    """
+    Завантажує файл із товарами, обробляє його та виконує точний збіг для артикула.
+    """
     logging.debug(f"Upload File Called with token: {token}")
     try:
         # Отримання ID користувача
@@ -1713,10 +1717,6 @@ def upload_file(token):
 
         logging.info(f"User ID: {user_id} started file upload.")
 
-        # Отримання націнки для користувача
-        user_markup = Decimal(get_markup_percentage(user_id))
-        logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
-
         # Перевірка наявності файлу
         if 'file' not in request.files:
             logging.error("No file uploaded.")
@@ -1726,6 +1726,7 @@ def upload_file(token):
         file = request.files['file']
         logging.info(f"Uploaded file: {file.filename}")
 
+        # Перевірка формату файлу
         if not file.filename.endswith('.xlsx'):
             logging.error("Invalid file format. Only .xlsx files are allowed.")
             flash("Invalid file format. Please upload an Excel file.", "error")
@@ -1733,97 +1734,111 @@ def upload_file(token):
 
         # Завантаження даних з файлу
         try:
-            df = pd.read_excel(file, header=None)
+            df = pd.read_excel(file, header=None)  # Завантаження без заголовків
             logging.info(f"File read successfully. Shape: {df.shape}")
         except Exception as e:
             logging.error(f"Error reading Excel file: {e}", exc_info=True)
             flash("Error reading the file. Please check the format.", "error")
             return redirect(f'/{token}/')
 
-        if df.shape[1] < 3:
-            logging.error("Invalid file structure. Less than three columns found.")
-            flash("Invalid file structure. Ensure the file has three columns.", "error")
+        # Перевірка мінімальної кількості колонок
+        if df.shape[1] < 2:
+            logging.error("Invalid file structure. Less than two columns found.")
+            flash("Invalid file structure. Ensure the file has at least two columns.", "error")
             return redirect(f'/{token}/')
 
-        items_with_table = []
-        missing_articles = []
+        # Встановлення третьої колонки (таблиці) як None, якщо вона відсутня
+        if df.shape[1] < 3:
+            df[2] = None
+
+        items_with_table = []      # Артикули з таблицею
+        items_without_table = []   # Артикули без таблиці
+        missing_articles = []      # Відсутні артикули
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
+            # Отримання всіх таблиць з price_lists
             cursor.execute("SELECT table_name FROM price_lists;")
             all_tables = [row[0] for row in cursor.fetchall()]
             logging.info(f"Fetched tables from price_lists: {all_tables}")
 
             for index, row in df.iterrows():
                 try:
-                    if len(row) < 3 or not str(row[1]).isdigit():
+                    # Пропуск некоректних рядків
+                    if len(row) < 2 or not str(row[1]).isdigit():
                         logging.warning(f"Skipped invalid row at index {index}: {row.tolist()}")
                         continue
 
-                    article = str(row[0]).strip().upper()
+                    article = str(row[0]).strip()
                     quantity = int(row[1])
-                    table_name = str(row[2]).strip().lower()
+                    table_name = str(row[2]).strip() if len(row) > 2 and pd.notna(row[2]) else None
 
-                    logging.debug(f"Processing article: {article}, Quantity: {quantity}, Table: {table_name}")
+                    logging.debug(f"Processing article: {article}, quantity: {quantity}, table: {table_name}")
 
-                    if table_name not in all_tables:
-                        logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
-                        missing_articles.append(article)
-                        continue
+                    if table_name:
+                        # Перевірка, чи таблиця існує в списку price_lists
+                        if table_name not in all_tables:
+                            logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
+                            missing_articles.append(article)
+                            continue
 
-                    cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
-                    result = cursor.fetchone()
+                        # Перевірка артикула в зазначеній таблиці (точний збіг)
+                        cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
+                        result = cursor.fetchone()
 
-                    if result:
-                        base_price = Decimal(result[1])
-                        final_price = round(base_price * (1 + user_markup / 100), 2)
-
-                        # Додавання товару до таблиці `products`
-                        cursor.execute(
-                            """
-                            INSERT INTO products (article, price, table_name, created_at)
-                            VALUES (%s, %s, %s, NOW())
-                            ON CONFLICT (article, table_name) DO UPDATE SET
-                                price = EXCLUDED.price,
-                                created_at = EXCLUDED.created_at
-                            """,
-                            (article, base_price, table_name)
-                        )
-
-                        items_with_table.append((article, final_price, table_name, quantity))
-                        logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
+                        if result:
+                            price = result[1]
+                            items_with_table.append((article, price, table_name, quantity))
+                            logging.info(f"Article {article} found in {table_name} with price {price}.")
+                        else:
+                            missing_articles.append(article)
+                            logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                     else:
-                        missing_articles.append(article)
-                        logging.warning(f"Article {article} not found in {table_name}. Skipping.")
+                        # Перевірка артикула у всіх таблицях (точний збіг)
+                        matching_tables = []
+                        for table in all_tables:
+                            cursor.execute(f"SELECT article FROM {table} WHERE article = %s", (article,))
+                            if cursor.fetchone():
+                                matching_tables.append(table)
+
+                        if matching_tables:
+                            logging.info(f"Article {article} found in tables: {matching_tables}")
+                            items_without_table.append((article, quantity, matching_tables))
+                        else:
+                            logging.warning(f"Article {article} not found in any table.")
+                            missing_articles.append(article)
                 except Exception as e:
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}")
-                    conn.rollback()
                     continue
 
+            # Додавання до кошика артикулів із таблицею
             for article, price, table_name, quantity in items_with_table:
-                try:
-                    cursor.execute(
-                        """
-                        INSERT INTO cart (user_id, product_id, quantity, added_at)
-                        VALUES (
-                            %s,
-                            (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                            %s,
-                            NOW()
-                        )
-                        ON CONFLICT (user_id, product_id) DO UPDATE SET
-                        quantity = cart.quantity + EXCLUDED.quantity
-                        """,
-                        (user_id, article, table_name, quantity)
+                cursor.execute("""
+                    INSERT INTO cart (user_id, product_id, quantity, added_at)
+                    VALUES (
+                        %s,
+                        (SELECT id FROM products WHERE article = %s AND table_name = %s),
+                        %s,
+                        NOW()
                     )
-                    logging.info(f"Added article {article} to cart from table {table_name}.")
-                except Exception as e:
-                    logging.error(f"Failed to add article {article} to cart: {e}")
-                    conn.rollback()
+                    ON CONFLICT (user_id, product_id) DO UPDATE SET
+                    quantity = cart.quantity + EXCLUDED.quantity
+                """, (user_id, article, table_name, quantity))
+                logging.info(f"Added article {article} to cart from table {table_name}.")
 
             conn.commit()
             logging.info("Database operations committed successfully.")
+
+        # Збереження результатів у сесії для проміжної сторінки
+        session['items_without_table'] = items_without_table
+        session['missing_articles'] = missing_articles
+
+        # Формування повідомлення для користувача
+        if items_without_table:
+            flash(f"{len(items_without_table)} articles need table selection.", "warning")
+            logging.info(f"Redirecting to intermediate_results. Items without table: {len(items_without_table)}")
+            return redirect(url_for('intermediate_results', token=token))
 
         flash(f"File processed successfully. {len(items_with_table)} items added to cart. {len(missing_articles)} missing articles.", "success")
         logging.info(f"File processed successfully for user_id={user_id}.")
@@ -1833,7 +1848,6 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
-
 
 
 

@@ -1865,7 +1865,7 @@ def intermediate_results(token):
             return redirect(f'/{token}/')
 
         # Отримання націнки для користувача
-        user_markup = Decimal(get_markup_percentage(user_id))
+        user_markup = get_markup_percentage(user_id)
         logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
 
         if request.method == 'POST':
@@ -1892,8 +1892,8 @@ def intermediate_results(token):
                             result = cursor.fetchone()
 
                             if result:
-                                base_price = Decimal(result[0])
-                                final_price = round(base_price * (1 + user_markup / 100), 2)
+                                base_price = result[0]
+                                final_price = calculate_price(base_price, user_markup)
 
                                 # Перевірка, чи є запис у `products`
                                 cursor.execute(
@@ -1948,9 +1948,9 @@ def intermediate_results(token):
 
         # GET запит: повертає сторінку з проміжними результатами
         items_without_table = session.get('items_without_table', [])
-        enriched_items = []
 
         # Готуємо результати з розрахунком фінальної ціни
+        enriched_items = []
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
                 for article, quantity, valid_tables in items_without_table:
@@ -1962,8 +1962,7 @@ def intermediate_results(token):
                         )
                         result = cursor.fetchone()
                         if result:
-                            base_price = Decimal(result[0])
-                            final_price = round(base_price * (1 + user_markup / 100), 2)
+                            final_price = calculate_price(result[0], user_markup)
                             item_prices.append({'table': table, 'final_price': final_price})
                     enriched_items.append({
                         'article': article,
@@ -1972,7 +1971,7 @@ def intermediate_results(token):
                         'prices': item_prices
                     })
 
-        return render_template('intermediate_results.html', token=token, items_without_table=enriched_items)
+        return render_template('intermediate.html', token=token, items_without_table=enriched_items)
 
     except Exception as e:
         logging.error(f"Error in intermediate_results: {e}", exc_info=True)

@@ -1745,6 +1745,12 @@ def upload_file(token):
             flash("Invalid file structure. Ensure the file has three columns.", "error")
             return redirect(f'/{token}/')
 
+        # Пропуск заголовка, якщо виявлено
+        first_row = df.iloc[0].tolist()
+        if first_row == ['article', 'quantity', 'table_name']:
+            df = df.iloc[1:]
+            logging.info("Header row detected and skipped.")
+
         items_with_table = []
         missing_articles = []
 
@@ -1752,15 +1758,11 @@ def upload_file(token):
             cursor = conn.cursor()
 
             cursor.execute("SELECT table_name FROM price_lists;")
-            all_tables = [row[0] for row in cursor.fetchall()]
+            all_tables = {row[0] for row in cursor.fetchall()}
             logging.info(f"Fetched tables from price_lists: {all_tables}")
 
             for index, row in df.iterrows():
                 try:
-                    if len(row) < 3 or not str(row[1]).isdigit():
-                        logging.warning(f"Skipped invalid row at index {index}: {row.tolist()}")
-                        continue
-
                     article = str(row[0]).strip().upper()
                     quantity = int(row[1])
                     table_name = str(row[2]).strip().lower()
@@ -1779,18 +1781,6 @@ def upload_file(token):
                         base_price = Decimal(result[1])
                         final_price = round(base_price * (1 + user_markup / 100), 2)
 
-                        # Додавання товару до таблиці `products`
-                        cursor.execute(
-                            """
-                            INSERT INTO products (article, price, table_name, created_at)
-                            VALUES (%s, %s, %s, NOW())
-                            ON CONFLICT (article, table_name) DO UPDATE SET
-                                price = EXCLUDED.price,
-                                created_at = EXCLUDED.created_at
-                            """,
-                            (article, base_price, table_name)
-                        )
-
                         items_with_table.append((article, final_price, table_name, quantity))
                         logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
                     else:
@@ -1798,29 +1788,58 @@ def upload_file(token):
                         logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                 except Exception as e:
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}")
-                    conn.rollback()
                     continue
 
             for article, price, table_name, quantity in items_with_table:
                 try:
+                    # Перевірка, чи існує товар у products
                     cursor.execute(
                         """
-                        INSERT INTO cart (user_id, product_id, quantity, added_at)
-                        VALUES (
-                            %s,
-                            (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                            %s,
-                            NOW()
-                        )
-                        ON CONFLICT (user_id, product_id) DO UPDATE SET
-                        quantity = cart.quantity + EXCLUDED.quantity
+                        SELECT id FROM products WHERE article = %s AND table_name = %s
                         """,
-                        (user_id, article, table_name, quantity)
+                        (article, table_name)
                     )
-                    logging.info(f"Added article {article} to cart from table {table_name}.")
+                    product = cursor.fetchone()
+
+                    if not product:
+                        missing_articles.append(article)
+                        logging.warning(f"Product {article} not found in products. Skipping.")
+                        continue
+
+                    product_id = product[0]
+
+                    # Перевірка, чи товар уже в кошику
+                    cursor.execute(
+                        """
+                        SELECT quantity FROM cart WHERE user_id = %s AND product_id = %s
+                        """,
+                        (user_id, product_id)
+                    )
+                    existing_cart_item = cursor.fetchone()
+
+                    if existing_cart_item:
+                        # Оновлення кількості в кошику
+                        new_quantity = existing_cart_item[0] + quantity
+                        cursor.execute(
+                            """
+                            UPDATE cart SET quantity = %s WHERE user_id = %s AND product_id = %s
+                            """,
+                            (new_quantity, user_id, product_id)
+                        )
+                        logging.info(f"Updated quantity for article {article} in cart.")
+                    else:
+                        # Додавання нового товару в кошик
+                        cursor.execute(
+                            """
+                            INSERT INTO cart (user_id, product_id, quantity, added_at)
+                            VALUES (%s, %s, %s, NOW())
+                            """,
+                            (user_id, product_id, quantity)
+                        )
+                        logging.info(f"Added article {article} to cart.")
+
                 except Exception as e:
-                    logging.error(f"Failed to add article {article} to cart: {e}")
-                    conn.rollback()
+                    logging.error(f"Failed to add/update article {article} in cart: {e}")
 
             conn.commit()
             logging.info("Database operations committed successfully.")
@@ -1833,6 +1852,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

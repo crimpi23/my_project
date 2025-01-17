@@ -1702,6 +1702,9 @@ def compare_prices(token):
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
+    """
+    Завантажує файл із товарами, перевіряє їх і додає в кошик.
+    """
     logging.debug(f"Upload File Called with token: {token}")
     try:
         # Отримання ID користувача
@@ -1713,10 +1716,6 @@ def upload_file(token):
 
         logging.info(f"User ID: {user_id} started file upload.")
 
-        # Отримання націнки для користувача
-        user_markup = Decimal(get_markup_percentage(user_id))
-        logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
-
         # Перевірка наявності файлу
         if 'file' not in request.files:
             logging.error("No file uploaded.")
@@ -1726,6 +1725,7 @@ def upload_file(token):
         file = request.files['file']
         logging.info(f"Uploaded file: {file.filename}")
 
+        # Перевірка формату файлу
         if not file.filename.endswith('.xlsx'):
             logging.error("Invalid file format. Only .xlsx files are allowed.")
             flash("Invalid file format. Please upload an Excel file.", "error")
@@ -1740,6 +1740,7 @@ def upload_file(token):
             flash("Error reading the file. Please check the format.", "error")
             return redirect(f'/{token}/')
 
+        # Перевірка мінімальної кількості колонок
         if df.shape[1] < 3:
             logging.error("Invalid file structure. Less than three columns found.")
             flash("Invalid file structure. Ensure the file has three columns.", "error")
@@ -1751,12 +1752,13 @@ def upload_file(token):
             df = df.iloc[1:]
             logging.info("Header row detected and skipped.")
 
-        items_with_table = []
-        missing_articles = []
+        missing_articles = []  # Відсутні артикули
+        items_with_table = []  # Артикули, знайдені в таблицях
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
+            # Отримання таблиць із прайсами
             cursor.execute("SELECT table_name FROM price_lists;")
             all_tables = {row[0] for row in cursor.fetchall()}
             logging.info(f"Fetched tables from price_lists: {all_tables}")
@@ -1769,20 +1771,20 @@ def upload_file(token):
 
                     logging.debug(f"Processing article: {article}, Quantity: {quantity}, Table: {table_name}")
 
+                    # Перевірка, чи таблиця існує
                     if table_name not in all_tables:
                         logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
                         missing_articles.append(article)
                         continue
 
+                    # Перевірка артикула в таблиці
                     cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
                     result = cursor.fetchone()
 
                     if result:
-                        base_price = Decimal(result[1])
-                        final_price = round(base_price * (1 + user_markup / 100), 2)
-
-                        items_with_table.append((article, final_price, table_name, quantity))
-                        logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
+                        price = Decimal(result[1])
+                        items_with_table.append((article, price, table_name, quantity))
+                        logging.info(f"Article {article} found in {table_name} with price {price}.")
                     else:
                         missing_articles.append(article)
                         logging.warning(f"Article {article} not found in {table_name}. Skipping.")
@@ -1790,60 +1792,31 @@ def upload_file(token):
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}")
                     continue
 
+            # Додавання знайдених артикулів до кошика
             for article, price, table_name, quantity in items_with_table:
                 try:
-                    # Перевірка, чи існує товар у products
                     cursor.execute(
                         """
-                        SELECT id FROM products WHERE article = %s AND table_name = %s
-                        """,
-                        (article, table_name)
-                    )
-                    product = cursor.fetchone()
-
-                    if not product:
-                        missing_articles.append(article)
-                        logging.warning(f"Product {article} not found in products. Skipping.")
-                        continue
-
-                    product_id = product[0]
-
-                    # Перевірка, чи товар уже в кошику
-                    cursor.execute(
-                        """
-                        SELECT quantity FROM cart WHERE user_id = %s AND product_id = %s
-                        """,
-                        (user_id, product_id)
-                    )
-                    existing_cart_item = cursor.fetchone()
-
-                    if existing_cart_item:
-                        # Оновлення кількості в кошику
-                        new_quantity = existing_cart_item[0] + quantity
-                        cursor.execute(
-                            """
-                            UPDATE cart SET quantity = %s WHERE user_id = %s AND product_id = %s
-                            """,
-                            (new_quantity, user_id, product_id)
+                        INSERT INTO cart (user_id, product_id, quantity, added_at)
+                        VALUES (
+                            %s,
+                            (SELECT id FROM products WHERE article = %s AND table_name = %s),
+                            %s,
+                            NOW()
                         )
-                        logging.info(f"Updated quantity for article {article} in cart.")
-                    else:
-                        # Додавання нового товару в кошик
-                        cursor.execute(
-                            """
-                            INSERT INTO cart (user_id, product_id, quantity, added_at)
-                            VALUES (%s, %s, %s, NOW())
-                            """,
-                            (user_id, product_id, quantity)
-                        )
-                        logging.info(f"Added article {article} to cart.")
-
+                        ON CONFLICT (user_id, product_id) DO UPDATE SET
+                        quantity = cart.quantity + EXCLUDED.quantity
+                        """,
+                        (user_id, article, table_name, quantity)
+                    )
+                    logging.info(f"Added article {article} to cart from table {table_name}.")
                 except Exception as e:
-                    logging.error(f"Failed to add/update article {article} in cart: {e}")
+                    logging.error(f"Failed to add article {article} to cart: {e}")
 
             conn.commit()
             logging.info("Database operations committed successfully.")
 
+        # Формування повідомлення для користувача
         flash(f"File processed successfully. {len(items_with_table)} items added to cart. {len(missing_articles)} missing articles.", "success")
         logging.info(f"File processed successfully for user_id={user_id}.")
         return redirect(url_for('cart', token=token))

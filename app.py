@@ -1855,7 +1855,6 @@ def upload_file(token):
 
 
 
-# проміжкова функція, для визначення таблиць при імпорті excel
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
 @requires_token_and_role('user')
 def intermediate_results(token):
@@ -1874,58 +1873,74 @@ def intermediate_results(token):
         logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
 
         if request.method == 'POST':
-            # Отримання вибору користувача
-            user_selections = {key.split('_')[1]: value for key, value in request.form.items() if key.startswith('table_')}
+            # Обробка вибору користувача
+            user_selections = {
+                key.split('_')[1]: value
+                for key, value in request.form.items() if key.startswith('table_')
+            }
             logging.debug(f"User selections: {user_selections}")
 
             items_without_table = session.get('items_without_table', [])
             added_to_cart = []
 
             with get_db_connection() as conn:
-                cursor = conn.cursor()
+                with conn.cursor() as cursor:
+                    for article, quantity, valid_tables in items_without_table:
+                        selected_table = user_selections.get(article)
+                        if selected_table and selected_table in valid_tables:
+                            # Перевірка, чи стаття існує в обраній таблиці
+                            cursor.execute(
+                                "SELECT price FROM {} WHERE article = %s".format(selected_table),
+                                (article,)
+                            )
+                            result = cursor.fetchone()
 
-                for article, quantity, valid_tables in items_without_table:
-                    selected_table = user_selections.get(article)
-                    if selected_table and selected_table in valid_tables:
-                        # Перевірка, чи стаття існує в обраній таблиці
-                        cursor.execute("SELECT price FROM {} WHERE article = %s".format(selected_table), (article,))
-                        result = cursor.fetchone()
+                            if result:
+                                base_price = result[0]
+                                final_price = calculate_price(base_price, user_markup)
 
-                        if result:
-                            base_price = result[0]
-                            final_price = calculate_price(base_price, user_markup)
+                                # Перевірка, чи є запис у `products`
+                                cursor.execute(
+                                    "SELECT id FROM products WHERE article = %s AND table_name = %s",
+                                    (article, selected_table)
+                                )
+                                product = cursor.fetchone()
 
-                            # Перевірка, чи є запис у `products`
-                            cursor.execute("SELECT id FROM products WHERE article = %s AND table_name = %s", (article, selected_table))
-                            product = cursor.fetchone()
+                                if not product:
+                                    # Додавання запису до `products`
+                                    cursor.execute(
+                                        """
+                                        INSERT INTO products (article, price, table_name, created_at)
+                                        VALUES (%s, %s, %s, NOW())
+                                        RETURNING id
+                                        """,
+                                        (article, base_price, selected_table)
+                                    )
+                                    product_id = cursor.fetchone()[0]
+                                    logging.info(f"Added article {article} to products with price {base_price} in table {selected_table}.")
+                                else:
+                                    product_id = product[0]
 
-                            if not product:
-                                # Додавання запису до `products`
-                                cursor.execute("""
-                                    INSERT INTO products (article, price, table_name, created_at)
+                                # Додавання до кошика
+                                cursor.execute(
+                                    """
+                                    INSERT INTO cart (user_id, product_id, quantity, added_at)
                                     VALUES (%s, %s, %s, NOW())
-                                    RETURNING id
-                                """, (article, base_price, selected_table))
-                                product_id = cursor.fetchone()[0]
-                                logging.info(f"Added article {article} to products with price {base_price} in table {selected_table}.")
-                            else:
-                                product_id = product[0]
+                                    ON CONFLICT (user_id, product_id) DO UPDATE SET
+                                    quantity = cart.quantity + EXCLUDED.quantity
+                                    """,
+                                    (user_id, product_id, quantity)
+                                )
+                                added_to_cart.append(article)
+                                logging.info(f"Added article {article} to cart from table {selected_table}.")
 
-                            # Додавання до кошика
-                            cursor.execute("""
-                                INSERT INTO cart (user_id, product_id, quantity, added_at)
-                                VALUES (%s, %s, %s, NOW())
-                                ON CONFLICT (user_id, product_id) DO UPDATE SET
-                                quantity = cart.quantity + EXCLUDED.quantity
-                            """, (user_id, product_id, quantity))
-                            added_to_cart.append(article)
-                            logging.info(f"Added article {article} to cart from table {selected_table}.")
-
-                conn.commit()
-                logging.info("Database operations committed successfully.")
+                    conn.commit()
+                    logging.info("Database operations committed successfully.")
 
             # Оновлення сесії та результатів
-            items_without_table = [item for item in items_without_table if item[0] not in added_to_cart]
+            items_without_table = [
+                item for item in items_without_table if item[0] not in added_to_cart
+            ]
             session['items_without_table'] = items_without_table
 
             if items_without_table:
@@ -1937,21 +1952,36 @@ def intermediate_results(token):
 
         # GET запит: повертає сторінку з проміжними результатами
         items_without_table = session.get('items_without_table', [])
-        # Додайте обчислення фінальної ціни для кожного артикула
-        for item in items_without_table:
-            article, quantity, valid_tables = item
-            for table in valid_tables:
-                cursor.execute("SELECT price FROM {} WHERE article = %s".format(table), (article,))
-                result = cursor.fetchone()
-                if result:
-                    item['final_price'] = calculate_price(result[0], user_markup)
 
-        return render_template('intermediate.html', token=token, items_without_table=items_without_table)
+        # Готуємо результати з розрахунком фінальної ціни
+        enriched_items = []
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                for article, quantity, valid_tables in items_without_table:
+                    item_prices = []
+                    for table in valid_tables:
+                        cursor.execute(
+                            "SELECT price FROM {} WHERE article = %s".format(table),
+                            (article,)
+                        )
+                        result = cursor.fetchone()
+                        if result:
+                            final_price = calculate_price(result[0], user_markup)
+                            item_prices.append({'table': table, 'final_price': final_price})
+                    enriched_items.append({
+                        'article': article,
+                        'quantity': quantity,
+                        'valid_tables': valid_tables,
+                        'prices': item_prices
+                    })
+
+        return render_template('intermediate.html', token=token, items_without_table=enriched_items)
 
     except Exception as e:
         logging.error(f"Error in intermediate_results: {e}", exc_info=True)
         flash("An error occurred while processing your selection. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 def get_markup_percentage(user_id):

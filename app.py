@@ -1702,99 +1702,6 @@ def compare_prices(token):
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
-    """
-    Завантажує файл із товарами, очищує таблицю `products` для поточного користувача перед завантаженням,
-    а потім додає нові дані.
-    """
-    logging.debug(f"Upload File Called with token: {token}")
-    try:
-        # Отримання ID користувача
-        user_id = session.get('user_id')
-        if not user_id:
-            logging.error("User not authenticated.")
-            flash("User not authenticated", "error")
-            return redirect(f'/{token}/')
-
-        logging.info(f"User ID: {user_id} started file upload.")
-
-        # Перевірка наявності файлу
-        if 'file' not in request.files or not request.files['file'].filename:
-            logging.error("No file uploaded.")
-            flash("No file uploaded", "error")
-            return redirect(f'/{token}/')
-
-        file = request.files['file']
-        logging.info(f"Uploaded file: {file.filename}")
-
-        # Перевірка формату файлу
-        if not file.filename.endswith('.xlsx'):
-            logging.error("Invalid file format. Only .xlsx files are allowed.")
-            flash("Invalid file format. Please upload an Excel file.", "error")
-            return redirect(f'/{token}/')
-
-        # Завантаження даних з файлу
-        try:
-            df = pd.read_excel(file, header=None)  # Завантаження без заголовків
-            logging.info(f"File read successfully. Shape: {df.shape}")
-        except Exception as e:
-            logging.error(f"Error reading Excel file: {e}", exc_info=True)
-            flash("Error reading the file. Please check the format.", "error")
-            return redirect(f'/{token}/')
-
-        # Перевірка мінімальної кількості колонок
-        if df.shape[1] < 2:
-            logging.error("Invalid file structure. Less than two columns found.")
-            flash("Invalid file structure. Ensure the file has at least two columns.", "error")
-            return redirect(f'/{token}/')
-
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-
-            # Очищення таблиці `products` для цього користувача
-            cursor.execute("""
-                DELETE FROM products WHERE id IN (
-                    SELECT p.id 
-                    FROM products p
-                    JOIN cart c ON p.id = c.product_id
-                    WHERE c.user_id = %s
-                )
-            """, (user_id,))
-            conn.commit()
-            logging.info(f"Cleared products for user_id={user_id}.")
-
-            # Додавання нових записів
-            for index, row in df.iterrows():
-                try:
-                    article = str(row[0]).strip()
-                    price = float(row[1])
-                    # Вставка нового запису в `products`
-                    cursor.execute("""
-                        INSERT INTO products (article, price, created_at)
-                        VALUES (%s, %s, NOW())
-                    """, (article, price))
-                except Exception as e:
-                    logging.error(f"Error processing row {index}: {row.tolist()} - {e}")
-
-            conn.commit()
-            logging.info(f"Inserted {len(df)} rows into products for user_id={user_id}.")
-
-        flash("File uploaded and processed successfully!", "success")
-        return redirect(f'/{token}/')
-
-    except Exception as e:
-        logging.error(f"Error in upload_file: {e}", exc_info=True)
-        flash("An error occurred during file upload. Please try again.", "error")
-        return redirect(f'/{token}/')
-
-
-
-
-
-
-# проміжкова функція, для визначення таблиць при імпорті excel
-@app.route('/<token>/upload_file', methods=['POST'])
-@requires_token_and_role('user')
-def upload_file(token):
     logging.debug(f"Upload File Called with token: {token}")
     try:
         # Отримання ID користувача
@@ -1927,6 +1834,109 @@ def upload_file(token):
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
 
+
+
+
+
+
+
+# проміжкова функція, для визначення таблиць при імпорті excel
+@app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
+@requires_token_and_role('user')
+def intermediate_results(token):
+    """
+    Обробляє статті без таблиці, надає можливість вибрати таблиці,
+    а потім додає вибрані статті до таблиці `products` і кошика.
+    """
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("User not authenticated", "error")
+            return redirect(f'/{token}/')
+
+        # Отримання націнки для користувача
+        user_markup = get_markup_percentage(user_id)
+        logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
+
+        if request.method == 'POST':
+            # Отримання вибору користувача
+            user_selections = {key.split('_')[1]: value for key, value in request.form.items() if key.startswith('table_')}
+            logging.debug(f"User selections: {user_selections}")
+
+            items_without_table = session.get('items_without_table', [])
+            added_to_cart = []
+
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+
+                for article, quantity, valid_tables in items_without_table:
+                    selected_table = user_selections.get(article)
+                    if selected_table and selected_table in valid_tables:
+                        # Перевірка, чи стаття існує в обраній таблиці
+                        cursor.execute("SELECT price FROM {} WHERE article = %s".format(selected_table), (article,))
+                        result = cursor.fetchone()
+
+                        if result:
+                            base_price = result[0]
+                            final_price = calculate_price(base_price, user_markup)
+
+                            # Перевірка, чи є запис у `products`
+                            cursor.execute("SELECT id FROM products WHERE article = %s AND table_name = %s", (article, selected_table))
+                            product = cursor.fetchone()
+
+                            if not product:
+                                # Додавання запису до `products`
+                                cursor.execute("""
+                                    INSERT INTO products (article, price, table_name, created_at)
+                                    VALUES (%s, %s, %s, NOW())
+                                    RETURNING id
+                                """, (article, base_price, selected_table))
+                                product_id = cursor.fetchone()[0]
+                                logging.info(f"Added article {article} to products with price {base_price} in table {selected_table}.")
+                            else:
+                                product_id = product[0]
+
+                            # Додавання до кошика
+                            cursor.execute("""
+                                INSERT INTO cart (user_id, product_id, quantity, added_at)
+                                VALUES (%s, %s, %s, NOW())
+                                ON CONFLICT (user_id, product_id) DO UPDATE SET
+                                quantity = cart.quantity + EXCLUDED.quantity
+                            """, (user_id, product_id, quantity))
+                            added_to_cart.append(article)
+                            logging.info(f"Added article {article} to cart from table {selected_table}.")
+
+                conn.commit()
+                logging.info("Database operations committed successfully.")
+
+            # Оновлення сесії та результатів
+            items_without_table = [item for item in items_without_table if item[0] not in added_to_cart]
+            session['items_without_table'] = items_without_table
+
+            if items_without_table:
+                flash("Some articles still need a table. Please review.", "warning")
+                return redirect(url_for('intermediate_results', token=token))
+
+            flash("All selected articles have been added to your cart.", "success")
+            return redirect(url_for('cart', token=token))
+
+        # GET запит: повертає сторінку з проміжними результатами
+        items_without_table = session.get('items_without_table', [])
+        # Додайте обчислення фінальної ціни для кожного артикула
+        for item in items_without_table:
+            article, quantity, valid_tables = item
+            for table in valid_tables:
+                cursor.execute("SELECT price FROM {} WHERE article = %s".format(table), (article,))
+                result = cursor.fetchone()
+                if result:
+                    item['final_price'] = calculate_price(result[0], user_markup)
+
+        return render_template('intermediate.html', token=token, items_without_table=items_without_table)
+
+    except Exception as e:
+        logging.error(f"Error in intermediate_results: {e}", exc_info=True)
+        flash("An error occurred while processing your selection. Please try again.", "error")
+        return redirect(f'/{token}/')
 
 
 def get_markup_percentage(user_id):

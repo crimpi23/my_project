@@ -1839,6 +1839,7 @@ def upload_file(token):
 
 
 
+
 # проміжкова функція, для визначення таблиць при імпорті excel
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
 @requires_token_and_role('user')

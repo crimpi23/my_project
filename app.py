@@ -702,36 +702,35 @@ def cart(token):
         user_id = session.get('user_id')
         if not user_id:
             flash("You need to log in to view your cart.", "error")
+            logging.warning("Attempt to access cart without user ID.")
             return redirect(url_for('index'))
 
-        user_markup = Decimal(get_markup_percentage(user_id))  # Отримання націнки
+        user_markup = Decimal(get_markup_percentage(user_id))
+        logging.debug(f"User ID: {user_id}, Markup percentage: {user_markup}.")
 
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
+        logging.debug(f"Fetching cart items for user_id: {user_id}.")
         cursor.execute("""
             SELECT 
                 c.product_id, 
                 p.article, 
-                p.price, 
-                c.quantity, 
-                (p.price * c.quantity) AS total_price, 
-                c.added_at
+                p.price AS base_price, 
+                ROUND(p.price * (1 + %s / 100.0), 2) AS final_price,
+                c.quantity,
+                ROUND(ROUND(p.price * (1 + %s / 100.0), 2) * c.quantity, 2) AS total_price
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
             ORDER BY c.added_at
-        """, (user_id,))
+        """, (user_markup, user_markup, user_id))
         cart_items = cursor.fetchall()
-        cart_items = [dict(row) for row in cart_items]  # Конвертуємо DictRow у словники
+        cart_items = [dict(row) for row in cart_items]
+        logging.debug(f"Cart items fetched: {cart_items}")
 
-        # Додавання final_price
-        for item in cart_items:
-            markup_decimal = user_markup / Decimal(100)
-            item['final_price'] = round(item['price'] * (Decimal(1) + markup_decimal), 2)
-            item['total_final_price'] = round(item['final_price'] * item['quantity'], 2)
-
-        total_price = sum(item['total_final_price'] for item in cart_items)
+        total_price = sum(item['total_price'] for item in cart_items)
+        logging.debug(f"Total price calculated: {total_price}. Preparing to render cart page.")
 
         return render_template('cart.html', cart_items=cart_items, total_price=total_price)
 

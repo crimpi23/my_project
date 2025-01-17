@@ -605,7 +605,7 @@ def search_articles(token):
         logging.info("Database connection established.")
 
         # Отримання націнки для користувача
-        user_markup = get_markup_percentage(session['user_id'])
+        user_markup = Decimal(get_markup_percentage(session['user_id']))
         logging.debug(f"Markup percentage for user_id={session['user_id']}: {user_markup}%")
 
         # Отримання таблиць із прайсами
@@ -633,8 +633,8 @@ def search_articles(token):
         grouped_results = {}
         for result in results:
             article = result['article']
-            base_price = result['price']
-            final_price = calculate_price(base_price, user_markup)  # Розрахунок ціни з націнкою
+            base_price = Decimal(result['price'])
+            final_price = round(base_price * (1 + user_markup / 100), 2)
             grouped_results.setdefault(article, []).append({
                 'price': final_price,
                 'base_price': base_price,
@@ -669,6 +669,7 @@ def search_articles(token):
         if conn:
             conn.close()
         logging.info("Database connection closed.")
+
 
 
 
@@ -1729,9 +1730,9 @@ def upload_file(token):
             flash("Error reading the file. Please check the format.", "error")
             return redirect(f'/{token}/')
 
-        if df.shape[1] < 2:
-            logging.error("Invalid file structure. Less than two columns found.")
-            flash("Invalid file structure. Ensure the file has at least two columns.", "error")
+        if df.shape[1] < 3:
+            logging.error("Invalid file structure. Less than three columns found.")
+            flash("Invalid file structure. Ensure the file has at least three columns.", "error")
             return redirect(f'/{token}/')
 
         items_with_table = []
@@ -1747,79 +1748,69 @@ def upload_file(token):
 
             for index, row in df.iterrows():
                 try:
-                    if len(row) < 2 or not str(row[1]).isdigit():
+                    if len(row) < 3 or not str(row[1]).isdigit():
                         logging.warning(f"Skipped invalid row at index {index}: {row.tolist()}")
                         continue
 
                     article = str(row[0]).strip()
                     quantity = int(row[1])
-                    table_name = str(row[2]).strip() if len(row) > 2 and pd.notna(row[2]) else None
+                    table_name = str(row[2]).strip()
 
                     logging.debug(f"Processing article: {article}, Quantity: {quantity}, Table: {table_name}")
 
-                    if table_name:
-                        if table_name not in all_tables:
-                            logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
-                            missing_articles.append(article)
-                            continue
+                    if table_name not in all_tables:
+                        logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
+                        missing_articles.append(article)
+                        continue
 
-                        cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
-                        result = cursor.fetchone()
+                    cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
+                    result = cursor.fetchone()
 
-                        if result:
-                            base_price = Decimal(result[1])
-                            final_price = round(base_price * (Decimal(1) + user_markup / Decimal(100)), 2)
+                    if result:
+                        base_price = Decimal(result[1])
+                        final_price = round(base_price * (Decimal(1) + user_markup / Decimal(100)), 2)
 
-                            # Оновлення або вставка в таблицю products
-                            cursor.execute(
-                                """
-                                INSERT INTO products (article, price, table_name, created_at)
-                                VALUES (%s, %s, %s, NOW())
-                                ON CONFLICT (article, table_name) DO UPDATE SET
-                                price = EXCLUDED.price,
-                                created_at = EXCLUDED.created_at
-                                """,
-                                (article, base_price, table_name)
-                            )
+                        # Оновлення або вставка в таблицю products
+                        cursor.execute(
+                            """
+                            INSERT INTO products (article, price, table_name, created_at)
+                            VALUES (%s, %s, %s, NOW())
+                            ON CONFLICT (article, table_name) DO UPDATE SET
+                            price = EXCLUDED.price,
+                            created_at = EXCLUDED.created_at
+                            """,
+                            (article, base_price, table_name)
+                        )
 
-                            items_with_table.append((article, final_price, table_name, quantity))
-                            logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
-                        else:
-                            missing_articles.append(article)
-                            logging.warning(f"Article {article} not found in {table_name}. Skipping.")
+                        items_with_table.append((article, final_price, table_name, quantity))
+                        logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
                     else:
-                        matching_tables = []
-                        for table in all_tables:
-                            cursor.execute(f"SELECT article FROM {table} WHERE article = %s", (article,))
-                            if cursor.fetchone():
-                                matching_tables.append(table)
+                        missing_articles.append(article)
+                        logging.warning(f"Article {article} not found in {table_name}. Skipping.")
 
-                        if matching_tables:
-                            logging.info(f"Article {article} found in tables: {matching_tables}")
-                            items_without_table.append((article, quantity, matching_tables))
-                        else:
-                            logging.warning(f"Article {article} not found in any table.")
-                            missing_articles.append(article)
                 except Exception as e:
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}")
                     continue
 
             for article, price, table_name, quantity in items_with_table:
-                cursor.execute(
-                    """
-                    INSERT INTO cart (user_id, product_id, quantity, added_at)
-                    VALUES (
-                        %s,
-                        (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                        %s,
-                        NOW()
+                try:
+                    cursor.execute(
+                        """
+                        INSERT INTO cart (user_id, product_id, quantity, added_at)
+                        VALUES (
+                            %s,
+                            (SELECT id FROM products WHERE article = %s AND table_name = %s),
+                            %s,
+                            NOW()
+                        )
+                        ON CONFLICT (user_id, product_id) DO UPDATE SET
+                        quantity = cart.quantity + EXCLUDED.quantity
+                        """,
+                        (user_id, article, table_name, quantity)
                     )
-                    ON CONFLICT (user_id, product_id) DO UPDATE SET
-                    quantity = cart.quantity + EXCLUDED.quantity
-                    """,
-                    (user_id, article, table_name, quantity)
-                )
-                logging.info(f"Added article {article} to cart from table {table_name}.")
+                    logging.info(f"Added article {article} to cart from table {table_name}.")
+                except Exception as e:
+                    logging.error(f"Error adding article {article} to cart: {e}", exc_info=True)
 
             conn.commit()
             logging.info("Database operations committed successfully.")

@@ -661,7 +661,6 @@ def search_articles(token):
 
 
 
-
 # очищення результату пошуку
 @app.route('/<token>/clear_search', methods=['POST'])
 @requires_token_and_role('user')

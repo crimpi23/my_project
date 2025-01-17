@@ -1074,10 +1074,10 @@ def orders(token):
         return redirect(url_for('index'))
 
     # Отримуємо фільтри з запиту
-    article_filter = request.args.get('article', '')
-    status_filter = request.args.get('status', '')
-    start_date = request.args.get('start_date', '')
-    end_date = request.args.get('end_date', '')
+    article_filter = request.args.get('article', '').strip()
+    status_filter = request.args.get('status', '').strip()
+    start_date = request.args.get('start_date', '').strip()
+    end_date = request.args.get('end_date', '').strip()
 
     # Логування отриманих фільтрів
     logging.debug(f"Received filters: Article: {article_filter}, Status: {status_filter}, Start Date: {start_date}, End Date: {end_date}")
@@ -1090,13 +1090,19 @@ def orders(token):
         query = """
         SELECT * FROM orders
         WHERE user_id = %s
-        ORDER BY order_date DESC
         """
         params = [user_id]
 
         # Якщо фільтр по артикулу
         if article_filter:
-            query += " AND EXISTS (SELECT 1 FROM order_items WHERE order_id = orders.id AND article LIKE %s)"
+            query += """
+            AND EXISTS (
+                SELECT 1 
+                FROM order_items 
+                WHERE order_id = orders.id 
+                AND article LIKE %s
+            )
+            """
             params.append(f"%{article_filter}%")
 
         # Якщо фільтр по статусу
@@ -1114,22 +1120,31 @@ def orders(token):
             query += " AND order_date <= %s"
             params.append(end_date)
 
+        # Додаємо сортування
+        query += " ORDER BY order_date DESC"
+
         # Логування сформованого запиту
         logging.debug(f"Executing query: {query} with params: {params}")
 
+        # Виконання запиту
         cursor.execute(query, params)
         orders = cursor.fetchall()
 
         logging.debug(f"Orders retrieved for user_id={user_id} with filters: {article_filter}, {status_filter}, {start_date}, {end_date}")
-        conn.commit()
-        cursor.close()
-        conn.close()
 
         return render_template('orders.html', orders=orders)
+
     except Exception as e:
         logging.error(f"Error fetching orders: {e}", exc_info=True)
         flash("Error fetching orders.", "error")
         return redirect(url_for('orders', token=token))
+
+    finally:
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conn' in locals() and conn:
+            conn.close()
+        logging.debug("Database connection closed.")
 
 
 

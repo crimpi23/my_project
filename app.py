@@ -567,7 +567,6 @@ def search_articles(token):
     try:
         articles = []
         quantities = {}
-        auto_set_quantities = []
 
         articles_input = request.form.get('articles')
         logging.debug(f"Received articles input: {articles_input}")
@@ -583,19 +582,12 @@ def search_articles(token):
                 continue
             if len(parts) == 1:
                 article = parts[0].strip().upper()
-                if article in quantities:
-                    quantities[article] += 1
-                else:
-                    articles.append(article)
-                    quantities[article] = 1
-                    auto_set_quantities.append(article)
+                quantities[article] = quantities.get(article, 0) + 1
+                articles.append(article)
             elif len(parts) == 2 and parts[1].isdigit():
                 article, quantity = parts[0].strip().upper(), int(parts[1])
-                if article in quantities:
-                    quantities[article] += quantity
-                else:
-                    articles.append(article)
-                    quantities[article] = quantity
+                quantities[article] = quantities.get(article, 0) + quantity
+                articles.append(article)
 
         logging.debug(f"Processed articles: {articles}")
         logging.debug(f"Quantities: {quantities}")
@@ -606,25 +598,24 @@ def search_articles(token):
 
         # Отримання націнки для користувача
         user_markup = Decimal(get_markup_percentage(session['user_id']))
+        if user_markup < 0:
+            logging.warning(f"Invalid markup percentage: {user_markup}. Defaulting to 0.")
+            user_markup = Decimal(0)
         logging.debug(f"Markup percentage for user_id={session['user_id']}: {user_markup}%")
 
         # Отримання таблиць із прайсами
         cursor.execute("SELECT table_name FROM price_lists")
-        tables = [table[0] for table in cursor.fetchall()]
+        tables = [row[0] for row in cursor.fetchall()]
         logging.debug(f"Fetched price list tables: {tables}")
 
         results = []
         for table_name in tables:
-            if table_name not in tables:
-                logging.warning(f"Skipping invalid table name: {table_name}")
-                continue
             logging.debug(f"Querying table: {table_name}")
             query = f"""
                 SELECT article, price, %s AS table_name
                 FROM {table_name}
                 WHERE article = ANY(%s)
             """
-            logging.debug(f"Executing query: {query}")
             cursor.execute(query, (table_name, articles))
             fetched = cursor.fetchall()
             results.extend(fetched)
@@ -643,7 +634,11 @@ def search_articles(token):
             })
 
         missing_articles = [article for article in articles if article not in grouped_results]
-        logging.info(f"Missing articles: {missing_articles}")
+        if missing_articles:
+            logging.info(f"Missing articles: {missing_articles}")
+        else:
+            logging.info("No missing articles found.")
+
         logging.debug(f"Grouped results: {grouped_results}")
 
         session['grouped_results'] = grouped_results
@@ -661,7 +656,7 @@ def search_articles(token):
 
     except Exception as e:
         logging.error(f"Error in search_articles: {str(e)}", exc_info=True)
-        flash(f"Error: {str(e)}", "error")
+        flash("An error occurred while processing your search. Please try again.", "error")
         return redirect(url_for('index'))
     finally:
         if cursor:
@@ -1703,7 +1698,7 @@ def upload_file(token):
 
         logging.info(f"User ID: {user_id} started file upload.")
 
-        # Отримання націнки для користувача (Decimal)
+        # Отримання націнки для користувача
         user_markup = Decimal(get_markup_percentage(user_id))
         logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
 
@@ -1730,13 +1725,12 @@ def upload_file(token):
             flash("Error reading the file. Please check the format.", "error")
             return redirect(f'/{token}/')
 
-        if df.shape[1] < 3:
-            logging.error("Invalid file structure. Less than three columns found.")
-            flash("Invalid file structure. Ensure the file has at least three columns.", "error")
+        if df.shape[1] < 2:
+            logging.error("Invalid file structure. Less than two columns found.")
+            flash("Invalid file structure. Ensure the file has at least two columns.", "error")
             return redirect(f'/{token}/')
 
         items_with_table = []
-        items_without_table = []
         missing_articles = []
 
         with get_db_connection() as conn:
@@ -1748,46 +1742,47 @@ def upload_file(token):
 
             for index, row in df.iterrows():
                 try:
-                    if len(row) < 3 or not str(row[1]).isdigit():
+                    if len(row) < 2 or not str(row[1]).isdigit():
                         logging.warning(f"Skipped invalid row at index {index}: {row.tolist()}")
                         continue
 
-                    article = str(row[0]).strip()
+                    article = str(row[0]).strip().upper()
                     quantity = int(row[1])
-                    table_name = str(row[2]).strip()
+                    table_name = str(row[2]).strip() if len(row) > 2 and pd.notna(row[2]) else None
 
                     logging.debug(f"Processing article: {article}, Quantity: {quantity}, Table: {table_name}")
 
-                    if table_name not in all_tables:
-                        logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
-                        missing_articles.append(article)
-                        continue
+                    if table_name:
+                        if table_name not in all_tables:
+                            logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
+                            missing_articles.append(article)
+                            continue
 
-                    cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
-                    result = cursor.fetchone()
+                        cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
+                        result = cursor.fetchone()
 
-                    if result:
-                        base_price = Decimal(result[1])
-                        final_price = round(base_price * (Decimal(1) + user_markup / Decimal(100)), 2)
+                        if result:
+                            base_price = Decimal(result[1])
+                            final_price = round(base_price * (1 + user_markup / 100), 2)
 
-                        # Оновлення або вставка в таблицю products
-                        cursor.execute(
-                            """
-                            INSERT INTO products (article, price, table_name, created_at)
-                            VALUES (%s, %s, %s, NOW())
-                            ON CONFLICT (article, table_name) DO UPDATE SET
-                            price = EXCLUDED.price,
-                            created_at = EXCLUDED.created_at
-                            """,
-                            (article, base_price, table_name)
-                        )
-
-                        items_with_table.append((article, final_price, table_name, quantity))
-                        logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
+                            cursor.execute(
+                                """
+                                INSERT INTO products (article, price, table_name, created_at)
+                                VALUES (%s, %s, %s, NOW())
+                                ON CONFLICT (article, table_name) DO UPDATE SET
+                                price = EXCLUDED.price,
+                                created_at = EXCLUDED.created_at
+                                """,
+                                (article, base_price, table_name)
+                            )
+                            items_with_table.append((article, final_price, table_name, quantity))
+                            logging.info(f"Article {article} found in {table_name} with base price {base_price} and final price {final_price}.")
+                        else:
+                            missing_articles.append(article)
+                            logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                     else:
+                        logging.warning(f"No table specified for article {article}. Skipping.")
                         missing_articles.append(article)
-                        logging.warning(f"Article {article} not found in {table_name}. Skipping.")
-
                 except Exception as e:
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}")
                     continue
@@ -1810,18 +1805,10 @@ def upload_file(token):
                     )
                     logging.info(f"Added article {article} to cart from table {table_name}.")
                 except Exception as e:
-                    logging.error(f"Error adding article {article} to cart: {e}", exc_info=True)
+                    logging.error(f"Failed to add article {article} to cart: {e}")
 
             conn.commit()
             logging.info("Database operations committed successfully.")
-
-        session['items_without_table'] = items_without_table
-        session['missing_articles'] = missing_articles
-
-        if items_without_table:
-            logging.info(f"Redirecting to intermediate_results. Items without table: {len(items_without_table)}")
-            flash(f"{len(items_without_table)} articles need table selection.", "warning")
-            return redirect(url_for('intermediate_results', token=token))
 
         flash(f"File processed successfully. {len(items_with_table)} items added to cart. {len(missing_articles)} missing articles.", "success")
         logging.info(f"File processed successfully for user_id={user_id}.")

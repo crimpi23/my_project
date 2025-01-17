@@ -1740,9 +1740,9 @@ def upload_file(token):
             flash("Error reading the file. Please check the format.", "error")
             return redirect(f'/{token}/')
 
-        if df.shape[1] < 2:
-            logging.error("Invalid file structure. Less than two columns found.")
-            flash("Invalid file structure. Ensure the file has at least two columns.", "error")
+        if df.shape[1] < 3:
+            logging.error("Invalid file structure. Less than three columns found.")
+            flash("Invalid file structure. Ensure the file has three columns.", "error")
             return redirect(f'/{token}/')
 
         items_with_table = []
@@ -1779,6 +1779,7 @@ def upload_file(token):
                         base_price = Decimal(result[1])
                         final_price = round(base_price * (1 + user_markup / 100), 2)
 
+                        # Додавання товару до таблиці `products`
                         cursor.execute(
                             """
                             INSERT INTO products (article, price, table_name, created_at)
@@ -1797,6 +1798,7 @@ def upload_file(token):
                         logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                 except Exception as e:
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}")
+                    conn.rollback()
                     continue
 
             for article, price, table_name, quantity in items_with_table:
@@ -1818,6 +1820,7 @@ def upload_file(token):
                     logging.info(f"Added article {article} to cart from table {table_name}.")
                 except Exception as e:
                     logging.error(f"Failed to add article {article} to cart: {e}")
+                    conn.rollback()
 
             conn.commit()
             logging.info("Database operations committed successfully.")
@@ -1830,6 +1833,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

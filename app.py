@@ -434,33 +434,10 @@ def submit_selection(token):
             logging.info("No articles selected in the form. Redirecting to search.")
             return redirect(f'/{token}/search')
 
-        # Додавання вибраних товарів до таблиці `selection_buffer`
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
             for article, price, table_name, quantity in selected_articles:
-                cursor.execute("""
-                    INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
-                    VALUES (%s, %s, %s, %s, %s, NOW())
-                    ON CONFLICT (user_id, article, table_name) DO UPDATE SET
-                    quantity = selection_buffer.quantity + EXCLUDED.quantity
-                """, (user_id, article, price, table_name, quantity))
-                logging.debug(f"Added/updated article {article} in selection_buffer for user_id={user_id}.")
-
-            # Перенос товарів із `selection_buffer` у `cart`
-            cursor.execute("""
-                SELECT article, price, table_name, quantity 
-                FROM selection_buffer 
-                WHERE user_id = %s
-            """, (user_id,))
-            buffer_items = cursor.fetchall()
-
-            for item in buffer_items:
-                article = item['article']
-                price = Decimal(item['price'])
-                table_name = item['table_name']
-                quantity = item['quantity']
-
                 # Перевірка, чи існує товар у `products`
                 cursor.execute("""
                     SELECT id FROM products WHERE article = %s AND table_name = %s
@@ -468,7 +445,7 @@ def submit_selection(token):
                 product = cursor.fetchone()
 
                 if not product:
-                    # Додавання нового товару у `products`
+                    # Додавання нового товару до `products`
                     cursor.execute("""
                         INSERT INTO products (article, table_name, price, created_at)
                         VALUES (%s, %s, %s, NOW())
@@ -479,19 +456,18 @@ def submit_selection(token):
 
                 product_id = product['id']
 
-                # Додавання товару до кошика
+                # Додавання товару в кошик
                 cursor.execute("""
                     INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, added_at)
                     VALUES (%s, %s, %s, %s, %s, NOW())
                     ON CONFLICT (user_id, product_id) DO UPDATE SET
-                    quantity = cart.quantity + EXCLUDED.quantity
+                    quantity = cart.quantity + EXCLUDED.quantity,
+                    final_price = EXCLUDED.final_price
                 """, (user_id, product_id, quantity, price, price))
                 logging.debug(f"Added/updated article {article} in cart for user_id={user_id}.")
 
-            # Очистка буфера
-            cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s", (user_id,))
             conn.commit()
-            logging.info(f"Buffer cleared for user_id={user_id} after submission.")
+            logging.info(f"Cart updated successfully for user_id={user_id}.")
 
         flash("Selection successfully submitted!", "success")
         return redirect(url_for('cart', token=token))

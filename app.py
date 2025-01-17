@@ -419,68 +419,55 @@ def submit_selection(token):
             logging.warning("User not authenticated. Redirecting to search.")
             return redirect(f'/{token}/search')
 
-        selected_articles = []
-        for key, value in request.form.items():
-            if key.startswith('selected_'):
-                article = key.replace('selected_', '')
-                price, table_name = value.split('|')
-                quantity = int(request.form.get(f'quantity_{article}', 1))
-                selected_articles.append((article, Decimal(price), table_name, quantity))
-
-        logging.debug(f"Parsed selected articles: {selected_articles}")
-
-        if not selected_articles:
-            flash("No articles selected.", "error")
-            logging.info("No articles were selected by the user. Redirecting to search.")
-            return redirect(f'/{token}/search')
-
+        # Отримуємо вибір з буфера
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            for article, final_price, table_name, quantity in selected_articles:
-                # Перевірка наявності артикула в таблиці products
+            cursor.execute("""
+                SELECT article, price, table_name, quantity 
+                FROM selection_buffer 
+                WHERE user_id = %s
+            """, (user_id,))
+            buffer_items = cursor.fetchall()
+
+            if not buffer_items:
+                flash("No articles in selection buffer.", "error")
+                return redirect(f'/{token}/search')
+
+            for item in buffer_items:
+                article = item['article']
+                price = Decimal(item['price'])
+                table_name = item['table_name']
+                quantity = item['quantity']
+
+                # Перевірка, чи є товар у `products`
                 cursor.execute("""
                     SELECT id FROM products WHERE article = %s AND table_name = %s
                 """, (article, table_name))
                 product = cursor.fetchone()
 
                 if not product:
-                    # Додавання нового запису до products
                     cursor.execute("""
                         INSERT INTO products (article, table_name, price, created_at)
                         VALUES (%s, %s, %s, NOW())
                         RETURNING id
-                    """, (article, table_name, final_price))
+                    """, (article, table_name, price))
                     product = cursor.fetchone()
-                    logging.info(f"Added new product to products: article={article}, table_name={table_name}, price={final_price}")
 
                 product_id = product['id']
 
-                # Перевірка, чи товар вже є в кошику
+                # Додавання товару в кошик
                 cursor.execute("""
-                    SELECT id, quantity FROM cart
-                    WHERE user_id = %s AND product_id = %s
-                """, (user_id, product_id))
-                existing_cart_item = cursor.fetchone()
+                    INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, added_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                    ON CONFLICT (user_id, product_id) DO UPDATE SET
+                    quantity = cart.quantity + EXCLUDED.quantity
+                """, (user_id, product_id, quantity, price, price))
+                logging.debug(f"Added article {article} to cart from buffer.")
 
-                if existing_cart_item:
-                    # Оновлення кількості в кошику
-                    cursor.execute("""
-                        UPDATE cart
-                        SET quantity = quantity + %s
-                        WHERE id = %s
-                    """, (quantity, existing_cart_item['id']))
-                    logging.debug(f"Updated quantity for article {article} in cart.")
-                else:
-                    # Додавання нового запису до кошика
-                    cursor.execute("""
-                        INSERT INTO cart (user_id, product_id, quantity, final_price, added_at)
-                        VALUES (%s, %s, %s, %s, NOW())
-                    """, (user_id, product_id, quantity, final_price))
-                    logging.debug(f"Added new item to cart for article {article} with quantity {quantity}.")
-
+            # Очистка буфера після додавання
+            cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s", (user_id,))
             conn.commit()
-            logging.info(f"Selection successfully submitted for user_id={user_id}.")
 
         flash("Selection successfully submitted!", "success")
         return redirect(url_for('cart', token=token))
@@ -489,6 +476,7 @@ def submit_selection(token):
         logging.error(f"Error in submit_selection: {e}", exc_info=True)
         flash("An error occurred during submission. Please try again.", "error")
         return redirect(f'/{token}/search')
+
 
 
 
@@ -701,11 +689,29 @@ def cart(token):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
+        # Якщо це POST-запит, обробляємо дії з кошиком (наприклад, видалення)
+        if request.method == 'POST':
+            action = request.form.get('action')
+            product_id = request.form.get('product_id')
+            if action == 'remove' and product_id:
+                cursor.execute(
+                    """
+                    DELETE FROM cart
+                    WHERE user_id = %s AND product_id = %s
+                    """,
+                    (user_id, product_id)
+                )
+                conn.commit()
+                flash("Item removed from cart.", "success")
+                logging.info(f"Product {product_id} removed from cart for user_id {user_id}.")
+
+        # Отримуємо товари з кошика
         logging.debug(f"Fetching cart items for user_id: {user_id}.")
         cursor.execute("""
             SELECT 
                 c.product_id, 
                 p.article, 
+                c.base_price,
                 c.final_price, 
                 c.quantity,
                 ROUND(c.final_price * c.quantity, 2) AS total_price
@@ -720,12 +726,14 @@ def cart(token):
             cart_items.append({
                 'product_id': row['product_id'],
                 'article': row['article'],
+                'base_price': float(row['base_price']),
                 'final_price': float(row['final_price']),
                 'quantity': row['quantity'],
                 'total_price': float(row['total_price'])
             })
         logging.debug(f"Cart items fetched: {cart_items}")
 
+        # Підрахунок загальної суми
         total_price = sum(item['total_price'] for item in cart_items)
         logging.debug(f"Total price calculated: {total_price}. Preparing to render cart page.")
 
@@ -742,6 +750,7 @@ def cart(token):
         if 'conn' in locals() and conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 

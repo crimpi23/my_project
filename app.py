@@ -432,6 +432,7 @@ def submit_selection(token):
 
             if not buffer_items:
                 flash("No articles in selection buffer.", "error")
+                logging.info("Selection buffer is empty. Redirecting to search.")
                 return redirect(f'/{token}/search')
 
             for item in buffer_items:
@@ -447,12 +448,14 @@ def submit_selection(token):
                 product = cursor.fetchone()
 
                 if not product:
+                    # Додавання нового товару до `products`
                     cursor.execute("""
                         INSERT INTO products (article, table_name, price, created_at)
                         VALUES (%s, %s, %s, NOW())
                         RETURNING id
                     """, (article, table_name, price))
                     product = cursor.fetchone()
+                    logging.info(f"Added new product to products: {article}, table: {table_name}, price: {price}")
 
                 product_id = product['id']
 
@@ -463,11 +466,12 @@ def submit_selection(token):
                     ON CONFLICT (user_id, product_id) DO UPDATE SET
                     quantity = cart.quantity + EXCLUDED.quantity
                 """, (user_id, product_id, quantity, price, price))
-                logging.debug(f"Added article {article} to cart from buffer.")
+                logging.debug(f"Added/updated article {article} in cart for user_id={user_id}.")
 
             # Очистка буфера після додавання
             cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s", (user_id,))
             conn.commit()
+            logging.info(f"Buffer cleared for user_id={user_id} after submission.")
 
         flash("Selection successfully submitted!", "success")
         return redirect(url_for('cart', token=token))
@@ -1780,6 +1784,7 @@ def upload_file(token):
                             base_price = Decimal(result[1])
                             final_price = round(base_price * (1 + user_markup / 100), 2)
 
+                            # Додавання в таблицю products
                             cursor.execute(
                                 """
                                 INSERT INTO products (article, price, table_name, created_at)
@@ -1833,8 +1838,6 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
-
-
 
 
 

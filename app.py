@@ -406,80 +406,76 @@ def create_user(token):
 
 
 # проміжковий єтап після /cart
-@app.route('/<token>/cart', methods=['GET', 'POST'])
+@app.route('/<token>/submit_selection', methods=['POST'])
 @requires_token_and_role('user')
-def cart(token):
+def submit_selection(token):
+    logging.debug(f"Submit Selection Called with token: {token}")
+    app.logger.debug(f"Form data received: {request.form}")
+
     try:
         user_id = session.get('user_id')
         if not user_id:
-            flash("You need to log in to view your cart.", "error")
-            logging.warning("Attempt to access cart without user ID.")
-            return redirect(url_for('index'))
+            flash("User not authenticated", "error")
+            logging.warning("User not authenticated. Redirecting to search.")
+            return redirect(f'/{token}/search')
 
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        # Обробка форми для вибраних товарів
+        selected_articles = []
+        for key, value in request.form.items():
+            if key.startswith('selected_'):
+                article = key.split('_')[1]
+                price, table_name = value.split('|')
+                quantity_key = f"quantity_{article}"
+                quantity = int(request.form.get(quantity_key, 1))
+                selected_articles.append((article, Decimal(price), table_name, quantity))
 
-        # Якщо це POST-запит, обробляємо дії з кошиком (наприклад, видалення)
-        if request.method == 'POST':
-            action = request.form.get('action')
-            product_id = request.form.get('product_id')
-            if action == 'remove' and product_id:
-                cursor.execute(
-                    """
-                    DELETE FROM cart
-                    WHERE user_id = %s AND product_id = %s
-                    """,
-                    (user_id, product_id)
-                )
-                conn.commit()
-                flash("Item removed from cart.", "success")
-                logging.info(f"Product {product_id} removed from cart for user_id {user_id}.")
+        if not selected_articles:
+            flash("No articles selected.", "error")
+            logging.info("No articles selected in the form. Redirecting to search.")
+            return redirect(f'/{token}/search')
 
-        # Отримуємо товари з кошика
-        logging.debug(f"Fetching cart items for user_id: {user_id}.")
-        cursor.execute("""
-            SELECT 
-                c.product_id, 
-                p.article, 
-                COALESCE(c.base_price, 0) AS base_price, -- Використання COALESCE для уникнення NULL
-                COALESCE(c.final_price, 0) AS final_price, -- Використання COALESCE для уникнення NULL
-                c.quantity,
-                ROUND(COALESCE(c.final_price, 0) * c.quantity, 2) AS total_price
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = %s
-            ORDER BY c.added_at
-        """, (user_id,))
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        cart_items = []
-        for row in cursor.fetchall():
-            cart_items.append({
-                'product_id': row['product_id'],
-                'article': row['article'],
-                'base_price': float(row['base_price']),
-                'final_price': float(row['final_price']),
-                'quantity': row['quantity'],
-                'total_price': float(row['total_price'])
-            })
-        logging.debug(f"Cart items fetched: {cart_items}")
+            for article, price, table_name, quantity in selected_articles:
+                # Перевірка, чи існує товар у `products`
+                cursor.execute("""
+                    SELECT id FROM products WHERE article = %s AND table_name = %s
+                """, (article, table_name))
+                product = cursor.fetchone()
 
-        # Підрахунок загальної суми
-        total_price = sum(item['total_price'] for item in cart_items)
-        logging.debug(f"Total price calculated: {total_price}. Preparing to render cart page.")
+                if not product:
+                    # Додавання нового товару до `products`
+                    cursor.execute("""
+                        INSERT INTO products (article, table_name, price, created_at)
+                        VALUES (%s, %s, %s, NOW())
+                        RETURNING id
+                    """, (article, table_name, price))
+                    product = cursor.fetchone()
+                    logging.info(f"Added new product to products: {article}, table: {table_name}, price: {price}")
 
-        return render_template('cart.html', cart_items=cart_items, total_price=total_price)
+                product_id = product['id']
+
+                # Додавання товару в кошик
+                cursor.execute("""
+                    INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, added_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                    ON CONFLICT (user_id, product_id) DO UPDATE SET
+                    quantity = cart.quantity + EXCLUDED.quantity,
+                    final_price = EXCLUDED.final_price
+                """, (user_id, product_id, quantity, price, price))
+                logging.debug(f"Added/updated article {article} in cart for user_id={user_id}.")
+
+            conn.commit()
+            logging.info(f"Cart updated successfully for user_id={user_id}.")
+
+        flash("Selection successfully submitted!", "success")
+        return redirect(url_for('cart', token=token))
 
     except Exception as e:
-        logging.error(f"Error in cart for user_id={user_id}: {str(e)}", exc_info=True)
-        flash("Could not load your cart. Please try again.", "error")
-        return redirect(request.referrer or url_for('index'))
-
-    finally:
-        if 'cursor' in locals() and cursor:
-            cursor.close()
-        if 'conn' in locals() and conn:
-            conn.close()
-        logging.debug("Database connection closed.")
+        logging.error(f"Error in submit_selection: {e}", exc_info=True)
+        flash("An error occurred during submission. Please try again.", "error")
+        return redirect(f'/{token}/search')
 
 
 
@@ -715,10 +711,10 @@ def cart(token):
             SELECT 
                 c.product_id, 
                 p.article, 
-                c.base_price,
-                c.final_price, 
+                COALESCE(c.base_price, 0) AS base_price, -- Використання COALESCE для уникнення NULL
+                COALESCE(c.final_price, 0) AS final_price, -- Використання COALESCE для уникнення NULL
                 c.quantity,
-                ROUND(c.final_price * c.quantity, 2) AS total_price
+                ROUND(COALESCE(c.final_price, 0) * c.quantity, 2) AS total_price
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
@@ -754,6 +750,7 @@ def cart(token):
         if 'conn' in locals() and conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 

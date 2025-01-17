@@ -419,10 +419,35 @@ def submit_selection(token):
             logging.warning("User not authenticated. Redirecting to search.")
             return redirect(f'/{token}/search')
 
-        # Отримуємо вибір з буфера
+        # Обробка форми для вибраних товарів
+        selected_articles = []
+        for key, value in request.form.items():
+            if key.startswith('selected_'):
+                article = key.split('_')[1]
+                price, table_name = value.split('|')
+                quantity_key = f"quantity_{article}"
+                quantity = int(request.form.get(quantity_key, 1))
+                selected_articles.append((article, Decimal(price), table_name, quantity))
+
+        if not selected_articles:
+            flash("No articles selected.", "error")
+            logging.info("No articles selected in the form. Redirecting to search.")
+            return redirect(f'/{token}/search')
+
+        # Додавання вибраних товарів до таблиці `selection_buffer`
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
+            for article, price, table_name, quantity in selected_articles:
+                cursor.execute("""
+                    INSERT INTO selection_buffer (user_id, article, price, table_name, quantity, added_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                    ON CONFLICT (user_id, article, table_name) DO UPDATE SET
+                    quantity = selection_buffer.quantity + EXCLUDED.quantity
+                """, (user_id, article, price, table_name, quantity))
+                logging.debug(f"Added/updated article {article} in selection_buffer for user_id={user_id}.")
+
+            # Перенос товарів із `selection_buffer` у `cart`
             cursor.execute("""
                 SELECT article, price, table_name, quantity 
                 FROM selection_buffer 
@@ -430,25 +455,20 @@ def submit_selection(token):
             """, (user_id,))
             buffer_items = cursor.fetchall()
 
-            if not buffer_items:
-                flash("No articles in selection buffer.", "error")
-                logging.info("Selection buffer is empty. Redirecting to search.")
-                return redirect(f'/{token}/search')
-
             for item in buffer_items:
                 article = item['article']
                 price = Decimal(item['price'])
                 table_name = item['table_name']
                 quantity = item['quantity']
 
-                # Перевірка, чи є товар у `products`
+                # Перевірка, чи існує товар у `products`
                 cursor.execute("""
                     SELECT id FROM products WHERE article = %s AND table_name = %s
                 """, (article, table_name))
                 product = cursor.fetchone()
 
                 if not product:
-                    # Додавання нового товару до `products`
+                    # Додавання нового товару у `products`
                     cursor.execute("""
                         INSERT INTO products (article, table_name, price, created_at)
                         VALUES (%s, %s, %s, NOW())
@@ -459,7 +479,7 @@ def submit_selection(token):
 
                 product_id = product['id']
 
-                # Додавання товару в кошик
+                # Додавання товару до кошика
                 cursor.execute("""
                     INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, added_at)
                     VALUES (%s, %s, %s, %s, %s, NOW())
@@ -468,7 +488,7 @@ def submit_selection(token):
                 """, (user_id, product_id, quantity, price, price))
                 logging.debug(f"Added/updated article {article} in cart for user_id={user_id}.")
 
-            # Очистка буфера після додавання
+            # Очистка буфера
             cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s", (user_id,))
             conn.commit()
             logging.info(f"Buffer cleared for user_id={user_id} after submission.")
@@ -480,6 +500,7 @@ def submit_selection(token):
         logging.error(f"Error in submit_selection: {e}", exc_info=True)
         flash("An error occurred during submission. Please try again.", "error")
         return redirect(f'/{token}/search')
+
 
 
 

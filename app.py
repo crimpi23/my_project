@@ -1698,7 +1698,6 @@ def compare_prices(token):
             return redirect(request.referrer or url_for('compare_prices'))
 
 
-# Завантаження файлу для замовлення
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
@@ -1844,7 +1843,10 @@ def upload_file(token):
         return redirect(url_for('cart', token=token))
 
     except Exception as e:
-        logging.error(f"Error in
+        logging.error(f"Error in upload_file: {e}", exc_info=True)
+        flash("An error occurred during file upload. Please try again.", "error")
+        return redirect(f'/{token}/')
+
 
 
 

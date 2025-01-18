@@ -1067,15 +1067,18 @@ def clear_cart(token):
 def place_order(token):
     try:
         user_id = session.get('user_id')  # Отримати ID поточного користувача з сесії
+        logging.debug(f"Placing order for user_id={user_id}")
 
         if not user_id:
             flash("User is not authenticated. Please log in.", "error")
+            logging.error("Attempt to place order by unauthenticated user.")
             return redirect(url_for('index'))
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
         # Отримання товарів із кошика
+        logging.debug("Fetching cart items...")
         cursor.execute("""
             SELECT c.product_id, p.price, c.quantity
             FROM cart c
@@ -1086,41 +1089,45 @@ def place_order(token):
 
         if not cart_items:
             flash("Your cart is empty!", "error")
-            logging.error("Cart is empty for user_id=%s", user_id)
+            logging.warning(f"Cart is empty for user_id={user_id}.")
             return redirect(request.referrer or url_for('cart'))
 
         # Логування вмісту кошика
-        logging.debug(f"Cart items for user_id={user_id}: {cart_items}")
+        logging.debug(f"Fetched cart items for user_id={user_id}: {cart_items}")
         for item in cart_items:
-            logging.debug(f"Item: product_id={item['product_id']}, price={item['price']}, quantity={item['quantity']}")
+            logging.debug(f"Item details - product_id: {item['product_id']}, price: {item['price']}, quantity: {item['quantity']}")
 
         # Розрахунок загальної суми
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
-        logging.debug(f"Calculated total_price for order: {total_price}")
+        logging.debug(f"Calculated total price for order: {total_price}")
 
         # Вставка замовлення в таблицю orders зі статусом "Pending"
+        logging.debug("Inserting new order into orders table...")
         cursor.execute("""
             INSERT INTO orders (user_id, total_price, order_date, status)
             VALUES (%s, %s, NOW(), %s)
             RETURNING id
         """, (user_id, total_price, "Pending"))
         order_id = cursor.fetchone()['id']
-        logging.debug(f"Order created with id={order_id} for user_id={user_id}")
+        logging.info(f"Order created with id={order_id} for user_id={user_id}")
 
         # Вставка деталей замовлення
+        logging.debug("Inserting order details into order_details table...")
         for item in cart_items:
+            logging.debug(f"Inserting detail for product_id={item['product_id']}, order_id={order_id}...")
             cursor.execute("""
                 INSERT INTO order_details (order_id, product_id, price, quantity, total_price, comment)
                 VALUES (%s, %s, %s, %s, %s, %s)
-            """, (order_id, item['product_id'], item['price'], item['quantity'], item['price'] * item['quantity']))
-            logging.debug(f"Inserted order detail: order_id={order_id}, product_id={item['product_id']}")
+            """, (order_id, item['product_id'], item['price'], item['quantity'], item['price'] * item['quantity'], None))
+            logging.info(f"Inserted order detail: order_id={order_id}, product_id={item['product_id']}")
 
         # Очищення кошика
+        logging.debug(f"Clearing cart for user_id={user_id}...")
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
         conn.commit()
+        logging.info(f"Cart cleared and order placed successfully for user_id={user_id}")
 
         flash("Order placed successfully!", "success")
-        logging.info(f"Order successfully placed for user_id={user_id}")
         return redirect(request.referrer or url_for('cart'))
 
     except Exception as e:
@@ -1135,6 +1142,7 @@ def place_order(token):
         if conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 

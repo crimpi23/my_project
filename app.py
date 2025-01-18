@@ -1110,8 +1110,8 @@ def place_order(token):
         # Вставка деталей замовлення
         for item in cart_items:
             cursor.execute("""
-                INSERT INTO order_details (order_id, product_id, price, quantity, total_price)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO order_details (order_id, product_id, price, quantity, total_price, status, comment)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (order_id, item['product_id'], item['price'], item['quantity'], item['price'] * item['quantity']))
             logging.debug(f"Inserted order detail: order_id={order_id}, product_id={item['product_id']}")
 

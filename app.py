@@ -473,7 +473,7 @@ def search_results(token):
 
 
 # Маршрут для пошуку артикулів
-@app.route('/<token>/cart', methods=['GET', 'POST'], endpoint='user_cart')
+@app.route('/<token>/cart', methods=['GET', 'POST'])
 @requires_token_and_role('user')
 def cart(token):
     """
@@ -645,7 +645,7 @@ def submit_selection(token):
             logging.info(f"Cart updated successfully for user_id={user_id}.")
 
         flash("Selection successfully submitted!", "success")
-        return redirect(url_for('user_cart', token=token))  # Оновлено ендпоінт
+        return redirect(url_for('cart', token=token))  # Оновлено ендпоінт
 
     except Exception as e:
         logging.error(f"Error in submit_selection: {e}", exc_info=True)
@@ -672,79 +672,6 @@ def clear_search(token):
     
     # Перенаправлення на головну сторінку
     return redirect(url_for('token_index', token=token))
-
-
-@app.route('/<token>/cart', methods=['GET', 'POST'])
-@requires_token_and_role('user')
-def user_cart(token):  # Змінено ім'я функції з `cart` на `user_cart`
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash("You need to log in to view your cart.", "error")
-            logging.warning("Attempt to access cart without user ID.")
-            return redirect(url_for('index'))
-
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        if request.method == 'POST':
-            action = request.form.get('action')
-            product_id = request.form.get('product_id')
-            if action == 'remove' and product_id:
-                cursor.execute(
-                    """
-                    DELETE FROM cart
-                    WHERE user_id = %s AND product_id = %s
-                    """,
-                    (user_id, product_id)
-                )
-                conn.commit()
-                flash("Item removed from cart.", "success")
-                logging.info(f"Product {product_id} removed from cart for user_id {user_id}.")
-
-        logging.debug(f"Fetching cart items for user_id: {user_id}.")
-        cursor.execute("""
-            SELECT 
-                c.product_id, 
-                p.article, 
-                COALESCE(c.base_price, 0) AS base_price,
-                COALESCE(c.final_price, 0) AS final_price,
-                c.quantity,
-                ROUND(COALESCE(c.final_price, 0) * c.quantity, 2) AS total_price
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = %s
-            ORDER BY c.added_at
-        """, (user_id,))
-
-        cart_items = []
-        for row in cursor.fetchall():
-            cart_items.append({
-                'product_id': row['product_id'],
-                'article': row['article'],
-                'base_price': float(row['base_price']),
-                'final_price': float(row['final_price']),
-                'quantity': row['quantity'],
-                'total_price': float(row['total_price'])
-            })
-        logging.debug(f"Cart items fetched: {cart_items}")
-
-        total_price = sum(item['total_price'] for item in cart_items)
-        logging.debug(f"Total price calculated: {total_price}. Preparing to render cart page.")
-
-        return render_template('cart.html', cart_items=cart_items, total_price=total_price)
-
-    except Exception as e:
-        logging.error(f"Error in cart for user_id={user_id}: {str(e)}", exc_info=True)
-        flash("Could not load your cart. Please try again.", "error")
-        return redirect(request.referrer or url_for('index'))
-
-    finally:
-        if 'cursor' in locals() and cursor:
-            cursor.close()
-        if 'conn' in locals() and conn:
-            conn.close()
-        logging.debug("Database connection closed.")
 
 
 
@@ -987,7 +914,7 @@ def clear_cart(token):
 
     # Використання правильного ендпоінта для перенаправлення
     try:
-        return redirect(url_for('user_cart', token=token))
+        return redirect(url_for('cart', token=token))
     except Exception as e:
         logging.error(f"Error redirecting to cart for user_id={user_id}: {e}", exc_info=True)
         flash("Could not load your cart. Please try again.", "error")
@@ -1948,7 +1875,7 @@ def intermediate_results(token):
                 return redirect(url_for('intermediate_results', token=token))
 
             flash("All selected articles have been added to your cart.", "success")
-            return redirect(url_for('user_cart', token=token))
+            return redirect(url_for('cart', token=token))
 
         # GET запит: повертає сторінку з проміжними результатами
         items_without_table = session.get('items_without_table', [])

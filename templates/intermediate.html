@@ -40,6 +40,7 @@
                             <th>Possible Tables</th>
                             <th>Final Price</th>
                             <th>Select Table</th>
+                            <th>Comment</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -66,6 +67,9 @@
                                     <option value="{{ table }}">{{ table }}</option>
                                     {% endfor %}
                                 </select>
+                            </td>
+                            <td>
+                                <input type="text" name="comment_{{ item.article }}" class="form-control" placeholder="Optional comment">
                             </td>
                         </tr>
                         {% endfor %}

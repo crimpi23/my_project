@@ -737,6 +737,7 @@ def submit_selection(token):
                 quantity = int(request.form.get(quantity_key, 1))
                 comment = request.form.get(comment_key, "").strip()
                 selected_articles.append((article, Decimal(price), table_name, quantity, comment))
+                logging.debug(f"Processed article: {article}, price: {price}, table: {table_name}, quantity: {quantity}, comment: {comment}")
 
         if not selected_articles:
             flash("No articles selected.", "error")
@@ -780,12 +781,13 @@ def submit_selection(token):
             logging.info(f"Cart updated successfully for user_id={user_id}.")
 
         flash("Selection successfully submitted!", "success")
-        return redirect(url_for('cart', token=token))  # Оновлено ендпоінт
+        return redirect(url_for('cart', token=token))
 
     except Exception as e:
         logging.error(f"Error in submit_selection: {e}", exc_info=True)
         flash("An error occurred during submission. Please try again.", "error")
         return redirect(url_for('search_articles', token=token))
+
 
 
 

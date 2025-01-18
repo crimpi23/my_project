@@ -455,6 +455,7 @@ def search_articles(token):
     try:
         articles = []
         quantities = {}
+        comments = {}
 
         articles_input = request.form.get('articles')
         logging.debug(f"Received articles input: {articles_input}")
@@ -463,35 +464,44 @@ def search_articles(token):
             flash("Please enter at least one article.", "error")
             return redirect(url_for('index'))
 
-        # Обробка введених артикулів
+        # Process the input lines for articles
         for line in articles_input.splitlines():
-            parts = line.strip().split()
-            if not parts:
+            parts = line.strip().split('\t')
+            if len(parts) == 0:
                 continue
-            if len(parts) == 1:
-                article = parts[0].strip().upper()
-                quantities[article] = quantities.get(article, 0) + 1
-                articles.append(article)
-            elif len(parts) == 2 and parts[1].isdigit():
-                article, quantity = parts[0].strip().upper(), int(parts[1])
-                quantities[article] = quantities.get(article, 0) + quantity
-                articles.append(article)
+
+            article = parts[0].strip().upper()
+
+            if len(parts) > 1 and parts[1].isdigit():
+                quantity = int(parts[1])
+            else:
+                quantity = 1  # Default quantity
+
+            if len(parts) > 2:
+                comment = parts[2].strip()
+            else:
+                comment = None  # No comment provided
+
+            quantities[article] = quantities.get(article, 0) + quantity
+            comments[article] = comment  # Store comment for the article
+            articles.append(article)
 
         logging.debug(f"Processed articles: {articles}")
         logging.debug(f"Quantities: {quantities}")
+        logging.debug(f"Comments: {comments}")
 
         conn = get_db_connection()
         cursor = conn.cursor()
         logging.info("Database connection established.")
 
-        # Отримання націнки для користувача
+        # Get the markup percentage for the user
         user_markup = Decimal(get_markup_percentage(session['user_id']))
         if user_markup < 0:
             logging.warning(f"Invalid markup percentage: {user_markup}. Defaulting to 0.")
             user_markup = Decimal(0)
         logging.debug(f"Markup percentage for user_id={session['user_id']}: {user_markup}%")
 
-        # Отримання таблиць із прайсами
+        # Fetch all tables from price_lists
         cursor.execute("SELECT table_name FROM price_lists")
         tables = [row[0] for row in cursor.fetchall()]
         logging.debug(f"Fetched price list tables: {tables}")
@@ -518,14 +528,14 @@ def search_articles(token):
                 'price': final_price,
                 'base_price': base_price,
                 'table_name': result['table_name'],
-                'quantity': quantities.get(article, 1)
+                'quantity': quantities.get(article, 1),
+                'comment': comments.get(article)  # Include the comment
             })
 
         missing_articles = [article for article in articles if article not in grouped_results]
         if missing_articles:
             flash(f"The following articles were not found in any price list: {', '.join(missing_articles)}", "warning")
             logging.info(f"Missing articles for user_id={session['user_id']}: {missing_articles}")
-
         else:
             logging.info("No missing articles found.")
 
@@ -533,6 +543,7 @@ def search_articles(token):
 
         session['grouped_results'] = grouped_results
         session['quantities'] = quantities
+        session['comments'] = comments  # Store comments in the session
         session['missing_articles'] = missing_articles
 
         logging.info("Search results successfully processed.")
@@ -554,6 +565,7 @@ def search_articles(token):
         if conn:
             conn.close()
         logging.info("Database connection closed.")
+
 
 
 @app.route('/<token>/search_results', methods=['GET'])
@@ -713,8 +725,10 @@ def submit_selection(token):
                 article = key.split('_')[1]
                 price, table_name = value.split('|')
                 quantity_key = f"quantity_{article}"
+                comment_key = f"comment_{article}"
                 quantity = int(request.form.get(quantity_key, 1))
-                selected_articles.append((article, Decimal(price), table_name, quantity))
+                comment = request.form.get(comment_key, "").strip()
+                selected_articles.append((article, Decimal(price), table_name, quantity, comment))
 
         if not selected_articles:
             flash("No articles selected.", "error")
@@ -724,7 +738,7 @@ def submit_selection(token):
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            for article, price, table_name, quantity in selected_articles:
+            for article, price, table_name, quantity, comment in selected_articles:
                 # Перевірка, чи існує товар у `products`
                 cursor.execute("""
                     SELECT id FROM products WHERE article = %s AND table_name = %s
@@ -745,12 +759,13 @@ def submit_selection(token):
 
                 # Додавання товару в кошик
                 cursor.execute("""
-                    INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, added_at)
-                    VALUES (%s, %s, %s, %s, %s, NOW())
+                    INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, comment, added_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, NOW())
                     ON CONFLICT (user_id, product_id) DO UPDATE SET
                     quantity = cart.quantity + EXCLUDED.quantity,
-                    final_price = EXCLUDED.final_price
-                """, (user_id, product_id, quantity, price, price))
+                    final_price = EXCLUDED.final_price,
+                    comment = EXCLUDED.comment
+                """, (user_id, product_id, quantity, price, price, comment))
                 logging.debug(f"Added/updated article {article} in cart for user_id={user_id}.")
 
             conn.commit()
@@ -763,7 +778,6 @@ def submit_selection(token):
         logging.error(f"Error in submit_selection: {e}", exc_info=True)
         flash("An error occurred during submission. Please try again.", "error")
         return redirect(url_for('search_articles', token=token))
-
 
 
 

@@ -44,19 +44,26 @@
                                 <th>Select</th>
                             </tr>
                         </thead>
-						<tbody>
-							{% for price_info in prices %}
-							<tr>
-								<td>${{ price_info.base_price }}</td> <!-- Base Price -->
-								<td>${{ price_info.price }}</td>       <!-- Final Price -->
-								<td>{{ price_info.table_name }}</td>   <!-- Supplier -->
-								<td>
-									<input type="radio" name="selected_{{ article }}" value="{{ price_info.price }}|{{ price_info.table_name }}">
-								</td>
-							</tr>
-							{% endfor %}
-						</tbody>
+                        <tbody>
+                            {% for price_info in prices %}
+                            <tr>
+                                <td>${{ price_info.base_price }}</td> <!-- Base Price -->
+                                <td>${{ price_info.price }}</td>       <!-- Final Price -->
+                                <td>{{ price_info.table_name }}</td>   <!-- Supplier -->
+                                <td>
+                                    <input type="radio" name="selected_{{ article }}" value="{{ price_info.price }}|{{ price_info.table_name }}">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
                     </table>
+
+                    <!-- Display client comment -->
+                    {% if comments.get(article) %}
+                    <div class="alert alert-secondary mt-3">
+                        <strong>Client Comment:</strong> {{ comments.get(article) }}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}

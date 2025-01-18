@@ -38,23 +38,22 @@
                     <th>Total Price</th>
                 </tr>
             </thead>
-			<tbody>
-				{% for detail in details %}
-				<tr>
-					<td>{{ detail.order_id }}</td>
-					<td>{{ detail.article }}</td>
-					<td>${{ detail.price }}</td>
-					<td>{{ detail.quantity }}</td>
-					<td>${{ detail.total_price }}</td>
-				</tr>
-				{% if detail.comment %}
-				<tr>
-					<td colspan="5"><strong>Comment:</strong> {{ detail.comment }}</td>
-				</tr>
-				{% endif %}
-				{% endfor %}
-			</tbody>
-
+            <tbody>
+                {% for detail in details %}
+                <tr>
+                    <td>{{ detail.order_id }}</td>
+                    <td>{{ detail.article }}</td>
+                    <td>${{ detail.price }}</td>
+                    <td>{{ detail.quantity }}</td>
+                    <td>${{ detail.total_price }}</td>
+                </tr>
+                {% if detail.comment %}
+                <tr>
+                    <td colspan="5"><strong>Comment:</strong> {{ detail.comment }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
         </table>
         {% else %}
         <div class="alert alert-warning">No details available for this order. Please contact support if you think this is an error.</div>

@@ -523,7 +523,9 @@ def search_articles(token):
 
         missing_articles = [article for article in articles if article not in grouped_results]
         if missing_articles:
-            logging.info(f"Missing articles: {missing_articles}")
+            flash(f"The following articles were not found in any price list: {', '.join(missing_articles)}", "warning")
+            logging.info(f"Missing articles for user_id={session['user_id']}: {missing_articles}")
+
         else:
             logging.info("No missing articles found.")
 
@@ -1869,25 +1871,25 @@ def upload_file(token):
             conn.commit()
             logging.info("Database operations committed successfully.")
 
-        # Збереження результатів у сесії для проміжної сторінки
-        session['items_without_table'] = items_without_table
-        session['missing_articles'] = missing_articles
-
         # Формування повідомлення для користувача
         if items_without_table:
             flash(f"{len(items_without_table)} articles need table selection.", "warning")
             logging.info(f"Redirecting to intermediate_results. Items without table: {len(items_without_table)}")
             return redirect(url_for('intermediate_results', token=token))
 
+        if missing_articles:
+            flash(f"The following articles were not found in any table: {', '.join(missing_articles)}", "warning")
+            logging.info(f"Missing articles: {missing_articles}")
+
         flash(f"File processed successfully. {len(items_with_table)} items added to cart. {len(missing_articles)} missing articles.", "success")
         logging.info(f"File processed successfully for user_id={user_id}.")
         return redirect(url_for('cart', token=token))
+
 
     except Exception as e:
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
-
 
 
 
@@ -1918,58 +1920,63 @@ def intermediate_results(token):
 
             items_without_table = session.get('items_without_table', [])
             added_to_cart = []
+            missing_articles = []
 
             with get_db_connection() as conn:
                 with conn.cursor() as cursor:
                     for article, quantity, valid_tables in items_without_table:
                         selected_table = user_selections.get(article)
-                        if selected_table and selected_table in valid_tables:
-                            # Перевірка, чи стаття існує в обраній таблиці
+                        if not selected_table or selected_table not in valid_tables:
+                            missing_articles.append(article)
+                            logging.warning(f"Article {article} not found in the selected table {selected_table}.")
+                            continue
+
+                        # Перевірка, чи стаття існує в обраній таблиці
+                        cursor.execute(
+                            "SELECT price FROM {} WHERE article = %s".format(selected_table),
+                            (article,)
+                        )
+                        result = cursor.fetchone()
+
+                        if result:
+                            base_price = Decimal(result[0])
+                            final_price = round(base_price * (1 + user_markup / 100), 2)
+
+                            # Перевірка, чи є запис у `products`
                             cursor.execute(
-                                "SELECT price FROM {} WHERE article = %s".format(selected_table),
-                                (article,)
+                                "SELECT id FROM products WHERE article = %s AND table_name = %s",
+                                (article, selected_table)
                             )
-                            result = cursor.fetchone()
+                            product = cursor.fetchone()
 
-                            if result:
-                                base_price = Decimal(result[0])
-                                final_price = round(base_price * (1 + user_markup / 100), 2)
-
-                                # Перевірка, чи є запис у `products`
-                                cursor.execute(
-                                    "SELECT id FROM products WHERE article = %s AND table_name = %s",
-                                    (article, selected_table)
-                                )
-                                product = cursor.fetchone()
-
-                                if not product:
-                                    # Додавання запису до `products`
-                                    cursor.execute(
-                                        """
-                                        INSERT INTO products (article, price, table_name, created_at)
-                                        VALUES (%s, %s, %s, NOW())
-                                        RETURNING id
-                                        """,
-                                        (article, base_price, selected_table)
-                                    )
-                                    product_id = cursor.fetchone()[0]
-                                    logging.info(f"Added article {article} to products with price {base_price} in table {selected_table}.")
-                                else:
-                                    product_id = product[0]
-
-                                # Додавання до кошика
+                            if not product:
+                                # Додавання запису до `products`
                                 cursor.execute(
                                     """
-                                    INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, added_at)
-                                    VALUES (%s, %s, %s, %s, %s, NOW())
-                                    ON CONFLICT (user_id, product_id) DO UPDATE SET
-                                    quantity = cart.quantity + EXCLUDED.quantity,
-                                    final_price = EXCLUDED.final_price
+                                    INSERT INTO products (article, price, table_name, created_at)
+                                    VALUES (%s, %s, %s, NOW())
+                                    RETURNING id
                                     """,
-                                    (user_id, product_id, quantity, base_price, final_price)
+                                    (article, base_price, selected_table)
                                 )
-                                added_to_cart.append(article)
-                                logging.info(f"Added article {article} to cart from table {selected_table}.")
+                                product_id = cursor.fetchone()[0]
+                                logging.info(f"Added article {article} to products with price {base_price} in table {selected_table}.")
+                            else:
+                                product_id = product[0]
+
+                            # Додавання до кошика
+                            cursor.execute(
+                                """
+                                INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, added_at)
+                                VALUES (%s, %s, %s, %s, %s, NOW())
+                                ON CONFLICT (user_id, product_id) DO UPDATE SET
+                                quantity = cart.quantity + EXCLUDED.quantity,
+                                final_price = EXCLUDED.final_price
+                                """,
+                                (user_id, product_id, quantity, base_price, final_price)
+                            )
+                            added_to_cart.append(article)
+                            logging.info(f"Added article {article} to cart from table {selected_table}.")
 
                     conn.commit()
                     logging.info("Database operations committed successfully.")
@@ -1979,6 +1986,11 @@ def intermediate_results(token):
                 item for item in items_without_table if item[0] not in added_to_cart
             ]
             session['items_without_table'] = items_without_table
+
+            # Повідомлення про відсутні артикули
+            if missing_articles:
+                flash(f"The following articles could not be added to the cart: {', '.join(missing_articles)}", "warning")
+                logging.info(f"Missing articles after user selection: {missing_articles}")
 
             if items_without_table:
                 flash("Some articles still need a table. Please review.", "warning")
@@ -2012,13 +2024,15 @@ def intermediate_results(token):
                         'prices': item_prices
                     })
 
+        if items_without_table:
+            flash(f"{len(items_without_table)} articles still need table selection. Please review.", "warning")
+
         return render_template('intermediate.html', token=token, items_without_table=enriched_items)
 
     except Exception as e:
         logging.error(f"Error in intermediate_results: {e}", exc_info=True)
         flash("An error occurred while processing your selection. Please try again.", "error")
         return redirect(f'/{token}/')
-
 
 
 def get_markup_percentage(user_id):

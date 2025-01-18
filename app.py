@@ -1782,8 +1782,7 @@ def compare_prices(token):
 @requires_token_and_role('user')
 def upload_file(token):
     """
-    Завантажує файл із товарами, обробляє його, виконує точний збіг для артикула
-    та додає коментарі до відповідних записів у кошику.
+    Завантажує файл із товарами, обробляє його та виконує точний збіг для артикула.
     """
     logging.debug(f"Upload File Called with token: {token}")
     try:
@@ -1826,7 +1825,7 @@ def upload_file(token):
             flash("Invalid file structure. Ensure the file has at least two columns.", "error")
             return redirect(f'/{token}/')
 
-        # Встановлення третьої колонки (коментаря) як None, якщо вона відсутня
+        # Встановлення третьої колонки (таблиці) як None, якщо вона відсутня
         if df.shape[1] < 3:
             df[2] = None
 
@@ -1851,49 +1850,60 @@ def upload_file(token):
 
                     article = str(row[0]).strip()
                     quantity = int(row[1])
-                    comment = str(row[2]).strip() if len(row) > 2 and pd.notna(row[2]) else None
+                    table_name = str(row[2]).strip() if len(row) > 2 and pd.notna(row[2]) else None
 
-                    logging.debug(f"Processing article: {article}, quantity: {quantity}, comment: {comment}")
+                    logging.debug(f"Processing article: {article}, quantity: {quantity}, table: {table_name}")
 
-                    matching_tables = []
-                    for table in all_tables:
-                        cursor.execute(f"SELECT article, price FROM {table} WHERE article = %s", (article,))
+                    if table_name:
+                        # Перевірка, чи таблиця існує в списку price_lists
+                        if table_name not in all_tables:
+                            logging.warning(f"Invalid table name '{table_name}' for article {article}. Adding to missing articles.")
+                            missing_articles.append(article)
+                            continue
+
+                        # Перевірка артикула в зазначеній таблиці (точний збіг)
+                        cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
                         result = cursor.fetchone()
 
                         if result:
                             price = result[1]
-                            matching_tables.append((table, price))
-
-                    if matching_tables:
-                        # Вибір першої таблиці для артикула (пріоритет логіки)
-                        selected_table, price = matching_tables[0]
-                        items_with_table.append((article, price, selected_table, quantity, comment))
-                        logging.info(f"Article {article} matched in table {selected_table} with price {price}.")
+                            items_with_table.append((article, price, table_name, quantity))
+                            logging.info(f"Article {article} found in {table_name} with price {price}.")
+                        else:
+                            missing_articles.append(article)
+                            logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                     else:
-                        missing_articles.append(article)
-                        logging.warning(f"Article {article} not found in any table.")
+                        # Перевірка артикула у всіх таблицях (точний збіг)
+                        matching_tables = []
+                        for table in all_tables:
+                            cursor.execute(f"SELECT article FROM {table} WHERE article = %s", (article,))
+                            if cursor.fetchone():
+                                matching_tables.append(table)
 
+                        if matching_tables:
+                            logging.info(f"Article {article} found in tables: {matching_tables}")
+                            items_without_table.append((article, quantity, matching_tables))
+                        else:
+                            logging.warning(f"Article {article} not found in any table.")
+                            missing_articles.append(article)
                 except Exception as e:
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}")
                     continue
 
             # Додавання до кошика артикулів із таблицею
-            for article, price, table_name, quantity, comment in items_with_table:
-                cursor.execute(
-                    """
-                    INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, comment, added_at)
+            for article, price, table_name, quantity in items_with_table:
+                cursor.execute("""
+                    INSERT INTO cart (user_id, product_id, quantity, added_at)
                     VALUES (
                         %s,
                         (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                        %s, %s, %s, %s, NOW()
+                        %s,
+                        NOW()
                     )
                     ON CONFLICT (user_id, product_id) DO UPDATE SET
-                        quantity = cart.quantity + EXCLUDED.quantity,
-                        comment = EXCLUDED.comment
-                    """,
-                    (user_id, article, table_name, quantity, price, price, comment)
-                )
-                logging.info(f"Added article {article} to cart from table {table_name} with comment: {comment}.")
+                    quantity = cart.quantity + EXCLUDED.quantity
+                """, (user_id, article, table_name, quantity))
+                logging.info(f"Added article {article} to cart from table {table_name}.")
 
             conn.commit()
             logging.info("Database operations committed successfully.")
@@ -1916,7 +1926,6 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
-
 
 
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
@@ -1942,12 +1951,7 @@ def intermediate_results(token):
                 key.split('_')[1]: value
                 for key, value in request.form.items() if key.startswith('table_')
             }
-            user_comments = {
-                key.split('_')[1]: value
-                for key, value in request.form.items() if key.startswith('comment_')
-            }
             logging.debug(f"User selections: {user_selections}")
-            logging.debug(f"User comments: {user_comments}")
 
             items_without_table = session.get('items_without_table', [])
             added_to_cart = []
@@ -1957,8 +1961,6 @@ def intermediate_results(token):
                 with conn.cursor() as cursor:
                     for article, quantity, valid_tables in items_without_table:
                         selected_table = user_selections.get(article)
-                        comment = user_comments.get(article, "").strip()
-
                         if not selected_table or selected_table not in valid_tables:
                             missing_articles.append(article)
                             logging.warning(f"Article {article} not found in the selected table {selected_table}.")
@@ -2000,17 +2002,17 @@ def intermediate_results(token):
                             # Додавання до кошика
                             cursor.execute(
                                 """
-                                INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, comment, added_at)
-                                VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                                INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, added_at, comment)
+                                VALUES (%s, %s, %s, %s, %s, NOW(), %s)
                                 ON CONFLICT (user_id, product_id) DO UPDATE SET
                                 quantity = cart.quantity + EXCLUDED.quantity,
                                 final_price = EXCLUDED.final_price,
                                 comment = EXCLUDED.comment
                                 """,
-                                (user_id, product_id, quantity, base_price, final_price, comment)
+                                (user_id, product_id, quantity, base_price, final_price, request.form.get(f'comment_{article}', ''))
                             )
                             added_to_cart.append(article)
-                            logging.info(f"Added article {article} to cart from table {selected_table} with comment: {comment}.")
+                            logging.info(f"Added article {article} to cart from table {selected_table}.")
 
                     conn.commit()
                     logging.info("Database operations committed successfully.")

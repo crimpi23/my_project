@@ -1080,7 +1080,7 @@ def place_order(token):
         # Отримання товарів із кошика
         logging.debug("Fetching cart items...")
         cursor.execute("""
-            SELECT c.product_id, p.price, c.quantity
+            SELECT c.product_id, p.price, c.quantity, c.comment
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
@@ -1095,7 +1095,7 @@ def place_order(token):
         # Логування вмісту кошика
         logging.debug(f"Fetched cart items for user_id={user_id}: {cart_items}")
         for item in cart_items:
-            logging.debug(f"Item details - product_id: {item['product_id']}, price: {item['price']}, quantity: {item['quantity']}")
+            logging.debug(f"Item details - product_id: {item['product_id']}, price: {item['price']}, quantity: {item['quantity']}, comment: {item.get('comment')}")
 
         # Розрахунок загальної суми
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
@@ -1118,7 +1118,7 @@ def place_order(token):
             cursor.execute("""
                 INSERT INTO order_details (order_id, product_id, price, quantity, total_price, comment)
                 VALUES (%s, %s, %s, %s, %s, %s)
-            """, (order_id, item['product_id'], item['price'], item['quantity'], item['price'] * item['quantity'], None))
+            """, (order_id, item['product_id'], item['price'], item['quantity'], item['price'] * item['quantity'], item.get('comment')))
             logging.info(f"Inserted order detail: order_id={order_id}, product_id={item['product_id']}")
 
         # Очищення кошика
@@ -1142,6 +1142,7 @@ def place_order(token):
         if conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 

@@ -1242,9 +1242,9 @@ def order_details(token, order_id):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Отримання деталей замовлення
+        # Отримання деталей замовлення з урахуванням коментарів
         cursor.execute("""
-            SELECT od.order_id, p.article, p.price, od.quantity, od.total_price
+            SELECT od.order_id, p.article, od.price, od.quantity, od.total_price, od.comment
             FROM order_details od
             JOIN products p ON od.product_id = p.id
             WHERE od.order_id = %s
@@ -1252,23 +1252,27 @@ def order_details(token, order_id):
         details = cursor.fetchall()
 
         # Логування результатів запиту
-        logging.debug(f"Query result for order_id={order_id}: {details}")
+        logging.debug(f"Order details fetched for order_id={order_id}: {details}")
 
         if not details:
             logging.warning(f"No details found for order_id={order_id}")
             flash("No details found for this order.", "warning")
             return render_template('order_details.html', details=[])
 
-        return render_template('order_details.html', details=details)
+        # Рендеринг сторінки з переданими деталями
+        return render_template('order_details.html', token=token, details=details)
+
     except Exception as e:
-        logging.error(f"Error loading order details for order_id={order_id}: {str(e)}")
+        logging.error(f"Error loading order details for order_id={order_id}: {str(e)}", exc_info=True)
         flash("Error loading order details. Please try again.", "error")
-        return redirect(request.referrer or url_for('orders'))
+        return redirect(request.referrer or url_for('orders', token=token))
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
+        logging.debug(f"Database connection closed after fetching order details for order_id={order_id}")
+
 
 @app.route('/<token>/admin/orders/<int:order_id>/update_status', methods=['POST'])
 @requires_token_and_role('admin')

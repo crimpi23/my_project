@@ -553,14 +553,15 @@ def search_articles(token):
             return render_template('search_results.html', grouped_results={}, quantities=quantities, missing_articles=missing_articles)
 
         flash("Search completed successfully!", "success")
-		return render_template(
-			'search_results.html',
-			grouped_results=grouped_results,
-			quantities=quantities,
-			comments=comments,  # Передаємо comments у шаблон
-			missing_articles=missing_articles,
-			token=token
-		)	
+        return render_template(
+            'search_results.html',
+            grouped_results=grouped_results,
+            quantities=quantities,
+            comments=comments, 
+            missing_articles=missing_articles,
+            token=token
+        )
+
 
     except Exception as e:
         logging.error(f"Error in search_articles: {str(e)}", exc_info=True)

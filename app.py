@@ -444,6 +444,116 @@ def process_selection():
     return redirect(url_for('search_results'))
 
 
+
+# Маршрут для пошуку артикулів
+@app.route('/<token>/search', methods=['GET', 'POST'])
+@requires_token_and_role('user')
+def search_articles(token):
+    logging.info(f"Started search_articles with token: {token}")
+    conn = None
+    cursor = None
+    try:
+        articles = []
+        quantities = {}
+
+        articles_input = request.form.get('articles')
+        logging.debug(f"Received articles input: {articles_input}")
+
+        if not articles_input:
+            flash("Please enter at least one article.", "error")
+            return redirect(url_for('index'))
+
+        # Обробка введених артикулів
+        for line in articles_input.splitlines():
+            parts = line.strip().split()
+            if not parts:
+                continue
+            if len(parts) == 1:
+                article = parts[0].strip().upper()
+                quantities[article] = quantities.get(article, 0) + 1
+                articles.append(article)
+            elif len(parts) == 2 and parts[1].isdigit():
+                article, quantity = parts[0].strip().upper(), int(parts[1])
+                quantities[article] = quantities.get(article, 0) + quantity
+                articles.append(article)
+
+        logging.debug(f"Processed articles: {articles}")
+        logging.debug(f"Quantities: {quantities}")
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        logging.info("Database connection established.")
+
+        # Отримання націнки для користувача
+        user_markup = Decimal(get_markup_percentage(session['user_id']))
+        if user_markup < 0:
+            logging.warning(f"Invalid markup percentage: {user_markup}. Defaulting to 0.")
+            user_markup = Decimal(0)
+        logging.debug(f"Markup percentage for user_id={session['user_id']}: {user_markup}%")
+
+        # Отримання таблиць із прайсами
+        cursor.execute("SELECT table_name FROM price_lists")
+        tables = [row[0] for row in cursor.fetchall()]
+        logging.debug(f"Fetched price list tables: {tables}")
+
+        results = []
+        for table_name in tables:
+            logging.debug(f"Querying table: {table_name}")
+            query = f"""
+                SELECT article, price, %s AS table_name
+                FROM {table_name}
+                WHERE article = ANY(%s)
+            """
+            cursor.execute(query, (table_name, articles))
+            fetched = cursor.fetchall()
+            results.extend(fetched)
+            logging.debug(f"Results from table {table_name}: {len(fetched)} rows")
+
+        grouped_results = {}
+        for result in results:
+            article = result['article']
+            base_price = Decimal(result['price'])
+            final_price = round(base_price * (1 + user_markup / 100), 2)
+            grouped_results.setdefault(article, []).append({
+                'price': final_price,
+                'base_price': base_price,
+                'table_name': result['table_name'],
+                'quantity': quantities.get(article, 1)
+            })
+
+        missing_articles = [article for article in articles if article not in grouped_results]
+        if missing_articles:
+            logging.info(f"Missing articles: {missing_articles}")
+        else:
+            logging.info("No missing articles found.")
+
+        logging.debug(f"Grouped results: {grouped_results}")
+
+        session['grouped_results'] = grouped_results
+        session['quantities'] = quantities
+        session['missing_articles'] = missing_articles
+
+        logging.info("Search results successfully processed.")
+
+        if not grouped_results:
+            flash("No results found for your search.", "info")
+            return render_template('search_results.html', grouped_results={}, quantities=quantities, missing_articles=missing_articles)
+
+        flash("Search completed successfully!", "success")
+        return render_template('search_results.html', grouped_results=grouped_results, quantities=quantities, missing_articles=missing_articles, token=token)
+
+    except Exception as e:
+        logging.error(f"Error in search_articles: {str(e)}", exc_info=True)
+        flash("An error occurred while processing your search. Please try again.", "error")
+        return redirect(url_for('index'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+        logging.info("Database connection closed.")
+
+
 @app.route('/<token>/search_results', methods=['GET'])
 @requires_token_and_role('user')
 def search_results(token):

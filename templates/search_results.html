@@ -35,36 +35,41 @@
                     <strong>Article: {{ article }}</strong>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Base Price</th>
-                                <th>Final Price</th>
-                                <th>Supplier</th>
-                                <th>Select</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for price_info in prices %}
-                            <tr>
-                                <td>${{ price_info.base_price }}</td> <!-- Base Price -->
-                                <td>${{ price_info.price }}</td>       <!-- Final Price -->
-                                <td>{{ price_info.table_name }}</td>   <!-- Supplier -->
-                                <td>
-                                    <input type="radio" name="selected_{{ article }}" value="{{ price_info.price }}|{{ price_info.table_name }}">
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+					<table class="table table-bordered">
+						<thead class="table-light">
+							<tr>
+								<th>Base Price</th>
+								<th>Final Price</th>
+								<th>Supplier</th>
+								<th>Select</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for price_info in prices %}
+							<tr>
+								<td>${{ price_info.base_price }}</td> <!-- Base Price -->
+								<td>${{ price_info.price }}</td>       <!-- Final Price -->
+								<td>{{ price_info.table_name }}</td>   <!-- Supplier -->
+								<td>
+									<input type="radio" name="selected_{{ article }}" value="{{ price_info.price }}|{{ price_info.table_name }}">
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
 
-                    <!-- Display client comment -->
-                    {% if comments.get(article) %}
-                    <div class="alert alert-secondary mt-3">
-                        <strong>Client Comment:</strong> {{ comments.get(article) }}
-                    </div>
-                    {% endif %}
-                </div>
+					<!-- Input for user comment -->
+					<div class="form-group mt-3">
+						<label for="comment_{{ article }}">Comment:</label>
+						<input type="text" 
+							   class="form-control" 
+							   name="comment_{{ article }}" 
+							   id="comment_{{ article }}" 
+							   value="{{ comments.get(article, '') }}" 
+							   placeholder="Enter your comment here">
+					</div>
+				</div>
+
             </div>
             {% endfor %}
 

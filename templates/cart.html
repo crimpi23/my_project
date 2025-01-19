@@ -5,9 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Cart</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .quantity-input {
+            width: 80px;
+            text-align: center;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+        }
+        .cart-table th, .cart-table td {
+            vertical-align: middle;
+        }
+        .alert {
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
             <a class="navbar-brand" href="#">MySite</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -23,29 +39,32 @@
         </div>
     </nav>
 
+    <!-- Main Content -->
     <main class="container mt-5">
         <h1 class="text-center mb-4">Shopping Cart</h1>
 
         {% if missing_articles %}
-        <div class="alert alert-warning">
-            <strong>Missing Articles:</strong>
-            <ul>
-                {% for article in missing_articles %}
-                <li>{{ article }}</li>
-                {% endfor %}
-            </ul>
-        </div>
+        <section>
+            <div class="alert alert-warning">
+                <strong>Missing Articles:</strong>
+                <ul>
+                    {% for article in missing_articles %}
+                    <li>{{ article }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
         {% endif %}
 
         {% if cart_items %}
-        <table class="table table-bordered">
+        <table class="table table-bordered cart-table">
             <thead class="table-light">
                 <tr>
                     <th>Article</th>
                     <th>Base Price</th>
-                    <th>Final Price</th>
+                    <th>Final Price per Unit</th>
                     <th>Quantity</th>
-                    <th>Total</th>
+                    <th>Total (Final Price)</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -55,7 +74,13 @@
                     <td>{{ item.article }}</td>
                     <td>${{ item.base_price }}</td>
                     <td>${{ item.final_price }}</td>
-                    <td>{{ item.quantity }}</td>
+                    <td>
+                        <form method="POST" action="/{{ session['token'] }}/update_cart" class="d-flex align-items-center">
+                            <input type="hidden" name="product_id" value="{{ item.product_id }}">
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control quantity-input me-2">
+                            <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                        </form>
+                    </td>
                     <td>${{ item.total_price }}</td>
                     <td>
                         <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
@@ -64,19 +89,28 @@
                         </form>
                     </td>
                 </tr>
+                {% if item.comment %}
+                <tr>
+                    <td colspan="6"><strong>Comment:</strong> {{ item.comment }}</td>
+                </tr>
+                {% endif %}
                 {% endfor %}
             </tbody>
         </table>
 
-        <div class="text-end">
+        <div class="d-flex justify-content-between mt-4">
+            <form method="POST" action="/{{ session['token'] }}/clear_cart">
+                <button type="submit" class="btn btn-warning btn-lg">Clear Cart</button>
+            </form>
             <form method="POST" action="/{{ session['token'] }}/place_order">
                 <button type="submit" class="btn btn-success btn-lg">Place Order</button>
             </form>
         </div>
         {% else %}
-        <div class="alert alert-warning text-center">Your cart is empty.</div>
+        <div class="alert alert-warning text-center">Your cart is empty. <a href="/{{ session['token'] }}/">Search for products</a> to add them to your cart.</div>
         {% endif %}
     </main>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

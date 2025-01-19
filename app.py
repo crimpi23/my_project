@@ -1954,7 +1954,6 @@ def upload_file(token):
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
 
-
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
 @requires_token_and_role('user')
 def intermediate_results(token):
@@ -1994,15 +1993,19 @@ def intermediate_results(token):
                         if not selected_table or selected_table not in valid_tables:
                             if article not in missing_articles:
                                 missing_articles.append(article)
-                            logging.warning(f"Article {article} not found in selected table {selected_table}.")
+                            logging.warning(f"Invalid or missing table for article {article}. Selected table: {selected_table}")
                             continue
 
-                        # Перевірка артикула в таблиці
-                        cursor.execute(
-                            "SELECT price FROM {} WHERE article = %s".format(selected_table),
-                            (article,)
-                        )
-                        result = cursor.fetchone()
+                        try:
+                            cursor.execute(
+                                "SELECT price FROM {} WHERE article = %s".format(selected_table),
+                                (article,)
+                            )
+                            result = cursor.fetchone()
+                        except Exception as e:
+                            logging.error(f"Error querying table {selected_table} for article {article}: {e}")
+                            missing_articles.append(article)
+                            continue
 
                         if result:
                             base_price = Decimal(result[0])
@@ -2016,7 +2019,6 @@ def intermediate_results(token):
                             product = cursor.fetchone()
 
                             if not product:
-                                # Додавання до `products`
                                 cursor.execute(
                                     """
                                     INSERT INTO products (article, price, table_name, created_at)
@@ -2030,7 +2032,6 @@ def intermediate_results(token):
                             else:
                                 product_id = product[0]
 
-                            # Додавання до кошика
                             cursor.execute(
                                 """
                                 INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, added_at, comment)
@@ -2056,9 +2057,8 @@ def intermediate_results(token):
             ]
             session['items_without_table'] = items_without_table
             session['missing_articles'] = list(set(missing_articles))
-            logging.debug(f"Updated session data: items_without_table={len(items_without_table)}, missing_articles={missing_articles}")
+            logging.info(f"Session updated. Remaining items: {len(items_without_table)}, Missing articles: {len(missing_articles)}")
 
-            # Повідомлення користувачеві
             if items_without_table:
                 flash("Some articles still need a table. Please review.", "warning")
                 return redirect(url_for('intermediate_results', token=token))
@@ -2071,7 +2071,6 @@ def intermediate_results(token):
         missing_articles = session.get('missing_articles', [])
         logging.debug(f"Rendering intermediate results. items_without_table={len(items_without_table)}, missing_articles={len(missing_articles)}")
 
-        # Готуємо результати
         enriched_items = []
         with get_db_connection() as conn:
             with conn.cursor() as cursor:

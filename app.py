@@ -1825,9 +1825,11 @@ def upload_file(token):
             flash("Invalid file structure. Ensure the file has at least two columns.", "error")
             return redirect(f'/{token}/')
 
-        # Встановлення третьої колонки (таблиці) як None, якщо вона відсутня
+        # Встановлення третьої та четвертої колонки (таблиці та коментаря) як None, якщо вони відсутні
         if df.shape[1] < 3:
             df[2] = None
+        if df.shape[1] < 4:
+            df[3] = None
 
         items_with_table = []      # Артикули з таблицею
         items_without_table = []   # Артикули без таблиці
@@ -1851,8 +1853,9 @@ def upload_file(token):
                     article = str(row[0]).strip()
                     quantity = int(row[1])
                     table_name = str(row[2]).strip() if len(row) > 2 and pd.notna(row[2]) else None
+                    comment = str(row[3]).strip() if len(row) > 3 and pd.notna(row[3]) else None
 
-                    logging.debug(f"Processing article: {article}, quantity: {quantity}, table: {table_name}")
+                    logging.debug(f"Processing article: {article}, quantity: {quantity}, table: {table_name}, comment: {comment}")
 
                     if table_name:
                         # Перевірка, чи таблиця існує в списку price_lists
@@ -1867,7 +1870,7 @@ def upload_file(token):
 
                         if result:
                             price = result[1]
-                            items_with_table.append((article, price, table_name, quantity))
+                            items_with_table.append((article, price, table_name, quantity, comment))
                             logging.info(f"Article {article} found in {table_name} with price {price}.")
                         else:
                             missing_articles.append(article)
@@ -1882,7 +1885,7 @@ def upload_file(token):
 
                         if matching_tables:
                             logging.info(f"Article {article} found in tables: {matching_tables}")
-                            items_without_table.append((article, quantity, matching_tables))
+                            items_without_table.append((article, quantity, matching_tables, comment))
                         else:
                             logging.warning(f"Article {article} not found in any table.")
                             missing_articles.append(article)
@@ -1891,18 +1894,23 @@ def upload_file(token):
                     continue
 
             # Додавання до кошика артикулів із таблицею
-            for article, price, table_name, quantity in items_with_table:
-                cursor.execute("""
-                    INSERT INTO cart (user_id, product_id, quantity, added_at)
+            for article, price, table_name, quantity, comment in items_with_table:
+                cursor.execute(
+                    """
+                    INSERT INTO cart (user_id, product_id, quantity, added_at, comment)
                     VALUES (
                         %s,
                         (SELECT id FROM products WHERE article = %s AND table_name = %s),
                         %s,
-                        NOW()
+                        NOW(),
+                        %s
                     )
                     ON CONFLICT (user_id, product_id) DO UPDATE SET
-                    quantity = cart.quantity + EXCLUDED.quantity
-                """, (user_id, article, table_name, quantity))
+                    quantity = cart.quantity + EXCLUDED.quantity,
+                    comment = EXCLUDED.comment
+                    """,
+                    (user_id, article, table_name, quantity, comment)
+                )
                 logging.info(f"Added article {article} to cart from table {table_name}.")
 
             conn.commit()
@@ -1910,6 +1918,7 @@ def upload_file(token):
 
         # Формування повідомлення для користувача
         if items_without_table:
+            session['items_without_table'] = items_without_table
             flash(f"{len(items_without_table)} articles need table selection.", "warning")
             logging.info(f"Redirecting to intermediate_results. Items without table: {len(items_without_table)}")
             return redirect(url_for('intermediate_results', token=token))
@@ -1926,6 +1935,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
@@ -1951,7 +1961,12 @@ def intermediate_results(token):
                 key.split('_')[1]: value
                 for key, value in request.form.items() if key.startswith('table_')
             }
+            user_comments = {
+                key.split('_')[1]: value
+                for key, value in request.form.items() if key.startswith('comment_')
+            }
             logging.debug(f"User selections: {user_selections}")
+            logging.debug(f"User comments: {user_comments}")
 
             items_without_table = session.get('items_without_table', [])
             added_to_cart = []
@@ -1961,6 +1976,8 @@ def intermediate_results(token):
                 with conn.cursor() as cursor:
                     for article, quantity, valid_tables in items_without_table:
                         selected_table = user_selections.get(article)
+                        comment = user_comments.get(article, "").strip()
+
                         if not selected_table or selected_table not in valid_tables:
                             missing_articles.append(article)
                             logging.warning(f"Article {article} not found in the selected table {selected_table}.")
@@ -2009,7 +2026,7 @@ def intermediate_results(token):
                                 final_price = EXCLUDED.final_price,
                                 comment = EXCLUDED.comment
                                 """,
-                                (user_id, product_id, quantity, base_price, final_price, request.form.get(f'comment_{article}', ''))
+                                (user_id, product_id, quantity, base_price, final_price, comment)
                             )
                             added_to_cart.append(article)
                             logging.info(f"Added article {article} to cart from table {selected_table}.")

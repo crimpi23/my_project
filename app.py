@@ -1961,12 +1961,7 @@ def intermediate_results(token):
                 key.split('_')[1]: value
                 for key, value in request.form.items() if key.startswith('table_')
             }
-            user_comments = {
-                key.split('_')[1]: value
-                for key, value in request.form.items() if key.startswith('comment_')
-            }
             logging.debug(f"User selections: {user_selections}")
-            logging.debug(f"User comments: {user_comments}")
 
             items_without_table = session.get('items_without_table', [])
             added_to_cart = []
@@ -1974,10 +1969,8 @@ def intermediate_results(token):
 
             with get_db_connection() as conn:
                 with conn.cursor() as cursor:
-                    for article, quantity, valid_tables in items_without_table:
+                    for article, quantity, valid_tables, comment in items_without_table:
                         selected_table = user_selections.get(article)
-                        comment = user_comments.get(article, "").strip()
-
                         if not selected_table or selected_table not in valid_tables:
                             missing_articles.append(article)
                             logging.warning(f"Article {article} not found in the selected table {selected_table}.")
@@ -2059,7 +2052,7 @@ def intermediate_results(token):
         enriched_items = []
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
-                for article, quantity, valid_tables in items_without_table:
+                for article, quantity, valid_tables, comment in items_without_table:
                     item_prices = []
                     for table in valid_tables:
                         cursor.execute(
@@ -2074,7 +2067,8 @@ def intermediate_results(token):
                         'article': article,
                         'quantity': quantity,
                         'valid_tables': valid_tables,
-                        'prices': item_prices
+                        'prices': item_prices,
+                        'comment': comment
                     })
 
         if items_without_table:
@@ -2086,6 +2080,7 @@ def intermediate_results(token):
         logging.error(f"Error in intermediate_results: {e}", exc_info=True)
         flash("An error occurred while processing your selection. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 def get_markup_percentage(user_id):

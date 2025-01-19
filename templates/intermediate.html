@@ -3,23 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopping Cart</title>
+    <title>Intermediate Results</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .quantity-input {
-            width: 80px;
-            text-align: center;
-        }
-        .btn-sm {
-            padding: 5px 10px;
-        }
-        .cart-table th, .cart-table td {
-            vertical-align: middle;
-        }
-        .alert {
-            font-size: 14px;
-        }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -32,7 +17,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/">Search</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/cart">Cart</a></li>
                     <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/orders">Orders</a></li>
                 </ul>
             </div>
@@ -41,91 +26,61 @@
 
     <!-- Main Content -->
     <main class="container mt-5">
-        <h1 class="text-center mb-4">Shopping Cart</h1>
+        <h1 class="text-center mb-4">Intermediate Results</h1>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="alert alert-info">
-                    {% for category, message in messages %}
-                        <div>{{ message }}</div>
-                    {% endfor %}
+        <!-- Articles Without Table Section -->
+        <section>
+            <h2>Articles Without Table</h2>
+            <form method="POST" action="/{{ session['token'] }}/intermediate_results">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Article</th>
+                            <th>Quantity</th>
+                            <th>Possible Tables</th>
+                            <th>Final Price</th>
+                            <th>Select Table</th>
+                            <th>Comment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items_without_table %}
+                        <tr>
+                            <td>{{ item.article }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>
+                                <ul class="list-unstyled">
+                                    {% for table in item.valid_tables %}
+                                    <li>{{ table }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>
+                                {% for price in item.prices %}
+                                <div>{{ price.table }}: {{ price.final_price }}</div>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <select name="table_{{ item.article }}" class="form-select" required>
+                                    <option value="" disabled selected>Select Table</option>
+                                    {% for table in item.valid_tables %}
+                                    <option value="{{ table }}">{{ table }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="comment_{{ item.article }}" class="form-control" placeholder="Optional comment" value="{{ item.comment }}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Submit</button>
                 </div>
-            {% endif %}
-        {% endwith %}
-
-        {% if missing_articles %}
-        <div class="alert alert-warning">
-            <h4>Missing Articles</h4>
-            <ul>
-                {% for article in missing_articles %}
-                <li>{{ article }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-
-        {% if cart_items %}
-        <div class="text-start mb-3">
-            <a href="/{{ session['token'] }}/" class="btn btn-secondary">Back to Search</a>
-        </div>
-
-        <table class="table table-bordered cart-table">
-            <thead class="table-light">
-                <tr>
-                    <th>Article</th>
-                    <th>Base Price</th>
-                    <th>Final Price per Unit</th>
-                    <th>Quantity</th>
-                    <th>Total (Final Price)</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-			<tbody>
-				{% for item in cart_items %}
-				<tr>
-					<td>{{ item.article }}</td>
-					<td>${{ item.base_price }}</td>
-					<td>${{ item.final_price }}</td>
-					<td>
-						<form method="POST" action="/{{ session['token'] }}/update_cart" class="d-flex align-items-center">
-							<input type="hidden" name="product_id" value="{{ item.product_id }}">
-							<input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control quantity-input me-2">
-							<button type="submit" class="btn btn-primary btn-sm" aria-label="Update Quantity">Update</button>
-						</form>
-					</td>
-					<td>${{ item.final_price * item.quantity }}</td>
-					<td>
-						<form method="POST" action="/{{ session['token'] }}/remove_from_cart">
-							<input type="hidden" name="product_id" value="{{ item.product_id }}">
-							<button type="submit" class="btn btn-danger btn-sm" aria-label="Remove Item">Remove</button>
-						</form>
-					</td>
-				</tr>
-				{% if item.comment %}
-				<tr>
-					<td colspan="6"><strong>Comment:</strong> {{ item.comment|escape }}</td>
-				</tr>
-				{% endif %}
-				{% endfor %}
-			</tbody>
-        </table>
-
-        <div class="mt-4">
-            <h5>Total Items: {{ cart_items|length }}</h5>
-            <h5>Total Price: ${{ total_price }}</h5>
-        </div>
-
-        <div class="d-flex justify-content-between mt-4">
-            <form method="POST" action="/{{ session['token'] }}/clear_cart">
-                <button type="submit" class="btn btn-warning btn-lg">Clear Cart</button>
             </form>
-            <form method="POST" action="/{{ session['token'] }}/place_order">
-                <button type="submit" class="btn btn-success btn-lg">Place Order</button>
-            </form>
-        </div>
-        {% else %}
-        <div class="alert alert-warning text-center">Your cart is empty. <a href="/{{ session['token'] }}/">Search for products</a> to add them to your cart.</div>
-        {% endif %}
+        </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

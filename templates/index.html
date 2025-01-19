@@ -6,20 +6,41 @@
     <title>Article Price Search</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: #0d6efd !important;
+        }
         .card {
-            height: 100%; /* Зробити картки однакової висоти */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .card-title {
-            text-align: center; /* Вирівнювання заголовків */
+            text-align: center;
+            font-weight: bold;
+            color: #495057;
         }
         .btn {
-            margin-top: 20px; /* Простір між текстовим полем і кнопкою */
+            margin-top: 10px;
+        }
+        textarea {
+            resize: none;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+            .card-title {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Header -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
         <div class="container">
             <a class="navbar-brand" href="#">MySite</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -38,18 +59,18 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="container mt-5">
+    <main class="container my-5">
         <h1 class="text-center mb-4">Article Price Search</h1>
 
         {% if session.get('token') %}
-        <p class="text-center">Welcome to the advanced search system! Use the tools below:</p>
+        <p class="text-center text-muted">Welcome to the advanced search system! Use the tools below:</p>
         {% endif %}
 
         <!-- File Upload and Search Forms -->
         <div class="row g-4">
             <!-- File Upload Section -->
-            <div class="col-md-6 d-flex">
-                <div class="card w-100">
+            <div class="col-md-6">
+                <div class="card">
                     <div class="card-body">
                         <h2 class="card-title">Upload Articles File</h2>
                         <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data">
@@ -64,14 +85,14 @@
             </div>
 
             <!-- Search Form -->
-            <div class="col-md-6 d-flex">
-                <div class="card w-100">
+            <div class="col-md-6">
+                <div class="card">
                     <div class="card-body">
                         <h2 class="card-title">Search Articles</h2>
                         <form method="POST" action="/{{ session['token'] }}/search#results">
                             <div class="mb-3">
                                 <label for="articles" class="form-label">Enter Articles and Quantities:</label>
-                                <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" class="form-control" required></textarea>
+                                <textarea id="articles" name="articles" rows="8" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" class="form-control" required></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Search</button>
                         </form>

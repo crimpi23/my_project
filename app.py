@@ -1793,7 +1793,6 @@ def compare_prices(token):
             return redirect(request.referrer or url_for('compare_prices'))
 
 
-
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
@@ -1802,7 +1801,7 @@ def upload_file(token):
     """
     logging.debug(f"Upload File Called with token: {token}")
     try:
-        # Ідентифікація користувача
+        # Отримання ID користувача
         user_id = session.get('user_id')
         if not user_id:
             logging.error("User not authenticated.")
@@ -1841,59 +1840,47 @@ def upload_file(token):
             flash("Invalid file structure. Ensure the file has at least two columns.", "error")
             return redirect(f'/{token}/')
 
-        # Встановлення третіх і четвертих колонок як None, якщо вони відсутні
-        if df.shape[1] < 3:
-            df[2] = None
-        if df.shape[1] < 4:
-            df[3] = None
+        # Заповнення відсутніх колонок значенням None
+        for col in range(2, 4):
+            if df.shape[1] <= col:
+                df[col] = None
 
         logging.debug(f"Dataframe after preprocessing: {df.head()}")
 
         items_with_table = []      # Артикули з таблицею
         items_without_table = []   # Артикули без таблиці
-        missing_articles = []      # Відсутні артикули
+        missing_articles = set()   # Унікальні відсутні артикули
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            # Отримання всіх таблиць із price_lists
+            # Отримання всіх таблиць з price_lists
             cursor.execute("SELECT table_name FROM price_lists;")
             all_tables = [row[0] for row in cursor.fetchall()]
             logging.info(f"Fetched tables from price_lists: {all_tables}")
 
             for index, row in df.iterrows():
                 try:
-                    # Пропуск некоректних рядків
-                    if not str(row[0]).strip() or not str(row[1]).isdigit():
-                        logging.warning(f"Skipped invalid row at index {index}: {row.tolist()}")
-                        continue
-
                     article = str(row[0]).strip()
                     quantity = int(row[1])
-                    table_name = str(row[2]).strip() if row[2] else None
-                    comment = str(row[3]).strip() if row[3] else None
-
-                    logging.debug(f"Processing article: {article}, quantity: {quantity}, table: {table_name}, comment: {comment}")
+                    table_name = str(row[2]).strip() if pd.notna(row[2]) else None
+                    comment = str(row[3]).strip() if pd.notna(row[3]) else None
 
                     if table_name:
-                        # Перевірка таблиці та артикула
                         if table_name not in all_tables:
-                            logging.warning(f"Invalid table '{table_name}' for article {article}.")
-                            missing_articles.append(article)
+                            logging.warning(f"Invalid table name '{table_name}' for article {article}.")
+                            missing_articles.add(article)
                             continue
 
-                        cursor.execute(f"SELECT price FROM {table_name} WHERE article = %s", (article,))
+                        cursor.execute(f"SELECT article, price FROM {table_name} WHERE article = %s", (article,))
                         result = cursor.fetchone()
-
                         if result:
-                            price = Decimal(result[0])
+                            price = result[1]
                             items_with_table.append((article, price, table_name, quantity, comment))
-                            logging.info(f"Article {article} found in {table_name} with price {price}.")
                         else:
-                            missing_articles.append(article)
+                            missing_articles.add(article)
                             logging.warning(f"Article {article} not found in {table_name}.")
                     else:
-                        # Пошук у всіх таблицях
                         matching_tables = []
                         for table in all_tables:
                             cursor.execute(f"SELECT article FROM {table} WHERE article = %s", (article,))
@@ -1902,53 +1889,56 @@ def upload_file(token):
 
                         if matching_tables:
                             items_without_table.append((article, quantity, matching_tables, comment))
-                            logging.info(f"Article {article} found in tables: {matching_tables}")
                         else:
-                            missing_articles.append(article)
+                            missing_articles.add(article)
                             logging.warning(f"Article {article} not found in any table.")
                 except Exception as e:
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}")
-                    continue
 
-            logging.debug(f"Items with table: {items_with_table}")
-            logging.debug(f"Items without table: {items_without_table}")
-            logging.debug(f"Missing articles: {missing_articles}")
+        logging.debug(f"Items with table: {items_with_table}")
+        logging.debug(f"Items without table: {items_without_table}")
+        logging.debug(f"Missing articles: {list(missing_articles)}")
 
-            # Додавання до кошика
-            for article, price, table_name, quantity, comment in items_with_table:
-                cursor.execute(
-                    """
-                    INSERT INTO cart (user_id, product_id, quantity, added_at, comment)
-                    VALUES (
-                        %s,
-                        (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                        %s,
-                        NOW(),
-                        %s
-                    )
-                    ON CONFLICT (user_id, product_id) DO UPDATE SET
-                    quantity = cart.quantity + EXCLUDED.quantity,
-                    comment = EXCLUDED.comment
-                    """,
-                    (user_id, article, table_name, quantity, comment)
+        # Додавання до кошика артикулів із таблицею
+        for article, price, table_name, quantity, comment in items_with_table:
+            if not price or not table_name:
+                logging.warning(f"Skipping article {article} with missing price or table_name.")
+                continue
+            cursor.execute(
+                """
+                INSERT INTO cart (user_id, product_id, quantity, added_at, comment)
+                VALUES (
+                    %s,
+                    (SELECT id FROM products WHERE article = %s AND table_name = %s),
+                    %s,
+                    NOW(),
+                    %s
                 )
-                logging.info(f"Added article {article} to cart from table {table_name}.")
+                ON CONFLICT (user_id, product_id) DO UPDATE SET
+                quantity = cart.quantity + EXCLUDED.quantity,
+                comment = EXCLUDED.comment
+                """,
+                (user_id, article, table_name, quantity, comment)
+            )
+            logging.info(f"Added article {article} to cart from table {table_name}.")
 
-            conn.commit()
-            logging.info("Database operations committed successfully.")
+        conn.commit()
+        logging.info("Database operations committed successfully.")
 
-        # Оновлення сесій
-        session['items_without_table'] = items_without_table
-        session['missing_articles'] = missing_articles
-
+        # Формування повідомлення для користувача
         if items_without_table:
+            session['items_without_table'] = items_without_table
             flash(f"{len(items_without_table)} articles need table selection.", "warning")
+            logging.info(f"Redirecting to intermediate_results. Items without table: {len(items_without_table)}")
             return redirect(url_for('intermediate_results', token=token))
 
         if missing_articles:
-            flash(f"Missing articles: {', '.join(missing_articles)}", "warning")
+            session['missing_articles'] = list(missing_articles)
+            flash(f"The following articles were not found: {', '.join(missing_articles)}", "warning")
+            logging.info(f"Missing articles: {missing_articles}")
 
-        flash(f"File processed successfully. {len(items_with_table)} items added to cart.", "success")
+        flash(f"File processed successfully. {len(items_with_table)} items added to cart. {len(missing_articles)} missing articles.", "success")
+        logging.info(f"File processed successfully for user_id={user_id}.")
         return redirect(url_for('cart', token=token))
 
     except Exception as e:

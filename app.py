@@ -1954,7 +1954,6 @@ def upload_file(token):
 
 
 
-
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
 @requires_token_and_role('user')
 def intermediate_results(token):

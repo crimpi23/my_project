@@ -1849,7 +1849,7 @@ def upload_file(token):
 
         items_with_table = []      # Артикули з таблицею
         items_without_table = []   # Артикули без таблиці
-        missing_articles = []      # Відсутні артикули
+        missing_articles = set()   # Відсутні артикули
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -1876,7 +1876,7 @@ def upload_file(token):
                     if table_name:
                         if table_name not in all_tables:
                             logging.warning(f"Invalid table name '{table_name}' for article {article}.")
-                            missing_articles.append(article)
+                            missing_articles.add(article)
                             continue
 
                         cursor.execute(f"SELECT price FROM {table_name} WHERE article = %s", (article,))
@@ -1887,7 +1887,7 @@ def upload_file(token):
                             items_with_table.append((article, price, table_name, quantity, comment))
                             logging.info(f"Article {article} found in {table_name} with price {price}.")
                         else:
-                            missing_articles.append(article)
+                            missing_articles.add(article)
                             logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                     else:
                         matching_tables = []
@@ -1900,7 +1900,7 @@ def upload_file(token):
                             logging.info(f"Article {article} found in tables: {matching_tables}")
                             items_without_table.append((article, quantity, matching_tables, comment))
                         else:
-                            missing_articles.append(article)
+                            missing_articles.add(article)
                             logging.warning(f"Article {article} not found in any table.")
                 except Exception as e:
                     logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}", exc_info=True)
@@ -1940,7 +1940,7 @@ def upload_file(token):
             return redirect(url_for('intermediate_results', token=token))
 
         if missing_articles:
-            session['missing_articles'] = list(set(missing_articles))
+            session['missing_articles'] = list(missing_articles)
             flash(f"The following articles were not found: {', '.join(missing_articles)}", "warning")
 
         flash(f"File processed successfully. {len(items_with_table)} items added to cart.", "success")
@@ -1950,6 +1950,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

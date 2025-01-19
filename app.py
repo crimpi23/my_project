@@ -1791,6 +1791,9 @@ def compare_prices(token):
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(request.referrer or url_for('compare_prices'))
+
+
+
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
@@ -1969,6 +1972,7 @@ def intermediate_results(token):
     Обробляє статті без таблиці, надає можливість вибрати таблиці,
     а потім додає вибрані статті до таблиці `products` і кошика.
     """
+    logging.debug(f"Intermediate Results Called with token: {token}")
     try:
         # Ідентифікація користувача
         user_id = session.get('user_id')

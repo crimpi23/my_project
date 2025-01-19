@@ -34,31 +34,38 @@
         <p class="text-center">Welcome to the advanced search system! Use the tools below:</p>
         {% endif %}
 
-        <!-- File Upload Section -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <h2 class="card-title">Upload Articles File</h2>
-                <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="file" class="form-label">Select a file to upload:</label>
-                        <input type="file" id="file" name="file" accept=".xlsx" class="form-control" required>
+        <!-- File Upload and Search Forms -->
+        <div class="row g-4">
+            <!-- File Upload Section -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">Upload Articles File</h2>
+                        <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="file" class="form-label">Select a file to upload:</label>
+                                <input type="file" id="file" name="file" accept=".xlsx" class="form-control" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Upload and Search</button>
+                        </form>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Upload and Search</button>
-                </form>
+                </div>
             </div>
-        </div>
 
-        <!-- Search Form -->
-        <div class="card">
-            <div class="card-body">
-                <h2 class="card-title">Search Articles</h2>
-                <form method="POST" action="/{{ session['token'] }}/search#results">
-                    <div class="mb-3">
-                        <label for="articles" class="form-label">Enter Articles and Quantities:</label>
-                        <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" class="form-control" required></textarea>
+            <!-- Search Form -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">Search Articles</h2>
+                        <form method="POST" action="/{{ session['token'] }}/search#results">
+                            <div class="mb-3">
+                                <label for="articles" class="form-label">Enter Articles and Quantities:</label>
+                                <textarea id="articles" name="articles" rows="10" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" class="form-control" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Search</button>
+                        </form>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Search</button>
-                </form>
+                </div>
             </div>
         </div>
     </main>

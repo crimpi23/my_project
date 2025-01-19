@@ -1801,11 +1801,15 @@ def upload_file(token):
     """
     logging.debug(f"Upload File Called with token: {token}")
     try:
+        # Очищення сесійних даних перед початком нового завантаження
+        session['missing_articles'] = []
+        session['items_without_table'] = []
+
         # Отримання ID користувача
         user_id = session.get('user_id')
         if not user_id:
             logging.error("User not authenticated.")
-            flash("User not authenticated", "error")
+            flash("User not authenticated.", "error")
             return redirect(f'/{token}/')
 
         logging.info(f"User ID: {user_id} started file upload.")
@@ -1813,7 +1817,7 @@ def upload_file(token):
         # Перевірка наявності файлу
         if 'file' not in request.files:
             logging.error("No file uploaded.")
-            flash("No file uploaded", "error")
+            flash("No file uploaded.", "error")
             return redirect(f'/{token}/')
 
         file = request.files['file']
@@ -1827,7 +1831,7 @@ def upload_file(token):
 
         # Завантаження даних з файлу
         try:
-            df = pd.read_excel(file, header=None)  # Завантаження без заголовків
+            df = pd.read_excel(file, header=None)
             logging.info(f"File read successfully. Shape: {df.shape}")
         except Exception as e:
             logging.error(f"Error reading Excel file: {e}", exc_info=True)
@@ -1841,20 +1845,20 @@ def upload_file(token):
             return redirect(f'/{token}/')
 
         # Заповнення відсутніх колонок значеннями None
-        for col in range(2, 4):  # Третя і четверта колонки
+        for col in range(2, 4):
             if col >= df.shape[1]:
                 df[col] = None
 
         logging.debug(f"Dataframe after preprocessing: {df.head()}")
 
-        items_with_table = []      # Артикули з таблицею
-        items_without_table = []   # Артикули без таблиці
-        missing_articles = set()   # Відсутні артикули
+        items_with_table = []
+        items_without_table = []
+        missing_articles = set()
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            # Отримання всіх таблиць із price_lists
+            # Отримання всіх таблиць з price_lists
             cursor.execute("SELECT table_name FROM price_lists;")
             all_tables = [row[0] for row in cursor.fetchall()]
             logging.info(f"Fetched tables from price_lists: {all_tables}")
@@ -1910,37 +1914,18 @@ def upload_file(token):
             logging.debug(f"Items without table: {items_without_table}")
             logging.debug(f"Missing articles: {missing_articles}")
 
-            # Додавання до кошика артикулів із таблицею
-            for article, price, table_name, quantity, comment in items_with_table:
-                cursor.execute(
-                    """
-                    INSERT INTO cart (user_id, product_id, quantity, added_at, comment)
-                    VALUES (
-                        %s,
-                        (SELECT id FROM products WHERE article = %s AND table_name = %s),
-                        %s,
-                        NOW(),
-                        %s
-                    )
-                    ON CONFLICT (user_id, product_id) DO UPDATE SET
-                    quantity = cart.quantity + EXCLUDED.quantity,
-                    comment = EXCLUDED.comment
-                    """,
-                    (user_id, article, table_name, quantity, comment)
-                )
-                logging.info(f"Added article {article} to cart from table {table_name}.")
-
             conn.commit()
-            logging.info("Database operations committed successfully.")
+
+        # Збереження результатів у сесії
+        session['items_without_table'] = items_without_table
+        session['missing_articles'] = list(missing_articles)
 
         # Формування повідомлення для користувача
         if items_without_table:
-            session['items_without_table'] = items_without_table
             flash(f"{len(items_without_table)} articles need table selection.", "warning")
             return redirect(url_for('intermediate_results', token=token))
 
         if missing_articles:
-            session['missing_articles'] = list(missing_articles)
             flash(f"The following articles were not found: {', '.join(missing_articles)}", "warning")
 
         flash(f"File processed successfully. {len(items_with_table)} items added to cart.", "success")

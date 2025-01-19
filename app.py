@@ -157,17 +157,27 @@ def validate_token(token):
 
 
 
-def send_email(to_email, subject, message_body):
+def send_email(to_email, subject, ordered_items, missing_articles):
     """
-    Відправляє повідомлення на вказану електронну адресу з логуванням результату.
+    Відправляє повідомлення на вказану електронну адресу з деталями замовлення.
     """
     try:
-        smtp_server = "smtp.gmail.com"  # SMTP сервер Gmail
-        smtp_port = 587  # Порт для TLS
-        sender_email = "crimpi@gmail.com"  # Ваша електронна пошта
-        sender_password = "xncavvmifgrfzbev"  # Пароль або App Password для пошти
+        smtp_server = "smtp.gmail.com"
+        smtp_port = 587
+        sender_email = "crimpi@gmail.com"
+        sender_password = "xncavvmifgrfzbev"
 
-        # Формуємо повідомлення
+        # Формування тексту повідомлення
+        message_body = f"Дякуємо за ваше замовлення!\n\nСписок замовлених товарів:\n"
+        for item in ordered_items:
+            message_body += f"- Артикул: {item['article']}, Кількість: {item['quantity']}, Ціна: {item['price']}, Коментар: {item['comment']}\n"
+        
+        if missing_articles:
+            message_body += "\nАртикули, які не були знайдені:\n"
+            for article in missing_articles:
+                message_body += f"- {article}\n"
+
+        # Формування повідомлення
         message = MIMEMultipart()
         message["From"] = sender_email
         message["To"] = to_email
@@ -180,11 +190,9 @@ def send_email(to_email, subject, message_body):
             server.login(sender_email, sender_password)
             server.send_message(message)
 
-        logging.info(f"Email successfully sent to {to_email}. Subject: {subject}")
-    except smtplib.SMTPException as smtp_err:
-        logging.error(f"SMTP error occurred while sending email to {to_email}: {smtp_err}")
+        logging.info(f"Email sent successfully to {to_email}")
     except Exception as e:
-        logging.error(f"An error occurred while sending email to {to_email}: {e}")
+        logging.error(f"Failed to send email to {to_email}: {e}")
 
 
 

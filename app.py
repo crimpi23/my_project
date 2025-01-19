@@ -1127,8 +1127,6 @@ def update_cart(token):
 
 
 
-
-
 # Очищення кошика користувача
 @app.route('/<token>/clear_cart', methods=['POST'])
 @requires_token_and_role('user')
@@ -1152,23 +1150,35 @@ def clear_cart(token):
         conn.commit()
 
         logging.info(f"Cart cleared for user_id={user_id}. Rows deleted: {rows_deleted}")
+
+        # Очищення даних сесії, пов’язаних із незнайденими позиціями
+        if 'missing_articles' in session:
+            session.pop('missing_articles', None)
+            logging.debug(f"Session data 'missing_articles' cleared for user_id={user_id}.")
+
+        if 'items_without_table' in session:
+            session.pop('items_without_table', None)
+            logging.debug(f"Session data 'items_without_table' cleared for user_id={user_id}.")
+
         flash("Cart cleared successfully.", "success")
     except Exception as e:
         logging.error(f"Error clearing cart for user_id={user_id}: {e}", exc_info=True)
         flash("Error clearing cart.", "error")
     finally:
+        # Закриття з'єднання та курсора
         if 'cursor' in locals() and cursor:
             cursor.close()
         if 'conn' in locals() and conn:
             conn.close()
 
-    # Використання правильного ендпоінта для перенаправлення
+    # Перенаправлення до сторінки кошика
     try:
         return redirect(url_for('cart', token=token))
     except Exception as e:
         logging.error(f"Error redirecting to cart for user_id={user_id}: {e}", exc_info=True)
         flash("Could not load your cart. Please try again.", "error")
         return redirect(url_for('index'))
+
 
 
 

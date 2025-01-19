@@ -32,7 +32,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/">Search</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/search">Search</a></li>
                     <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/orders">Orders</a></li>
                 </ul>
             </div>
@@ -43,15 +43,18 @@
     <main class="container mt-5">
         <h1 class="text-center mb-4">Shopping Cart</h1>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="alert alert-info">
-                    {% for category, message in messages %}
-                        <div>{{ message }}</div>
+        {% if missing_articles %}
+        <section>
+            <div class="alert alert-warning">
+                <strong>Missing Articles:</strong>
+                <ul>
+                    {% for article in missing_articles %}
+                    <li>{{ article }}</li>
                     {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+                </ul>
+            </div>
+        </section>
+        {% endif %}
 
         {% if cart_items %}
         <table class="table table-bordered cart-table">
@@ -65,35 +68,34 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-			<tbody>
-				{% for item in cart_items %}
-				<tr>
-					<td>{{ item.article }}</td>
-					<td>${{ item.base_price }}</td>
-					<td>${{ item.final_price }}</td>
-					<td>
-						<form method="POST" action="/{{ session['token'] }}/update_cart" class="d-flex align-items-center">
-							<input type="hidden" name="product_id" value="{{ item.product_id }}">
-							<input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control quantity-input me-2">
-							<button type="submit" class="btn btn-primary btn-sm">Update</button>
-						</form>
-					</td>
-					<td>${{ item.final_price * item.quantity }}</td>
-					<td>
-						<form method="POST" action="/{{ session['token'] }}/remove_from_cart">
-							<input type="hidden" name="product_id" value="{{ item.product_id }}">
-							<button type="submit" class="btn btn-danger btn-sm">Remove</button>
-						</form>
-					</td>
-				</tr>
-				{% if item.comment %}
-				<tr>
-					<td colspan="6"><strong>Comment:</strong> {{ item.comment }}</td>
-				</tr>
-				{% endif %}
-				{% endfor %}
-			</tbody>
-
+            <tbody>
+                {% for item in cart_items %}
+                <tr>
+                    <td>{{ item.article }}</td>
+                    <td>${{ item.base_price }}</td>
+                    <td>${{ item.final_price }}</td>
+                    <td>
+                        <form method="POST" action="/{{ session['token'] }}/update_cart" class="d-flex align-items-center">
+                            <input type="hidden" name="product_id" value="{{ item.product_id }}">
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control quantity-input me-2">
+                            <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                        </form>
+                    </td>
+                    <td>${{ item.total_price }}</td>
+                    <td>
+                        <form method="POST" action="/{{ session['token'] }}/remove_from_cart">
+                            <input type="hidden" name="product_id" value="{{ item.product_id }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                {% if item.comment %}
+                <tr>
+                    <td colspan="6"><strong>Comment:</strong> {{ item.comment }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
         </table>
 
         <div class="d-flex justify-content-between mt-4">

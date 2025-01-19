@@ -611,6 +611,7 @@ def cart(token):
     """
     Функція для обробки кошика користувача:
     - Відображає товари у кошику.
+    - Відображає відсутні артикули.
     - Дозволяє оновлювати кількість або видаляти товари.
     """
     try:
@@ -686,6 +687,12 @@ def cart(token):
             })
         logging.debug(f"Cart items fetched: {cart_items}")
 
+        # Отримання відсутніх артикулів із сесії
+        missing_articles = session.get('missing_articles', [])
+        if missing_articles:
+            missing_articles = list(set(missing_articles))  # Уникнення повторень
+        logging.debug(f"Missing articles: {missing_articles}")
+
         # Підрахунок загальної суми
         total_price = sum(item['total_price'] for item in cart_items)
         logging.debug(f"Total price calculated: {total_price}. Preparing to render cart page.")
@@ -694,6 +701,7 @@ def cart(token):
             'cart.html',
             cart_items=cart_items,
             total_price=total_price,
+            missing_articles=missing_articles,
             token=token
         )
 
@@ -709,6 +717,7 @@ def cart(token):
         if 'conn' in locals() and conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 
@@ -1926,7 +1935,8 @@ def upload_file(token):
             return redirect(url_for('intermediate_results', token=token))
 
         if missing_articles:
-            flash(f"The following articles were not found in any table: {', '.join(missing_articles)}", "warning")
+            session['missing_articles'] = missing_articles
+            flash(f"The following articles were not found: {', '.join(missing_articles)}", "warning")
             logging.info(f"Missing articles: {missing_articles}")
 
         flash(f"File processed successfully. {len(items_with_table)} items added to cart. {len(missing_articles)} missing articles.", "success")
@@ -1937,7 +1947,6 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
-
 
 
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
@@ -1974,7 +1983,8 @@ def intermediate_results(token):
                     for article, quantity, valid_tables, comment in items_without_table:
                         selected_table = user_selections.get(article)
                         if not selected_table or selected_table not in valid_tables:
-                            missing_articles.append(article)
+                            if article not in missing_articles:
+                                missing_articles.append(article)
                             logging.warning(f"Article {article} not found in the selected table {selected_table}.")
                             continue
 
@@ -2034,11 +2044,7 @@ def intermediate_results(token):
                 item for item in items_without_table if item[0] not in added_to_cart
             ]
             session['items_without_table'] = items_without_table
-
-            # Повідомлення про відсутні артикули
-            if missing_articles:
-                flash(f"The following articles could not be added to the cart: {', '.join(missing_articles)}", "warning")
-                logging.info(f"Missing articles after user selection: {missing_articles}")
+            session['missing_articles'] = list(set(missing_articles))
 
             if items_without_table:
                 flash("Some articles still need a table. Please review.", "warning")
@@ -2049,6 +2055,7 @@ def intermediate_results(token):
 
         # GET запит: повертає сторінку з проміжними результатами
         items_without_table = session.get('items_without_table', [])
+        missing_articles = session.get('missing_articles', [])
 
         # Готуємо результати з розрахунком фінальної ціни
         enriched_items = []
@@ -2073,10 +2080,12 @@ def intermediate_results(token):
                         'comment': comment
                     })
 
-        if items_without_table:
-            flash(f"{len(items_without_table)} articles still need table selection. Please review.", "warning")
-
-        return render_template('intermediate.html', token=token, items_without_table=enriched_items)
+        return render_template(
+            'intermediate.html',
+            token=token,
+            items_without_table=enriched_items,
+            missing_articles=missing_articles
+        )
 
     except Exception as e:
         logging.error(f"Error in intermediate_results: {e}", exc_info=True)

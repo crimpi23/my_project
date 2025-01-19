@@ -603,8 +603,6 @@ def search_results(token):
 
 
 
-
-# Маршрут для пошуку артикулів
 @app.route('/<token>/cart', methods=['GET', 'POST'])
 @requires_token_and_role('user')
 def cart(token):
@@ -622,6 +620,8 @@ def cart(token):
             logging.warning("Attempt to access cart without user ID.")
             return redirect(url_for('index'))
 
+        logging.debug(f"User ID: {user_id} accessed the cart.")
+
         # Підключення до бази даних
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -630,6 +630,7 @@ def cart(token):
         if request.method == 'POST':
             action = request.form.get('action')
             product_id = request.form.get('product_id')
+            logging.debug(f"POST action received: {action}, product_id: {product_id}")
             if action == 'remove' and product_id:
                 # Видалення товару з кошика
                 cursor.execute(
@@ -659,6 +660,7 @@ def cart(token):
                     logging.info(f"Product {product_id} quantity updated to {new_quantity} for user_id {user_id}.")
                 else:
                     flash("Quantity must be greater than zero.", "error")
+                    logging.warning(f"Invalid quantity {new_quantity} provided for product {product_id}.")
 
         # Отримуємо товари з кошика
         cursor.execute("""
@@ -689,13 +691,17 @@ def cart(token):
 
         # Отримання відсутніх артикулів із сесії
         missing_articles = session.get('missing_articles', [])
+        logging.debug(f"Missing articles from session before processing: {missing_articles}")
         if missing_articles:
             missing_articles = list(set(missing_articles))  # Уникнення повторень
-        logging.debug(f"Missing articles: {missing_articles}")
+        logging.debug(f"Unique missing articles after processing: {missing_articles}")
 
         # Підрахунок загальної суми
         total_price = sum(item['total_price'] for item in cart_items)
         logging.debug(f"Total price calculated: {total_price}. Preparing to render cart page.")
+
+        # Логування для рендерингу
+        logging.info(f"Rendering cart for user_id={user_id}. Cart items count: {len(cart_items)}, Missing articles count: {len(missing_articles)}")
 
         return render_template(
             'cart.html',
@@ -1785,7 +1791,6 @@ def compare_prices(token):
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(request.referrer or url_for('compare_prices'))
-
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
@@ -1953,6 +1958,9 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
+
+
 
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
 @requires_token_and_role('user')

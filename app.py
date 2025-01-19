@@ -1076,8 +1076,6 @@ def clear_cart(token):
 
 
 
-
-
 # Оформлення замовлення
 @app.route('/<token>/place_order', methods=['POST'])
 @requires_token_and_role('user')
@@ -1141,6 +1139,12 @@ def place_order(token):
         # Очищення кошика
         logging.debug(f"Clearing cart for user_id={user_id}...")
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
+        
+        # Очищення сесійних даних про незнайдені артикули
+        if 'missing_articles' in session:
+            logging.debug(f"Clearing 'missing_articles' from session for user_id={user_id}...")
+            session.pop('missing_articles', None)
+
         conn.commit()
         logging.info(f"Cart cleared and order placed successfully for user_id={user_id}")
 
@@ -1159,8 +1163,6 @@ def place_order(token):
         if conn:
             conn.close()
         logging.debug("Database connection closed.")
-
-
 
 
 

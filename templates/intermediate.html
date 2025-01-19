@@ -28,6 +28,21 @@
     <main class="container mt-5">
         <h1 class="text-center mb-4">Intermediate Results</h1>
 
+        <!-- Missing Articles Section -->
+        {% if missing_articles %}
+        <section>
+            <h2>Missing Articles</h2>
+            <div class="alert alert-warning">
+                The following articles could not be found in any table:
+                <ul>
+                    {% for article in missing_articles %}
+                    <li>{{ article }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+        {% endif %}
+
         <!-- Articles Without Table Section -->
         <section>
             <h2>Articles Without Table</h2>

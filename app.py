@@ -162,8 +162,8 @@ def send_email(to_email, subject, ordered_items, missing_articles):
     try:
         smtp_server = "smtp.gmail.com"
         smtp_port = 587
-        sender_email = "crimpi@gmail.com"
-        sender_password = "xncavvmifgrfzbev"
+        SMTP_EMAIL = os.getenv("SMTP_EMAIL")
+        SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
         # Формування тексту повідомлення
         message_body = f"Thank you for your order!\n\nYour order details:\n"

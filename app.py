@@ -1964,6 +1964,7 @@ def upload_file(token):
 
 
 
+
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
 @requires_token_and_role('user')
 def intermediate_results(token):
@@ -1971,18 +1972,22 @@ def intermediate_results(token):
     Обробляє статті без таблиці, надає можливість вибрати таблиці,
     а потім додає вибрані статті до таблиці `products` і кошика.
     """
+    logging.debug(f"Intermediate Results Called with token: {token}")
     try:
+        # Ідентифікація користувача
         user_id = session.get('user_id')
         if not user_id:
             logging.error("User not authenticated.")
             flash("User not authenticated", "error")
             return redirect(f'/{token}/')
 
+        # Отримання націнки
         user_markup = get_markup_percentage(user_id)
         logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
 
         if request.method == 'POST':
             logging.info("Processing user table selection for articles.")
+            # Отримання вибору користувача
             user_selections = {
                 key.split('_')[1]: value
                 for key, value in request.form.items() if key.startswith('table_')
@@ -1990,10 +1995,8 @@ def intermediate_results(token):
             logging.debug(f"User selections: {user_selections}")
 
             items_without_table = session.get('items_without_table', [])
-            missing_articles = session.get('missing_articles', [])
-            logging.debug(f"Missing articles before processing POST: {missing_articles}")
-
             added_to_cart = []
+            missing_articles = []
 
             with get_db_connection() as conn:
                 with conn.cursor() as cursor:
@@ -2002,23 +2005,25 @@ def intermediate_results(token):
                         if not selected_table or selected_table not in valid_tables:
                             if article not in missing_articles:
                                 missing_articles.append(article)
-                            logging.warning(f"Invalid or missing table for article {article}.")
+                            logging.warning(f"Invalid or missing table for article {article}. Selected table: {selected_table}")
                             continue
 
                         try:
                             cursor.execute(
-                                f"SELECT price FROM {selected_table} WHERE article = %s",
+                                "SELECT price FROM {} WHERE article = %s".format(selected_table),
                                 (article,)
                             )
                             result = cursor.fetchone()
-                            if not result:
-                                missing_articles.append(article)
-                                logging.warning(f"Article {article} not found in table {selected_table}.")
-                                continue
+                        except Exception as e:
+                            logging.error(f"Error querying table {selected_table} for article {article}: {e}")
+                            missing_articles.append(article)
+                            continue
 
+                        if result:
                             base_price = Decimal(result[0])
                             final_price = round(base_price * (1 + user_markup / 100), 2)
 
+                            # Перевірка існування у `products`
                             cursor.execute(
                                 "SELECT id FROM products WHERE article = %s AND table_name = %s",
                                 (article, selected_table)
@@ -2035,6 +2040,7 @@ def intermediate_results(token):
                                     (article, base_price, selected_table)
                                 )
                                 product_id = cursor.fetchone()[0]
+                                logging.info(f"Article {article} added to products with base price {base_price} in table {selected_table}.")
                             else:
                                 product_id = product[0]
 
@@ -2051,18 +2057,19 @@ def intermediate_results(token):
                             )
                             added_to_cart.append(article)
                             logging.info(f"Article {article} added to cart from table {selected_table}.")
-                        except Exception as e:
-                            logging.error(f"Error processing article {article}: {e}")
+                        else:
+                            logging.warning(f"Article {article} not found in table {selected_table}. Skipping.")
 
                     conn.commit()
                     logging.info("Database operations committed successfully.")
 
+            # Оновлення сесії
             items_without_table = [
                 item for item in items_without_table if item[0] not in added_to_cart
             ]
             session['items_without_table'] = items_without_table
-            session['missing_articles'] = missing_articles
-            logging.debug(f"Session updated. Missing articles: {missing_articles}")
+            session['missing_articles'] = list(set(missing_articles))
+            logging.info(f"Session updated. Remaining items: {len(items_without_table)}, Missing articles: {len(missing_articles)}")
 
             if items_without_table:
                 flash("Some articles still need a table. Please review.", "warning")
@@ -2071,9 +2078,10 @@ def intermediate_results(token):
             flash("All selected articles have been added to your cart.", "success")
             return redirect(url_for('cart', token=token))
 
+        # GET: Відображення проміжних результатів
         items_without_table = session.get('items_without_table', [])
         missing_articles = session.get('missing_articles', [])
-        logging.debug(f"Rendering intermediate results. items_without_table={len(items_without_table)}, missing_articles={missing_articles}")
+        logging.debug(f"Rendering intermediate results. items_without_table={len(items_without_table)}, missing_articles={len(missing_articles)}")
 
         enriched_items = []
         with get_db_connection() as conn:
@@ -2082,7 +2090,7 @@ def intermediate_results(token):
                     item_prices = []
                     for table in valid_tables:
                         cursor.execute(
-                            f"SELECT price FROM {table} WHERE article = %s",
+                            "SELECT price FROM {} WHERE article = %s".format(table),
                             (article,)
                         )
                         result = cursor.fetchone()
@@ -2108,7 +2116,6 @@ def intermediate_results(token):
         logging.error(f"Error in intermediate_results: {e}", exc_info=True)
         flash("An error occurred while processing your selection. Please try again.", "error")
         return redirect(f'/{token}/')
-
 
 
 

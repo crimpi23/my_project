@@ -2139,7 +2139,6 @@ def get_markup_percentage(user_id):
         return 35  # Повертає стандартну націнку у разі помилки
 
 
-
 @app.route('/<token>/admin/utilities')
 @requires_token_and_role('admin')
 def utilities(token):

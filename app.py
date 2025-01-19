@@ -13,6 +13,11 @@ from functools import wraps
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import logging
 
 # Налаштування логування
 logging.basicConfig(level=logging.DEBUG)
@@ -148,6 +153,44 @@ def validate_token(token):
     except Exception as e:
         logging.error(f"Error validating token: {e}")
         return None
+
+
+
+
+def send_email(to_email, subject, message_body):
+    """
+    Відправляє повідомлення на вказану електронну адресу з логуванням результату.
+    """
+    try:
+        smtp_server = "smtp.gmail.com"  # SMTP сервер Gmail
+        smtp_port = 587  # Порт для TLS
+        sender_email = "crimpi@gmail.com"  # Ваша електронна пошта
+        sender_password = "xncavvmifgrfzbev"  # Пароль або App Password для пошти
+
+        # Формуємо повідомлення
+        message = MIMEMultipart()
+        message["From"] = sender_email
+        message["To"] = to_email
+        message["Subject"] = subject
+        message.attach(MIMEText(message_body, "plain"))
+
+        # Відправка через SMTP
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()  # Захищене з'єднання
+            server.login(sender_email, sender_password)
+            server.send_message(message)
+
+        logging.info(f"Email successfully sent to {to_email}. Subject: {subject}")
+    except smtplib.SMTPException as smtp_err:
+        logging.error(f"SMTP error occurred while sending email to {to_email}: {smtp_err}")
+    except Exception as e:
+        logging.error(f"An error occurred while sending email to {to_email}: {e}")
+
+
+
+
+
+
 
 # Функція для відправлення електронного листа
 def send_email(to_email, subject, message_body):
@@ -1147,7 +1190,6 @@ def clear_cart(token):
 @requires_token_and_role('user')
 def place_order(token):
     try:
-        # Отримання ID користувача
         user_id = session.get('user_id')
         logging.debug(f"Placing order for user_id={user_id}")
 
@@ -1159,7 +1201,6 @@ def place_order(token):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримання товарів із кошика
         logging.debug("Fetching cart items...")
         cursor.execute("""
             SELECT c.product_id, p.price, c.quantity, c.comment
@@ -1174,17 +1215,9 @@ def place_order(token):
             logging.warning(f"Cart is empty for user_id={user_id}.")
             return redirect(request.referrer or url_for('cart'))
 
-        # Логування вмісту кошика
-        logging.debug(f"Fetched cart items for user_id={user_id}: {cart_items}")
-        for item in cart_items:
-            logging.debug(f"Item details - product_id: {item['product_id']}, price: {item['price']}, quantity: {item['quantity']}, comment: {item.get('comment')}")
-
-        # Розрахунок загальної суми
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
         logging.debug(f"Calculated total price for order: {total_price}")
 
-        # Вставка замовлення в таблицю orders
-        logging.debug("Inserting new order into orders table...")
         cursor.execute("""
             INSERT INTO orders (user_id, total_price, order_date, status)
             VALUES (%s, %s, NOW(), %s)
@@ -1193,8 +1226,6 @@ def place_order(token):
         order_id = cursor.fetchone()['id']
         logging.info(f"Order created with id={order_id} for user_id={user_id}")
 
-        # Вставка деталей замовлення
-        logging.debug("Inserting order details into order_details table...")
         for item in cart_items:
             cursor.execute("""
                 INSERT INTO order_details (order_id, product_id, price, quantity, total_price, comment)
@@ -1202,17 +1233,21 @@ def place_order(token):
             """, (order_id, item['product_id'], item['price'], item['quantity'], item['price'] * item['quantity'], item.get('comment')))
             logging.info(f"Inserted order detail: order_id={order_id}, product_id={item['product_id']}")
 
-        # Очищення кошика
         logging.debug(f"Clearing cart for user_id={user_id}...")
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
-        
-        # Очищення сесійних даних
+
         if 'missing_articles' in session:
-            logging.debug(f"Clearing 'missing_articles' from session for user_id={user_id}...")
             session.pop('missing_articles', None)
         if 'items_without_table' in session:
-            logging.debug(f"Clearing 'items_without_table' from session for user_id={user_id}...")
             session.pop('items_without_table', None)
+
+        # Надсилання електронного листа
+        cursor.execute("SELECT email FROM users WHERE id = %s", (user_id,))
+        user_email = cursor.fetchone()
+        if user_email:
+            subject = "Order Confirmation"
+            message_body = f"Thank you for your order! Your order ID is {order_id}."
+            send_email(user_email['email'], subject, message_body)
 
         conn.commit()
         logging.info(f"Cart cleared and order placed successfully for user_id={user_id}")
@@ -1227,12 +1262,12 @@ def place_order(token):
         flash(f"Error placing order: {str(e)}", "error")
         return redirect(request.referrer or url_for('cart'))
     finally:
-        # Закриття курсора та з'єднання
         if cursor:
             cursor.close()
         if conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 

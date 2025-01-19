@@ -4,3 +4,4 @@ bcrypt
 Flask-Session
 openpyxl
 pandas
+python-dotenv

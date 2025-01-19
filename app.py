@@ -1777,7 +1777,6 @@ def compare_prices(token):
             flash("An error occurred during comparison.", "error")
             return redirect(request.referrer or url_for('compare_prices'))
 
-
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_role('user')
 def upload_file(token):
@@ -1895,6 +1894,9 @@ def upload_file(token):
 
             # Додавання до кошика артикулів із таблицею
             for article, price, table_name, quantity, comment in items_with_table:
+                if not price or not table_name:
+                    logging.warning(f"Skipping article {article} with missing price or table_name.")
+                    continue
                 cursor.execute(
                     """
                     INSERT INTO cart (user_id, product_id, quantity, added_at, comment)
@@ -1935,6 +1937,7 @@ def upload_file(token):
         logging.error(f"Error in upload_file: {e}", exc_info=True)
         flash("An error occurred during file upload. Please try again.", "error")
         return redirect(f'/{token}/')
+
 
 
 

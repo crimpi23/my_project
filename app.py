@@ -155,8 +155,6 @@ def validate_token(token):
         return None
 
 
-
-
 def send_email(to_email, subject, ordered_items, missing_articles):
     """
     Відправляє повідомлення на вказану електронну адресу з деталями замовлення.
@@ -168,12 +166,20 @@ def send_email(to_email, subject, ordered_items, missing_articles):
         sender_password = "xncavvmifgrfzbev"
 
         # Формування тексту повідомлення
-        message_body = f"Дякуємо за ваше замовлення!\n\nСписок замовлених товарів:\n"
-        for item in ordered_items:
-            message_body += f"- Артикул: {item['article']}, Кількість: {item['quantity']}, Ціна: {item['price']}, Коментар: {item['comment']}\n"
+        message_body = f"Thank you for your order!\n\nYour order details:\n"
+
+        if ordered_items:
+            message_body += "Ordered items:\n"
+            for item in ordered_items:
+                message_body += (
+                    f"- Article: {item['article']}, "
+                    f"Price: {item['price']:.2f}, "
+                    f"Quantity: {item['quantity']}, "
+                    f"Comment: {item['comment'] or 'No comment'}\n"
+                )
         
         if missing_articles:
-            message_body += "\nАртикули, які не були знайдені:\n"
+            message_body += "\nMissing articles:\n"
             for article in missing_articles:
                 message_body += f"- {article}\n"
 
@@ -186,7 +192,7 @@ def send_email(to_email, subject, ordered_items, missing_articles):
 
         # Відправка через SMTP
         with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()  # Захищене з'єднання
+            server.starttls()
             server.login(sender_email, sender_password)
             server.send_message(message)
 
@@ -197,36 +203,6 @@ def send_email(to_email, subject, ordered_items, missing_articles):
 
 
 
-
-
-
-# Функція для відправлення електронного листа
-def send_email(to_email, subject, message_body):
-    """
-    Відправляє повідомлення на вказану електронну адресу.
-    """
-    try:
-        smtp_server = "smtp.gmail.com"  # SMTP сервер Gmail
-        smtp_port = 587  # Порт для TLS
-        sender_email = "crimpi@gmail.com"  # Ваша електронна пошта
-        sender_password = "xncavvmifgrfzbev"  # Пароль або App Password для пошти
-
-        # Формуємо повідомлення
-        message = MIMEMultipart()
-        message["From"] = sender_email
-        message["To"] = to_email
-        message["Subject"] = subject
-        message.attach(MIMEText(message_body, "plain"))
-
-        # Відправка через SMTP
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()  # Захищене з'єднання
-            server.login(sender_email, sender_password)
-            server.send_message(message)
-
-        logging.info(f"Email sent successfully to {to_email}")
-    except Exception as e:
-        logging.error(f"Failed to send email to {to_email}: {e}")
 
 def send_order_confirmation_email(to_email, order_id, total_price, cart_items):
     try:
@@ -1211,7 +1187,7 @@ def place_order(token):
 
         logging.debug("Fetching cart items...")
         cursor.execute("""
-            SELECT c.product_id, p.price, c.quantity, c.comment
+            SELECT c.product_id, p.article, p.price, c.quantity, c.comment
             FROM cart c
             JOIN products p ON c.product_id = p.id
             WHERE c.user_id = %s
@@ -1244,22 +1220,44 @@ def place_order(token):
         logging.debug(f"Clearing cart for user_id={user_id}...")
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
 
+        # Зберігання деталей замовлення для повідомлення
+        ordered_items = [
+            {
+                "article": item['article'],
+                "price": item['price'],
+                "quantity": item['quantity'],
+                "comment": item['comment'] or "No comment"
+            }
+            for item in cart_items
+        ]
+
         if 'missing_articles' in session:
-            session.pop('missing_articles', None)
+            missing_articles = session.pop('missing_articles', None)
+        else:
+            missing_articles = []
+
         if 'items_without_table' in session:
             session.pop('items_without_table', None)
+
+        conn.commit()
 
         # Надсилання електронного листа
         cursor.execute("SELECT email FROM users WHERE id = %s", (user_id,))
         user_email = cursor.fetchone()
-        if user_email:
-            subject = "Order Confirmation"
-            message_body = f"Thank you for your order! Your order ID is {order_id}."
-            send_email(user_email['email'], subject, message_body)
+        if user_email and user_email['email']:
+            try:
+                send_email(
+                    to_email=user_email['email'],
+                    subject=f"Order Confirmation - Order #{order_id}",
+                    ordered_items=ordered_items,
+                    missing_articles=missing_articles
+                )
+                logging.info(f"Email sent successfully to {user_email['email']}")
+            except Exception as email_error:
+                logging.error(f"Failed to send email: {email_error}")
+                flash("Order placed, but we couldn't send a confirmation email.", "warning")
 
-        conn.commit()
         logging.info(f"Cart cleared and order placed successfully for user_id={user_id}")
-
         flash("Order placed successfully!", "success")
         return redirect(request.referrer or url_for('cart'))
 

@@ -1995,8 +1995,8 @@ def intermediate_results(token):
             logging.debug(f"User selections: {user_selections}")
 
             items_without_table = session.get('items_without_table', [])
+            missing_articles = session.get('missing_articles', [])
             added_to_cart = []
-            missing_articles = []
 
             with get_db_connection() as conn:
                 with conn.cursor() as cursor:
@@ -2064,14 +2064,13 @@ def intermediate_results(token):
                     logging.info("Database operations committed successfully.")
 
             # Оновлення сесії
-            items_without_table = [
+            session['items_without_table'] = [
                 item for item in items_without_table if item[0] not in added_to_cart
             ]
-            session['items_without_table'] = items_without_table
             session['missing_articles'] = list(set(missing_articles))
-            logging.info(f"Session updated. Remaining items: {len(items_without_table)}, Missing articles: {len(missing_articles)}")
+            logging.debug(f"Session updated. Missing articles: {session['missing_articles']}")
 
-            if items_without_table:
+            if session['items_without_table']:
                 flash("Some articles still need a table. Please review.", "warning")
                 return redirect(url_for('intermediate_results', token=token))
 

@@ -162,8 +162,11 @@ def send_email(to_email, subject, ordered_items, missing_articles):
     try:
         smtp_server = "smtp.gmail.com"
         smtp_port = 587
-        SMTP_EMAIL = os.getenv("SMTP_EMAIL")
-        SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+        sender_email = os.getenv("SMTP_EMAIL")  # Отримання адреси з environment variables
+        sender_password = os.getenv("SMTP_PASSWORD")  # Отримання пароля з environment variables
+
+        if not sender_email or not sender_password:
+            raise ValueError("SMTP credentials are not set in environment variables.")
 
         # Формування тексту повідомлення
         message_body = f"Thank you for your order!\n\nYour order details:\n"
@@ -199,6 +202,7 @@ def send_email(to_email, subject, ordered_items, missing_articles):
         logging.info(f"Email sent successfully to {to_email}")
     except Exception as e:
         logging.error(f"Failed to send email to {to_email}: {e}")
+
 
 
 

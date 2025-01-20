@@ -68,9 +68,9 @@ def get_db_connection():
     )
 
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
-def requires_token_and_role(required_role):
+def requires_token_and_roles(*allowed_roles):
     """
-    Декоратор для перевірки токена і ролі користувача.
+    Декоратор для перевірки токена і декількох дозволених ролей користувача.
     """
     def decorator(func):
         @wraps(func)
@@ -78,21 +78,26 @@ def requires_token_and_role(required_role):
             logging.debug(f"Session token: {session.get('token')}")
             logging.debug(f"Received token: {token}")
             
+            # Перевірка відповідності токену
             if session.get('token') != token:
                 flash("Access denied. Token mismatch.", "error")
                 return redirect(url_for('index'))
 
+            # Отримання даних ролі
             role_data = validate_token(token)
             logging.debug(f"Role data from token: {role_data}")
-            if not role_data or role_data['role'] != required_role:
-                flash("Access denied. Invalid role or token.", "error")
+            
+            if not role_data or role_data['role'] not in allowed_roles:
+                flash("Access denied. Insufficient permissions.", "error")
                 return redirect(url_for('index'))
 
+            # Збереження даних користувача в сесії
             session['user_id'] = role_data['user_id']
             session['role'] = role_data['role']
             return func(token, *args, **kwargs)
         return wrapper
     return decorator
+
 
 #  отримання даних з selection_buffer 
 def get_selection_buffer(user_id):

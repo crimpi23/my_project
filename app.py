@@ -509,7 +509,8 @@ def create_user(token):
 
 
 @app.route('/process_selection', methods=['POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def process_selection():
     try:
         selected_prices = {}
@@ -546,7 +547,8 @@ def process_selection():
 
 # Маршрут для пошуку артикулів
 @app.route('/<token>/search', methods=['GET', 'POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def search_articles(token):
     logging.info(f"Started search_articles with token: {token}")
     conn = None
@@ -676,7 +678,8 @@ def search_articles(token):
 
 
 @app.route('/<token>/search_results', methods=['GET'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def search_results(token):
     user_id = session.get('user_id')
     if not user_id:
@@ -703,7 +706,8 @@ def search_results(token):
 
 
 @app.route('/<token>/cart', methods=['GET', 'POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def cart(token):
     """
     Функція для обробки кошика користувача:
@@ -828,7 +832,8 @@ def cart(token):
 
 # проміжковий єтап після cart
 @app.route('/<token>/submit_selection', methods=['POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def submit_selection(token):
     logging.debug(f"Submit Selection Called with token: {token}")
     app.logger.debug(f"Form data received: {request.form}")
@@ -908,7 +913,8 @@ def submit_selection(token):
 
 # очищення результату пошуку
 @app.route('/<token>/clear_search', methods=['POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def clear_search(token):
     try:
         logging.debug("Clearing search data from session.")
@@ -931,7 +937,8 @@ def clear_search(token):
 
 # Додавання в кошик користувачем
 @app.route('/<token>/add_to_cart', methods=['POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def add_to_cart(token):
     """
     Додає товар до кошика користувача.
@@ -1022,7 +1029,8 @@ def add_to_cart(token):
 
 # Видалення товару з кошика
 @app.route('/<token>/remove_from_cart', methods=['POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def remove_from_cart(token):
     conn = None
     cursor = None
@@ -1068,7 +1076,8 @@ def remove_from_cart(token):
 
 # Оновлення товару в кошику
 @app.route('/<token>/update_cart', methods=['POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def update_cart(token):
     """
     Оновлює кількість товарів у кошику.
@@ -1129,7 +1138,8 @@ def update_cart(token):
 
 # Очищення кошика користувача
 @app.route('/<token>/clear_cart', methods=['POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def clear_cart(token):
     try:
         # Отримання user_id з сесії
@@ -1185,7 +1195,8 @@ def clear_cart(token):
 
 
 @app.route('/<token>/place_order', methods=['POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def place_order(token):
     try:
         user_id = session.get('user_id')
@@ -1293,7 +1304,8 @@ def place_order(token):
 
 # Замовлення користувача
 @app.route('/<token>/orders', methods=['GET'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def orders(token):
     user_id = session.get('user_id')
     if not user_id:
@@ -1378,7 +1390,8 @@ def orders(token):
 
 # Окреме замовлення пористувача по id
 @app.route('/<token>/order_details/<int:order_id>')
-@requires_token_and_role('user') 
+@requires_token_and_role('user', 'user_25', 'user_29')
+ 
 def order_details(token, order_id):
     try:
         conn = get_db_connection()
@@ -1921,7 +1934,8 @@ def compare_prices(token):
 
 
 @app.route('/<token>/upload_file', methods=['POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def upload_file(token):
     """
     Завантажує файл із товарами, обробляє його та виконує точний збіг для артикула.
@@ -2067,7 +2081,8 @@ def upload_file(token):
 
 
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
-@requires_token_and_role('user')
+@requires_token_and_role('user', 'user_25', 'user_29')
+
 def intermediate_results(token):
     """
     Обробляє статті без таблиці, надає можливість вибрати таблиці,

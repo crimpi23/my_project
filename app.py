@@ -403,7 +403,7 @@ def admin_panel(token):
 
 
 
-# Це треба потім описати, теж щось про адмінку
+# Головна сторінка адмінки
 @app.route('/<token>/admin/dashboard')
 @requires_token_and_roles('admin')
 def admin_dashboard(token):
@@ -513,39 +513,39 @@ def create_user(token):
 
 
 
-@app.route('/process_selection', methods=['POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def process_selection():
-    try:
-        selected_prices = {}
-        for key, value in request.form.items():
-            if key.startswith('selected_price_'):
-                article = key.replace('selected_price_', '')
-                table_name, price = value.split(':')
-                selected_prices[article] = {'table_name': table_name, 'price': float(price)}
+# @app.route('/process_selection', methods=['POST'])
+# @requires_token_and_roles('user', 'user_25', 'user_29')
+# def process_selection():
+    # try:
+        # selected_prices = {}
+        # for key, value in request.form.items():
+            # if key.startswith('selected_price_'):
+                # article = key.replace('selected_price_', '')
+                # table_name, price = value.split(':')
+                # selected_prices[article] = {'table_name': table_name, 'price': float(price)}
 
-        user_id = session.get('user_id')
-        if not user_id:
-            flash("User is not authenticated.", "error")
-            return redirect(url_for('index'))
+        # user_id = session.get('user_id')
+        # if not user_id:
+            # flash("User is not authenticated.", "error")
+            # return redirect(url_for('index'))
 
-        # Очищення старих записів і додавання нових
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s", (user_id,))
+        Очищення старих записів і додавання нових
+        # with get_db_connection() as conn:
+            # with conn.cursor() as cursor:
+                # cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s", (user_id,))
 
-                for article, data in selected_prices.items():
-                    cursor.execute("""
-                        INSERT INTO selection_buffer (user_id, article, table_name, price, quantity, added_at)
-                        VALUES (%s, %s, %s, %s, 1, NOW());
-                    """, (user_id, article, data['table_name'], data['price']))
+                # for article, data in selected_prices.items():
+                    # cursor.execute("""
+                        # INSERT INTO selection_buffer (user_id, article, table_name, price, quantity, added_at)
+                        # VALUES (%s, %s, %s, %s, 1, NOW());
+                    # """, (user_id, article, data['table_name'], data['price']))
 
-        flash("Ваш вибір успішно збережено!", "success")
-    except Exception as e:
-        logging.error(f"Error processing selection: {str(e)}")
-        flash("Сталася помилка при обробці вибору. Спробуйте ще раз.", "error")
+        # flash("Ваш вибір успішно збережено!", "success")
+    # except Exception as e:
+        # logging.error(f"Error processing selection: {str(e)}")
+        # flash("Сталася помилка при обробці вибору. Спробуйте ще раз.", "error")
 
-    return redirect(url_for('search_results'))
+    # return redirect(url_for('search_results'))
 
 
 
@@ -831,81 +831,81 @@ def cart(token):
 
 
 
-# проміжковий єтап після cart
-@app.route('/<token>/submit_selection', methods=['POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def submit_selection(token):
-    logging.debug(f"Submit Selection Called with token: {token}")
-    app.logger.debug(f"Form data received: {request.form}")
+проміжковий єтап після cart
+# @app.route('/<token>/submit_selection', methods=['POST'])
+# @requires_token_and_roles('user', 'user_25', 'user_29')
+# def submit_selection(token):
+    # logging.debug(f"Submit Selection Called with token: {token}")
+    # app.logger.debug(f"Form data received: {request.form}")
 
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash("User not authenticated", "error")
-            logging.warning("User not authenticated. Redirecting to search.")
-            return redirect(url_for('search_articles', token=token))
+    # try:
+        # user_id = session.get('user_id')
+        # if not user_id:
+            # flash("User not authenticated", "error")
+            # logging.warning("User not authenticated. Redirecting to search.")
+            # return redirect(url_for('search_articles', token=token))
 
-        # Обробка форми для вибраних товарів
-        selected_articles = []
-        for key, value in request.form.items():
-            if key.startswith('selected_'):
-                article = key.split('_')[1]
-                price, table_name = value.split('|')
-                quantity_key = f"quantity_{article}"
-                comment_key = f"comment_{article}"
-                quantity = int(request.form.get(quantity_key, 1))
-                comment = request.form.get(comment_key, "").strip()
-                selected_articles.append((article, Decimal(price), table_name, quantity, comment))
-                logging.debug(f"Processed article: {article}, price: {price}, table: {table_name}, quantity: {quantity}, comment: {comment}")
+        Обробка форми для вибраних товарів
+        # selected_articles = []
+        # for key, value in request.form.items():
+            # if key.startswith('selected_'):
+                # article = key.split('_')[1]
+                # price, table_name = value.split('|')
+                # quantity_key = f"quantity_{article}"
+                # comment_key = f"comment_{article}"
+                # quantity = int(request.form.get(quantity_key, 1))
+                # comment = request.form.get(comment_key, "").strip()
+                # selected_articles.append((article, Decimal(price), table_name, quantity, comment))
+                # logging.debug(f"Processed article: {article}, price: {price}, table: {table_name}, quantity: {quantity}, comment: {comment}")
 
-        if not selected_articles:
-            flash("No articles selected.", "error")
-            logging.info("No articles selected in the form. Redirecting to search.")
-            return redirect(url_for('search_articles', token=token))
+        # if not selected_articles:
+            # flash("No articles selected.", "error")
+            # logging.info("No articles selected in the form. Redirecting to search.")
+            # return redirect(url_for('search_articles', token=token))
 
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        # with get_db_connection() as conn:
+            # cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            for article, price, table_name, quantity, comment in selected_articles:
-                # Перевірка, чи існує товар у `products`
-                cursor.execute("""
-                    SELECT id FROM products WHERE article = %s AND table_name = %s
-                """, (article, table_name))
-                product = cursor.fetchone()
+            # for article, price, table_name, quantity, comment in selected_articles:
+                Перевірка, чи існує товар у `products`
+                # cursor.execute("""
+                    # SELECT id FROM products WHERE article = %s AND table_name = %s
+                # """, (article, table_name))
+                # product = cursor.fetchone()
 
-                if not product:
-                    # Додавання нового товару до `products`
-                    cursor.execute("""
-                        INSERT INTO products (article, table_name, price, created_at)
-                        VALUES (%s, %s, %s, NOW())
-                        RETURNING id
-                    """, (article, table_name, price))
-                    product = cursor.fetchone()
-                    logging.info(f"Added new product to products: {article}, table: {table_name}, price: {price}")
+                # if not product:
+                    Додавання нового товару до `products`
+                    # cursor.execute("""
+                        # INSERT INTO products (article, table_name, price, created_at)
+                        # VALUES (%s, %s, %s, NOW())
+                        # RETURNING id
+                    # """, (article, table_name, price))
+                    # product = cursor.fetchone()
+                    # logging.info(f"Added new product to products: {article}, table: {table_name}, price: {price}")
 
-                product_id = product['id']
+                # product_id = product['id']
 
-                # Додавання товару в кошик
-                cursor.execute("""
-                    INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, comment, added_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, NOW())
-                    ON CONFLICT (user_id, product_id) DO UPDATE SET
-                    quantity = cart.quantity + EXCLUDED.quantity,
-                    final_price = EXCLUDED.final_price,
-                    comment = EXCLUDED.comment
-                """, (user_id, product_id, quantity, price, price, comment))
-                logging.debug(f"Added/updated article {article} in cart for user_id={user_id}.")
+                Додавання товару в кошик
+                # cursor.execute("""
+                    # INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, comment, added_at)
+                    # VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                    # ON CONFLICT (user_id, product_id) DO UPDATE SET
+                    # quantity = cart.quantity + EXCLUDED.quantity,
+                    # final_price = EXCLUDED.final_price,
+                    # comment = EXCLUDED.comment
+                # """, (user_id, product_id, quantity, price, price, comment))
+                # logging.debug(f"Added/updated article {article} in cart for user_id={user_id}.")
 
-            conn.commit()
-            logging.info(f"Cart updated successfully for user_id={user_id}.")
+            # conn.commit()
+            # logging.info(f"Cart updated successfully for user_id={user_id}.")
 
-        flash("Selection successfully submitted!", "success")
-        return redirect(url_for('cart', token=token))
+        # flash("Selection successfully submitted!", "success")
+        # return redirect(url_for('cart', token=token))
 
-    except Exception as e:
-        logging.error(f"Error in submit_selection: {e}", exc_info=True)
-        flash("An error occurred during submission. Please try again.", "error")
-        return redirect(url_for('search_articles', token=token))
+    # except Exception as e:
+        # logging.error(f"Error in submit_selection: {e}", exc_info=True)
+        # flash("An error occurred during submission. Please try again.", "error")
+        # return redirect(url_for('search_articles', token=token))
 
 
 

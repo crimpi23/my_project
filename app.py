@@ -529,7 +529,7 @@ def create_user(token):
             # flash("User is not authenticated.", "error")
             # return redirect(url_for('index'))
 
-        Очищення старих записів і додавання нових
+        # Очищення старих записів і додавання нових
         # with get_db_connection() as conn:
             # with conn.cursor() as cursor:
                 # cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s", (user_id,))

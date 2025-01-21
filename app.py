@@ -831,7 +831,7 @@ def cart(token):
 
 
 
-проміжковий єтап після cart
+# проміжковий єтап після cart
 # @app.route('/<token>/submit_selection', methods=['POST'])
 # @requires_token_and_roles('user', 'user_25', 'user_29')
 # def submit_selection(token):
@@ -845,7 +845,7 @@ def cart(token):
             # logging.warning("User not authenticated. Redirecting to search.")
             # return redirect(url_for('search_articles', token=token))
 
-        Обробка форми для вибраних товарів
+        # Обробка форми для вибраних товарів
         # selected_articles = []
         # for key, value in request.form.items():
             # if key.startswith('selected_'):
@@ -867,14 +867,14 @@ def cart(token):
             # cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
             # for article, price, table_name, quantity, comment in selected_articles:
-                Перевірка, чи існує товар у `products`
+                # Перевірка, чи існує товар у `products`
                 # cursor.execute("""
                     # SELECT id FROM products WHERE article = %s AND table_name = %s
                 # """, (article, table_name))
                 # product = cursor.fetchone()
 
                 # if not product:
-                    Додавання нового товару до `products`
+                    # Додавання нового товару до `products`
                     # cursor.execute("""
                         # INSERT INTO products (article, table_name, price, created_at)
                         # VALUES (%s, %s, %s, NOW())
@@ -885,7 +885,7 @@ def cart(token):
 
                 # product_id = product['id']
 
-                Додавання товару в кошик
+                # Додавання товару в кошик
                 # cursor.execute("""
                     # INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, comment, added_at)
                     # VALUES (%s, %s, %s, %s, %s, %s, NOW())

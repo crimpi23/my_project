@@ -679,8 +679,7 @@ def search_articles(token):
         logging.info("Database connection closed.")
 
 
-
-@app.route('/<token>/search_results', methods=['GET'])
+@app.route('/<token>/search_results', methods=['GET', 'POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def search_results(token):
     user_id = session.get('user_id')
@@ -688,21 +687,78 @@ def search_results(token):
         flash("You need to log in to view search results.", "error")
         return redirect(url_for('index'))
 
-    user_markup = Decimal(get_markup_percentage(user_id))
-    logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
+    # Якщо це POST-запит, обробляємо вибір користувача
+    if request.method == 'POST':
+        selected_prices = {}
+        for key, value in request.form.items():
+            if key.startswith('selected_price_'):
+                article = key.replace('selected_price_', '')
+                table_name, price = value.split(':')
+                selected_prices[article] = {
+                    'table_name': table_name,
+                    'price': Decimal(price),
+                }
 
-    results = get_selection_buffer(user_id)
-    grouped_results = {}
-    for row in results:
-        base_price = Decimal(row['price'])
-        final_price = round(base_price * (Decimal(1) + user_markup / Decimal(100)), 2)
-        grouped_results.setdefault(row['article'], []).append({
-            'price': final_price,
-            'table_name': row['table_name'],
-            'quantity': row['quantity'],
-        })
+        # Зберегти вибір у `selection_buffer`
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            # Очистити буфер для поточного користувача
+            cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s", (user_id,))
 
-    return render_template('search_results.html', grouped_results=grouped_results, token=token)
+            # Додати нові записи
+            for article, data in selected_prices.items():
+                cursor.execute("""
+                    INSERT INTO selection_buffer (user_id, article, table_name, price, quantity, added_at)
+                    VALUES (%s, %s, %s, %s, 1, NOW())
+                """, (user_id, article, data['table_name'], data['price']))
+
+            conn.commit()
+            flash("Your selection has been saved!", "success")
+        except Exception as e:
+            conn.rollback()
+            logging.error(f"Error updating selection buffer: {str(e)}", exc_info=True)
+            flash("An error occurred while saving your selection. Please try again.", "error")
+        finally:
+            cursor.close()
+            conn.close()
+
+        return redirect(url_for('search_results', token=token))
+
+    # Якщо це GET-запит, відображаємо результати
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Отримати список прайс-листів
+        cursor.execute("SELECT table_name FROM price_lists")
+        price_list_tables = [row[0] for row in cursor.fetchall()]
+
+        # Отримати артикул із сесії
+        grouped_results = session.get('grouped_results', {})
+        if not grouped_results:
+            flash("No search results found. Please start a new search.", "info")
+            return redirect(url_for('index'))
+
+        # Групувати результати по артикулах
+        results = {}
+        for article, options in grouped_results.items():
+            for option in options:
+                results.setdefault(article, []).append(option)
+
+        return render_template(
+            'search_results.html',
+            grouped_results=results,
+            token=token
+        )
+
+    except Exception as e:
+        logging.error(f"Error fetching search results: {str(e)}", exc_info=True)
+        flash("An error occurred while retrieving search results.", "error")
+        return redirect(url_for('index'))
+    finally:
+        cursor.close()
+        conn.close()
 
 
 

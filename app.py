@@ -1223,8 +1223,6 @@ def clear_cart(token):
         return redirect(url_for('index'))
 
 
-
-# Переміщення товару з кошика в замовлення з надсиланням електронного листа
 @app.route('/<token>/place_order', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def place_order(token):
@@ -1242,7 +1240,7 @@ def place_order(token):
 
         logging.debug("Fetching cart items...")
         cursor.execute("""
-            SELECT article, price, quantity, table_name, comment
+            SELECT article, final_price AS price, quantity, table_name, comment
             FROM cart
             WHERE user_id = %s
         """, (user_id,))
@@ -1268,7 +1266,7 @@ def place_order(token):
         # Додавання деталей замовлення
         for item in cart_items:
             cursor.execute("""
-                INSERT INTO order_details (order_id, article, table_name, price, quantity, total_price, comment)
+                INSERT INTO order_details (order_id, article, table_name, final_price, quantity, total_price, comment)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
                 order_id,
@@ -1305,7 +1303,7 @@ def place_order(token):
         # Надсилання електронного листа
         cursor.execute("SELECT email FROM users WHERE id = %s", (user_id,))
         user_email = cursor.fetchone()
-        if user_email and user_email['email']:
+        if user_email and 'email' in user_email and user_email['email']:
             try:
                 send_email(
                     to_email=user_email['email'],
@@ -1328,9 +1326,9 @@ def place_order(token):
         flash(f"Error placing order: {str(e)}", "error")
         return redirect(request.referrer or url_for('cart'))
     finally:
-        if cursor:
+        if 'cursor' in locals() and cursor:
             cursor.close()
-        if conn:
+        if 'conn' in locals() and conn:
             conn.close()
         logging.debug("Database connection closed.")
 

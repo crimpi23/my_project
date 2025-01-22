@@ -1225,7 +1225,6 @@ def clear_cart(token):
 
 
 
-
 @app.route('/<token>/place_order', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def place_order(token):
@@ -1251,7 +1250,7 @@ def place_order(token):
         # Отримання даних з кошика
         logging.debug("Fetching cart items...")
         cursor.execute("""
-            SELECT article, final_price AS price, quantity, table_name, comment
+            SELECT product_id, article, final_price AS price, quantity, table_name, comment
             FROM cart
             WHERE user_id = %s
         """, (user_id,))
@@ -1278,10 +1277,11 @@ def place_order(token):
         # Додавання деталей замовлення
         for item in cart_items:
             cursor.execute("""
-                INSERT INTO order_details (order_id, article, table_name, price, quantity, total_price, comment)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO order_details (order_id, product_id, article, table_name, price, quantity, total_price, comment)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 order_id,
+                item['product_id'],
                 item['article'],
                 item['table_name'],
                 item['price'],
@@ -1289,23 +1289,11 @@ def place_order(token):
                 item['price'] * item['quantity'],
                 item['comment'] or "No comment"
             ))
-            logging.info(f"Inserted order detail: order_id={order_id}, article={item['article']}, table_name={item['table_name']}")
+            logging.info(f"Inserted order detail: order_id={order_id}, product_id={item['product_id']}, article={item['article']}")
 
         # Очищення кошика
         logging.debug(f"Clearing cart for user_id={user_id}...")
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
-
-        # Зберігання деталей замовлення для повідомлення
-        ordered_items = [
-            {
-                "article": item['article'],
-                "price": item['price'],
-                "quantity": item['quantity'],
-                "comment": item['comment'] or "No comment",
-                "table_name": item['table_name']
-            }
-            for item in cart_items
-        ]
 
         # Видалення даних із сесії
         session.pop('missing_articles', None)
@@ -1322,7 +1310,16 @@ def place_order(token):
                 send_email(
                     to_email=user_email['email'],
                     subject=f"Order Confirmation - Order #{order_id}",
-                    ordered_items=ordered_items
+                    ordered_items=[
+                        {
+                            "article": item['article'],
+                            "price": item['price'],
+                            "quantity": item['quantity'],
+                            "comment": item['comment'] or "No comment",
+                            "table_name": item['table_name']
+                        }
+                        for item in cart_items
+                    ]
                 )
                 logging.info(f"Email sent successfully to {user_email['email']}")
             except Exception as email_error:
@@ -1345,6 +1342,7 @@ def place_order(token):
         if 'conn' in locals() and conn:
             conn.close()
         logging.debug("Database connection closed.")
+
 
 
 

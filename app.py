@@ -1222,10 +1222,16 @@ def clear_cart(token):
         flash("Could not load your cart. Please try again.", "error")
         return redirect(url_for('index'))
 
-
 @app.route('/<token>/place_order', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def place_order(token):
+    """
+    Функція для обробки замовлення:
+    - Створює замовлення в таблиці `orders`.
+    - Додає деталі замовлення до `order_details`.
+    - Очищає кошик користувача.
+    - Відправляє підтвердження електронною поштою.
+    """
     try:
         user_id = session.get('user_id')
         logging.debug(f"Placing order for user_id={user_id}")
@@ -1236,8 +1242,9 @@ def place_order(token):
             return redirect(url_for('index'))
 
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
+        # Отримання даних з кошика
         logging.debug("Fetching cart items...")
         cursor.execute("""
             SELECT article, final_price AS price, quantity, table_name, comment
@@ -1251,10 +1258,11 @@ def place_order(token):
             logging.warning(f"Cart is empty for user_id={user_id}.")
             return redirect(request.referrer or url_for('cart'))
 
+        # Підрахунок загальної суми
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
         logging.debug(f"Calculated total price for order: {total_price}")
 
-        # Створення замовлення
+        # Створення запису замовлення
         cursor.execute("""
             INSERT INTO orders (user_id, total_price, order_date, status)
             VALUES (%s, %s, NOW(), %s)
@@ -1266,7 +1274,7 @@ def place_order(token):
         # Додавання деталей замовлення
         for item in cart_items:
             cursor.execute("""
-                INSERT INTO order_details (order_id, article, table_name, final_price, quantity, total_price, comment)
+                INSERT INTO order_details (order_id, article, table_name, price, quantity, total_price, comment)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
                 order_id,
@@ -1275,10 +1283,11 @@ def place_order(token):
                 item['price'],
                 item['quantity'],
                 item['price'] * item['quantity'],
-                item['comment']
+                item['comment'] or "No comment"
             ))
             logging.info(f"Inserted order detail: order_id={order_id}, article={item['article']}, table_name={item['table_name']}")
 
+        # Очищення кошика
         logging.debug(f"Clearing cart for user_id={user_id}...")
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
 
@@ -1298,9 +1307,10 @@ def place_order(token):
         session.pop('missing_articles', None)
         session.pop('items_without_table', None)
 
+        # Підтвердження замовлення
         conn.commit()
 
-        # Надсилання електронного листа
+        # Отримання електронної пошти користувача
         cursor.execute("SELECT email FROM users WHERE id = %s", (user_id,))
         user_email = cursor.fetchone()
         if user_email and 'email' in user_email and user_email['email']:

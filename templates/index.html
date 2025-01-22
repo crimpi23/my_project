@@ -59,10 +59,20 @@
             background-color: #e9ecef;
             cursor: pointer;
             transition: border-color 0.2s, background-color 0.2s;
+            position: relative;
         }
-        .drop-zone:hover {
+        .drop-zone.dragover {
             border-color: #0d6efd;
             background-color: #f8f9fa;
+        }
+        .drop-zone.loaded {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .drop-zone .file-name {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #495057;
         }
         textarea {
             resize: none;
@@ -114,6 +124,7 @@
                         <h2 class="card-title">Upload Articles File</h2>
                         <div class="drop-zone" id="drop-zone">
                             Drag and drop your file here, or click to select
+                            <div class="file-name" id="file-name"></div>
                         </div>
                         <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data" id="upload-form">
                             <input type="file" id="file" name="file" accept=".xlsx" class="form-control d-none" required>
@@ -150,6 +161,7 @@
     <script>
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file');
+        const fileNameDisplay = document.getElementById('file-name');
 
         // Trigger file input when drop zone is clicked
         dropZone.addEventListener('click', () => fileInput.click());
@@ -157,22 +169,32 @@
         // Highlight drop zone on drag over
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            dropZone.classList.add('drop-zone-hover');
+            dropZone.classList.add('dragover');
         });
 
         // Remove highlight on drag leave
         dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('drop-zone-hover');
+            dropZone.classList.remove('dragover');
         });
 
         // Handle file drop
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            dropZone.classList.remove('drop-zone-hover');
+            dropZone.classList.remove('dragover');
 
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 fileInput.files = files;
+                dropZone.classList.add('loaded');
+                fileNameDisplay.textContent = `File selected: ${files[0].name}`;
+            }
+        });
+
+        // Handle file input change
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                dropZone.classList.add('loaded');
+                fileNameDisplay.textContent = `File selected: ${fileInput.files[0].name}`;
             }
         });
     </script>

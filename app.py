@@ -895,7 +895,7 @@ def cart(token):
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def submit_selection(token):
     """
-    Функція обробляє вибір користувача та додає вибрані артикули в кошик.
+    Обробляє вибір користувача та додає вибрані артикули в кошик безпосередньо.
     """
     logging.debug(f"Submit Selection Called with token: {token}")
     try:
@@ -905,7 +905,7 @@ def submit_selection(token):
             logging.warning("User not authenticated. Redirecting to search.")
             return redirect(url_for('search_articles', token=token))
 
-        # Обробка форми для вибраних товарів
+        # Обробка даних із форми
         selected_articles = []
         for key, value in request.form.items():
             if key.startswith('selected_'):
@@ -923,6 +923,7 @@ def submit_selection(token):
             logging.info("No articles selected in the form. Redirecting to search.")
             return redirect(url_for('search_articles', token=token))
 
+        # Підключення до бази даних
         with get_db_connection() as conn:
             cursor = conn.cursor()
 

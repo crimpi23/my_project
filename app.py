@@ -762,7 +762,6 @@ def search_results(token):
 
 
 
-
 @app.route('/<token>/cart', methods=['GET', 'POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def cart(token):
@@ -789,21 +788,24 @@ def cart(token):
         # Якщо це POST-запит, обробляємо дії з кошиком (видалення, оновлення кількості)
         if request.method == 'POST':
             action = request.form.get('action')
-            product_id = request.form.get('product_id')
-            logging.debug(f"POST action received: {action}, product_id: {product_id}")
-            if action == 'remove' and product_id:
+            article = request.form.get('article')
+            table_name = request.form.get('table_name')
+            logging.debug(f"POST action received: {action}, article: {article}, table_name: {table_name}")
+            
+            if action == 'remove' and article and table_name:
                 # Видалення товару з кошика
                 cursor.execute(
                     """
                     DELETE FROM cart
-                    WHERE user_id = %s AND product_id = %s
+                    WHERE user_id = %s AND article = %s AND table_name = %s
                     """,
-                    (user_id, product_id)
+                    (user_id, article, table_name)
                 )
                 conn.commit()
                 flash("Item removed from cart.", "success")
-                logging.info(f"Product {product_id} removed from cart for user_id {user_id}.")
-            elif action == 'update_quantity' and product_id:
+                logging.info(f"Article {article} removed from cart for user_id {user_id}.")
+            
+            elif action == 'update_quantity' and article and table_name:
                 # Оновлення кількості товару
                 new_quantity = int(request.form.get('quantity', 1))
                 if new_quantity > 0:
@@ -811,41 +813,42 @@ def cart(token):
                         """
                         UPDATE cart
                         SET quantity = %s
-                        WHERE user_id = %s AND product_id = %s
+                        WHERE user_id = %s AND article = %s AND table_name = %s
                         """,
-                        (new_quantity, user_id, product_id)
+                        (new_quantity, user_id, article, table_name)
                     )
                     conn.commit()
                     flash("Item quantity updated.", "success")
-                    logging.info(f"Product {product_id} quantity updated to {new_quantity} for user_id {user_id}.")
+                    logging.info(f"Article {article} quantity updated to {new_quantity} for user_id {user_id}.")
                 else:
                     flash("Quantity must be greater than zero.", "error")
-                    logging.warning(f"Invalid quantity {new_quantity} provided for product {product_id}.")
+                    logging.warning(f"Invalid quantity {new_quantity} provided for article {article}.")
 
         # Отримуємо товари з кошика
         cursor.execute("""
             SELECT 
-                c.product_id, 
-                p.article, 
-                COALESCE(c.base_price, 0) AS base_price,
-                COALESCE(c.final_price, 0) AS final_price,
-                c.quantity,
-                ROUND(COALESCE(c.final_price, 0) * c.quantity, 2) AS total_price
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = %s
-            ORDER BY c.added_at
+                article, 
+                table_name, 
+                COALESCE(base_price, 0) AS base_price,
+                COALESCE(final_price, 0) AS final_price,
+                quantity,
+                ROUND(COALESCE(final_price, 0) * quantity, 2) AS total_price,
+                comment
+            FROM cart
+            WHERE user_id = %s
+            ORDER BY added_at
         """, (user_id,))
 
         cart_items = []
         for row in cursor.fetchall():
             cart_items.append({
-                'product_id': row['product_id'],
                 'article': row['article'],
+                'table_name': row['table_name'],
                 'base_price': float(row['base_price']),
                 'final_price': float(row['final_price']),
                 'quantity': row['quantity'],
-                'total_price': float(row['total_price'])
+                'total_price': float(row['total_price']),
+                'comment': row['comment']
             })
         logging.debug(f"Cart items fetched: {cart_items}")
 
@@ -901,7 +904,7 @@ def submit_selection(token):
             logging.warning("User not authenticated. Redirecting to search.")
             return redirect(url_for('search_articles', token=token))
 
-        #Обробка форми для вибраних товарів
+        # Обробка форми для вибраних товарів
         selected_articles = []
         for key, value in request.form.items():
             if key.startswith('selected_'):
@@ -923,33 +926,15 @@ def submit_selection(token):
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
             for article, price, table_name, quantity, comment in selected_articles:
-                #Перевірка, чи існує товар у `products`
+                # Додавання товару в кошик
                 cursor.execute("""
-                    SELECT id FROM products WHERE article = %s AND table_name = %s
-                """, (article, table_name))
-                product = cursor.fetchone()
-
-                if not product:
-                    #Додавання нового товару до `products`
-                    cursor.execute("""
-                        INSERT INTO products (article, table_name, price, created_at)
-                        VALUES (%s, %s, %s, NOW())
-                        RETURNING id
-                    """, (article, table_name, price))
-                    product = cursor.fetchone()
-                    logging.info(f"Added new product to products: {article}, table: {table_name}, price: {price}")
-
-                product_id = product['id']
-
-                #Додавання товару в кошик
-                cursor.execute("""
-                    INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, comment, added_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, NOW())
-                    ON CONFLICT (user_id, product_id) DO UPDATE SET
+                    INSERT INTO cart (user_id, article, table_name, quantity, base_price, final_price, comment, added_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+                    ON CONFLICT (user_id, article, table_name) DO UPDATE SET
                     quantity = cart.quantity + EXCLUDED.quantity,
                     final_price = EXCLUDED.final_price,
                     comment = EXCLUDED.comment
-                """, (user_id, product_id, quantity, price, price, comment))
+                """, (user_id, article, table_name, quantity, price, price, comment))
                 logging.debug(f"Added/updated article {article} in cart for user_id={user_id}.")
 
             conn.commit()
@@ -962,7 +947,6 @@ def submit_selection(token):
         logging.error(f"Error in submit_selection: {e}", exc_info=True)
         flash("An error occurred during submission. Please try again.", "error")
         return redirect(url_for('search_articles', token=token))
-
 
 
 
@@ -1422,8 +1406,7 @@ def orders(token):
 
 
 
-
-# Окреме замовлення пористувача по id
+# Окреме замовлення користувача по id
 @app.route('/<token>/order_details/<int:order_id>')
 @requires_token_and_roles('user', 'user_25', 'user_29') 
 def order_details(token, order_id):
@@ -1431,11 +1414,17 @@ def order_details(token, order_id):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Отримання деталей замовлення з урахуванням коментарів
+        # Отримання деталей замовлення
         cursor.execute("""
-            SELECT od.order_id, p.article, od.price, od.quantity, od.total_price, od.comment
+            SELECT 
+                od.order_id, 
+                od.article, 
+                od.table_name, 
+                od.price, 
+                od.quantity, 
+                od.total_price, 
+                od.comment
             FROM order_details od
-            JOIN products p ON od.product_id = p.id
             WHERE od.order_id = %s
         """, (order_id,))
         details = cursor.fetchall()
@@ -1448,8 +1437,22 @@ def order_details(token, order_id):
             flash("No details found for this order.", "warning")
             return render_template('order_details.html', details=[])
 
+        # Підготовка даних для відображення
+        formatted_details = [
+            {
+                "article": row['article'],
+                "table_name": row['table_name'],
+                "price": float(row['price']),
+                "quantity": row['quantity'],
+                "total_price": float(row['total_price']),
+                "comment": row['comment'] or "No comment"
+            }
+            for row in details
+        ]
+        logging.debug(f"Formatted order details: {formatted_details}")
+
         # Рендеринг сторінки з переданими деталями
-        return render_template('order_details.html', token=token, details=details)
+        return render_template('order_details.html', token=token, details=formatted_details)
 
     except Exception as e:
         logging.error(f"Error loading order details for order_id={order_id}: {str(e)}", exc_info=True)

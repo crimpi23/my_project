@@ -894,9 +894,10 @@ def cart(token):
 @app.route('/<token>/submit_selection', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def submit_selection(token):
+    """
+    Функція обробляє вибір користувача та додає вибрані артикули в кошик.
+    """
     logging.debug(f"Submit Selection Called with token: {token}")
-    app.logger.debug(f"Form data received: {request.form}")
-
     try:
         user_id = session.get('user_id')
         if not user_id:
@@ -923,19 +924,27 @@ def submit_selection(token):
             return redirect(url_for('search_articles', token=token))
 
         with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            cursor = conn.cursor()
 
             for article, price, table_name, quantity, comment in selected_articles:
-                # Додавання товару в кошик
-                cursor.execute("""
-                    INSERT INTO cart (user_id, article, table_name, quantity, base_price, final_price, comment, added_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
-                    ON CONFLICT (user_id, article, table_name) DO UPDATE SET
-                    quantity = cart.quantity + EXCLUDED.quantity,
-                    final_price = EXCLUDED.final_price,
-                    comment = EXCLUDED.comment
-                """, (user_id, article, table_name, quantity, price, price, comment))
-                logging.debug(f"Added/updated article {article} in cart for user_id={user_id}.")
+                try:
+                    # Додавання товару в кошик
+                    cursor.execute(
+                        """
+                        INSERT INTO cart (user_id, article, table_name, quantity, base_price, final_price, comment, added_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+                        ON CONFLICT (user_id, article, table_name) DO UPDATE SET
+                        quantity = cart.quantity + EXCLUDED.quantity,
+                        final_price = EXCLUDED.final_price,
+                        comment = EXCLUDED.comment
+                        """,
+                        (user_id, article, table_name, quantity, price, price, comment)
+                    )
+                    logging.info(f"Article {article} added/updated in cart for user_id={user_id}.")
+                except Exception as e:
+                    logging.error(f"Error adding article {article} to cart: {e}")
+                    flash(f"Error adding article {article} to cart.", "error")
+                    continue
 
             conn.commit()
             logging.info(f"Cart updated successfully for user_id={user_id}.")
@@ -1968,8 +1977,6 @@ def compare_prices(token):
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(request.referrer or url_for('compare_prices'))
-
-
 @app.route('/<token>/upload_file', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def upload_file(token):
@@ -2115,13 +2122,12 @@ def upload_file(token):
 
 
 
-
 @app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def intermediate_results(token):
     """
     Обробляє статті без таблиці, надає можливість вибрати таблиці,
-    а потім додає вибрані статті до таблиці `products` і кошика.
+    а потім додає вибрані статті до кошика.
     """
     logging.debug(f"Intermediate Results Called with token: {token}")
     try:
@@ -2161,7 +2167,7 @@ def intermediate_results(token):
 
                         try:
                             cursor.execute(
-                                "SELECT price FROM {} WHERE article = %s".format(selected_table),
+                                f"SELECT price FROM {selected_table} WHERE article = %s",
                                 (article,)
                             )
                             result = cursor.fetchone()
@@ -2174,37 +2180,17 @@ def intermediate_results(token):
                             base_price = Decimal(result[0])
                             final_price = round(base_price * (1 + user_markup / 100), 2)
 
-                            # Перевірка існування у `products`
-                            cursor.execute(
-                                "SELECT id FROM products WHERE article = %s AND table_name = %s",
-                                (article, selected_table)
-                            )
-                            product = cursor.fetchone()
-
-                            if not product:
-                                cursor.execute(
-                                    """
-                                    INSERT INTO products (article, price, table_name, created_at)
-                                    VALUES (%s, %s, %s, NOW())
-                                    RETURNING id
-                                    """,
-                                    (article, base_price, selected_table)
-                                )
-                                product_id = cursor.fetchone()[0]
-                                logging.info(f"Article {article} added to products with base price {base_price} in table {selected_table}.")
-                            else:
-                                product_id = product[0]
-
+                            # Додавання товару в кошик
                             cursor.execute(
                                 """
-                                INSERT INTO cart (user_id, product_id, quantity, base_price, final_price, added_at, comment)
-                                VALUES (%s, %s, %s, %s, %s, NOW(), %s)
-                                ON CONFLICT (user_id, product_id) DO UPDATE SET
+                                INSERT INTO cart (user_id, article, table_name, quantity, base_price, final_price, added_at, comment)
+                                VALUES (%s, %s, %s, %s, %s, %s, NOW(), %s)
+                                ON CONFLICT (user_id, article, table_name) DO UPDATE SET
                                 quantity = cart.quantity + EXCLUDED.quantity,
                                 final_price = EXCLUDED.final_price,
                                 comment = EXCLUDED.comment
                                 """,
-                                (user_id, product_id, quantity, base_price, final_price, comment)
+                                (user_id, article, selected_table, quantity, base_price, final_price, comment)
                             )
                             added_to_cart.append(article)
                             logging.info(f"Article {article} added to cart from table {selected_table}.")
@@ -2240,7 +2226,7 @@ def intermediate_results(token):
                     item_prices = []
                     for table in valid_tables:
                         cursor.execute(
-                            "SELECT price FROM {} WHERE article = %s".format(table),
+                            f"SELECT price FROM {table} WHERE article = %s",
                             (article,)
                         )
                         result = cursor.fetchone()

@@ -991,6 +991,7 @@ def clear_search(token):
 
 
 # Додавання в кошик користувачем
+# Додавання в кошик користувачем
 @app.route('/<token>/add_to_cart', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def add_to_cart(token):
@@ -1002,10 +1003,11 @@ def add_to_cart(token):
     try:
         # Отримання даних з форми
         article = request.form.get('article')
-        price = float(request.form.get('price'))
-        quantity = int(request.form.get('quantity'))  # Перевіряємо кількість товару
+        price = Decimal(request.form.get('price'))  # Ціна на момент додавання
+        quantity = int(request.form.get('quantity'))  # Кількість товару
         table_name = request.form.get('table_name')
-        user_id = session.get('user_id')  # Отримання ID користувача із сесії
+        comment = request.form.get('comment', None)  # Коментар користувача
+        user_id = session.get('user_id')  # ID користувача
 
         if not user_id:
             flash("User is not authenticated. Please log in.", "error")
@@ -1016,48 +1018,29 @@ def add_to_cart(token):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Перевірка наявності товару у таблиці `products`
-        cursor.execute("""
-            SELECT id FROM products
-            WHERE article = %s AND table_name = %s
-        """, (article, table_name))
-        product = cursor.fetchone()
-
-        if not product:
-            # Додавання нового продукту в таблицю `products`
-            cursor.execute("""
-                INSERT INTO products (article, table_name, price)
-                VALUES (%s, %s, %s)
-                RETURNING id
-            """, (article, table_name, price))
-            product_id = cursor.fetchone()[0]
-            logging.info(f"New product added to 'products': ID={product_id}, Article={article}, Table={table_name}, Price={price}")
-        else:
-            product_id = product['id']
-            logging.debug(f"Product already exists: ID={product_id}, Article={article}")
-
         # Перевірка, чи товар вже є в кошику
         cursor.execute("""
-            SELECT id FROM cart
-            WHERE user_id = %s AND product_id = %s
-        """, (user_id, product_id))
+            SELECT id, quantity FROM cart
+            WHERE user_id = %s AND article = %s AND table_name = %s
+        """, (user_id, article, table_name))
         existing_cart_item = cursor.fetchone()
 
         if existing_cart_item:
             # Оновлення кількості товару в кошику
+            new_quantity = existing_cart_item['quantity'] + quantity
             cursor.execute("""
                 UPDATE cart
-                SET quantity = quantity + %s
+                SET quantity = %s
                 WHERE id = %s
-            """, (quantity, existing_cart_item['id']))
-            logging.info(f"Cart updated: Product ID={product_id}, Quantity Added={quantity}, User ID={user_id}")
+            """, (new_quantity, existing_cart_item['id']))
+            logging.info(f"Cart updated: Article={article}, New Quantity={new_quantity}, User ID={user_id}")
         else:
             # Додавання нового товару в кошик
             cursor.execute("""
-                INSERT INTO cart (user_id, product_id, quantity, added_at)
-                VALUES (%s, %s, %s, NOW())
-            """, (user_id, product_id, quantity))
-            logging.info(f"Product added to cart: Product ID={product_id}, Quantity={quantity}, User ID={user_id}")
+                INSERT INTO cart (user_id, article, table_name, price, quantity, comment, added_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW())
+            """, (user_id, article, table_name, price, quantity, comment))
+            logging.info(f"Product added to cart: Article={article}, Quantity={quantity}, User ID={user_id}")
 
         conn.commit()
         flash("Product added to cart!", "success")
@@ -1078,6 +1061,7 @@ def add_to_cart(token):
         quantities=session.get('quantities', {}),
         missing_articles=session.get('missing_articles', []),
     )
+
 
 
 
@@ -1243,8 +1227,6 @@ def clear_cart(token):
 
 
 
-
-
 @app.route('/<token>/place_order', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def place_order(token):
@@ -1262,10 +1244,9 @@ def place_order(token):
 
         logging.debug("Fetching cart items...")
         cursor.execute("""
-            SELECT c.product_id, p.article, p.price, c.quantity, c.comment
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = %s
+            SELECT article, price, quantity, table_name, comment
+            FROM cart
+            WHERE user_id = %s
         """, (user_id,))
         cart_items = cursor.fetchall()
 
@@ -1277,6 +1258,7 @@ def place_order(token):
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
         logging.debug(f"Calculated total price for order: {total_price}")
 
+        # Створення замовлення
         cursor.execute("""
             INSERT INTO orders (user_id, total_price, order_date, status)
             VALUES (%s, %s, NOW(), %s)
@@ -1285,12 +1267,21 @@ def place_order(token):
         order_id = cursor.fetchone()['id']
         logging.info(f"Order created with id={order_id} for user_id={user_id}")
 
+        # Додавання деталей замовлення
         for item in cart_items:
             cursor.execute("""
-                INSERT INTO order_details (order_id, product_id, price, quantity, total_price, comment)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (order_id, item['product_id'], item['price'], item['quantity'], item['price'] * item['quantity'], item.get('comment')))
-            logging.info(f"Inserted order detail: order_id={order_id}, product_id={item['product_id']}")
+                INSERT INTO order_details (order_id, article, table_name, price, quantity, total_price, comment)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                order_id,
+                item['article'],
+                item['table_name'],
+                item['price'],
+                item['quantity'],
+                item['price'] * item['quantity'],
+                item['comment']
+            ))
+            logging.info(f"Inserted order detail: order_id={order_id}, article={item['article']}, table_name={item['table_name']}")
 
         logging.debug(f"Clearing cart for user_id={user_id}...")
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
@@ -1301,18 +1292,15 @@ def place_order(token):
                 "article": item['article'],
                 "price": item['price'],
                 "quantity": item['quantity'],
-                "comment": item['comment'] or "No comment"
+                "comment": item['comment'] or "No comment",
+                "table_name": item['table_name']
             }
             for item in cart_items
         ]
 
-        if 'missing_articles' in session:
-            missing_articles = session.pop('missing_articles', None)
-        else:
-            missing_articles = []
-
-        if 'items_without_table' in session:
-            session.pop('items_without_table', None)
+        # Видалення даних із сесії
+        session.pop('missing_articles', None)
+        session.pop('items_without_table', None)
 
         conn.commit()
 
@@ -1324,8 +1312,7 @@ def place_order(token):
                 send_email(
                     to_email=user_email['email'],
                     subject=f"Order Confirmation - Order #{order_id}",
-                    ordered_items=ordered_items,
-                    missing_articles=missing_articles
+                    ordered_items=ordered_items
                 )
                 logging.info(f"Email sent successfully to {user_email['email']}")
             except Exception as email_error:
@@ -1348,7 +1335,6 @@ def place_order(token):
         if conn:
             conn.close()
         logging.debug("Database connection closed.")
-
 
 
 

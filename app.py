@@ -1226,7 +1226,7 @@ def clear_cart(token):
 
 
 
-
+# Переміщення товару з кошика в замовлення з надсиланням електронного листа
 @app.route('/<token>/place_order', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def place_order(token):

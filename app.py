@@ -1251,7 +1251,7 @@ def place_order(token):
         # Отримання даних з кошика
         logging.debug("Fetching cart items...")
         cursor.execute("""
-            SELECT product_id, article, final_price AS price, quantity, table_name, comment
+            SELECT article, final_price AS price, quantity, table_name, comment
             FROM cart
             WHERE user_id = %s
         """, (user_id,))
@@ -1261,13 +1261,6 @@ def place_order(token):
             flash("Your cart is empty!", "error")
             logging.warning(f"Cart is empty for user_id={user_id}.")
             return redirect(request.referrer or url_for('cart'))
-
-        # Перевірка наявності product_id
-        for item in cart_items:
-            if not item.get('product_id'):
-                flash(f"Product ID is missing for article {item['article']}.", "error")
-                logging.error(f"Missing product_id for article {item['article']} in cart.")
-                return redirect(request.referrer or url_for('cart'))
 
         # Підрахунок загальної суми
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
@@ -1285,11 +1278,10 @@ def place_order(token):
         # Додавання деталей замовлення
         for item in cart_items:
             cursor.execute("""
-                INSERT INTO order_details (order_id, product_id, article, table_name, price, quantity, total_price, comment)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO order_details (order_id, article, table_name, price, quantity, total_price, comment)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
                 order_id,
-                item['product_id'],  # Важливо передати product_id
                 item['article'],
                 item['table_name'],
                 item['price'],
@@ -1297,14 +1289,13 @@ def place_order(token):
                 item['price'] * item['quantity'],
                 item['comment'] or "No comment"
             ))
-            logging.info(f"Inserted order detail: order_id={order_id}, article={item['article']}, product_id={item['product_id']}")
+            logging.info(f"Inserted order detail: order_id={order_id}, article={item['article']}, table_name={item['table_name']}")
 
         # Очищення кошика
         logging.debug(f"Clearing cart for user_id={user_id}...")
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
-        conn.commit()
 
-        # Отримання деталей замовлення для email
+        # Зберігання деталей замовлення для повідомлення
         ordered_items = [
             {
                 "article": item['article'],
@@ -1316,7 +1307,14 @@ def place_order(token):
             for item in cart_items
         ]
 
-        # Надсилання підтвердження електронною поштою
+        # Видалення даних із сесії
+        session.pop('missing_articles', None)
+        session.pop('items_without_table', None)
+
+        # Підтвердження замовлення
+        conn.commit()
+
+        # Отримання електронної пошти користувача
         cursor.execute("SELECT email FROM users WHERE id = %s", (user_id,))
         user_email = cursor.fetchone()
         if user_email and 'email' in user_email and user_email['email']:

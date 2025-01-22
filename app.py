@@ -1330,7 +1330,7 @@ def orders(token):
             query += """
             AND EXISTS (
                 SELECT 1 
-                FROM order_items 
+                FROM order_details 
                 WHERE order_id = orders.id 
                 AND article LIKE %s
             )

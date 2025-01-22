@@ -759,8 +759,9 @@ def search_results(token):
     finally:
         cursor.close()
         conn.close()
-
-@app.route('/<token>/cart', methods=['GET', 'POST'])
+ 
+ 
+ @app.route('/<token>/cart', methods=['GET', 'POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def cart(token):
     """
@@ -789,7 +790,7 @@ def cart(token):
             article = request.form.get('article')
             table_name = request.form.get('table_name')
             logging.debug(f"POST action received: {action}, article: {article}, table_name: {table_name}")
-            
+
             if action == 'remove' and article and table_name:
                 # Видалення товару з кошика
                 cursor.execute(
@@ -802,25 +803,29 @@ def cart(token):
                 conn.commit()
                 flash("Item removed from cart.", "success")
                 logging.info(f"Article {article} removed from cart for user_id {user_id}.")
-            
+
             elif action == 'update_quantity' and article and table_name:
                 # Оновлення кількості товару
-                new_quantity = int(request.form.get('quantity', 1))
-                if new_quantity > 0:
-                    cursor.execute(
-                        """
-                        UPDATE cart
-                        SET quantity = %s
-                        WHERE user_id = %s AND article = %s AND table_name = %s
-                        """,
-                        (new_quantity, user_id, article, table_name)
-                    )
-                    conn.commit()
-                    flash("Item quantity updated.", "success")
-                    logging.info(f"Article {article} quantity updated to {new_quantity} for user_id {user_id}.")
-                else:
-                    flash("Quantity must be greater than zero.", "error")
-                    logging.warning(f"Invalid quantity {new_quantity} provided for article {article}.")
+                try:
+                    new_quantity = int(request.form.get('quantity', 1))
+                    if new_quantity > 0:
+                        cursor.execute(
+                            """
+                            UPDATE cart
+                            SET quantity = %s
+                            WHERE user_id = %s AND article = %s AND table_name = %s
+                            """,
+                            (new_quantity, user_id, article, table_name)
+                        )
+                        conn.commit()
+                        flash("Item quantity updated.", "success")
+                        logging.info(f"Article {article} quantity updated to {new_quantity} for user_id {user_id}.")
+                    else:
+                        flash("Quantity must be greater than zero.", "error")
+                        logging.warning(f"Invalid quantity {new_quantity} provided for article {article}.")
+                except ValueError:
+                    flash("Invalid quantity provided.", "error")
+                    logging.error(f"Non-integer quantity provided for article {article}.")
 
         # Отримуємо товари з кошика
         cursor.execute("""

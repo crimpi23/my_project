@@ -761,7 +761,8 @@ def search_results(token):
         conn.close()
  
  
- @app.route('/<token>/cart', methods=['GET', 'POST'])
+ 
+@app.route('/<token>/cart', methods=['GET', 'POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def cart(token):
     """

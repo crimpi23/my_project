@@ -1344,6 +1344,8 @@ def place_order(token):
 
 
 
+
+
 # Замовлення користувача
 @app.route('/<token>/orders', methods=['GET'])
 @requires_token_and_roles('user', 'user_25', 'user_29')

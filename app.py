@@ -1116,24 +1116,17 @@ def update_cart(token):
     """
     Оновлює кількість товарів у кошику.
     """
-    conn = None
-    cursor = None
     try:
         # Отримуємо дані з форми
-        product_id = request.form.get('product_id')
+        article = request.form.get('article')
         quantity = request.form.get('quantity')
-        user_id = session.get('user_id')  # Отримання ID користувача із сесії
+        user_id = get_user_id_from_session()
 
-        if not user_id:
-            flash("User is not authenticated. Please log in.", "error")
-            return redirect(url_for('index'))
-
-        if not product_id or not quantity:
-            flash("Invalid input: product_id or quantity missing.", "error")
-            logging.error("Missing product_id or quantity in update_cart form.")
+        if not article or not quantity:
+            flash("Invalid input: article or quantity missing.", "error")
+            logging.error("Missing article or quantity in update_cart form.")
             return redirect(url_for('cart', token=token))
 
-        product_id = int(product_id)
         quantity = int(quantity)
 
         if quantity < 1:
@@ -1141,32 +1134,29 @@ def update_cart(token):
             logging.error(f"Invalid quantity: {quantity}")
             return redirect(url_for('cart', token=token))
 
-        logging.debug(f"Updating cart: Product ID={product_id}, Quantity={quantity}, User={user_id}")
+        logging.debug(f"Updating cart: Article={article}, Quantity={quantity}, User={user_id}")
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
+        cursor = get_db().cursor()
+        
         # Оновлення кількості у кошику
         cursor.execute("""
             UPDATE cart
             SET quantity = %s
-            WHERE user_id = %s AND product_id = %s
-        """, (quantity, user_id, product_id))
+            WHERE user_id = %s AND article = %s
+        """, (quantity, user_id, article))
 
-        conn.commit()
+        get_db().commit()
         flash("Cart updated successfully!", "success")
+        
     except Exception as e:
         logging.error(f"Error updating cart: {e}", exc_info=True)
         flash("Error updating cart.", "error")
     finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-            logging.debug("Database connection closed after updating cart.")
+        cursor.close()
+        logging.debug("Database connection closed after updating cart.")
 
-    # Повернення до кошика
     return redirect(url_for('cart', token=token))
+
 
 
 
@@ -1281,7 +1271,7 @@ def place_order(token):
                 (order_id, article, table_name, price, quantity, total_price, comment)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (order_id, cart_item['article'], cart_item['table_name'], 
-                  cart_item['final_price'], cart_item['quantity'], 
+                  cart_item['price'], cart_item['quantity'], 
                   cart_item['total_price'], cart_item['comment']))
 
             if not product_data:

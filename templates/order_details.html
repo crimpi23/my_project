@@ -67,33 +67,35 @@
 
         {% if details %}
         <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead class="table-light">
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Article</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Total Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for detail in details %}
-                    <tr>
-                        <td>{{ detail.order_id }}</td>
-                        <td>{{ detail.article }}</td>
-                        <td>${{ detail.price }}</td>
-                        <td>{{ detail.quantity }}</td>
-                        <td>${{ detail.total_price }}</td>
-                    </tr>
-                    {% if detail.comment %}
-                    <tr>
-                        <td colspan="5" class="text-start"><strong>Comment:</strong> {{ detail.comment }}</td>
-                    </tr>
-                    {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
+			<table class="table table-bordered">
+				<thead class="table-light">
+					<tr>
+						<th>Order ID</th>
+						<th>Article</th>
+						<th>Table Name</th>
+						<th>Price</th>
+						<th>Quantity</th>
+						<th>Total Price</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for detail in details %}
+					<tr>
+						<td>{{ detail.order_id }}</td>
+						<td>{{ detail.article }}</td>
+						<td>{{ detail.table_name }}</td>
+						<td>${{ detail.price }}</td>
+						<td>{{ detail.quantity }}</td>
+						<td>${{ detail.total_price }}</td>
+					</tr>
+					{% if detail.comment %}
+					<tr>
+						<td colspan="6" class="text-start"><strong>Comment:</strong> {{ detail.comment }}</td>
+					</tr>
+					{% endif %}
+					{% endfor %}
+				</tbody>
+			</table>
         </div>
         {% else %}
         <div class="alert alert-warning text-center">

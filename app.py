@@ -1281,7 +1281,7 @@ def place_order(token):
                 (order_id, article, table_name, price, quantity, total_price, comment)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (order_id, cart_item['article'], cart_item['table_name'], 
-                  cart_item['final_price'], cart_item['quantity'], 
+                  cart_item['base_price'], cart_item['quantity'], 
                   cart_item['total_price'], cart_item['comment']))
 
             if not product_data:

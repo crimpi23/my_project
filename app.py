@@ -1239,8 +1239,9 @@ def place_order(token):
         # Отримання товарів з кошика
         logging.debug("Fetching cart items...")
         cursor.execute("""
-            SELECT article, table_name, final_price AS price, quantity, comment
-            FROM cart
+            SELECT article, table_name, price, quantity, 
+                   (price * quantity) as total_price, comment
+            FROM cart 
             WHERE user_id = %s
         """, (user_id,))
         cart_items = cursor.fetchall()

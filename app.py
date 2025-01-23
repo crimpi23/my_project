@@ -1227,13 +1227,14 @@ def clear_cart(token):
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def place_order(token):
     """
-    Функція для обробки замовлення:
-    - Створює замовлення в таблиці `orders`.
+    Функція для розміщення замовлення:
+    - Створює запис у таблиці `orders`.
     - Додає деталі замовлення до `order_details`.
     - Очищає кошик користувача.
-    - Відправляє підтвердження електронною поштою.
+    - Відправляє підтвердження замовлення електронною поштою.
     """
     try:
+        # Отримання ідентифікатора користувача
         user_id = session.get('user_id')
         logging.debug(f"Placing order for user_id={user_id}")
 
@@ -1245,10 +1246,9 @@ def place_order(token):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Отримання товарів з кошика
-        logging.debug("Fetching cart items...")
+        # Отримання даних із кошика
         cursor.execute("""
-            SELECT article, table_name, final_price AS price, quantity, comment
+            SELECT article, final_price AS price, quantity, table_name, comment
             FROM cart
             WHERE user_id = %s
         """, (user_id,))
@@ -1259,7 +1259,7 @@ def place_order(token):
             logging.warning(f"Cart is empty for user_id={user_id}.")
             return redirect(request.referrer or url_for('cart'))
 
-        # Підрахунок загальної суми
+        # Розрахунок загальної вартості замовлення
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
         logging.debug(f"Calculated total price for order: {total_price}")
 
@@ -1273,27 +1273,12 @@ def place_order(token):
         logging.info(f"Order created with id={order_id} for user_id={user_id}")
 
         # Додавання деталей замовлення
-        ordered_items = []
         for item in cart_items:
-            # Отримання product_id
             cursor.execute("""
-                SELECT id AS product_id
-                FROM products
-                WHERE article = %s AND table_name = %s
-            """, (item['article'], item['table_name']))
-            product_data = cursor.fetchone()
-
-            if not product_data:
-                raise ValueError(f"Product ID not found for article {item['article']} in table {item['table_name']}")
-
-            product_id = product_data['product_id']
-
-            cursor.execute("""
-                INSERT INTO order_details (order_id, product_id, article, table_name, price, quantity, total_price, comment)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO order_details (order_id, article, table_name, price, quantity, total_price, comment)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
                 order_id,
-                product_id,
                 item['article'],
                 item['table_name'],
                 item['price'],
@@ -1301,28 +1286,34 @@ def place_order(token):
                 item['price'] * item['quantity'],
                 item['comment'] or "No comment"
             ))
-            logging.info(f"Inserted order detail: order_id={order_id}, product_id={product_id}, article={item['article']}")
-
-            ordered_items.append({
-                "article": item['article'],
-                "price": item['price'],
-                "quantity": item['quantity'],
-                "comment": item['comment'] or "No comment",
-                "table_name": item['table_name']
-            })
+            logging.info(f"Inserted order detail: order_id={order_id}, article={item['article']}, table_name={item['table_name']}")
 
         # Очищення кошика
         logging.debug(f"Clearing cart for user_id={user_id}...")
         cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
 
-        # Підтвердження замовлення
+        # Збереження змін у базі даних
         conn.commit()
 
-        # Надсилання підтвердження на email
+        # Отримання email користувача
         cursor.execute("SELECT email FROM users WHERE id = %s", (user_id,))
         user_email = cursor.fetchone()
         if user_email and 'email' in user_email and user_email['email']:
             try:
+                # Формування списку деталей замовлення для відправки
+                ordered_items = [
+                    {
+                        "article": item['article'],
+                        "table_name": item['table_name'],
+                        "quantity": item['quantity'],
+                        "price": item['price'],
+                        "total_price": item['price'] * item['quantity'],
+                        "comment": item['comment'] or "No comment"
+                    }
+                    for item in cart_items
+                ]
+
+                # Відправка електронного листа
                 send_email(
                     to_email=user_email['email'],
                     subject=f"Order Confirmation - Order #{order_id}",
@@ -1333,7 +1324,6 @@ def place_order(token):
                 logging.error(f"Failed to send email: {email_error}")
                 flash("Order placed, but we couldn't send a confirmation email.", "warning")
 
-        logging.info(f"Cart cleared and order placed successfully for user_id={user_id}")
         flash("Order placed successfully!", "success")
         return redirect(request.referrer or url_for('cart'))
 
@@ -1341,7 +1331,7 @@ def place_order(token):
         if conn:
             conn.rollback()
         logging.error(f"Error placing order for user_id={user_id}: {str(e)}", exc_info=True)
-        flash(f"Error placing order: {str(e)}", "error")
+        flash("Error placing order. Please try again.", "error")
         return redirect(request.referrer or url_for('cart'))
     finally:
         if 'cursor' in locals() and cursor:

@@ -1273,22 +1273,10 @@ def place_order(token):
 
         # Додавання деталей замовлення
         for item in cart_items:
-            # Отримання product_id
-            cursor.execute("""
-                SELECT id FROM products WHERE article = %s
-            """, (item['article'],))
-            product = cursor.fetchone()
+            # Створення унікального product_id на основі артикула та таблиці
+            product_id = f"{item['article']}_{item['table_name']}"
+            logging.debug(f"Generated product_id: {product_id}")
 
-            if not product:
-                # Якщо продукт відсутній у таблиці products, створюємо новий запис
-                cursor.execute("""
-                    INSERT INTO products (article) VALUES (%s) RETURNING id
-                """, (item['article'],))
-                product_id = cursor.fetchone()['id']
-            else:
-                product_id = product['id']
-
-            # Вставка деталей замовлення
             cursor.execute("""
                 INSERT INTO order_details (order_id, article, table_name, price, quantity, total_price, comment, product_id)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)

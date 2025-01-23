@@ -1275,14 +1275,14 @@ def place_order(token):
 
         # Додавання деталей замовлення
         ordered_items = []
-        for item in cart_items:
-            # Отримання product_id
+        for cart_item in cart_items:
             cursor.execute("""
-                SELECT id AS product_id
-                FROM products
-                WHERE article = %s AND table_name = %s
-            """, (item['article'], item['table_name']))
-            product_data = cursor.fetchone()
+                INSERT INTO order_details 
+                (order_id, article, table_name, price, quantity, total_price, comment)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (order_id, cart_item['article'], cart_item['table_name'], 
+                  cart_item['final_price'], cart_item['quantity'], 
+                  cart_item['total_price'], cart_item['comment']))
 
             if not product_data:
                 raise ValueError(f"Product ID not found for article {item['article']} in table {item['table_name']}")

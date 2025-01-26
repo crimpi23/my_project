@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cache Statistics</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        /* Use your existing admin dashboard styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        /* Add table styles */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .stats-table th, .stats-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Cache Statistics</h1>
+    </header>
+    
+    <div class="container">
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Function</th>
+                    <th>Hits</th>
+                    <th>Misses</th>
+                    <th>Execution Time (s)</th>
+                    <th>Cache Size</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in stats %}
+                <tr>
+                    <td>{{ stat.timestamp }}</td>
+                    <td>{{ stat.function_name }}</td>
+                    <td>{{ stat.hits }}</td>
+                    <td>{{ stat.misses }}</td>
+                    <td>{{ "%.3f"|format(stat.execution_time) }}</td>
+                    <td>{{ stat.cache_size }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <footer>
+        Admin Dashboard - All Rights Reserved © 2025
+    </footer>
+</body>
+</html>

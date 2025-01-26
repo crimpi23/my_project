@@ -1,202 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Article Price Search</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .navbar-brand {
-            font-weight: bold;
-            color: #0d6efd !important;
-        }
-        .card {
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-            height: 100%;
-        }
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-        }
-        .card-body {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .card-title {
-            font-weight: bold;
-            text-align: center;
-            color: #495057;
-        }
-        .btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-weight: 500;
-            margin-top: auto;
-        }
-        .btn:hover {
-            background-color: #0056b3 !important;
-        }
-        .alert-warning {
-            background-color: #fff3cd;
-            border-color: #ffeeba;
-            color: #856404;
-            border-radius: 5px;
-        }
-        .drop-zone {
-            border: 2px dashed #6c757d;
-            border-radius: 5px;
-            padding: 20px;
-            text-align: center;
-            background-color: #e9ecef;
-            cursor: pointer;
-            transition: border-color 0.2s, background-color 0.2s;
-            position: relative;
-        }
-        .drop-zone.dragover {
-            border-color: #0d6efd;
-            background-color: #f8f9fa;
-        }
-        .drop-zone.loaded {
-            border-color: #28a745;
-            background-color: #d4edda;
-        }
-        .drop-zone .file-name {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #495057;
-        }
-        textarea {
-            resize: none;
-        }
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 1.75rem;
-            }
-            .card-title {
-                font-size: 1rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Header -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-        <div class="container">
-            <a class="navbar-brand" href="#">MySite</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/">Home</a></li>
-                    {% if session.get('token') %}
-                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/cart">Cart</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/{{ session['token'] }}/orders">Orders</a></li>
-                    {% endif %}
-                </ul>
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="text-center mb-4">Article Price Search</h1>
+{% if session.get('token') %}
+<p class="text-center text-muted">Welcome to the advanced search system! Use the tools below:</p>
+{% endif %}
+
+<div class="row g-4">
+    <!-- File Upload Section -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="card-title">Upload Articles File</h2>
+                <div class="drop-zone" id="drop-zone">
+                    Drag and drop your file here, or click to select
+                    <div class="file-name" id="file-name"></div>
+                </div>
+                <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data" id="upload-form">
+                    <input type="file" id="file" name="file" accept=".xlsx" class="form-control d-none" required>
+                    <button type="submit" class="btn btn-primary w-100 mt-4">
+                        <i class="bi bi-upload"></i> Upload and Search
+                    </button>
+                </form>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <!-- Main Content -->
-    <main class="container my-5">
-        <h1 class="text-center mb-4">Article Price Search</h1>
-
-        {% if session.get('token') %}
-        <p class="text-center text-muted">Welcome to the advanced search system! Use the tools below:</p>
-        {% endif %}
-
-        <!-- File Upload and Search Forms -->
-        <div class="row g-4">
-            <!-- File Upload Section -->
-            <div class="col-md-6">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="card-title">Upload Articles File</h2>
-                        <div class="drop-zone" id="drop-zone">
-                            Drag and drop your file here, or click to select
-                            <div class="file-name" id="file-name"></div>
-                        </div>
-                        <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data" id="upload-form">
-                            <input type="file" id="file" name="file" accept=".xlsx" class="form-control d-none" required>
-                            <button type="submit" class="btn btn-primary w-100 mt-4">
-                                <i class="bi bi-upload"></i> Upload and Search
-                            </button>
-                        </form>
+    <!-- Search Form -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="card-title">Search Articles</h2>
+                <form method="POST" action="/{{ session['token'] }}/search#results">
+                    <div class="mb-3">
+                        <label for="articles" class="form-label">Enter Articles and Quantities:</label>
+                        <textarea id="articles" name="articles" rows="8" 
+                            placeholder="Example:&#10;0XW105101&#10;03H133201N 2&#10;1231321313" 
+                            class="form-control" required></textarea>
                     </div>
-                </div>
-            </div>
-
-            <!-- Search Form -->
-            <div class="col-md-6">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="card-title">Search Articles</h2>
-                        <form method="POST" action="/{{ session['token'] }}/search#results">
-                            <div class="mb-3">
-                                <label for="articles" class="form-label">Enter Articles and Quantities:</label>
-                                <textarea id="articles" name="articles" rows="8" placeholder="Example:\n0XW105101\n03H133201N 2\n1231321313" class="form-control" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-search"></i> Search
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </form>
             </div>
         </div>
-    </main>
+    </div>
+</div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.js"></script>
-    <script>
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file');
-        const fileNameDisplay = document.getElementById('file-name');
+{% block extra_js %}
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file');
+    const fileNameDisplay = document.getElementById('file-name');
+    const uploadForm = document.getElementById('upload-form');
 
-        // Trigger file input when drop zone is clicked
-        dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('click', () => fileInput.click());
 
-        // Highlight drop zone on drag over
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
 
-        // Remove highlight on drag leave
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
 
-        // Handle file drop
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            dropZone.classList.add('loaded');
+            fileNameDisplay.textContent = `File selected: ${files[0].name}`;
+        }
+    });
 
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                fileInput.files = files;
-                dropZone.classList.add('loaded');
-                fileNameDisplay.textContent = `File selected: ${files[0].name}`;
-            }
-        });
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            dropZone.classList.add('loaded');
+            fileNameDisplay.textContent = `File selected: ${fileInput.files[0].name}`;
+        }
+    });
 
-        // Handle file input change
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length > 0) {
-                dropZone.classList.add('loaded');
-                fileNameDisplay.textContent = `File selected: ${fileInput.files[0].name}`;
-            }
-        });
-    </script>
-</body>
-</html>
+    uploadForm.addEventListener('submit', () => {
+        document.getElementById('loading').style.display = 'block';
+    });
+</script>
+{% endblock %}

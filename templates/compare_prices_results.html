@@ -1,111 +1,156 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparison Results</title>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-    <header>
-        <nav>
-            <ul class="nav">
-                <li><a href="/">Home</a></li>
-                <li><a href="/{{ token }}/admin/dashboard">Dashboard</a></li>
-                <li><a href="/{{ token }}/admin/compare_prices">Compare Prices</a></li>
-            </ul>
-        </nav>
-    </header>
+{% extends "admin_base.html" %}
 
-    <div class="container">
-        <h1>Comparison Results</h1>
+{% block title %}Price Comparison Results{% endblock %}
 
-        <!-- Експорт в Excel -->
-        <form method="POST" action="{{ url_for('compare_prices', token=token) }}" class="form-export">
-            <input type="hidden" name="export_excel" value="true">
-            <button type="submit" class="btn btn-secondary">Export to Excel</button>
-        </form>
-
-        <!-- Розділ Better in First Table -->
-        <section>
-            <h2>Better in First Table</h2>
-            {% if better_in_first %}
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Article</th>
-                        <th>Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in better_in_first %}
-                    <tr>
-                        <td>{{ item.article }}</td>
-                        <td>{{ item.price }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>No data available for the first table.</p>
-            {% endif %}
-        </section>
-
-        <!-- Розділ Better in Second Table -->
-        <section>
-            <h2>Better in Second Table</h2>
-            {% if better_in_second %}
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Article</th>
-                        <th>Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in better_in_second %}
-                    <tr>
-                        <td>{{ item.article }}</td>
-                        <td>{{ item.price }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>No data available for the second table.</p>
-            {% endif %}
-        </section>
-
-        <!-- Розділ Same Prices -->
-        <section>
-            <h2>Same Prices</h2>
-            {% if same_prices %}
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Article</th>
-                        <th>Price</th>
-                        <th>Tables</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in same_prices %}
-                    <tr>
-                        <td>{{ item.article }}</td>
-                        <td>{{ item.price }}</td>
-                        <td>{{ item.tables }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>No articles with the same prices found.</p>
-            {% endif %}
-        </section>
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Price Comparison Results</h1>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print
+            </button>
+            <form method="POST" action="{{ url_for('compare_prices', token=token) }}" class="d-inline">
+                <input type="hidden" name="export_excel" value="true">
+                <button type="submit" class="btn btn-admin">
+                    <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                </button>
+            </form>
+        </div>
     </div>
 
-    <footer>
-        <p>Comparison Results - All Rights Reserved © 2025</p>
-    </footer>
-</body>
-</html>
+    <div class="row g-4">
+        <!-- Better in First Table -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up"></i> Better in First Table
+                        <span class="badge bg-light text-success float-end">
+                            {{ better_in_first|length }}
+                        </span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if better_in_first %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Article</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in better_in_first %}
+                                <tr>
+                                    <td>{{ item.article }}</td>
+                                    <td>€{{ "%.2f"|format(item.price) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center my-4">No better prices found in first table</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Better in Second Table -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-down"></i> Better in Second Table
+                        <span class="badge bg-light text-danger float-end">
+                            {{ better_in_second|length }}
+                        </span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if better_in_second %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Article</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in better_in_second %}
+                                <tr>
+                                    <td>{{ item.article }}</td>
+                                    <td>€{{ "%.2f"|format(item.price) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center my-4">No better prices found in second table</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Same Prices -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-equals"></i> Same Prices
+                        <span class="badge bg-light text-primary float-end">
+                            {{ same_prices|length }}
+                        </span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if same_prices %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Article</th>
+                                    <th>Price</th>
+                                    <th>Tables</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in same_prices %}
+                                <tr>
+                                    <td>{{ item.article }}</td>
+                                    <td>€{{ "%.2f"|format(item.price) }}</td>
+                                    <td><small>{{ item.tables }}</small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center my-4">No matching prices found</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    @media print {
+        .btn, nav {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}

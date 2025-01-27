@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, send_file, get_flashed_messages
 from decimal import Decimal
-from flask_caching import Cache
 import time
 import os
 import psycopg2
@@ -25,28 +24,21 @@ logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 
-cache = Cache(app, config={
-    'CACHE_TYPE': 'SimpleCache',
-    'CACHE_DEFAULT_TIMEOUT': 300
-})
-
-hits = 0
-misses = 0
+# Додаємо фільтр для кольорів статусу замовлення
+@app.template_filter('status_color')
+def status_color(status):
+    # Мапінг статусів до кольорів Bootstrap
+    colors = {
+        'new': 'primary',
+        'pending': 'warning',
+        'accepted': 'success',
+        'rejected': 'danger',
+        'cancelled': 'secondary'
+    }
+    return colors.get(status.lower(), 'secondary')
 
 # Секретний ключ для сесій
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
-
-# статистика кешу
-def save_cache_stats(hits, misses, execution_time, cache_size, function_name):
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO cache_stats 
-            (hits, misses, execution_time, cache_size, function_name)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (hits, misses, execution_time, cache_size, function_name))
-        conn.commit()
-
 
 # Генерує унікальний токен для користувача
 def generate_token():
@@ -392,32 +384,31 @@ def simple_search():
     # Простий рендер сторінки пошуку
     return render_template('simple_search.html')
 
-
-
-
-
-# Доступ до адмін-панелі:
+# Доступ до адмін панелі
 @app.route('/<token>/admin', methods=['GET', 'POST'])
 def admin_panel(token):
     try:
         logging.debug(f"Token received in admin_panel: {token}")
 
+        # Валідація токена
         role_data = validate_token(token)
-        logging.debug(f"Role data after validation: {role_data}")  # Логування результату перевірки токена
+        logging.debug(f"Role data after validation: {role_data}")
 
         if not role_data or role_data['role'] != 'admin':
             logging.warning(f"Access denied for token: {token}, Role data: {role_data}")
             flash("Access denied. Admin rights are required.", "error")
             return redirect(url_for('simple_search'))
 
+        # Збереження даних сесії
         session['token'] = token
         session['user_id'] = role_data['user_id']
-        session['role'] = role_data['role']  # Збереження ролі в сесії
-        logging.debug(f"Session after saving role: {dict(session)}")  # Логування стану сесії
+        session['role'] = role_data['role']
+        logging.debug(f"Session after saving role: {dict(session)}")
 
+        # Обробка POST-запиту
         if request.method == 'POST':
             password = request.form.get('password')
-            logging.debug(f"Password entered: {'******' if password else 'None'}")  # Логування введеного пароля
+            logging.debug(f"Password entered: {'******' if password else 'None'}")
 
             if not password:
                 flash("Password is required.", "error")
@@ -426,23 +417,28 @@ def admin_panel(token):
             conn = get_db_connection()
             cursor = conn.cursor()
 
+            # Перевірка пароля адміністратора
             cursor.execute("""
                 SELECT password_hash 
                 FROM users
                 WHERE id = %s
             """, (role_data['user_id'],))
             admin_password_hash = cursor.fetchone()
-            logging.debug(f"Fetched admin password hash: {admin_password_hash}")  # Логування хешу пароля
+            logging.debug(f"Fetched admin password hash: {admin_password_hash}")
 
             if not admin_password_hash or not verify_password(password, admin_password_hash[0]):
                 logging.warning("Invalid admin password attempt.")
                 flash("Invalid password.", "error")
                 return redirect(url_for('admin_panel', token=token))
 
+            # Встановлення статусу автентифікації
             session['admin_authenticated'] = True
+            session.modified = True
             logging.info(f"Admin authenticated for token: {token}")
-            return redirect(f'/{token}/admin/dashboard')
 
+            return redirect(url_for('admin_dashboard', token=token))
+
+        # Відображення форми входу
         return render_template('admin_login.html', token=token)
 
     except Exception as e:
@@ -453,8 +449,6 @@ def admin_panel(token):
     finally:
         if 'conn' in locals() and conn:
             conn.close()
-
-
 
 
 # Головна сторінка адмінки
@@ -1648,61 +1642,57 @@ def update_order_item_status(token, order_id):
     return jsonify({"message": "Statuses updated successfully."})
 
 
-
-
 @app.route('/<token>/admin/orders/<int:order_id>', methods=['GET'])
 @requires_token_and_roles('admin')
 def admin_order_details(token, order_id):
     """
-    Display detailed view of a specific order for admin.
+    Відображення деталей конкретного замовлення для адміна.
     """
+    logging.info(f"Fetching details for order {order_id}")
+
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     try:
-        # Get order details
-        cursor.execute("SELECT id, user_id, order_date, total_price FROM orders WHERE id = %s;", (order_id,))
+        # Отримуємо основну інформацію про замовлення
+        cursor.execute("""
+            SELECT o.id, o.user_id, o.order_date, o.total_price, o.status,
+                   u.username
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            WHERE o.id = %s
+        """, (order_id,))
         order = cursor.fetchone()
 
         if not order:
-            flash("Order not found.", "error")
+            logging.warning(f"Order {order_id} not found")
+            flash("Order not found", "error")
             return redirect(url_for('admin_orders', token=token))
 
-        # Map order details to a dictionary
-        order_data = {
-            'id': order[0],
-            'user_id': order[1],
-            'order_date': order[2],
-            'total_price': order[3],
-        }
-
-        # Get order items
+        # Отримуємо деталі замовлення
         cursor.execute("""
-            SELECT id, product_id, price, quantity, total_price, status, comment
+            SELECT id, article, table_name, price, quantity, 
+                   total_price, status, comment
             FROM order_details
-            WHERE order_id = %s;
+            WHERE order_id = %s
         """, (order_id,))
         order_items = cursor.fetchall()
 
-        # Map order items to a list of dictionaries
-        order_items_data = [
-            {
-                'id': item[0],
-                'product_id': item[1],
-                'price': item[2],
-                'quantity': item[3],
-                'total_price': item[4],
-                'status': item[5],
-                'comment': item[6],
-            }
-            for item in order_items
-        ]
+        logging.info(f"Found {len(order_items)} items for order {order_id}")
 
-        return render_template('admin_order_details.html', order=order_data, order_items=order_items_data, token=token)
+        return render_template(
+            'admin_order_details.html',
+            order=order,
+            order_items=order_items,
+            token=token
+        )
+
     except Exception as e:
-        logging.error(f"Error fetching order details: {e}")
-        flash("Failed to load order details.", "error")
+        logging.error(f"Error fetching order details: {e}", exc_info=True)
+        flash("Failed to load order details", "error")
         return redirect(url_for('admin_orders', token=token))
+
     finally:
+        cursor.close()
         conn.close()
 
 
@@ -1710,25 +1700,43 @@ def admin_order_details(token, order_id):
 @requires_token_and_roles('admin')
 def admin_orders(token):
     """
-    Display all orders for the admin.
+    Відображення всіх замовлень для адміністратора.
     """
+    logging.info(f"Starting admin_orders route with token: {token}")
+
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     try:
-        # Fetch all orders
-        cursor.execute("SELECT * FROM orders ORDER BY order_date DESC;")
+        logging.debug("Executing orders query...")
+        cursor.execute("""
+            SELECT 
+                o.id, 
+                o.order_date, 
+                o.total_price, 
+                o.status,
+                u.username
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            ORDER BY o.order_date DESC;
+        """)
         orders = cursor.fetchall()
+        logging.info(f"Successfully fetched {len(orders)} orders")
+        logging.debug(f"First order sample: {orders[0] if orders else 'No orders'}")
 
         return render_template('admin_orders.html', orders=orders, token=token)
+
     except Exception as e:
-        logging.error(f"Error fetching orders: {e}")
+        logging.error(f"Error in admin_orders: {str(e)}", exc_info=True)
         flash("Failed to load orders.", "error")
         return redirect(url_for('admin_dashboard', token=token))
+
     finally:
+        cursor.close()
         conn.close()
+        logging.info("Database connection closed in admin_orders")
 
 
-# Ролі користувачеві    
+# Ролі користувачеві
 @app.route('/<token>/admin/assign_roles', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')  # Вкажіть 'admin' або іншу роль
 def assign_roles(token):

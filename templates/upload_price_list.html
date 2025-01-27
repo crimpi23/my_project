@@ -1,132 +1,184 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Price List</title>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-    <header>
-        <nav>
-            <ul class="nav">
-                <li><a href="/">Home</a></li>
-                <li><a href="/{{ token }}/admin/dashboard">Dashboard</a></li>
-            </ul>
-        </nav>
-    </header>
+{% extends "admin_base.html" %}
 
-    <div class="container">
-        <h1>Upload Price List</h1>
+{% block title %}Upload Price List{% endblock %}
 
-        <!-- Flash Messages -->
-        <div class="flash-messages">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                <div class="flash-message {{ category }}">
-                    <strong>{{ category.capitalize() }}:</strong> {{ message }}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Upload Price List</h5>
                 </div>
-                {% endfor %}
-            {% endif %}
-            {% endwith %}
+                <div class="card-body">
+                    <form id="uploadForm" method="POST" enctype="multipart/form-data" action="/{{ token }}/admin/upload_price_list">
+                        <div class="row g-3">
+                            <!-- Table Selection -->
+                            <div class="col-md-6">
+                                <label class="form-label">Select Table</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-table"></i>
+                                    </span>
+                                    <select name="table_name" id="table_name" class="form-select" required>
+                                        {% for table in price_lists %}
+                                        <option value="{{ table.table_name }}">{{ table.table_name }}</option>
+                                        {% endfor %}
+                                        <option value="new">Create New Table</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- New Table Name -->
+                            <div class="col-md-6" id="new_table_name_container" style="display: none;">
+                                <label class="form-label">New Table Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-plus-square"></i>
+                                    </span>
+                                    <input type="text" 
+                                           name="new_table_name" 
+                                           class="form-control"
+                                           pattern="[a-z0-9_]+"
+                                           title="Only lowercase letters, numbers, and underscores allowed">
+                                </div>
+                            </div>
+
+                            <!-- File Upload -->
+                            <div class="col-12">
+                                <label class="form-label">Upload File</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                    </span>
+                                    <input type="file" 
+                                           name="file" 
+                                           class="form-control" 
+                                           accept=".csv,.txt,.xlsx"
+                                           required>
+                                </div>
+                                <div class="form-text">Supported formats: CSV, TXT, XLSX</div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="col-12" id="progressContainer" style="display: none;">
+                                <div class="progress" style="height: 25px;">
+                                    <div id="progressBar" 
+                                         class="progress-bar progress-bar-striped progress-bar-animated"
+                                         role="progressbar"></div>
+                                </div>
+                                <p id="progressText" class="text-center mt-2"></p>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-admin">
+                                    <i class="bi bi-cloud-upload"></i> Upload Price List
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
-        <!-- Upload Form -->
-        <form id="uploadForm" class="form" method="POST" enctype="multipart/form-data" action="/{{ token }}/admin/upload_price_list">
-            <div class="form-group">
-                <label for="table_name">Select Table:</label>
-                <select name="table_name" id="table_name" required>
-                    {% for table in price_lists %}
-                    <option value="{{ table.table_name }}">{{ table.table_name }}</option>
-                    {% endfor %}
-                    <option value="new">New Table</option>
-                </select>
+        <!-- Instructions Card -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Upload Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="bi bi-1-circle"></i> Select existing table or create new
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-2-circle"></i> Prepare your file (CSV, TXT, XLSX)
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-3-circle"></i> File should have columns: Article, Price
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-4-circle"></i> Click upload and wait for confirmation
+                        </li>
+                    </ul>
+                </div>
             </div>
-
-            <div class="form-group" id="new_table_name_container" style="display: none;">
-                <label for="new_table_name">New Table Name:</label>
-                <input type="text" name="new_table_name" id="new_table_name">
-            </div>
-
-            <div class="form-group">
-                <label for="file">Choose File:</label>
-                <input type="file" name="file" id="file" accept=".csv,.txt" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Upload</button>
-        </form>
-
-        <!-- Upload Progress -->
-        <div id="progressContainer" style="display: none; margin-top: 20px;">
-            <div id="progressBar" style="width: 0; height: 20px; background: #007bff;"></div>
-            <p id="progressText" style="text-align: center;">Starting upload...</p>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <footer>
-        <p>Upload Price List - All Rights Reserved © 2025</p>
-    </footer>
+{% block extra_js %}
+<script>
+document.getElementById('table_name').addEventListener('change', function() {
+    const newTableContainer = document.getElementById('new_table_name_container');
+    newTableContainer.style.display = this.value === 'new' ? 'block' : 'none';
+});
 
-    <script>
-        // Toggle visibility of new table name field
-        document.getElementById('table_name').addEventListener('change', function () {
-            const newTableContainer = document.getElementById('new_table_name_container');
-            newTableContainer.style.display = this.value === 'new' ? 'block' : 'none';
-        });
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
 
-        // Handle file upload with progress
-        document.getElementById('uploadForm').addEventListener('submit', function (e) {
-            e.preventDefault();
+    progressContainer.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressText.textContent = 'Starting upload...';
 
-            const formData = new FormData(this);
-            const progressContainer = document.getElementById('progressContainer');
-            const progressBar = document.getElementById('progressBar');
-            const progressText = document.getElementById('progressText');
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', this.action, true);
 
-            progressContainer.style.display = 'block';
-            progressBar.style.width = '0%';
-            progressText.textContent = 'Starting upload...';
+    xhr.upload.onprogress = function(event) {
+        if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            progressBar.style.width = percent + '%';
+            progressBar.setAttribute('aria-valuenow', percent);
+            progressText.textContent = `Uploading: ${percent}%`;
+        }
+    };
 
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/{{ token }}/admin/upload_price_list', true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            progressBar.classList.remove('progress-bar-animated');
+            progressBar.classList.add('bg-success');
+            progressText.textContent = 'Upload successful!';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            progressBar.classList.add('bg-danger');
+            progressText.textContent = 'Upload failed. Please try again.';
+        }
+    };
 
-            xhr.upload.onprogress = function (event) {
-                if (event.lengthComputable) {
-                    const percent = Math.round((event.loaded / event.total) * 100);
-                    progressBar.style.width = percent + '%';
-                    progressText.textContent = `Uploading: ${percent}%`;
-                }
-            };
+    xhr.onerror = function() {
+        progressBar.classList.add('bg-danger');
+        progressText.textContent = 'Network error. Please try again.';
+    };
 
-            xhr.onload = function () {
-                const flashMessages = document.querySelector('.flash-messages');
-                flashMessages.innerHTML = '';
-                if (xhr.status === 200) {
-                    progressBar.style.backgroundColor = 'green';
-                    progressText.textContent = 'Upload successful!';
-                    flashMessages.innerHTML = `<div class="flash-message success"><strong>Success:</strong> File uploaded successfully.</div>`;
-                } else {
-                    progressBar.style.backgroundColor = 'red';
-                    progressText.textContent = 'Upload failed.';
-                    flashMessages.innerHTML = `<div class="flash-message error"><strong>Error:</strong> An error occurred while uploading the file.</div>`;
-                }
-            };
+    xhr.send(formData);
+});
 
-            xhr.onerror = function () {
-                progressBar.style.backgroundColor = 'red';
-                progressText.textContent = 'Network error. Please try again.';
-            };
+// Keep-alive ping
+setInterval(() => {
+    fetch('/ping').catch(console.error);
+}, 300000);
+</script>
+{% endblock %}
 
-            xhr.send(formData);
-        });
-
-        // Keep-alive ping for server
-        setInterval(() => {
-            fetch('/ping')
-                .then(() => console.log('Keep-alive: OK'))
-                .catch(() => console.error('Keep-alive failed'));
-        }, 300000); // Every 5 minutes
-    </script>
-</body>
-</html>
+{% block extra_css %}
+<style>
+.list-group-item i {
+    margin-right: 10px;
+    color: #dc3545;
+}
+.progress {
+    background-color: #f8f9fa;
+}
+.form-text {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+</style>
+{% endblock %}

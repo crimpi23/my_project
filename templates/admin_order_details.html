@@ -1,124 +1,156 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Details</title>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-    <header>
-        <nav>
-            <ul class="nav">
-                <li><a href="/{{ token }}/admin/dashboard">Dashboard</a></li>
-                <li><a href="/{{ token }}/admin/orders">Orders</a></li>
-            </ul>
-        </nav>
-    </header>
+{% extends "admin_base.html" %}
 
-    <div class="container">
+{% block title %}Order Details #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Order #{{ order.id }} Details</h1>
-        <p><strong>User ID:</strong> {{ order.user_id }}</p>
-        <p><strong>Order Date:</strong> {{ order.order_date }}</p>
-        <p><strong>Total Price:</strong> {{ order.total_price }}</p>
-
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Item ID</th>
-                    <th>Product ID</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Total Price</th>
-                    <th>Status</th>
-                    <th>Comment</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in order_items %}
-                <tr>
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.product_id }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ item.total_price }}</td>
-                    <td>{{ item.status }}</td>
-                    <td>{{ item.comment }}</td>
-                    <td>
-                        <form class="update-status-form" action="/{{ token }}/admin/orders/{{ order.id }}/update_status" method="POST">
-                            <input type="hidden" name="item_id" value="{{ item.id }}">
-                            <select name="new_status" required>
-                                <option value="">Select Status</option>
-                                <option value="new">New</option>
-                                <option value="accepted">Accepted</option>
-                                <option value="completed">Completed</option>
-                                <option value="cancelled">Cancelled</option>
-                            </select>
-                            <input type="text" name="comment" placeholder="Reason (optional)">
-                            <button type="submit" class="btn btn-primary">Update</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <a href="{{ url_for('admin_orders', token=token) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Orders
+        </a>
     </div>
 
-    <footer>
-        <p>Admin Order Details - All Rights Reserved © 2025</p>
-    </footer>
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <p><i class="bi bi-person"></i> <strong>User ID:</strong> {{ order.user_id }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><i class="bi bi-calendar"></i> <strong>Order Date:</strong> {{ order.order_date }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><i class="bi bi-currency-euro"></i> <strong>Total Price:</strong> {{ order.total_price }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <script>
-		document.querySelectorAll('.update-status-form').forEach(form => {
-			form.addEventListener('submit', function (e) {
-				e.preventDefault();
+    <div class="card admin-table">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Item ID</th>
+                            <th>Product ID</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total Price</th>
+                            <th>Status</th>
+                            <th>Comment</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order_items %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.product_id }}</td>
+                            <td>{{ "%.2f"|format(item.price) }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ "%.2f"|format(item.total_price) }}</td>
+                            <td>
+                                <span class="badge bg-{{ item.status | status_color }}">
+                                    {{ item.status }}
+                                </span>
+                            </td>
+                            <td>{{ item.comment or '-' }}</td>
+                            <td>
+                                <form class="update-status-form" action="/{{ token }}/admin/orders/{{ order.id }}/update_status" method="POST">
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <div class="input-group">
+                                        <select name="new_status" class="form-select form-select-sm" required>
+                                            <option value="">Select Status</option>
+                                            <option value="new">New</option>
+                                            <option value="accepted">Accepted</option>
+                                            <option value="completed">Completed</option>
+                                            <option value="cancelled">Cancelled</option>
+                                        </select>
+                                        <input type="text" name="comment" class="form-control form-control-sm" placeholder="Comment">
+                                        <button type="submit" class="btn btn-admin btn-sm">
+                                            <i class="bi bi-check2"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-				const formData = new FormData(this);
-				const data = {
-					items: [
-						{
-							id: formData.get('item_id'),
-							status: formData.get('new_status'),
-							comment: formData.get('comment') || null,
-						},
-					],
-				};
+{% block extra_css %}
+<style>
+    .badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.8em;
+    }
+    .update-status-form {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .form-select, .form-control {
+        font-size: 0.875rem;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}
 
-				const button = this.querySelector('button');
-				button.disabled = true;
-				button.textContent = 'Updating...';
+{% block extra_js %}
+<script>
+document.querySelectorAll('.update-status-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
 
-				fetch(this.action, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(data),
-				})
-					.then(response => {
-						if (!response.ok) {
-							return response.json().then(err => {
-								throw new Error(err.error || 'Failed to update status.');
-							});
-						}
-						return response.json();
-					})
-					.then(data => {
-						alert('Status updated successfully!');
-						location.reload();
-					})
-					.catch(error => {
-						console.error(error);
-						alert(error.message || 'Error updating status.');
-					})
-					.finally(() => {
-						button.disabled = false;
-						button.textContent = 'Update';
-					});
-			});
-		});
+        const formData = new FormData(this);
+        const data = {
+            items: [{
+                id: formData.get('item_id'),
+                status: formData.get('new_status'),
+                comment: formData.get('comment') || null,
+            }],
+        };
 
-    </script>
-</body>
-</html>
+        const button = this.querySelector('button');
+        button.disabled = true;
+        const originalContent = button.innerHTML;
+        button.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || 'Failed to update status.');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            location.reload();
+        })
+        .catch(error => {
+            console.error(error);
+            alert(error.message || 'Error updating status.');
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.innerHTML = originalContent;
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -5,4 +5,3 @@ Flask-Session
 openpyxl
 pandas
 python-dotenv
-flask-caching==2.1.0

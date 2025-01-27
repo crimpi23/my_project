@@ -1,96 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="/static/styles.css">
-    <style>
-        /* Додаткові стилі для покращення вигляду */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        header {
-            background-color: #007bff;
-            color: white;
-            text-align: center;
-            padding: 1rem 0;
-        }
-        h1 {
-            margin: 0;
-        }
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            padding: 2rem;
-        }
-        .grid-item {
-            background-color: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            padding: 1rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .grid-item a {
-            text-decoration: none;
-            color: #007bff;
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-        .grid-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-        footer {
-            background-color: #007bff;
-            color: white;
-            text-align: center;
-            padding: 1rem 0;
-            margin-top: auto;
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>Admin Dashboard</h1>
-    </header>
+{% extends "admin_base.html" %}
 
-	<div class="grid-container">
-		<div class="grid-item">
-			<a href="{{ url_for('create_user', token=token) }}" class="btn btn-primary">Create New User</a>
-		</div>
-		<div class="grid-item">
-			<a href="{{ url_for('assign_roles', token=token) }}" class="btn btn-primary">Assign Roles</a>
-		</div>
-		<div class="grid-item">
-			<a href="{{ url_for('upload_price_list', token=token) }}" class="btn btn-primary">Upload Price List</a>
-		</div>
-		<div class="grid-item">
-			<a href="{{ url_for('compare_prices', token=token) }}" class="btn btn-primary">Compare Prices</a>
-		</div>
-		<div class="grid-item">
-			<a href="{{ url_for('admin_orders', token=token) }}" class="btn btn-primary">View All Orders</a>
-		</div>
-		<div class="grid-item">
-			<a href="{{ url_for('cart', token=token) }}" class="btn btn-primary">Manage Cart</a>
-		</div>
-	</div>
-	<div class="grid-item">
-		<a href="{{ url_for('view_cache_stats', token=token) }}" class="btn btn-primary">Cache Statistics</a>
-	</div>
+{% block title %}Admin Dashboard{% endblock %}
 
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="mb-4">Admin Dashboard</h1>
 
-    <footer>
-        Admin Dashboard - All Rights Reserved © 2025
-    </footer>
-</body>
-</html>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-plus fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Users Management</h5>
+                    <a href="{{ url_for('create_user', token=token) }}" class="btn btn-admin w-100 mb-2">Create User</a>
+                    <a href="{{ url_for('assign_roles', token=token) }}" class="btn btn-admin w-100">Assign Roles</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-currency-euro fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Price Management</h5>
+                    <a href="{{ url_for('upload_price_list', token=token) }}" class="btn btn-admin w-100 mb-2">Upload Price List</a>
+                    <a href="{{ url_for('compare_prices', token=token) }}" class="btn btn-admin w-100">Compare Prices</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-cart3 fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Orders Management</h5>
+                    <a href="{{ url_for('admin_orders', token=token) }}" class="btn btn-admin w-100 mb-2">View Orders</a>
+                    <a href="{{ url_for('cart', token=token) }}" class="btn btn-admin w-100">Manage Cart</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        height: 100%;
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .btn-admin {
+        transition: all 0.3s;
+    }
+    .bi {
+        transition: transform 0.3s;
+    }
+    .card:hover .bi {
+        transform: scale(1.1);
+    }
+</style>
+{% endblock %}

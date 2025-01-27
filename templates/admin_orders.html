@@ -1,46 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Orders</title>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-    <header>
-        <nav>
-            <ul class="nav">
-                <li><a href="/">Home</a></li>
-                <li><a href="/{{ token }}/admin/dashboard">Dashboard</a></li>
-                <li><a href="/{{ token }}/admin/orders">Orders</a></li>
-            </ul>
-        </nav>
-    </header>
+{% extends "admin_base.html" %}
 
-    <div class="container">
-        <h1>All Orders</h1>
+{% block title %}Orders Management{% endblock %}
 
-        <!-- Flash Messages -->
-        <div class="flash-messages">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="flash-message {{ category }}">
-                <strong>{{ category.capitalize() }}:</strong> {{ message }}
-            </div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
-        </div>
+{% block content %}
+<div class="container-fluid">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('admin_dashboard', token=token) }}">Dashboard</a>
+            </li>
+            <li class="breadcrumb-item active">Orders</li>
+        </ol>
+    </nav>
 
-        <!-- Orders Table -->
+    <div class="table-responsive">
         <table class="table">
             <thead>
                 <tr>
-                    <th>Order ID</th>
-                    <th>Customer ID</th>
-                    <th>Order Date</th>
-                    <th>Total Price</th>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Date</th>
+                    <th>Total</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -49,21 +29,53 @@
                 {% for order in orders %}
                 <tr>
                     <td>{{ order.id }}</td>
-                    <td>{{ order.user_id }}</td>
-                    <td>{{ order.order_date }}</td>
-                    <td>${{ order.total_price }}</td>
-                    <td>{{ order.status | capitalize }}</td>
+                    <td>{{ order.username }}</td>
+                    <td>{{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>€{{ "%.2f"|format(order.total_price) }}</td>
                     <td>
-                        <a href="/{{ token }}/admin/orders/{{ order.id }}" class="btn btn-link">View Details</a>
+                        <span class="badge bg-{{ order.status|status_color }}">
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin_order_details', token=token, order_id=order.id) }}" 
+                           class="btn btn-sm btn-primary">
+                            Details
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+</div>
+{% endblock %}
 
-    <footer>
-        <p>Admin Panel - All Rights Reserved © 2025</p>
-    </footer>
-</body>
-</html>
+{% block extra_css %}
+<style>
+    .badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.8em;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    .btn-admin {
+        min-width: 120px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('filterToggle').addEventListener('click', function() {
+    const panel = document.getElementById('filtersPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+});
+
+function exportOrders() {
+    // Implementation for orders export
+    alert('Export functionality will be implemented here');
+}
+</script>
+{% endblock %}

@@ -2,6 +2,50 @@
 
 {% block title %}My Orders{% endblock %}
 
+{% block extra_css %}
+<style>
+    .table-striped > tbody > tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.075);
+    }
+    
+    .badge {
+        font-size: 0.875rem;
+        padding: 0.5em 0.75em;
+    }
+    
+    .badge.bg-primary {
+        background-color: #0d6efd !important;
+    }
+    
+    .badge.bg-success {
+        background-color: #198754 !important;
+    }
+    
+    .badge.bg-danger {
+        background-color: #dc3545 !important;
+    }
+    
+    .table thead {
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    .btn-info {
+        color: white;
+        background-color: #0dcaf0;
+    }
+    
+    .btn-info:hover {
+        color: white;
+        background-color: #31d2f2;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <h1 class="text-center mb-4">My Orders</h1>

@@ -2422,6 +2422,279 @@ def utilities(token):
     return render_template('utilities.html', token=token)
 
 
+@app.route('/<token>/admin/news', methods=['GET'])
+@requires_token_and_roles('admin')
+def admin_news(token):
+    """
+    Відображення списку всіх новин в адмін-панелі
+    """
+    logging.info(f"Accessing admin news with token: {token}")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    try:
+        cursor.execute("""
+            SELECT id, title, created_at, updated_at, is_published
+            FROM news
+            ORDER BY created_at DESC
+        """)
+        news_list = cursor.fetchall()
+        logging.info(f"Fetched {len(news_list)} news items")
+        
+        return render_template('admin_news.html', news_list=news_list, token=token)
+        
+    except Exception as e:
+        logging.error(f"Error fetching news: {e}")
+        flash("Error loading news", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+        
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route('/<token>/admin/news/create', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def create_news(token):
+    """
+    Створення нової новини
+    """
+    if request.method == 'POST':
+        logging.info("Processing news creation")
+        try:
+            title = request.form['title']
+            content = request.form['content']
+            html_content = request.form['html_content']
+            is_published = bool(request.form.get('is_published'))
+            
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO news (title, content, html_content, is_published)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id
+            """, (title, content, html_content, is_published))
+            
+            news_id = cursor.fetchone()[0]
+            conn.commit()
+            
+            logging.info(f"Created news with id: {news_id}")
+            flash("News created successfully!", "success")
+            return redirect(url_for('admin_news', token=token))
+            
+        except Exception as e:
+            logging.error(f"Error creating news: {e}")
+            flash("Error creating news", "error")
+            return redirect(url_for('create_news', token=token))
+        finally:
+            if 'conn' in locals():
+                cursor.close()
+                conn.close()
+    
+    return render_template('create_news.html', token=token)
+
+@app.route('/<token>/news')
+@requires_token_and_roles('user', 'user_25', 'user_29')
+def user_news(token):
+    """
+    Відображення списку новин для користувачів
+    """
+    logging.info(f"Accessing user news with token: {token}")
+    user_id = session.get('user_id')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    try:
+        # Отримуємо всі опубліковані новини та статус їх прочитання для користувача
+        cursor.execute("""
+            SELECT 
+                n.id,
+                n.title,
+                n.content,
+                n.created_at,
+                CASE WHEN nr.id IS NOT NULL THEN true ELSE false END as is_read
+            FROM news n
+            LEFT JOIN news_reads nr ON nr.news_id = n.id AND nr.user_id = %s
+            WHERE n.is_published = true
+            ORDER BY n.created_at DESC
+        """, (user_id,))
+        
+        news_list = cursor.fetchall()
+        logging.info(f"Fetched {len(news_list)} news items for user {user_id}")
+        
+        return render_template('user_news.html', news_list=news_list, token=token)
+        
+    except Exception as e:
+        logging.error(f"Error fetching news for user: {e}")
+        flash("Error loading news", "error")
+        return redirect(url_for('index', token=token))
+        
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/<token>/news/<int:news_id>')
+@requires_token_and_roles('user', 'user_25', 'user_29')
+def get_news_details(token, news_id):
+    """
+    Отримання детальної інформації про новину
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    try:
+        cursor.execute("""
+            SELECT title, html_content, created_at
+            FROM news
+            WHERE id = %s AND is_published = true
+        """, (news_id,))
+        
+        news = cursor.fetchone()
+        if news:
+            return jsonify({
+                'title': news['title'],
+                'html_content': news['html_content'],
+                'created_at': news['created_at'].strftime('%d.%m.%Y %H:%M')
+            })
+        return jsonify({'error': 'News not found'}), 404
+        
+    except Exception as e:
+        logging.error(f"Error fetching news details: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_unread_news_count(user_id):
+    """
+    Підрахунок непрочитаних новин для користувача
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT COUNT(*) FROM news n
+            LEFT JOIN news_reads nr ON nr.news_id = n.id AND nr.user_id = %s
+            WHERE n.is_published = true AND nr.id IS NULL
+        """, (user_id,))
+        return cursor.fetchone()[0]
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.context_processor
+def inject_unread_news_count():
+    if 'user_id' in session:
+        return {'unread_news_count': get_unread_news_count(session['user_id'])}
+    return {'unread_news_count': 0}
+
+
+@app.route('/<token>/news/<int:news_id>/view', methods=['GET'])
+@requires_token_and_roles('user', 'user_25', 'user_29')
+def view_news(token, news_id):
+    """
+    Тільки показує новину без зміни статусу
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    cursor.execute("""
+        SELECT title, html_content, created_at
+        FROM news 
+        WHERE id = %s
+    """, (news_id,))
+    news = cursor.fetchone()
+    
+    return render_template('view_news.html', news=news, token=token, news_id=news_id)
+
+@app.route('/<token>/news/<int:news_id>/mark-read', methods=['POST'])
+@requires_token_and_roles('user', 'user_25', 'user_29')
+def mark_news_read(token, news_id):
+    """
+    Окремий endpoint для позначення новини як прочитаної
+    """
+    user_id = session.get('user_id')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        INSERT INTO news_reads (user_id, news_id, read_at)
+        VALUES (%s, %s, NOW())
+        ON CONFLICT (user_id, news_id) DO NOTHING
+    """, (user_id, news_id))
+    
+    conn.commit()
+    return jsonify({'success': True})
+
+@app.route('/<token>/news/<int:news_id>/set-read', methods=['POST'])
+@requires_token_and_roles('user', 'user_25', 'user_29')
+def set_news_as_read(token, news_id):
+    """
+    Endpoint for marking news as read
+    """
+    user_id = session.get('user_id')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        INSERT INTO news_reads (user_id, news_id, read_at)
+        VALUES (%s, %s, NOW())
+        ON CONFLICT (user_id, news_id) DO NOTHING
+    """, (user_id, news_id))
+    
+    conn.commit()
+    return jsonify({'success': True})
+
+
+@app.route('/<token>/admin/news/<int:news_id>/edit', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def edit_news(token, news_id):
+    """
+    Редагування існуючої новини
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    try:
+        if request.method == 'POST':
+            title = request.form['title']
+            content = request.form['content']
+            html_content = request.form['html_content']
+            is_published = 'is_published' in request.form
+            
+            cursor.execute("""
+                UPDATE news 
+                SET title = %s, content = %s, html_content = %s, 
+                    is_published = %s, updated_at = NOW()
+                WHERE id = %s
+            """, (title, content, html_content, is_published, news_id))
+            
+            conn.commit()
+            flash("Новину успішно оновлено!", "success")
+            return redirect(url_for('admin_news', token=token))
+            
+        cursor.execute("SELECT * FROM news WHERE id = %s", (news_id,))
+        news = cursor.fetchone()
+        
+        if not news:
+            flash("Новину не знайдено", "error")
+            return redirect(url_for('admin_news', token=token))
+            
+        return render_template('edit_news.html', news=news, token=token)
+        
+    except Exception as e:
+        logging.error(f"Помилка редагування новини: {e}")
+        flash("Помилка оновлення новини", "error")
+        return redirect(url_for('admin_news', token=token))
+        
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @app.route('/ping', methods=['GET'])
 def ping():
     logging.info("ping function called.")  

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}News{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">News</h1>
+
+    <div class="row">
+        <!-- Unread News -->
+        <div class="col-md-8">
+            <h2 class="h4 mb-3">New Messages</h2>
+            {% for news in news_list if not news.is_read %}
+            <div class="card mb-3 news-card unread">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h3 class="h5 card-title">{{ news.title }}</h3>
+                        <span class="badge bg-primary">New</span>
+                    </div>
+                    <p class="card-text">{{ news.content }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">{{ news.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                        <button class="btn btn-sm btn-outline-primary read-more" 
+								data-news-id="{{ news.id }}"
+								onclick="window.location.href='{{ url_for('view_news', token=token, news_id=news.id) }}'">
+							Read More
+						</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Read News -->
+        <div class="col-md-4">
+            <h2 class="h4 mb-3">News Archive</h2>
+            {% for news in news_list if news.is_read %}
+            <div class="card mb-2 news-card read">
+                <div class="card-body">
+                    <h3 class="h6 card-title">{{ news.title }}</h3>
+                    <small class="text-muted d-block mb-2">{{ news.created_at.strftime('%d.%m.%Y') }}</small>
+                    <button class="btn btn-sm btn-link p-0" 
+                            onclick="showNewsDetails({{ news.id }})">
+                        View Details
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- News Modal -->
+<div class="modal fade" id="newsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+function markAsRead(newsId) {
+    fetch(`/{{ token }}/news/${newsId}/set-read`, {
+        method: 'POST',
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNewsDetails(newsId);
+            location.reload();
+        }
+    });
+}
+
+function showNewsDetails(newsId) {
+    fetch(`/{{ token }}/news/${newsId}`)
+    .then(response => response.json())
+    .then(data => {
+        const modal = new bootstrap.Modal(document.getElementById('newsModal'));
+        document.querySelector('#newsModal .modal-title').textContent = data.title;
+        document.querySelector('#newsModal .modal-body').innerHTML = data.html_content;
+        modal.show();
+    });
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.news-card {
+    transition: transform 0.2s;
+}
+.news-card:hover {
+    transform: translateY(-2px);
+}
+.news-card.unread {
+    border-left: 4px solid #0d6efd;
+}
+.news-card.read {
+    opacity: 0.8;
+}
+</style>
+{% endblock %}

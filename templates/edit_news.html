@@ -1,0 +1,56 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Edit News{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Edit News</h1>
+        <a href="{{ url_for('admin_news', token=token) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ news.title }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="short_description" class="form-label">Short Description</label>
+                    <textarea class="form-control" id="short_description" name="content" rows="3">{{ news.content }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="html_content" class="form-label">Full News Content</label>
+                    <textarea id="html_content" name="html_content">{{ news.html_content }}</textarea>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="is_published" name="is_published" 
+                           {% if news.is_published %}checked{% endif %}>
+                    <label class="form-check-label" for="is_published">Publish Immediately</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.tiny.cloud/1/90oozl0f4oahclttjqyd22sjftlwfbyi2rpgre9dz2whorm6/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+    tinymce.init({
+        selector: '#html_content',
+        height: 500,
+        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+    });
+</script>
+{% endblock %}

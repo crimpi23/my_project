@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ session.get('language', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Article Price Search{% endblock %}</title>
+    <title>{% block title %}{{ _('Article Price Search') }}{% endblock %}</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
@@ -114,17 +114,34 @@
 
     <!-- Header -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-        <div class="container">
-            <a class="navbar-brand" href="#">MySite</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+		<div class="container">
+			<a class="navbar-brand" href="#">{{ _('MySite') }}</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
 				<ul class="navbar-nav ms-auto">
+					<!-- Language Switcher -->
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown">
+							<i class="bi bi-globe"></i>
+							{{ LANGUAGES[session.get('language', 'en')] }}
+						</a>
+						<ul class="dropdown-menu">
+							{% for code, name in LANGUAGES.items() %}
+								<li>
+									<a class="dropdown-item {% if session.language == code %}active{% endif %}" 
+									   href="{{ url_for('set_language', language=code) }}">
+										{{ name }}
+									</a>
+								</li>
+							{% endfor %}
+						</ul>
+					</li>
 					<li class="nav-item">
 						<a class="nav-link" href="/{{ session['token'] }}/news">
 							<i class="bi bi-newspaper"></i>
-							<span>News</span>
+							<span>{{ _('News') }}</span>
 							{% if unread_news_count %}
 							<span class="badge bg-primary">{{ unread_news_count }}</span>
 							{% endif %}
@@ -133,28 +150,27 @@
 					<li class="nav-item">
 						<a class="nav-link" href="/{{ session['token'] }}/">
 							<i class="bi bi-house"></i>
-							<span>Home</span>
+							<span>{{ _('Home') }}</span>
 						</a>
 					</li>
 					{% if session.get('token') %}
 					<li class="nav-item">
 						<a class="nav-link" href="/{{ session['token'] }}/cart">
 							<i class="bi bi-cart"></i>
-							<span>Cart</span>
+							<span>{{ _('Cart') }}</span>
 						</a>
 					</li>
 					<li class="nav-item">
 						<a class="nav-link" href="/{{ session['token'] }}/orders">
 							<i class="bi bi-box"></i>
-							<span>Orders</span>
+							<span>{{ _('Orders') }}</span>
 						</a>
 					</li>
 					{% endif %}
 				</ul>
 			</div>
-
-        </div>
-    </nav>
+		</div>
+	</nav>
 
     <!-- Flash Messages -->
     <div class="container mt-3">

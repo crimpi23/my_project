@@ -1,0 +1,439 @@
+# English translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-01-28 23:44+0200\n"
+"PO-Revision-Date: 2025-01-28 18:10+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: app.py:214
+msgid "Thank you for your order!\n\nYour order details:\n"
+msgstr "Thank you for your order!\n\nYour order details:\n"
+
+#: app.py:217
+msgid "Ordered items:\n"
+msgstr "Ordered items:\n"
+
+#: app.py:219
+msgid "- Article: {article}, Price: {price:.2f}, Quantity: {quantity}, Comment: {comment}\n"
+msgstr "- Article: {article}, Price: {price:.2f}, Quantity: {quantity}, Comment: {comment}\n"
+
+#: app.py:228 templates/cart.html:40 templates/order_details.html:36
+msgid "No comment"
+msgstr "No comment"
+
+#: app.py:232
+msgid "\nMissing articles:\n"
+msgstr "\nMissing articles:\n"
+
+#: app.py:336
+msgid "Invalid token."
+msgstr "Invalid token."
+
+#: app.py:361
+msgid "Invalid token or role."
+msgstr "Invalid token or role."
+
+#: app.py:372
+msgid "Please enter an article for search."
+msgstr "Please enter an article for search."
+
+#: app.py:399
+msgid "An error occurred during the search. Please try again later."
+msgstr "An error occurred during the search. Please try again later."
+
+#: app.py:629
+msgid "Please enter at least one article."
+msgstr "Please enter at least one article."
+
+#: app.py:741
+msgid "Articles not found: {articles}"
+msgstr "Articles not found: {articles}"
+
+#: app.py:789
+msgid "An error occurred while processing your request."
+msgstr "An error occurred while processing your request."
+
+#: app.py:889
+msgid "You need to log in to view your cart."
+msgstr "You need to log in to view your cart."
+
+#: app.py:994
+msgid "Could not load your cart. Please try again."
+msgstr "Could not load your cart. Please try again."
+
+#: app.py:1122 app.py:1337
+msgid "User is not authenticated. Please log in."
+msgstr "User is not authenticated. Please log in."
+
+#: app.py:1155
+msgid "Product added to cart!"
+msgstr "Product added to cart!"
+
+#: app.py:1158
+msgid "Error adding product to cart."
+msgstr "Error adding product to cart."
+
+#: app.py:1189
+msgid "Missing required information for removal"
+msgstr "Missing required information for removal"
+
+#: app.py:1206
+msgid "Article {article} removed successfully"
+msgstr "Article {article} removed successfully"
+
+#: app.py:1209
+msgid "Item not found in cart"
+msgstr "Item not found in cart"
+
+#: app.py:1214
+msgid "Error removing item from cart"
+msgstr "Error removing item from cart"
+
+#: app.py:1233
+msgid "Invalid input: article or quantity missing."
+msgstr "Invalid input: article or quantity missing."
+
+#: app.py:1240
+msgid "Quantity must be at least 1."
+msgstr "Quantity must be at least 1."
+
+#: app.py:1257
+msgid "Cart updated successfully!"
+msgstr "Cart updated successfully!"
+
+#: app.py:1261
+msgid "Error updating cart."
+msgstr "Error updating cart."
+
+#: app.py:1304
+msgid "Cart cleared successfully."
+msgstr "Cart cleared successfully."
+
+#: app.py:1308
+msgid "Error clearing cart."
+msgstr "Error clearing cart."
+
+#: app.py:1355
+msgid "Your cart is empty!"
+msgstr "Your cart is empty!"
+
+#: app.py:1425
+msgid "Order placed, but we couldn't send a confirmation email."
+msgstr "Order placed, but we couldn't send a confirmation email."
+
+#: app.py:1432
+msgid "Order placed successfully!"
+msgstr "Order placed successfully!"
+
+#: app.py:1439
+msgid "Error placing order: {error}"
+msgstr "Error placing order: {error}"
+
+#: app.py:1458
+msgid "User is not authenticated."
+msgstr "User is not authenticated."
+
+#: app.py:1524
+msgid "Error fetching orders."
+msgstr "Error fetching orders."
+
+#: app.py:1576
+msgid "Error loading order details."
+msgstr "Error loading order details."
+
+#: app.py:2558
+msgid "Error loading news"
+msgstr "Error loading news"
+
+#: app.py:2588 app.py:2638
+msgid "News not found"
+msgstr "News not found"
+
+#: templates/base.html:6 templates/index.html:4
+msgid "Article Price Search"
+msgstr "Article Price Search"
+
+#: templates/base.html:118
+msgid "MySite"
+msgstr "MySite"
+
+#: templates/base.html:144 templates/user_news.html:3 templates/user_news.html:7
+msgid "News"
+msgstr "News"
+
+#: templates/base.html:153
+msgid "Home"
+msgstr "Home"
+
+#: templates/base.html:160
+msgid "Cart"
+msgstr "Cart"
+
+#: templates/base.html:166
+msgid "Orders"
+msgstr "Orders"
+
+#: templates/cart.html:3 templates/cart.html:7
+msgid "Shopping Cart"
+msgstr "Shopping Cart"
+
+#: templates/cart.html:14 templates/order_details.html:19 templates/orders.html:58 templates/search_results.html:15
+msgid "Article"
+msgstr "Article"
+
+#: templates/cart.html:15 templates/order_details.html:20
+msgid "Price List"
+msgstr "Price List"
+
+#: templates/cart.html:16 templates/order_details.html:21
+msgid "Price"
+msgstr "Price"
+
+#: templates/cart.html:17 templates/order_details.html:22 templates/search_results.html:17
+msgid "Quantity"
+msgstr "Quantity"
+
+#: templates/cart.html:18 templates/order_details.html:23
+msgid "Total"
+msgstr "Total"
+
+#: templates/cart.html:19 templates/order_details.html:24 templates/search_results.html:18
+msgid "Comment"
+msgstr "Comment"
+
+#: templates/cart.html:20 templates/orders.html:99
+msgid "Actions"
+msgstr "Actions"
+
+#: templates/cart.html:55
+msgid "Total:"
+msgstr "Total:"
+
+#: templates/cart.html:66
+msgid "Place Order"
+msgstr "Place Order"
+
+#: templates/cart.html:72
+msgid "Clear Cart"
+msgstr "Clear Cart"
+
+#: templates/cart.html:79 templates/search_results.html:70
+msgid "Missing Articles:"
+msgstr "Missing Articles:"
+
+#: templates/cart.html:80
+msgid "The following articles were not found:"
+msgstr "The following articles were not found:"
+
+#: templates/cart.html:91
+msgid "Your Cart is Empty"
+msgstr "Your Cart is Empty"
+
+#: templates/cart.html:92
+msgid "Start adding items to your cart!"
+msgstr "Start adding items to your cart!"
+
+#: templates/cart.html:94 templates/index.html:33
+msgid "Search Articles"
+msgstr "Search Articles"
+
+#: templates/index.html:6
+msgid "Welcome to the advanced search system! Use the tools below:"
+msgstr "Welcome to the advanced search system! Use the tools below:"
+
+#: templates/index.html:14
+msgid "Upload Articles File"
+msgstr "Upload Articles File"
+
+#: templates/index.html:16
+msgid "Drag and drop your file here, or click to select"
+msgstr "Drag and drop your file here, or click to select"
+
+#: templates/index.html:22
+msgid "Upload and Search"
+msgstr "Upload and Search"
+
+#: templates/index.html:36
+msgid "Enter Articles and Quantities:"
+msgstr "Enter Articles and Quantities:"
+
+#: templates/index.html:38
+msgid "Example:"
+msgstr "Example:"
+
+#: templates/index.html:42
+msgid "Search"
+msgstr "Search"
+
+#: templates/index.html:76 templates/index.html:83
+msgid "File selected:"
+msgstr "File selected:"
+
+#: templates/order_details.html:3 templates/order_details.html:8
+msgid "Order Details"
+msgstr "Order Details"
+
+#: templates/order_details.html:10
+msgid "Back to Orders"
+msgstr "Back to Orders"
+
+#: templates/order_details.html:25 templates/orders.html:62 templates/orders.html:98
+msgid "Status"
+msgstr "Status"
+
+#: templates/order_details.html:51
+msgid "Total Order Amount:"
+msgstr "Total Order Amount:"
+
+#: templates/order_details.html:61
+msgid "Order Timeline"
+msgstr "Order Timeline"
+
+#: templates/order_details.html:80
+msgid "No Details Available"
+msgstr "No Details Available"
+
+#: templates/order_details.html:81
+msgid "The details for this order could not be found."
+msgstr "The details for this order could not be found."
+
+#: templates/orders.html:51
+msgid "My Orders"
+msgstr "My Orders"
+
+#: templates/orders.html:64
+msgid "All"
+msgstr "All"
+
+#: templates/orders.html:65 templates/user_news.html:18
+msgid "New"
+msgstr "New"
+
+#: templates/orders.html:66
+msgid "Accepted"
+msgstr "Accepted"
+
+#: templates/orders.html:67
+msgid "Cancelled"
+msgstr "Cancelled"
+
+#: templates/orders.html:71
+msgid "Start Date"
+msgstr "Start Date"
+
+#: templates/orders.html:75
+msgid "End Date"
+msgstr "End Date"
+
+#: templates/orders.html:80
+msgid "Filter"
+msgstr "Filter"
+
+#: templates/orders.html:83
+msgid "Clear Filters"
+msgstr "Clear Filters"
+
+#: templates/orders.html:95
+msgid "Order ID"
+msgstr "Order ID"
+
+#: templates/orders.html:96
+msgid "Date"
+msgstr "Date"
+
+#: templates/orders.html:97
+msgid "Total Price"
+msgstr "Total Price"
+
+#: templates/orders.html:119 templates/user_news.html:44
+msgid "View Details"
+msgstr "View Details"
+
+#: templates/orders.html:128
+msgid "No Orders Found"
+msgstr "No Orders Found"
+
+#: templates/orders.html:129
+msgid "You haven't placed any orders yet."
+msgstr "You haven't placed any orders yet."
+
+#: templates/orders.html:131
+msgid "Start Shopping"
+msgstr "Start Shopping"
+
+#: templates/search_results.html:3 templates/search_results.html:7
+msgid "Search Results"
+msgstr "Search Results"
+
+#: templates/search_results.html:16
+msgid "Price Lists"
+msgstr "Price Lists"
+
+#: templates/search_results.html:19
+msgid "Select"
+msgstr "Select"
+
+#: templates/search_results.html:71
+msgid "The following articles were not found in any price list:"
+msgstr "The following articles were not found in any price list:"
+
+#: templates/search_results.html:82
+msgid "Add to Cart"
+msgstr "Add to Cart"
+
+#: templates/search_results.html:86
+msgid "Clear Results"
+msgstr "Clear Results"
+
+#: templates/search_results.html:93
+msgid "No Results Found"
+msgstr "No Results Found"
+
+#: templates/search_results.html:94
+msgid "Try searching with different articles or check your input format."
+msgstr "Try searching with different articles or check your input format."
+
+#: templates/search_results.html:96
+msgid "New Search"
+msgstr "New Search"
+
+#: templates/admin/dashboard.html:3
+msgid "Admin Dashboard"
+msgstr "Admin Dashboard"
+
+#: templates/admin/dashboard.html:7
+msgid "System Statistics"
+msgstr "System Statistics"
+
+#: templates/admin/dashboard.html:13
+msgid "User Management"
+msgstr "User Management"
+
+#: templates/admin/dashboard.html:19
+msgid "Price Lists Management"
+msgstr "Price Lists Management"
+
+#: templates/errors/404.html:3
+msgid "Page Not Found"
+msgstr "Page Not Found"
+
+#: templates/errors/500.html:3
+msgid "Server Error"
+msgstr "Server Error"
+
+#: templates/errors/403.html:3
+msgid "Access Denied"
+msgstr "Access Denied"

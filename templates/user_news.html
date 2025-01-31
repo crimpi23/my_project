@@ -1,30 +1,30 @@
 {% extends "base.html" %}
 
-{% block title %}News{% endblock %}
+{% block title %}{{ _('News') }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <h1 class="mb-4">News</h1>
+    <h1 class="mb-4">{{ _('News') }}</h1>
 
     <div class="row">
         <!-- Unread News -->
         <div class="col-md-8">
-            <h2 class="h4 mb-3">New Messages</h2>
+            <h2 class="h4 mb-3">{{ _('New Messages') }}</h2>
             {% for news in news_list if not news.is_read %}
             <div class="card mb-3 news-card unread">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <h3 class="h5 card-title">{{ news.title }}</h3>
-                        <span class="badge bg-primary">New</span>
+                        <span class="badge bg-primary">{{ _('New') }}</span>
                     </div>
                     <p class="card-text">{{ news.content }}</p>
                     <div class="d-flex justify-content-between align-items-center">
                         <small class="text-muted">{{ news.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
                         <button class="btn btn-sm btn-outline-primary read-more" 
-								data-news-id="{{ news.id }}"
-								onclick="window.location.href='{{ url_for('view_news', token=token, news_id=news.id) }}'">
-							Read More
-						</button>
+                                data-news-id="{{ news.id }}"
+                                onclick="window.location.href='{{ url_for('view_news', token=token, news_id=news.id) }}'">
+                            {{ _('Read More') }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -33,7 +33,7 @@
 
         <!-- Read News -->
         <div class="col-md-4">
-            <h2 class="h4 mb-3">News Archive</h2>
+            <h2 class="h4 mb-3">{{ _('News Archive') }}</h2>
             {% for news in news_list if news.is_read %}
             <div class="card mb-2 news-card read">
                 <div class="card-body">
@@ -41,7 +41,7 @@
                     <small class="text-muted d-block mb-2">{{ news.created_at.strftime('%d.%m.%Y') }}</small>
                     <button class="btn btn-sm btn-link p-0" 
                             onclick="showNewsDetails({{ news.id }})">
-                        View Details
+                        {{ _('View Details') }}
                     </button>
                 </div>
             </div>
@@ -63,7 +63,6 @@
     </div>
 </div>
 {% endblock %}
-
 
 {% block extra_js %}
 <script>

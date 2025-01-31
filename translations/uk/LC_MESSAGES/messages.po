@@ -1,0 +1,492 @@
+# Ukrainian translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-01-28 23:44+0200\n"
+"PO-Revision-Date: 2025-01-28 18:10+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: uk\n"
+"Language-Team: uk <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: app.py:1206
+msgid "Article {article} removed successfully"
+msgstr "Артикул {article} успішно видалено"
+
+#: app.py:1209
+msgid "Item not found in cart"
+msgstr "Товар не знайдено в кошику"
+
+#: app.py:1214
+msgid "Error removing item from cart"
+msgstr "Помилка видалення товару з кошика"
+
+#: app.py:1233
+msgid "Invalid input: article or quantity missing."
+msgstr "Некоректні дані: відсутній артикул або кількість."
+
+#: app.py:1240
+msgid "Quantity must be at least 1."
+msgstr "Кількість повинна бути не менше 1."
+
+#: app.py:1257
+msgid "Cart updated successfully!"
+msgstr "Кошик успішно оновлено!"
+
+#: app.py:1261
+msgid "Error updating cart."
+msgstr "Помилка оновлення кошика."
+
+#: app.py:1304
+msgid "Cart cleared successfully."
+msgstr "Кошик успішно очищено."
+
+#: app.py:1308
+msgid "Error clearing cart."
+msgstr "Помилка очищення кошика."
+
+#: app.py:1355
+msgid "Your cart is empty!"
+msgstr "Ваш кошик порожній!"
+
+#: app.py:1425
+msgid "Order placed, but we couldn't send a confirmation email."
+msgstr "Замовлення розміщено, але не вдалося надіслати підтвердження на email."
+
+#: app.py:1432
+msgid "Order placed successfully!"
+msgstr "Замовлення успішно розміщено!"
+
+#: app.py:1439
+msgid "Error placing order: {error}"
+msgstr "Помилка розміщення замовлення: {error}"
+
+#: app.py:1458
+msgid "User is not authenticated."
+msgstr "Користувач не авторизований."
+
+#: app.py:1524
+msgid "Error fetching orders."
+msgstr "Помилка отримання замовлень."
+
+#: app.py:1576
+msgid "Error loading order details."
+msgstr "Помилка завантаження деталей замовлення."
+
+#: app.py:2558
+msgid "Error loading news"
+msgstr "Помилка завантаження новин"
+
+#: app.py:2588 app.py:2638
+msgid "News not found"
+msgstr "Новини не знайдено"
+
+#: templates/base.html:6 templates/index.html:4
+msgid "Article Price Search"
+msgstr "Пошук цін артикулів"
+
+#: templates/base.html:118
+msgid "MySite"
+msgstr "Мій сайт"
+
+#: templates/base.html:144 templates/user_news.html:3 templates/user_news.html:7
+msgid "News"
+msgstr "Новини"
+
+#: templates/base.html:153
+msgid "Home"
+msgstr "Головна"
+
+#: templates/base.html:160
+msgid "Cart"
+msgstr "Кошик"
+
+#: templates/base.html:166
+msgid "Orders"
+msgstr "Замовлення"
+
+#: templates/cart.html:3 templates/cart.html:7
+msgid "Shopping Cart"
+msgstr "Кошик покупок"
+
+#: templates/cart.html:14 templates/order_details.html:19 templates/orders.html:58 templates/search_results.html:15
+msgid "Article"
+msgstr "Артикул"
+
+#: templates/cart.html:15 templates/order_details.html:20
+msgid "Price List"
+msgstr "Прайс-лист"
+
+#: templates/cart.html:16 templates/order_details.html:21
+msgid "Price"
+msgstr "Ціна"
+
+#: templates/cart.html:17 templates/order_details.html:22 templates/search_results.html:17
+msgid "Quantity"
+msgstr "Кількість"
+
+#: templates/cart.html:18 templates/order_details.html:23
+msgid "Total"
+msgstr "Сума"
+
+#: templates/cart.html:19 templates/order_details.html:24 templates/search_results.html:18
+msgid "Comment"
+msgstr "Коментар"
+
+#: templates/cart.html:20 templates/orders.html:99
+msgid "Actions"
+msgstr "Дії"
+
+#: templates/cart.html:55
+msgid "Total:"
+msgstr "Всього:"
+
+#: templates/cart.html:66
+msgid "Place Order"
+msgstr "Оформити замовлення"
+
+#: templates/cart.html:72
+msgid "Clear Cart"
+msgstr "Очистити кошик"
+
+#: templates/cart.html:79 templates/search_results.html:70
+msgid "Missing Articles:"
+msgstr "Відсутні артикули:"
+
+#: templates/cart.html:80
+msgid "The following articles were not found:"
+msgstr "Наступні артикули не знайдено:"
+
+#: templates/cart.html:91
+msgid "Your Cart is Empty"
+msgstr "Ваш кошик порожній"
+
+#: templates/cart.html:92
+msgid "Start adding items to your cart!"
+msgstr "Почніть додавати товари до кошика!"
+
+#: templates/cart.html:94 templates/index.html:33
+msgid "Search Articles"
+msgstr "Пошук артикулів"
+
+#: templates/index.html:6
+msgid "Welcome to the advanced search system! Use the tools below:"
+msgstr "Ласкаво просимо до розширеної системи пошуку! Використовуйте інструменти нижче:"
+
+#: templates/index.html:14
+msgid "Upload Articles File"
+msgstr "Завантажити файл з артикулами"
+
+#: templates/index.html:16
+msgid "Drag and drop your file here, or click to select"
+msgstr "Перетягніть файл сюди або натисніть для вибору"
+
+#: templates/index.html:22
+msgid "Upload and Search"
+msgstr "Завантажити та шукати"
+
+#: templates/index.html:36
+msgid "Enter Articles and Quantities:"
+msgstr "Введіть артикули та кількість:"
+
+#: templates/index.html:38
+msgid "Example:"
+msgstr "Приклад:"
+
+#: templates/index.html:42
+msgid "Search"
+msgstr "Пошук"
+
+#: templates/index.html:76 templates/index.html:83
+msgid "File selected:"
+msgstr "Вибраний файл:"
+
+#: templates/order_details.html:3 templates/order_details.html:8
+msgid "Order Details"
+msgstr "Деталі замовлення"
+
+#: templates/order_details.html:10
+msgid "Back to Orders"
+msgstr "Назад до замовлень"
+
+#: templates/order_details.html:25 templates/orders.html:62 templates/orders.html:98
+msgid "Status"
+msgstr "Статус"
+
+#: templates/order_details.html:51
+msgid "Total Order Amount:"
+msgstr "Загальна сума замовлення:"
+
+#: templates/order_details.html:61
+msgid "Order Timeline"
+msgstr "Хронологія замовлення"
+
+#: templates/order_details.html:80
+msgid "No Details Available"
+msgstr "Деталі відсутні"
+
+#: templates/order_details.html:81
+msgid "The details for this order could not be found."
+msgstr "Деталі цього замовлення не знайдено."
+
+#: templates/orders.html:51
+msgid "My Orders"
+msgstr "Мої замовлення"
+
+#: templates/orders.html:64
+msgid "All"
+msgstr "Всі"
+
+#: templates/orders.html:65 templates/user_news.html:18
+msgid "New"
+msgstr "Нові"
+
+#: templates/orders.html:66
+msgid "Accepted"
+msgstr "Прийняті"
+
+#: templates/orders.html:67
+msgid "Cancelled"
+msgstr "Скасовані"
+
+#: templates/orders.html:71
+msgid "Start Date"
+msgstr "Дата початку"
+
+#: templates/orders.html:75
+msgid "End Date"
+msgstr "Дата кінця"
+
+#: templates/orders.html:80
+msgid "Filter"
+msgstr "Фільтрувати"
+
+#: templates/orders.html:83
+msgid "Clear Filters"
+msgstr "Очистити фільтри"
+
+#: templates/orders.html:95
+msgid "Order ID"
+msgstr "ID замовлення"
+
+#: templates/orders.html:96
+msgid "Date"
+msgstr "Дата"
+
+#: templates/orders.html:97
+msgid "Total Price"
+msgstr "Загальна ціна"
+
+#: templates/orders.html:119 templates/user_news.html:44
+msgid "View Details"
+msgstr "Переглянути деталі"
+
+#: templates/orders.html:128
+msgid "No Orders Found"
+msgstr "Замовлень не знайдено"
+
+#: templates/orders.html:129
+msgid "You haven't placed any orders yet."
+msgstr "Ви ще не розмістили жодного замовлення."
+
+#: templates/orders.html:131
+msgid "Start Shopping"
+msgstr "Почати покупки"
+
+#: templates/search_results.html:3 templates/search_results.html:7
+msgid "Search Results"
+msgstr "Результати пошуку"
+
+#: templates/search_results.html:16
+msgid "Price Lists"
+msgstr "Прайс-листи"
+
+#: templates/search_results.html:19
+msgid "Select"
+msgstr "Вибрати"
+
+#: templates/search_results.html:71
+msgid "The following articles were not found in any price list:"
+msgstr "Наступні артикули не знайдено в жодному прайс-листі:"
+
+#: templates/search_results.html:82
+msgid "Add to Cart"
+msgstr "Додати в кошик"
+
+#: templates/search_results.html:86
+msgid "Clear Results"
+msgstr "Очистити результати"
+
+#: templates/search_results.html:93
+msgid "No Results Found"
+msgstr "Результатів не знайдено"
+
+#: templates/search_results.html:94
+msgid "Try searching with different articles or check your input format."
+msgstr "Спробуйте пошук з іншими артикулами або перевірте формат введення."
+
+#: templates/search_results.html:96
+msgid "New Search"
+msgstr "Новий пошук"
+
+#: templates/user_news.html:12
+msgid "New Messages"
+msgstr "Нові повідомлення"
+
+#: templates/user_news.html:26
+msgid "Read More"
+msgstr "Читати далі"
+
+#: templates/user_news.html:36
+msgid "News Archive"
+msgstr "Архів новин"
+
+#: templates/view_news.html:9
+msgid "Mark as Read"
+msgstr "Позначити як прочитане"
+
+#: templates/view_news.html:16
+msgid "Published:"
+msgstr "Опубліковано:"
+
+#: templates/user_news.html:3
+msgid "User News"
+msgstr "Новини користувача"
+
+#: templates/user_news.html:44
+msgid "No news available"
+msgstr "Немає доступних новин"
+
+#: templates/admin/news.html:3
+msgid "News Management"
+msgstr "Управління новинами"
+
+#: templates/admin/news.html:7
+msgid "Create News"
+msgstr "Створити новину"
+
+#: templates/admin/news.html:10
+msgid "Edit News"
+msgstr "Редагувати новину"
+
+#: templates/admin/news.html:13
+msgid "Delete News"
+msgstr "Видалити новину"
+
+#: templates/admin/news_edit.html:3
+msgid "Edit News Item"
+msgstr "Редагування новини"
+
+#: templates/admin/news_edit.html:7
+msgid "Title"
+msgstr "Заголовок"
+
+#: templates/admin/news_edit.html:13
+msgid "Content"
+msgstr "Зміст"
+
+#: templates/admin/news_edit.html:19
+msgid "Published"
+msgstr "Опубліковано"
+
+#: templates/admin/news_edit.html:25
+msgid "Save Changes"
+msgstr "Зберегти зміни"
+
+#: templates/admin/orders.html:3
+msgid "Order Management"
+msgstr "Управління замовленнями"
+
+#: templates/admin/orders.html:7
+msgid "Order List"
+msgstr "Список замовлень"
+
+#: templates/admin/orders.html:12
+msgid "Order Status"
+msgstr "Статус замовлення"
+
+#: templates/admin/orders.html:18
+msgid "Customer"
+msgstr "Клієнт"
+
+#: templates/admin/orders.html:24
+msgid "Order Date"
+msgstr "Дата замовлення"
+
+#: templates/admin/orders.html:30
+msgid "Update Status"
+msgstr "Оновити статус"
+
+#: templates/admin/dashboard.html:3
+msgid "Admin Dashboard"
+msgstr "Панель адміністратора"
+
+#: templates/admin/dashboard.html:7
+msgid "System Statistics"
+msgstr "Статистика системи"
+
+#: templates/admin/dashboard.html:13
+msgid "User Management"
+msgstr "Управління користувачами"
+
+#: templates/admin/dashboard.html:19
+msgid "Price Lists"
+msgstr "Прайс-листи"
+
+#: templates/admin/price_lists.html:3
+msgid "Price List Management"
+msgstr "Управління прайс-листами"
+
+#: templates/admin/price_lists.html:7
+msgid "Upload New Price List"
+msgstr "Завантажити новий прайс-лист"
+
+#: templates/admin/price_lists.html:13
+msgid "Current Price Lists"
+msgstr "Поточні прайс-листи"
+
+#: templates/admin/price_lists.html:19
+msgid "Compare Price Lists"
+msgstr "Порівняти прайс-листи"
+
+#: templates/admin/users.html:3
+msgid "User Management"
+msgstr "Управління користувачами"
+
+#: templates/admin/users.html:7
+msgid "Create User"
+msgstr "Створити користувача"
+
+#: templates/admin/users.html:13
+msgid "User List"
+msgstr "Список користувачів"
+
+#: templates/admin/users.html:19
+msgid "User Roles"
+msgstr "Ролі користувачів"
+
+#: templates/admin/users.html:25
+msgid "User Activity"
+msgstr "Активність користувачів"
+
+#: templates/errors/404.html:3
+msgid "Page Not Found"
+msgstr "Сторінку не знайдено"
+
+#: templates/errors/500.html:3
+msgid "Server Error"
+msgstr "Помилка сервера"
+
+#: templates/errors/403.html:3
+msgid "Access Denied"
+msgstr "Доступ заборонено"

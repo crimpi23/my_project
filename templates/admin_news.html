@@ -18,7 +18,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Title</th>
+                            <th>Title (UK/EN/SK)</th>
                             <th>Created</th>
                             <th>Updated</th>
                             <th>Status</th>
@@ -29,7 +29,17 @@
                         {% for news in news_list %}
                         <tr>
                             <td>{{ news.id }}</td>
-                            <td>{{ news.title }}</td>
+                            <td>
+                                {% if news.title_uk %}
+                                    <div><strong>UK:</strong> {{ news.title_uk }}</div>
+                                {% endif %}
+                                {% if news.title_en %}
+                                    <div><strong>EN:</strong> {{ news.title_en }}</div>
+                                {% endif %}
+                                {% if news.title_sk %}
+                                    <div><strong>SK:</strong> {{ news.title_sk }}</div>
+                                {% endif %}
+                            </td>
                             <td>{{ news.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                             <td>{{ news.updated_at.strftime('%Y-%m-%d %H:%M') if news.updated_at else '-' }}</td>
                             <td>

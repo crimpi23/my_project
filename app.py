@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, session, redirect, url_for, f
 from decimal import Decimal
 import time
 import os
+from flask_babel import Babel
+from flask import g
+from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, send_file, get_flashed_messages, g
 import psycopg2
 import psycopg2.extras
 import logging
@@ -18,11 +21,46 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import logging
+from flask_babel import gettext as _
+
+
 
 # Налаштування логування
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
+
+babel = Babel(app)
+
+# Налаштування Babel
+app.config['BABEL_DEFAULT_LOCALE'] = 'uk'
+app.config['BABEL_SUPPORTED_LOCALES'] = ['uk', 'en', 'sk']
+
+# Конфігурація доступних мов
+LANGUAGES = {
+    'uk': 'Українська',
+    'en': 'English',
+    'sk': 'Slovak'
+}
+
+def get_locale():
+    return session.get('language', app.config['BABEL_DEFAULT_LOCALE'])
+
+babel.init_app(app, locale_selector=get_locale)
+
+# Make LANGUAGES available to all templates
+@app.context_processor
+def inject_languages():
+    return dict(LANGUAGES=LANGUAGES)
+
+@app.route('/set_language/<language>')
+def set_language(language):
+    session['language'] = language
+    return redirect(request.referrer or url_for('index'))
+
+@app.before_request
+def before_request():
+    g.locale = session.get('language', 'uk')
 
 # Додаємо фільтр для кольорів статусу замовлення
 @app.template_filter('status_color')
@@ -187,20 +225,25 @@ def send_email(to_email, subject, ordered_items, missing_articles):
             raise ValueError("SMTP credentials are not set in environment variables.")
 
         # Формування тексту повідомлення
-        message_body = f"Thank you for your order!\n\nYour order details:\n"
+        message_body = _("Thank you for your order!\n\nYour order details:\n")
 
         if ordered_items:
-            message_body += "Ordered items:\n"
+            message_body += _("Ordered items:\n")
             for item in ordered_items:
-                message_body += (
-                    f"- Article: {item['article']}, "
-                    f"Price: {item['price']:.2f}, "
-                    f"Quantity: {item['quantity']}, "
-                    f"Comment: {item['comment'] or 'No comment'}\n"
+                message_body += _(
+                    "- Article: {article}, "
+                    "Price: {price:.2f}, "
+                    "Quantity: {quantity}, "
+                    "Comment: {comment}\n"
+                ).format(
+                    article=item['article'],
+                    price=item['price'],
+                    quantity=item['quantity'],
+                    comment=item['comment'] or _('No comment')
                 )
-        
+
         if missing_articles:
-            message_body += "\nMissing articles:\n"
+            message_body += _("\nMissing articles:\n")
             for article in missing_articles:
                 message_body += f"- {article}\n"
 
@@ -304,7 +347,7 @@ def send_order_confirmation_email(to_email, order_id, total_price, cart_items):
 def token_index(token):
     role = validate_token(token)
     if not role:
-        flash("Invalid token.", "error")
+        flash(_("Invalid token."), "error")
         return redirect(url_for('index'))  # Якщо токен недійсний, перенаправляємо на головну
 
     # Якщо токен валідний, зберігаємо роль і токен у сесії
@@ -329,7 +372,7 @@ def index():
     elif role == "user":
         return render_template('index.html', role=role)
     else:
-        flash("Invalid token or role.", "error")
+        flash(_("Invalid token or role."), "error")
         return redirect(url_for('simple_search'))
 
 
@@ -340,20 +383,17 @@ def simple_search():
     if request.method == 'POST':
         article = request.form.get('article', '').strip()
         if not article:
-            # Якщо поле порожнє, виводимо повідомлення
-            flash("Please enter an article for search.", "error")
+            flash(_("Please enter an article for search."), "error")
             return redirect(url_for('simple_search'))
 
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
 
-            # Отримання списку таблиць з price_lists
             cursor.execute("SELECT table_name FROM price_lists")
             tables = [row['table_name'] for row in cursor.fetchall()]
 
             results = []
-            # Пошук у кожній таблиці
             for table in tables:
                 query = f"""
                     SELECT article, price, '{table}' AS table_name
@@ -363,7 +403,6 @@ def simple_search():
                 cursor.execute(query, (article,))
                 results.extend(cursor.fetchall())
 
-            # Логування результатів
             if results:
                 logging.debug(f"Search results for article '{article}': {results}")
             else:
@@ -371,18 +410,17 @@ def simple_search():
 
         except Exception as e:
             logging.error(f"Error in simple_search: {e}", exc_info=True)
-            flash("An error occurred during the search. Please try again later.", "error")
+            flash(_("An error occurred during the search. Please try again later."), "error")
             results = []
 
         finally:
             if 'conn' in locals() and conn:
                 conn.close()
 
-        # Відображення результатів
         return render_template('simple_search_results.html', results=results)
 
-    # Простий рендер сторінки пошуку
     return render_template('simple_search.html')
+
 
 # Доступ до адмін панелі
 @app.route('/<token>/admin', methods=['GET', 'POST'])
@@ -602,7 +640,7 @@ def search_articles(token):
     try:
         articles_input = request.form.get('articles', '').strip()
         if not articles_input:
-            flash("Please enter at least one article.", "error")
+            flash(_("Please enter at least one article."), "error")
             return redirect(url_for('index'))
 
         # Створюємо множини для порівняння артикулів
@@ -714,7 +752,8 @@ def search_articles(token):
             missing_articles = list(requested_articles - found_articles)
 
             if missing_articles:
-                flash(f"Articles not found: {', '.join(missing_articles)}", "warning")
+                flash(_("Articles not found: {articles}").format(
+                    articles=', '.join(missing_articles)), "warning")
 
             # Додаємо в кошик артикули з однією таблицею
             if to_add_to_cart:
@@ -758,9 +797,10 @@ def search_articles(token):
             # Якщо всі артикули оброблені - перенаправляємо в кошик
             return redirect(url_for('cart', token=token))
 
+
     except Exception as e:
-        logging.error(f"Error in search_articles: {str(e)}", exc_info=True)
-        flash("An error occurred during search. Please try again.", "error")
+        logging.error(f"Error in search_articles: {e}", exc_info=True)
+        flash(_("An error occurred while processing your request."), "error")
         return redirect(url_for('index'))
 
 
@@ -860,7 +900,7 @@ def cart(token):
         # Отримуємо ID користувача з сесії
         user_id = session.get('user_id')
         if not user_id:
-            flash("You need to log in to view your cart.", "error")
+            flash(_("You need to log in to view your cart."), "error")
             logging.warning("Attempt to access cart without user ID.")
             return redirect(url_for('index'))
 
@@ -965,7 +1005,7 @@ def cart(token):
 
     except Exception as e:
         logging.error(f"Error in cart for user_id={user_id}: {str(e)}", exc_info=True)
-        flash("Could not load your cart. Please try again.", "error")
+        flash(_("Could not load your cart. Please try again."), "error")
         return redirect(url_for('index'))
 
     finally:
@@ -1093,7 +1133,7 @@ def add_to_cart(token):
         user_id = session.get('user_id')  # ID користувача
 
         if not user_id:
-            flash("User is not authenticated. Please log in.", "error")
+            flash(_("User is not authenticated. Please log in."), "error")
             return redirect(url_for('index'))
 
         logging.debug(f"Adding to cart: Article={article}, Price={price}, Quantity={quantity}, Table={table_name}, User={user_id}")
@@ -1126,10 +1166,10 @@ def add_to_cart(token):
             logging.info(f"Product added to cart: Article={article}, Quantity={quantity}, User ID={user_id}")
 
         conn.commit()
-        flash("Product added to cart!", "success")
+        flash(_("Product added to cart!"), "success")
     except Exception as e:
         logging.error(f"Error in add_to_cart: {e}", exc_info=True)
-        flash("Error adding product to cart.", "error")
+        flash(_("Error adding product to cart."), "error")
     finally:
         if cursor:
             cursor.close()
@@ -1160,7 +1200,7 @@ def remove_from_cart(token):
         logging.debug(f"Removing from cart: Article={article}, Table={table_name}, User={user_id}")
 
         if not all([user_id, article, table_name]):
-            flash("Missing required information for removal", "error")
+            flash(_("Missing required information for removal"), "error")
             return redirect(url_for('cart', token=token))
 
         with get_db_connection() as conn:
@@ -1177,15 +1217,15 @@ def remove_from_cart(token):
             conn.commit()
 
             if deleted:
-                flash(f"Article {article} removed successfully", "success")
+                flash(_("Article {article} removed successfully").format(article=article), "success")
                 logging.info(f"Article {article} removed from cart for user_id={user_id}")
             else:
-                flash("Item not found in cart", "warning")
+                flash(_("Item not found in cart"), "warning")
                 logging.warning(f"Failed to remove article {article} for user_id={user_id}")
 
     except Exception as e:
         logging.error(f"Error removing from cart: {e}", exc_info=True)
-        flash("Error removing item from cart", "error")
+        flash(_("Error removing item from cart"), "error")
 
     return redirect(url_for('cart', token=token))
 
@@ -1204,14 +1244,14 @@ def update_cart(token):
         user_id = session['user_id']
 
         if not article or not quantity:
-            flash("Invalid input: article or quantity missing.", "error")
+            flash(_("Invalid input: article or quantity missing."), "error")
             logging.error("Missing article or quantity in update_cart form.")
             return redirect(url_for('cart', token=token))
 
         quantity = int(quantity)
 
         if quantity < 1:
-            flash("Quantity must be at least 1.", "error")
+            flash(_("Quantity must be at least 1."), "error")
             logging.error(f"Invalid quantity: {quantity}")
             return redirect(url_for('cart', token=token))
 
@@ -1228,11 +1268,11 @@ def update_cart(token):
         """, (quantity, user_id, article))
 
         conn.commit()
-        flash("Cart updated successfully!", "success")
+        flash(_("Cart updated successfully!"), "success")
 
     except Exception as e:
         logging.error(f"Error updating cart: {e}", exc_info=True)
-        flash("Error updating cart.", "error")
+        flash(_("Error updating cart."), "error")
     finally:
         if 'cursor' in locals():
             cursor.close()
@@ -1275,11 +1315,11 @@ def clear_cart(token):
                 logging.debug(f"Session data '{key}' cleared for user_id={user_id}.")
 
         session.modified = True
-        flash("Cart cleared successfully.", "success")
+        flash(_("Cart cleared successfully."), "success")
 
     except Exception as e:
         logging.error(f"Error clearing cart for user_id={user_id}: {e}", exc_info=True)
-        flash("Error clearing cart.", "error")
+        flash(_("Error clearing cart."), "error")
     finally:
         if 'cursor' in locals() and cursor:
             cursor.close()
@@ -1308,7 +1348,7 @@ def place_order(token):
         logging.debug(f"Placing order for user_id={user_id}")
 
         if not user_id:
-            flash("User is not authenticated. Please log in.", "error")
+            flash(_("User is not authenticated. Please log in."), "error")
             logging.error("Attempt to place order by unauthenticated user.")
             return redirect(url_for('index'))
 
@@ -1326,7 +1366,7 @@ def place_order(token):
         cart_items = cursor.fetchall()
 
         if not cart_items:
-            flash("Your cart is empty!", "error")
+            flash(_("Your cart is empty!"), "error")
             logging.warning(f"Cart is empty for user_id={user_id}.")
             return redirect(request.referrer or url_for('cart'))
 
@@ -1396,21 +1436,21 @@ def place_order(token):
                 logging.info(f"Email sent successfully to {user_email['email']}")
             except Exception as email_error:
                 logging.error(f"Failed to send email: {email_error}")
-                flash("Order placed, but we couldn't send a confirmation email.", "warning")
+                flash(_("Order placed, but we couldn't send a confirmation email."), "warning")
 
         # Очищаємо список відсутніх позицій
         session['missing_articles'] = []
         session.modified = True
 
         logging.info(f"Cart cleared and order placed successfully for user_id={user_id}")
-        flash("Order placed successfully!", "success")
+        flash(_("Order placed successfully!"), "success")
         return redirect(request.referrer or url_for('cart'))
 
     except Exception as e:
         if conn:
             conn.rollback()
         logging.error(f"Error placing order for user_id={user_id}: {str(e)}", exc_info=True)
-        flash(f"Error placing order: {str(e)}", "error")
+        flash(_("Error placing order: {error}").format(error=str(e)), "error")
         return redirect(request.referrer or url_for('cart'))
     finally:
         if 'cursor' in locals() and cursor:
@@ -1429,7 +1469,7 @@ def place_order(token):
 def orders(token):
     user_id = session.get('user_id')
     if not user_id:
-        flash("User is not authenticated.", "error")
+        flash(_("User is not authenticated."), "error")
         return redirect(url_for('index'))
 
     # Отримуємо фільтри з запиту
@@ -1495,7 +1535,7 @@ def orders(token):
 
     except Exception as e:
         logging.error(f"Error fetching orders: {e}", exc_info=True)
-        flash("Error fetching orders.", "error")
+        flash(_("Error fetching orders."), "error")
         return redirect(url_for('orders', token=token))
 
     finally:
@@ -1515,9 +1555,9 @@ def order_details(token, order_id):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримуємо деталі замовлення
+        # Отримуємо деталі замовлення та статус
         cursor.execute("""
-            SELECT order_id, article, table_name, price, quantity, total_price, comment
+            SELECT order_id, article, table_name, price, quantity, total_price, comment, status
             FROM order_details 
             WHERE order_id = %s
         """, (order_id,))
@@ -1531,7 +1571,8 @@ def order_details(token, order_id):
                 'price': float(row[3]),
                 'quantity': row[4],
                 'total_price': float(row[5]),
-                'comment': row[6]
+                'comment': row[6] or _("No comment"),
+                'status': row[7] or 'new'
             }
             for row in details
         ]
@@ -1539,16 +1580,17 @@ def order_details(token, order_id):
         # Рахуємо загальну суму
         total_price = sum(item['total_price'] for item in formatted_details)
 
-        # Передаємо всі необхідні дані в шаблон
         return render_template('order_details.html',
-                               token=token,
-                               details=formatted_details,
-                               total_price=total_price)
+                            token=token,
+                            order_id=order_id,
+                            details=formatted_details,
+                            total_price=total_price)
 
     except Exception as e:
         logging.error(f"Помилка завантаження деталей замовлення для order_id={order_id}: {e}", exc_info=True)
-        flash("Помилка завантаження деталей замовлення.", "error")
+        flash(_("Error loading order details."), "error")
         return redirect(url_for('orders', token=token))
+
 
 
 @app.route('/<token>/admin/orders/<int:order_id>/update_status', methods=['POST'])
@@ -2428,27 +2470,35 @@ def admin_news(token):
     """
     Відображення списку всіх новин в адмін-панелі
     """
-    logging.info(f"Accessing admin news with token: {token}")
-    
+    logging.info(f"Доступ до адмін-новин з токеном: {token}")
+
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    
+
     try:
+        # Оновлений запит з вибіркою всіх мовних версій
         cursor.execute("""
-            SELECT id, title, created_at, updated_at, is_published
+            SELECT 
+                id, 
+                COALESCE(title_uk, title) as title_uk,
+                COALESCE(title_en, title) as title_en,
+                COALESCE(title_sk, title) as title_sk,
+                created_at, 
+                updated_at, 
+                is_published
             FROM news
             ORDER BY created_at DESC
         """)
         news_list = cursor.fetchall()
-        logging.info(f"Fetched {len(news_list)} news items")
-        
+        logging.info(f"Отримано {len(news_list)} новин")
+
         return render_template('admin_news.html', news_list=news_list, token=token)
-        
+
     except Exception as e:
-        logging.error(f"Error fetching news: {e}")
-        flash("Error loading news", "error")
+        logging.error(f"Помилка отримання новин: {e}")
+        flash("Помилка завантаження новин", "error")
         return redirect(url_for('admin_dashboard', token=token))
-        
+
     finally:
         cursor.close()
         conn.close()
@@ -2457,63 +2507,79 @@ def admin_news(token):
 @app.route('/<token>/admin/news/create', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
 def create_news(token):
-    """
-    Створення нової новини
-    """
     if request.method == 'POST':
-        logging.info("Processing news creation")
         try:
-            title = request.form['title']
-            content = request.form['content']
-            html_content = request.form['html_content']
+            title_uk = request.form['title_uk']
+            content_uk = request.form['content_uk']
+            html_content_uk = request.form['html_content_uk']
+
+            title_en = request.form['title_en']
+            content_en = request.form['content_en']
+            html_content_en = request.form['html_content_en']
+
+            title_sk = request.form['title_sk']
+            content_sk = request.form['content_sk']
+            html_content_sk = request.form['html_content_sk']
+
             is_published = bool(request.form.get('is_published'))
-            
+
             conn = get_db_connection()
             cursor = conn.cursor()
-            
+
             cursor.execute("""
-                INSERT INTO news (title, content, html_content, is_published)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO news (
+                    title_uk, content_uk, html_content_uk,
+                    title_en, content_en, html_content_en,
+                    title_sk, content_sk, html_content_sk,
+                    is_published
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
-            """, (title, content, html_content, is_published))
-            
+            """, (
+                title_uk, content_uk, html_content_uk,
+                title_en, content_en, html_content_en,
+                title_sk, content_sk, html_content_sk,
+                is_published
+            ))
+
             news_id = cursor.fetchone()[0]
             conn.commit()
-            
-            logging.info(f"Created news with id: {news_id}")
-            flash("News created successfully!", "success")
+
+            flash(_("News created successfully!"), "success")
             return redirect(url_for('admin_news', token=token))
-            
+
         except Exception as e:
             logging.error(f"Error creating news: {e}")
-            flash("Error creating news", "error")
+            flash(_("Error creating news"), "error")
             return redirect(url_for('create_news', token=token))
         finally:
             if 'conn' in locals():
                 cursor.close()
                 conn.close()
-    
+
     return render_template('create_news.html', token=token)
+
 
 @app.route('/<token>/news')
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def user_news(token):
     """
-    Відображення списку новин для користувачів
+    Відображення списку новин для користувачів з підтримкою багатомовності
     """
     logging.info(f"Accessing user news with token: {token}")
     user_id = session.get('user_id')
-    
+    current_lang = session.get('language', 'uk')
+
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    
+
     try:
-        # Отримуємо всі опубліковані новини та статус їх прочитання для користувача
-        cursor.execute("""
+        cursor.execute(f"""
             SELECT 
                 n.id,
-                n.title,
-                n.content,
+                n.title_{current_lang} as title,
+                n.content_{current_lang} as content,
+                n.html_content_{current_lang} as html_content,
                 n.created_at,
                 CASE WHEN nr.id IS NOT NULL THEN true ELSE false END as is_read
             FROM news n
@@ -2521,20 +2587,24 @@ def user_news(token):
             WHERE n.is_published = true
             ORDER BY n.created_at DESC
         """, (user_id,))
-        
+
         news_list = cursor.fetchall()
-        logging.info(f"Fetched {len(news_list)} news items for user {user_id}")
-        
-        return render_template('user_news.html', news_list=news_list, token=token)
-        
+        logging.info(f"Fetched {len(news_list)} news items for user {user_id} in language {current_lang}")
+
+        return render_template('user_news.html',
+                               news_list=news_list,
+                               token=token,
+                               current_lang=current_lang)
+
     except Exception as e:
         logging.error(f"Error fetching news for user: {e}")
-        flash("Error loading news", "error")
+        flash(_("Error loading news"), "error")
         return redirect(url_for('index', token=token))
-        
+
     finally:
         cursor.close()
         conn.close()
+
 
 @app.route('/<token>/news/<int:news_id>')
 @requires_token_and_roles('user', 'user_25', 'user_29')
@@ -2544,14 +2614,14 @@ def get_news_details(token, news_id):
     """
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    
+
     try:
         cursor.execute("""
             SELECT title, html_content, created_at
             FROM news
             WHERE id = %s AND is_published = true
         """, (news_id,))
-        
+
         news = cursor.fetchone()
         if news:
             return jsonify({
@@ -2559,8 +2629,8 @@ def get_news_details(token, news_id):
                 'html_content': news['html_content'],
                 'created_at': news['created_at'].strftime('%d.%m.%Y %H:%M')
             })
-        return jsonify({'error': 'News not found'}), 404
-        
+        return jsonify({'error': _('News not found')}), 404
+
     except Exception as e:
         logging.error(f"Error fetching news details: {e}")
         return jsonify({'error': str(e)}), 500
@@ -2596,19 +2666,52 @@ def inject_unread_news_count():
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def view_news(token, news_id):
     """
-    Тільки показує новину без зміни статусу
+    Відображення окремої новини з підтримкою багатомовності
     """
+    # Отримуємо поточну мову користувача, за замовчуванням українська
+    current_lang = session.get('language', 'uk')
+
+    # Підключаємося до бази даних
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    
-    cursor.execute("""
-        SELECT title, html_content, created_at
-        FROM news 
-        WHERE id = %s
-    """, (news_id,))
-    news = cursor.fetchone()
-    
-    return render_template('view_news.html', news=news, token=token, news_id=news_id)
+
+    try:
+        # Виконуємо запит з підтримкою старих та нових полів через COALESCE
+        cursor.execute("""
+            SELECT *, 
+                COALESCE(title_uk, title) as title_uk,
+                COALESCE(title_en, title) as title_en,
+                COALESCE(title_sk, title) as title_sk,
+                COALESCE(html_content_uk, html_content) as html_content_uk,
+                COALESCE(html_content_en, html_content) as html_content_en,
+                COALESCE(html_content_sk, html_content) as html_content_sk,
+                created_at
+            FROM news 
+            WHERE id = %s
+        """, (news_id,))
+
+        news = cursor.fetchone()
+
+        if not news:
+            flash("Новину не знайдено", "error")
+            return redirect(url_for('user_news', token=token))
+
+        # Передаємо дані в шаблон
+        return render_template('view_news.html',
+                               news=news,
+                               token=token,
+                               news_id=news_id,
+                               current_lang=current_lang)
+
+    except Exception as e:
+        logging.error(f"Помилка при відображенні новини {news_id}: {e}")
+        flash("Помилка при завантаженні новини", "error")
+        return redirect(url_for('user_news', token=token))
+
+    finally:
+        cursor.close()
+        conn.close()
+
 
 @app.route('/<token>/news/<int:news_id>/mark-read', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
@@ -2630,6 +2733,7 @@ def mark_news_read(token, news_id):
     return jsonify({'success': True})
 
 @app.route('/<token>/news/<int:news_id>/set-read', methods=['POST'])
+@app.route('/<token>/news/<int:news_id>/set-read', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def set_news_as_read(token, news_id):
     """
@@ -2638,13 +2742,13 @@ def set_news_as_read(token, news_id):
     user_id = session.get('user_id')
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     cursor.execute("""
         INSERT INTO news_reads (user_id, news_id, read_at)
         VALUES (%s, %s, NOW())
         ON CONFLICT (user_id, news_id) DO NOTHING
     """, (user_id, news_id))
-    
+
     conn.commit()
     return jsonify({'success': True})
 
@@ -2653,43 +2757,66 @@ def set_news_as_read(token, news_id):
 @requires_token_and_roles('admin')
 def edit_news(token, news_id):
     """
-    Редагування існуючої новини
+    Редагування багатомовної новини
     """
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    
+
     try:
         if request.method == 'POST':
-            title = request.form['title']
-            content = request.form['content']
-            html_content = request.form['html_content']
+            # Отримуємо дані для кожної мови
+            data = {
+                'uk': {
+                    'title': request.form['title_uk'],
+                    'content': request.form['content_uk'],
+                    'html_content': request.form['html_content_uk']
+                },
+                'en': {
+                    'title': request.form['title_en'],
+                    'content': request.form['content_en'],
+                    'html_content': request.form['html_content_en']
+                },
+                'sk': {
+                    'title': request.form['title_sk'],
+                    'content': request.form['content_sk'],
+                    'html_content': request.form['html_content_sk']
+                }
+            }
+
             is_published = 'is_published' in request.form
-            
+
             cursor.execute("""
                 UPDATE news 
-                SET title = %s, content = %s, html_content = %s, 
+                SET title_uk = %s, content_uk = %s, html_content_uk = %s,
+                    title_en = %s, content_en = %s, html_content_en = %s,
+                    title_sk = %s, content_sk = %s, html_content_sk = %s,
                     is_published = %s, updated_at = NOW()
                 WHERE id = %s
-            """, (title, content, html_content, is_published, news_id))
-            
+            """, (
+                data['uk']['title'], data['uk']['content'], data['uk']['html_content'],
+                data['en']['title'], data['en']['content'], data['en']['html_content'],
+                data['sk']['title'], data['sk']['content'], data['sk']['html_content'],
+                is_published, news_id
+            ))
+
             conn.commit()
             flash("Новину успішно оновлено!", "success")
             return redirect(url_for('admin_news', token=token))
-            
+
         cursor.execute("SELECT * FROM news WHERE id = %s", (news_id,))
         news = cursor.fetchone()
-        
+
         if not news:
             flash("Новину не знайдено", "error")
             return redirect(url_for('admin_news', token=token))
-            
+
         return render_template('edit_news.html', news=news, token=token)
-        
+
     except Exception as e:
         logging.error(f"Помилка редагування новини: {e}")
         flash("Помилка оновлення новини", "error")
         return redirect(url_for('admin_news', token=token))
-        
+
     finally:
         cursor.close()
         conn.close()

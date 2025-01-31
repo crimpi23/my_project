@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Order Details #{{ order_id }}{% endblock %}
+{% block title %}{{ _('Order Details') }} #{{ order_id }}{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Order Details #{{ order_id }}</h1>
+        <h1>{{ _('Order Details') }} #{{ order_id }}</h1>
         <a href="/{{ token }}/orders" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-left"></i> Back to Orders
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Orders') }}
         </a>
     </div>
 
@@ -16,13 +16,13 @@
         <table class="table table-striped table-hover">
             <thead class="table-primary">
                 <tr>
-                    <th>Article</th>
-                    <th>Price List</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Total</th>
-                    <th>Comment</th>
-                    <th>Status</th>
+                    <th>{{ _('Article') }}</th>
+                    <th>{{ _('Price List') }}</th>
+                    <th>{{ _('Price') }}</th>
+                    <th>{{ _('Quantity') }}</th>
+                    <th>{{ _('Total') }}</th>
+                    <th>{{ _('Comment') }}</th>
+                    <th>{{ _('Status') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,14 +33,14 @@
                     <td>{{ "%.2f"|format(item.price) }}</td>
                     <td>{{ item.quantity }}</td>
                     <td>{{ "%.2f"|format(item.total_price) }}</td>
-                    <td>{{ item.comment or 'No comment' }}</td>
+                    <td>{{ item.comment or _('No comment') }}</td>
                     <td>
                         <span class="badge bg-{{ {
                             'new': 'primary',
                             'accepted': 'success',
                             'rejected': 'danger'
                         }[item.status] }}">
-                            {{ item.status|title }}
+                            {{ _(item.status|title) }}
                         </span>
                     </td>
                 </tr>
@@ -48,7 +48,7 @@
             </tbody>
             <tfoot>
                 <tr class="table-primary">
-                    <td colspan="4" class="text-end"><strong>Total Order Amount:</strong></td>
+                    <td colspan="4" class="text-end"><strong>{{ _('Total Order Amount:') }}</strong></td>
                     <td colspan="3"><strong>{{ "%.2f"|format(total_price) }}</strong></td>
                 </tr>
             </tfoot>
@@ -58,7 +58,7 @@
     <!-- Order Timeline -->
     <div class="card mt-4">
         <div class="card-header bg-primary text-white">
-            <h5 class="card-title mb-0">Order Timeline</h5>
+            <h5 class="card-title mb-0">{{ _('Order Timeline') }}</h5>
         </div>
         <div class="card-body">
             <div class="timeline">
@@ -66,8 +66,8 @@
                 <div class="timeline-item">
                     <div class="timeline-date">{{ event.date.strftime('%Y-%m-%d %H:%M') }}</div>
                     <div class="timeline-content">
-                        <h6>{{ event.status }}</h6>
-                        <p>{{ event.description }}</p>
+                        <h6>{{ _(event.status) }}</h6>
+                        <p>{{ _(event.description) }}</p>
                     </div>
                 </div>
                 {% endfor %}
@@ -77,8 +77,8 @@
 
     {% else %}
     <div class="alert alert-info">
-        <h4 class="alert-heading">No Details Available</h4>
-        <p>The details for this order could not be found.</p>
+        <h4 class="alert-heading">{{ _('No Details Available') }}</h4>
+        <p>{{ _('The details for this order could not be found.') }}</p>
     </div>
     {% endif %}
 </div>

@@ -14,19 +14,61 @@
     <div class="card">
         <div class="card-body">
             <form method="POST" action="{{ url_for('create_news', token=token) }}">
-                <div class="mb-3">
-                    <label for="title" class="form-label">Title</label>
-                    <input type="text" class="form-control" id="title" name="title" required>
+                <!-- Ukrainian Version -->
+                <div class="mb-4">
+                    <h3>Ukrainian Version</h3>
+                    <div class="mb-3">
+                        <label for="title_uk" class="form-label">Title (UK)</label>
+                        <input type="text" class="form-control" id="title_uk" name="title_uk" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="content_uk" class="form-label">Short Description (UK)</label>
+                        <textarea class="form-control" id="content_uk" name="content_uk" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="html_content_uk" class="form-label">Full News Content (UK)</label>
+                        <textarea id="html_content_uk" name="html_content_uk"></textarea>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="content" class="form-label">Short Description</label>
-                    <textarea class="form-control" id="content" name="content" rows="3" required></textarea>
+                <!-- English Version -->
+                <div class="mb-4">
+                    <h3>English Version</h3>
+                    <div class="mb-3">
+                        <label for="title_en" class="form-label">Title (EN)</label>
+                        <input type="text" class="form-control" id="title_en" name="title_en" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="content_en" class="form-label">Short Description (EN)</label>
+                        <textarea class="form-control" id="content_en" name="content_en" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="html_content_en" class="form-label">Full News Content (EN)</label>
+                        <textarea id="html_content_en" name="html_content_en"></textarea>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="html_content" class="form-label">Full News Content</label>
-                    <textarea id="html_content" name="html_content"></textarea>
+                <!-- Slovak Version -->
+                <div class="mb-4">
+                    <h3>Slovak Version</h3>
+                    <div class="mb-3">
+                        <label for="title_sk" class="form-label">Title (SK)</label>
+                        <input type="text" class="form-control" id="title_sk" name="title_sk" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="content_sk" class="form-label">Short Description (SK)</label>
+                        <textarea class="form-control" id="content_sk" name="content_sk" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="html_content_sk" class="form-label">Full News Content (SK)</label>
+                        <textarea id="html_content_sk" name="html_content_sk"></textarea>
+                    </div>
                 </div>
 
                 <div class="mb-3 form-check">
@@ -61,19 +103,22 @@
 {% block extra_js %}
 <script src="https://cdn.tiny.cloud/1/90oozl0f4oahclttjqyd22sjftlwfbyi2rpgre9dz2whorm6/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
-tinymce.init({
-    selector: '#html_content',
-    height: 500,
-    plugins: [
-        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-        'insertdatetime', 'media', 'table', 'help', 'wordcount'
-    ],
-    toolbar: 'undo redo | blocks | ' +
-        'bold italic backcolor | alignleft aligncenter ' +
-        'alignright alignjustify | bullist numlist outdent indent | ' +
-        'removeformat | help',
-    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+// Initialize TinyMCE for each language version
+['uk', 'en', 'sk'].forEach(lang => {
+    tinymce.init({
+        selector: `#html_content_${lang}`,
+        height: 500,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | ' +
+            'bold italic backcolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | help',
+        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+    });
 });
 
 function markAsRead(newsId) {

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="text-center mb-4">Article Price Search</h1>
+<h1 class="text-center mb-4">{{ _('Article Price Search') }}</h1>
 {% if session.get('token') %}
-<p class="text-center text-muted">Welcome to the advanced search system! Use the tools below:</p>
+<p class="text-center text-muted">{{ _('Welcome to the advanced search system! Use the tools below:') }}</p>
 {% endif %}
 
 <div class="row g-4">
@@ -11,15 +11,15 @@
     <div class="col-md-6">
         <div class="card h-100">
             <div class="card-body">
-                <h2 class="card-title">Upload Articles File</h2>
+                <h2 class="card-title">{{ _('Upload Articles File') }}</h2>
                 <div class="drop-zone" id="drop-zone">
-                    Drag and drop your file here, or click to select
+                    {{ _('Drag and drop your file here, or click to select') }}
                     <div class="file-name" id="file-name"></div>
                 </div>
                 <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data" id="upload-form">
                     <input type="file" id="file" name="file" accept=".xlsx" class="form-control d-none" required>
                     <button type="submit" class="btn btn-primary w-100 mt-4">
-                        <i class="bi bi-upload"></i> Upload and Search
+                        <i class="bi bi-upload"></i> {{ _('Upload and Search') }}
                     </button>
                 </form>
             </div>
@@ -30,16 +30,16 @@
     <div class="col-md-6">
         <div class="card h-100">
             <div class="card-body">
-                <h2 class="card-title">Search Articles</h2>
+                <h2 class="card-title">{{ _('Search Articles') }}</h2>
                 <form method="POST" action="/{{ session['token'] }}/search#results">
                     <div class="mb-3">
-                        <label for="articles" class="form-label">Enter Articles and Quantities:</label>
+                        <label for="articles" class="form-label">{{ _('Enter Articles and Quantities:') }}</label>
                         <textarea id="articles" name="articles" rows="8" 
-                            placeholder="Example:&#10;0XW105101&#10;03H133201N 2&#10;1231321313" 
+                            placeholder="{{ _('Example:') }}&#10;0XW105101&#10;03H133201N 2&#10;1231321313" 
                             class="form-control" required></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-search"></i> Search
+                        <i class="bi bi-search"></i> {{ _('Search') }}
                     </button>
                 </form>
             </div>
@@ -73,14 +73,14 @@
         if (files.length > 0) {
             fileInput.files = files;
             dropZone.classList.add('loaded');
-            fileNameDisplay.textContent = `File selected: ${files[0].name}`;
+            fileNameDisplay.textContent = `{{ _('File selected:') }} ${files[0].name}`;
         }
     });
 
     fileInput.addEventListener('change', () => {
         if (fileInput.files.length > 0) {
             dropZone.classList.add('loaded');
-            fileNameDisplay.textContent = `File selected: ${fileInput.files[0].name}`;
+            fileNameDisplay.textContent = `{{ _('File selected:') }} ${fileInput.files[0].name}`;
         }
     });
 

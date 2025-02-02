@@ -7,7 +7,7 @@
     <h1 class="mb-4">Admin Dashboard</h1>
 
     <div class="row g-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-body text-center">
                     <i class="bi bi-person-plus fs-1 text-primary mb-3"></i>
@@ -18,7 +18,7 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-body text-center">
                     <i class="bi bi-currency-euro fs-1 text-primary mb-3"></i>
@@ -29,16 +29,26 @@
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="bi bi-cart3 fs-1 text-primary mb-3"></i>
-                    <h5 class="card-title">Orders Management</h5>
-                    <a href="{{ url_for('admin_orders', token=token) }}" class="btn btn-admin w-100 mb-2">View Orders</a>
-                    <a href="{{ url_for('cart', token=token) }}" class="btn btn-admin w-100">Manage Cart</a>
-                </div>
-            </div>
-        </div>
+        <div class="col-md-3">
+			<div class="card">
+				<div class="card-body text-center">
+					<i class="bi bi-cart3 fs-1 text-primary mb-3"></i>
+					<h5 class="card-title">Orders Management</h5>
+					<a href="{{ url_for('admin_orders', token=token) }}" class="btn btn-admin w-100 mb-2">View Orders</a>
+					<a href="{{ url_for('supplier_orders', token=token) }}" class="btn btn-admin w-100">Supplier Orders</a>
+				</div>
+			</div>
+		</div>
+
+        <div class="col-md-3">
+			<div class="card h-100">
+				<div class="card-body text-center">
+					<i class="bi bi-list-check fs-1 text-primary mb-3"></i>
+					<h5 class="card-title">Price Lists</h5>
+					<a href="{{ url_for('manage_price_lists', token=token) }}" class="btn btn-admin w-100">Manage Lists</a>
+				</div>
+			</div>
+		</div>
     </div>
 </div>
 {% endblock %}

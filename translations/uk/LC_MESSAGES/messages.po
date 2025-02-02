@@ -490,3 +490,71 @@ msgstr "Помилка сервера"
 #: templates/errors/403.html:3
 msgid "Access Denied"
 msgstr "Доступ заборонено"
+
+#: app.py:XXX templates/admin_order_details.html:YY
+msgid "new"
+msgstr "Нове"
+
+#: app.py:XXX templates/admin_order_details.html:YY
+msgid "in_review"
+msgstr "На розгляді"
+
+#: app.py:XXX templates/admin_order_details.html:YY
+msgid "pending"
+msgstr "В очікуванні"
+
+#: app.py:XXX templates/admin_order_details.html:YY
+msgid "accepted"
+msgstr "Прийнято"
+
+#: app.py:XXX templates/admin_order_details.html:YY
+msgid "ordered_supplier"
+msgstr "Замовлено у постачальника"
+
+#: app.py:XXX templates/admin_order_details.html:YY
+msgid "invoice_received"
+msgstr "Отримано інвойс"
+
+#: app.py:XXX templates/admin_order_details.html:YY
+msgid "in_transit"
+msgstr "В дорозі"
+
+#: app.py:XXX templates/admin_order_details.html:YY
+msgid "ready_pickup"
+msgstr "Готово до відвантаження"
+
+#: app.py:XXX templates/admin_order_details.html:YY
+msgid "completed"
+msgstr "Виконано"
+
+#: app.py:XXX templates/admin_order_details.html:YY
+msgid "cancelled"
+msgstr "Скасовано"
+
+#: templates/admin_orders.html:YY templates/admin_order_details.html:ZZ
+msgid "Orders Management"
+msgstr "Управління замовленнями"
+
+msgid "Dashboard"
+msgstr "Панель керування"
+
+msgid "Filter by Status"
+msgstr "Фільтр за статусом"
+
+msgid "All Statuses"
+msgstr "Всі статуси"
+
+msgid "Details"
+msgstr "Деталі"
+
+msgid "Actions"
+msgstr "Дії"
+
+msgid "Total"
+msgstr "Сума"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "User"
+msgstr "Користувач"

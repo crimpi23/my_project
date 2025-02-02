@@ -1,17 +1,45 @@
 {% extends "admin_base.html" %}
-
 {% block title %}Orders Management{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{{ url_for('admin_dashboard', token=token) }}">Dashboard</a>
-            </li>
-            <li class="breadcrumb-item active">Orders</li>
-        </ol>
-    </nav>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Orders Management</h1>
+        <div class="btn-group">
+            <button id="filterToggle" class="btn btn-admin">
+                <i class="bi bi-funnel"></i> Filters
+            </button>
+            <button onclick="exportOrders()" class="btn btn-admin">
+                <i class="bi bi-download"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div id="filtersPanel" class="card admin-table mb-4">
+        <div class="card-body">
+            <div class="row mb-3">
+				<div class="col-md-4">
+					<form method="GET" action="{{ url_for('admin_orders', token=token) }}">
+						<label for="status" class="form-label">Filter by Status:</label>
+						<select name="status" class="form-select" onchange="this.form.submit()">
+							<option value="">All Statuses</option>
+							<option value="new" {% if current_status == 'new' %}selected{% endif %}>new</option>
+							<option value="in_review" {% if current_status == 'in_review' %}selected{% endif %}>in_review</option>
+							<option value="pending" {% if current_status == 'pending' %}selected{% endif %}>pending</option>
+							<option value="accepted" {% if current_status == 'accepted' %}selected{% endif %}>accepted</option>
+							<option value="ordered_supplier" {% if current_status == 'ordered_supplier' %}selected{% endif %}>ordered_supplier</option>
+							<option value="invoice_received" {% if current_status == 'invoice_received' %}selected{% endif %}>invoice_received</option>
+							<option value="in_transit" {% if current_status == 'in_transit' %}selected{% endif %}>in_transit</option>
+							<option value="ready_pickup" {% if current_status == 'ready_pickup' %}selected{% endif %}>ready_pickup</option>
+							<option value="completed" {% if current_status == 'completed' %}selected{% endif %}>completed</option>
+							<option value="cancelled" {% if current_status == 'cancelled' %}selected{% endif %}>cancelled</option>
+						</select>
+					</form>
+				</div>
+			</div>
+        </div>
+    </div>
 
     <div class="table-responsive">
         <table class="table">
@@ -33,7 +61,7 @@
                     <td>{{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>€{{ "%.2f"|format(order.total_price) }}</td>
                     <td>
-                        <span class="badge bg-{{ order.status|status_color }}">
+                        <span class="badge bg-{{ order.status|status_color }}" data-status="{{ order.status }}">
                             {{ order.status }}
                         </span>
                     </td>
@@ -68,9 +96,26 @@
 
 {% block extra_js %}
 <script>
-document.getElementById('filterToggle').addEventListener('click', function() {
-    const panel = document.getElementById('filtersPanel');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+document.addEventListener('DOMContentLoaded', function() {
+    const filterToggle = document.getElementById('filterToggle');
+    const filtersPanel = document.getElementById('filtersPanel');
+    const statusFilter = document.getElementById('statusFilter');
+
+    filterToggle.addEventListener('click', function() {
+        filtersPanel.classList.toggle('d-none');
+    });
+
+    statusFilter.addEventListener('change', function() {
+        const selectedStatus = this.value;
+        const tableRows = document.querySelectorAll('table tbody tr');
+
+        tableRows.forEach(row => {
+            const statusCell = row.querySelector('td:nth-child(5) .badge');
+            const rowStatus = statusCell.getAttribute('data-status');
+            
+            row.style.display = (selectedStatus === '' || rowStatus === selectedStatus) ? '' : 'none';
+        });
+    });
 });
 
 function exportOrders() {
@@ -79,3 +124,4 @@ function exportOrders() {
 }
 </script>
 {% endblock %}
+

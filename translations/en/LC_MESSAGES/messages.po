@@ -437,3 +437,56 @@ msgstr "Server Error"
 #: templates/errors/403.html:3
 msgid "Access Denied"
 msgstr "Access Denied"
+
+#: app.py:XXX templates/admin_order_details.html:YY templates/admin_orders.html:ZZ
+msgid "order_statuses"
+msgstr ""
+
+msgid "new"
+msgstr "New"
+msgid "in_review"
+msgstr "In Review"
+msgid "pending"
+msgstr "Pending"
+msgid "accepted"
+msgstr "Accepted"
+msgid "ordered_supplier"
+msgstr "Ordered from Supplier"
+msgid "invoice_received"
+msgstr "Invoice Received"
+msgid "in_transit"
+msgstr "In Transit"
+msgid "ready_pickup"
+msgstr "Ready for Pickup"
+msgid "completed"
+msgstr "Completed"
+msgid "cancelled"
+msgstr "Cancelled"
+
+# en/LC_MESSAGES/messages.po
+msgid "Orders Management"
+msgstr "Orders Management"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Filter by Status"
+msgstr "Filter by Status"
+
+msgid "All Statuses"
+msgstr "All Statuses"
+
+msgid "Details"
+msgstr "Details"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "User"
+msgstr "User"

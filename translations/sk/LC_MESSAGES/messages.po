@@ -417,3 +417,56 @@ msgstr "Chyba servera"
 #: templates/errors/403.html:3
 msgid "Access Denied"
 msgstr "Prístup zamietnutý"
+
+#: app.py:XXX templates/admin_order_details.html:YY templates/admin_orders.html:ZZ
+msgid "order_statuses"
+msgstr ""
+
+msgid "new"
+msgstr "Nové"
+msgid "in_review"
+msgstr "Na kontrole"
+msgid "pending"
+msgstr "Čakajúce"
+msgid "accepted"
+msgstr "Prijaté"
+msgid "ordered_supplier"
+msgstr "Objednané od dodávateľa"
+msgid "invoice_received"
+msgstr "Faktúra prijatá"
+msgid "in_transit"
+msgstr "V preprave"
+msgid "ready_pickup"
+msgstr "Pripravené na vyzdvihnutie"
+msgid "completed"
+msgstr "Dokončené"
+msgid "cancelled"
+msgstr "Zrušené"
+
+# sk/LC_MESSAGES/messages.po
+msgid "Orders Management"
+msgstr "Správa objednávok"
+
+msgid "Dashboard"
+msgstr "Nástenka"
+
+msgid "Filter by Status"
+msgstr "Filter podľa stavu"
+
+msgid "All Statuses"
+msgstr "Všetky stavy"
+
+msgid "Details"
+msgstr "Podrobnosti"
+
+msgid "Actions"
+msgstr "Akcie"
+
+msgid "Total"
+msgstr "Celkom"
+
+msgid "Date"
+msgstr "Dátum"
+
+msgid "User"
+msgstr "Používateľ"

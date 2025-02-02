@@ -105,6 +105,12 @@
                         <i class="bi bi-cart3"></i> Orders
                     </a>
                 </li>
+				<li class="nav-item">
+					<a class="nav-link {% if request.endpoint == 'supplier_orders' %}active{% endif %}" 
+					   href="{{ url_for('supplier_orders', token=token) }}">
+						<i class="bi bi-truck"></i> Supplier Orders
+					</a>
+				</li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'upload_price_list' %}active{% endif %}" href="{{ url_for('upload_price_list', token=token) }}">
                         <i class="bi bi-upload"></i> Price Lists

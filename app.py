@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, send_file, get_flashed_messages
+import xlsxwriter
+from datetime import datetime
+from io import BytesIO
+from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, send_file, get_flashed_messages, g
 from decimal import Decimal
 import time
 import os
 from flask_babel import Babel
-from flask import g
-from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, send_file, get_flashed_messages, g
 import psycopg2
 import psycopg2.extras
 import logging
@@ -22,6 +23,10 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import logging
 from flask_babel import gettext as _
+from openpyxl import Workbook
+
+
+
 
 
 
@@ -48,6 +53,7 @@ def get_locale():
 
 babel.init_app(app, locale_selector=get_locale)
 
+
 # Make LANGUAGES available to all templates
 @app.context_processor
 def inject_languages():
@@ -65,15 +71,20 @@ def before_request():
 # Додаємо фільтр для кольорів статусу замовлення
 @app.template_filter('status_color')
 def status_color(status):
-    # Мапінг статусів до кольорів Bootstrap
     colors = {
-        'new': 'primary',
-        'pending': 'warning',
-        'accepted': 'success',
-        'rejected': 'danger',
-        'cancelled': 'secondary'
+        'new': 'primary',           # Нове замовлення
+        'in_review': 'info',        # На розгляді менеджера
+        'pending': 'warning',       # В очікуванні
+        'accepted': 'success',      # Прийнято
+        'cancelled': 'secondary',   # Скасовано
+        'ordered_supplier': 'info',      # Замовлено у постачальника
+        'invoice_received': 'primary',   # Отримано інвойс
+        'in_transit': 'warning',         # В дорозі
+        'ready_pickup': 'success',       # Готово до відвантаження
+        'completed': 'success'           # Повністю виконано
     }
     return colors.get(status.lower(), 'secondary')
+
 
 # Секретний ключ для сесій
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
@@ -1379,7 +1390,7 @@ def place_order(token):
             INSERT INTO orders (user_id, total_price, order_date, status)
             VALUES (%s, %s, NOW(), %s)
             RETURNING id
-        """, (user_id, total_price, "Pending"))
+        """, (user_id, total_price, "pending"))
         order_id = cursor.fetchone()['id']
         logging.info(f"Order created with id={order_id} for user_id={user_id}")
 
@@ -1592,26 +1603,27 @@ def order_details(token, order_id):
         return redirect(url_for('orders', token=token))
 
 
-
 @app.route('/<token>/admin/orders/<int:order_id>/update_status', methods=['POST'])
 @requires_token_and_roles('admin')
 def update_order_item_status(token, order_id):
-    """
-    Update the status of specific order items.
-    """
     try:
-        data = request.json  # Очікуємо JSON-дані
+        data = request.json
         if not data:
             logging.warning("No JSON data received.")
             return jsonify({"error": "Invalid JSON data."}), 400
-        
-        user_id = session.get('user_id')  # ID адміністратора
+
+        user_id = session.get('user_id')
         conn = get_db_connection()
         cursor = conn.cursor()
 
         logging.info(f"Received data for order {order_id}: {data}")
 
-        # Перевіряємо наявність елементів
+        valid_statuses = {
+            'new', 'in_review', 'pending', 'accepted',
+            'ordered_supplier', 'invoice_received', 'in_transit',
+            'ready_pickup', 'completed', 'cancelled'
+        }
+
         if not data.get('items'):
             logging.warning("No items found in request data.")
             return jsonify({"error": "No items provided."}), 400
@@ -1621,12 +1633,14 @@ def update_order_item_status(token, order_id):
             new_status = item.get('status')
             comment = item.get('comment', None)
 
-            # Перевіряємо обов'язкові поля
             if not detail_id or not new_status:
                 logging.warning(f"Missing required fields for item: {item}")
                 continue
 
-            # Отримуємо поточний статус
+            if new_status not in valid_statuses:
+                logging.warning(f"Invalid status provided: {new_status}")
+                continue
+
             cursor.execute("SELECT status FROM order_details WHERE id = %s;", (detail_id,))
             current_status = cursor.fetchone()
 
@@ -1634,37 +1648,57 @@ def update_order_item_status(token, order_id):
                 current_status = current_status[0]
                 logging.info(f"Updating item {detail_id}: {current_status} -> {new_status}")
 
-                # Оновлюємо статус елемента
                 cursor.execute("""
                     UPDATE order_details
                     SET status = %s, comment = %s
                     WHERE id = %s;
                 """, (new_status, comment, detail_id))
 
-                # Логування змін
                 cursor.execute("""
                     INSERT INTO order_changes (order_id, order_detail_id, field_changed, old_value, new_value, comment, changed_by)
                     VALUES (%s, %s, 'status', %s, %s, %s, %s);
                 """, (order_id, detail_id, current_status, new_status, comment, user_id))
 
         conn.commit()
-        logging.info(f"Item statuses for order {order_id} updated successfully.")
 
         # Оновлення статусу замовлення
         cursor.execute("""
-            SELECT COUNT(*) FILTER (WHERE status = 'new') AS new_count,
-                   COUNT(*) FILTER (WHERE status = 'accepted') AS accepted_count,
-                   COUNT(*) FILTER (WHERE status = 'rejected') AS rejected_count
+            SELECT 
+                COUNT(*) FILTER (WHERE status = 'new') AS new_count,
+                COUNT(*) FILTER (WHERE status = 'in_review') AS in_review_count,
+                COUNT(*) FILTER (WHERE status = 'pending') AS pending_count,
+                COUNT(*) FILTER (WHERE status = 'accepted') AS accepted_count,
+                COUNT(*) FILTER (WHERE status = 'ordered_supplier') AS ordered_count,
+                COUNT(*) FILTER (WHERE status = 'invoice_received') AS invoice_count,
+                COUNT(*) FILTER (WHERE status = 'in_transit') AS transit_count,
+                COUNT(*) FILTER (WHERE status = 'ready_pickup') AS ready_count,
+                COUNT(*) FILTER (WHERE status = 'completed') AS completed_count,
+                COUNT(*) AS total_count
             FROM order_details
             WHERE order_id = %s;
         """, (order_id,))
         counts = cursor.fetchone()
 
         if counts:
-            if counts[0] == 0 and counts[1] == 0:
-                new_order_status = 'cancelled'
-            elif counts[1] > 0:
+            total_items = counts[9]  # total_count
+
+            # Визначення загального статусу замовлення
+            if counts[8] == total_items:  # Всі completed
+                new_order_status = 'completed'
+            elif counts[7] > 0:  # Є ready_pickup
+                new_order_status = 'ready_pickup'
+            elif counts[6] > 0:  # Є in_transit
+                new_order_status = 'in_transit'
+            elif counts[5] > 0:  # Є invoice_received
+                new_order_status = 'invoice_received'
+            elif counts[4] > 0:  # Є ordered_supplier
+                new_order_status = 'ordered_supplier'
+            elif counts[3] > 0:  # Є accepted
                 new_order_status = 'accepted'
+            elif counts[2] > 0:  # Є pending
+                new_order_status = 'pending'
+            elif counts[1] > 0:  # Є in_review
+                new_order_status = 'in_review'
             else:
                 new_order_status = 'new'
 
@@ -1673,6 +1707,8 @@ def update_order_item_status(token, order_id):
             logging.info(f"Order {order_id} status updated to {new_order_status}.")
 
         flash("Order and item statuses updated successfully.", "success")
+        return jsonify({"message": "Statuses updated successfully."})
+
     except Exception as e:
         logging.error(f"Error in updating order items for order {order_id}: {e}")
         return jsonify({"error": "An error occurred while processing the request."}), 500
@@ -1681,34 +1717,23 @@ def update_order_item_status(token, order_id):
             conn.close()
             logging.info(f"Database connection closed for order {order_id}.")
 
-    return jsonify({"message": "Statuses updated successfully."})
-
 
 @app.route('/<token>/admin/orders/<int:order_id>', methods=['GET'])
 @requires_token_and_roles('admin')
 def admin_order_details(token, order_id):
-    """
-    Відображення деталей конкретного замовлення для адміна.
-    """
-    logging.info(f"Fetching details for order {order_id}")
-
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     try:
-        # Отримуємо основну інформацію про замовлення
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # Отримуємо інформацію про замовлення та користувача
         cursor.execute("""
             SELECT o.id, o.user_id, o.order_date, o.total_price, o.status,
-                   u.username
+                   u.username, u.email
             FROM orders o
             JOIN users u ON o.user_id = u.id
             WHERE o.id = %s
         """, (order_id,))
         order = cursor.fetchone()
-
-        if not order:
-            logging.warning(f"Order {order_id} not found")
-            flash("Order not found", "error")
-            return redirect(url_for('admin_orders', token=token))
 
         # Отримуємо деталі замовлення
         cursor.execute("""
@@ -1716,10 +1741,9 @@ def admin_order_details(token, order_id):
                    total_price, status, comment
             FROM order_details
             WHERE order_id = %s
+            ORDER BY id
         """, (order_id,))
         order_items = cursor.fetchall()
-
-        logging.info(f"Found {len(order_items)} items for order {order_id}")
 
         return render_template(
             'admin_order_details.html',
@@ -1742,15 +1766,16 @@ def admin_order_details(token, order_id):
 @requires_token_and_roles('admin')
 def admin_orders(token):
     """
-    Відображення всіх замовлень для адміністратора.
+    Відображення всіх замовлень для адміністратора з фільтрацією по статусу.
     """
     logging.info(f"Starting admin_orders route with token: {token}")
+    status_filter = request.args.get('status', '')
+    logging.debug(f"Status filter: {status_filter}")
 
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     try:
-        logging.debug("Executing orders query...")
-        cursor.execute("""
+        base_query = """
             SELECT 
                 o.id, 
                 o.order_date, 
@@ -1759,13 +1784,28 @@ def admin_orders(token):
                 u.username
             FROM orders o
             JOIN users u ON o.user_id = u.id
-            ORDER BY o.order_date DESC;
-        """)
+        """
+
+        params = []
+        if status_filter:
+            base_query += " WHERE o.status = %s"
+            params.append(status_filter)
+
+        base_query += " ORDER BY o.order_date DESC"
+
+        logging.debug(f"Executing query: {base_query} with params: {params}")
+        cursor.execute(base_query, params)
         orders = cursor.fetchall()
+
         logging.info(f"Successfully fetched {len(orders)} orders")
         logging.debug(f"First order sample: {orders[0] if orders else 'No orders'}")
 
-        return render_template('admin_orders.html', orders=orders, token=token)
+        return render_template(
+            'admin_orders.html',
+            orders=orders,
+            token=token,
+            current_status=status_filter
+        )
 
     except Exception as e:
         logging.error(f"Error in admin_orders: {str(e)}", exc_info=True)
@@ -1776,7 +1816,6 @@ def admin_orders(token):
         cursor.close()
         conn.close()
         logging.info("Database connection closed in admin_orders")
-
 
 # Ролі користувачеві
 @app.route('/<token>/admin/assign_roles', methods=['GET', 'POST'])
@@ -1853,6 +1892,82 @@ def detect_delimiter(file_content):
             counts[delimiter] += line.count(delimiter)
 
     return max(counts, key=counts.get)
+
+
+@app.route('/<token>/admin/supplier-mapping', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def supplier_mapping(token):
+    if request.method == 'POST':
+        price_list_id = request.form.get('price_list_id')
+        supplier_id = request.form.get('supplier_id')
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE price_lists 
+                SET supplier_id = %s 
+                WHERE id = %s
+            """, (supplier_id, price_list_id))
+            conn.commit()
+
+        flash("Mapping updated successfully", "success")
+
+    return redirect(url_for('manage_price_lists', token=token))
+
+#
+@app.route('/<token>/admin/manage-price-lists', methods=['GET'])
+@requires_token_and_roles('admin')
+def manage_price_lists(token):
+    with get_db_connection() as conn:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        cursor.execute("""
+            SELECT 
+                pl.id,
+                pl.table_name,
+                s.name as supplier_name,
+                s.delivery_time,
+                pl.created_at,
+                s.id as supplier_id
+            FROM price_lists pl
+            LEFT JOIN suppliers s ON pl.supplier_id = s.id
+            ORDER BY pl.created_at DESC
+        """)
+        price_lists = cursor.fetchall()
+
+        # Отримуємо список всіх постачальників для випадаючого списку
+        cursor.execute("SELECT id, name FROM suppliers ORDER BY name")
+        suppliers = cursor.fetchall()
+
+    return render_template('manage_price_lists.html',
+                           price_lists=price_lists,
+                           suppliers=suppliers,
+                           token=token)
+
+
+@app.route('/<token>/admin/update-price-list-supplier', methods=['POST'])
+@requires_token_and_roles('admin')
+def update_price_list_supplier(token):
+    try:
+        price_list_id = request.form.get('price_list_id')
+        supplier_id = request.form.get('supplier_id')
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE price_lists
+                SET supplier_id = %s
+                WHERE id = %s
+            """, (supplier_id, price_list_id))
+            conn.commit()
+
+        flash("Постачальника успішно оновлено", "success")
+
+    except Exception as e:
+        logging.error(f"Error updating supplier: {e}")
+        flash("Помилка при оновленні постачальника", "error")
+
+    return redirect(url_for('manage_price_lists', token=token))
 
 
 # Завантаження прайсу в Адмінці
@@ -1994,6 +2109,48 @@ def upload_price_list(token):
             if 'conn' in locals() and conn:
                 conn.close()
                 logging.info("Database connection closed.")
+
+# роут для керування постачальниками
+@app.route('/<token>/admin/manage-suppliers', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def manage_suppliers(token):
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name')
+            delivery_time = request.form.get('delivery_time')
+
+            logging.info(f"Creating new supplier: {name}, delivery time: {delivery_time} days")
+
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO suppliers (name, delivery_time)
+                    VALUES (%s, %s)
+                    RETURNING id
+                """, (name, delivery_time))
+                supplier_id = cursor.fetchone()[0]
+                conn.commit()
+
+                logging.info(f"Created supplier with ID: {supplier_id}")
+                flash(f"Постачальника {name} успішно створено", "success")
+                return redirect(url_for('manage_suppliers', token=token))
+
+        except Exception as e:
+            logging.error(f"Error creating supplier: {e}")
+            flash("Помилка при створенні постачальника", "error")
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("""
+            SELECT id, name, delivery_time, created_at
+            FROM suppliers 
+            ORDER BY name
+        """)
+        suppliers = cursor.fetchall()
+
+    return render_template('manage_suppliers.html',
+                           suppliers=suppliers,
+                           token=token)
 
 
 # маршрут для перегляду статистики в адмін-панелі
@@ -2560,6 +2717,316 @@ def create_news(token):
     return render_template('create_news.html', token=token)
 
 
+@app.route('/<token>/admin/supplier-orders', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def supplier_orders(token):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # Отримуємо список постачальників
+        cursor.execute("SELECT id, name FROM suppliers ORDER BY name")
+        suppliers = cursor.fetchall()
+
+        # Обробка вибору постачальника
+        selected_supplier_id = None
+        if request.method == 'POST':
+            selected_supplier_id = request.form.get('supplier_id')
+
+            # Отримуємо замовлення для вибраного постачальника
+            cursor.execute("""
+                SELECT od.order_id, od.article, od.quantity, od.price, od.status,
+                       u.username as customer_name, pl.table_name as price_list
+                FROM order_details od
+                JOIN orders o ON od.order_id = o.id
+                JOIN users u ON o.user_id = u.id
+                JOIN price_lists pl ON od.table_name = pl.table_name
+                WHERE od.status = 'accepted'
+                AND pl.supplier_id = %s
+                ORDER BY od.order_id
+            """, (selected_supplier_id,))
+        else:
+            # Показуємо всі accepted замовлення
+            cursor.execute("""
+                SELECT od.order_id, od.article, od.quantity, od.price, od.status,
+                       u.username as customer_name, pl.table_name as price_list
+                FROM order_details od
+                JOIN orders o ON od.order_id = o.id
+                JOIN users u ON o.user_id = u.id
+                JOIN price_lists pl ON od.table_name = pl.table_name
+                WHERE od.status = 'accepted'
+                ORDER BY od.order_id
+            """)
+
+        orders = cursor.fetchall()
+
+        return render_template('supplier_orders.html',
+                               token=token,
+                               suppliers=suppliers,
+                               orders=orders,
+                               selected_supplier_id=selected_supplier_id)
+
+    except Exception as e:
+        logging.error(f"Помилка при отриманні замовлень постачальників: {e}")
+        flash("Error loading supplier orders", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
+
+@app.route('/<token>/admin/export-supplier-orders', methods=['POST'])
+@requires_token_and_roles('admin')
+def export_supplier_orders(token):
+    logging.info("Починаємо експорт замовлень постачальника")
+    try:
+        supplier_id = request.form.get('supplier_id')
+        logging.debug(f"Отримано supplier_id: {supplier_id}")
+
+        if not supplier_id:
+            logging.warning("Постачальника не вибрано")
+            flash("Постачальника не вибрано", "error")
+            return redirect(url_for('supplier_orders', token=token))
+
+        output = BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet()
+
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        logging.debug("Отримуємо дані постачальника")
+        cursor.execute("SELECT name FROM suppliers WHERE id = %s", (supplier_id,))
+        supplier_name = cursor.fetchone()['name']
+        logging.info(f"Формуємо експорт для постачальника: {supplier_name}")
+
+        logging.debug("Виконуємо запит для отримання замовлень")
+        cursor.execute("""
+            SELECT od.order_id, od.article, od.quantity, od.price,
+                   u.username as customer_name
+            FROM order_details od
+            JOIN orders o ON od.order_id = o.id
+            JOIN users u ON o.user_id = u.id
+            JOIN price_lists pl ON od.table_name = pl.table_name
+            WHERE od.status = 'accepted'
+            AND pl.supplier_id = %s
+            ORDER BY od.article
+        """, (supplier_id,))
+
+        orders = cursor.fetchall()
+        logging.info(f"Знайдено {len(orders)} позицій для експорту")
+
+        logging.debug("Створюємо Excel файл")
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet()
+
+        headers = ['Order ID', 'Article', 'Quantity', 'Price', 'Customer']
+        for col, header in enumerate(headers):
+            worksheet.write(0, col, header)
+
+        for row, order in enumerate(orders, 1):
+            worksheet.write(row, 0, order['order_id'])
+            worksheet.write(row, 1, order['article'])
+            worksheet.write(row, 2, order['quantity'])
+            worksheet.write(row, 3, float(order['price']))
+            worksheet.write(row, 4, order['customer_name'])
+
+        workbook.close()
+        output.seek(0)
+
+        filename = f'supplier_orders_{supplier_name}_{datetime.now().strftime("%Y%m%d")}.xlsx'
+        logging.info(f"Файл {filename} успішно створено")
+
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+
+    except Exception as e:
+        logging.error(f"Помилка при експорті замовлень постачальника: {e}", exc_info=True)
+        flash("Помилка експорту замовлень", "error")
+        return redirect(url_for('supplier_orders', token=token))
+
+
+@app.route('/<token>/admin/orders/<int:order_id>/accept-all', methods=['POST'])
+@requires_token_and_roles('admin')
+def accept_all_items(token, order_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Оновлюємо тільки статус, зберігаючи існуючі коментарі
+        cursor.execute("""
+            UPDATE order_details 
+            SET status = 'accepted'
+            WHERE order_id = %s
+        """, (order_id,))
+
+        # Оновлюємо статус замовлення
+        cursor.execute("""
+            UPDATE orders 
+            SET status = 'accepted' 
+            WHERE id = %s
+        """, (order_id,))
+
+        conn.commit()
+        flash("All items accepted successfully", "success")
+
+    except Exception as e:
+        logging.error(f"Error accepting all items: {e}")
+        flash("Error accepting items", "error")
+
+    return redirect(url_for('admin_order_details', token=token, order_id=order_id))
+
+
+@app.route('/<token>/admin/export-orders', methods=['GET'])
+@requires_token_and_roles('admin')
+def export_orders(token):
+    try:
+        wb = Workbook()
+
+        # Create sheets for each supplier
+        mercedes_sheet = wb.active
+        mercedes_sheet.title = "Mercedes"
+        bmw_sheet = wb.create_sheet("BMW")
+        vag_sheet = wb.create_sheet("VAG")
+
+        # Set headers for each sheet
+        headers = ['Article', 'Total Quantity', 'Price List']
+        for sheet in [mercedes_sheet, bmw_sheet, vag_sheet]:
+            sheet.append(headers)
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            query = """
+                SELECT 
+                    od.article,
+                    SUM(od.quantity) as total_quantity,
+                    od.table_name,
+                    CASE 
+                        WHEN od.table_name LIKE '%mercedes%' THEN 'Mercedes'
+                        WHEN od.table_name LIKE '%bmw%' THEN 'BMW'
+                        WHEN od.table_name LIKE '%vag%' THEN 'VAG'
+                        ELSE 'Unknown'
+                    END as supplier
+                FROM order_details od
+                GROUP BY od.article, od.table_name
+                ORDER BY od.article;
+            """
+
+            cursor.execute(query)
+            results = cursor.fetchall()
+
+            for row in results:
+                data = [row['article'], row['total_quantity'], row['table_name']]
+                if 'mercedes' in row['table_name'].lower():
+                    mercedes_sheet.append(data)
+                elif 'bmw' in row['table_name'].lower():
+                    bmw_sheet.append(data)
+                elif 'vag' in row['table_name'].lower():
+                    vag_sheet.append(data)
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name='supplier_orders.xlsx'
+        )
+
+    except Exception as e:
+        logging.error(f"Error exporting orders: {e}")
+        flash("Error exporting orders", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+
+@app.route('/api/update-supplier-statuses', methods=['POST'])
+@requires_token_and_roles('admin')
+def update_supplier_statuses():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+
+        file = request.files['file']
+        df = pd.read_excel(file)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        for _, row in df.iterrows():
+            cursor.execute("""
+                UPDATE order_details 
+                SET status = %s 
+                WHERE article = %s AND order_id = %s
+            """, (row['status'], row['article'], row['order_id']))
+
+        conn.commit()
+        return jsonify({'success': True})
+
+    except Exception as e:
+        logging.error(f"Error updating statuses: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route('/api/process-supplier-invoice', methods=['POST'])
+@requires_token_and_roles('admin')
+def process_supplier_invoice():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+
+        file = request.files['file']
+        df = pd.read_excel(file)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Створюємо новий інвойс
+        cursor.execute("""
+            INSERT INTO supplier_invoices (invoice_number, supplier_id, status)
+            VALUES (%s, %s, 'received')
+            RETURNING id
+        """, (df['invoice_number'].iloc[0], df['supplier_id'].iloc[0]))
+
+        invoice_id = cursor.fetchone()[0]
+
+        # Додаємо зв'язки замовлень з інвойсом
+        for _, row in df.iterrows():
+            cursor.execute("""
+                INSERT INTO order_invoice_links 
+                (order_id, invoice_id, article, quantity, status)
+                VALUES (%s, %s, %s, %s, 'in_transit')
+            """, (row['order_id'], invoice_id, row['article'], row['quantity']))
+
+            # Оновлюємо статус замовлення
+            cursor.execute("""
+                UPDATE order_details 
+                SET status = 'in_transit' 
+                WHERE article = %s AND order_id = %s
+            """, (row['article'], row['order_id']))
+
+        conn.commit()
+        return jsonify({'success': True})
+
+    except Exception as e:
+        logging.error(f"Error processing invoice: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @app.route('/<token>/news')
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def user_news(token):
@@ -2831,3 +3298,4 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"Starting server on port {port}...")
     app.run(host='0.0.0.0', port=port)
+

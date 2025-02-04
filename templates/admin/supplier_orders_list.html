@@ -1,0 +1,52 @@
+{% extends "base/admin_base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2>Supplier Orders</h2>
+            <a href="/{{ token }}/admin/supplier-orders/new" class="btn btn-primary">
+                <i class="bi bi-plus"></i> New Order
+            </a>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order Number</th>
+                        <th>Supplier</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                        <th>Items</th>
+                        <th>Total Quantity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.order_number }}</td>
+                        <td>{{ order.supplier_name }}</td>
+                        <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if order.status == 'completed' else 'warning' }}">
+                                {{ order.status }}
+                            </span>
+                        </td>
+                        <td>{{ order.items_count }}</td>
+                        <td>{{ order.total_quantity }}</td>
+                        <td>
+                            <a href="/{{ token }}/admin/supplier-orders/{{ order.id }}" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="/{{ token }}/admin/supplier-orders/{{ order.id }}/export" class="btn btn-sm btn-success">
+                                <i class="bi bi-file-earmark-excel"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

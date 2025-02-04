@@ -1,0 +1,156 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Price Comparison Results{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Price Comparison Results</h1>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print
+            </button>
+            <form method="POST" action="{{ url_for('compare_prices', token=token) }}" class="d-inline">
+                <input type="hidden" name="export_excel" value="true">
+                <button type="submit" class="btn btn-admin">
+                    <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Better in First Table -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up"></i> Better in First Table
+                        <span class="badge bg-light text-success float-end">
+                            {{ better_in_first|length }}
+                        </span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if better_in_first %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Article</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in better_in_first %}
+                                <tr>
+                                    <td>{{ item.article }}</td>
+                                    <td>€{{ "%.2f"|format(item.price) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center my-4">No better prices found in first table</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Better in Second Table -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-down"></i> Better in Second Table
+                        <span class="badge bg-light text-danger float-end">
+                            {{ better_in_second|length }}
+                        </span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if better_in_second %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Article</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in better_in_second %}
+                                <tr>
+                                    <td>{{ item.article }}</td>
+                                    <td>€{{ "%.2f"|format(item.price) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center my-4">No better prices found in second table</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Same Prices -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-equals"></i> Same Prices
+                        <span class="badge bg-light text-primary float-end">
+                            {{ same_prices|length }}
+                        </span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if same_prices %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Article</th>
+                                    <th>Price</th>
+                                    <th>Tables</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in same_prices %}
+                                <tr>
+                                    <td>{{ item.article }}</td>
+                                    <td>€{{ "%.2f"|format(item.price) }}</td>
+                                    <td><small>{{ item.tables }}</small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center my-4">No matching prices found</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    @media print {
+        .btn, nav {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Create New User{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Create New User</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('create_user', token=token) }}" id="createUserForm">
+                        <div class="row g-3">
+                            <!-- Username Field -->
+                            <div class="col-md-6">
+                                <label class="form-label">Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-person"></i>
+                                    </span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           name="username" 
+                                           required 
+                                           pattern="[a-zA-Z0-9_]{3,}"
+                                           title="Username must be at least 3 characters long and contain only letters, numbers, and underscores">
+                                </div>
+                            </div>
+
+                            <!-- Email Field -->
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-envelope"></i>
+                                    </span>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           name="email" 
+                                           required>
+                                </div>
+                            </div>
+
+                            <!-- Password Field -->
+                            <div class="col-md-6">
+                                <label class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-key"></i>
+                                    </span>
+                                    <input type="password" 
+                                           class="form-control" 
+                                           name="password" 
+                                           id="password"
+                                           required 
+                                           minlength="8">
+                                    <button class="btn btn-outline-secondary" 
+                                            type="button"
+                                            onclick="togglePassword()">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">Password must be at least 8 characters long</div>
+                            </div>
+
+                            <!-- Role Selection -->
+                            <div class="col-md-6">
+                                <label class="form-label">Role</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-shield"></i>
+                                    </span>
+                                    <select class="form-select" name="role_id" required>
+                                        {% for role in roles %}
+                                        <option value="{{ role.id }}">{{ role.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-admin">
+                                        <i class="bi bi-person-plus"></i> Create User
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Password Requirements Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Password Requirements</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle text-success"></i> Minimum 8 characters
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle text-success"></i> At least one uppercase letter
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle text-success"></i> At least one number
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const icon = event.currentTarget.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+}
+
+// Form validation
+document.getElementById('createUserForm').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    if (!/[A-Z]/.test(password)) {
+        e.preventDefault();
+        alert('Password must contain at least one uppercase letter');
+    }
+    if (!/[0-9]/.test(password)) {
+        e.preventDefault();
+        alert('Password must contain at least one number');
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.input-group-text {
+    background-color: transparent;
+}
+.form-text {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+.list-group-item i {
+    margin-right: 10px;
+}
+</style>
+{% endblock %}

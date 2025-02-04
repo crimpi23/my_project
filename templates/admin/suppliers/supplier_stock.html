@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Склад постачальника</title>
+</head>
+<body>
+    <h1>Склад постачальника</h1>
+    <form action="{{ url_for('supplier_stock', token=token) }}" method="post">
+        <textarea name="buffer_data" rows="20" cols="100" placeholder="Вставте дані з буфера тут..."></textarea><br>
+        <input type="submit" value="Зберегти">
+    </form>
+</body>
+</html>

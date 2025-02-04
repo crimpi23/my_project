@@ -1,0 +1,63 @@
+{% extends "base/admin_base.html" %}
+
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>Create Supplier Order</h2>
+        </div>
+        <div class="card-body">
+            <form action="/{{ token }}/admin/supplier-orders/create" method="POST">
+                <div class="mb-3">
+                    <label for="supplier" class="form-label">Select Supplier</label>
+                    <select class="form-select" id="supplier" name="supplier_id" required>
+                        <option value="">Choose supplier...</option>
+                        {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <h4>Price Lists</h4>
+                    <div id="priceLists">
+                        <!-- Price lists will be loaded here dynamically -->
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Create Order</button>
+                <a href="/{{ token }}/admin/supplier-orders" class="btn btn-secondary">Back</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('supplier').addEventListener('change', function() {
+    const supplierId = this.value;
+    const token = '{{ token }}';
+    
+    if (supplierId) {
+        fetch(`/${token}/api/price-lists/${supplierId}`)
+            .then(response => response.json())
+            .then(data => {
+                const priceListsDiv = document.getElementById('priceLists');
+                if (data.price_lists && data.price_lists.length > 0) {
+                    priceListsDiv.innerHTML = data.price_lists.map(pl => 
+                        `<div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="price_lists[]" value="${pl.id}">
+                            <label class="form-check-label">${pl.table_name}</label>
+                        </div>`
+                    ).join('');
+                } else {
+                    priceListsDiv.innerHTML = '<p>No price lists available for this supplier</p>';
+                }
+            });
+    } else {
+        document.getElementById('priceLists').innerHTML = '';
+    }
+});
+</script>
+
+{% endblock %}

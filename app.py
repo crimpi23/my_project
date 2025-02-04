@@ -795,7 +795,7 @@ def search_articles(token):
             # Якщо є артикули для вибору таблиць
             if multiple_prices:
                 return render_template(
-                    'search_results.html',
+                    'user/search/search_results.html',
                     grouped_results=multiple_prices,
                     missing_articles=missing_articles,
                     quantities=quantities,
@@ -881,7 +881,7 @@ def search_results(token):
                 results.setdefault(article, []).append(option)
 
         return render_template(
-            'search_results.html',
+            'user/search/search_results.html',
             grouped_results=results,
             token=token
         )
@@ -1188,7 +1188,7 @@ def add_to_cart(token):
 
     # Перенаправлення на сторінку результатів пошуку
     return render_template(
-        'search_results.html',
+        'user/search/search_results.html',
         grouped_results=session.get('grouped_results', {}),
         quantities=session.get('quantities', {}),
         missing_articles=session.get('missing_articles', []),
@@ -1799,7 +1799,7 @@ def admin_orders(token):
         logging.debug(f"First order sample: {orders[0] if orders else 'No orders'}")
 
         return render_template(
-            'admin/orders/admin_user/orders/orders.html',
+            'admin/orders/admin_orders.html',
             orders=orders,
             token=token,
             current_status=status_filter
@@ -3160,7 +3160,7 @@ def user_news(token):
         news_list = cursor.fetchall()
         logging.info(f"Fetched {len(news_list)} news items for user {user_id} in language {current_lang}")
 
-        return render_template('user_news.html',
+        return render_template('user/news/user_news.html',
                                news_list=news_list,
                                token=token,
                                current_lang=current_lang)

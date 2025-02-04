@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Оновити статус замовлення</title>
+</head>
+<body>
+    <h1>Оновити статус замовлення</h1>
+    <form action="{{ url_for('update_order_status', token=token) }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="file"><br>
+        <input type="submit" value="Завантажити інвойс та оновити статуси">
+    </form>
+</body>
+</html>

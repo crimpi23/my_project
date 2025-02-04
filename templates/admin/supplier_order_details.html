@@ -1,0 +1,67 @@
+{% extends "base/admin_base.html" %}
+
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2>Order Details: {{ order.order_number }}</h2>
+            <div>
+                <a href="/{{ token }}/admin/supplier-orders/{{ order.id }}/export" class="btn btn-success">
+                    <i class="bi bi-file-earmark-excel"></i> Export
+                </a>
+                <a href="/{{ token }}/admin/supplier-orders" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h4>Order Information</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Supplier:</th>
+                            <td>{{ order.supplier_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                <span class="badge bg-{{ 'success' if order.status == 'completed' else 'warning' }}">
+                                    {{ order.status }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <h4>Order Items</h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Quantity</th>
+                        <th>Tracking Code</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detail in details %}
+                    <tr>
+                        <td>{{ detail.article }}</td>
+                        <td>{{ detail.quantity }}</td>
+                        <td>{{ detail.tracking_code or '-' }}</td>
+                        <td>{{ detail.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

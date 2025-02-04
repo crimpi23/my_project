@@ -406,7 +406,7 @@ def token_index(token):
     # Якщо токен валідний, зберігаємо роль і токен у сесії
     session['token'] = token
     session['role'] = role
-    return render_template('index.html', role=role)
+    return render_template('user/index.html', role=role)
 
 # Головна сторінка
 @app.route('/')
@@ -415,7 +415,7 @@ def index():
     logging.debug(f"Session data in index: {dict(session)}")  # Логування стану сесії
 
     if not token:
-        return render_template('simple_search.html')
+        return render_template('user/search/simple_search.html')
 
     role = session.get('role')
     logging.debug(f"Role in index: {role}")  # Логування ролі користувача
@@ -423,7 +423,7 @@ def index():
     if role == "admin":
         return redirect(url_for('admin_dashboard', token=token))
     elif role == "user":
-        return render_template('index.html', role=role)
+        return render_template('user/index.html', role=role)
     else:
         flash(_("Invalid token or role."), "error")
         return redirect(url_for('simple_search'))
@@ -470,9 +470,9 @@ def simple_search():
             if 'conn' in locals() and conn:
                 conn.close()
 
-        return render_template('simple_search_results.html', results=results)
+        return render_template('user/search/simple_search_results.html', results=results)
 
-    return render_template('simple_search.html')
+    return render_template('user/search/simple_search.html')
 
 
 # Доступ до адмін панелі
@@ -530,7 +530,7 @@ def admin_panel(token):
             return redirect(url_for('admin_dashboard', token=token))
 
         # Відображення форми входу
-        return render_template('admin_login.html', token=token)
+        return render_template('admin/admin_login.html', token=token)
 
     except Exception as e:
         logging.error(f"Error in admin_panel: {e}", exc_info=True)
@@ -566,7 +566,7 @@ def admin_dashboard(token):
         users = cursor.fetchall()
         logging.debug(f"Fetched users and roles for dashboard: {users}")  # Логування даних користувачів
 
-        return render_template('admin_dashboard.html', users=users, token=token)
+        return render_template('admin/dashboard/admin_dashboard.html', users=users, token=token)
     except Exception as e:
         logging.error(f"Error in admin_dashboard: {e}", exc_info=True)
         flash("An error occurred while loading the dashboard.", "error")
@@ -640,7 +640,7 @@ def create_user(token):
     roles = cursor.fetchall()
     conn.close()
 
-    return render_template('create_user.html', roles=roles, token=token)
+    return render_template('admin/users/create_user.html', roles=roles, token=token)
 
 
 @app.route('/<token>/search', methods=['GET', 'POST'])
@@ -1005,7 +1005,7 @@ def cart(token):
         logging.info(f"Rendering cart for user_id={user_id}. Cart items count: {len(cart_items)}, Missing articles count: {len(missing_articles)}")
 
         return render_template(
-            'cart.html',
+            'user/cart/cart.html',
             cart_items=cart_items,
             total_price=total_price,
             missing_articles=missing_articles,
@@ -1540,7 +1540,7 @@ def orders(token):
 
         logging.debug(f"Orders retrieved for user_id={user_id} with filters: {article_filter}, {status_filter}, {start_date}, {end_date}")
 
-        return render_template('orders.html', orders=orders)
+        return render_template('user/orders/orders.html', orders=orders)
 
     except Exception as e:
         logging.error(f"Error fetching orders: {e}", exc_info=True)
@@ -1589,7 +1589,7 @@ def order_details(token, order_id):
         # Рахуємо загальну суму
         total_price = sum(item['total_price'] for item in formatted_details)
 
-        return render_template('order_details.html',
+        return render_template('user/orders/order_details.html',
                             token=token,
                             order_id=order_id,
                             details=formatted_details,
@@ -1744,7 +1744,7 @@ def admin_order_details(token, order_id):
         order_items = cursor.fetchall()
 
         return render_template(
-            'admin_order_details.html',
+            'admin/orders/admin_order_details.html',
             order=order,
             order_items=order_items,
             token=token
@@ -1799,7 +1799,7 @@ def admin_orders(token):
         logging.debug(f"First order sample: {orders[0] if orders else 'No orders'}")
 
         return render_template(
-            'admin_orders.html',
+            'admin/orders/admin_user/orders/orders.html',
             orders=orders,
             token=token,
             current_status=status_filter
@@ -1874,7 +1874,7 @@ def assign_roles(token):
         return redirect(url_for('assign_roles', token=token))
 
     conn.close()
-    return render_template('assign_roles.html', user_roles=user_roles, users=users, roles=roles, token=token)
+    return render_template('admin/users/assign_roles.html', user_roles=user_roles, users=users, roles=roles, token=token)
 
 
 
@@ -1927,7 +1927,7 @@ def manage_price_lists(token):
         cursor.execute("SELECT id, name FROM suppliers ORDER BY name")
         suppliers = cursor.fetchall()
 
-    return render_template('manage_price_lists.html',
+    return render_template('admin/price_lists/manage_price_lists.html',
                            price_lists=price_lists,
                            suppliers=suppliers,
                            token=token)
@@ -1976,7 +1976,7 @@ def upload_price_list(token):
             price_lists = cursor.fetchall()
             conn.close()
             logging.info(f"Fetched price lists: {price_lists}")
-            return render_template('upload_price_list.html', price_lists=price_lists, token=token)
+            return render_template('admin/price_lists/upload_price_list.html', price_lists=price_lists, token=token)
         except Exception as e:
             logging.error(f"Error during GET request: {e}")
             flash("Error loading the upload page.", "error")
@@ -2136,7 +2136,7 @@ def manage_suppliers(token):
         """)
         suppliers = cursor.fetchall()
 
-    return render_template('manage_suppliers.html',
+    return render_template('admin/suppliers/manage_suppliers.html',
                            suppliers=suppliers,
                            token=token)
 
@@ -2234,7 +2234,7 @@ def compare_prices(token):
             price_lists = cursor.fetchall()
             conn.close()
             logging.info("Fetched price list tables successfully.")
-            return render_template('compare_prices.html', price_lists=price_lists)
+            return render_template('user/search/compare_prices.html', price_lists=price_lists)
         except Exception as e:
             logging.error(f"Error during GET request: {str(e)}", exc_info=True)
             flash("Failed to load price list tables.", "error")
@@ -2312,7 +2312,7 @@ def compare_prices(token):
 
             logging.info("Comparison completed successfully.")
             return render_template(
-                'compare_prices_results.html',
+                'user/search/compare_prices_results.html',
                 better_in_first=better_in_first,
                 better_in_second=better_in_second,
                 same_prices=same_prices
@@ -2853,7 +2853,7 @@ def get_markup_percentage(user_id):
 @app.route('/<token>/admin/utilities')
 @requires_token_and_roles('admin')
 def utilities(token):
-    return render_template('utilities.html', token=token)
+    return render_template('admin/utilities.html', token=token)
 
 
 @app.route('/<token>/admin/news', methods=['GET'])
@@ -2884,7 +2884,7 @@ def admin_news(token):
         news_list = cursor.fetchall()
         logging.info(f"Отримано {len(news_list)} новин")
 
-        return render_template('admin_news.html', news_list=news_list, token=token)
+        return render_template('admin/news/admin_news.html', news_list=news_list, token=token)
 
     except Exception as e:
         logging.error(f"Помилка отримання новин: {e}")
@@ -2949,7 +2949,7 @@ def create_news(token):
                 cursor.close()
                 conn.close()
 
-    return render_template('create_news.html', token=token)
+    return render_template('admin/news/create_news.html', token=token)
 
 
 
@@ -3379,7 +3379,7 @@ def edit_news(token, news_id):
             flash("Новину не знайдено", "error")
             return redirect(url_for('admin_news', token=token))
 
-        return render_template('edit_news.html', news=news, token=token)
+        return render_template('admin/news/edit_news.html', news=news, token=token)
 
     except Exception as e:
         logging.error(f"Помилка редагування новини: {e}")

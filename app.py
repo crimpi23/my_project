@@ -1,30 +1,28 @@
-import xlsxwriter
 from datetime import datetime
-from io import BytesIO
-from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, send_file, get_flashed_messages, g
 from decimal import Decimal
 import time
 import os
-from flask_babel import Babel
+import logging
+import bcrypt
+from functools import wraps
 import psycopg2
 import psycopg2.extras
-import logging
-import csv
-import io
-import bcrypt
-import pandas as pd
-from functools import wraps
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import logging
-from flask_babel import gettext as _
+from flask import (
+    Flask, render_template, request, session,
+    redirect, url_for, flash, jsonify,
+    send_file, get_flashed_messages, g
+)
+from flask_babel import Babel, gettext as _
 from openpyxl import Workbook
+from io import BytesIO
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import smtplib
+import random
+import string
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('psycopg2')
 
 
 
@@ -52,6 +50,36 @@ def get_locale():
     return session.get('language', app.config['BABEL_DEFAULT_LOCALE'])
 
 babel.init_app(app, locale_selector=get_locale)
+
+# генерація коду для відстеження артикулів в документах
+def generate_tracking_code():
+    # Використовуємо великі літери та цифри
+    chars = string.ascii_uppercase + string.digits
+    # Генеруємо 8-значний код
+    tracking_code = ''.join(random.choices(chars, k=8))
+    return tracking_code
+
+# генерація tracking_code в момент створення нового замовлення постачальнику
+def create_supplier_order_details(order_id, article, quantity):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    tracking_code = generate_tracking_code()
+
+    cur.execute("""
+        INSERT INTO supplier_order_details 
+        (supplier_order_id, article, quantity, tracking_code, created_at)
+        VALUES (%s, %s, %s, %s, NOW())
+        RETURNING id
+    """, (order_id, article, quantity, tracking_code))
+
+    detail_id = cur.fetchone()[0]
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return detail_id
 
 
 # Make LANGUAGES available to all templates
@@ -274,6 +302,20 @@ def send_email(to_email, subject, ordered_items, missing_articles):
         logging.info(f"Email sent successfully to {to_email}")
     except Exception as e:
         logging.error(f"Failed to send email to {to_email}: {e}")
+
+
+# Функція для визначення розділювача
+def detect_delimiter(file_content):
+    delimiters = [',', ';', '\t', ' ']
+    sample_lines = file_content.splitlines()[:5]
+    counts = {delimiter: 0 for delimiter in delimiters}
+
+    for line in sample_lines:
+        for delimiter in delimiters:
+            counts[delimiter] += line.count(delimiter)
+
+    return max(counts, key=counts.get)
+
 
 
 # Функція для визначення розділювача у рядку
@@ -535,10 +577,6 @@ def admin_dashboard(token):
 
 
 
-
-
-
-
 # Створення користувача в адмін панелі:
 @app.route('/<token>/admin/create_user', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
@@ -603,46 +641,6 @@ def create_user(token):
     conn.close()
 
     return render_template('create_user.html', roles=roles, token=token)
-
-
-
-
-
-
-
-# @app.route('/process_selection', methods=['POST'])
-# @requires_token_and_roles('user', 'user_25', 'user_29')
-# def process_selection():
-    # try:
-        # selected_prices = {}
-        # for key, value in request.form.items():
-            # if key.startswith('selected_price_'):
-                # article = key.replace('selected_price_', '')
-                # table_name, price = value.split(':')
-                # selected_prices[article] = {'table_name': table_name, 'price': float(price)}
-
-        # user_id = session.get('user_id')
-        # if not user_id:
-            # flash("User is not authenticated.", "error")
-            # return redirect(url_for('index'))
-
-        # Очищення старих записів і додавання нових
-        # with get_db_connection() as conn:
-            # with conn.cursor() as cursor:
-                # cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s", (user_id,))
-
-                # for article, data in selected_prices.items():
-                    # cursor.execute("""
-                        # INSERT INTO selection_buffer (user_id, article, table_name, price, quantity, added_at)
-                        # VALUES (%s, %s, %s, %s, 1, NOW());
-                    # """, (user_id, article, data['table_name'], data['price']))
-
-        # flash("Ваш вибір успішно збережено!", "success")
-    # except Exception as e:
-        # logging.error(f"Error processing selection: {str(e)}")
-        # flash("Сталася помилка при обробці вибору. Спробуйте ще раз.", "error")
-
-    # return redirect(url_for('search_results'))
 
 
 @app.route('/<token>/search', methods=['GET', 'POST'])
@@ -1881,17 +1879,7 @@ def assign_roles(token):
 
 
 
-# Функція для визначення розділювача
-def detect_delimiter(file_content):
-    delimiters = [',', ';', '\t', ' ']
-    sample_lines = file_content.splitlines()[:5]
-    counts = {delimiter: 0 for delimiter in delimiters}
 
-    for line in sample_lines:
-        for delimiter in delimiters:
-            counts[delimiter] += line.count(delimiter)
-
-    return max(counts, key=counts.get)
 
 
 @app.route('/<token>/admin/supplier-mapping', methods=['GET', 'POST'])
@@ -2153,24 +2141,84 @@ def manage_suppliers(token):
                            token=token)
 
 
-# маршрут для перегляду статистики в адмін-панелі
-@app.route('/<token>/admin/cache-stats')
+
+
+# створення замовлення постачальнику
+@app.route('/<token>/admin/supplier-orders/create', methods=['POST'])
 @requires_token_and_roles('admin')
-def view_cache_stats(token):
-    with get_db_connection() as conn:
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("SELECT * FROM cache_stats ORDER BY timestamp DESC LIMIT 100")
-        stats = cursor.fetchall()
-    return render_template('cache_stats.html', stats=stats, token=token)
+def create_supplier_order(token):
+    try:
+        supplier_id = request.form.get('supplier_id')
+        order_number = f"SO-{supplier_id}-{datetime.now().strftime('%Y%m%d%H%M')}"
 
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-# 
-@app.route('/import_status', methods=['GET'])
-def get_import_status():
-    logging.info("get_import_status function called.")
-    return jsonify(
-        {"status": "success", "message": f"Uploaded {len(data)} rows to table '{table_name}' successfully."}), 200
+        # Створюємо нове замовлення постачальнику
+        cur.execute("""
+            INSERT INTO supplier_orders (supplier_id, order_number, status)
+            VALUES (%s, %s, 'new')
+            RETURNING id
+        """, (supplier_id, order_number))
 
+        supplier_order_id = cur.fetchone()[0]
+
+        # Отримуємо деталі замовлення з order_details
+        cur.execute("""
+            SELECT id, article, quantity 
+            FROM order_details 
+            WHERE status = 'accepted' AND table_name IN (
+                SELECT table_name 
+                FROM price_lists 
+                WHERE supplier_id = %s
+            )
+        """, (supplier_id,))
+
+        details = cur.fetchall()
+
+        # Додаємо деталі до замовлення постачальнику
+        for detail in details:
+            detail_id, article, quantity = detail
+            tracking_code = generate_tracking_code()
+
+            # Додаємо в supplier_order_details
+            cur.execute("""
+                INSERT INTO supplier_order_details 
+                (supplier_order_id, article, quantity, tracking_code)
+                VALUES (%s, %s, %s, %s)
+            """, (supplier_order_id, article, quantity, tracking_code))
+
+            # Оновлюємо статус в order_details на 'ordered'
+            cur.execute("""
+                UPDATE order_details 
+                SET status = 'ordered_supplier'
+                WHERE id = %s
+            """, (detail_id,))
+
+        # Оновлюємо статус замовлення на 'ordered_supplier'
+        cur.execute("""
+            UPDATE orders 
+            SET status = 'ordered_supplier' 
+            WHERE id IN (
+                SELECT DISTINCT order_id 
+                FROM order_details 
+                WHERE status = 'ordered'
+            )
+        """)
+
+        conn.commit()
+        flash('Supplier order created successfully', 'success')
+
+    except Exception as e:
+        conn.rollback()
+        logging.error(f"Помилка створення замовлення постачальнику: {e}")
+        flash('Error creating supplier order', 'error')
+
+    finally:
+        cur.close()
+        conn.close()
+
+    return redirect(url_for('list_supplier_orders', token=token))
 
 
 
@@ -2274,6 +2322,193 @@ def compare_prices(token):
             logging.error(f"Error during POST request: {str(e)}", exc_info=True)
             flash("An error occurred during comparison.", "error")
             return redirect(request.referrer or url_for('compare_prices'))
+
+# Маршрут для відображення форми (new_supplier_order):
+@app.route('/<token>/admin/supplier-orders/new', methods=['GET'])
+@requires_token_and_roles('admin')
+def new_supplier_order(token):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("SELECT id, name FROM suppliers ORDER BY name")
+    suppliers = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template('admin/supplier_orders_create.html',
+                           token=token,
+                           suppliers=suppliers)
+
+
+@app.route('/<token>/api/price-lists/<supplier_id>')
+@requires_token_and_roles('admin')
+def get_supplier_price_lists(token, supplier_id):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""
+        SELECT id, table_name 
+        FROM price_lists 
+        WHERE supplier_id = %s
+    """, (supplier_id,))
+
+    price_lists = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return jsonify({'price_lists': price_lists})
+
+# сторінка перегляду замовлень постачальників
+@app.route('/<token>/admin/supplier-orders', methods=['GET'])
+@requires_token_and_roles('admin')
+def list_supplier_orders(token):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    # Отримуємо всі замовлення з деталями
+    cur.execute("""
+        SELECT 
+            so.id,
+            so.order_number,
+            so.created_at,
+            so.status,
+            s.name as supplier_name,
+            COUNT(sod.id) as items_count,
+            SUM(sod.quantity) as total_quantity
+        FROM supplier_orders so
+        JOIN suppliers s ON so.supplier_id = s.id
+        LEFT JOIN supplier_order_details sod ON so.id = sod.supplier_order_id
+        GROUP BY so.id, s.name
+        ORDER BY so.created_at DESC
+    """)
+
+    orders = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template('admin/supplier_orders_list.html',
+                           token=token,
+                           orders=orders)
+
+# маршрут для перегляду деталей замовлення постачальнику
+@app.route('/<token>/admin/supplier-orders/<order_id>', methods=['GET'])
+@requires_token_and_roles('admin')
+def view_supplier_order(token, order_id):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    # Отримуємо основну інформацію про замовлення
+    cur.execute("""
+        SELECT 
+            so.*,
+            s.name as supplier_name
+        FROM supplier_orders so
+        JOIN suppliers s ON so.supplier_id = s.id
+        WHERE so.id = %s
+    """, (order_id,))
+
+    order = cur.fetchone()
+
+    # Отримуємо деталі замовлення
+    cur.execute("""
+        SELECT *
+        FROM supplier_order_details
+        WHERE supplier_order_id = %s
+        ORDER BY created_at
+    """, (order_id,))
+
+    details = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template('admin/supplier_order_details.html',
+                           token=token,
+                           order=order,
+                           details=details)
+
+# Функція експорту в Excel замовлень постачальнику
+@app.route('/<token>/admin/supplier-orders/<int:order_id>/export')
+def export_supplier_order(token, order_id):
+    logging.info(f"Starting export for supplier order {order_id}")
+
+    if validate_token(token):
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+
+            # Get order info
+            cur.execute("""
+                SELECT 
+                    so.id,
+                    so.created_at,
+                    so.status,
+                    so.order_number,
+                    s.name as supplier_name
+                FROM supplier_orders so
+                JOIN suppliers s ON so.supplier_id = s.id
+                WHERE so.id = %s
+            """, [order_id])
+            order = cur.fetchone()
+
+            if order:
+                # Get order details with correct column names
+                cur.execute("""
+                    SELECT 
+                        article,
+                        quantity,
+                        tracking_code,
+                        created_at
+                    FROM supplier_order_details
+                    WHERE supplier_order_id = %s
+                """, [order_id])
+                items = cur.fetchall()
+
+                workbook = Workbook()
+                sheet = workbook.active
+
+                # Headers
+                sheet['A1'] = f'Supplier Order #{order["order_number"]}'
+                sheet['A2'] = f'Supplier: {order["supplier_name"]}'
+                sheet['A3'] = f'Status: {order["status"]}'
+                sheet['A4'] = f'Created: {order["created_at"]}'
+
+                # Column headers
+                sheet['A6'] = 'Article'
+                sheet['B6'] = 'Quantity'
+                sheet['C6'] = 'Tracking Code'
+                sheet['D6'] = 'Created At'
+
+                row = 7
+                for item in items:
+                    sheet[f'A{row}'] = item['article']
+                    sheet[f'B{row}'] = item['quantity']
+                    sheet[f'C{row}'] = item['tracking_code']
+                    sheet[f'D{row}'] = item['created_at']
+                    row += 1
+
+                output = BytesIO()
+                workbook.save(output)
+                output.seek(0)
+
+                return send_file(
+                    output,
+                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    as_attachment=True,
+                    download_name=f'supplier_order_{order["order_number"]}.xlsx'
+                )
+
+        except Exception as e:
+            logging.error(f"Export failed: {str(e)}")
+            flash("Export failed. Please try again.", "error")
+        finally:
+            cur.close()
+            conn.close()
+
+    return redirect(url_for('list_supplier_orders', token=token))
 
 
 @app.route('/<token>/upload_file', methods=['POST'])
@@ -2717,139 +2952,6 @@ def create_news(token):
     return render_template('create_news.html', token=token)
 
 
-@app.route('/<token>/admin/supplier-orders', methods=['GET', 'POST'])
-@requires_token_and_roles('admin')
-def supplier_orders(token):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        # Отримуємо список постачальників
-        cursor.execute("SELECT id, name FROM suppliers ORDER BY name")
-        suppliers = cursor.fetchall()
-
-        # Обробка вибору постачальника
-        selected_supplier_id = None
-        if request.method == 'POST':
-            selected_supplier_id = request.form.get('supplier_id')
-
-            # Отримуємо замовлення для вибраного постачальника
-            cursor.execute("""
-                SELECT od.order_id, od.article, od.quantity, od.price, od.status,
-                       u.username as customer_name, pl.table_name as price_list
-                FROM order_details od
-                JOIN orders o ON od.order_id = o.id
-                JOIN users u ON o.user_id = u.id
-                JOIN price_lists pl ON od.table_name = pl.table_name
-                WHERE od.status = 'accepted'
-                AND pl.supplier_id = %s
-                ORDER BY od.order_id
-            """, (selected_supplier_id,))
-        else:
-            # Показуємо всі accepted замовлення
-            cursor.execute("""
-                SELECT od.order_id, od.article, od.quantity, od.price, od.status,
-                       u.username as customer_name, pl.table_name as price_list
-                FROM order_details od
-                JOIN orders o ON od.order_id = o.id
-                JOIN users u ON o.user_id = u.id
-                JOIN price_lists pl ON od.table_name = pl.table_name
-                WHERE od.status = 'accepted'
-                ORDER BY od.order_id
-            """)
-
-        orders = cursor.fetchall()
-
-        return render_template('supplier_orders.html',
-                               token=token,
-                               suppliers=suppliers,
-                               orders=orders,
-                               selected_supplier_id=selected_supplier_id)
-
-    except Exception as e:
-        logging.error(f"Помилка при отриманні замовлень постачальників: {e}")
-        flash("Error loading supplier orders", "error")
-        return redirect(url_for('admin_dashboard', token=token))
-
-    finally:
-        if 'conn' in locals():
-            conn.close()
-
-
-@app.route('/<token>/admin/export-supplier-orders', methods=['POST'])
-@requires_token_and_roles('admin')
-def export_supplier_orders(token):
-    logging.info("Починаємо експорт замовлень постачальника")
-    try:
-        supplier_id = request.form.get('supplier_id')
-        logging.debug(f"Отримано supplier_id: {supplier_id}")
-
-        if not supplier_id:
-            logging.warning("Постачальника не вибрано")
-            flash("Постачальника не вибрано", "error")
-            return redirect(url_for('supplier_orders', token=token))
-
-        output = BytesIO()
-        workbook = xlsxwriter.Workbook(output)
-        worksheet = workbook.add_worksheet()
-
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        logging.debug("Отримуємо дані постачальника")
-        cursor.execute("SELECT name FROM suppliers WHERE id = %s", (supplier_id,))
-        supplier_name = cursor.fetchone()['name']
-        logging.info(f"Формуємо експорт для постачальника: {supplier_name}")
-
-        logging.debug("Виконуємо запит для отримання замовлень")
-        cursor.execute("""
-            SELECT od.order_id, od.article, od.quantity, od.price,
-                   u.username as customer_name
-            FROM order_details od
-            JOIN orders o ON od.order_id = o.id
-            JOIN users u ON o.user_id = u.id
-            JOIN price_lists pl ON od.table_name = pl.table_name
-            WHERE od.status = 'accepted'
-            AND pl.supplier_id = %s
-            ORDER BY od.article
-        """, (supplier_id,))
-
-        orders = cursor.fetchall()
-        logging.info(f"Знайдено {len(orders)} позицій для експорту")
-
-        logging.debug("Створюємо Excel файл")
-        output = io.BytesIO()
-        workbook = xlsxwriter.Workbook(output)
-        worksheet = workbook.add_worksheet()
-
-        headers = ['Order ID', 'Article', 'Quantity', 'Price', 'Customer']
-        for col, header in enumerate(headers):
-            worksheet.write(0, col, header)
-
-        for row, order in enumerate(orders, 1):
-            worksheet.write(row, 0, order['order_id'])
-            worksheet.write(row, 1, order['article'])
-            worksheet.write(row, 2, order['quantity'])
-            worksheet.write(row, 3, float(order['price']))
-            worksheet.write(row, 4, order['customer_name'])
-
-        workbook.close()
-        output.seek(0)
-
-        filename = f'supplier_orders_{supplier_name}_{datetime.now().strftime("%Y%m%d")}.xlsx'
-        logging.info(f"Файл {filename} успішно створено")
-
-        return send_file(
-            output,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name=filename
-        )
-
-    except Exception as e:
-        logging.error(f"Помилка при експорті замовлень постачальника: {e}", exc_info=True)
-        flash("Помилка експорту замовлень", "error")
-        return redirect(url_for('supplier_orders', token=token))
 
 
 @app.route('/<token>/admin/orders/<int:order_id>/accept-all', methods=['POST'])

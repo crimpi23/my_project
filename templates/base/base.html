@@ -167,7 +167,12 @@
                             <span>{{ _('Orders') }}</span>
                         </a>
                     </li>
-                    {# INSERT THE NEW LINK HERE #}
+                    <li class="nav-item">
+						<a class="nav-link" href="{{ url_for('user_shipments', token=session['token']) }}">
+							<i class="bi bi-truck"></i>
+							<span>{{ _('Shipments') }}</span>
+						</a>
+					</li>
                     <li class="nav-item">
                         <a class="nav-link" href="/{{ session['token'] }}/order-changes">
                             <i class="bi bi-clock-history"></i>

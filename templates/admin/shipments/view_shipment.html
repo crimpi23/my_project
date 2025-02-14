@@ -1,0 +1,76 @@
+{# filepath: templates/admin/shipments/view_shipment.html #}
+{% extends "base/admin_base.html" %}
+
+{% block title %}Shipment Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Shipment Details</h1>
+        <a href="{{ url_for('list_shipments', token=token) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Shipments
+        </a>
+    </div>
+
+    {% if shipment %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Shipment Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Shipment ID:</strong> {{ shipment.id }}</p>
+                        <p><strong>Date:</strong> {{ shipment.shipment_date }}</p>
+                        <p><strong>Status:</strong> {{ shipment.status }}</p>
+                        <p><strong>Tracking Number:</strong> {{ shipment.tracking_number or 'Not specified' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Customer:</strong> {{ shipment.user_name }}</p>
+                        <p><strong>Email:</strong> {{ shipment.user_email }}</p>
+                        <p><strong>Order ID:</strong> {{ shipment.order_id }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Shipment Items</h5>
+            </div>
+            <div class="card-body">
+                {% if details %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Article</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Total Price</th>
+                                    <th>Comment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in details %}
+                                    <tr>
+                                        <td>{{ item.article }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>{{ item.price }}</td>
+                                        <td>{{ item.total_price }}</td>
+                                        <td>{{ item.comment or '' }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No items in this shipment.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-warning">Shipment not found.</div>
+    {% endif %}
+</div>
+{% endblock %}

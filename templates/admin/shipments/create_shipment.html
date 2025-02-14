@@ -1,0 +1,31 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Create Shipment{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Create Shipment</h1>
+    <form method="post" action="{{ url_for('create_shipment', token=token) }}">
+        <input type="hidden" name="user_id" value="{{ user_id }}">
+        <div class="mb-3">
+            <label for="tracking_number" class="form-label">Tracking Number (Optional):</label>
+            <input type="text" class="form-control" id="tracking_number" name="tracking_number">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Available Items for Shipment:</label>
+            {% if available_items %}
+            <ul class="list-group">
+                {% for item in available_items %}
+                <li class="list-group-item">
+                    {{ item.article }} - Quantity: {{ item.quantity }} - Price: {{ item.price }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>No available items for this user.</p>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">Create Shipment</button>
+    </form>
+</div>
+{% endblock %}

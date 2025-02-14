@@ -16,14 +16,6 @@
 
     <!-- Статистика -->
     <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Users</h5>
-                    <p class="display-6">{{ users|length }}</p>
-                </div>
-            </div>
-        </div>
         <!-- Додаткові карти статистики можна додати тут -->
     </div>
 
@@ -87,6 +79,18 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-truck fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Shipments Management</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('list_shipments', token=token) }}" class="btn btn-admin mb-2">View Shipments</a>
+                        <a href="{{ url_for('create_shipment_select_user', token=token) }}" class="btn btn-admin">Create Shipments</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Додаткові функції -->
@@ -131,14 +135,14 @@
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     }
     .btn-admin {
-        background-color: #dc3545;
-        border-color: #dc3545;
+        background-color: #007bff; /* Змінено колір на синій */
+        border-color: #007bff;
         color: white;
         transition: all 0.3s;
     }
     .btn-admin:hover {
-        background-color: #c82333;
-        border-color: #bd2130;
+        background-color: #0056b3;
+        border-color: #0056b3;
         color: white;
         transform: translateY(-2px);
     }

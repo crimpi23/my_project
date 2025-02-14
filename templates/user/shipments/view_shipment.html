@@ -1,0 +1,66 @@
+{# filepath: templates/user/shipments/view_shipment.html #}
+{% extends "base/base.html" %}
+
+{% block title %}Shipment Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Shipment Details</h1>
+        <a href="{{ url_for('user_shipments', token=token) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Shipments
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Shipment Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Date:</strong> {{ shipment.shipment_date.strftime('%Y-%m-%d') }}</p>
+                    <p><strong>Status:</strong> {{ shipment.status }}</p>
+                    <p><strong>Tracking Number:</strong> {{ shipment.tracking_number or 'Not specified' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Items</h5>
+        </div>
+        <div class="card-body">
+            {% if details %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Article</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total Price</th>
+                                <th>Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in details %}
+                                <tr>
+                                    <td>{{ item.article }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ "%.2f"|format(item.price) }}</td>
+                                    <td>{{ "%.2f"|format(item.total_price) }}</td>
+                                    <td>{{ item.comment or '' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No items in this shipment.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

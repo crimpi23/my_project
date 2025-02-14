@@ -160,38 +160,29 @@ def get_db_connection():
 
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
 def requires_token_and_roles(*allowed_roles):
-    """
-    Декоратор для перевірки токена і декількох дозволених ролей користувача.
-    """
-    def decorator(func):
-        @wraps(func)
-        def wrapper(token, *args, **kwargs):
-            logging.debug(f"Session token: {session.get('token')}")
-            logging.debug(f"Received token: {token}")
-            
-            # Перевірка відповідності токену
-            if session.get('token') != token:
-                flash("Access denied. Token mismatch.", "error")
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            token = request.view_args.get('token')
+            if not token:
+                token = request.args.get('token')
+
+            if not token or not validate_token(token):
+                flash(_("Invalid token."), "error")
                 return redirect(url_for('index'))
 
-            # Отримання даних ролі
-            role_data = validate_token(token)
-            logging.debug(f"Role data from token: {role_data}")
-            
-            if not role_data or role_data['role'] not in allowed_roles:
-                flash("Access denied. Insufficient permissions.", "error")
+            session_role = session.get('role')
+            if not session_role:
+                flash(_("Invalid token or role."), "error")
                 return redirect(url_for('index'))
 
-            # Перевірка автентифікації адміністратора
-            if 'admin' in allowed_roles and not session.get('admin_authenticated'):
-                flash("Access denied. Please log in as an admin.", "error")
-                return redirect(url_for('admin_panel', token=token))
+            role_name = session_role
+            if allowed_roles and role_name not in allowed_roles:
+                flash(_("Invalid token or role."), "error")
+                return redirect(url_for('index'))
 
-            # Збереження даних користувача в сесії
-            session['user_id'] = role_data['user_id']
-            session['role'] = role_data['role']
-            return func(token, *args, **kwargs)
-        return wrapper
+            return f(*args, **kwargs)
+        return decorated_function
     return decorator
 
 
@@ -3372,11 +3363,17 @@ def invoice_details(token, invoice_id):
                     CASE
                         WHEN w.id IS NOT NULL THEN TRUE
                         ELSE FALSE
-                    END as in_warehouse
+                    END as in_warehouse,
+                    od.base_price,
+                    od.price AS customer_price,
+                    u.username AS customer_username,
+                    u.email AS customer_email
                 FROM invoice_details id
                 LEFT JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
                 LEFT JOIN order_details od ON sod.order_details_id = od.id
                 LEFT JOIN warehouse w ON id.article = w.article AND id.invoice_id = w.invoice_id
+                LEFT JOIN orders o ON od.order_id = o.id
+                LEFT JOIN users u ON o.user_id = u.id
                 WHERE id.invoice_id = %s
                 ORDER BY id.id
             """, (invoice_id,))
@@ -4253,6 +4250,292 @@ def accept_all_items(token, order_id):
         flash("Error processing items", "error")
         
     return redirect(url_for('admin_order_details', token=token, order_id=order_id))
+
+
+# Маршрут для відображення форми вибору користувача для створення відвантаження
+@app.route('/<token>/admin/shipments/create', methods=['GET'])
+@requires_token_and_roles('admin')
+def create_shipment_select_user(token):
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            # Отримуємо список всіх користувачів
+            cursor.execute("""
+                SELECT id, username FROM users
+            """)
+            users = cursor.fetchall()
+
+            return render_template(
+                'admin/shipments/select_user.html',
+                token=token,
+                users=users
+            )
+
+    except Exception as e:
+        logging.error(f"Error fetching users for shipment creation: {e}", exc_info=True)
+        flash("Error loading users for shipment creation", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+
+# Маршрут для відображення форми створення відвантаження
+@app.route('/<token>/admin/shipments/create/<int:user_id>', methods=['GET'])
+@requires_token_and_roles('admin')
+def create_shipment_form(token, user_id):
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            # Отримуємо інформацію про замовлення та деталі замовлення для вибраного користувача
+            cursor.execute("""
+                SELECT * FROM orders WHERE user_id = %s
+            """, (user_id,))
+            orders = cursor.fetchall()
+
+            available_items = []
+            for order in orders:
+                cursor.execute("""
+                    SELECT 
+                        od.id,
+                        od.article,
+                        od.quantity,
+                        od.price,
+                        od.total_price,
+                        od.order_id
+                    FROM order_details od
+                    WHERE od.order_id = %s AND od.shipment_id IS NULL AND od.status = 'invoice_received'
+                """, (order['id'],))
+                order_details = cursor.fetchall()
+                available_items.extend(order_details)
+
+            return render_template(
+                'admin/shipments/create_shipment.html',
+                token=token,
+                user_id=user_id,
+                available_items=available_items,
+                orders=orders  # Передаємо список замовлень у шаблон
+            )
+
+    except Exception as e:
+        logging.error(f"Error fetching data for shipment creation: {e}", exc_info=True)
+        flash("Error loading data for shipment creation", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+
+# Маршрут для відображення списку відвантажень для користувачів
+@app.route('/<token>/shipments', methods=['GET'])
+@requires_token_and_roles('user', 'user_25', 'user_29')
+def user_shipments(token):
+    try:
+        user_id = session.get('user_id')
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            cursor.execute("""
+                SELECT 
+                    s.id,
+                    s.shipment_date,
+                    s.status,
+                    s.tracking_number,
+                    o.id as order_id,
+                    COUNT(od.id) as items_count,
+                    SUM(od.total_price) as total_price
+                FROM shipments s
+                JOIN orders o ON s.order_id = o.id
+                LEFT JOIN order_details od ON od.shipment_id = s.id
+                WHERE o.user_id = %s
+                GROUP BY s.id, s.shipment_date, s.status, s.tracking_number, o.id
+                ORDER BY s.shipment_date DESC
+            """, (user_id,))
+            
+            shipments = cursor.fetchall()
+
+            return render_template(
+                'user/shipments/list_shipments.html',
+                token=token,
+                shipments=shipments
+            )
+
+    except Exception as e:
+        logging.error(f"Error fetching user shipments: {e}", exc_info=True)
+        flash("Error loading shipments", "error")
+        return redirect(url_for('token_index', token=token))
+
+
+# Маршрут для перегляду деталей відправлення користувачем
+@app.route('/<token>/shipments/<int:shipment_id>', methods=['GET'])
+@requires_token_and_roles('user', 'user_25', 'user_29')
+def view_user_shipment(token, shipment_id):
+    try:
+        user_id = session.get('user_id')
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            # Отримуємо інформацію про відправлення
+            cursor.execute("""
+                SELECT 
+                    s.*,
+                    o.id as order_id
+                FROM shipments s
+                JOIN orders o ON s.order_id = o.id
+                WHERE s.id = %s AND o.user_id = %s
+            """, (shipment_id, user_id))
+            
+            shipment = cursor.fetchone()
+            if not shipment:
+                flash("Shipment not found", "error")
+                return redirect(url_for('user_shipments', token=token))
+
+            # Отримуємо деталі відправлення
+            cursor.execute("""
+                SELECT 
+                    od.article,
+                    od.quantity,
+                    od.price,
+                    od.total_price,
+                    od.comment
+                FROM order_details od
+                WHERE od.shipment_id = %s
+            """, (shipment_id,))
+            
+            details = cursor.fetchall()
+
+            return render_template(
+                'user/shipments/view_shipment.html',
+                token=token,
+                shipment=shipment,
+                details=details
+            )
+
+    except Exception as e:
+        logging.error(f"Error fetching shipment details: {e}", exc_info=True)
+        flash("Error loading shipment details", "error")
+        return redirect(url_for('user_shipments', token=token))
+
+
+# Маршрут для обробки створення відвантаження
+@app.route('/<token>/admin/shipments/create', methods=['POST'])
+@requires_token_and_roles('admin')
+def create_shipment(token):
+    try:
+        user_id = request.form.get('user_id')
+        tracking_number = request.form.get('tracking_number')
+        #selected_details = request.form.getlist('selected_details')
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+
+            # Створюємо запис про відвантаження
+            cursor.execute("""
+                INSERT INTO shipments (order_id, shipment_date, status, tracking_number)
+                VALUES (%s, CURRENT_DATE, 'created', %s)
+                RETURNING id
+            """, (user_id, tracking_number))
+            shipment_id = cursor.fetchone()[0]
+
+            # Оновлюємо shipment_id для вибраних деталей замовлення
+            #for detail_id in selected_details:
+            #    cursor.execute("""
+            #        UPDATE order_details SET shipment_id = %s WHERE id = %s
+            #    """, (shipment_id, detail_id))
+
+            conn.commit()
+            flash("Shipment created successfully", "success")
+
+    except Exception as e:
+        logging.error(f"Error creating shipment: {e}", exc_info=True)
+        flash("Error creating shipment", "error")
+
+    return redirect(url_for('admin_dashboard', token=token))
+
+# Маршрут для перегляду деталей відвантаження
+@app.route('/<token>/admin/shipments/<int:shipment_id>', methods=['GET'])
+@requires_token_and_roles('admin')
+def view_shipment(token, shipment_id):
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            # Отримуємо інформацію про відвантаження
+            cursor.execute("""
+                SELECT 
+                    s.*,
+                    o.id as order_id,
+                    u.username as user_name,
+                    u.email as user_email
+                FROM shipments s
+                JOIN orders o ON s.order_id = o.id
+                JOIN users u ON o.user_id = u.id
+                WHERE s.id = %s
+            """, (shipment_id,))
+            
+            shipment = cursor.fetchone()
+            if not shipment:
+                flash("Shipment not found", "error")
+                return redirect(url_for('list_shipments', token=token))
+
+            # Отримуємо деталі відвантаження
+            cursor.execute("""
+                SELECT 
+                    od.id,
+                    od.article,
+                    od.quantity,
+                    od.price,
+                    od.total_price,
+                    od.comment
+                FROM order_details od
+                WHERE od.shipment_id = %s
+            """, (shipment_id,))
+            
+            details = cursor.fetchall()
+
+            return render_template(
+                'admin/shipments/view_shipment.html',
+                token=token,
+                shipment=shipment,
+                details=details
+            )
+
+    except Exception as e:
+        logging.error(f"Error fetching shipment details: {e}", exc_info=True)
+        flash("Error loading shipment details", "error")
+        return redirect(url_for('list_shipments', token=token))
+
+# Маршрут для відображення списку відвантажень
+@app.route('/<token>/admin/shipments', methods=['GET'])
+@requires_token_and_roles('admin')
+def list_shipments(token):
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            # Отримуємо список всіх відвантажень
+            cursor.execute("""
+                SELECT 
+                    s.id,
+                    s.shipment_date,
+                    s.status,
+                    s.tracking_number,
+                    o.id as order_id,
+                    u.username as user_name
+                FROM shipments s
+                JOIN orders o ON s.order_id = o.id
+                JOIN users u ON o.user_id = u.id
+                ORDER BY s.shipment_date DESC
+            """)
+            shipments = cursor.fetchall()
+
+            return render_template(
+                'admin/shipments/list_shipments.html',
+                token=token,
+                shipments=shipments
+            )
+
+    except Exception as e:
+        logging.error(f"Error fetching shipments: {e}", exc_info=True)
+        flash("Error loading shipments", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
 
 
 

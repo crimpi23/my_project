@@ -1,0 +1,48 @@
+{# filepath: templates/user/shipments/shipments.html #}
+{% extends "base/base.html" %}
+
+{% block title %}Shipments{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>My Shipments</h1>
+
+    {% if shipments %}
+        {% for shipment in shipments %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    Shipment Date: {{ shipment.shipment_date }} | Status: {{ shipment.status }}
+                    {% if shipment.tracking_number %}
+                        | Tracking Number: {{ shipment.tracking_number }}
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Order Details</h5>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Article</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detail in shipment.details %}
+                                <tr>
+                                    <td>{{ detail.article }}</td>
+                                    <td>{{ detail.quantity }}</td>
+                                    <td>{{ detail.price }}</td>
+                                    <td>{{ detail.total_price }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No shipments found.</p>
+    {% endif %}
+</div>
+{% endblock %}

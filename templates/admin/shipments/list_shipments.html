@@ -1,0 +1,49 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}All Shipments{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>All Shipments</h1>
+        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    {% if shipments %}
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Shipment Date</th>
+                        <th>Status</th>
+                        <th>Tracking Number</th>
+                        <th>Order ID</th>
+                        <th>User Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for shipment in shipments %}
+                    <tr>
+                        <td>{{ shipment.id }}</td>
+                        <td>{{ shipment.shipment_date }}</td>
+                        <td>{{ shipment.status }}</td>
+                        <td>{{ shipment.tracking_number }}</td>
+                        <td>{{ shipment.order_id }}</td>
+                        <td>{{ shipment.user_name }}</td>
+                        <td>
+                            <a href="{{ url_for('view_shipment', token=token, shipment_id=shipment.id) }}" class="btn btn-sm btn-primary">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No shipments found.</p>
+    {% endif %}
+</div>
+{% endblock %}

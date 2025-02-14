@@ -1,0 +1,20 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Select User for Shipment{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Select User for Shipment</h1>
+    <form method="get" action="{{ url_for('create_shipment_form', token=token, user_id=0) }}">
+        <div class="mb-3">
+            <label for="user_id" class="form-label">Select User:</label>
+            <select class="form-control" id="user_id" name="user_id" required onchange="this.form.action = '/{{ token }}/admin/shipments/create/' + this.value; this.form.submit();">
+                <option value="">-- Select User --</option>
+                {% for user in users %}
+                <option value="{{ user.id }}">{{ user.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+{% endblock %}

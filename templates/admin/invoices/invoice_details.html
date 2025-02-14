@@ -45,6 +45,9 @@
                             <th>Tracking Code</th>
                             <th>Quantity</th>
                             <th>Ordered Quantity</th>
+                            <th>Base Price</th>
+                            <th>Customer Price</th>
+                            <th>Customer</th>
                             <th>Status</th>
                             <th>Warehouse</th>
                         </tr>
@@ -58,6 +61,15 @@
                             <td>{{ item.tracking_code }}</td>
                             <td>{{ item.quantity }}</td>
                             <td>{{ item.ordered_quantity or '-' }}</td>
+                            <td>{{ item.base_price or '-' }}</td>
+                            <td>{{ item.customer_price or '-' }}</td>
+                            <td>
+                                {% if item.customer_username %}
+                                    {{ item.customer_username }} ({{ item.customer_email }})
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
                             <td>
                                 <span class="badge bg-{{ item.status | status_color }}">
                                     {{ item.status }}

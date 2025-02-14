@@ -1,0 +1,48 @@
+{# filepath: templates/user/shipments/list_shipments.html #}
+{% extends "base/base.html" %}
+
+{% block title %}My Shipments{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Shipments</h1>
+    </div>
+
+    {% if shipments %}
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Shipment Date</th>
+                        <th>Status</th>
+                        <th>Tracking Number</th>
+                        <th>Items Count</th>
+                        <th>Total Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for shipment in shipments %}
+                    <tr>
+                        <td>{{ shipment.shipment_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ shipment.status }}</td>
+                        <td>{{ shipment.tracking_number or 'N/A' }}</td>
+                        <td>{{ shipment.items_count }}</td>
+                        <td>{{ "%.2f"|format(shipment.total_price or 0) }}</td>
+                        <td>
+                            <a href="{{ url_for('view_user_shipment', token=token, shipment_id=shipment.id) }}" 
+                               class="btn btn-sm btn-primary">
+                                View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No shipments found.</p>
+    {% endif %}
+</div>
+{% endblock %}

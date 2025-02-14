@@ -1,0 +1,108 @@
+{# filepath: templates/admin/invoices/list_invoices.html #}
+{% extends "base/admin_base.html" %}
+
+{% block title %}Invoices{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Invoices</h1>
+        <a href="{{ url_for('upload_invoice', token=token) }}" class="btn btn-admin">
+            <i class="bi bi-upload"></i> Upload New Invoice
+        </a>
+    </div>
+
+    <div class="card admin-table">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Supplier</th>
+                            <th>Created At</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                        <tr>
+                            <td>{{ invoice.invoice_number }}</td>
+                            <td>{{ invoice.supplier_name }}</td>
+                            <td>{{ invoice.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <span class="badge bg-{{ invoice.status | status_color }}">
+                                    {{ invoice.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="progress">
+                                    {% set progress = (invoice.processed_count / invoice.items_count * 100) if invoice.items_count > 0 else 0 %}
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ progress }}%"
+                                         aria-valuenow="{{ progress }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ invoice.processed_count }}/{{ invoice.items_count }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('invoice_details', token=token, invoice_id=invoice.id) }}" 
+                                       class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    {% if invoice.status == 'new' %}
+                                    <a href="{{ url_for('analyze_invoice', token=token, invoice_id=invoice.id) }}" 
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-search"></i> Analyze
+                                    </a>
+                                    {% endif %}
+                                    <a href="{{ url_for('export_invoice_analysis', token=token, invoice_id=invoice.id) }}" 
+                                       class="btn btn-sm btn-success">
+                                        <i class="bi bi-download"></i> Export
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .progress {
+        height: 20px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+    }
+    .progress-bar {
+        background-color: #28a745;
+        color: white;
+        text-align: center;
+        line-height: 20px;
+        font-size: 12px;
+    }
+    .btn-group .btn {
+        margin-right: 4px;
+    }
+    .btn-admin {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+    .btn-admin:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        color: white;
+    }
+</style>
+{% endblock %}

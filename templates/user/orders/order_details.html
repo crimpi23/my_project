@@ -1,3 +1,4 @@
+{# filepath: templates/user/orders/order_details.html #}
 {% extends "base/base.html" %}
 
 {% block title %}{{ _('Order Details') }} #{{ order_id }}{% endblock %}
@@ -17,6 +18,7 @@
             <thead class="table-primary">
                 <tr>
                     <th>{{ _('Article') }}</th>
+                    <th>{{ _('Original Article') }}</th>
                     <th>{{ _('Price List') }}</th>
                     <th>{{ _('Price') }}</th>
                     <th>{{ _('Quantity') }}</th>
@@ -26,15 +28,44 @@
                 </tr>
             </thead>
             <tbody>
-                {% for item in details %}
-                <tr>
-                    <td>{{ item.article }}</td>
-                    <td>{{ item.table_name }}</td>
-                    <td>{{ "%.2f"|format(item.price) }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ "%.2f"|format(item.total_price) }}</td>
-                    <td>{{ item.comment or _('No comment') }}</td>
-                    <td>
+				{% for item in details %}
+				<tr class="{{ 'table-warning' if item.price_changed or item.article_changed or item.quantity_changed }}">
+					<td>
+						{{ item.article }}
+						{% if item.article_changed %}
+							<span class="badge bg-warning" data-bs-toggle="tooltip" title="Article was changed">
+								<i class="bi bi-pencil"></i>
+							</span>
+						{% endif %}
+					</td>
+					<td>{{ item.original_article or '-' }}</td>
+					<td>{{ item.table_name }}</td>
+					<td>
+						{{ "%.2f"|format(item.price) }}
+						{% if item.price_changed %}
+							<span class="badge bg-warning" data-bs-toggle="tooltip" title="Price was updated from invoice">
+								<i class="bi bi-currency-euro"></i>
+							</span>
+						{% endif %}
+					</td>
+					<td>
+						{{ item.quantity }}
+						{% if item.quantity_changed %}
+							<span class="badge bg-warning" data-bs-toggle="tooltip" title="Quantity was adjusted">
+								<i class="bi bi-hash"></i>
+							</span>
+						{% endif %}
+					</td>
+					<td>{{ "%.2f"|format(item.total_price) }}</td>
+					<td>
+						{{ item.comment or _('No comment') }}
+						{% if item.change_reason %}
+							<span class="badge bg-info" data-bs-toggle="tooltip" title="{{ item.change_reason }}">
+								<i class="bi bi-info-circle"></i>
+							</span>
+						{% endif %}
+					</td>
+					<td>
 						<span class="badge bg-{{ {
 							'new': 'primary',
 							'accepted': 'success',
@@ -44,12 +75,13 @@
 							{{ _(item.status|title) }}
 						</span>
 					</td>
-                </tr>
-                {% endfor %}
-            </tbody>
+				</tr>
+				{% endfor %}
+			</tbody>
+
             <tfoot>
                 <tr class="table-primary">
-                    <td colspan="4" class="text-end"><strong>{{ _('Total Order Amount:') }}</strong></td>
+                    <td colspan="5" class="text-end"><strong>{{ _('Total Order Amount:') }}</strong></td>
                     <td colspan="3"><strong>{{ "%.2f"|format(total_price) }}</strong></td>
                 </tr>
             </tfoot>
@@ -87,7 +119,7 @@
 
 {% block extra_css %}
 <style>
-	    .badge.bg-primary {
+        .badge.bg-primary {
         background-color: #0d6efd !important;
     }
     
@@ -102,7 +134,7 @@
     .badge.bg-info {
         background-color: #0dcaf0 !important;
     }
-	
+    
     .timeline {
         position: relative;
         padding: 20px 0;
@@ -146,4 +178,14 @@
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 </style>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
 {% endblock %}

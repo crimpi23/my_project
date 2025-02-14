@@ -1,0 +1,31 @@
+{# filepath: templates/admin/invoices/upload.html #}
+{% extends 'base/admin_base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Завантаження інвойсу</h2>
+    
+    <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>Постачальник:</label>
+            <select name="supplier_id" class="form-control" required>
+                {% for supplier in suppliers %}
+                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Номер інвойсу:</label>
+            <input type="text" name="invoice_number" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Excel файл:</label>
+            <input type="file" name="invoice_file" accept=".xlsx" class="form-control" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Завантажити</button>
+    </form>
+</div>
+{% endblock %}

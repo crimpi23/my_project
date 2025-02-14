@@ -20,6 +20,9 @@ from email.mime.multipart import MIMEMultipart
 import smtplib
 import random
 import string
+import pandas as pd
+import numpy as np
+from datetime import datetime
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('psycopg2')
@@ -27,11 +30,10 @@ logger = logging.getLogger('psycopg2')
 
 
 
-
 # Налаштування логування
 logging.basicConfig(level=logging.DEBUG)
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 
 babel = Babel(app)
 
@@ -60,7 +62,7 @@ def generate_tracking_code():
     return tracking_code
 
 # генерація tracking_code в момент створення нового замовлення постачальнику
-def create_supplier_order_details(order_id, article, quantity):
+def create_supplier_order_details(order_id, article, quantity, order_detail_id):  # Додаємо параметр
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -68,10 +70,10 @@ def create_supplier_order_details(order_id, article, quantity):
 
     cur.execute("""
         INSERT INTO supplier_order_details 
-        (supplier_order_id, article, quantity, tracking_code, created_at)
-        VALUES (%s, %s, %s, %s, NOW())
+        (supplier_order_id, article, quantity, tracking_code, created_at, order_details_id)  # Додаємо поле
+        VALUES (%s, %s, %s, %s, NOW(), %s)  # Додаємо значення
         RETURNING id
-    """, (order_id, article, quantity, tracking_code))
+    """, (order_id, article, quantity, tracking_code, order_detail_id))  # Додаємо параметр
 
     detail_id = cur.fetchone()[0]
 
@@ -179,6 +181,11 @@ def requires_token_and_roles(*allowed_roles):
             if not role_data or role_data['role'] not in allowed_roles:
                 flash("Access denied. Insufficient permissions.", "error")
                 return redirect(url_for('index'))
+
+            # Перевірка автентифікації адміністратора
+            if 'admin' in allowed_roles and not session.get('admin_authenticated'):
+                flash("Access denied. Please log in as an admin.", "error")
+                return redirect(url_for('admin_panel', token=token))
 
             # Збереження даних користувача в сесії
             session['user_id'] = role_data['user_id']
@@ -540,7 +547,6 @@ def admin_panel(token):
     finally:
         if 'conn' in locals() and conn:
             conn.close()
-
 
 # Головна сторінка адмінки
 @app.route('/<token>/admin/dashboard')
@@ -1523,12 +1529,12 @@ def place_order(token):
 
         if user_email and 'email' in user_email and user_email['email']:
             try:
-                send_email(
-                    to_email=user_email['email'],
-                    subject=f"Order Confirmation - Order #{order_id}",
-                    ordered_items=ordered_items,
-                    missing_articles=session.get('missing_articles', [])
-                )
+                # send_email(
+                #     to_email=user_email['email'],
+                #     subject=f"Order Confirmation - Order #{order_id}",
+                #     ordered_items=ordered_items,
+                #     missing_articles=session.get('missing_articles', [])
+                # )
                 logging.info(f"Email sent successfully to {user_email['email']}")
             except Exception as email_error:
                 logging.error(f"Failed to send email: {email_error}")
@@ -1651,36 +1657,41 @@ def order_details(token, order_id):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Отримуємо деталі замовлення та статус
         cursor.execute("""
-            SELECT order_id, article, table_name, price, quantity, total_price, comment, status
+            SELECT 
+                order_id, 
+                article,
+                original_article, 
+                table_name, 
+                COALESCE(price, 0) as price,
+                quantity, 
+                COALESCE(total_price, 0) as total_price, 
+                COALESCE(comment, '') as comment,
+                status
             FROM order_details 
             WHERE order_id = %s
         """, (order_id,))
+        
         details = cursor.fetchall()
-
-        # Форматуємо дані
         formatted_details = [
             {
                 'article': row[1],
-                'table_name': row[2],
-                'price': float(row[3]),
-                'quantity': row[4],
-                'total_price': float(row[5]),
-                'comment': row[6] or _("No comment"),
-                'status': row[7] or 'new'
+                'original_article': row[2],
+                'table_name': row[3],
+                'price': float(row[4]),
+                'quantity': row[5],
+                'total_price': float(row[6]),
+                'comment': row[7],
+                'status': row[8] or 'new'
             }
             for row in details
         ]
-
-        # Рахуємо загальну суму
-        total_price = sum(item['total_price'] for item in formatted_details)
 
         return render_template('user/orders/order_details.html',
                             token=token,
                             order_id=order_id,
                             details=formatted_details,
-                            total_price=total_price)
+                            total_price=sum(item['total_price'] for item in formatted_details))
 
     except Exception as e:
         logging.error(f"Помилка завантаження деталей замовлення для order_id={order_id}: {e}", exc_info=True)
@@ -1691,8 +1702,9 @@ def order_details(token, order_id):
 @app.route('/<token>/admin/orders/<int:order_id>/update_status', methods=['POST'])
 @requires_token_and_roles('admin')
 def update_order_item_status(token, order_id):
+    conn = None  # Ініціалізуємо conn тут
     try:
-        data = request.json
+        data = request.get_json()  # Отримуємо JSON з тіла запиту
         if not data:
             logging.warning("No JSON data received.")
             return jsonify({"error": "Invalid JSON data."}), 400
@@ -1767,25 +1779,27 @@ def update_order_item_status(token, order_id):
         if counts:
             total_items = counts[9]  # total_count
 
-            # Визначення загального статусу замовлення
+            # Визначаємо загальний статус замовлення
             if counts[8] == total_items:  # Всі completed
                 new_order_status = 'completed'
-            elif counts[7] > 0:  # Є ready_pickup
+            elif counts[7] == total_items:  # Всі ready_pickup
                 new_order_status = 'ready_pickup'
-            elif counts[6] > 0:  # Є in_transit
+            elif counts[6] == total_items:  # Всі in_transit
                 new_order_status = 'in_transit'
-            elif counts[5] > 0:  # Є invoice_received
+            elif counts[5] == total_items:  # Всі invoice_received
                 new_order_status = 'invoice_received'
-            elif counts[4] > 0:  # Є ordered_supplier
+            elif counts[4] == total_items:  # Всі ordered_supplier
                 new_order_status = 'ordered_supplier'
-            elif counts[3] > 0:  # Є accepted
+            elif counts[3] == total_items:  # Всі accepted
                 new_order_status = 'accepted'
-            elif counts[2] > 0:  # Є pending
+            elif counts[2] == total_items:  # Всі pending
                 new_order_status = 'pending'
-            elif counts[1] > 0:  # Є in_review
+            elif counts[1] == total_items:  # Всі in_review
                 new_order_status = 'in_review'
-            else:
+            elif counts[0] == total_items:  # Всі new
                 new_order_status = 'new'
+            else:
+                new_order_status = 'in_progress'
 
             cursor.execute("UPDATE orders SET status = %s WHERE id = %s;", (new_order_status, order_id))
             conn.commit()
@@ -1803,49 +1817,55 @@ def update_order_item_status(token, order_id):
             logging.info(f"Database connection closed for order {order_id}.")
 
 
+
 @app.route('/<token>/admin/orders/<int:order_id>', methods=['GET'])
 @requires_token_and_roles('admin')
 def admin_order_details(token, order_id):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Отримуємо інформацію про замовлення та користувача
-        cursor.execute("""
-            SELECT o.id, o.user_id, o.order_date, o.total_price, o.status,
-                   u.username, u.email
-            FROM orders o
-            JOIN users u ON o.user_id = u.id
-            WHERE o.id = %s
-        """, (order_id,))
-        order = cursor.fetchone()
+            # Отримуємо інформацію про замовлення та користувача
+            cursor.execute("""
+                SELECT o.*, u.username, u.email,
+                       EXISTS (
+                           SELECT 1 FROM order_details 
+                           WHERE order_id = o.id 
+                           AND (status IS NULL OR status = 'new')
+                       ) as has_unprocessed_items
+                FROM orders o
+                JOIN users u ON o.user_id = u.id
+                WHERE o.id = %s
+            """, (order_id,))
+            
+            order = cursor.fetchone()
+            if not order:
+                flash("Order not found", "error")
+                return redirect(url_for('admin_orders', token=token))
 
-        # Отримуємо деталі замовлення
-        cursor.execute("""
-            SELECT id, article, table_name, price, quantity, 
-                   total_price, status, comment
-            FROM order_details
-            WHERE order_id = %s
-            ORDER BY id
-        """, (order_id,))
-        order_items = cursor.fetchall()
+            # Отримуємо деталі замовлення
+            cursor.execute("""
+                SELECT id, article, table_name, price, quantity, 
+                       total_price, COALESCE(status, 'new') as status, comment
+                FROM order_details
+                WHERE order_id = %s
+                ORDER BY id
+            """, (order_id,))
+            
+            order_items = cursor.fetchall()
 
-        return render_template(
-            'admin/orders/admin_order_details.html',
-            order=order,
-            order_items=order_items,
-            token=token
-        )
+            return render_template(
+                'admin/orders/admin_order_details.html',
+                order=order,
+                order_items=order_items,
+                token=token
+            )
 
     except Exception as e:
         logging.error(f"Error fetching order details: {e}", exc_info=True)
         flash("Failed to load order details", "error")
         return redirect(url_for('admin_orders', token=token))
-
-    finally:
-        cursor.close()
-        conn.close()
-
+    
 
 @app.route('/<token>/admin/orders', methods=['GET'])
 @requires_token_and_roles('admin')
@@ -2237,6 +2257,8 @@ def create_supplier_order(token):
     try:
         supplier_id = request.form.get('supplier_id')
         order_number = f"SO-{supplier_id}-{datetime.now().strftime('%Y%m%d%H%M')}"
+        
+        logging.info(f"Creating supplier order. Supplier ID: {supplier_id}, Order number: {order_number}")
 
         conn = get_db_connection()
         cur = conn.cursor()
@@ -2249,6 +2271,7 @@ def create_supplier_order(token):
         """, (supplier_id, order_number))
 
         supplier_order_id = cur.fetchone()[0]
+        logging.info(f"Created supplier order with ID: {supplier_order_id}")
 
         # Отримуємо деталі замовлення з order_details
         cur.execute("""
@@ -2262,27 +2285,41 @@ def create_supplier_order(token):
         """, (supplier_id,))
 
         details = cur.fetchall()
+        logging.info(f"Found {len(details)} order details to process")
 
         # Додаємо деталі до замовлення постачальнику
         for detail in details:
             detail_id, article, quantity = detail
             tracking_code = generate_tracking_code()
+            
+            logging.info(f"Processing detail - ID: {detail_id}, Article: {article}, Quantity: {quantity}, Tracking: {tracking_code}")
 
-            # Додаємо в supplier_order_details
-            cur.execute("""
-                INSERT INTO supplier_order_details 
-                (supplier_order_id, article, quantity, tracking_code)
-                VALUES (%s, %s, %s, %s)
-            """, (supplier_order_id, article, quantity, tracking_code))
+            try:
+                # Додаємо в supplier_order_details з order_details_id
+                cur.execute("""
+                    INSERT INTO supplier_order_details 
+                    (supplier_order_id, article, quantity, tracking_code, order_details_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING id
+                """, (supplier_order_id, article, quantity, tracking_code, detail_id))
+                
+                inserted_id = cur.fetchone()[0]
+                logging.info(f"Inserted supplier_order_detail with ID: {inserted_id}")
 
-            # Оновлюємо статус в order_details на 'ordered'
-            cur.execute("""
-                UPDATE order_details 
-                SET status = 'ordered_supplier'
-                WHERE id = %s
-            """, (detail_id,))
+                # Оновлюємо статус в order_details
+                cur.execute("""
+                    UPDATE order_details 
+                    SET status = 'ordered_supplier'
+                    WHERE id = %s
+                """, (detail_id,))
+                
+                logging.info(f"Updated order_details status for ID: {detail_id}")
 
-        # Оновлюємо статус замовлення на 'ordered_supplier'
+            except Exception as detail_error:
+                logging.error(f"Error processing detail {detail_id}: {detail_error}")
+                continue
+
+        # Оновлюємо статус замовлення
         cur.execute("""
             UPDATE orders 
             SET status = 'ordered_supplier' 
@@ -2294,20 +2331,1069 @@ def create_supplier_order(token):
         """)
 
         conn.commit()
+        logging.info("Supplier order creation completed successfully")
         flash('Supplier order created successfully', 'success')
 
     except Exception as e:
         conn.rollback()
-        logging.error(f"Помилка створення замовлення постачальнику: {e}")
+        logging.error(f"Error creating supplier order: {str(e)}", exc_info=True)
         flash('Error creating supplier order', 'error')
 
     finally:
         cur.close()
         conn.close()
+        logging.info("Database connection closed")
 
     return redirect(url_for('list_supplier_orders', token=token))
 
 
+# Функція прийому інвойсу
+@app.route('/<token>/admin/process-invoice', methods=['POST'])
+@requires_token_and_roles('admin')
+def process_invoice(token):
+    """Processes uploaded invoice file and creates invoice records"""
+    try:
+        if 'file' not in request.files:
+            flash("No file uploaded", "error")
+            return redirect(url_for('upload_invoice', token=token))
+            
+        file = request.files['file']
+        supplier_id = request.form.get('supplier_id')
+        invoice_number = request.form.get('invoice_number')
+        
+        # Validate required fields
+        if not all([file, supplier_id, invoice_number]):
+            flash("All fields are required", "error")
+            return redirect(url_for('upload_invoice', token=token))
+
+        # Read Excel file
+        df = pd.read_excel(file)
+        
+        # Validate and standardize column names
+        required_columns = ['Article', 'Quantity', 'Tracking_Code', 'Price']
+        if not all(col in df.columns for col in required_columns):
+            # Try to find columns by content if headers are missing
+            if len(df.columns) >= 4:
+                df.columns = required_columns + [f'Column_{i+4}' for i in range(len(df.columns)-4)]
+            else:
+                flash("Invalid file format - missing required columns", "error")
+                return redirect(url_for('upload_invoice', token=token))
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Create invoice record
+            cursor.execute("""
+                INSERT INTO supplier_invoices 
+                (invoice_number, supplier_id, status, created_at)
+                VALUES (%s, %s, 'new', NOW())
+                RETURNING id
+            """, (invoice_number, supplier_id))
+            
+            invoice_id = cursor.fetchone()[0]
+            
+            # Process each row
+            for _, row in df.iterrows():
+                try:
+                    article = str(row['Article']).strip().upper()
+                    quantity = int(row['Quantity'])
+                    tracking_code = str(row['Tracking_Code']).strip() if pd.notna(row['Tracking_Code']) else None
+                    
+                    # Додаємо логування для перевірки ціни
+                    price = row['Price']
+                    logging.info(f"Article: {article}, Price from Excel: {price}")
+                    
+                    price = float(price)
+                    total_price = price * quantity
+                    
+                    cursor.execute("""
+                        INSERT INTO invoice_details 
+                        (invoice_id, article, quantity, tracking_code, price, total_price)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (invoice_id, article, quantity, tracking_code, price, total_price))
+                except Exception as row_err:
+                    logging.error(f"Error processing row: {row.to_dict()}", exc_info=True)
+                    flash(f"Error processing row for article {row['Article']}: {row_err}", "error")
+                    conn.rollback()
+                    return redirect(url_for('upload_invoice', token=token))
+            
+            conn.commit()
+            flash("Invoice uploaded successfully", "success")
+            return redirect(url_for('analyze_invoice', token=token, invoice_id=invoice_id))
+            
+    except Exception as e:
+        logging.error(f"Error processing invoice: {e}", exc_info=True)
+        flash("Error processing invoice file", "error")
+        return redirect(url_for('upload_invoice', token=token))
+
+
+
+
+# функція перевірки схожості артикулів для приймання інвойсу
+def find_similar_articles(article1, article2):
+    """Перевіряє схожість артикулів"""
+    prefixes = ['K', 'V', 'G', 'J', 'WHT', 'VAG']
+    clean_article1 = article1
+    clean_article2 = article2
+    
+    for prefix in prefixes:
+        if article1.startswith(prefix):
+            clean_article1 = article1[len(prefix):]
+        if article2.startswith(prefix):
+            clean_article2 = article2[len(prefix):]
+    
+    return clean_article1 == clean_article2
+
+
+#  Функція аналізу відповідностей в обробці інвойсу від постачальника
+@app.route('/<token>/admin/analyze-invoice/<int:invoice_id>', methods=['GET'])
+@requires_token_and_roles('admin')
+def analyze_invoice(token, invoice_id):
+    logging.info(f"Starting analyze_invoice for invoice_id: {invoice_id}")
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Get invoice details
+            logging.info(f"Fetching invoice details for invoice_id: {invoice_id}")
+            cursor.execute("""
+                SELECT 
+                    id.*,
+                    si.invoice_number,
+                    si.supplier_id,
+                    si.status as invoice_status,
+                    id.price
+                FROM invoice_details id
+                JOIN supplier_invoices si ON id.invoice_id = si.id
+                WHERE id.invoice_id = %s
+                AND (id.status IS NULL OR id.status != 'processed')
+            """, (invoice_id,))
+            
+            invoice_items = cursor.fetchall()
+            logging.info(f"Found {len(invoice_items)} unprocessed items in invoice")
+            for item in invoice_items:
+                logging.debug(f"Invoice item: {dict(item)}")
+
+            full_matches = []
+            wrong_articles = []
+            excess_quantities = []
+            missing_quantities = []
+            price_highers = []
+            price_lowers = []
+            no_tracking_codes = []
+            different_names = []
+            
+            for item in invoice_items:
+                logging.info(f"Processing invoice item ID: {item['id']}")
+                try:
+                    if item['tracking_code']:
+                        logging.debug(f"Found tracking code: {item['tracking_code']}")
+                        cursor.execute("""
+                            SELECT 
+                                od.id as order_detail_id,
+                                od.article,
+                                od.original_article,
+                                od.quantity as order_quantity,
+                                od.status as order_status,
+                                od.order_id,
+                                sod.tracking_code,
+                                od.base_price,
+                                od.price,
+                                od.total_price,
+                                od.comment,
+                                od.table_name
+                            FROM supplier_order_details sod
+                            JOIN order_details od ON sod.order_details_id = od.id
+                            WHERE sod.tracking_code = %s
+                            AND od.status = 'ordered_supplier'
+                        """, (item['tracking_code'],))
+                        
+                        order_item = cursor.fetchone()
+                        if order_item:
+                            logging.debug(f"Found matching order item: {dict(order_item)}")
+                            
+                            invoice_qty = item['quantity']
+                            order_qty = order_item['order_quantity']
+                            invoice_price = item['price']
+                            order_price = order_item['price']
+                            base_price = order_item['base_price']
+                            
+                            logging.info(f"Comparing quantities - Invoice: {invoice_qty}, Order: {order_qty}")
+                            logging.info(f"Comparing prices - Invoice: {invoice_price}, Base: {base_price}")
+                            
+                            if order_item['article'] == item['article']:
+                                if invoice_qty == order_qty and invoice_price == base_price:
+                                    logging.info(f"Found full match for article {item['article']}")
+                                    full_matches.append({
+                                        'invoice_item': item,
+                                        'order_item': order_item
+                                    })
+                                else:
+                                    if invoice_qty > order_qty:
+                                        logging.info(f"Found excess quantity for article {item['article']}")
+                                        excess_quantities.append({
+                                            'invoice_item': item,
+                                            'order_item': order_item,
+                                            'excess_qty': invoice_qty - order_qty
+                                        })
+                                    elif invoice_qty < order_qty:
+                                        logging.info(f"Found missing quantity for article {item['article']}")
+                                        missing_quantities.append({
+                                            'invoice_item': item,
+                                            'order_item': order_item,
+                                            'missing_qty': order_qty - invoice_qty
+                                        })
+                                    
+                                    if invoice_price > base_price:
+                                        logging.info(f"Found higher price for article {item['article']}")
+                                        price_highers.append({
+                                            'invoice_item': item,
+                                            'order_item': order_item,
+                                            'price_diff': invoice_price - base_price
+                                        })
+                                    elif invoice_price < base_price:
+                                        logging.info(f"Found lower price for article {item['article']}")
+                                        price_lowers.append({
+                                            'invoice_item': item,
+                                            'order_item': order_item,
+                                            'price_diff': base_price - invoice_price
+                                        })
+                            else:
+                                logging.info(f"Article mismatch - Invoice: {item['article']}, Order: {order_item['article']}")
+                                if find_similar_articles(item['article'], order_item['article']):
+                                    logging.info(f"Found similar article names")
+                                    different_names.append({
+                                        'invoice_item': item,
+                                        'order_item': order_item
+                                    })
+                                else:
+                                    logging.info(f"Found wrong article")
+                                    wrong_articles.append({
+                                        'invoice_item': item,
+                                        'order_item': order_item
+                                    })
+                        else:
+                            logging.warning(f"No matching order found for tracking code: {item['tracking_code']}")
+                    else:
+                        logging.warning(f"No tracking code for article: {item['article']}")
+                        no_tracking_codes.append({
+                            'invoice_item': item
+                        })
+                except Exception as item_err:
+                    logging.error(f"Error processing item {item['id']}: {item_err}", exc_info=True)
+                    continue
+
+            # Логування результатів аналізу
+            logging.info(f"Analysis results for invoice {invoice_id}:")
+            logging.info(f"Full matches: {len(full_matches)}")
+            logging.info(f"Wrong articles: {len(wrong_articles)}")
+            logging.info(f"Excess quantities: {len(excess_quantities)}")
+            logging.info(f"Missing quantities: {len(missing_quantities)}")
+            logging.info(f"Price highers: {len(price_highers)}")
+            logging.info(f"Price lowers: {len(price_lowers)}")
+            logging.info(f"No tracking codes: {len(no_tracking_codes)}")
+            logging.info(f"Different names: {len(different_names)}")
+
+            return render_template(
+                'admin/invoices/analyze.html',
+                token=token,
+                invoice_id=invoice_id,
+                full_matches=full_matches,
+                wrong_articles=wrong_articles,
+                excess_quantities=excess_quantities,
+                missing_quantities=missing_quantities,
+                price_highers=price_highers,
+                price_lowers=price_lowers,
+                no_tracking_codes=no_tracking_codes,
+                different_names=different_names
+            )
+            
+    except Exception as e:
+        logging.error(f"Critical error in analyze_invoice: {e}", exc_info=True)
+        flash("Error analyzing invoice", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+    
+
+# Функція обробки невідповідностей
+@app.route('/<token>/admin/process-mismatches', methods=['POST'])
+@requires_token_and_roles('admin')
+def process_mismatches(token):
+    """Обробляє невідповідності в інвойсі"""
+    logging.info("=== Starting process_mismatches ===")
+    try:
+        invoice_id = request.form.get('invoice_id')
+        logging.info(f"Processing invoice_id: {invoice_id}")
+
+        if not invoice_id:
+            logging.error("No invoice_id provided in form data")
+            flash("Invoice ID is missing", "error")
+            return redirect(url_for('admin_dashboard', token=token))
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            # Отримуємо дані інвойсу
+            cursor.execute("""
+                SELECT invoice_number, supplier_id, status
+                FROM supplier_invoices 
+                WHERE id = %s
+            """, (invoice_id,))
+            invoice_data = cursor.fetchone()
+            logging.info(f"Invoice data: {dict(invoice_data) if invoice_data else None}")
+
+            if not invoice_data:
+                logging.error(f"Invoice not found for id: {invoice_id}")
+                flash("Invoice not found", "error")
+                return redirect(url_for('admin_dashboard', token=token))
+
+            # Логуємо всі вхідні дані форми
+            form_data = dict(request.form)
+            logging.info(f"Received form data: {form_data}")
+
+            # Обробка кожної дії з форми
+            for key, value in request.form.items():
+                logging.debug(f"Processing form field - Key: {key}, Value: {value}")
+
+                try:
+                    if key.startswith('action_'):
+                        invoice_detail_id = key.replace('action_', '')
+                        action = value
+                        logging.info(f"Processing action '{action}' for invoice_detail_id: {invoice_detail_id}")
+
+                        # Логуємо поточний стан деталі інвойсу перед обробкою
+                        cursor.execute("""
+                            SELECT id.*, sod.order_details_id
+                            FROM invoice_details id
+                            LEFT JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
+                            WHERE id.id = %s
+                        """, (invoice_detail_id,))
+                        detail_before = cursor.fetchone()
+                        logging.info(f"Detail before processing: {dict(detail_before) if detail_before else None}")
+
+                        if action == 'update_article':
+                            correct_article = request.form.get('correct_article')
+                            update_price = request.form.get('update_price') == 'on'
+                            logging.info(f"Update article - New article: {correct_article}, Update price: {update_price}")
+                            
+                            if not handle_wrong_article(invoice_detail_id, correct_article, update_price, conn, cursor):
+                                logging.error(f"Failed to handle wrong article for item {invoice_detail_id}")
+                                flash(f"Error handling wrong article for item {invoice_detail_id}", "error")
+
+                        elif action == 'accept_name_change':
+                            logging.info(f"Accepting name change for invoice_detail_id: {invoice_detail_id}")
+                            if not handle_accept_name_change(invoice_detail_id, conn, cursor):
+                                logging.error(f"Failed to handle name change for item {invoice_detail_id}")
+                                flash(f"Error handling name change for item {invoice_detail_id}", "error")
+
+                        elif action == 'reduce_order':
+                            logging.info(f"Reducing order for invoice_detail_id: {invoice_detail_id}")
+                            if not handle_missing_quantity(invoice_detail_id, conn, cursor):
+                                logging.error(f"Failed to handle missing quantity for item {invoice_detail_id}")
+                                flash(f"Error handling missing quantity for item {invoice_detail_id}", "error")
+
+                        elif action == 'update_price':
+                            logging.info(f"Updating price for invoice_detail_id: {invoice_detail_id}")
+                            if not handle_price_mismatch(invoice_detail_id, action, conn, cursor):
+                                logging.error(f"Failed to handle price mismatch for item {invoice_detail_id}")
+                                flash(f"Error handling price mismatch for item {invoice_detail_id}", "error")
+
+                        # Логуємо оновлений стан деталі інвойсу
+                        cursor.execute("""
+                            SELECT id.*, sod.order_details_id
+                            FROM invoice_details id
+                            LEFT JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
+                            WHERE id.id = %s
+                        """, (invoice_detail_id,))
+                        detail_after = cursor.fetchone()
+                        logging.info(f"Detail after processing: {dict(detail_after) if detail_after else None}")
+
+                except Exception as action_err:
+                    logging.error(f"Error processing action for invoice_detail_id {invoice_detail_id}: {action_err}", exc_info=True)
+                    flash(f"Error handling action for item {invoice_detail_id}: {str(action_err)}", "error")
+                    continue
+
+            conn.commit()
+            logging.info("Successfully processed all mismatches")
+            flash("Невідповідності успішно оброблено", "success")
+
+    except Exception as e:
+        logging.error(f"Critical error in process_mismatches: {e}", exc_info=True)
+        flash("Помилка обробки невідповідностей", "error")
+
+    logging.info("=== Finished process_mismatches ===")
+    return redirect(url_for('analyze_invoice', token=token, invoice_id=invoice_id))
+
+@app.route('/<token>/admin/confirm-invoice/<int:invoice_id>', methods=['POST'])
+@requires_token_and_roles('admin')
+def confirm_invoice(token, invoice_id):
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            # Оновлюємо статус замовлення
+            cursor.execute("""
+                UPDATE order_details
+                SET status = 'invoice_received'
+                WHERE id IN (
+                    SELECT sod.order_details_id
+                    FROM invoice_details id
+                    JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
+                    WHERE id.invoice_id = %s
+                )
+                AND status = 'ordered_supplier'
+            """, (invoice_id,))
+            updated_count = cursor.rowcount
+            conn.commit()
+            logging.info(f"Updated {updated_count} order details status to 'invoice_received'")
+
+            # Оновлюємо статус деталі інвойсу
+            cursor.execute("""
+                UPDATE invoice_details 
+                SET status = 'processed',
+                    processed_at = NOW()
+                WHERE invoice_id = %s
+            """, (invoice_id,))
+            updated_count = cursor.rowcount
+            logging.info(f"Updated {updated_count} invoice_detail status for invoice_id: {invoice_id}")
+
+            # Оновлюємо статус інвойсу
+            cursor.execute("""
+                UPDATE supplier_invoices
+                SET status = 'accepted'
+                WHERE id = %s
+            """, (invoice_id,))
+            updated_count = cursor.rowcount
+            logging.info(f"Updated {updated_count} supplier_invoices status for id: {invoice_id}")
+
+            conn.commit()
+            flash("Інвойс успішно підтверджено", "success")
+
+    except Exception as e:
+        logging.error(f"Error confirming invoice: {e}", exc_info=True)
+        flash("Помилка підтвердження інвойсу", "error")
+
+    return redirect(url_for('list_invoices', token=token))
+
+
+def handle_accept_name_change(invoice_detail_id, conn, cursor):
+    """
+    Обробляє прийняття зміни назви артикула.
+    """
+    try:
+        # Отримуємо інформацію про позицію інвойсу
+        cursor.execute("""
+            SELECT 
+                id.article,
+                sod.order_details_id
+            FROM invoice_details id
+            JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
+            WHERE id.id = %s
+        """, (invoice_detail_id,))
+        
+        item = cursor.fetchone()
+        
+        if not item:
+            logging.error(f"Item not found for invoice_detail_id: {invoice_detail_id}")
+            return False
+
+        # Оновлюємо артикул в order_details
+        cursor.execute("""
+            UPDATE order_details 
+            SET article = %s
+            WHERE id = %s
+        """, (item['article'], item['order_details_id']))
+        logging.info(f"Updated order_details article for id: {item['order_details_id']} to {item['article']}")
+
+        # Оновлюємо статус деталі інвойсу
+        cursor.execute("""
+            UPDATE invoice_details 
+            SET status = 'processed',
+                processed_at = NOW()
+            WHERE id = %s
+        """, (invoice_detail_id,))
+        logging.info(f"Updated invoice_detail status for id: {invoice_detail_id}")
+
+        return True
+
+    except Exception as e:
+        logging.error(f"Error handling wrong article: {e}", exc_info=True)
+        return False
+
+
+def handle_excess_quantity(invoice_detail_id, conn, cursor):
+    """
+    Обробляє ситуацію, коли кількість в інвойсі більша за кількість в замовленні.
+    """
+    try:
+        # Отримуємо інформацію про позицію інвойсу
+        cursor.execute("""
+            SELECT 
+                id.article,
+                id.quantity as invoice_quantity,
+                sod.order_details_id,
+                od.quantity as order_quantity
+            FROM invoice_details id
+            JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
+            JOIN order_details od ON sod.order_details_id = od.id
+            WHERE id.id = %s
+        """, (invoice_detail_id,))
+        item = cursor.fetchone()
+
+        if not item:
+            logging.error(f"Item not found for invoice_detail_id: {invoice_detail_id}")
+            return False
+
+        # Розраховуємо надлишкову кількість
+        excess_quantity = item['invoice_quantity'] - item['order_quantity']
+
+        if excess_quantity <= 0:
+            logging.warning(f"No excess quantity for invoice_detail_id: {invoice_detail_id}")
+            return False
+
+        # Створюємо новий запис order_details для надлишку
+        cursor.execute("""
+            INSERT INTO order_details 
+            (order_id, article, table_name, price, quantity)
+            SELECT order_id, article, table_name, price, %s
+            FROM order_details
+            WHERE id = %s
+        """, (excess_quantity, item['order_details_id']))
+
+        # Оновлюємо статус деталі інвойсу
+        cursor.execute("""
+            UPDATE invoice_details 
+            SET status = 'processed'
+            WHERE id = %s
+        """, (invoice_detail_id,))
+
+        return True
+
+    except Exception as e:
+        logging.error(f"Error handling excess quantity: {e}", exc_info=True)
+        return False
+
+
+def handle_missing_quantity(invoice_detail_id, conn, cursor):
+    """
+    Обробляє ситуацію, коли кількість в інвойсі менша за кількість в замовленні.
+    """
+    try:
+        # Отримуємо інформацію про позицію інвойсу
+        cursor.execute("""
+            SELECT 
+                id.article,
+                id.quantity as invoice_quantity,
+                sod.order_details_id,
+                od.quantity as order_quantity
+            FROM invoice_details id
+            JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
+            JOIN order_details od ON sod.order_details_id = od.id
+            WHERE id.id = %s
+        """, (invoice_detail_id,))
+        item = cursor.fetchone()
+
+        if not item:
+            logging.error(f"Item not found for invoice_detail_id: {invoice_detail_id}")
+            return False
+
+        # Розраховуємо залишок кількості
+        remaining_quantity = item['order_quantity'] - item['invoice_quantity']
+
+        if remaining_quantity <= 0:
+            logging.warning(f"No remaining quantity for invoice_detail_id: {invoice_detail_id}")
+            return False
+
+        # Оновлюємо кількість в поточному записі order_details
+        cursor.execute("""
+            UPDATE order_details 
+            SET quantity = %s
+            WHERE id = %s
+        """, (item['invoice_quantity'], item['order_details_id']))
+
+        # Створюємо новий запис order_details для залишку
+        cursor.execute("""
+            INSERT INTO order_details 
+            (order_id, article, table_name, price, quantity)
+            SELECT order_id, article, table_name, price, %s
+            FROM order_details
+            WHERE id = %s
+        """, (remaining_quantity, item['order_details_id']))
+
+        # Оновлюємо статус деталі інвойсу
+        cursor.execute("""
+            UPDATE invoice_details 
+            SET status = 'processed'
+            WHERE id = %s
+        """, (invoice_detail_id,))
+
+        return True
+
+    except Exception as e:
+        logging.error(f"Error handling missing quantity: {e}", exc_info=True)
+        return False
+
+
+def handle_price_mismatch(invoice_detail_id, action, conn, cursor):
+    """Обробляє невідповідність ціни в інвойсі з урахуванням націнки клієнта."""
+    try:
+        logging.info(f"Processing price mismatch for invoice_detail_id: {invoice_detail_id}")
+
+        # Отримуємо інформацію про позицію інвойсу та замовлення
+        cursor.execute("""
+            SELECT 
+                id.price as invoice_price,
+                sod.order_details_id,
+                od.price as order_price,
+                od.base_price as old_base_price,
+                o.user_id,
+                o.id as order_id
+            FROM invoice_details id
+            JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
+            JOIN order_details od ON sod.order_details_id = od.id
+            JOIN orders o ON od.order_id = o.id
+            WHERE id.id = %s
+        """, (invoice_detail_id,))
+        
+        item = cursor.fetchone()
+        if not item:
+            logging.error(f"Item not found for invoice_detail_id: {invoice_detail_id}")
+            return False
+
+        # Розрахунок нової ціни з націнкою
+        base_price = Decimal(item['invoice_price'])
+        old_base_price = Decimal(item['old_base_price'])
+        
+        # Отримуємо націнку користувача
+        cursor.execute("""
+            SELECT r.markup_percentage
+            FROM user_roles ur
+            JOIN roles r ON ur.role_id = r.id
+            WHERE ur.user_id = %s
+        """, (item['user_id'],))
+        
+        markup_result = cursor.fetchone()
+        if not markup_result:
+            logging.error(f"No markup found for user_id: {item['user_id']}")
+            return False
+        
+        markup_percentage = Decimal(markup_result[0])
+        final_price = base_price * (1 + markup_percentage / 100)
+
+        if action == 'update_price':
+            # Оновлюємо ціни та відмітки про зміни
+            cursor.execute("""
+                UPDATE order_details 
+                SET base_price = %s,
+                    price = %s,
+                    total_price = %s * quantity,
+                    price_changed = true,
+                    last_change_type = 'price_updated',
+                    change_reason = %s
+                WHERE id = %s
+            """, (
+                base_price, 
+                final_price, 
+                final_price, 
+                f"Price updated from invoice (old: {old_base_price}, new: {base_price})",
+                item['order_details_id']
+            ))
+            
+            # Додаємо запис в історію змін
+            cursor.execute("""
+                INSERT INTO order_changes 
+                (order_id, order_detail_id, field_changed, old_value, new_value, changed_by, change_date)
+                VALUES (%s, %s, 'price', %s, %s, %s, NOW())
+            """, (item['order_id'], item['order_details_id'], item['order_price'], final_price, 'invoice_process')) # Змінено тут
+
+        logging.info(f"Price updated for order_detail_id: {item['order_details_id']}")
+        return True
+
+    except Exception as e:
+        logging.error(f"Error handling price mismatch: {e}", exc_info=True)
+        return False
+
+@app.route('/<token>/order-changes', methods=['GET'])
+@requires_token_and_roles('user', 'user_25', 'user_29')
+def view_order_changes(token):
+    """Показує історію змін замовлень користувача."""
+    try:
+        user_id = session.get('user_id')
+        logging.info(f"Viewing order changes for user_id: {user_id}")
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо всі зміни для замовлень користувача
+            cursor.execute("""
+                SELECT 
+                    oc.order_id,
+                    oc.order_detail_id,
+                    oc.field_changed,
+                    oc.old_value,
+                    oc.new_value,
+                    oc.change_date,
+                    oc.comment,
+                    od.article,
+                    od.status
+                FROM order_changes oc
+                JOIN order_details od ON oc.order_detail_id = od.id
+                JOIN orders o ON oc.order_id = o.id
+                WHERE o.user_id = %s
+                ORDER BY oc.change_date DESC
+            """, (user_id,))
+            
+            changes = cursor.fetchall()
+            
+            return render_template(
+                'user/orders/order_changes.html',
+                changes=changes,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error viewing order changes: {e}", exc_info=True)
+        flash("Error loading order changes", "error")
+        return redirect(url_for('orders', token=token))
+
+def handle_no_tracking_code(invoice_detail_id, action, conn, cursor):
+    """
+    Обробляє ситуацію, коли в інвойсі відсутній код відстеження.
+    """
+    try:
+        # Отримуємо інформацію про позицію інвойсу
+        cursor.execute("""
+            SELECT 
+                id.article,
+                id.quantity,
+                id.price
+            FROM invoice_details id
+            WHERE id.id = %s
+        """, (invoice_detail_id,))
+        item = cursor.fetchone()
+
+        if not item:
+            logging.error(f"Item not found for invoice_detail_id: {invoice_detail_id}")
+            return False
+
+        if action == 'add_to_warehouse':
+            # Додаємо товар на склад
+            cursor.execute("""
+                INSERT INTO warehouse (article, quantity, base_price, price, table_name, added_at)
+                VALUES (%s, %s, %s, %s, %s, NOW())
+            """, (item['article'], item['quantity'], item['price'], item['price'], 'unknown'))
+            logging.info(f"Added item {item['article']} to warehouse")
+
+        # Оновлюємо статус деталі інвойсу
+        cursor.execute("""
+            UPDATE invoice_details 
+            SET status = 'processed',
+                processed_at = NOW()
+            WHERE id = %s
+        """, (invoice_detail_id,))
+        logging.info(f"Updated invoice_detail status for id: {invoice_detail_id}")
+
+        return True
+
+    except Exception as e:
+        logging.error(f"Error handling no tracking code: {e}", exc_info=True)
+        return False
+
+
+# Додаткові функції обробки невідповідностей в інвойсі
+def handle_wrong_article(invoice_detail_id, correct_article, update_price, conn, cursor):
+    """
+    Обробляє невідповідність артикулів в інвойсі.
+    """
+    try:
+        logging.info(f"handle_wrong_article called for invoice_detail_id: {invoice_detail_id}, correct_article: {correct_article}, update_price: {update_price}")
+        # Отримуємо інформацію про позицію інвойсу
+        cursor.execute("""
+            SELECT 
+                id.article,
+                id.quantity as invoice_quantity,
+                id.price as invoice_price,
+                sod.order_details_id
+            FROM invoice_details id
+            JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
+            WHERE id.id = %s
+        """, (invoice_detail_id,))
+        
+        item = cursor.fetchone()
+        
+        if not item:
+            logging.error(f"Item not found for invoice_detail_id: {invoice_detail_id}")
+            return False
+
+        # Оновлюємо артикул в order_details
+        cursor.execute("""
+            UPDATE order_details 
+            SET article = %s
+            WHERE id = %s
+        """, (correct_article, item['order_details_id']))
+        logging.info(f"Updated order_details article for id: {item['order_details_id']} to {correct_article}")
+
+        # Перевіряємо ціну
+        invoice_price_per_unit = item['invoice_price'] / item['invoice_quantity']
+        price_difference_percentage = abs((invoice_price_per_unit - item['invoice_price']) / item['invoice_price']) * 100
+
+        if update_price and price_difference_percentage <= 1:
+            # Оновлюємо ціну в order_details
+            cursor.execute("""
+                UPDATE order_details 
+                SET price = %s,
+                    total_price = %s * quantity
+                WHERE id = %s
+            """, (invoice_price_per_unit, invoice_price_per_unit, item['order_details_id']))
+            logging.info(f"Updated order_details price for id: {item['order_details_id']} to {invoice_price_per_unit}")
+
+        # Оновлюємо статус деталі інвойсу
+        cursor.execute("""
+            UPDATE invoice_details 
+            SET status = 'processed',
+                processed_at = NOW()
+            WHERE id = %s
+        """, (invoice_detail_id,))
+        logging.info(f"Updated invoice_detail status for id: {invoice_detail_id}")
+
+        return True
+
+    except Exception as e:
+        logging.error(f"Error handling wrong article: {e}", exc_info=True)
+        return False
+
+# перегляд складу
+@app.route('/<token>/admin/warehouse', methods=['GET'])
+@requires_token_and_roles('admin')
+def warehouse_items(token):
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            cursor.execute("""
+                SELECT 
+                    w.id,
+                    w.article,
+                    w.quantity,
+                    w.base_price,
+                    w.price,
+                    w.table_name,
+                    w.added_at,
+                    w.invoice_number,
+                    si.supplier_id,
+                    s.name as supplier_name
+                FROM warehouse w
+                LEFT JOIN supplier_invoices si ON w.invoice_id = si.id
+                LEFT JOIN suppliers s ON si.supplier_id = s.id
+                ORDER BY w.added_at DESC
+            """)
+            
+            items = cursor.fetchall()
+            
+            return render_template(
+                'admin/warehouse/list_items.html',
+                items=items,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error fetching warehouse items: {e}")
+        flash("Error loading warehouse items", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+
+
+# сторінка для завантаження інвойсу:
+@app.route('/<token>/admin/invoice/upload', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def upload_invoice(token):
+    if request.method == 'GET':
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Get suppliers list
+            cursor.execute("SELECT id, name FROM suppliers")
+            suppliers = cursor.fetchall()
+            
+            return render_template('admin/invoices/upload.html', 
+                                 suppliers=suppliers,
+                                 token=token)
+        except Exception as e:
+            logging.error(f"Error in GET: {e}")
+            flash("Error loading suppliers", "error")
+            return redirect(url_for('admin_dashboard', token=token))
+                             
+    elif request.method == 'POST':
+        try:
+            file = request.files.get('invoice_file')
+            supplier_id = request.form.get('supplier_id')
+            invoice_number = request.form.get('invoice_number')
+            
+            logging.debug(f"Received file: {file.filename if file else None}")
+            logging.debug(f"Supplier ID: {supplier_id}")
+            logging.debug(f"Invoice number: {invoice_number}")
+            
+            if not all([file, supplier_id, invoice_number]):
+                flash("All fields are required", "error") 
+                return redirect(url_for('upload_invoice', token=token))
+                
+            # Read Excel file
+            df = pd.read_excel(file, dtype={'Price': str})  # Явне вказання типу даних
+            logging.debug(f"Excel data shape: {df.shape}")
+            logging.debug(f"Columns: {df.columns.tolist()}")
+            
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Create invoice record
+                cursor.execute("""
+                    INSERT INTO supplier_invoices 
+                    (invoice_number, supplier_id, status, created_at)
+                    VALUES (%s, %s, 'new', NOW())
+                    RETURNING id
+                """, (invoice_number, supplier_id))
+                
+                invoice_id = cursor.fetchone()[0]
+                
+                # Save invoice details
+                for _, row in df.iterrows():
+                    # Отримуємо значення ціни з файлу Excel
+                    logging.info(f"Row data: {row}")  # Логування всього рядка
+                    price = row.get('Price')
+                    logging.info(f"Article: {row['Article']}, Raw Price from Excel: {price}")
+
+                    # Перевіряємо, чи ціна не є порожньою
+                    if price is None:
+                        logging.warning(f"Price is empty for Article: {row['Article']}")
+                        price_value = 0.0  # або можна вказати інше значення за замовчуванням
+                    else:
+                        try:
+                            price_str = str(price).replace(',', '.')  # Заміна коми на крапку
+                            price_value = float(price_str)
+                        except Exception as err:
+                            logging.error(f"Failed to convert price to float for Article: {row['Article']}, price: {price}", exc_info=True)
+                            price_value = 0.0
+
+                    # Логування значення та типу ціни перед виконанням SQL-запиту
+                    logging.info(f"Inserting row for Article: {row['Article']} with Price: {price_value} (type: {type(price_value)})")
+
+                    cursor.execute("""
+                        INSERT INTO invoice_details 
+                        (invoice_id, article, quantity, tracking_code, price)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (invoice_id, row['Article'], 
+                          row['Quantity'], row.get('Tracking_Code'), price_value))
+                          
+                conn.commit()
+                
+            flash("Invoice uploaded successfully", "success")
+            return redirect(url_for('analyze_invoice', 
+                                  token=token,
+                                  invoice_id=invoice_id))
+                                  
+        except Exception as e:
+            logging.error(f"Error uploading invoice: {e}")
+            flash("Error uploading invoice", "error")
+            return redirect(url_for('upload_invoice', token=token))
+
+
+# маршрут для списку інвойсів в адмін-панелі
+@app.route('/<token>/admin/invoices', methods=['GET'])
+@requires_token_and_roles('admin')
+def list_invoices(token):
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо всі інвойси з інформацією про постачальника
+            cursor.execute("""
+                SELECT 
+                    si.id,
+                    si.invoice_number,
+                    si.created_at,
+                    si.status,
+                    s.name as supplier_name,
+                    COUNT(id.id) as items_count,
+                    COUNT(CASE WHEN id.status = 'processed' THEN 1 END) as processed_count
+                FROM supplier_invoices si
+                JOIN suppliers s ON si.supplier_id = s.id
+                LEFT JOIN invoice_details id ON si.id = id.invoice_id
+                GROUP BY si.id, si.invoice_number, si.created_at, si.status, s.name
+                ORDER BY si.created_at DESC
+            """)
+            invoices = cursor.fetchall()
+            
+            return render_template(
+                'admin/invoices/list_invoices.html',
+                invoices=invoices,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error fetching invoices: {e}", exc_info=True)
+        flash("Error loading invoices", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+# функція для перегляду деталей інвойсу
+@app.route('/<token>/admin/invoice/<int:invoice_id>/details', methods=['GET'])
+@requires_token_and_roles('admin')
+def invoice_details(token, invoice_id):
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо інформацію про інвойс
+            cursor.execute("""
+                SELECT 
+                    si.*,
+                    s.name as supplier_name
+                FROM supplier_invoices si
+                JOIN suppliers s ON si.supplier_id = s.id
+                WHERE si.id = %s
+            """, (invoice_id,))
+            
+            invoice = cursor.fetchone()
+            if not invoice:
+                flash("Invoice not found", "error")
+                return redirect(url_for('list_invoices', token=token))
+
+            # Отримуємо деталі інвойсу
+            cursor.execute("""
+                SELECT 
+                    id.*,
+                    CASE 
+                        WHEN sod.order_details_id IS NOT NULL THEN od.article 
+                        ELSE NULL 
+                    END as original_article,
+                    CASE 
+                        WHEN sod.order_details_id IS NOT NULL THEN od.quantity 
+                        ELSE NULL 
+                    END as ordered_quantity,
+                    CASE
+                        WHEN w.id IS NOT NULL THEN TRUE
+                        ELSE FALSE
+                    END as in_warehouse
+                FROM invoice_details id
+                LEFT JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
+                LEFT JOIN order_details od ON sod.order_details_id = od.id
+                LEFT JOIN warehouse w ON id.article = w.article AND id.invoice_id = w.invoice_id
+                WHERE id.invoice_id = %s
+                ORDER BY id.id
+            """, (invoice_id,))
+            
+            invoice_items = cursor.fetchall()
+
+            return render_template(
+                'admin/invoices/invoice_details.html',
+                invoice=invoice,
+                items=invoice_items,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error fetching invoice details: {e}", exc_info=True)
+        flash("Error loading invoice details", "error")
+        return redirect(url_for('list_invoices', token=token))
 
 @app.route('/<token>/admin/compare_prices', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
@@ -2520,6 +3606,7 @@ def view_supplier_order(token, order_id):
 # Функція експорту в Excel замовлень постачальнику
 @app.route('/<token>/admin/supplier-orders/<int:order_id>/export')
 def export_supplier_order(token, order_id):
+    """Export supplier order details to Excel file"""
     logging.info(f"Starting export for supplier order {order_id}")
 
     if validate_token(token):
@@ -2542,33 +3629,31 @@ def export_supplier_order(token, order_id):
             order = cur.fetchone()
 
             if order:
-                # Get order details with correct column names
+                # Get order details
                 cur.execute("""
-                    SELECT 
-                        article,
-                        quantity,
-                        tracking_code,
-                        created_at
+                    SELECT article, quantity, tracking_code, created_at
                     FROM supplier_order_details
                     WHERE supplier_order_id = %s
                 """, [order_id])
                 items = cur.fetchall()
 
+                # Create Excel workbook
                 workbook = Workbook()
                 sheet = workbook.active
 
-                # Headers
+                # Add headers
                 sheet['A1'] = f'Supplier Order #{order["order_number"]}'
                 sheet['A2'] = f'Supplier: {order["supplier_name"]}'
                 sheet['A3'] = f'Status: {order["status"]}'
                 sheet['A4'] = f'Created: {order["created_at"]}'
 
-                # Column headers
+                # Add column headers
                 sheet['A6'] = 'Article'
                 sheet['B6'] = 'Quantity'
-                sheet['C6'] = 'Tracking Code'
+                sheet['C6'] = 'Tracking Code' 
                 sheet['D6'] = 'Created At'
 
+                # Add order items
                 row = 7
                 for item in items:
                     sheet[f'A{row}'] = item['article']
@@ -2577,20 +3662,24 @@ def export_supplier_order(token, order_id):
                     sheet[f'D{row}'] = item['created_at']
                     row += 1
 
+                # Save to BytesIO buffer
                 output = BytesIO()
                 workbook.save(output)
                 output.seek(0)
 
+                # Return Excel file
+                filename = f'supplier_order_{order["order_number"]}.xlsx'
                 return send_file(
                     output,
                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     as_attachment=True,
-                    download_name=f'supplier_order_{order["order_number"]}.xlsx'
+                    download_name=filename
                 )
 
         except Exception as e:
             logging.error(f"Export failed: {str(e)}")
             flash("Export failed. Please try again.", "error")
+
         finally:
             cur.close()
             conn.close()
@@ -2904,7 +3993,7 @@ def intermediate_results(token):
 
         # Передача всіх даних у шаблон
         return render_template(
-            'intermediate.html',
+            'user/search/intermediate.html',
             token=token,
             items_without_table=enriched_items,
             missing_articles=missing_articles
@@ -2915,6 +4004,78 @@ def intermediate_results(token):
         flash("An error occurred while processing your selection. Please try again.", "error")
         return redirect(f'/{token}/')
 
+
+# Кнопка підтвердження співпадінь аналізу інвойсу
+@app.route('/<token>/admin/accept-matches/<int:invoice_id>', methods=['POST'])
+@requires_token_and_roles('admin')
+def accept_matches(token, invoice_id):
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # 1. Оновлення повних співпадінь
+            cursor.execute("""
+                UPDATE order_details od
+                SET status = 'invoice_received'
+                FROM supplier_order_details sod
+                JOIN invoice_details id ON sod.tracking_code = id.tracking_code
+                WHERE sod.order_details_id = od.id
+                AND id.invoice_id = %s
+                AND od.status = 'ordered_supplier'
+                AND id.quantity = od.quantity
+            """, (invoice_id,))
+
+            # 2. Обробка часткових співпадінь без створення нових замовлень
+            cursor.execute("""
+                WITH partial_matches AS (
+                    SELECT 
+                        od.id as order_detail_id,
+                        od.order_id,
+                        od.article,
+                        od.quantity as order_quantity,
+                        id.quantity as invoice_quantity,
+                        od.base_price,
+                        od.price,
+                        od.comment,
+                        od.table_name
+                    FROM order_details od
+                    JOIN supplier_order_details sod ON sod.order_details_id = od.id
+                    JOIN invoice_details id ON sod.tracking_code = id.tracking_code
+                    WHERE id.invoice_id = %s
+                    AND od.status = 'ordered_supplier'
+                    AND id.quantity < od.quantity
+                )
+                UPDATE order_details od
+                SET 
+                    quantity = pm.invoice_quantity,
+                    status = 'invoice_received',
+                    total_price = pm.price * pm.invoice_quantity
+                FROM partial_matches pm
+                WHERE od.id = pm.order_detail_id
+            """, (invoice_id,))
+            
+            # 3. Оновлення статусу деталей інвойсу на 'processed'
+            cursor.execute("""
+                UPDATE invoice_details
+                SET status = 'processed'
+                WHERE invoice_id = %s
+            """, (invoice_id,))
+            
+            # 4. Оновлення статусу інвойсу на 'accepted'
+            cursor.execute("""
+                UPDATE supplier_invoices
+                SET status = 'accepted'
+                WHERE id = %s
+            """, (invoice_id,))
+            
+            conn.commit()
+            flash("Matches accepted successfully", "success")
+            
+    except Exception as e:
+        logging.error(f"Error accepting matches: {e}")
+        flash("Error processing matches", "error")
+        
+    return redirect(url_for('list_invoices', token=token))
 
 
 def get_markup_percentage(user_id):
@@ -3040,36 +4201,59 @@ def create_news(token):
 
 
 
-
+# Прийняти всі артикулі в замовленні користувача
 @app.route('/<token>/admin/orders/<int:order_id>/accept-all', methods=['POST'])
 @requires_token_and_roles('admin')
 def accept_all_items(token, order_id):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Перевіряємо чи є позиції зі статусом new
+            cursor.execute("""
+                SELECT COUNT(*) 
+                FROM order_details 
+                WHERE order_id = %s 
+                AND status = 'new'
+            """, (order_id,))
+            
+            unprocessed_count = cursor.fetchone()[0]
+            
+            if unprocessed_count == 0:
+                flash("All items are already processed", "warning")
+                return redirect(url_for('admin_order_details', token=token, order_id=order_id))
 
-        # Оновлюємо тільки статус, зберігаючи існуючі коментарі
-        cursor.execute("""
-            UPDATE order_details 
-            SET status = 'accepted'
-            WHERE order_id = %s
-        """, (order_id,))
-
-        # Оновлюємо статус замовлення
-        cursor.execute("""
-            UPDATE orders 
-            SET status = 'accepted' 
-            WHERE id = %s
-        """, (order_id,))
-
-        conn.commit()
-        flash("All items accepted successfully", "success")
-
+            # Оновлюємо тільки позиції зі статусом new
+            cursor.execute("""
+                UPDATE order_details 
+                SET status = 'accepted',
+                    processed_at = NOW()
+                WHERE order_id = %s 
+                AND status = 'new'
+            """, (order_id,))
+            
+            # Оновлюємо статус замовлення
+            cursor.execute("""
+                UPDATE orders
+                SET status = 'accepted'
+                WHERE id = %s
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM order_details
+                    WHERE order_id = %s
+                    AND status != 'accepted'
+                )
+            """, (order_id, order_id))
+            
+            conn.commit()
+            flash("All items accepted successfully", "success")
+            
     except Exception as e:
         logging.error(f"Error accepting all items: {e}")
-        flash("Error accepting items", "error")
-
+        flash("Error processing items", "error")
+        
     return redirect(url_for('admin_order_details', token=token, order_id=order_id))
+
 
 
 @app.route('/<token>/admin/export-orders', methods=['GET'])
@@ -3214,6 +4398,73 @@ def process_supplier_invoice():
     finally:
         cursor.close()
         conn.close()
+
+# endpoint accept-match для підтвердження в інвойсах постачальника
+@app.route('/<token>/api/accept-match', methods=['POST'])
+@requires_token_and_roles('admin')
+def accept_match():
+    try:
+        data = request.json
+        invoice_detail_id = data.get('invoice_detail_id')
+        order_detail_id = data.get('order_detail_id')
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE order_details 
+                SET status = 'invoice_received'
+                WHERE id = %s
+            """, (order_detail_id,))
+            
+            conn.commit()
+            
+        return jsonify({'success': True})
+    except Exception as e:
+        logging.error(f"Error accepting match: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# експорт результату аналізу інвойса
+@app.route('/<token>/admin/invoice/<int:invoice_id>/export', methods=['GET'])
+@requires_token_and_roles('admin')
+def export_invoice_analysis(token, invoice_id):
+    try:
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Invoice Analysis"
+        
+        # Headers
+        headers = ['Article', 'Invoice Qty', 'Order Qty', 'Tracking Code', 'Status', 'Details']
+        ws.append(headers)
+        
+        # Add matched items
+        for item in matching_items:
+            ws.append([
+                item['invoice_item']['article'],
+                item['invoice_item']['quantity'],
+                item['order_item']['order_quantity'],
+                item['invoice_item']['tracking_code'],
+                item['match_type'],
+                f"Received: {item.get('received_qty', '')} Remaining: {item.get('remaining_qty', '')}"
+            ])
+            
+        # Format and return Excel file
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'invoice_analysis_{invoice_id}.xlsx'
+        )
+        
+    except Exception as e:
+        logging.error(f"Error exporting invoice analysis: {e}")
+        flash("Error exporting analysis", "error")
+        return redirect(url_for('analyze_invoice', token=token, invoice_id=invoice_id))
 
 
 @app.route('/<token>/news')

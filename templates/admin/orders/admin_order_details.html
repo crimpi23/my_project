@@ -1,6 +1,63 @@
+{# filepath: templates/admin/orders/admin_order_details.html #}
 {% extends "base/admin_base.html" %}
 
 {% block title %}Order Details #{{ order.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.8em;
+    }
+
+    .badge.bg-info {
+        background-color: #17a2b8 !important;
+    }
+    
+    .badge.bg-warning {
+        color: #000 !important;
+    }
+
+    .badge.bg-success {
+        background-color: #28a745 !important;
+    }
+
+    .update-status-form {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .form-select, .form-control {
+        font-size: 0.875rem;
+    }
+
+    .input-group {
+        width: 100%;
+        max-width: 450px;
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 0.75rem;
+    }
+
+    .btn-admin {
+        min-width: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bi-arrow-repeat.spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -11,60 +68,64 @@
         </a>
     </div>
 
-<div class="card admin-table mb-4">
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-person me-2"></i>
-                    <div>
-                        <small class="d-block text-muted">Customer</small>
-                        <strong>{{ order.username }}</strong>
+    <div class="card admin-table mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <!-- Customer Info -->
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-person me-2"></i>
+                        <div>
+                            <small class="d-block text-muted">Customer</small>
+                            <strong>{{ order.username }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <!-- Email -->
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-envelope me-2"></i>
+                        <div>
+                            <small class="d-block text-muted">Email</small>
+                            <strong>{{ order.email }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <!-- Order Date -->
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-calendar me-2"></i>
+                        <div>
+                            <small class="d-block text-muted">Order Date</small>
+                            <strong>{{ order.order_date }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <!-- Total Price -->
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-currency-euro me-2"></i>
+                        <div>
+                            <small class="d-block text-muted">Total Price</small>
+                            <strong>{{ order.total_price }}</strong>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-envelope me-2"></i>
-                    <div>
-                        <small class="d-block text-muted">Email</small>
-                        <strong>{{ order.email }}</strong>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-calendar me-2"></i>
-                    <div>
-                        <small class="d-block text-muted">Order Date</small>
-                        <strong>{{ order.order_date }}</strong>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-currency-euro me-2"></i>
-                    <div>
-                        <small class="d-block text-muted">Total Price</small>
-                        <strong>{{ order.total_price }}</strong>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col">
+            <!-- Accept All Button -->
+            <div class="text-end mt-3">
+                {% if order.has_unprocessed_items %}
                 <form action="{{ url_for('accept_all_items', token=token, order_id=order.id) }}" method="POST">
-                    <button type="submit" class="btn btn-admin">
-                        <i class="bi bi-check-all"></i> Accept All Items
-                    </button>
+                    <button type="submit" class="btn btn-success">Accept All Items</button>
                 </form>
+                {% else %}
+                <button type="button" class="btn btn-success" disabled>All Items Processed</button>
+                {% endif %}
             </div>
         </div>
     </div>
-</div>
 
-
-	
+    <!-- Order Items Table -->
     <div class="card admin-table">
         <div class="card-body">
             <div class="table-responsive">
@@ -129,62 +190,6 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .badge {
-        font-size: 0.8rem;
-        padding: 0.4em 0.8em;
-    }
-
-    .badge.bg-info {
-        background-color: #17a2b8 !important;
-    }
-    
-    .badge.bg-warning {
-        color: #000 !important;
-    }
-
-    .badge.bg-success {
-        background-color: #28a745 !important;
-    }
-
-    .update-status-form {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .form-select, .form-control {
-        font-size: 0.875rem;
-    }
-
-    .input-group {
-        width: 100%;
-        max-width: 450px;
-    }
-
-    .table td {
-        vertical-align: middle;
-        padding: 0.75rem;
-    }
-
-    .btn-admin {
-        min-width: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .bi-arrow-repeat.spin {
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-</style>
 {% endblock %}
 
 {% block extra_js %}

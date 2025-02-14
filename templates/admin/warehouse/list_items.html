@@ -1,0 +1,39 @@
+<!-- templates/admin/warehouse/list_items.html -->
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Warehouse Items</h2>
+    
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Article</th>
+                    <th>Quantity</th>
+                    <th>Base Price</th>
+                    <th>Price</th>
+                    <th>Price List</th>
+                    <th>Supplier</th>
+                    <th>Invoice</th>
+                    <th>Added At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.article }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ "%.2f"|format(item.base_price) }}</td>
+                    <td>{{ "%.2f"|format(item.price) }}</td>
+                    <td>{{ item.table_name }}</td>
+                    <td>{{ item.supplier_name or 'N/A' }}</td>
+                    <td>{{ item.invoice_number or 'N/A' }}</td>
+                    <td>{{ item.added_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

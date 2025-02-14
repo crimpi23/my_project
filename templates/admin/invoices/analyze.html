@@ -1,0 +1,320 @@
+{# filepath: templates/admin/invoices/analyze.html #}
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1>Аналіз інвойсу #{{ invoice_id }}</h1>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Invoice Analysis</h2>
+        <a href="{{ url_for('export_invoice_analysis', token=token, invoice_id=invoice_id) }}" 
+           class="btn btn-primary">
+            Export to Excel
+        </a>
+    </div>
+
+    <!-- Full Matches -->
+    {% if full_matches %}
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h4>Full Matches ({{ full_matches|length }})</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Article</th>
+                            <th>Invoice Quantity</th>
+                            <th>Order Quantity</th>
+                            <th>Tracking Code</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in full_matches %}
+                        <tr>
+                            <td>{{ item.invoice_item.article }}</td>
+                            <td>{{ item.invoice_item.quantity }}</td>
+                            <td>{{ item.order_item.order_quantity }}</td>
+                            <td>{{ item.invoice_item.tracking_code }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Wrong Articles -->
+    {% if wrong_articles %}
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h4>Wrong Articles ({{ wrong_articles|length }})</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice Article</th>
+                            <th>Order Article</th>
+                            <th>Tracking Code</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in wrong_articles %}
+                        <tr>
+                            <td>{{ item.invoice_item.article }}</td>
+                            <td>{{ item.order_item.article }}</td>
+                            <td>{{ item.invoice_item.tracking_code }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('process_mismatches', token=token) }}">
+                                    <input type="hidden" name="invoice_id" value="{{ invoice_id }}">
+                                    <input type="hidden" name="invoice_detail_id" value="{{ item.invoice_item.id }}">
+                                    <div class="mb-3">
+                                        <label for="correct_article" class="form-label">Correct Article:</label>
+                                        <input type="text" class="form-control" name="correct_article" value="{{ item.order_item.article }}" required>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="update_price" id="update_price_{{ item.invoice_item.id }}">
+                                        <label class="form-check-label" for="update_price_{{ item.invoice_item.id }}">Update Price</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary mt-2" name="action_{{ item.invoice_item.id }}" value="update_article">Update Article</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Excess Quantities -->
+    {% if excess_quantities %}
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h4>Excess Quantities ({{ excess_quantities|length }})</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Article</th>
+                            <th>Invoice Quantity</th>
+                            <th>Order Quantity</th>
+                            <th>Excess Quantity</th>
+                            <th>Tracking Code</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in excess_quantities %}
+                        <tr>
+                            <td>{{ item.invoice_item.article }}</td>
+                            <td>{{ item.invoice_item.quantity }}</td>
+                            <td>{{ item.order_item.order_quantity }}</td>
+                            <td>{{ item.excess_qty }}</td>
+                            <td>{{ item.invoice_item.tracking_code }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('process_mismatches', token=token) }}">
+                                    <input type="hidden" name="invoice_id" value="{{ invoice_id }}">
+                                    <input type="hidden" name="invoice_detail_id" value="{{ item.invoice_item.id }}">
+                                    <button type="submit" class="btn btn-primary mt-2" name="action_{{ item.invoice_item.id }}" value="add_to_warehouse">Add to Warehouse</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Missing Quantities -->
+    {% if missing_quantities %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-white">
+            <h4>Missing Quantities ({{ missing_quantities|length }})</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Article</th>
+                            <th>Invoice Quantity</th>
+                            <th>Order Quantity</th>
+                            <th>Missing Quantity</th>
+                            <th>Tracking Code</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in missing_quantities %}
+                        <tr>
+                            <td>{{ item.invoice_item.article }}</td>
+                            <td>{{ item.invoice_item.quantity }}</td>
+                            <td>{{ item.order_item.order_quantity }}</td>
+                            <td>{{ item.missing_qty }}</td>
+                            <td>{{ item.invoice_item.tracking_code }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('process_mismatches', token=token) }}">
+                                    <input type="hidden" name="invoice_id" value="{{ invoice_id }}">
+                                    <input type="hidden" name="invoice_detail_id" value="{{ item.invoice_item.id }}">
+                                    <button type="submit" class="btn btn-primary mt-2" name="action_{{ item.invoice_item.id }}" value="reduce_order">Reduce Order</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Price Mismatches -->
+    {% if price_highers or price_lowers %}
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h4>Price Mismatches (Highers: {{ price_highers|length }}, Lowers: {{ price_lowers|length }})</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Article</th>
+                            <th>Invoice Price</th>
+                            <th>Order Price</th>
+                            <th>Difference</th>
+                            <th>Tracking Code</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in price_highers %}
+                        <tr>
+                            <td>{{ item.invoice_item.article }}</td>
+                            <td>{{ item.invoice_item.price }}</td>
+                            <td>{{ item.order_item.price }}</td>
+                            <td>{{ item.price_diff }}</td>
+                            <td>{{ item.invoice_item.tracking_code }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('process_mismatches', token=token) }}">
+                                    <input type="hidden" name="invoice_id" value="{{ invoice_id }}">
+                                    <input type="hidden" name="invoice_detail_id" value="{{ item.invoice_item.id }}">
+                                    <button type="submit" class="btn btn-primary mt-2" name="action_{{ item.invoice_item.id }}" value="update_price">Update Price</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% for item in price_lowers %}
+                        <tr>
+                            <td>{{ item.invoice_item.article }}</td>
+                            <td>{{ item.invoice_item.price }}</td>
+                            <td>{{ item.order_item.price }}</td>
+                            <td>{{ item.price_diff }}</td>
+                            <td>{{ item.invoice_item.tracking_code }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('process_mismatches', token=token) }}">
+                                    <input type="hidden" name="invoice_id" value="{{ invoice_id }}">
+                                    <input type="hidden" name="invoice_detail_id" value="{{ item.invoice_item.id }}">
+                                    <button type="submit" class="btn btn-primary mt-2" name="action_{{ item.invoice_item.id }}" value="update_price">Update Price</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- No Tracking Codes -->
+    {% if no_tracking_codes %}
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h4>No Tracking Codes ({{ no_tracking_codes|length }})</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Article</th>
+                            <th>Invoice Quantity</th>
+                            <th>Invoice Price</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in no_tracking_codes %}
+                        <tr>
+                            <td>{{ item.invoice_item.article }}</td>
+                            <td>{{ item.invoice_item.quantity }}</td>
+                            <td>{{ item.invoice_item.price }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('process_mismatches', token=token) }}">
+                                    <input type="hidden" name="invoice_id" value="{{ invoice_id }}">
+                                    <input type="hidden" name="invoice_detail_id" value="{{ item.invoice_item.id }}">
+                                    <button type="submit" class="btn btn-primary mt-2" name="action_{{ item.invoice_item.id }}" value="add_to_warehouse">Add to Warehouse</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+	
+    <!-- Accept All Matches Button -->
+    {% if full_matches %}
+    <form action="{{ url_for('accept_matches', token=token, invoice_id=invoice_id) }}" method="POST" class="mb-4">
+        <button type="submit" class="btn btn-success">Accept All Matches</button>
+    </form>
+    {% endif %}
+	<form action="{{ url_for('confirm_invoice', token=token, invoice_id=invoice_id) }}" method="POST" class="mb-4">
+        <button type="submit" class="btn btn-primary">Confirm Invoice</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.accept-match').forEach(button => {
+    button.addEventListener('click', function() {
+        const invoiceDetailId = this.dataset.invoiceDetailId;
+        const orderDetailId = this.dataset.orderDetailId;
+        
+        fetch('/api/accept-match', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                invoice_detail_id: invoiceDetailId,
+                order_detail_id: orderDetailId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error accepting match');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

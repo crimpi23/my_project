@@ -1,3 +1,4 @@
+{# filepath: templates/base/admin_base.html #}
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -5,21 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Admin Panel{% endblock %}</title>
     
-    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    
-    <!-- Bootstrap & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     
     <style>
+        :root {
+            --primary-color: #343a40;
+            --accent-color: #dc3545;
+            --hover-color: #c82333;
+        }
+
         body {
             background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .navbar-brand {
-            font-weight: bold;
-            color: #dc3545 !important;
-        }
+
+        /* Sidebar styles */
         .sidebar {
             position: fixed;
             top: 0;
@@ -27,9 +30,11 @@
             left: 0;
             z-index: 100;
             padding: 48px 0 0;
-            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-            background-color: #343a40;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            background-color: var(--primary-color);
+            width: 250px;
         }
+
         .sidebar-sticky {
             position: relative;
             top: 0;
@@ -38,80 +43,144 @@
             overflow-x: hidden;
             overflow-y: auto;
         }
+
         .sidebar .nav-link {
-            font-weight: 500;
-            color: #fff;
-            padding: 0.5rem 1rem;
+            padding: 0.8rem 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
         }
+
         .sidebar .nav-link:hover {
-            color: #dc3545;
-        }
-        .sidebar .nav-link.active {
-            color: #dc3545;
-        }
-        .card {
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-        }
-        .btn-admin {
-            background-color: #dc3545;
-            border-color: #dc3545;
             color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding-left: 1.5rem;
         }
+
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: var(--accent-color);
+        }
+
+        .sidebar .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main content area */
+        main {
+            margin-left: 250px;
+            padding: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Buttons */
+        .btn-admin {
+            background-color: var(--accent-color);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
         .btn-admin:hover {
-            background-color: #c82333;
-            border-color: #bd2130;
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
         }
+
+        /* Tables */
         .admin-table {
             background-color: white;
-            border-radius: 8px;
+            border-radius: 10px;
+            overflow: hidden;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
         .admin-table th {
-            background-color: #343a40;
+            background-color: var(--primary-color);
             color: white;
+            padding: 1rem;
+            font-weight: 500;
+        }
+
+        .admin-table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        /* Alert messages */
+        .alert {
+            border-radius: 8px;
+            margin-bottom: 1rem;
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Sidebar -->
-    <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+    <nav class="sidebar">
         <div class="sidebar-sticky">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard', token=token) }}">
+                    <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" 
+                       href="{{ url_for('admin_dashboard', token=token) }}">
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
                 </li>
-				<li class="nav-item">
-					<a class="nav-link" href="{{ url_for('admin_news', token=token) }}">
-						<i class="bi bi-newspaper"></i>
-						<span>News</span>
-					</a>
-				</li>
                 <li class="nav-item">
-					<a class="nav-link {% if request.endpoint == 'create_user' %}active{% endif %}" href="{{ url_for('create_user', token=token) }}">
-						<i class="bi bi-people"></i> Users
-					</a>
-				</li>
+                    <a class="nav-link {% if request.endpoint == 'admin_news' %}active{% endif %}" 
+                       href="{{ url_for('admin_news', token=token) }}">
+                        <i class="bi bi-newspaper"></i> News
+                    </a>
+                </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'admin_orders' %}active{% endif %}" href="{{ url_for('admin_orders', token=token) }}">
+                    <a class="nav-link {% if request.endpoint == 'create_user' %}active{% endif %}" 
+                       href="{{ url_for('create_user', token=token) }}">
+                        <i class="bi bi-people"></i> Users
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_orders' %}active{% endif %}" 
+                       href="{{ url_for('admin_orders', token=token) }}">
                         <i class="bi bi-cart3"></i> Orders
                     </a>
                 </li>
-				<li class="nav-item">
-					<a class="nav-link" href="{{ url_for('list_supplier_orders', token=token) }}">
-						<i class="bi bi-truck"></i> Supplier Orders
-					</a>
-				</li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'upload_price_list' %}active{% endif %}" href="{{ url_for('upload_price_list', token=token) }}">
+                    <a class="nav-link {% if request.endpoint == 'list_supplier_orders' %}active{% endif %}" 
+                       href="{{ url_for('list_supplier_orders', token=token) }}">
+                        <i class="bi bi-truck"></i> Supplier Orders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'warehouse_items' %}active{% endif %}" 
+                       href="{{ url_for('warehouse_items', token=token) }}">
+                        <i class="bi bi-box-seam"></i> Warehouse
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'list_invoices' %}active{% endif %}" 
+                       href="{{ url_for('list_invoices', token=token) }}">
+                        <i class="bi bi-file-text"></i> Invoices
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'upload_price_list' %}active{% endif %}" 
+                       href="{{ url_for('upload_price_list', token=token) }}">
                         <i class="bi bi-upload"></i> Price Lists
                     </a>
                 </li>
@@ -120,12 +189,11 @@
     </nav>
 
     <!-- Main content -->
-    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-        <!-- Flash Messages -->
+    <main>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show mt-3">
+                    <div class="alert alert-{{ category }} alert-dismissible fade show">
                         {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
@@ -133,11 +201,9 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Page content -->
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
 </body>

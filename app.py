@@ -84,6 +84,39 @@ def create_supplier_order_details(order_id, article, quantity, order_detail_id):
     return detail_id
 
 
+# # Кількість товару в кошику користувача
+def get_cart_count(user_id):
+    """Повертає кількість товарів у кошику користувача"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT COALESCE(SUM(quantity), 0) 
+            FROM cart 
+            WHERE user_id = %s
+        """, (user_id,))
+        count = cursor.fetchone()[0]
+        return int(count)
+    except Exception as e:
+        logging.error(f"Error getting cart count: {e}")
+        return 0
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+
+# Кількість товару в кошику користувача
+@app.context_processor
+def utility_processor():
+    """Додає допоміжні функції до контексту шаблону"""
+    def get_user_cart_count():
+        user_id = session.get('user_id')
+        if user_id:
+            return get_cart_count(user_id)
+        return 0
+    return dict(get_user_cart_count=get_user_cart_count)
+
 # Make LANGUAGES available to all templates
 @app.context_processor
 def inject_languages():
@@ -646,90 +679,85 @@ def search_articles(token):
     try:
         user_id = session.get('user_id')
         logging.debug(f"Search initiated by user_id={user_id}")
-        
+
         articles_input = request.form.get('articles', '').strip()
         logging.debug(f"Raw input: {articles_input}")
-        
+
         if not articles_input:
             logging.warning("Empty articles input")
             flash(_("Please enter at least one article."), "error")
             return redirect(url_for('index'))
 
-        # Створюємо множини для порівняння артикулів
         requested_articles = set()
         articles_data = []
         quantities = {}
         comments = {}
 
-        # Отримуємо список доступних таблиць спочатку
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT table_name FROM price_lists")
-            available_tables = [row[0] for row in cursor.fetchall()]
+            cursor.execute("""
+                SELECT pl.table_name, pl.brand_id, b.name as brand_name 
+                FROM price_lists pl 
+                JOIN brands b ON pl.brand_id = b.id
+            """)
+            available_tables = cursor.fetchall()
             logging.debug(f"Available tables: {available_tables}")
 
-        for line in articles_input.splitlines():
-            delimiter = detect_delimiter(line)
-            parts = line.strip().split(delimiter)
-            logging.debug(f"Processing line: {line}, delimiter: {delimiter}, parts: {parts}")
-            
-            if len(parts) == 0:
-                continue
+            for line in articles_input.splitlines():
+                delimiter = detect_delimiter(line)
+                parts = line.strip().split(delimiter)
+                logging.debug(f"Processing line: {line}, delimiter: {delimiter}, parts: {parts}")
 
-            article = parts[0].strip().upper()
-            requested_articles.add(article)
+                if len(parts) == 0:
+                    continue
 
-            quantity = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
-            logging.debug(f"Article: {article}, Quantity: {quantity}")
+                article = parts[0].strip().upper()
+                requested_articles.add(article)
+                quantity = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
 
-            # Перевіряємо третій параметр
-            if len(parts) > 2:
-                if parts[2].strip().lower() in available_tables:
-                    specified_table = parts[2].strip().lower()
-                    comment = parts[3].strip() if len(parts) > 3 else None
+                if len(parts) > 2:
+                    if parts[2].strip().lower() in [table[0] for table in available_tables]:
+                        specified_table = parts[2].strip().lower()
+                        comment = parts[3].strip() if len(parts) > 3 else None
+                    else:
+                        specified_table = None
+                        comment = parts[2].strip()
                 else:
                     specified_table = None
-                    comment = parts[2].strip()
-            else:
-                specified_table = None
-                comment = None
-            
-            logging.debug(f"Article details - Table: {specified_table}, Comment: {comment}")
+                    comment = None
 
-            quantities[article] = quantity
-            comments[article] = comment
-            articles_data.append({
-                'article': article,
-                'quantity': quantity,
-                'specified_table': specified_table,
-                'comment': comment
-            })
-
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            user_markup = Decimal(get_markup_percentage(session['user_id']))
-            logging.debug(f"User markup: {user_markup}%")
+                quantities[article] = quantity
+                comments[article] = comment
+                articles_data.append({
+                    'article': article,
+                    'quantity': quantity,
+                    'specified_table': specified_table,
+                    'comment': comment
+                })
 
             to_add_to_cart = []
             multiple_prices = {}
             found_articles = set()
 
+            user_markup = Decimal(get_markup_percentage(session['user_id']))
+            logging.debug(f"User markup: {user_markup}%")
+
             for item in articles_data:
                 article = item['article']
                 specified_table = item['specified_table']
-                logging.debug(f"Processing article: {article} with specified table: {specified_table}")
 
                 if specified_table:
-                    if specified_table not in available_tables:
+                    # Логіка для вказаної таблиці
+                    if specified_table not in [table[0] for table in available_tables]:
                         logging.warning(f"Specified table {specified_table} not found in available tables")
                         continue
 
-                    cursor.execute(f"SELECT price FROM {specified_table} WHERE article = %s", (article,))
+                    cursor.execute(f"SELECT price, brand_id FROM {specified_table} WHERE article = %s", (article,))
                     result = cursor.fetchone()
 
                     if result:
                         found_articles.add(article)
-                        base_price = Decimal(result[0])
+                        base_price = Decimal(result['price'])
                         final_price = round(base_price * (1 + user_markup / 100), 2)
                         logging.debug(f"Found price for {article} in {specified_table}: base={base_price}, final={final_price}")
                         to_add_to_cart.append({
@@ -738,11 +766,12 @@ def search_articles(token):
                             'price': base_price,
                             'final_price': final_price,
                             'quantity': item['quantity'],
-                            'comment': item['comment']
+                            'comment': item['comment'],
+                            'brand_id': result['brand_id']
                         })
                 else:
                     prices_found = []
-                    for table in available_tables:
+                    for table, brand_id, brand_name in available_tables:
                         cursor.execute(f"SELECT price FROM {table} WHERE article = %s", (article,))
                         result = cursor.fetchone()
                         if result:
@@ -755,22 +784,12 @@ def search_articles(token):
                                 'base_price': base_price,
                                 'price': final_price,
                                 'quantity': item['quantity'],
-                                'comment': item['comment']
+                                'comment': item['comment'],
+                                'brand_id': brand_id,
+                                'brand_name': brand_name  # Додаємо назву бренду
                             })
-
-                    if len(prices_found) > 1:
-                        logging.info(f"Multiple prices found for {article}: {prices_found}")
+                    if prices_found:
                         multiple_prices[article] = prices_found
-                    elif len(prices_found) == 1:
-                        price_info = prices_found[0]
-                        to_add_to_cart.append({
-                            'article': article,
-                            'table': price_info['table_name'],
-                            'price': price_info['base_price'],
-                            'final_price': price_info['price'],
-                            'quantity': item['quantity'],
-                            'comment': item['comment']
-                        })
 
             # Визначаємо відсутні артикули
             missing_articles = list(requested_articles - found_articles)
@@ -787,13 +806,14 @@ def search_articles(token):
                     logging.debug(f"Adding to cart: {item}")
                     cursor.execute("""
                         INSERT INTO cart 
-                        (user_id, article, table_name, quantity, base_price, final_price, comment, added_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+                        (user_id, article, table_name, quantity, base_price, final_price, comment, brand_id, added_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
                         ON CONFLICT (user_id, article, table_name) 
                         DO UPDATE SET 
                             quantity = cart.quantity + EXCLUDED.quantity,
                             final_price = EXCLUDED.final_price,
-                            comment = EXCLUDED.comment
+                            comment = EXCLUDED.comment,
+                            brand_id = EXCLUDED.brand_id
                     """, (
                         session['user_id'],
                         item['article'],
@@ -801,10 +821,11 @@ def search_articles(token):
                         item['quantity'],
                         item['price'],
                         item['final_price'],
-                        item['comment']
+                        item['comment'],
+                        item['brand_id']
                     ))
                 conn.commit()
-                flash(f"Added to cart: {', '.join(item['article'] for item in to_add_to_cart)}", "success")
+                flash(_("Added to cart: {articles}").format(articles=', '.join(item['article'] for item in to_add_to_cart)), "success")
 
             # Зберігаємо дані в сесії для артикулів з multiple_prices
             session['grouped_results'] = multiple_prices
@@ -831,6 +852,7 @@ def search_articles(token):
         logging.error(f"Error in search_articles: {e}", exc_info=True)
         flash(_("An error occurred while processing your request."), "error")
         return redirect(url_for('index'))
+
 
 @app.route('/<token>/search_results', methods=['GET', 'POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
@@ -1020,16 +1042,19 @@ def cart(token):
         # Отримуємо товари з кошика
         cursor.execute("""
             SELECT 
-                article, 
-                table_name, 
-                COALESCE(base_price, 0) AS base_price,
-                COALESCE(final_price, 0) AS final_price,
-                quantity,
-                ROUND(COALESCE(final_price, 0) * quantity, 2) AS total_price,
-                comment
-            FROM cart
-            WHERE user_id = %s
-            ORDER BY added_at ASC, article ASC, table_name ASC
+                c.article, 
+                c.table_name,
+                COALESCE(c.base_price, 0) AS base_price,
+                COALESCE(c.final_price, 0) AS final_price,
+                c.quantity,
+                ROUND(COALESCE(c.final_price, 0) * quantity, 2) AS total_price,
+                c.comment,
+                b.name AS brand_name  -- Отримуємо назву бренду
+            FROM cart c
+            JOIN price_lists pl ON c.table_name = pl.table_name
+            JOIN brands b ON pl.brand_id = b.id
+            WHERE c.user_id = %s
+            ORDER BY c.added_at ASC, c.article ASC, c.table_name ASC
         """, (user_id,))
 
         cart_items = []
@@ -1041,7 +1066,8 @@ def cart(token):
                 'final_price': float(row['final_price']),
                 'quantity': row['quantity'],
                 'total_price': float(row['total_price']),
-                'comment': row['comment']
+                'comment': row['comment'],
+                'brand_name': row['brand_name']  # Передаємо назву бренду
             })
         logging.debug(f"Cart items fetched: {cart_items}")
 
@@ -1058,6 +1084,10 @@ def cart(token):
 
         # Логування для рендерингу
         logging.info(f"Rendering cart for user_id={user_id}. Cart items count: {len(cart_items)}, Missing articles count: {len(missing_articles)}")
+        
+        # Додаємо логування для brand_name та table_name
+        for item in cart_items:
+            logging.debug(f"Item in cart: article={item['article']}, table_name={item['table_name']}, brand_name={item['brand_name']}")
 
         return render_template(
             'user/cart/cart.html',
@@ -1082,131 +1112,124 @@ def cart(token):
 
 
 
-
 #проміжковий єтап перед search, який минує search_results до cart
 @app.route('/<token>/submit_selection', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def submit_selection(token):
-    """
-    Обробляє вибір користувача та додає вибрані артикули в кошик безпосередньо.
-    """
-    logging.debug(f"Submit Selection Called with token: {token}")
     try:
         user_id = session.get('user_id')
         if not user_id:
             flash(_("User not authenticated"), "error")
-            logging.warning("Спроба доступу без автентифікації")
             return redirect(url_for('index', token=token))
 
-        # Отримуємо дані з сесії
         grouped_results = session.get('grouped_results', {})
-        logging.debug(f"Дані з сесії grouped_results: {grouped_results}")
-        
-        # Обробка даних із форми
+        logging.debug(f"Form data: {request.form}")
+        logging.debug(f"Grouped results from session: {grouped_results}")
+
         selected_articles = []
-        for key, value in request.form.items():
-            logging.debug(f"Обробка форми - ключ: {key}, значення: {value}")
-            if key.startswith('selected_') and not key.startswith('selected_price_'):
-                article = key.replace('selected_', '')
-                price, table_name = value.split('|')
-                
-                # Знаходимо базову ціну
-                base_price = None
-                for price_info in grouped_results.get(article, []):
-                    if price_info['table_name'] == table_name:
-                        base_price = Decimal(price_info['base_price'])
-                        break
-                
-                if base_price is None:
-                    logging.error(f"Не знайдено базову ціну для артикула {article}")
+        for article in grouped_results:
+            if request.form.get(f"include_{article}") == "on":
+                selected_value = request.form.get(f"selected_{article}")
+                if not selected_value:
                     continue
+
+                # Split the selected value into table_name and price|brand_id
+                table_name, price_brand = selected_value.split(':')
+                price, brand_id = price_brand.split('|')
                 
+                # Find article data in grouped_results
+                article_data = None
+                for option in grouped_results[article]:
+                    if option['table_name'] == table_name:
+                        article_data = option
+                        base_price = Decimal(str(option['base_price']))  # Convert to string first
+                        break
+
+                if article_data is None:
+                    continue
+
                 quantity = int(request.form.get(f"quantity_{article}", 1))
                 comment = request.form.get(f"comment_{article}", "").strip() or None
-                
-                if request.form.get(f"include_{article}") == "on":
-                    selected_articles.append({
-                        'article': article,
-                        'base_price': base_price,
-                        'final_price': Decimal(price),
-                        'table_name': table_name,
-                        'quantity': quantity,
-                        'comment': comment
-                    })
-                    logging.debug(f"Додано артикул: {article}, base_price: {base_price}, "
-                                f"final_price: {price}, table: {table_name}")
+                if comment == "None":  # Fix for "None" string
+                    comment = None
+
+                # Convert price to Decimal after removing any potential whitespace
+                final_price = Decimal(str(price).strip())
+
+                selected_articles.append({
+                    'article': article,
+                    'table_name': table_name,
+                    'base_price': base_price,
+                    'final_price': final_price,
+                    'quantity': quantity,
+                    'comment': comment,
+                    'brand_id': brand_id
+                })
+                logging.debug(f"Added to selection: {selected_articles[-1]}")
 
         if not selected_articles:
-            flash(_("No articles selected."), "error")
-            logging.info("Не вибрано жодного артикула")
+            flash(_("No articles selected"), "warning")
             return redirect(url_for('index', token=token))
 
-        # Додавання в корзину
+        # Add to cart
         with get_db_connection() as conn:
             cursor = conn.cursor()
             for item in selected_articles:
-                try:
-                    cursor.execute("""
-                        INSERT INTO cart 
-                        (user_id, article, table_name, quantity, base_price, final_price, comment, added_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
-                        ON CONFLICT (user_id, article, table_name) DO UPDATE SET
-                        quantity = cart.quantity + EXCLUDED.quantity,
-                        base_price = EXCLUDED.base_price,
-                        final_price = EXCLUDED.final_price,
-                        comment = EXCLUDED.comment
-                    """, (
-                        user_id, 
-                        item['article'],
-                        item['table_name'],
-                        item['quantity'],
-                        item['base_price'],
-                        item['final_price'],
-                        item['comment']
-                    ))
-                    logging.info(f"Артикул {item['article']} додано/оновлено в кошику для user_id={user_id}")
-                except Exception as e:
-                    logging.error(f"Помилка додавання артикула {item['article']}: {e}")
-                    continue
-
+                cursor.execute("""
+                    INSERT INTO cart 
+                    (user_id, article, table_name, quantity, base_price, final_price, comment, brand_id, added_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                    ON CONFLICT (user_id, article, table_name) DO UPDATE SET
+                    quantity = cart.quantity + EXCLUDED.quantity,
+                    base_price = EXCLUDED.base_price,
+                    final_price = EXCLUDED.final_price,
+                    comment = EXCLUDED.comment,
+                    brand_id = EXCLUDED.brand_id
+                """, (
+                    user_id,
+                    item['article'],
+                    item['table_name'],
+                    item['quantity'],
+                    item['base_price'],
+                    item['final_price'],
+                    item['comment'],
+                    item['brand_id']
+                ))
             conn.commit()
-            logging.info(f"Кошик успішно оновлено для user_id={user_id}")
 
         flash(_("Selection successfully submitted!"), "success")
         return redirect(url_for('cart', token=token))
 
     except Exception as e:
-        logging.error(f"Помилка в submit_selection: {e}", exc_info=True)
-        flash(_("An error occurred during submission. Please try again."), "error")
+        logging.error(f"Error in submit_selection: {e}", exc_info=True)
+        flash(_("An error occurred during submission"), "error")
         return redirect(url_for('index', token=token))
-
-
-
         
 # очищення результату пошуку
-@app.route('/<token>/clear_search', methods=['POST'])
+@app.route('/<token>/clear_search', methods=['GET'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def clear_search(token):
+    """Очищає результати пошуку з сесії"""
     try:
-        logging.debug("Clearing search data from session.")
+        # Очищаємо дані пошуку з сесії
         session.pop('grouped_results', None)
-        session.pop('quantities', None)
         session.pop('missing_articles', None)
-        flash("Search data cleared successfully.", "success")
+        logging.debug("Search results cleared from session")
+        
+        flash(_("Search results cleared successfully"), "success")
+        # Перенаправляємо на головну сторінку з токеном
+        return redirect(url_for('token_index', token=token))
+        
     except Exception as e:
-        logging.error(f"Error clearing search data: {str(e)}", exc_info=True)
-        flash("Could not clear search data. Please try again.", "error")
-    
-    # Перенаправлення на головну сторінку
-    return redirect(url_for('token_index', token=token))
+        logging.error(f"Error clearing search results: {e}", exc_info=True)
+        flash(_("Error clearing search results"), "error")
+        return redirect(url_for('token_index', token=token))
 
 
 
 
 
 
-
-# Додавання в кошик користувачем
 # Додавання в кошик користувачем
 @app.route('/<token>/add_to_cart', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
@@ -1223,6 +1246,7 @@ def add_to_cart(token):
         quantity = int(request.form.get('quantity'))  # Кількість товару
         table_name = request.form.get('table_name')
         comment = request.form.get('comment', None)  # Коментар користувача
+        brand_id = request.form.get('brand_id') # Отримуємо brand_id
         user_id = session.get('user_id')  # ID користувача
 
         if not user_id:
@@ -1246,16 +1270,16 @@ def add_to_cart(token):
             new_quantity = existing_cart_item['quantity'] + quantity
             cursor.execute("""
                 UPDATE cart
-                SET quantity = %s
+                SET quantity = %s, brand_id = %s
                 WHERE id = %s
-            """, (new_quantity, existing_cart_item['id']))
+            """, (new_quantity, brand_id, existing_cart_item['id']))
             logging.info(f"Cart updated: Article={article}, New Quantity={new_quantity}, User ID={user_id}")
         else:
             # Додавання нового товару в кошик
             cursor.execute("""
-                INSERT INTO cart (user_id, article, table_name, price, quantity, comment, added_at)
-                VALUES (%s, %s, %s, %s, %s, %s, NOW())
-            """, (user_id, article, table_name, price, quantity, comment))
+                INSERT INTO cart (user_id, article, table_name, price, quantity, comment, brand_id, added_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+            """, (user_id, article, table_name, price, quantity, comment, brand_id))
             logging.info(f"Product added to cart: Article={article}, Quantity={quantity}, User ID={user_id}")
 
         conn.commit()
@@ -1277,8 +1301,6 @@ def add_to_cart(token):
         quantities=session.get('quantities', {}),
         missing_articles=session.get('missing_articles', []),
     )
-
-
 
 
 # Видалення товару з кошика
@@ -1377,47 +1399,24 @@ def update_cart(token):
 
 
 # Очищення кошика користувача
-@app.route('/<token>/clear_cart', methods=['POST'])
+@app.route('/<token>/cart/clear', methods=['POST'])
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def clear_cart(token):
     try:
         user_id = session.get('user_id')
-        logging.debug(f"Clear Cart: Retrieved user_id={user_id} from session.")
+        if not user_id:
+            flash("User not authenticated", "error")
+            return redirect(url_for('token_index', token=token))
 
-        # Очищення кошика в базі даних
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
-        rows_deleted = cursor.rowcount
-        conn.commit()
-
-        logging.info(f"Cart cleared for user_id={user_id}. Rows deleted: {rows_deleted}")
-
-        # Очищення даних сесії
-        session_keys_to_clear = [
-            'grouped_results',
-            'quantities',
-            'comments',
-            'missing_articles',
-            'items_without_table'
-        ]
-
-        for key in session_keys_to_clear:
-            if key in session:
-                session.pop(key)
-                logging.debug(f"Session data '{key}' cleared for user_id={user_id}.")
-
-        session.modified = True
-        flash(_("Cart cleared successfully."), "success")
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
+            conn.commit()
+            flash("Cart cleared successfully", "success")
 
     except Exception as e:
-        logging.error(f"Error clearing cart for user_id={user_id}: {e}", exc_info=True)
-        flash(_("Error clearing cart."), "error")
-    finally:
-        if 'cursor' in locals() and cursor:
-            cursor.close()
-        if 'conn' in locals() and conn:
-            conn.close()
+        logging.error(f"Error clearing cart: {e}", exc_info=True)
+        flash("Error clearing cart", "error")
 
     return redirect(url_for('cart', token=token))
 
@@ -1452,7 +1451,7 @@ def place_order(token):
         logging.debug("Fetching cart items...")
         cursor.execute("""
             SELECT article, table_name, base_price, final_price as price,
-                   quantity, (final_price * quantity) as total_price, comment
+                   quantity, (final_price * quantity) as total_price, comment, brand_id
             FROM cart
             WHERE user_id = %s
         """, (user_id,))
@@ -1482,8 +1481,8 @@ def place_order(token):
             # Додаємо запис в таблицю order_details
             cursor.execute("""
                 INSERT INTO order_details
-                (order_id, article, table_name, base_price, price, quantity, total_price, comment)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                (order_id, article, table_name, base_price, price, quantity, total_price, comment, brand_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 order_id,
                 cart_item['article'],
@@ -1492,7 +1491,8 @@ def place_order(token):
                 cart_item['price'],
                 cart_item['quantity'],
                 cart_item['total_price'],
-                cart_item['comment']
+                cart_item['comment'],
+                cart_item['brand_id']
             ))
 
             # Логуємо успішне додавання
@@ -1551,7 +1551,6 @@ def place_order(token):
         if 'conn' in locals() and conn:
             conn.close()
         logging.debug("Database connection closed.")
-
 
 
 
@@ -1807,7 +1806,59 @@ def update_order_item_status(token, order_id):
             conn.close()
             logging.info(f"Database connection closed for order {order_id}.")
 
+@app.route('/<token>/order-changes', methods=['GET'])
+@requires_token_and_roles('user', 'user_25', 'user_29')
+def view_order_changes(token):
+    """Показує історію змін артикулів та цін в замовленнях користувача."""
+    try:
+        user_id = session.get('user_id')
+        logging.info(f"Viewing order changes for user_id: {user_id}")
 
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо тільки зміни артикулів та цін
+            cursor.execute("""
+                SELECT 
+                    oc.order_id,
+                    oc.order_detail_id,
+                    oc.field_changed,
+                    oc.old_value,
+                    oc.new_value,
+                    oc.change_date,
+                    oc.comment,
+                    od.article,
+                    od.status
+                FROM order_changes oc
+                JOIN order_details od ON oc.order_detail_id = od.id
+                JOIN orders o ON oc.order_id = o.id
+                WHERE o.user_id = %s
+                AND oc.field_changed IN ('article', 'price')
+                ORDER BY oc.change_date DESC
+            """, (user_id,))
+            
+            changes = cursor.fetchall()
+            
+            # Форматування значень для відображення
+            formatted_changes = []
+            for change in changes:
+                formatted_change = dict(change)
+                if change['field_changed'] == 'price':
+                    # Форматуємо ціни до 2 знаків після коми
+                    formatted_change['old_value'] = f"{float(change['old_value']):.2f}"
+                    formatted_change['new_value'] = f"{float(change['new_value']):.2f}"
+                formatted_changes.append(formatted_change)
+            
+            return render_template(
+                'user/orders/order_changes.html',
+                changes=formatted_changes,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error viewing order changes: {e}", exc_info=True)
+        flash("Error loading order changes", "error")
+        return redirect(url_for('orders', token=token))
 
 @app.route('/<token>/admin/orders/<int:order_id>', methods=['GET'])
 @requires_token_and_roles('admin')
@@ -2063,7 +2114,7 @@ def upload_price_list(token):
     """
     Обробляє завантаження прайс-листу.
     - GET: Повертає сторінку завантаження.
-    - POST: Обробляє завантаження файлу та записує дані в базу.
+    - POST: Обробляє завантаження файлу та записує дані в базу, включаючи brand_id.
     """
     if request.method == 'GET':
         try:
@@ -2072,9 +2123,15 @@ def upload_price_list(token):
             cursor = conn.cursor()
             cursor.execute("SELECT table_name FROM price_lists;")
             price_lists = cursor.fetchall()
+
+            # Отримуємо список брендів для вибору
+            cursor.execute("SELECT id, name FROM brands;")
+            brands = cursor.fetchall()
+
             conn.close()
             logging.info(f"Fetched price lists: {price_lists}")
-            return render_template('admin/price_lists/upload_price_list.html', price_lists=price_lists, token=token)
+            return render_template('admin/price_lists/upload_price_list.html', price_lists=price_lists,
+                                   brands=brands, token=token)
         except Exception as e:
             logging.error(f"Error during GET request: {e}")
             flash("Error loading the upload page.", "error")
@@ -2088,10 +2145,11 @@ def upload_price_list(token):
             # Отримання параметрів форми
             table_name = request.form['table_name']
             new_table_name = request.form.get('new_table_name', '').strip()
+            brand_id = request.form.get('brand_id')  # Отримання brand_id
             file = request.files.get('file')
 
             # Логування вхідних даних
-            logging.debug(f"Received table_name: {table_name}, new_table_name: {new_table_name}")
+            logging.debug(f"Received table_name: {table_name}, new_table_name: {new_table_name}, brand_id: {brand_id}")
 
             if not file or file.filename == '':
                 flash("No file uploaded or selected.", "error")
@@ -2146,10 +2204,14 @@ def upload_price_list(token):
                     cursor.execute(f"""
                         CREATE TABLE IF NOT EXISTS {table_name} (
                             article TEXT PRIMARY KEY,
-                            price NUMERIC
+                            price NUMERIC,
+                            brand_id INTEGER REFERENCES brands(id)
                         );
                     """)
-                    cursor.execute("INSERT INTO price_lists (table_name, created_at) VALUES (%s, NOW());", (table_name,))
+                    cursor.execute("""
+                        INSERT INTO price_lists (table_name, brand_id, created_at) VALUES (%s, %s, NOW())
+                        ON CONFLICT (table_name) DO UPDATE SET brand_id = %s
+                    """, (table_name, brand_id, brand_id))
                     conn.commit()
                     logging.info(f"Created new table: {table_name}")
                 except Exception as e:
@@ -2177,14 +2239,14 @@ def upload_price_list(token):
             # Завантаження даних у таблицю
             output = io.StringIO()
             for row in data:
-                output.write(f"{row[0]},{row[1]}\n")
+                output.write(f"{row[0]},{row[1]},{brand_id}\n")
             output.seek(0)
-            cursor.copy_expert(f"COPY {table_name} (article, price) FROM STDIN WITH (FORMAT CSV);", output)
+            cursor.copy_expert(f"COPY {table_name} (article, price, brand_id) FROM STDIN WITH (FORMAT CSV);", output)
             conn.commit()
 
             cache.delete_memoized(search_articles)
             flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "success")
-            logging.info(f"Uploaded {len(data)} rows to table '{table_name}' in {end_time - start_time:.2f} seconds.")
+            logging.info(f"Uploaded {len(data)} rows to table '{table_name}' in {time.time() - start_time:.2f} seconds.")
             return redirect(url_for('upload_price_list', token=token))
 
         except Exception as e:
@@ -3003,48 +3065,7 @@ def handle_price_mismatch(invoice_detail_id, action, conn, cursor):
         logging.error(f"Error handling price mismatch: {e}", exc_info=True)
         return False
 
-@app.route('/<token>/order-changes', methods=['GET'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def view_order_changes(token):
-    """Показує історію змін замовлень користувача."""
-    try:
-        user_id = session.get('user_id')
-        logging.info(f"Viewing order changes for user_id: {user_id}")
 
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Отримуємо всі зміни для замовлень користувача
-            cursor.execute("""
-                SELECT 
-                    oc.order_id,
-                    oc.order_detail_id,
-                    oc.field_changed,
-                    oc.old_value,
-                    oc.new_value,
-                    oc.change_date,
-                    oc.comment,
-                    od.article,
-                    od.status
-                FROM order_changes oc
-                JOIN order_details od ON oc.order_detail_id = od.id
-                JOIN orders o ON oc.order_id = o.id
-                WHERE o.user_id = %s
-                ORDER BY oc.change_date DESC
-            """, (user_id,))
-            
-            changes = cursor.fetchall()
-            
-            return render_template(
-                'user/orders/order_changes.html',
-                changes=changes,
-                token=token
-            )
-            
-    except Exception as e:
-        logging.error(f"Error viewing order changes: {e}", exc_info=True)
-        flash("Error loading order changes", "error")
-        return redirect(url_for('orders', token=token))
 
 def handle_no_tracking_code(invoice_detail_id, action, conn, cursor):
     """
@@ -3165,8 +3186,8 @@ def warehouse_items(token):
                     w.id,
                     w.article,
                     w.quantity,
-                    w.base_price,
-                    w.price,
+                    COALESCE(w.base_price, 0) as base_price,
+                    COALESCE(w.price, 0) as price,
                     w.table_name,
                     w.added_at,
                     w.invoice_number,
@@ -3190,7 +3211,6 @@ def warehouse_items(token):
         logging.error(f"Error fetching warehouse items: {e}")
         flash("Error loading warehouse items", "error")
         return redirect(url_for('admin_dashboard', token=token))
-
 
 
 # сторінка для завантаження інвойсу:
@@ -3746,9 +3766,13 @@ def upload_file(token):
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT table_name FROM price_lists;")
-            all_tables = [row[0] for row in cursor.fetchall()]
-            logging.info(f"Fetched tables from price_lists: {all_tables}")
+            cursor.execute("""
+                SELECT pl.table_name, pl.brand_id, b.name as brand_name 
+                FROM price_lists pl 
+                JOIN brands b ON pl.brand_id = b.id
+            """)
+            all_tables = [(row[0], row[1], row[2]) for row in cursor.fetchall()]
+            logging.info(f"Fetched tables from price_lists with brands: {all_tables}")
 
             for index, row in df.iterrows():
                 try:
@@ -3765,35 +3789,38 @@ def upload_file(token):
                         f"Processing article: {article}, quantity: {quantity}, table: {table_name}, comment: {comment}")
 
                     if table_name:
-                        if table_name not in all_tables:
+                        table_info = next((t for t in all_tables if t[0] == table_name), None)
+                        if not table_info:
                             logging.warning(f"Invalid table name '{table_name}' for article {article}.")
                             missing_articles.add(article)
                             continue
+                        table_name, brand_id, brand_name = table_info
 
                         cursor.execute(f"SELECT price FROM {table_name} WHERE article = %s", (article,))
                         result = cursor.fetchone()
 
                         if result:
                             price = result[0]
-                            items_with_table.append((article, price, table_name, quantity, comment))
+                            items_with_table.append((article, price, table_name, quantity, comment, brand_id))
                             logging.info(f"Article {article} found in {table_name} with price {price}.")
                         else:
                             missing_articles.add(article)
                             logging.warning(f"Article {article} not found in {table_name}. Skipping.")
                     else:
                         matching_tables = []
-                        for table in all_tables:
+                        for table, brand_id, brand_name in all_tables:
                             cursor.execute(f"SELECT price FROM {table} WHERE article = %s", (article,))
                             if cursor.fetchone():
-                                matching_tables.append(table)
+                                matching_tables.append((table, brand_id, brand_name))
 
                         if matching_tables:
                             if len(matching_tables) == 1:
-                                cursor.execute(f"SELECT price FROM {matching_tables[0]} WHERE article = %s", (article,))
+                                table, brand_id, brand_name = matching_tables[0]
+                                cursor.execute(f"SELECT price FROM {table} WHERE article = %s", (article,))
                                 price = cursor.fetchone()[0]
-                                items_with_table.append((article, price, matching_tables[0], quantity, comment))
+                                items_with_table.append((article, price, table, quantity, comment, brand_id))
                                 logging.info(
-                                    f"Article {article} automatically added from single table {matching_tables[0]}")
+                                    f"Article {article} automatically added from single table {table}")
                             else:
                                 logging.info(f"Article {article} found in multiple tables: {matching_tables}")
                                 items_without_table.append((article, quantity, matching_tables, comment))
@@ -3810,7 +3837,7 @@ def upload_file(token):
 
             # Додавання товарів з визначеними таблицями до кошика
             if items_with_table:
-                for article, base_price, table_name, quantity, comment in items_with_table:
+                for article, base_price, table_name, quantity, comment, brand_id in items_with_table:
                     # Перевіряємо наявність в корзині перед додаванням
                     cursor.execute("""
                         SELECT quantity FROM cart 
@@ -3828,14 +3855,15 @@ def upload_file(token):
                     final_price = calculate_price(base_price, markup_percentage)
 
                     cursor.execute("""
-                        INSERT INTO cart (user_id, article, table_name, quantity, base_price, final_price, comment, added_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+                        INSERT INTO cart (user_id, article, table_name, quantity, base_price, final_price, comment, brand_id, added_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
                         ON CONFLICT (user_id, article, table_name) 
                         DO UPDATE SET 
                             quantity = cart.quantity + EXCLUDED.quantity,
                             final_price = EXCLUDED.final_price,
-                            comment = EXCLUDED.comment
-                    """, (user_id, article, table_name, quantity, base_price, final_price, comment))
+                            comment = EXCLUDED.comment,
+                            brand_id = EXCLUDED.brand_id
+                    """, (user_id, article, table_name, quantity, base_price, final_price, comment, brand_id))
                     logging.info(f"Article {article} added/updated in cart")
 
             conn.commit()
@@ -3873,105 +3901,100 @@ def upload_file(token):
 @requires_token_and_roles('user', 'user_25', 'user_29')
 def intermediate_results(token):
     """
-    Обробляє статті без таблиці, надає можливість вибрати таблиці,
+    Обробляє статті без таблиці, надає можливість вибрати таблиці із підтримкою brand_id,
     а потім додає вибрані статті до кошика.
     """
     logging.debug(f"Intermediate Results Called with token: {token}")
     try:
-        # Ідентифікація користувача
+        # Отримання ідентифікатора користувача
         user_id = session.get('user_id')
         if not user_id:
-            logging.error("User not authenticated.")
-            flash("User not authenticated", "error")
+            logging.error("Користувач не автентифікований.")
+            flash(_("User not authenticated"), "error")
             return redirect(f'/{token}/')
 
-        # Отримання націнки
+        # Отримання націнки користувача
         user_markup = get_markup_percentage(user_id)
         logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
 
         if request.method == 'POST':
-            logging.info("Processing user table selection for articles.")
-            # Отримання вибору користувача
-            user_selections = {
-                key.split('_')[1]: value
-                for key, value in request.form.items() if key.startswith('table_')
-            }
-            logging.debug(f"User selections: {user_selections}")
+            logging.info("Обробка вибору таблиці для статей користувача.")
+            # Отримання виборів користувача з форми
+            # Очікується формат: "final_price|table_name|brand_id"
+            user_selections = {}
+            for key, value in request.form.items():
+                if key.startswith('table_'):
+                    article = key.split('_', 1)[1]
+                    parts = value.split('|')
+                    if len(parts) == 3:
+                        try:
+                            final_price = Decimal(parts[0])
+                        except Exception:
+                            final_price = Decimal('0')
+                        table_name = parts[1]
+                        brand_id = parts[2]
+                        user_selections[article] = {
+                            'final_price': final_price,
+                            'table_name': table_name,
+                            'brand_id': brand_id
+                        }
+            logging.debug(f"Вибір користувача: {user_selections}")
 
             items_without_table = session.get('items_without_table', [])
             missing_articles = session.get('missing_articles', [])
             added_to_cart = []
 
             with get_db_connection() as conn:
-                with conn.cursor() as cursor:
-                    for article, quantity, valid_tables, comment in items_without_table:
-                        selected_table = user_selections.get(article)
-                        if not selected_table or selected_table not in valid_tables:
-                            if article not in missing_articles:
-                                missing_articles.append(article)
-                            logging.warning(f"Invalid or missing table for article {article}. Selected table: {selected_table}")
-                            continue
-
-                        try:
-                            cursor.execute(
-                                f"SELECT price FROM {selected_table} WHERE article = %s",
-                                (article,)
-                            )
-                            result = cursor.fetchone()
-                        except Exception as e:
-                            logging.error(f"Error querying table {selected_table} for article {article}: {e}")
-                            missing_articles.append(article)
-                            continue
-
-                        if result:
-                            base_price = Decimal(result[0])
-                            final_price = round(base_price * (1 + user_markup / 100), 2)
-
-                            # Додавання товару в кошик
-                            cursor.execute(
-                                """
-                                INSERT INTO cart (user_id, article, table_name, quantity, base_price, final_price, added_at, comment)
-                                VALUES (%s, %s, %s, %s, %s, %s, NOW(), %s)
-                                ON CONFLICT (user_id, article, table_name) DO UPDATE SET
+                cursor = conn.cursor()
+                for item in items_without_table:
+                    # Припускаємо, що item – кортеж з елементів: (article, quantity, available_tables, comment)
+                    article = item[0]
+                    if article in user_selections:
+                        selection = user_selections[article]
+                        final_price = selection['final_price']
+                        table_name = selection['table_name']
+                        brand_id = selection['brand_id']
+                        quantity = item[1]
+                        comment = item[3] if len(item) > 3 else None
+                        # Вставка або оновлення статті в кошик з урахуванням brand_id
+                        cursor.execute("""
+                            INSERT INTO cart (user_id, article, table_name, quantity, base_price, final_price, comment, brand_id, added_at)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                            ON CONFLICT (user_id, article, table_name)
+                            DO UPDATE SET 
                                 quantity = cart.quantity + EXCLUDED.quantity,
                                 final_price = EXCLUDED.final_price,
-                                comment = EXCLUDED.comment
-                                """,
-                                (user_id, article, selected_table, quantity, base_price, final_price, comment)
-                            )
-                            added_to_cart.append(article)
-                            logging.info(f"Article {article} added to cart from table {selected_table}.")
-                        else:
-                            logging.warning(f"Article {article} not found in table {selected_table}. Skipping.")
+                                comment = EXCLUDED.comment,
+                                brand_id = EXCLUDED.brand_id
+                        """, (user_id, article, table_name, quantity, 0, final_price, comment, brand_id))
+                        added_to_cart.append(article)
+                        logging.info(f"Додано статтю {article} до кошика з таблицею {table_name} і brand_id {brand_id}.")
+                conn.commit()
 
-                    conn.commit()
-                    logging.info("Database operations committed successfully.")
-
-            # Оновлення сесії
-            session['items_without_table'] = [
-                item for item in items_without_table if item[0] not in added_to_cart
-            ]
+            # Оновлення сесії: видалення оброблених статей
+            session['items_without_table'] = [item for item in items_without_table if item[0] not in added_to_cart]
             session['missing_articles'] = list(set(missing_articles))
-            logging.debug(f"Session updated. Missing articles: {session['missing_articles']}")
+            logging.debug(f"Оновлено сесію. Відсутні статті: {session['missing_articles']}")
 
             if session['items_without_table']:
-                flash("Some articles still need a table. Please review.", "warning")
-                return redirect(url_for('intermediate_results', token=token))
-
-            flash("All selected articles have been added to your cart.", "success")
+                flash(_("Some articles still need table selection."), "warning")
+            else:
+                flash(_("All selected articles have been added to your cart."), "success")
             return redirect(url_for('cart', token=token))
 
-        # GET: Відображення проміжних результатів
-        items_without_table = session.get('items_without_table', [])
-        missing_articles = session.get('missing_articles', [])
-        logging.debug(f"Rendering intermediate results. items_without_table={len(items_without_table)}, missing_articles={len(missing_articles)}")
+        else:
+            # GET: Відображення проміжних результатів
+            items_without_table = session.get('items_without_table', [])
+            missing_articles = session.get('missing_articles', [])
+            logging.debug(f"Відображення проміжних результатів: items_without_table={len(items_without_table)}, missing_articles={len(missing_articles)}")
 
-        enriched_items = []
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
+            enriched_items = []
+            with get_db_connection() as conn:
+                cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                # Формування доповнених даних для відображення вибору таблиці з підтримкою brand_id
                 for article, quantity, valid_tables, comment in items_without_table:
                     item_prices = []
-                    for table in valid_tables:
+                    for table, brand_id, brand_name in valid_tables:
                         cursor.execute(
                             f"SELECT price FROM {table} WHERE article = %s",
                             (article,)
@@ -3979,28 +4002,31 @@ def intermediate_results(token):
                         result = cursor.fetchone()
                         if result:
                             final_price = round(Decimal(result[0]) * (1 + user_markup / 100), 2)
-                            item_prices.append({'table': table, 'final_price': final_price})
+
+                            item_prices.append({
+                                'table': table,
+                                'final_price': final_price,
+                                'brand_id': brand_id,
+                                'brand_name': brand_name  # Додаємо назву бренду
+                            })
                     enriched_items.append({
                         'article': article,
                         'quantity': quantity,
-                        'valid_tables': valid_tables,
                         'prices': item_prices,
                         'comment': comment
                     })
-
-        # Передача всіх даних у шаблон
-        return render_template(
-            'user/search/intermediate.html',
-            token=token,
-            items_without_table=enriched_items,
-            missing_articles=missing_articles
-        )
+                cursor.close()
+            return render_template(
+                'user/search/intermediate.html',
+                token=token,
+                items_without_table=enriched_items,
+                missing_articles=missing_articles
+            )
 
     except Exception as e:
-        logging.error(f"Error in intermediate_results: {e}", exc_info=True)
-        flash("An error occurred while processing your selection. Please try again.", "error")
+        logging.error(f"Помилка в intermediate_results: {e}", exc_info=True)
+        flash(_("An error occurred while processing your selection. Please try again."), "error")
         return redirect(f'/{token}/')
-
 
 # Кнопка підтвердження співпадінь аналізу інвойсу
 @app.route('/<token>/admin/accept-matches/<int:invoice_id>', methods=['POST'])
@@ -4419,8 +4445,13 @@ def view_user_shipment(token, shipment_id):
 def create_shipment(token):
     try:
         user_id = request.form.get('user_id')
+        order_id = request.form.get('order_id')
         tracking_number = request.form.get('tracking_number')
-        #selected_details = request.form.getlist('selected_details')
+        selected_details = request.form.getlist('selected_details')
+
+        if not selected_details:
+            flash("Please select items for shipment", "error")
+            return redirect(url_for('create_shipment_form', token=token, user_id=user_id))
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -4430,14 +4461,16 @@ def create_shipment(token):
                 INSERT INTO shipments (order_id, shipment_date, status, tracking_number)
                 VALUES (%s, CURRENT_DATE, 'created', %s)
                 RETURNING id
-            """, (user_id, tracking_number))
+            """, (order_id, tracking_number))
             shipment_id = cursor.fetchone()[0]
 
             # Оновлюємо shipment_id для вибраних деталей замовлення
-            #for detail_id in selected_details:
-            #    cursor.execute("""
-            #        UPDATE order_details SET shipment_id = %s WHERE id = %s
-            #    """, (shipment_id, detail_id))
+            for detail_id in selected_details:
+                cursor.execute("""
+                    UPDATE order_details 
+                    SET shipment_id = %s 
+                    WHERE id = %s AND status = 'invoice_received'
+                """, (shipment_id, detail_id))
 
             conn.commit()
             flash("Shipment created successfully", "success")
@@ -4446,7 +4479,7 @@ def create_shipment(token):
         logging.error(f"Error creating shipment: {e}", exc_info=True)
         flash("Error creating shipment", "error")
 
-    return redirect(url_for('admin_dashboard', token=token))
+    return redirect(url_for('list_shipments', token=token))
 
 # Маршрут для перегляду деталей відвантаження
 @app.route('/<token>/admin/shipments/<int:shipment_id>', methods=['GET'])

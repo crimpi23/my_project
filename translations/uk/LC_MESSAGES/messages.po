@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-01-28 23:44+0200\n"
-"PO-Revision-Date: 2025-01-28 18:10+0200\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2025-02-16 15:14+0200\n"
+"PO-Revision-Date: 2025-02-16 16:22+0200\n"
+"Last-Translator: GitHub Copilot <copilot@github.com>\n"
 "Language: uk\n"
 "Language-Team: uk <LL@li.org>\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
@@ -19,542 +19,958 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app.py:1206
+#: app.py:204 app.py:434
+msgid "Invalid token."
+msgstr "Недійсний токен."
+
+#: app.py:209 app.py:214 app.py:459
+msgid "Invalid token or role."
+msgstr "Недійсний токен або роль."
+
+#: app.py:298
+msgid ""
+"Thank you for your order!\n"
+"\n"
+"Your order details:\n"
+msgstr "Дякуємо за ваше замовлення!\n\nДеталі вашого замовлення:\n"
+
+#: app.py:301
+#, fuzzy
+msgid "Ordered items:\n"
+msgstr "Замовлені товари:\n"
+
+#: app.py:303
+msgid ""
+"- Article: {article}, Price: {price:.2f}, Quantity: {quantity}, Comment: "
+"{comment}\n"
+msgstr "- Артикул: {article}, Ціна: {price:.2f}, Кількість: {quantity}, Коментар: {comment}\n"
+
+#: app.py:312 templates/user/cart/cart.html:42
+#: templates/user/orders/order_details.html:63
+#, fuzzy
+msgid "No comment"
+msgstr "Без коментаря"
+
+#: app.py:316
+#, fuzzy
+msgid ""
+"\n"
+"Missing articles:\n"
+msgstr "\nВідсутні артикули:\n"
+
+#: app.py:470
+msgid "Please enter an article for search."
+msgstr "Будь ласка, введіть артикул для пошуку."
+
+#: app.py:497
+msgid "An error occurred during the search. Please try again later."
+msgstr "Під час пошуку сталася помилка. Будь ласка, спробуйте пізніше."
+
+#: app.py:688
+msgid "Please enter at least one article."
+msgstr "Будь ласка, введіть хоча б один артикул."
+
+#: app.py:801
+#, fuzzy
+msgid "Articles not found: {articles}"
+msgstr "Артикули не знайдено: {articles}"
+
+#: app.py:830
+#, fuzzy
+msgid "Added to cart: {articles}"
+msgstr "Додано до кошика: {articles}"
+
+#: app.py:855
+msgid "An error occurred while processing your request."
+msgstr "Під час обробки вашого запиту сталася помилка."
+
+#: app.py:867
+msgid "You need to log in to view search results."
+msgstr "Вам потрібно увійти, щоб переглянути результати пошуку."
+
+#: app.py:929
+msgid "Your selection has been saved!"
+msgstr "Ваш вибір збережено!"
+
+#: app.py:933
+msgid "An error occurred while saving your selection. Please try again."
+msgstr "Під час збереження вашого вибору сталася помилка. Будь ласка, спробуйте ще раз."
+
+#: app.py:954
+msgid "No search results found. Please start a new search."
+msgstr "Результатів пошуку не знайдено. Будь ласка, почніть новий пошук."
+
+#: app.py:971
+msgid "An error occurred while retrieving search results."
+msgstr "Під час отримання результатів пошуку сталася помилка."
+
+#: app.py:991
+msgid "You need to log in to view your cart."
+msgstr "Вам потрібно увійти, щоб переглянути свій кошик."
+
+#: app.py:1104
+msgid "Could not load your cart. Please try again."
+msgstr "Не вдалося завантажити ваш кошик. Будь ласка, спробуйте ще раз."
+
+#: app.py:1128 app.py:3916
+#, fuzzy
+msgid "User not authenticated"
+msgstr "Користувач не автентифікований."
+
+#: app.py:1173
+#, fuzzy
+msgid "No articles selected"
+msgstr "Не вибрано жодного артикула"
+
+#: app.py:1202
+msgid "Selection successfully submitted!"
+msgstr "Вибір успішно надіслано!"
+
+#: app.py:1207
+msgid "An error occurred during submission"
+msgstr "Під час надсилання сталася помилка"
+
+#: app.py:1222
+#, fuzzy
+msgid "Search results cleared successfully"
+msgstr "Результати пошуку успішно очищено"
+
+#: app.py:1228
+#, fuzzy
+msgid "Error clearing search results"
+msgstr "Результати пошуку"
+
+#: app.py:1256 app.py:1446
+#, fuzzy
+msgid "User is not authenticated. Please log in."
+msgstr "Користувач не автентифікований. Будь ласка, увійдіть."
+
+#: app.py:1289
+#, fuzzy
+msgid "Product added to cart!"
+msgstr "Товар додано до кошика!"
+
+#: app.py:1292
+#, fuzzy
+msgid "Error adding product to cart."
+msgstr "Помилка додавання товару до кошика."
+
+#: app.py:1321
+msgid "Missing required information for removal"
+msgstr "Відсутня необхідна інформація для видалення"
+
+#: app.py:1338
 msgid "Article {article} removed successfully"
 msgstr "Артикул {article} успішно видалено"
 
-#: app.py:1209
+#: app.py:1341
 msgid "Item not found in cart"
 msgstr "Товар не знайдено в кошику"
 
-#: app.py:1214
+#: app.py:1346
 msgid "Error removing item from cart"
 msgstr "Помилка видалення товару з кошика"
 
-#: app.py:1233
+#: app.py:1365
 msgid "Invalid input: article or quantity missing."
-msgstr "Некоректні дані: відсутній артикул або кількість."
+msgstr "Некоректний ввід: відсутній артикул або кількість."
 
-#: app.py:1240
+#: app.py:1372
 msgid "Quantity must be at least 1."
 msgstr "Кількість повинна бути не менше 1."
 
-#: app.py:1257
+#: app.py:1389
 msgid "Cart updated successfully!"
 msgstr "Кошик успішно оновлено!"
 
-#: app.py:1261
+#: app.py:1393
 msgid "Error updating cart."
 msgstr "Помилка оновлення кошика."
 
-#: app.py:1304
-msgid "Cart cleared successfully."
-msgstr "Кошик успішно очищено."
-
-#: app.py:1308
-msgid "Error clearing cart."
-msgstr "Помилка очищення кошика."
-
-#: app.py:1355
+#: app.py:1464
 msgid "Your cart is empty!"
 msgstr "Ваш кошик порожній!"
 
-#: app.py:1425
+#: app.py:1535
 msgid "Order placed, but we couldn't send a confirmation email."
 msgstr "Замовлення розміщено, але не вдалося надіслати підтвердження на email."
 
-#: app.py:1432
+#: app.py:1542
 msgid "Order placed successfully!"
 msgstr "Замовлення успішно розміщено!"
 
-#: app.py:1439
+#: app.py:1549
 msgid "Error placing order: {error}"
 msgstr "Помилка розміщення замовлення: {error}"
 
-#: app.py:1458
+#: app.py:1567
 msgid "User is not authenticated."
-msgstr "Користувач не авторизований."
+msgstr "Користувач не автентифікований."
 
-#: app.py:1524
+#: app.py:1633
 msgid "Error fetching orders."
 msgstr "Помилка отримання замовлень."
 
-#: app.py:1576
+#: app.py:1691
 msgid "Error loading order details."
 msgstr "Помилка завантаження деталей замовлення."
 
-#: app.py:2558
+#: app.py:3983
+msgid "Some articles still need table selection."
+msgstr "Деякі артикули ще потребують вибору таблиці."
+
+#: app.py:3985
+msgid "All selected articles have been added to your cart."
+msgstr "Усі вибрані артикули додано до вашого кошика."
+
+#: app.py:4031
+msgid "An error occurred while processing your selection. Please try again."
+msgstr "Під час обробки вашого вибору сталася помилка. Будь ласка, спробуйте ще раз."
+
+#: app.py:4214
+#, fuzzy
+msgid "News created successfully!"
+msgstr "Новину створено успішно!"
+
+#: app.py:4219
+#, fuzzy
+msgid "Error creating news"
+msgstr "Помилка створення новини"
+
+#: app.py:4827
 msgid "Error loading news"
 msgstr "Помилка завантаження новин"
 
-#: app.py:2588 app.py:2638
+#: app.py:4858
 msgid "News not found"
-msgstr "Новини не знайдено"
+msgstr "Новину не знайдено"
 
-#: templates/base.html:6 templates/index.html:4
+#: templates/base/base.html:6 templates/user/index.html:4
 msgid "Article Price Search"
 msgstr "Пошук цін артикулів"
 
-#: templates/base.html:118
-msgid "MySite"
-msgstr "Мій сайт"
-
-#: templates/base.html:144 templates/user_news.html:3 templates/user_news.html:7
+#: templates/base/base.html:125 templates/user/news/user_news.html:3
+#: templates/user/news/user_news.html:7
 msgid "News"
 msgstr "Новини"
 
-#: templates/base.html:153
-msgid "Home"
-msgstr "Головна"
-
-#: templates/base.html:160
+#: templates/base/base.html:133
 msgid "Cart"
 msgstr "Кошик"
 
-#: templates/base.html:166
+#: templates/base/base.html:142
 msgid "Orders"
 msgstr "Замовлення"
 
-#: templates/cart.html:3 templates/cart.html:7
-msgid "Shopping Cart"
-msgstr "Кошик покупок"
+#: templates/base/base.html:148 templates/user/orders/order_changes.html:5
+msgid "Order Changes History"
+msgstr "Історія змін замовлення"
 
-#: templates/cart.html:14 templates/order_details.html:19 templates/orders.html:58 templates/search_results.html:15
-msgid "Article"
-msgstr "Артикул"
+#: templates/base/base.html:154 templates/user/shipments/shipments.html:3
+msgid "Shipments"
+msgstr "Відвантаження"
 
-#: templates/cart.html:15 templates/order_details.html:20
-msgid "Price List"
-msgstr "Прайс-лист"
-
-#: templates/cart.html:16 templates/order_details.html:21
-msgid "Price"
-msgstr "Ціна"
-
-#: templates/cart.html:17 templates/order_details.html:22 templates/search_results.html:17
-msgid "Quantity"
-msgstr "Кількість"
-
-#: templates/cart.html:18 templates/order_details.html:23
-msgid "Total"
-msgstr "Сума"
-
-#: templates/cart.html:19 templates/order_details.html:24 templates/search_results.html:18
-msgid "Comment"
-msgstr "Коментар"
-
-#: templates/cart.html:20 templates/orders.html:99
-msgid "Actions"
-msgstr "Дії"
-
-#: templates/cart.html:55
-msgid "Total:"
-msgstr "Всього:"
-
-#: templates/cart.html:66
-msgid "Place Order"
-msgstr "Оформити замовлення"
-
-#: templates/cart.html:72
-msgid "Clear Cart"
-msgstr "Очистити кошик"
-
-#: templates/cart.html:79 templates/search_results.html:70
-msgid "Missing Articles:"
-msgstr "Відсутні артикули:"
-
-#: templates/cart.html:80
-msgid "The following articles were not found:"
-msgstr "Наступні артикули не знайдено:"
-
-#: templates/cart.html:91
-msgid "Your Cart is Empty"
-msgstr "Ваш кошик порожній"
-
-#: templates/cart.html:92
-msgid "Start adding items to your cart!"
-msgstr "Почніть додавати товари до кошика!"
-
-#: templates/cart.html:94 templates/index.html:33
-msgid "Search Articles"
-msgstr "Пошук артикулів"
-
-#: templates/index.html:6
+#: templates/user/index.html:6
 msgid "Welcome to the advanced search system! Use the tools below:"
-msgstr "Ласкаво просимо до розширеної системи пошуку! Використовуйте інструменти нижче:"
+msgstr ""
+"Ласкаво просимо до розширеної системи пошуку! Використовуйте інструменти "
+"нижче:"
 
-#: templates/index.html:14
+#: templates/user/index.html:14
 msgid "Upload Articles File"
 msgstr "Завантажити файл з артикулами"
 
-#: templates/index.html:16
+#: templates/user/index.html:17
+msgid "Article/Quantity/Comment"
+msgstr "Артикул/Кількість/Коментар"
+
+#: templates/user/index.html:20
+msgid "Article/Quantity/Brand/Comment"
+msgstr "Артикул/Кількість/Бренд/Коментар"
+
+#: templates/user/index.html:24
 msgid "Drag and drop your file here, or click to select"
 msgstr "Перетягніть файл сюди або натисніть для вибору"
 
-#: templates/index.html:22
+#: templates/user/index.html:30
 msgid "Upload and Search"
 msgstr "Завантажити та шукати"
 
-#: templates/index.html:36
+#: templates/user/cart/cart.html:96 templates/user/index.html:41
+msgid "Search Articles"
+msgstr "Пошук артикулів"
+
+#: templates/user/index.html:44
 msgid "Enter Articles and Quantities:"
 msgstr "Введіть артикули та кількість:"
 
-#: templates/index.html:38
+#: templates/user/index.html:46
 msgid "Example:"
 msgstr "Приклад:"
 
-#: templates/index.html:42
+#: templates/user/index.html:50
 msgid "Search"
 msgstr "Пошук"
 
-#: templates/index.html:76 templates/index.html:83
+#: templates/user/index.html:97 templates/user/index.html:104
 msgid "File selected:"
 msgstr "Вибраний файл:"
 
-#: templates/order_details.html:3 templates/order_details.html:8
-msgid "Order Details"
-msgstr "Деталі замовлення"
-
-#: templates/order_details.html:10
-msgid "Back to Orders"
-msgstr "Назад до замовлень"
-
-#: templates/order_details.html:25 templates/orders.html:62 templates/orders.html:98
-msgid "Status"
-msgstr "Статус"
-
-#: templates/order_details.html:51
-msgid "Total Order Amount:"
-msgstr "Загальна сума замовлення:"
-
-#: templates/order_details.html:61
-msgid "Order Timeline"
-msgstr "Хронологія замовлення"
-
-#: templates/order_details.html:80
-msgid "No Details Available"
-msgstr "Деталі відсутні"
-
-#: templates/order_details.html:81
-msgid "The details for this order could not be found."
-msgstr "Деталі цього замовлення не знайдено."
-
-#: templates/orders.html:51
-msgid "My Orders"
-msgstr "Мої замовлення"
-
-#: templates/orders.html:64
-msgid "All"
-msgstr "Всі"
-
-#: templates/orders.html:65 templates/user_news.html:18
-msgid "New"
-msgstr "Нові"
-
-#: templates/orders.html:66
-msgid "Accepted"
-msgstr "Прийняті"
-
-#: templates/orders.html:67
-msgid "Cancelled"
-msgstr "Скасовані"
-
-#: templates/orders.html:71
-msgid "Start Date"
-msgstr "Дата початку"
-
-#: templates/orders.html:75
-msgid "End Date"
-msgstr "Дата кінця"
-
-#: templates/orders.html:80
-msgid "Filter"
-msgstr "Фільтрувати"
-
-#: templates/orders.html:83
-msgid "Clear Filters"
-msgstr "Очистити фільтри"
-
-#: templates/orders.html:95
-msgid "Order ID"
-msgstr "ID замовлення"
-
-#: templates/orders.html:96
-msgid "Date"
-msgstr "Дата"
-
-#: templates/orders.html:97
-msgid "Total Price"
-msgstr "Загальна ціна"
-
-#: templates/orders.html:119 templates/user_news.html:44
-msgid "View Details"
-msgstr "Переглянути деталі"
-
-#: templates/orders.html:128
-msgid "No Orders Found"
-msgstr "Замовлень не знайдено"
-
-#: templates/orders.html:129
-msgid "You haven't placed any orders yet."
-msgstr "Ви ще не розмістили жодного замовлення."
-
-#: templates/orders.html:131
-msgid "Start Shopping"
-msgstr "Почати покупки"
-
-#: templates/search_results.html:3 templates/search_results.html:7
-msgid "Search Results"
-msgstr "Результати пошуку"
-
-#: templates/search_results.html:16
-msgid "Price Lists"
-msgstr "Прайс-листи"
-
-#: templates/search_results.html:19
-msgid "Select"
-msgstr "Вибрати"
-
-#: templates/search_results.html:71
-msgid "The following articles were not found in any price list:"
-msgstr "Наступні артикули не знайдено в жодному прайс-листі:"
-
-#: templates/search_results.html:82
-msgid "Add to Cart"
-msgstr "Додати в кошик"
-
-#: templates/search_results.html:86
-msgid "Clear Results"
-msgstr "Очистити результати"
-
-#: templates/search_results.html:93
-msgid "No Results Found"
-msgstr "Результатів не знайдено"
-
-#: templates/search_results.html:94
-msgid "Try searching with different articles or check your input format."
-msgstr "Спробуйте пошук з іншими артикулами або перевірте формат введення."
-
-#: templates/search_results.html:96
-msgid "New Search"
-msgstr "Новий пошук"
-
-#: templates/user_news.html:12
-msgid "New Messages"
-msgstr "Нові повідомлення"
-
-#: templates/user_news.html:26
-msgid "Read More"
-msgstr "Читати далі"
-
-#: templates/user_news.html:36
-msgid "News Archive"
-msgstr "Архів новин"
-
-#: templates/view_news.html:9
-msgid "Mark as Read"
-msgstr "Позначити як прочитане"
-
-#: templates/view_news.html:16
-msgid "Published:"
-msgstr "Опубліковано:"
-
-#: templates/user_news.html:3
-msgid "User News"
-msgstr "Новини користувача"
-
-#: templates/user_news.html:44
-msgid "No news available"
-msgstr "Немає доступних новин"
-
-#: templates/admin/news.html:3
-msgid "News Management"
-msgstr "Управління новинами"
-
-#: templates/admin/news.html:7
-msgid "Create News"
-msgstr "Створити новину"
-
-#: templates/admin/news.html:10
-msgid "Edit News"
-msgstr "Редагувати новину"
-
-#: templates/admin/news.html:13
-msgid "Delete News"
-msgstr "Видалити новину"
-
-#: templates/admin/news_edit.html:3
-msgid "Edit News Item"
-msgstr "Редагування новини"
-
-#: templates/admin/news_edit.html:7
-msgid "Title"
-msgstr "Заголовок"
-
-#: templates/admin/news_edit.html:13
-msgid "Content"
-msgstr "Зміст"
-
-#: templates/admin/news_edit.html:19
-msgid "Published"
-msgstr "Опубліковано"
-
-#: templates/admin/news_edit.html:25
-msgid "Save Changes"
-msgstr "Зберегти зміни"
-
-#: templates/admin/orders.html:3
-msgid "Order Management"
-msgstr "Управління замовленнями"
-
-#: templates/admin/orders.html:7
-msgid "Order List"
-msgstr "Список замовлень"
-
-#: templates/admin/orders.html:12
-msgid "Order Status"
-msgstr "Статус замовлення"
-
-#: templates/admin/orders.html:18
-msgid "Customer"
-msgstr "Клієнт"
-
-#: templates/admin/orders.html:24
-msgid "Order Date"
-msgstr "Дата замовлення"
-
-#: templates/admin/orders.html:30
-msgid "Update Status"
-msgstr "Оновити статус"
-
-#: templates/admin/dashboard.html:3
-msgid "Admin Dashboard"
-msgstr "Панель адміністратора"
-
-#: templates/admin/dashboard.html:7
-msgid "System Statistics"
-msgstr "Статистика системи"
-
-#: templates/admin/dashboard.html:13
-msgid "User Management"
-msgstr "Управління користувачами"
-
-#: templates/admin/dashboard.html:19
-msgid "Price Lists"
-msgstr "Прайс-листи"
-
-#: templates/admin/price_lists.html:3
-msgid "Price List Management"
-msgstr "Управління прайс-листами"
-
-#: templates/admin/price_lists.html:7
-msgid "Upload New Price List"
-msgstr "Завантажити новий прайс-лист"
-
-#: templates/admin/price_lists.html:13
-msgid "Current Price Lists"
-msgstr "Поточні прайс-листи"
-
-#: templates/admin/price_lists.html:19
-msgid "Compare Price Lists"
-msgstr "Порівняти прайс-листи"
-
-#: templates/admin/users.html:3
-msgid "User Management"
-msgstr "Управління користувачами"
-
-#: templates/admin/users.html:7
-msgid "Create User"
-msgstr "Створити користувача"
-
-#: templates/admin/users.html:13
-msgid "User List"
-msgstr "Список користувачів"
-
-#: templates/admin/users.html:19
-msgid "User Roles"
-msgstr "Ролі користувачів"
-
-#: templates/admin/users.html:25
-msgid "User Activity"
-msgstr "Активність користувачів"
-
-#: templates/errors/404.html:3
-msgid "Page Not Found"
-msgstr "Сторінку не знайдено"
-
-#: templates/errors/500.html:3
-msgid "Server Error"
-msgstr "Помилка сервера"
-
-#: templates/errors/403.html:3
-msgid "Access Denied"
-msgstr "Доступ заборонено"
-
-#: app.py:XXX templates/admin_order_details.html:YY
-msgid "new"
-msgstr "Нове"
-
-#: app.py:XXX templates/admin_order_details.html:YY
-msgid "in_review"
-msgstr "На розгляді"
-
-#: app.py:XXX templates/admin_order_details.html:YY
-msgid "pending"
-msgstr "В очікуванні"
-
-#: app.py:XXX templates/admin_order_details.html:YY
-msgid "accepted"
-msgstr "Прийнято"
-
-#: app.py:XXX templates/admin_order_details.html:YY
-msgid "ordered_supplier"
-msgstr "Замовлено у постачальника"
-
-#: app.py:XXX templates/admin_order_details.html:YY
-msgid "invoice_received"
-msgstr "Отримано інвойс"
-
-#: app.py:XXX templates/admin_order_details.html:YY
-msgid "in_transit"
-msgstr "В дорозі"
-
-#: app.py:XXX templates/admin_order_details.html:YY
-msgid "ready_pickup"
-msgstr "Готово до відвантаження"
-
-#: app.py:XXX templates/admin_order_details.html:YY
-msgid "completed"
-msgstr "Виконано"
-
-#: app.py:XXX templates/admin_order_details.html:YY
-msgid "cancelled"
-msgstr "Скасовано"
-
-#: templates/admin_orders.html:YY templates/admin_order_details.html:ZZ
-msgid "Orders Management"
-msgstr "Управління замовленнями"
-
-msgid "Dashboard"
-msgstr "Панель керування"
-
-msgid "Filter by Status"
-msgstr "Фільтр за статусом"
-
-msgid "All Statuses"
-msgstr "Всі статуси"
-
-msgid "Details"
-msgstr "Деталі"
-
-msgid "Actions"
-msgstr "Дії"
-
+#: templates/user/cart/cart.html:3 templates/user/cart/cart.html:7
+msgid "Shopping Cart"
+msgstr "Кошик покупок"
+
+#: templates/user/cart/cart.html:14 templates/user/orders/order_changes.html:13
+#: templates/user/orders/order_details.html:20
+#: templates/user/orders/orders.html:62
+#: templates/user/search/intermediate.html:16
+#: templates/user/search/search_results.html:15
+#: templates/user/shipments/shipments.html:23
+#: templates/user/shipments/view_shipment.html:39
+msgid "Article"
+msgstr "Артикул"
+
+#: templates/user/cart/cart.html:15 templates/user/orders/order_details.html:22
+msgid "Price List"
+msgstr "Прайс-лист"
+
+#: templates/user/cart/cart.html:16 templates/user/search/intermediate.html:35
+msgid "Brand"
+msgstr "Бренд"
+
+#: templates/user/cart/cart.html:17 templates/user/orders/order_details.html:24
+#: templates/user/shipments/shipments.html:25
+#: templates/user/shipments/view_shipment.html:41
+msgid "Price"
+msgstr "Ціна"
+
+#: templates/user/cart/cart.html:18 templates/user/orders/order_details.html:25
+#: templates/user/search/intermediate.html:18
+#: templates/user/search/search_results.html:17
+#: templates/user/shipments/shipments.html:24
+#: templates/user/shipments/view_shipment.html:40
+msgid "Quantity"
+msgstr "Кількість"
+
+#: templates/user/cart/cart.html:19 templates/user/orders/order_details.html:26
 msgid "Total"
 msgstr "Сума"
 
+#: templates/user/cart/cart.html:20 templates/user/orders/order_details.html:27
+#: templates/user/search/intermediate.html:19
+#: templates/user/search/search_results.html:18
+#: templates/user/shipments/view_shipment.html:43
+msgid "Comment"
+msgstr "Коментар"
+
+#: templates/user/cart/cart.html:21 templates/user/orders/orders.html:103
+#: templates/user/shipments/list_shipments.html:22
+msgid "Actions"
+msgstr "Дії"
+
+#: templates/user/cart/cart.html:57
+msgid "Total:"
+msgstr "Всього:"
+
+#: templates/user/cart/cart.html:68
+msgid "Place Order"
+msgstr "Оформити замовлення"
+
+#: templates/user/cart/cart.html:74
+#, fuzzy
+msgid "Clear Cart"
+msgstr "Очистити кошик"
+
+#: templates/user/cart/cart.html:81
+#: templates/user/search/search_results.html:70
+msgid "Missing Articles:"
+msgstr "Відсутні артикули:"
+
+#: templates/user/cart/cart.html:82
+msgid "The following articles were not found:"
+msgstr "Наступні артикули не знайдено:"
+
+#: templates/user/cart/cart.html:93
+msgid "Your Cart is Empty"
+msgstr "Ваш кошик порожній"
+
+#: templates/user/cart/cart.html:94
+msgid "Start adding items to your cart!"
+msgstr "Почніть додавати товари до кошика!"
+
+#: templates/user/news/user_news.html:12
+msgid "New Messages"
+msgstr "Нові повідомлення"
+
+#: templates/user/news/user_news.html:18 templates/user/orders/orders.html:69
+msgid "New"
+msgstr "Нові"
+
+#: templates/user/news/user_news.html:26
+msgid "Read More"
+msgstr "Читати далі"
+
+#: templates/user/news/user_news.html:36
+msgid "News Archive"
+msgstr "Архів новин"
+
+#: templates/user/news/user_news.html:44 templates/user/orders/orders.html:124
+#: templates/user/shipments/list_shipments.html:36
+msgid "View Details"
+msgstr "Переглянути деталі"
+
+#: templates/user/news/view_news.html:9
+msgid "Mark as Read"
+msgstr "Позначити як прочитане"
+
+#: templates/user/news/view_news.html:16
+msgid "Published:"
+msgstr "Опубліковано:"
+
+#: templates/user/orders/order_changes.html:12
+#: templates/user/orders/orders.html:99
+msgid "Order ID"
+msgstr "ID замовлення"
+
+#: templates/user/orders/order_changes.html:14
+msgid "Change Type"
+msgstr "Тип зміни"
+
+#: templates/user/orders/order_changes.html:15
+msgid "Old Value"
+msgstr "Старе значення"
+
+#: templates/user/orders/order_changes.html:16
+msgid "New Value"
+msgstr "Нове значення"
+
+#: templates/user/orders/order_changes.html:17
+msgid "Change Date"
+msgstr "Дата зміни"
+
+#: templates/user/orders/order_changes.html:27
+msgid "Article Number Change"
+msgstr "Зміна номера артикула"
+
+#: templates/user/orders/order_changes.html:29
+msgid "Price Change"
+msgstr "Зміна ціни"
+
+#: templates/user/orders/order_changes.html:42
+msgid "No changes found."
+msgstr "Змін не знайдено"
+
+#: templates/user/orders/order_details.html:4
+#: templates/user/orders/order_details.html:9
+#: templates/user/shipments/shipments.html:19
+msgid "Order Details"
+msgstr "Деталі замовлення"
+
+#: templates/user/orders/order_details.html:11
+msgid "Back to Orders"
+msgstr "Назад до замовлень"
+
+#: templates/user/orders/order_details.html:21
+#, fuzzy
+msgid "Original Article"
+msgstr "Оригінальний артикул"
+
+#: templates/user/orders/order_details.html:23
+#, fuzzy
+msgid "Brand ID"
+msgstr "ID бренду"
+
+#: templates/user/orders/order_details.html:28
+#: templates/user/orders/orders.html:66 templates/user/orders/orders.html:102
+#: templates/user/shipments/list_shipments.html:18
+msgid "Status"
+msgstr "Статус"
+
+#: templates/user/orders/order_details.html:86
+msgid "Total Order Amount:"
+msgstr "Загальна сума замовлення:"
+
+#: templates/user/orders/order_details.html:96
+msgid "Order Timeline"
+msgstr "Хронологія замовлення"
+
+#: templates/user/orders/order_details.html:115
+msgid "No Details Available"
+msgstr "Деталі відсутні"
+
+#: templates/user/orders/order_details.html:116
+msgid "The details for this order could not be found."
+msgstr "Деталі цього замовлення не знайдено."
+
+#: templates/user/orders/orders.html:55
+msgid "My Orders"
+msgstr "Мої замовлення"
+
+#: templates/user/orders/orders.html:68
+msgid "All"
+msgstr "Всі"
+
+#: templates/user/orders/orders.html:70
+msgid "Accepted"
+msgstr "Прийняті"
+
+#: templates/user/orders/orders.html:71
+msgid "Cancelled"
+msgstr "Скасовані"
+
+#: templates/user/orders/orders.html:75
+msgid "Start Date"
+msgstr "Дата початку"
+
+#: templates/user/orders/orders.html:79
+msgid "End Date"
+msgstr "Дата кінця"
+
+#: templates/user/orders/orders.html:84
+msgid "Filter"
+msgstr "Фільтрувати"
+
+#: templates/user/orders/orders.html:87
+msgid "Clear Filters"
+msgstr "Очистити фільтри"
+
+#: templates/user/orders/orders.html:100
 msgid "Date"
 msgstr "Дата"
 
-msgid "User"
-msgstr "Користувач"
+#: templates/user/orders/orders.html:101
+#: templates/user/shipments/list_shipments.html:21
+#: templates/user/shipments/shipments.html:26
+#: templates/user/shipments/view_shipment.html:42
+msgid "Total Price"
+msgstr "Загальна ціна"
+
+#: templates/user/orders/orders.html:133
+msgid "No Orders Found"
+msgstr "Замовлень не знайдено"
+
+#: templates/user/orders/orders.html:134
+msgid "You haven't placed any orders yet."
+msgstr "Ви ще не розмістили жодного замовлення."
+
+#: templates/user/orders/orders.html:136
+msgid "Start Shopping"
+msgstr "Почати покупки"
+
+#: templates/user/search/intermediate.html:3
+#, fuzzy
+msgid "Select Price Lists"
+msgstr "Виберіть прайс-листи"
+
+#: templates/user/search/intermediate.html:7
+#, fuzzy
+msgid "Intermediate Results"
+msgstr "Проміжні результати"
+
+#: templates/user/search/intermediate.html:8
+msgid "Please select a price list for each article."
+msgstr "Будь ласка, виберіть прайс-лист для кожного артикула."
+
+#: templates/user/search/intermediate.html:17
+#, fuzzy
+msgid "Available Price Lists"
+msgstr "Доступні прайс-листи"
+
+#: templates/user/search/intermediate.html:61
+#: templates/user/search/search_results.html:82
+msgid "Add to Cart"
+msgstr "Додати в кошик"
+
+#: templates/user/search/intermediate.html:64
+#, fuzzy
+msgid "Cancel"
+msgstr "Скасувати"
+
+#: templates/user/search/intermediate.html:71
+#, fuzzy
+msgid "Missing Articles"
+msgstr "Відсутні артикули"
+
+#: templates/user/search/intermediate.html:72
+#: templates/user/search/search_results.html:71
+msgid "The following articles were not found in any price list:"
+msgstr "Наступні артикули не знайдено в жодному прайс-листі:"
+
+#: templates/user/search/search_results.html:3
+#: templates/user/search/search_results.html:7
+msgid "Search Results"
+msgstr "Результати пошуку"
+
+#: templates/user/search/search_results.html:16
+msgid "Price Lists"
+msgstr "Прайс-листи"
+
+#: templates/user/search/search_results.html:19
+msgid "Select"
+msgstr "Вибрати"
+
+#: templates/user/search/search_results.html:86
+msgid "Clear Results"
+msgstr "Очистити результати"
+
+#: templates/user/search/search_results.html:92
+msgid "No Results Found"
+msgstr "Результатів не знайдено"
+
+#: templates/user/search/search_results.html:93
+msgid "Try searching with different articles or check your input format."
+msgstr "Спробуйте пошук з іншими артикулами або перевірте формат введення."
+
+#: templates/user/search/search_results.html:95
+msgid "New Search"
+msgstr "Новий пошук"
+
+#: templates/user/shipments/list_shipments.html:9
+#: templates/user/shipments/shipments.html:7
+msgid "My Shipments"
+msgstr "Мої відвантаження"
+
+#: templates/user/shipments/list_shipments.html:17
+msgid "Shipment Date"
+msgstr "Дата відвантаження"
+
+#: templates/user/shipments/list_shipments.html:19
+msgid "Tracking Number"
+msgstr "Номер відстеження"
+
+#: templates/user/shipments/list_shipments.html:20
+msgid "Items Count"
+msgstr "Кількість товарів"
+
+#: templates/user/shipments/list_shipments.html:30
+msgid "N/A"
+msgstr "Немає даних"
+
+#: templates/user/shipments/list_shipments.html:45
+#: templates/user/shipments/shipments.html:44
+msgid "No shipments found."
+msgstr "Відвантажень не знайдено."
+
+#: templates/user/shipments/shipments.html:13
+msgid "Shipment Date:"
+msgstr "Дата відвантаження:"
+
+#: templates/user/shipments/shipments.html:13
+#: templates/user/shipments/view_shipment.html:22
+msgid "Status:"
+msgstr "Статус:"
+
+#: templates/user/shipments/shipments.html:15
+#: templates/user/shipments/view_shipment.html:23
+msgid "Tracking Number:"
+msgstr "Номер відстеження:"
+
+#: templates/user/shipments/view_shipment.html:3
+#: templates/user/shipments/view_shipment.html:8
+msgid "Shipment Details"
+msgstr "Деталі відвантаження"
+
+#: templates/user/shipments/view_shipment.html:10
+msgid "Back to Shipments"
+msgstr "Назад до відвантажень"
+
+#: templates/user/shipments/view_shipment.html:16
+msgid "Shipment Information"
+msgstr "Інформація про відвантаження"
+
+#: templates/user/shipments/view_shipment.html:21
+msgid "Date:"
+msgstr "Дата:"
+
+#: templates/user/shipments/view_shipment.html:23
+msgid "Not specified"
+msgstr "Не вказано"
+
+#: templates/user/shipments/view_shipment.html:31
+msgid "Items"
+msgstr "Товари"
+
+#: templates/user/shipments/view_shipment.html:60
+msgid "No items in this shipment."
+msgstr "Немає товарів у цьому відвантаженні."
+
+#: venv/Lib/site-packages/click/_termui_impl.py:556
+msgid "{editor}: Editing failed"
+msgstr "{editor}: Не вдалося редагувати"
+
+#: venv/Lib/site-packages/click/_termui_impl.py:560
+msgid "{editor}: Editing failed: {e}"
+msgstr "{editor}: Не вдалося редагувати: {e}"
+
+#: venv/Lib/site-packages/click/core.py:1124
+msgid "Aborted!"
+msgstr "Скасовано!"
+
+#: venv/Lib/site-packages/click/core.py:1349
+#: venv/Lib/site-packages/click/core.py:1379
+msgid "(Deprecated) {text}"
+msgstr "(Застаріле) {text}"
+
+#: venv/Lib/site-packages/click/core.py:1396
+#, fuzzy
+msgid "Options"
+msgstr "Параметри"
+
+#: venv/Lib/site-packages/click/core.py:1424
+msgid "Got unexpected extra argument ({args})"
+msgid_plural "Got unexpected extra arguments ({args})"
+msgstr[0] "Отримано неочікуваний додатковий аргумент ({args})"
+msgstr[1] "Отримано неочікувані додаткові аргументи ({args})"
+msgstr[2] "Отримано неочікувані додаткові аргументи ({args})"
+
+#: venv/Lib/site-packages/click/core.py:1437
+msgid "DeprecationWarning: The command {name!r} is deprecated."
+msgstr "DeprecationWarning: Команда {name!r} застаріла."
+
+#: venv/Lib/site-packages/click/core.py:1645
+msgid "Commands"
+msgstr "Команди"
+
+#: venv/Lib/site-packages/click/core.py:1677
+msgid "Missing command."
+msgstr "Відсутня команда."
+
+#: venv/Lib/site-packages/click/core.py:1755
+msgid "No such command {name!r}."
+msgstr "Немає такої команди {name!r}."
+
+#: venv/Lib/site-packages/click/core.py:2313
+msgid "Value must be an iterable."
+msgstr "Значення має бути iterable."
+
+#: venv/Lib/site-packages/click/core.py:2336
+msgid "Takes {nargs} values but 1 was given."
+msgid_plural "Takes {nargs} values but {len} were given."
+msgstr[0] "Потрібно {nargs} значення, але надано 1."
+msgstr[1] "Потрібно {nargs} значення, але надано {len}."
+msgstr[2] "Потрібно {nargs} значень, але надано {len}."
+
+#: venv/Lib/site-packages/click/core.py:2783
+msgid "env var: {var}"
+msgstr "змінна середовища: {var}"
+
+#: venv/Lib/site-packages/click/core.py:2813
+msgid "(dynamic)"
+msgstr "(динамічний)"
+
+#: venv/Lib/site-packages/click/core.py:2828
+msgid "default: {default}"
+msgstr "за замовчуванням: {default}"
+
+#: venv/Lib/site-packages/click/core.py:2841
+msgid "required"
+msgstr "обов'язково"
+
+#: venv/Lib/site-packages/click/decorators.py:457
+#, python-format
+msgid "%(prog)s, version %(version)s"
+msgstr "%(prog)s, версія %(version)s"
+
+#: venv/Lib/site-packages/click/decorators.py:520
+msgid "Show the version and exit."
+msgstr "Показати версію та вийти."
+
+#: venv/Lib/site-packages/click/decorators.py:541
+msgid "Show this message and exit."
+msgstr "Показати це повідомлення та вийти."
+
+#: venv/Lib/site-packages/click/exceptions.py:49
+#: venv/Lib/site-packages/click/exceptions.py:88
+msgid "Error: {message}"
+msgstr "Помилка: {message}"
+
+#: venv/Lib/site-packages/click/exceptions.py:80
+msgid "Try '{command} {option}' for help."
+msgstr "Спробуйте '{command} {option}' для отримання довідки."
+
+#: venv/Lib/site-packages/click/exceptions.py:129
+msgid "Invalid value: {message}"
+msgstr "Недійсне значення: {message}"
+
+#: venv/Lib/site-packages/click/exceptions.py:131
+msgid "Invalid value for {param_hint}: {message}"
+msgstr "Недійсне значення для {param_hint}: {message}"
+
+#: venv/Lib/site-packages/click/exceptions.py:187
+msgid "Missing argument"
+msgstr "Відсутній аргумент"
+
+#: venv/Lib/site-packages/click/exceptions.py:189
+msgid "Missing option"
+msgstr "Відсутня опція"
+
+#: venv/Lib/site-packages/click/exceptions.py:191
+msgid "Missing parameter"
+msgstr "Відсутній параметр"
+
+#: venv/Lib/site-packages/click/exceptions.py:193
+msgid "Missing {param_type}"
+msgstr "Відсутній {param_type}"
+
+#: venv/Lib/site-packages/click/exceptions.py:200
+msgid "Missing parameter: {param_name}"
+msgstr "Відсутній параметр: {param_name}"
+
+#: venv/Lib/site-packages/click/exceptions.py:220
+msgid "No such option: {name}"
+msgstr "Немає такої опції: {name}"
+
+#: venv/Lib/site-packages/click/exceptions.py:234
+msgid "Did you mean {possibility}?"
+msgid_plural "(Possible options: {possibilities})"
+msgstr[0] "Можливо, ви мали на увазі {possibility}?"
+msgstr[1] "(Можливі опції: {possibilities})"
+msgstr[2] "(Можливі опції: {possibilities})"
+
+#: venv/Lib/site-packages/click/exceptions.py:270
+msgid "unknown error"
+msgstr "невідома помилка"
+
+#: venv/Lib/site-packages/click/exceptions.py:277
+msgid "Could not open file {filename!r}: {message}"
+msgstr "Не вдалося відкрити файл {filename!r}: {message}"
+
+#: venv/Lib/site-packages/click/formatting.py:156
+msgid "Usage:"
+msgstr "Використання:"
+
+#: venv/Lib/site-packages/click/parser.py:233
+msgid "Argument {name!r} takes {nargs} values."
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:415
+msgid "Option {name!r} does not take a value."
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:475
+msgid "Option {name!r} requires an argument."
+msgid_plural "Option {name!r} requires {nargs} arguments."
+msgstr[0] "Опція {name!r} вимагає аргумент."
+msgstr[1] "Опція {name!r} вимагає {nargs} аргументи."
+msgstr[2] "Опція {name!r} вимагає {nargs} аргументів."
+
+#: venv/Lib/site-packages/click/shell_completion.py:325
+msgid "Shell completion is not supported for Bash versions older than 4.4."
+msgstr ""
+
+#: venv/Lib/site-packages/click/shell_completion.py:333
+msgid "Couldn't detect Bash version, shell completion is not supported."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:158
+msgid "Repeat for confirmation"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:174
+msgid "Error: The value you entered was invalid."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:176
+msgid "Error: {e.message}"
+msgstr "Помилка: {e.message}"
+
+#: venv/Lib/site-packages/click/termui.py:187
+msgid "Error: The two entered values do not match."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:243
+msgid "Error: invalid input"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:773
+msgid "Press any key to continue..."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:267
+msgid ""
+"Choose from:\n"
+"\t{choices}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:301
+msgid "{value!r} is not {choice}."
+msgid_plural "{value!r} is not one of {choices}."
+msgstr[0] "Користувач не автентифікований."
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/types.py:395
+msgid "{value!r} does not match the format {format}."
+msgid_plural "{value!r} does not match the formats {formats}."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/types.py:415
+msgid "{value!r} is not a valid {number_type}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:471
+msgid "{value} is not in the range {range}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:612
+msgid "{value!r} is not a valid boolean."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:636
+msgid "{value!r} is not a valid UUID."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:826
+msgid "file"
+msgstr "Фільтрувати"
+
+#: venv/Lib/site-packages/click/types.py:828
+msgid "directory"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:830
+msgid "path"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:881
+msgid "{name} {filename!r} does not exist."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:890
+msgid "{name} {filename!r} is a file."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:898
+msgid "{name} {filename!r} is a directory."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:907
+msgid "{name} {filename!r} is not readable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:916
+msgid "{name} {filename!r} is not writable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:925
+msgid "{name} {filename!r} is not executable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:991
+msgid "{len_type} values are required, but {len_value} was given."
+msgid_plural "{len_type} values are required, but {len_value} were given."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#~ msgid "or"
+#~ msgstr ""
+
+#~ msgid "Error loading order changes."
+#~ msgstr "Помилка завантаження змін замовлення"
+
+#~ msgid "An error occurred during submission. Please try again."
+#~ msgstr ""
+

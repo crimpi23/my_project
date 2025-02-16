@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-01-28 23:44+0200\n"
+"POT-Creation-Date: 2025-02-16 15:14+0200\n"
 "PO-Revision-Date: 2025-01-28 18:10+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: sk\n"
@@ -18,455 +18,1014 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app.py:214
-msgid "Thank you for your order!\n\nYour order details:\n"
-msgstr "Ďakujeme za vašu objednávku!\n\nPodrobnosti vašej objednávky:\n"
-
-#: app.py:217
-msgid "Ordered items:\n"
-msgstr "Objednané položky:\n"
-
-#: app.py:219
-msgid "- Article: {article}, Price: {price:.2f}, Quantity: {quantity}, Comment: {comment}\n"
-msgstr "- Článok: {article}, Cena: {price:.2f}, Množstvo: {quantity}, Komentár: {comment}\n"
-
-#: app.py:228 templates/cart.html:40 templates/order_details.html:36
-msgid "No comment"
-msgstr "Bez komentára"
-
-#: app.py:232
-msgid "\nMissing articles:\n"
-msgstr "\nChýbajúce články:\n"
-
-#: app.py:336
+#: app.py:204 app.py:434
 msgid "Invalid token."
 msgstr "Neplatný token."
 
-#: app.py:361
+#: app.py:209 app.py:214 app.py:459
 msgid "Invalid token or role."
 msgstr "Neplatný token alebo rola."
 
-#: app.py:372
+#: app.py:298
+msgid ""
+"Thank you for your order!\n"
+"\n"
+"Your order details:\n"
+msgstr ""
+"Ďakujeme za vašu objednávku!\n"
+"\n"
+"Podrobnosti Vašej objednávky:\n"
+
+#: app.py:301
+msgid "Ordered items:\n"
+msgstr "Objednané položky:\n"
+
+#: app.py:303
+msgid ""
+"- Article: {article}, Price: {price:.2f}, Quantity: {quantity}, Comment: "
+"{comment}\n"
+msgstr ""
+"- Číslo dielu: {article}, Cena: {price:.2f}, Množstvo: {quantity}, Komentár: {comment}\n"
+
+#: app.py:312 templates/user/cart/cart.html:42
+#: templates/user/orders/order_details.html:63
+msgid "No comment"
+msgstr "Bez komentára"
+
+#: app.py:316
+msgid ""
+"\n"
+"Missing articles:\n"
+msgstr ""
+"\nChýbajúce položky:\n"
+
+#: app.py:470
 msgid "Please enter an article for search."
-msgstr "Zadajte článok na vyhľadávanie."
+msgstr "Zadajte číslo dielu pre vyhľadávanie."
 
-#: app.py:399
+#: app.py:497
 msgid "An error occurred during the search. Please try again later."
-msgstr "Počas vyhľadávania sa vyskytla chyba. Skúste to znova neskôr."
+msgstr "Pri vyhľadávaní sa vyskytla chyba. Skúste to znova neskôr."
 
-#: app.py:629
+#: app.py:688
 msgid "Please enter at least one article."
-msgstr "Zadajte aspoň jeden článok."
+msgstr "Zadajte aspoň jedno číslo dielu."
 
-#: app.py:741
+#: app.py:801
 msgid "Articles not found: {articles}"
-msgstr "Články neboli nájdené: {articles}"
+msgstr "Položky neboli nájdené: {articles}"
 
-#: app.py:789
+#: app.py:830
+msgid "Added to cart: {articles}"
+msgstr "Pridané do košíka: {articles}"
+
+#: app.py:855
 msgid "An error occurred while processing your request."
-msgstr "Pri spracovaní vašej požiadavky sa vyskytla chyba."
+msgstr "Vyskytla sa chyba pri spracovaní vašej žiadosti."
 
-#: app.py:889
+#: app.py:867
+msgid "You need to log in to view search results."
+msgstr "Pre zobrazenie výsledkov vyhľadávania sa musíte prihlásiť."
+
+#: app.py:929
+msgid "Your selection has been saved!"
+msgstr "Váš výber bol uložený!"
+
+#: app.py:933
+msgid "An error occurred while saving your selection. Please try again."
+msgstr "Pri ukladaní vášho výberu sa vyskytla chyba. Skúste to znova."
+
+#: app.py:954
+msgid "No search results found. Please start a new search."
+msgstr "Neboli nájdené žiadne výsledky vyhľadávania. Začnite nové vyhľadávanie."
+
+#: app.py:971
+msgid "An error occurred while retrieving search results."
+msgstr "Pri získavaní výsledkov vyhľadávania sa vyskytla chyba."
+
+#: app.py:991
 msgid "You need to log in to view your cart."
 msgstr "Pre zobrazenie košíka sa musíte prihlásiť."
 
-#: app.py:994
+#: app.py:1104
 msgid "Could not load your cart. Please try again."
 msgstr "Nepodarilo sa načítať váš košík. Skúste to znova."
 
-#: app.py:1122 app.py:1337
+#: app.py:1128 app.py:3916
+msgid "User not authenticated"
+msgstr "Používateľ nie je overený."
+
+#: app.py:1173
+msgid "No articles selected"
+msgstr "Neboli vybraté žiadne položky."
+
+#: app.py:1202
+msgid "Selection successfully submitted!"
+msgstr "Výber úspešne odoslaný!"
+
+#: app.py:1207
+msgid "An error occurred during submission"
+msgstr "Pri odosielaní sa vyskytla chyba."
+
+#: app.py:1222
+msgid "Search results cleared successfully"
+msgstr "Výsledky vyhľadávania boli úspešne vymazané."
+
+#: app.py:1228
+msgid "Error clearing search results"
+msgstr "Chyba pri mazaní výsledkov vyhľadávania."
+
+#: app.py:1256 app.py:1446
 msgid "User is not authenticated. Please log in."
 msgstr "Používateľ nie je overený. Prihláste sa."
 
-#: app.py:1155
+#: app.py:1289
 msgid "Product added to cart!"
 msgstr "Produkt bol pridaný do košíka!"
 
-#: app.py:1158
+#: app.py:1292
 msgid "Error adding product to cart."
 msgstr "Chyba pri pridávaní produktu do košíka."
 
-#: app.py:1189
+#: app.py:1321
 msgid "Missing required information for removal"
-msgstr "Chýbajú potrebné informácie na odstránenie"
+msgstr "Chýbajú potrebné informácie pre odstránenie."
 
-#: app.py:1206
+#: app.py:1338
 msgid "Article {article} removed successfully"
-msgstr "Článok {article} bol úspešne odstránený"
+msgstr "Položka {article} bola úspešne odstránená."
 
-#: app.py:1209
+#: app.py:1341
 msgid "Item not found in cart"
-msgstr "Položka nebola nájdená v košíku"
+msgstr "Položka sa nenašla v košíku."
 
-#: app.py:1214
+#: app.py:1346
 msgid "Error removing item from cart"
-msgstr "Chyba pri odstraňovaní položky z košíka"
+msgstr "Chyba pri odstraňovaní položky z košíka."
 
-#: app.py:1233
+#: app.py:1365
 msgid "Invalid input: article or quantity missing."
-msgstr "Neplatný vstup: chýba článok alebo množstvo."
+msgstr "Neplatný vstup: chýba číslo dielu alebo množstvo."
 
-#: app.py:1240
+#: app.py:1372
 msgid "Quantity must be at least 1."
 msgstr "Množstvo musí byť aspoň 1."
 
-#: app.py:1257
+#: app.py:1389
 msgid "Cart updated successfully!"
 msgstr "Košík bol úspešne aktualizovaný!"
 
-#: app.py:1261
+#: app.py:1393
 msgid "Error updating cart."
 msgstr "Chyba pri aktualizácii košíka."
 
-#: app.py:1304
-msgid "Cart cleared successfully."
-msgstr "Košík bol úspešne vyčistený."
-
-#: app.py:1308
-msgid "Error clearing cart."
-msgstr "Chyba pri čistení košíka."
-
-#: app.py:1355
+#: app.py:1464
 msgid "Your cart is empty!"
 msgstr "Váš košík je prázdny!"
 
-#: app.py:1425
+#: app.py:1535
 msgid "Order placed, but we couldn't send a confirmation email."
 msgstr "Objednávka bola zadaná, ale nepodarilo sa odoslať potvrdzovací e-mail."
 
-#: app.py:1432
+#: app.py:1542
 msgid "Order placed successfully!"
 msgstr "Objednávka bola úspešne zadaná!"
 
-#: app.py:1439
+#: app.py:1549
 msgid "Error placing order: {error}"
 msgstr "Chyba pri zadávaní objednávky: {error}"
 
-#: templates/base.html:6 templates/index.html:4
+#: app.py:1567
+msgid "User is not authenticated."
+msgstr "Používateľ nie je overený."
+
+#: app.py:1633
+msgid "Error fetching orders."
+msgstr "Chyba pri načítaní objednávok."
+
+#: app.py:1691
+msgid "Error loading order details."
+msgstr "Chyba pri načítaní podrobností objednávky."
+
+#: app.py:3983
+msgid "Some articles still need table selection."
+msgstr "Niektoré položky stále potrebujú výber tabuľky."
+
+#: app.py:3985
+msgid "All selected articles have been added to your cart."
+msgstr "Všetky vybraté položky boli pridané do vášho košíka."
+
+#: app.py:4031
+msgid "An error occurred while processing your selection. Please try again."
+msgstr "Pri spracovaní vášho výberu sa vyskytla chyba. Skúste to znova."
+
+#: app.py:4214
+msgid "News created successfully!"
+msgstr "Novinka úspešne vytvorená!"
+
+#: app.py:4219
+msgid "Error creating news"
+msgstr "Chyba pri vytváraní novinky."
+
+#: app.py:4827
+msgid "Error loading news"
+msgstr "Chyba pri načítaní noviniek."
+
+#: app.py:4858
+msgid "News not found"
+msgstr "Novinka nebola nájdená."
+
+#: templates/base/base.html:6 templates/user/index.html:4
 msgid "Article Price Search"
-msgstr "Vyhľadávanie cien článkov"
+msgstr "Vyhľadávanie cien položiek"
 
-#: templates/base.html:118
-msgid "MySite"
-msgstr "Moja stránka"
-
-#: templates/base.html:144 templates/user_news.html:3 templates/user_news.html:7
+#: templates/base/base.html:125 templates/user/news/user_news.html:3
+#: templates/user/news/user_news.html:7
 msgid "News"
 msgstr "Novinky"
 
-#: templates/base.html:153
-msgid "Home"
-msgstr "Domov"
-
-#: templates/base.html:160
+#: templates/base/base.html:133
 msgid "Cart"
 msgstr "Košík"
 
-#: templates/base.html:166
+#: templates/base/base.html:142
 msgid "Orders"
 msgstr "Objednávky"
 
-#: templates/cart.html:3 templates/cart.html:7
-msgid "Shopping Cart"
-msgstr "Nákupný košík"
+#: templates/base/base.html:148 templates/user/orders/order_changes.html:5
+msgid "Order Changes History"
+msgstr "História zmien objednávky"
 
-#: templates/cart.html:14 templates/order_details.html:19 templates/orders.html:58 templates/search_results.html:15
-msgid "Article"
-msgstr "Článok"
+#: templates/base/base.html:154 templates/user/shipments/shipments.html:3
+msgid "Shipments"
+msgstr "Zásielky"
 
-#: templates/cart.html:15 templates/order_details.html:20
-msgid "Price List"
-msgstr "Cenník"
-
-#: templates/cart.html:16 templates/order_details.html:21
-msgid "Price"
-msgstr "Cena"
-
-#: templates/cart.html:17 templates/order_details.html:22 templates/search_results.html:17
-msgid "Quantity"
-msgstr "Množstvo"
-
-#: templates/cart.html:18 templates/order_details.html:23
-msgid "Total"
-msgstr "Celkom"
-
-#: templates/cart.html:19 templates/order_details.html:24 templates/search_results.html:18
-msgid "Comment"
-msgstr "Komentár"
-
-#: templates/cart.html:20 templates/orders.html:99
-msgid "Actions"
-msgstr "Akcie"
-
-#: templates/cart.html:55
-msgid "Total:"
-msgstr "Celkom:"
-
-#: templates/cart.html:66
-msgid "Place Order"
-msgstr "Zadať objednávku"
-
-#: templates/cart.html:72
-msgid "Clear Cart"
-msgstr "Vyčistiť košík"
-
-#: templates/cart.html:79 templates/search_results.html:70
-msgid "Missing Articles:"
-msgstr "Chýbajúce články:"
-
-#: templates/cart.html:80
-msgid "The following articles were not found:"
-msgstr "Nasledujúce články neboli nájdené:"
-
-#: templates/cart.html:91
-msgid "Your Cart is Empty"
-msgstr "Váš košík je prázdny"
-
-#: templates/cart.html:92
-msgid "Start adding items to your cart!"
-msgstr "Začnite pridávať položky do košíka!"
-
-#: templates/cart.html:94 templates/index.html:33
-msgid "Search Articles"
-msgstr "Vyhľadať články"
-
-#: templates/index.html:6
+#: templates/user/index.html:6
 msgid "Welcome to the advanced search system! Use the tools below:"
-msgstr "Vitajte v pokročilom vyhľadávacom systéme! Použite nástroje nižšie:"
+msgstr "Vitajte v pokročilom vyhľadávacom systéme! Použite nástroje uvedené nižšie:"
 
-#: templates/index.html:14
+#: templates/user/index.html:14
 msgid "Upload Articles File"
-msgstr "Nahrať súbor článkov"
+msgstr "Nahrať súbor položiek"
 
-#: templates/index.html:16
+#: templates/user/index.html:17
+msgid "Article/Quantity/Comment"
+msgstr "Položka/Množstvo/Komentár"
+
+#: templates/user/index.html:20
+msgid "Article/Quantity/Brand/Comment"
+msgstr "Položka/Množstvo/Značka/Komentár"
+
+#: templates/user/index.html:24
 msgid "Drag and drop your file here, or click to select"
-msgstr "Presuňte súbor sem alebo kliknite pre výber"
+msgstr "Pretiahnite sem súbor alebo kliknite pre výber"
 
-#: templates/index.html:22
+#: templates/user/index.html:30
 msgid "Upload and Search"
 msgstr "Nahrať a vyhľadať"
 
-#: templates/index.html:36
-msgid "Enter Articles and Quantities:"
-msgstr "Zadajte články a množstvá:"
+#: templates/user/cart/cart.html:96 templates/user/index.html:41
+msgid "Search Articles"
+msgstr "Vyhľadávanie položiek"
 
-#: templates/index.html:38
+#: templates/user/index.html:44
+msgid "Enter Articles and Quantities:"
+msgstr "Zadajte položky a množstvá:"
+
+#: templates/user/index.html:46
 msgid "Example:"
 msgstr "Príklad:"
 
-#: templates/index.html:42
+#: templates/user/index.html:50
 msgid "Search"
 msgstr "Vyhľadať"
 
-#: templates/index.html:76 templates/index.html:83
+#: templates/user/index.html:97 templates/user/index.html:104
 msgid "File selected:"
 msgstr "Vybraný súbor:"
 
-#: templates/order_details.html:3 templates/order_details.html:8
-msgid "Order Details"
-msgstr "Podrobnosti objednávky"
+#: templates/user/cart/cart.html:3 templates/user/cart/cart.html:7
+msgid "Shopping Cart"
+msgstr "Nákupný košík"
 
-#: templates/order_details.html:10
-msgid "Back to Orders"
-msgstr "Späť na objednávky"
+#: templates/user/cart/cart.html:14 templates/user/orders/order_changes.html:13
+#: templates/user/orders/order_details.html:20
+#: templates/user/orders/orders.html:62
+#: templates/user/search/intermediate.html:16
+#: templates/user/search/search_results.html:15
+#: templates/user/shipments/shipments.html:23
+#: templates/user/shipments/view_shipment.html:39
+msgid "Article"
+msgstr "Položka"
 
-#: templates/order_details.html:25 templates/orders.html:62 templates/orders.html:98
-msgid "Status"
-msgstr "Stav"
+#: templates/user/cart/cart.html:15 templates/user/orders/order_details.html:22
+msgid "Price List"
+msgstr "Cenník"
 
-#: templates/order_details.html:51
-msgid "Total Order Amount:"
-msgstr "Celková suma objednávky:"
+#: templates/user/cart/cart.html:16 templates/user/search/intermediate.html:35
+msgid "Brand"
+msgstr "Značka"
 
-#: templates/order_details.html:61
-msgid "Order Timeline"
-msgstr "Časová os objednávky"
+#: templates/user/cart/cart.html:17 templates/user/orders/order_details.html:24
+#: templates/user/shipments/shipments.html:25
+#: templates/user/shipments/view_shipment.html:41
+msgid "Price"
+msgstr "Cena"
 
-#: templates/order_details.html:80
-msgid "No Details Available"
-msgstr "Žiadne dostupné podrobnosti"
+#: templates/user/cart/cart.html:18 templates/user/orders/order_details.html:25
+#: templates/user/search/intermediate.html:18
+#: templates/user/search/search_results.html:17
+#: templates/user/shipments/shipments.html:24
+#: templates/user/shipments/view_shipment.html:40
+msgid "Quantity"
+msgstr "Množstvo"
 
-#: templates/order_details.html:81
-msgid "The details for this order could not be found."
-msgstr "Podrobnosti tejto objednávky sa nenašli."
-
-#: templates/orders.html:51
-msgid "My Orders"
-msgstr "Moje objednávky"
-
-#: templates/orders.html:64
-msgid "All"
-msgstr "Všetky"
-
-#: templates/orders.html:65 templates/user_news.html:18
-msgid "New"
-msgstr "Nové"
-
-#: templates/orders.html:66
-msgid "Accepted"
-msgstr "Prijaté"
-
-#: templates/orders.html:67
-msgid "Cancelled"
-msgstr "Zrušené"
-
-#: templates/orders.html:71
-msgid "Start Date"
-msgstr "Dátum začiatku"
-
-#: templates/orders.html:75
-msgid "End Date"
-msgstr "Dátum konca"
-
-#: templates/orders.html:80
-msgid "Filter"
-msgstr "Filter"
-
-#: templates/orders.html:83
-msgid "Clear Filters"
-msgstr "Vyčistiť filtre"
-
-#: templates/orders.html:95
-msgid "Order ID"
-msgstr "ID objednávky"
-
-#: templates/orders.html:96
-msgid "Date"
-msgstr "Dátum"
-
-#: templates/orders.html:97
-msgid "Total Price"
-msgstr "Celková cena"
-
-#: templates/orders.html:119 templates/user_news.html:44
-msgid "View Details"
-msgstr "Zobraziť podrobnosti"
-
-#: templates/orders.html:128
-msgid "No Orders Found"
-msgstr "Nenašli sa žiadne objednávky"
-
-#: templates/orders.html:129
-msgid "You haven't placed any orders yet."
-msgstr "Zatiaľ ste nezadali žiadne objednávky."
-
-#: templates/orders.html:131
-msgid "Start Shopping"
-msgstr "Začať nakupovať"
-
-#: templates/search_results.html:3 templates/search_results.html:7
-msgid "Search Results"
-msgstr "Výsledky vyhľadávania"
-
-#: templates/search_results.html:16
-msgid "Price Lists"
-msgstr "Cenníky"
-
-#: templates/search_results.html:19
-msgid "Select"
-msgstr "Vybrať"
-
-#: templates/search_results.html:71
-msgid "The following articles were not found in any price list:"
-msgstr "Nasledujúce články sa nenašli v žiadnom cenníku:"
-
-#: templates/search_results.html:82
-msgid "Add to Cart"
-msgstr "Pridať do košíka"
-
-#: templates/search_results.html:86
-msgid "Clear Results"
-msgstr "Vyčistiť výsledky"
-
-#: templates/search_results.html:93
-msgid "No Results Found"
-msgstr "Nenašli sa žiadne výsledky"
-
-#: templates/search_results.html:94
-msgid "Try searching with different articles or check your input format."
-msgstr "Skúste vyhľadávať s inými článkami alebo skontrolujte formát vstupu."
-
-#: templates/search_results.html:96
-msgid "New Search"
-msgstr "Nové vyhľadávanie"
-
-#: templates/admin/dashboard.html:3
-msgid "Admin Dashboard"
-msgstr "Administrátorský panel"
-
-#: templates/admin/dashboard.html:7
-msgid "System Statistics"
-msgstr "Systémové štatistiky"
-
-#: templates/admin/dashboard.html:13
-msgid "User Management"
-msgstr "Správa používateľov"
-
-#: templates/admin/dashboard.html:19
-msgid "Price Lists Management"
-msgstr "Správa cenníkov"
-
-#: templates/errors/404.html:3
-msgid "Page Not Found"
-msgstr "Stránka sa nenašla"
-
-#: templates/errors/500.html:3
-msgid "Server Error"
-msgstr "Chyba servera"
-
-#: templates/errors/403.html:3
-msgid "Access Denied"
-msgstr "Prístup zamietnutý"
-
-#: app.py:XXX templates/admin_order_details.html:YY templates/admin_orders.html:ZZ
-msgid "order_statuses"
-msgstr ""
-
-msgid "new"
-msgstr "Nové"
-msgid "in_review"
-msgstr "Na kontrole"
-msgid "pending"
-msgstr "Čakajúce"
-msgid "accepted"
-msgstr "Prijaté"
-msgid "ordered_supplier"
-msgstr "Objednané od dodávateľa"
-msgid "invoice_received"
-msgstr "Faktúra prijatá"
-msgid "in_transit"
-msgstr "V preprave"
-msgid "ready_pickup"
-msgstr "Pripravené na vyzdvihnutie"
-msgid "completed"
-msgstr "Dokončené"
-msgid "cancelled"
-msgstr "Zrušené"
-
-# sk/LC_MESSAGES/messages.po
-msgid "Orders Management"
-msgstr "Správa objednávok"
-
-msgid "Dashboard"
-msgstr "Nástenka"
-
-msgid "Filter by Status"
-msgstr "Filter podľa stavu"
-
-msgid "All Statuses"
-msgstr "Všetky stavy"
-
-msgid "Details"
-msgstr "Podrobnosti"
-
-msgid "Actions"
-msgstr "Akcie"
-
+#: templates/user/cart/cart.html:19 templates/user/orders/order_details.html:26
 msgid "Total"
 msgstr "Celkom"
 
+#: templates/user/cart/cart.html:20 templates/user/orders/order_details.html:27
+#: templates/user/search/intermediate.html:19
+#: templates/user/search/search_results.html:18
+#: templates/user/shipments/view_shipment.html:43
+msgid "Comment"
+msgstr "Komentár"
+
+#: templates/user/cart/cart.html:21 templates/user/orders/orders.html:103
+#: templates/user/shipments/list_shipments.html:22
+msgid "Actions"
+msgstr "Akcie"
+
+#: templates/user/cart/cart.html:57
+msgid "Total:"
+msgstr "Celkom:"
+
+#: templates/user/cart/cart.html:68
+msgid "Place Order"
+msgstr "Umiestniť objednávku"
+
+#: templates/user/cart/cart.html:74
+msgid "Clear Cart"
+msgstr "Vyčistiť košík"
+
+#: templates/user/cart/cart.html:81
+#: templates/user/search/search_results.html:70
+msgid "Missing Articles:"
+msgstr "Chýbajúce položky:"
+
+#: templates/user/cart/cart.html:82
+msgid "The following articles were not found:"
+msgstr "Nasledujúce položky neboli nájdené:"
+
+#: templates/user/cart/cart.html:93
+msgid "Your Cart is Empty"
+msgstr "Váš košík je prázdny"
+
+#: templates/user/cart/cart.html:94
+msgid "Start adding items to your cart!"
+msgstr "Začnite pridávať položky do košíka!"
+
+#: templates/user/news/user_news.html:12
+msgid "New Messages"
+msgstr "Nové správy"
+
+#: templates/user/news/user_news.html:18 templates/user/orders/orders.html:69
+msgid "New"
+msgstr "Nové"
+
+#: templates/user/news/user_news.html:26
+msgid "Read More"
+msgstr "Čítať viac"
+
+#: templates/user/news/user_news.html:36
+msgid "News Archive"
+msgstr "Archív správ"
+
+#: templates/user/news/user_news.html:44 templates/user/orders/orders.html:124
+#: templates/user/shipments/list_shipments.html:36
+msgid "View Details"
+msgstr "Zobraziť podrobnosti"
+
+#: templates/user/news/view_news.html:9
+msgid "Mark as Read"
+msgstr "Označiť ako prečítané"
+
+#: templates/user/news/view_news.html:16
+msgid "Published:"
+msgstr "Publikované:"
+
+#: templates/user/orders/order_changes.html:12
+#: templates/user/orders/orders.html:99
+msgid "Order ID"
+msgstr "ID objednávky"
+
+#: templates/user/orders/order_changes.html:14
+msgid "Change Type"
+msgstr "Typ zmeny"
+
+#: templates/user/orders/order_changes.html:15
+msgid "Old Value"
+msgstr "Stará hodnota"
+
+#: templates/user/orders/order_changes.html:16
+msgid "New Value"
+msgstr "Nová hodnota"
+
+#: templates/user/orders/order_changes.html:17
+msgid "Change Date"
+msgstr "Dátum zmeny"
+
+#: templates/user/orders/order_changes.html:27
+msgid "Article Number Change"
+msgstr "Zmena čísla položky"
+
+#: templates/user/orders/order_changes.html:29
+msgid "Price Change"
+msgstr "Zmena ceny"
+
+#: templates/user/orders/order_changes.html:42
+msgid "No changes found."
+msgstr "Neboli nájdené žiadne zmeny."
+
+#: templates/user/orders/order_details.html:4
+#: templates/user/orders/order_details.html:9
+#: templates/user/shipments/shipments.html:19
+msgid "Order Details"
+msgstr "Podrobnosti objednávky"
+
+#: templates/user/orders/order_details.html:11
+msgid "Back to Orders"
+msgstr "Späť na objednávky"
+
+#: templates/user/orders/order_details.html:21
+msgid "Original Article"
+msgstr "Pôvodná položka"
+
+#: templates/user/orders/order_details.html:23
+msgid "Brand ID"
+msgstr "ID značky"
+
+#: templates/user/orders/order_details.html:28
+#: templates/user/orders/orders.html:66 templates/user/orders/orders.html:102
+#: templates/user/shipments/list_shipments.html:18
+msgid "Status"
+msgstr "Stav"
+
+#: templates/user/orders/order_details.html:86
+msgid "Total Order Amount:"
+msgstr "Celková suma objednávky:"
+
+#: templates/user/orders/order_details.html:96
+msgid "Order Timeline"
+msgstr "Časová os objednávky"
+
+#: templates/user/orders/order_details.html:115
+msgid "No Details Available"
+msgstr "Žiadne dostupné podrobnosti"
+
+#: templates/user/orders/order_details.html:116
+msgid "The details for this order could not be found."
+msgstr "Podrobnosti pre túto objednávku sa nenašli."
+
+#: templates/user/orders/orders.html:55
+msgid "My Orders"
+msgstr "Moje objednávky"
+
+#: templates/user/orders/orders.html:68
+msgid "All"
+msgstr "Všetky"
+
+#: templates/user/orders/orders.html:70
+msgid "Accepted"
+msgstr "Prijaté"
+
+#: templates/user/orders/orders.html:71
+msgid "Cancelled"
+msgstr "Zrušené"
+
+#: templates/user/orders/orders.html:75
+msgid "Start Date"
+msgstr "Dátum začiatku"
+
+#: templates/user/orders/orders.html:79
+msgid "End Date"
+msgstr "Dátum konca"
+
+#: templates/user/orders/orders.html:84
+msgid "Filter"
+msgstr "Filter"
+
+#: templates/user/orders/orders.html:87
+msgid "Clear Filters"
+msgstr "Vyčistiť filtre"
+
+#: templates/user/orders/orders.html:100
 msgid "Date"
 msgstr "Dátum"
 
-msgid "User"
+#: templates/user/orders/orders.html:101
+#: templates/user/shipments/list_shipments.html:21
+#: templates/user/shipments/shipments.html:26
+#: templates/user/shipments/view_shipment.html:42
+msgid "Total Price"
+msgstr "Celková cena"
+
+#: templates/user/orders/orders.html:133
+msgid "No Orders Found"
+msgstr "Nenašli sa žiadne objednávky."
+
+#: templates/user/orders/orders.html:134
+msgid "You haven't placed any orders yet."
+msgstr "Zatiaľ ste neuskutočnili žiadne objednávky."
+
+#: templates/user/orders/orders.html:136
+msgid "Start Shopping"
+msgstr "Začať nakupovať"
+
+#: templates/user/search/intermediate.html:3
+msgid "Select Price Lists"
+msgstr "Vyberte cenníky"
+
+#: templates/user/search/intermediate.html:7
+msgid "Intermediate Results"
+msgstr "Medzivýsledky"
+
+#: templates/user/search/intermediate.html:8
+msgid "Please select a price list for each article."
+msgstr "Prosím, vyberte cenník pre každú položku."
+
+#: templates/user/search/intermediate.html:17
+msgid "Available Price Lists"
+msgstr "Dostupné cenníky"
+
+#: templates/user/search/intermediate.html:61
+#: templates/user/search/search_results.html:82
+msgid "Add to Cart"
+msgstr "Pridať do košíka"
+
+#: templates/user/search/intermediate.html:64
+msgid "Cancel"
+msgstr "Zrušiť"
+
+#: templates/user/search/intermediate.html:71
+msgid "Missing Articles"
+msgstr "Chýbajúce položky"
+
+#: templates/user/search/intermediate.html:72
+#: templates/user/search/search_results.html:71
+msgid "The following articles were not found in any price list:"
+msgstr "Nasledujúce položky sa nenašli v žiadnom cenníku:"
+
+#: templates/user/search/search_results.html:3
+#: templates/user/search/search_results.html:7
+msgid "Search Results"
+msgstr "Výsledky vyhľadávania"
+
+#: templates/user/search/search_results.html:16
+msgid "Price Lists"
+msgstr "Cenníky"
+
+#: templates/user/search/search_results.html:19
+msgid "Select"
+msgstr "Vybrať"
+
+#: templates/user/search/search_results.html:86
+msgid "Clear Results"
+msgstr "Vyčistiť výsledky"
+
+#: templates/user/search/search_results.html:92
+msgid "No Results Found"
+msgstr "Nenašli sa žiadne výsledky"
+
+#: templates/user/search/search_results.html:93
+msgid "Try searching with different articles or check your input format."
+msgstr "Skúste vyhľadávanie s inými položkami alebo skontrolujte formát vstupu."
+
+#: templates/user/search/search_results.html:95
+msgid "New Search"
+msgstr "Nové vyhľadávanie"
+
+#: templates/user/shipments/list_shipments.html:9
+#: templates/user/shipments/shipments.html:7
+msgid "My Shipments"
+msgstr "Moje zásielky"
+
+#: templates/user/shipments/list_shipments.html:17
+msgid "Shipment Date"
+msgstr "Dátum odoslania"
+
+#: templates/user/shipments/list_shipments.html:19
+msgid "Tracking Number"
+msgstr "Sledovacie číslo"
+
+#: templates/user/shipments/list_shipments.html:20
+msgid "Items Count"
+msgstr "Počet položiek"
+
+#: templates/user/shipments/list_shipments.html:30
+msgid "N/A"
+msgstr "N/A"
+
+#: templates/user/shipments/list_shipments.html:45
+#: templates/user/shipments/shipments.html:44
+msgid "No shipments found."
+msgstr "Nenašli sa žiadne zásielky."
+
+#: templates/user/shipments/shipments.html:13
+msgid "Shipment Date:"
+msgstr "Dátum odoslania:"
+
+#: templates/user/shipments/shipments.html:13
+#: templates/user/shipments/view_shipment.html:22
+msgid "Status:"
+msgstr "Stav:"
+
+#: templates/user/shipments/shipments.html:15
+#: templates/user/shipments/view_shipment.html:23
+msgid "Tracking Number:"
+msgstr "Sledovacie číslo:"
+
+#: templates/user/shipments/view_shipment.html:3
+#: templates/user/shipments/view_shipment.html:8
+msgid "Shipment Details"
+msgstr "Podrobnosti zásielky"
+
+#: templates/user/shipments/view_shipment.html:10
+msgid "Back to Shipments"
+msgstr "Späť na zásielky"
+
+#: templates/user/shipments/view_shipment.html:16
+msgid "Shipment Information"
+msgstr "Informácie o zásielke"
+
+#: templates/user/shipments/view_shipment.html:21
+msgid "Date:"
+msgstr "Dátum:"
+
+#: templates/user/shipments/view_shipment.html:23
+msgid "Not specified"
+msgstr "Nešpecifikované"
+
+#: templates/user/shipments/view_shipment.html:31
+msgid "Items"
+msgstr "Položky"
+
+#: templates/user/shipments/view_shipment.html:60
+msgid "No items in this shipment."
+msgstr "Žiadne položky v tejto zásielke."
+
+#: venv/Lib/site-packages/click/_termui_impl.py:556
+msgid "{editor}: Editing failed"
+msgstr ""
+
+#: venv/Lib/site-packages/click/_termui_impl.py:560
+msgid "{editor}: Editing failed: {e}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1124
+msgid "Aborted!"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1349
+#: venv/Lib/site-packages/click/core.py:1379
+msgid "(Deprecated) {text}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1396
+msgid "Options"
+msgstr "Akcie"
+
+#: venv/Lib/site-packages/click/core.py:1424
+msgid "Got unexpected extra argument ({args})"
+msgid_plural "Got unexpected extra arguments ({args})"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/core.py:1437
+msgid "DeprecationWarning: The command {name!r} is deprecated."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1645
+msgid "Commands"
+msgstr "Komentár"
+
+#: venv/Lib/site-packages/click/core.py:1677
+msgid "Missing command."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1755
+msgid "No such command {name!r}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2313
+msgid "Value must be an iterable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2336
+msgid "Takes {nargs} values but 1 was given."
+msgid_plural "Takes {nargs} values but {len} were given."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/core.py:2783
+msgid "env var: {var}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2813
+msgid "(dynamic)"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2828
+msgid "default: {default}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2841
+msgid "required"
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:457
+#, python-format
+msgid "%(prog)s, version %(version)s"
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:520
+msgid "Show the version and exit."
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:541
+msgid "Show this message and exit."
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:49
+#: venv/Lib/site-packages/click/exceptions.py:88
+msgid "Error: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:80
+msgid "Try '{command} {option}' for help."
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:129
+msgid "Invalid value: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:131
+msgid "Invalid value for {param_hint}: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:187
+msgid "Missing argument"
+msgstr "Chýbajúce články:"
+
+#: venv/Lib/site-packages/click/exceptions.py:189
+msgid "Missing option"
+msgstr "Chýbajúce články:"
+
+#: venv/Lib/site-packages/click/exceptions.py:191
+msgid "Missing parameter"
+msgstr "Chýbajúce články:"
+
+#: venv/Lib/site-packages/click/exceptions.py:193
+msgid "Missing {param_type}"
+msgstr "Chýbajúce články:"
+
+#: venv/Lib/site-packages/click/exceptions.py:200
+msgid "Missing parameter: {param_name}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:220
+msgid "No such option: {name}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:234
+msgid "Did you mean {possibility}?"
+msgid_plural "(Possible options: {possibilities})"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/exceptions.py:270
+msgid "unknown error"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:277
+msgid "Could not open file {filename!r}: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/formatting.py:156
+msgid "Usage:"
 msgstr "Používateľ"
+
+#: venv/Lib/site-packages/click/parser.py:233
+msgid "Argument {name!r} takes {nargs} values."
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:415
+msgid "Option {name!r} does not take a value."
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:475
+msgid "Option {name!r} requires an argument."
+msgid_plural "Option {name!r} requires {nargs} arguments."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/shell_completion.py:325
+msgid "Shell completion is not supported for Bash versions older than 4.4."
+msgstr ""
+
+#: venv/Lib/site-packages/click/shell_completion.py:333
+msgid "Couldn't detect Bash version, shell completion is not supported."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:158
+msgid "Repeat for confirmation"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:174
+msgid "Error: The value you entered was invalid."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:176
+msgid "Error: {e.message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:187
+msgid "Error: The two entered values do not match."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:243
+msgid "Error: invalid input"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:773
+msgid "Press any key to continue..."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:267
+msgid ""
+"Choose from:\n"
+"\t{choices}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:301
+msgid "{value!r} is not {choice}."
+msgid_plural "{value!r} is not one of {choices}."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/types.py:395
+msgid "{value!r} does not match the format {format}."
+msgid_plural "{value!r} does not match the formats {formats}."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/types.py:415
+msgid "{value!r} is not a valid {number_type}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:471
+msgid "{value} is not in the range {range}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:612
+msgid "{value!r} is not a valid boolean."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:636
+msgid "{value!r} is not a valid UUID."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:826
+msgid "file"
+msgstr "Filter"
+
+#: venv/Lib/site-packages/click/types.py:828
+msgid "directory"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:830
+msgid "path"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:881
+msgid "{name} {filename!r} does not exist."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:890
+msgid "{name} {filename!r} is a file."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:898
+msgid "{name} {filename!r} is a directory."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:907
+msgid "{name} {filename!r} is not readable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:916
+msgid "{name} {filename!r} is not writable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:925
+msgid "{name} {filename!r} is not executable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:991
+msgid "{len_type} values are required, but {len_value} was given."
+msgid_plural "{len_type} values are required, but {len_value} were given."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#~ msgid "Cart cleared successfully."
+#~ msgstr "Košík bol úspešne vyčistený."
+
+#~ msgid "MySite"
+#~ msgstr "Moja stránka"
+
+#~ msgid "Home"
+#~ msgstr "Domov"
+
+#~ msgid "Clear Cart"
+#~ msgstr "Vyčistiť košík"
+
+#~ msgid "Admin Dashboard"
+#~ msgstr "Administrátorský panel"
+
+#~ msgid "System Statistics"
+#~ msgstr "Systémové štatistiky"
+
+#~ msgid "User Management"
+#~ msgstr "Správa používateľov"
+
+#~ msgid "Price Lists Management"
+#~ msgstr "Správa cenníkov"
+
+#~ msgid "Server Error"
+#~ msgstr "Chyba servera"
+
+#~ msgid "Access Denied"
+#~ msgstr "Prístup zamietnutý"
+
+#~ msgid "order_statuses"
+#~ msgstr ""
+
+#~ msgid "new"
+#~ msgstr "Nové"
+
+#~ msgid "in_review"
+#~ msgstr "Na kontrole"
+
+#~ msgid "pending"
+#~ msgstr "Čakajúce"
+
+#~ msgid "accepted"
+#~ msgstr "Prijaté"
+
+#~ msgid "ordered_supplier"
+#~ msgstr "Objednané od dodávateľa"
+
+#~ msgid "invoice_received"
+#~ msgstr "Faktúra prijatá"
+
+#~ msgid "in_transit"
+#~ msgstr "V preprave"
+
+#~ msgid "ready_pickup"
+#~ msgstr "Pripravené na vyzdvihnutie"
+
+#~ msgid "completed"
+#~ msgstr "Dokončené"
+
+#~ msgid "cancelled"
+#~ msgstr "Zrušené"
+
+# sk/LC_MESSAGES/messages.po
+#~ msgid "Orders Management"
+#~ msgstr "Správa objednávok"
+
+#~ msgid "Dashboard"
+#~ msgstr "Nástenka"
+
+#~ msgid "Filter by Status"
+#~ msgstr "Filter podľa stavu"
+
+#~ msgid "All Statuses"
+#~ msgstr "Všetky stavy"
+
+#~ msgid "Details"
+#~ msgstr "Podrobnosti"
+
+#~ msgid "or"
+#~ msgstr "alebo"
+
+#~ msgid "Error loading order changes."
+#~ msgstr "Chyba pri načítaní zmien objednávky"
+

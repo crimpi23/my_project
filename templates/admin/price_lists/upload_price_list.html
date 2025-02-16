@@ -44,6 +44,21 @@
                                 </div>
                             </div>
 
+                            <!-- Brand Selection -->
+                            <div class="col-md-6">
+                                <label class="form-label">Select Brand</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-tags"></i>
+                                    </span>
+                                    <select name="brand_id" id="brand_id" class="form-select" required>
+                                        {% for brand in brands %}
+                                        <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
                             <!-- File Upload -->
                             <div class="col-12">
                                 <label class="form-label">Upload File</label>
@@ -94,20 +109,23 @@
                             <i class="bi bi-1-circle"></i> Select existing table or create new
                         </li>
                         <li class="list-group-item">
-                            <i class="bi bi-2-circle"></i> Prepare your file (CSV, TXT, XLSX)
+                            <i class="bi bi-2-circle"></i> Select brand for the price list
                         </li>
                         <li class="list-group-item">
-                            <i class="bi bi-3-circle"></i> File should have columns: Article, Price
+                            <i class="bi bi-3-circle"></i> Prepare your file (CSV, TXT, XLSX)
                         </li>
                         <li class="list-group-item">
-                            <i class="bi bi-4-circle"></i> Click upload and wait for confirmation
+                            <i class="bi bi-4-circle"></i> File should have columns: Article, Price
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-5-circle"></i> Click upload and wait for confirmation
                         </li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</div> 
 {% endblock %}
 
 {% block extra_js %}

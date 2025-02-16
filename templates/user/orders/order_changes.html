@@ -1,43 +1,46 @@
-{# templates/user/orders/order_changes.html #}
 {% extends "base/base.html" %}
 
 {% block content %}
 <div class="container">
-    <h2>Order Changes History</h2>
+    <h2>{{ _('Order Changes History') }}</h2>
     
+    {% if changes %}
     <div class="table-responsive">
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Order ID</th>
-                    <th>Article</th>
-                    <th>Change Type</th>
-                    <th>Old Value</th>
-                    <th>New Value</th>
-                    <th>Change Date</th>
-                    <th>Comment</th>
+                    <th>{{ _('Order ID') }}</th>
+                    <th>{{ _('Article') }}</th>
+                    <th>{{ _('Change Type') }}</th>
+                    <th>{{ _('Old Value') }}</th>
+                    <th>{{ _('New Value') }}</th>
+                    <th>{{ _('Change Date') }}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for change in changes %}
                 <tr>
-                    <td>
-                        <a href="{{ url_for('order_details', token=token, order_id=change.order_id) }}">
-                            #{{ change.order_id }}
-                        </a>
-                    </td>
+                    <td>{{ change.order_id }}</td>
                     <td>{{ change.article }}</td>
                     <td>
-                        <span class="badge bg-info">{{ change.field_changed }}</span>
+                        {% if change.field_changed == 'article' %}
+                            {{ _('Article Number Change') }}
+                        {% elif change.field_changed == 'price' %}
+                            {{ _('Price Change') }}
+                        {% endif %}
                     </td>
                     <td>{{ change.old_value }}</td>
                     <td>{{ change.new_value }}</td>
                     <td>{{ change.change_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>{{ change.comment or '' }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    {% else %}
+    <div class="alert alert-info">
+        {{ _('No changes found.') }}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

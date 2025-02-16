@@ -20,6 +20,7 @@
                     <th>{{ _('Article') }}</th>
                     <th>{{ _('Original Article') }}</th>
                     <th>{{ _('Price List') }}</th>
+                    <th>{{ _('Brand ID') }}</th>
                     <th>{{ _('Price') }}</th>
                     <th>{{ _('Quantity') }}</th>
                     <th>{{ _('Total') }}</th>
@@ -28,60 +29,61 @@
                 </tr>
             </thead>
             <tbody>
-				{% for item in details %}
-				<tr class="{{ 'table-warning' if item.price_changed or item.article_changed or item.quantity_changed }}">
-					<td>
-						{{ item.article }}
-						{% if item.article_changed %}
-							<span class="badge bg-warning" data-bs-toggle="tooltip" title="Article was changed">
-								<i class="bi bi-pencil"></i>
-							</span>
-						{% endif %}
-					</td>
-					<td>{{ item.original_article or '-' }}</td>
-					<td>{{ item.table_name }}</td>
-					<td>
-						{{ "%.2f"|format(item.price) }}
-						{% if item.price_changed %}
-							<span class="badge bg-warning" data-bs-toggle="tooltip" title="Price was updated from invoice">
-								<i class="bi bi-currency-euro"></i>
-							</span>
-						{% endif %}
-					</td>
-					<td>
-						{{ item.quantity }}
-						{% if item.quantity_changed %}
-							<span class="badge bg-warning" data-bs-toggle="tooltip" title="Quantity was adjusted">
-								<i class="bi bi-hash"></i>
-							</span>
-						{% endif %}
-					</td>
-					<td>{{ "%.2f"|format(item.total_price) }}</td>
-					<td>
-						{{ item.comment or _('No comment') }}
-						{% if item.change_reason %}
-							<span class="badge bg-info" data-bs-toggle="tooltip" title="{{ item.change_reason }}">
-								<i class="bi bi-info-circle"></i>
-							</span>
-						{% endif %}
-					</td>
-					<td>
-						<span class="badge bg-{{ {
-							'new': 'primary',
-							'accepted': 'success',
-							'rejected': 'danger',
-							'ordered_supplier': 'info'
-						}[item.status] }}">
-							{{ _(item.status|title) }}
-						</span>
-					</td>
-				</tr>
-				{% endfor %}
-			</tbody>
+                {% for item in details %}
+                <tr class="{{ 'table-warning' if item.price_changed or item.article_changed or item.quantity_changed }}">
+                    <td>
+                        {{ item.article }}
+                        {% if item.article_changed %}
+                            <span class="badge bg-warning" data-bs-toggle="tooltip" title="Article was changed">
+                                <i class="bi bi-pencil"></i>
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.original_article or '-' }}</td>
+                    <td>{{ item.table_name }}</td>
+                    <td>{{ item.brand_id }}</td>
+                    <td>
+                        {{ "%.2f"|format(item.price) }}
+                        {% if item.price_changed %}
+                            <span class="badge bg-warning" data-bs-toggle="tooltip" title="Price was updated from invoice">
+                                <i class="bi bi-currency-euro"></i>
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ item.quantity }}
+                        {% if item.quantity_changed %}
+                            <span class="badge bg-warning" data-bs-toggle="tooltip" title="Quantity was adjusted">
+                                <i class="bi bi-hash"></i>
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>{{ "%.2f"|format(item.total_price) }}</td>
+                    <td>
+                        {{ item.comment or _('No comment') }}
+                        {% if item.change_reason %}
+                            <span class="badge bg-info" data-bs-toggle="tooltip" title="{{ item.change_reason }}">
+                                <i class="bi bi-info-circle"></i>
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ {
+                            'new': 'primary',
+                            'accepted': 'success',
+                            'rejected': 'danger',
+                            'ordered_supplier': 'info'
+                        }[item.status] }}">
+                            {{ _(item.status|title) }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
 
             <tfoot>
                 <tr class="table-primary">
-                    <td colspan="5" class="text-end"><strong>{{ _('Total Order Amount:') }}</strong></td>
+                    <td colspan="6" class="text-end"><strong>{{ _('Total Order Amount:') }}</strong></td>
                     <td colspan="3"><strong>{{ "%.2f"|format(total_price) }}</strong></td>
                 </tr>
             </tfoot>

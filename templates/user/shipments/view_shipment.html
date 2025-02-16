@@ -1,27 +1,26 @@
-{# filepath: templates/user/shipments/view_shipment.html #}
 {% extends "base/base.html" %}
 
-{% block title %}Shipment Details{% endblock %}
+{% block title %}{{ _('Shipment Details') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Shipment Details</h1>
+        <h1>{{ _('Shipment Details') }}</h1>
         <a href="{{ url_for('user_shipments', token=token) }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Shipments
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Shipments') }}
         </a>
     </div>
 
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">Shipment Information</h5>
+            <h5 class="mb-0">{{ _('Shipment Information') }}</h5>
         </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Date:</strong> {{ shipment.shipment_date.strftime('%Y-%m-%d') }}</p>
-                    <p><strong>Status:</strong> {{ shipment.status }}</p>
-                    <p><strong>Tracking Number:</strong> {{ shipment.tracking_number or 'Not specified' }}</p>
+                    <p><strong>{{ _('Date:') }}</strong> {{ shipment.shipment_date.strftime('%Y-%m-%d') }}</p>
+                    <p><strong>{{ _('Status:') }}</strong> {{ _(shipment.status) }}</p>
+                    <p><strong>{{ _('Tracking Number:') }}</strong> {{ shipment.tracking_number or _('Not specified') }}</p>
                 </div>
             </div>
         </div>
@@ -29,7 +28,7 @@
 
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0">Items</h5>
+            <h5 class="mb-0">{{ _('Items') }}</h5>
         </div>
         <div class="card-body">
             {% if details %}
@@ -37,11 +36,11 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>Article</th>
-                                <th>Quantity</th>
-                                <th>Price</th>
-                                <th>Total Price</th>
-                                <th>Comment</th>
+                                <th>{{ _('Article') }}</th>
+                                <th>{{ _('Quantity') }}</th>
+                                <th>{{ _('Price') }}</th>
+                                <th>{{ _('Total Price') }}</th>
+                                <th>{{ _('Comment') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -58,7 +57,7 @@
                     </table>
                 </div>
             {% else %}
-                <p>No items in this shipment.</p>
+                <p>{{ _('No items in this shipment.') }}</p>
             {% endif %}
         </div>
     </div>

@@ -13,6 +13,7 @@
                 <tr>
                     <th>{{ _('Article') }}</th>
                     <th>{{ _('Price List') }}</th>
+                    <th>{{ _('Brand') }}</th>
                     <th>{{ _('Price') }}</th>
                     <th>{{ _('Quantity') }}</th>
                     <th>{{ _('Total') }}</th>
@@ -25,6 +26,7 @@
                 <tr>
                     <td>{{ item.article }}</td>
                     <td>{{ item.table_name }}</td>
+                    <td>{{ item.brand_name }}</td> 
                     <td>{{ "%.2f"|format(item.final_price) }}</td>
                     <td>
                         <form method="POST" action="/{{ token }}/update_cart" class="d-flex align-items-center">
@@ -52,7 +54,7 @@
             </tbody>
             <tfoot>
                 <tr class="table-primary">
-                    <td colspan="4" class="text-end"><strong>{{ _('Total:') }}</strong></td>
+                    <td colspan="5" class="text-end"><strong>{{ _('Total:') }}</strong></td>
                     <td><strong>{{ "%.2f"|format(total_price) }}</strong></td>
                     <td colspan="2"></td>
                 </tr>
@@ -67,8 +69,8 @@
             </button>
         </form>
         
-        <form method="POST" action="/{{ token }}/clear_cart">
-            <button type="submit" class="btn btn-secondary">
+        <form method="POST" action="{{ url_for('clear_cart', token=token) }}" style="display: inline;">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to clear your cart?');">
                 <i class="bi bi-trash"></i> {{ _('Clear Cart') }}
             </button>
         </form>

@@ -12,6 +12,14 @@
         <div class="card h-100">
             <div class="card-body">
                 <h2 class="card-title">{{ _('Upload Articles File') }}</h2>
+				<div class="upload-formats mb-4">
+					<div class="format-line text-muted">
+						{{ _('Article/Quantity/Comment') }}
+					</div>
+					<div class="format-line text-muted">
+						{{ _('Article/Quantity/Brand/Comment') }}
+					</div>
+				</div>
                 <div class="drop-zone" id="drop-zone">
                     {{ _('Drag and drop your file here, or click to select') }}
                     <div class="file-name" id="file-name"></div>
@@ -46,7 +54,20 @@
         </div>
     </div>
 </div>
+<style>
+.upload-formats {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 1.5rem 0;
+}
+
+.format-line {
+    padding: 0.5rem 0;
+    color: #495057;
+}
+</style>
 {% endblock %}
+
 
 {% block extra_js %}
 <script>

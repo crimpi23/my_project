@@ -1,0 +1,72 @@
+{% extends "base/public_base.html" %}
+
+{% block title %}{{ _('About Us') }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1 class="mb-4">{{ _('About AutogroupEU') }}</h1>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-shop"></i> {{ _('Auto Parts Store') }}
+                    </h5>
+                    <p class="card-text">
+                        {{ _('We are a specialized auto parts store serving business clients across Europe.') }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-truck"></i> {{ _('Our Main Brands') }}
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check2"></i> Mercedes-Benz</li>
+                        <li><i class="bi bi-check2"></i> BMW</li>
+                        <li><i class="bi bi-check2"></i> Volkswagen Group</li>
+                        <li><i class="bi bi-check2"></i> Jaguar</li>
+                        <li><i class="bi bi-check2"></i> Land Rover</li>
+                        <li><i class="bi bi-check2"></i> Volvo</li>
+                        <li><i class="bi bi-check2"></i> Toyota</li>
+                        <li><i class="bi bi-check2"></i> Ford</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-building"></i> {{ _('B2B Services') }}
+                    </h5>
+                    <p class="card-text">
+                        {{ _('For business clients interested in B2B access, please contact:') }}
+                        <br>
+                        <a href="mailto:info@autogroup.sk" class="text-decoration-none">
+                            <i class="bi bi-envelope"></i> info@autogroup.sk
+                        </a>
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-geo-alt"></i> {{ _('Find Us') }}
+                    </h5>
+                    <div class="ratio ratio-16x9">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2624.9999999999995!2d21.907539999999998!3d48.937539999999996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x473e3d9999999999%3A0x9999999999999999!2sTušická%20Nová%20Ves%2090%2C%20072%2002%20Slovakia!5e0!3m2!1sen!2sus!4v1619999999999!5m2!1sen!2sus"
+                                style="border:0;" 
+                                allowfullscreen="" 
+                                loading="lazy">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

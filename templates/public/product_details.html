@@ -1,0 +1,392 @@
+{% extends "base/public_base.html" %}
+
+{% block head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ product_data.description[:160] }}">
+<meta name="keywords" content="{{ product_data.name }}, {{ article }}, автозапчастини, запчастини">
+<meta property="og:title" content="{{ product_data.name }} - AutogroupEU">
+<meta property="og:description" content="{{ product_data.description[:160] }}">
+<meta property="og:image" content="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}">
+<meta property="og:type" content="product">
+<meta property="og:url" content="{{ request.url }}">
+
+<!-- Google Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": "{{ product_data.name }}",
+  "description": "{{ product_data.description }}",
+  "sku": "{{ article }}",
+  "image": [
+    {% for url in product_data.photo_urls %}
+    "{{ url }}"{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ],
+  "brand": {
+    "@type": "Brand",
+    "name": "{{ brand_name if brand_name else 'AutogroupEU' }}"
+  },
+  "offers": {
+    "@type": "AggregateOffer",
+    "priceCurrency": "EUR",
+    "lowPrice": "{{ prices[0].price if prices }}",
+    "highPrice": "{{ prices[-1].price if prices }}",
+    "offerCount": "{{ prices|length }}",
+    "availability": "https://schema.org/InStock"
+  }
+}
+</script>
+
+<!-- Google Analytics Enhanced Ecommerce -->
+<script>
+gtag('event', 'view_item', {
+  currency: "EUR",
+  items: [{
+    item_id: "{{ article }}",
+    item_name: "{{ product_data.name }}",
+    item_brand: "{{ brand_name if brand_name else 'AutogroupEU' }}",
+    price: "{{ prices[0].price if prices }}"
+  }]
+});
+</script>
+{% endblock %}
+
+{% block title %}{{ product_data.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.product-container {
+    max-width: 1400px; /* Збільшено на 30% від початкового розміру */
+    width: 95%;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.image-section {
+    position: relative;
+    background: var(--light-bg);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    height: 600px; /* Фіксована висота */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-container {
+    position: relative;
+    width: 100%;
+    height: 100%; /* Займає всю висоту батьківського елемента */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 0.75rem;
+}
+
+.image-container img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.image-container img:hover {
+    transform: scale(1.05);
+}
+
+.image-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.image-nav:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.image-nav.prev { left: 10px; }
+.image-nav.next { right: 10px; }
+
+.image-dots {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 20px;
+    z-index: 2;
+}
+
+.image-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.image-dot.active {
+    background: var(--primary-color);
+    transform: scale(1.2);
+}
+
+.product-info {
+    padding: 1.5rem;
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+
+.price-card {
+    background: white;
+    padding: 0.75rem; /* Зменшено відступи */
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem; /* Зменшено відступ між картками */
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.price-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow);
+}
+
+.price-value {
+    font-size: 1.4rem; /* Зменшено розмір шрифту */
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0; /* Видалено відступ знизу */
+    min-width: 120px;
+}
+
+.delivery-info {
+    color: var(--secondary-color);
+    font-size: 0.85rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 120px;
+}
+
+.cart-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Зменшено відступ між елементами */
+    margin-left: auto;
+}
+
+.quantity-input {
+    width: 60px !important; /* Зменшено ширину */
+    text-align: center;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    padding: 0.375rem; /* Зменшено padding */
+    height: 32px; /* Фіксована висота */
+}
+
+.btn-add-cart {
+    height: 32px; /* Фіксована висота */
+    padding: 0 1rem; /* Зменшено padding */
+    font-size: 0.9rem; /* Зменшено розмір шрифту */
+    border-radius: 0.375rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-add-cart i {
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .price-card {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
+    }
+
+    .cart-controls {
+        flex-direction: row; /* Змінено на горизонтальне розташування */
+        width: 100%;
+    }
+
+    .quantity-input {
+        width: 80px !important;
+    }
+
+    .btn-add-cart {
+        flex-grow: 1;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="product-container" itemscope itemtype="https://schema.org/Product">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="image-section">
+                <div class="image-container">
+                    <img id="productImage" 
+                         src="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}" 
+                         alt="{{ product_data.name }}"
+                         itemprop="image">
+                </div>
+                {% if product_data.photo_urls|length > 1 %}
+                <button class="image-nav prev" onclick="prevImage()">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="image-nav next" onclick="nextImage()">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                <div class="image-dots">
+                    {% for index in range(product_data.photo_urls|length) %}
+                    <div class="image-dot {% if loop.first %}active{% endif %}" 
+                         onclick="changeImage('{{ product_data.photo_urls[index] }}', {{ index }})"></div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="product-info">
+                <h1 class="mb-3" itemprop="name">{{ product_data.name }}</h1>
+                <div class="mb-4">
+                    <span class="text-muted">{{ _('Article') }}:</span>
+                    <strong itemprop="sku">{{ article }}</strong>
+                </div>
+                <form method="POST" action="{{ url_for('public_add_to_cart') }}" 
+                      onsubmit="return trackAddToCart(this)">
+                    <input type="hidden" name="article" value="{{ article }}">
+                    {% for price in prices %}
+                    <div class="price-card" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                        <div class="price-value">
+                            <span itemprop="price">{{ price.price }}</span>
+                            <span itemprop="priceCurrency">EUR</span>
+                        </div>
+                        <div class="delivery-info">
+                            {% if price.in_stock %}
+                            <link itemprop="availability" href="https://schema.org/InStock">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <span class="ms-1">{{ _('In Stock') }}</span>
+                            {% else %}
+                            <link itemprop="availability" href="https://schema.org/PreOrder">
+                            <i class="bi bi-clock"></i>
+                            <span class="ms-1">{{ price.delivery_time }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="cart-controls">
+                            <input type="number" 
+                                   name="quantity_{{ price.table_name }}" 
+                                   value="1" 
+                                   min="1" 
+                                   class="form-control quantity-input">
+                            <button type="submit" 
+                                    name="selected_price" 
+                                    value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}" 
+                                    class="btn btn-add-cart">
+                                <i class="bi bi-cart-plus"></i>
+                                {{ _('Add to Cart') }}
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="mt-4">
+        <h2>{{ _('Description') }}</h2>
+        <p itemprop="description">{{ product_data.description }}</p>
+    </div>
+</div>
+
+<script>
+let currentImageIndex = 0;
+const images = {{ product_data.photo_urls | tojson }};
+const dots = document.querySelectorAll('.image-dot');
+
+function updateDots(index) {
+    dots.forEach(dot => dot.classList.remove('active'));
+    dots[index].classList.add('active');
+}
+
+function changeImage(newSrc, index) {
+    const img = document.getElementById('productImage');
+    img.style.opacity = '0';
+    setTimeout(() => {
+        img.src = newSrc;
+        img.style.opacity = '1';
+        currentImageIndex = index;
+        updateDots(index);
+    }, 300);
+}
+
+function prevImage() {
+    // Якщо поточний індекс 0, переходимо до останнього зображення
+    let newIndex = currentImageIndex <= 0 ? images.length - 1 : currentImageIndex - 1;
+    changeImage(images[newIndex], newIndex);
+}
+
+function nextImage() {
+    // Якщо поточний індекс останній, переходимо до першого зображення
+    let newIndex = currentImageIndex >= images.length - 1 ? 0 : currentImageIndex + 1;
+    changeImage(images[newIndex], newIndex);
+}
+
+// Додаємо автоматичне перегортання кожні 5 секунд (опціонально)
+function autoSlide() {
+    nextImage();
+}
+// setInterval(autoSlide, 5000); // Розкоментуйте цей рядок, якщо потрібне автоматичне перегортання
+
+function trackAddToCart(form) {
+    gtag('event', 'add_to_cart', {
+        currency: "EUR",
+        items: [{
+            item_id: "{{ article }}",
+            item_name: "{{ product_data.name }}",
+            item_brand: "{{ brand_name if brand_name else 'AutogroupEU' }}",
+            price: form.querySelector('button[type="submit"]').value.split(':')[1].split('|')[0],
+            quantity: parseInt(form.querySelector('input[type="number"]').value)
+        }]
+    });
+    return true;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /public_cart/
+Disallow: /public_orders/
+
+Sitemap: https://your-domain.com/sitemap.xml

@@ -1,0 +1,82 @@
+{% extends "base/public_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Ліва колонка з привітанням та пошуком -->
+        <div class="col-lg-8">
+            <!-- Блок привітання -->
+            <div class="welcome-section bg-white p-4 mb-4 rounded shadow-sm">
+                <h1 class="h3 mb-3">{{ _('Welcome to AutogroupEU') }}</h1>
+                <p class="lead text-muted">
+                    {{ _('Your reliable partner in auto parts supply across Europe. Enter the article number to check prices and availability.') }}
+                </p>
+            </div>
+
+            <!-- Блок пошуку -->
+            <div class="search-section bg-white p-4 rounded shadow-sm">
+                <form method="POST" action="{{ url_for('public_search') }}" class="mb-0">
+                    <div class="input-group">
+                        <input type="text" 
+                               name="article" 
+                               class="form-control form-control-lg" 
+                               placeholder="{{ _('Enter article number...') }}"
+                               required>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-search me-1"></i>
+                            {{ _('Search') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Права колонка з контактною інформацією -->
+        <div class="col-lg-4">
+            <div class="contact-section bg-white p-4 rounded shadow-sm">
+                <h4 class="mb-3">
+                    <i class="bi bi-headset me-2"></i>
+                    {{ _('Need Help?') }}
+                </h4>
+                <p class="text-muted mb-3">
+                    {{ _("If you have any questions, don't hesitate to contact us:") }}
+                </p>
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-telephone-fill text-primary me-3 fs-3"></i>
+                    <div>
+                        <div class="fw-bold fs-5">+421 907 539 325</div>
+                        <small class="text-muted">{{ _('Mon-Fri: 9:00 - 19:00') }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .welcome-section, .search-section, .contact-section {
+        border: 1px solid rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+
+    .contact-section:hover {
+        transform: translateY(-5px);
+    }
+
+    .input-group {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .form-control:focus {
+        box-shadow: none;
+        border-color: #007bff;
+    }
+
+    .btn-primary {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base/public_base.html" %}
+
+{% block head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="View and manage your shopping cart at AutogroupEU. Check prices, quantities, and proceed to checkout.">
+<meta name="robots" content="noindex, nofollow">
+
+<!-- Google Analytics Enhanced Ecommerce -->
+<script>
+gtag('event', 'view_cart', {
+    currency: "EUR",
+    value: {{ total_price }},
+    items: [
+        {% for item in cart_items %}
+        {
+            item_id: '{{ item.article }}',
+            item_name: '{{ item.name }}',
+            brand: '{{ item.brand_name }}',
+            price: '{{ item.price }}',
+            quantity: {{ item.quantity }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+});
+</script>
+{% endblock %}
+
+{% block title %}{{ _('Shopping Cart') }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ _('Shopping Cart') }}</h1>
+
+    {% if cart_items %}
+        <div class="card shadow-sm mb-4">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Article') }}</th>
+                            <th>{{ _('Product') }}</th>
+                            <th>{{ _('Brand') }}</th>
+                            <th>{{ _('Price') }}</th>
+                            <th>{{ _('Quantity') }}</th>
+                            <th>{{ _('Total') }}</th>
+                            <th>{{ _('Delivery') }}</th>
+                            <th>{{ _('Actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart_items %}
+                        <tr id="cart-item-{{ item.article }}">
+                            <td>
+                                <a href="{{ url_for('product_details', article=item.article) }}" 
+                                   class="text-decoration-none">
+                                    {{ item.article }}
+                                </a>
+                            </td>
+                            <td>{{ item.name or item.article }}</td>
+                            <td>{{ item.brand_name or '-' }}</td>
+                            <td>{{ "%.2f"|format(item.price) }} EUR</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('public_add_to_cart') }}" 
+                                      class="d-flex align-items-center gap-2"
+                                      onsubmit="updateCartAnalytics('{{ item.article }}', this.quantity.value)">
+                                    <input type="hidden" name="article" value="{{ item.article }}">
+                                    <input type="hidden" name="table_name" value="{{ item.table_name }}">
+                                    <input type="number" 
+                                           name="quantity" 
+                                           value="{{ item.quantity }}" 
+                                           min="1" 
+                                           class="form-control form-control-sm" 
+                                           style="width: 70px"
+                                           onchange="this.form.submit()">
+                                </form>
+                            </td>
+                            <td>{{ "%.2f"|format(item.total) }} EUR</td>
+                            <td>
+                                {% if item.delivery_time == '0' %}
+                                    <span class="badge bg-success">{{ _('In Stock') }}</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">
+                                        {{ item.delivery_time }} {{ _('days') }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" 
+                                      action="{{ url_for('public_remove_from_cart') }}" 
+                                      class="d-inline"
+                                      onsubmit="removeFromCartAnalytics('{{ item.article }}')">
+                                    <input type="hidden" name="article" value="{{ item.article }}">
+                                    <input type="hidden" name="table_name" value="{{ item.table_name }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-light">
+                            <td colspan="5" class="text-end"><strong>{{ _('Total:') }}</strong></td>
+                            <td colspan="3"><strong>{{ "%.2f"|format(total_price) }} EUR</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>
+                {{ _('Continue Shopping') }}
+            </a>
+            <div class="d-flex gap-2">
+                <form method="POST" action="{{ url_for('cart_clear') }}" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-trash me-2"></i>
+                        {{ _('Clear Cart') }}
+                    </button>
+                </form>
+                <form method="POST" 
+                      action="{{ url_for('public_place_order') }}" 
+                      class="d-inline"
+                      onsubmit="beginCheckoutAnalytics()">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>
+                        {{ _('Place Order') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-cart-x display-1 text-muted mb-4"></i>
+            <h2>{{ _('Your Cart is Empty') }}</h2>
+            <p class="text-muted">{{ _('Start adding items to your cart!') }}</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">
+                <i class="bi bi-search me-2"></i>
+                {{ _('Search Articles') }}
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function updateCartAnalytics(articleId, newQuantity) {
+    gtag('event', 'update_quantity', {
+        item_id: articleId,
+        quantity: parseInt(newQuantity)
+    });
+}
+
+function removeFromCartAnalytics(articleId) {
+    gtag('event', 'remove_from_cart', {
+        item_id: articleId
+    });
+}
+
+function beginCheckoutAnalytics() {
+    gtag('event', 'begin_checkout', {
+        currency: "EUR",
+        value: {{ total_price }},
+        items: [
+            {% for item in cart_items %}
+            {
+                item_id: '{{ item.article }}',
+                item_name: '{{ item.name }}',
+                brand: '{{ item.brand_name }}',
+                price: '{{ item.price }}',
+                quantity: {{ item.quantity }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    });
+}
+</script>
+{% endblock %}

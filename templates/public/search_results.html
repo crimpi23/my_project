@@ -1,0 +1,34 @@
+{% extends "base/public_base.html" %}
+
+{% block title %}{{ _('Search Results') }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>{{ _('Search Results') }}</h2>
+    
+    {% if results %}
+        {% for article, prices in results.items() %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ article }}</h5>
+                    {% if product_data and product_data.article == article %}
+                        <h6 class="card-subtitle mb-2 text-muted">{{ product_data.name }}</h6>
+                        <p class="card-text">{{ product_data.description }}</p>
+                        <img src="{{ product_data.photo_url }}" class="card-img-top" alt="{{ product_data.name }}">
+                    {% endif %}
+                    <p class="card-text">{{ _('Available prices:') }}</p>
+                    <ul class="list-group">
+                        {% for price in prices %}
+                            <li class="list-group-item">
+                                {{ price.price }} - {{ price.table_name }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>{{ _('No results found.') }}</p>
+    {% endif %}
+</div>
+{% endblock %}

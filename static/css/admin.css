@@ -1,0 +1,115 @@
+:root {
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --success-color: #198754;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #0dcaf0;
+  --light-bg: #f8f9fa;
+  --dark-bg: #212529;
+  --border-color: #dee2e6;
+}
+
+/* Admin Layout */
+.admin-layout {
+  min-height: 100vh;
+  background: var(--light-bg);
+}
+
+/* Admin Sidebar */
+.admin-sidebar {
+  width: 280px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: var(--dark-bg);
+  color: #fff;
+  z-index: 1000;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.admin-content {
+  margin-left: 280px;
+  padding: 2rem;
+}
+
+/* Admin Cards */
+.admin-card {
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.admin-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Admin Tables */
+.admin-table {
+  width: 100%;
+  background: #fff;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.admin-table th {
+  background: var(--dark-bg);
+  color: #fff;
+  font-weight: 500;
+  padding: 1rem;
+}
+
+.admin-table td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Admin Forms */
+.admin-form .form-control {
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1rem;
+}
+
+.admin-form .form-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 0.5em 1em;
+  border-radius: 2rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+/* Admin Buttons */
+.admin-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+  
+  .admin-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+  
+  .admin-table {
+    font-size: 0.875rem;
+  }
+}

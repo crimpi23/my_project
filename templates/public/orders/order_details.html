@@ -1,0 +1,158 @@
+{% extends "base/public_base.html" %}
+
+{% block head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="Order details #{{ order.id }} at AutogroupEU - View your order status, items and delivery information">
+<meta name="robots" content="noindex, nofollow">
+
+<!-- Google Analytics Enhanced Ecommerce -->
+<script>
+gtag('event', 'purchase', {
+    transaction_id: '{{ order.id }}',
+    value: {{ order.total_price }},
+    currency: 'EUR',
+    tax: 0,
+    shipping: 0,
+    items: [
+        {% for item in items %}
+        {
+            item_id: '{{ item.article }}',
+            item_name: '{{ item.product_name or item.article }}',
+            brand: '{{ item.brand_name }}',
+            price: '{{ item.price }}',
+            quantity: {{ item.quantity }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+});
+</script>
+
+<!-- Structured Data Markup -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Order",
+    "orderNumber": "{{ order.id }}",
+    "orderStatus": "https://schema.org/OrderStatus/{{ order.status }}",
+    "orderDate": "{{ order.created_at.isoformat() }}",
+    "acceptedOffer": [
+        {% for item in items %}
+        {
+            "@type": "Offer",
+            "itemOffered": {
+                "@type": "Product",
+                "name": "{{ item.product_name or item.article }}",
+                "sku": "{{ item.article }}",
+                "brand": {
+                    "@type": "Brand",
+                    "name": "{{ item.brand_name }}"
+                }
+            },
+            "price": "{{ item.price }}",
+            "priceCurrency": "EUR",
+            "quantity": {{ item.quantity }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Order Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">{{ _('Order') }} #{{ order.id }}</h1>
+        <a href="{{ url_for('public_view_orders') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>
+            {{ _('Back to Orders') }}
+        </a>
+    </div>
+
+    <!-- Order Summary Card -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="text-muted small">{{ _('Order Date') }}</label>
+                        <div class="fs-5">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
+                    <div>
+                        <label class="text-muted small">{{ _('Status') }}</label>
+                        <div>
+                            <span class="badge bg-{{ order.status|status_color }} fs-6">
+                                {{ _(order.status) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="mb-3">
+                        <label class="text-muted small">{{ _('Total Items') }}</label>
+                        <div class="fs-5">{{ order.items_count }}</div>
+                    </div>
+                    <div>
+                        <label class="text-muted small">{{ _('Total Amount') }}</label>
+                        <div class="fs-4 fw-bold text-primary">
+                            {{ "%.2f"|format(order.total_price) }} EUR
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items Table -->
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ _('Article') }}</th>
+                        <th>{{ _('Name') }}</th>
+                        <th>{{ _('Brand') }}</th>
+                        <th class="text-end">{{ _('Price') }}</th>
+                        <th class="text-center">{{ _('Quantity') }}</th>
+                        <th class="text-end">{{ _('Total') }}</th>
+                        <th class="text-center">{{ _('Status') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr class="align-middle">
+                        <td>
+                            <a href="{{ url_for('product_details', article=item.article) }}" 
+                               class="text-decoration-none">
+                                {{ item.article }}
+                            </a>
+                        </td>
+                        <td>{{ item.product_name or '-' }}</td>
+                        <td>{{ item.brand_name or '-' }}</td>
+                        <td class="text-end">{{ "%.2f"|format(item.price) }} EUR</td>
+                        <td class="text-center">{{ item.quantity }}</td>
+                        <td class="text-end">{{ "%.2f"|format(item.total_price) }} EUR</td>
+                        <td class="text-center">
+                            <span class="badge bg-{{ item.status|status_color }}">
+                                {{ _(item.status) }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <td colspan="5" class="text-end">
+                            <strong>{{ _('Total:') }}</strong>
+                        </td>
+                        <td class="text-end">
+                            <strong>{{ "%.2f"|format(order.total_price) }} EUR</strong>
+                        </td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

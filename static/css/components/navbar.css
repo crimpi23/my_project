@@ -1,0 +1,35 @@
+.navbar-brand img {
+    height: 60px;
+    width: auto;
+}
+
+.nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+}
+
+.nav-link i {
+    font-size: 1.2rem;
+}
+
+.cart-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: var(--danger-color);
+    color: white;
+    font-size: 0.75rem;
+    line-height: 18px;
+    text-align: center;
+}
+
+.navbar-nav .nav-item {
+    position: relative;
+    margin: 0 0.25rem;
+}

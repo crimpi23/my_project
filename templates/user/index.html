@@ -1,112 +1,126 @@
 {% extends "base/base.html" %}
 
-{% block content %}
-<h1 class="text-center mb-4">{{ _('Article Price Search') }}</h1>
-{% if session.get('token') %}
-<p class="text-center text-muted">{{ _('Welcome to the advanced search system! Use the tools below:') }}</p>
-{% endif %}
+{% block title %}{{ _('Article Price Search') }}{% endblock %}
 
-<div class="row g-4">
-    <!-- File Upload Section -->
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <h2 class="card-title">{{ _('Upload Articles File') }}</h2>
-				<div class="upload-formats mb-4">
-					<div class="format-line text-muted">
-						{{ _('Article/Quantity/Comment') }}
-					</div>
-					<div class="format-line text-muted">
-						{{ _('Article/Quantity/Brand/Comment') }}
-					</div>
-				</div>
-                <div class="drop-zone" id="drop-zone">
-                    {{ _('Drag and drop your file here, or click to select') }}
-                    <div class="file-name" id="file-name"></div>
-                </div>
-                <form method="POST" action="/{{ session['token'] }}/upload_file" enctype="multipart/form-data" id="upload-form">
-                    <input type="file" id="file" name="file" accept=".xlsx" class="form-control d-none" required>
-                    <button type="submit" class="btn btn-primary w-100 mt-4">
-                        <i class="bi bi-upload"></i> {{ _('Upload and Search') }}
+{% block content %}
+<div class="row g-4 justify-content-center">
+    <!-- Search Form -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <h5 class="fw-normal mb-4">{{ _('Search Articles') }}</h5>
+                <form method="POST" action="/{{ session['token'] }}/search#results" class="d-flex flex-column flex-grow-1">
+                    <div class="mb-4 flex-grow-1">
+                        <label class="form-label small text-muted">
+                            {{ _('Enter Articles and Quantities:') }}
+                        </label>
+                        <textarea name="articles" 
+                                rows="8" 
+                                class="form-control h-100"
+                                placeholder="{{ _('Example:') }}&#10;0XW105101&#10;03H133201N 2&#10;1231321313"
+                                required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mt-auto">
+                        <i class="bi bi-search me-2"></i>{{ _('Search') }}
                     </button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Search Form -->
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <h2 class="card-title">{{ _('Search Articles') }}</h2>
-                <form method="POST" action="/{{ session['token'] }}/search#results">
-                    <div class="mb-3">
-                        <label for="articles" class="form-label">{{ _('Enter Articles and Quantities:') }}</label>
-                        <textarea id="articles" name="articles" rows="8" 
-                            placeholder="{{ _('Example:') }}&#10;0XW105101&#10;03H133201N 2&#10;1231321313" 
-                            class="form-control" required></textarea>
+    <!-- Upload Form -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <h5 class="fw-normal mb-4">{{ _('Upload Articles File') }}</h5>
+                
+                <!-- File Format Info -->
+                <div class="formats-info mb-4">
+                    <div class="format-line d-flex align-items-center mb-2">
+                        <i class="bi bi-file-text me-2 text-muted"></i>
+                        <span class="small text-muted">{{ _('Article/Quantity/Comment') }}</span>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-search"></i> {{ _('Search') }}
+                    <div class="format-line d-flex align-items-center">
+                        <i class="bi bi-file-text me-2 text-muted"></i>
+                        <span class="small text-muted">{{ _('Article/Quantity/Brand/Comment') }}</span>
+                    </div>
+                </div>
+
+                <!-- Drop Zone -->
+                <div class="drop-zone rounded-3 mb-4 flex-grow-1" id="drop-zone">
+                    <div class="drop-zone-content text-center p-4">
+                        <i class="bi bi-cloud-arrow-up fs-1 mb-3 text-muted"></i>
+                        <p class="mb-2">{{ _('Drag and drop your file here') }}</p>
+                        <p class="text-muted small mb-3">{{ _('or') }}</p>
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4">
+                            {{ _('Select File') }}
+                        </button>
+                    </div>
+                    <div id="file-name" class="text-center mt-2 small"></div>
+                </div>
+
+                <form method="POST" 
+                      action="/{{ session['token'] }}/upload_file" 
+                      enctype="multipart/form-data" 
+                      id="upload-form">
+                    <input type="file" 
+                           id="file" 
+                           name="file" 
+                           accept=".xlsx" 
+                           class="d-none" 
+                           required>
+                    <button type="submit" class="btn btn-primary w-100 mt-auto">
+                        <i class="bi bi-upload me-2"></i>{{ _('Upload and Search') }}
                     </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
 <style>
-.upload-formats {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin: 1.5rem 0;
+.drop-zone {
+    border: 2px dashed var(--bs-gray-300);
+    background-color: var(--bs-gray-100);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.format-line {
-    padding: 0.5rem 0;
-    color: #495057;
+.drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--bs-primary);
+    background-color: rgba(13, 110, 253, 0.03);
+}
+
+.drop-zone.loaded {
+    border-style: solid;
+    border-color: var(--bs-success);
+    background-color: rgba(25, 135, 84, 0.03);
+}
+
+.formats-info {
+    padding: 1rem;
+    background-color: var(--bs-gray-100);
+    border-radius: 0.5rem;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+textarea {
+    flex-grow: 1;
+    resize: none;
 }
 </style>
-{% endblock %}
-
-
-{% block extra_js %}
-<script>
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file');
-    const fileNameDisplay = document.getElementById('file-name');
-    const uploadForm = document.getElementById('upload-form');
-
-    dropZone.addEventListener('click', () => fileInput.click());
-
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('dragover');
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            fileInput.files = files;
-            dropZone.classList.add('loaded');
-            fileNameDisplay.textContent = `{{ _('File selected:') }} ${files[0].name}`;
-        }
-    });
-
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            dropZone.classList.add('loaded');
-            fileNameDisplay.textContent = `{{ _('File selected:') }} ${fileInput.files[0].name}`;
-        }
-    });
-
-    uploadForm.addEventListener('submit', () => {
-        document.getElementById('loading').style.display = 'block';
-    });
-</script>
 {% endblock %}

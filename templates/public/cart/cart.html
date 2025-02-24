@@ -60,18 +60,17 @@ gtag('event', 'view_cart', {
                             <td>{{ item.brand_name or '-' }}</td>
                             <td>{{ "%.2f"|format(item.price) }} EUR</td>
                             <td>
-                                <form method="POST" action="{{ url_for('public_add_to_cart') }}" 
-                                      class="d-flex align-items-center gap-2"
-                                      onsubmit="updateCartAnalytics('{{ item.article }}', this.quantity.value)">
+                                <form method="POST" action="{{ url_for('update_public_cart') }}" class="d-inline">
                                     <input type="hidden" name="article" value="{{ item.article }}">
                                     <input type="hidden" name="table_name" value="{{ item.table_name }}">
-                                    <input type="number" 
-                                           name="quantity" 
-                                           value="{{ item.quantity }}" 
-                                           min="1" 
-                                           class="form-control form-control-sm" 
-                                           style="width: 70px"
-                                           onchange="this.form.submit()">
+                                    <div class="input-group" style="width: 120px;">
+                                        <input type="number" 
+                                               name="quantity" 
+                                               value="{{ item.quantity }}" 
+                                               min="1" 
+                                               class="form-control quantity-input"
+                                               onchange="this.form.submit()">
+                                    </div>
                                 </form>
                             </td>
                             <td>{{ "%.2f"|format(item.total) }} EUR</td>

@@ -233,24 +233,226 @@ gtag('event', 'view_item', {
     font-size: 1rem;
 }
 
+.product-container {
+    max-width: 1400px;
+    width: 95%;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 @media (max-width: 768px) {
-    .price-card {
-        flex-direction: column;
-        align-items: stretch;
+    .product-container {
+        padding: 1rem;
+        margin: 1rem auto;
+    }
+
+    /* Змінюємо порядок відображення для мобільних */
+    .mobile-order-1 {
+        order: 1;
+    }
+    
+    .mobile-order-2 {
+        order: 2;
+    }
+
+    /* Стилі для основної інформації */
+    .product-info {
         padding: 1rem;
     }
 
+    .product-title {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .article-info {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Стилі для цін */
+    .price-card {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+    }
+
+    .price-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    /* Стилі для зображень */
+    .image-section {
+        height: auto;
+        margin-top: 1rem;
+    }
+
+    .image-container {
+        height: 300px;
+    }
+
+    .image-container img {
+        max-height: 100%;
+        width: auto;
+    }
+
+    /* Кнопки навігації для зображень */
+    .image-nav {
+        width: 30px;
+        height: 30px;
+    }
+
+    /* Адаптивні контроли кошика */
     .cart-controls {
-        flex-direction: row; /* Змінено на горизонтальне розташування */
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
         width: 100%;
     }
 
     .quantity-input {
         width: 80px !important;
+        height: 40px;
     }
 
     .btn-add-cart {
         flex-grow: 1;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    /* Кнопка "Повернутися до пошуку" */
+    .back-button {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        width: 100%;
+        padding: 0.5rem;
+        background: white;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1rem;
+    }
+}
+.brand-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+.brand-info i {
+    font-size: 1rem;
+}
+.brand-section {
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #fff;
+}
+
+.brand-title {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.brand-prices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Для мобільних пристроїв */
+@media (max-width: 768px) {
+    .brand-section {
+        padding: 0.75rem;
+    }
+
+    .brand-title {
+        font-size: 1.1rem;
+    }
+}
+
+.cart-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.quantity-input {
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .cart-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .quantity-input {
+        width: 100% !important;
+    }
+}
+
+.left-column {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.description-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+
+.btn-add-to-cart {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    transition: all 0.3s ease;
+}
+
+.btn-add-to-cart:hover {
+    background: var(--primary-color-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.price-card {
+    transition: all 0.3s ease;
+}
+
+.price-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.quantity-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb), 0.25);
+}
+
+@media (max-width: 768px) {
+    .left-column {
+        margin-bottom: 2rem;
     }
 }
 </style>
@@ -259,80 +461,111 @@ gtag('event', 'view_item', {
 {% block content %}
 <div class="product-container" itemscope itemtype="https://schema.org/Product">
     <div class="row">
+        <!-- Ліва колонка: фото + опис -->
         <div class="col-md-6">
-            <div class="image-section">
-                <div class="image-container">
-                    <img id="productImage" 
-                         src="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}" 
-                         alt="{{ product_data.name }}"
-                         itemprop="image">
+            <div class="left-column">
+                <div class="image-section">
+                    <div class="image-container">
+                        <img id="productImage" 
+                             src="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}" 
+                             alt="{{ product_data.name }}"
+                             itemprop="image">
+                    </div>
+                    {% if product_data.photo_urls|length > 1 %}
+                    <button class="image-nav prev" onclick="prevImage()">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="image-nav next" onclick="nextImage()">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                    <div class="image-dots">
+                        {% for index in range(product_data.photo_urls|length) %}
+                        <div class="image-dot {% if loop.first %}active{% endif %}" 
+                             onclick="changeImage('{{ product_data.photo_urls[index] }}', {{ index }})"></div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
-                {% if product_data.photo_urls|length > 1 %}
-                <button class="image-nav prev" onclick="prevImage()">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                <button class="image-nav next" onclick="nextImage()">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
-                <div class="image-dots">
-                    {% for index in range(product_data.photo_urls|length) %}
-                    <div class="image-dot {% if loop.first %}active{% endif %}" 
-                         onclick="changeImage('{{ product_data.photo_urls[index] }}', {{ index }})"></div>
-                    {% endfor %}
+                
+                <!-- Опис одразу після фото -->
+                <div class="description-section mt-3">
+                    <h2>{{ _('Description') }}</h2>
+                    <p itemprop="description">{{ product_data.description }}</p>
                 </div>
-                {% endif %}
             </div>
         </div>
+
+        <!-- Права колонка: ціни -->
         <div class="col-md-6">
             <div class="product-info">
-                <h1 class="mb-3" itemprop="name">{{ product_data.name }}</h1>
+                <h1 class="mb-3">{{ product_data.name }}</h1>
+                <div class="mb-4">
+                    <span class="text-muted">{{ _('Brand') }}:</span>
+                    <strong>{{ product_data.brand_name }}</strong>
+                </div>
                 <div class="mb-4">
                     <span class="text-muted">{{ _('Article') }}:</span>
-                    <strong itemprop="sku">{{ article }}</strong>
+                    <strong>{{ article }}</strong>
                 </div>
-                <form method="POST" action="{{ url_for('public_add_to_cart') }}" 
-                      onsubmit="return trackAddToCart(this)">
-                    <input type="hidden" name="article" value="{{ article }}">
-                    {% for price in prices %}
-                    <div class="price-card" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-                        <div class="price-value">
-                            <span itemprop="price">{{ price.price }}</span>
-                            <span itemprop="priceCurrency">EUR</span>
-                        </div>
-                        <div class="delivery-info">
-                            {% if price.in_stock %}
-                            <link itemprop="availability" href="https://schema.org/InStock">
-                            <i class="bi bi-check-circle-fill text-success"></i>
-                            <span class="ms-1">{{ _('In Stock') }}</span>
-                            {% else %}
-                            <link itemprop="availability" href="https://schema.org/PreOrder">
-                            <i class="bi bi-clock"></i>
-                            <span class="ms-1">{{ price.delivery_time }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="cart-controls">
-                            <input type="number" 
-                                   name="quantity_{{ price.table_name }}" 
-                                   value="1" 
-                                   min="1" 
-                                   class="form-control quantity-input">
-                            <button type="submit" 
-                                    name="selected_price" 
-                                    value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}" 
-                                    class="btn btn-add-cart">
-                                <i class="bi bi-cart-plus"></i>
-                                {{ _('Add to Cart') }}
-                            </button>
+
+                {% set grouped_prices = {} %}
+                {% for price in prices %}
+                    {% if price.brand_name not in grouped_prices %}
+                        {% set _ = grouped_prices.update({price.brand_name: []}) %}
+                    {% endif %}
+                    {% set _ = grouped_prices[price.brand_name].append(price) %}
+                {% endfor %}
+
+                {% for brand, brand_prices in grouped_prices.items() %}
+                    <div class="brand-section mb-4">
+                        <h3 class="brand-title">
+                            <i class="bi bi-tag-fill"></i> {{ brand }}
+                        </h3>
+                        
+                        <div class="brand-prices">
+                            {% for price in brand_prices %}
+                            <div class="price-card" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                                <div class="price-info">
+                                    <div class="price-value">
+                                        <span>{{ "%.2f"|format(price.price|float) }}</span>
+                                        <span>EUR</span>
+                                    </div>
+                                    <div class="delivery-info">
+                                        {% if price.in_stock %}
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        <span>{{ _('In Stock') }}</span>
+                                        {% else %}
+                                        <i class="bi bi-clock"></i>
+                                        <span>{{ price.delivery_time }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-controls">
+                                    <input type="hidden" name="article" value="{{ article }}">  <!-- Змінено з item.article на article -->
+                                    <input type="hidden" name="selected_price" value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}">
+                                    
+                                    <div class="input-group me-2" style="width: auto;">
+                                        <input type="number" 
+                                               name="quantity_{{ price.table_name }}" 
+                                               value="1" 
+                                               min="1" 
+                                               class="form-control quantity-input"
+                                               style="width: 70px;">
+                                    </div>
+                                
+                                    <button type="submit" class="btn btn-add-to-cart">
+                                        <i class="bi bi-cart-plus"></i>
+                                        {{ _('Add to Cart') }}
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
-                    {% endfor %}
-                </form>
+                {% endfor %}
             </div>
         </div>
-    </div>
-    <div class="mt-4">
-        <h2>{{ _('Description') }}</h2>
-        <p itemprop="description">{{ product_data.description }}</p>
     </div>
 </div>
 

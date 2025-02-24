@@ -60,34 +60,52 @@ def register():
         email = request.form['email']
         password = request.form['password']
 
-        # Перевірка наявності користувача з таким ім'ям або email
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id FROM users WHERE username = %s OR email = %s", (username, email))
-            if cursor.fetchone():
-                flash(_("Username or email already registered."), "error")
-                return render_template('auth/register.html')
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                # Перевірка наявності користувача
+                cursor.execute("SELECT id FROM users WHERE username = %s OR email = %s", 
+                            (username, email))
+                if cursor.fetchone():
+                    flash(_("Username or email already registered."), "error")
+                    return render_template('auth/register.html')
 
-            # Хешування пароля
-            hashed_password = hash_password(password)
+                # Хешування пароля
+                hashed_password = hash_password(password)
 
-            # Додавання нового користувача в базу даних
-            cursor.execute("""
-                INSERT INTO users (username, email, password_hash)
-                VALUES (%s, %s, %s)
-                RETURNING id
-            """, (username, email, hashed_password))
-            user_id = cursor.fetchone()[0]
+                # Додавання нового користувача
+                cursor.execute("""
+                    INSERT INTO users (username, email, password_hash)
+                    VALUES (%s, %s, %s)
+                    RETURNING id
+                """, (username, email, hashed_password))
+                user_id = cursor.fetchone()[0]
 
-            # Автоматична авторизація після реєстрації
-            session['user_id'] = user_id
-            session['username'] = username
-            session['role'] = 'public'  # Встановлюємо роль за замовчуванням
-            logging.info(f"New user registered: user_id={user_id}, username={username}, role=public")
+                # Отримуємо ID ролі 'public'
+                cursor.execute("SELECT id FROM roles WHERE name = 'public'")
+                public_role = cursor.fetchone()
+                
+                # Призначаємо роль користувачу
+                cursor.execute("""
+                    INSERT INTO user_roles (user_id, role_id, assigned_at)
+                    VALUES (%s, %s, NOW())
+                """, (user_id, public_role[0]))
 
-            conn.commit()
-            flash(_("Registration successful! You are now logged in."), "success")
-            return redirect(url_for('index'))
+                # Автоматична авторизація
+                session['user_id'] = user_id
+                session['username'] = username
+                session['role'] = 'public'
+
+                conn.commit()
+                logging.info(f"New user registered: user_id={user_id}, username={username}, role=public")
+                flash(_("Registration successful! You are now logged in."), "success")
+                return redirect(url_for('index'))
+
+        except Exception as e:
+            logging.error(f"Error during registration: {e}", exc_info=True)
+            flash(_("Registration failed. Please try again."), "error")
+            return render_template('auth/register.html')
+
     return render_template('auth/register.html')
 
 # сторінка про нас public
@@ -101,43 +119,55 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        logging.debug("Verifying password")
 
         with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, username, password_hash FROM users WHERE username = %s", (username,))
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Спочатку перевіряємо користувача
+            cursor.execute("""
+                SELECT id, username, password_hash, email
+                FROM users 
+                WHERE username = %s
+            """, (username,))
+            
             user = cursor.fetchone()
-
+            
             if user and verify_password(password, user['password_hash']):
+                # Тепер перевіряємо роль
+                cursor.execute("""
+                    SELECT r.name as role
+                    FROM user_roles ur
+                    JOIN roles r ON ur.role_id = r.id
+                    WHERE ur.user_id = %s
+                """, (user['id'],))
+                
+                role_row = cursor.fetchone()
+                role = role_row['role'] if role_row else 'public'
+                
+                # Зберігаємо дані в сесії
                 session['user_id'] = user['id']
                 session['username'] = user['username']
-                session['role'] = 'public'  # Встановлюємо роль за замовчуванням
-                logging.info(f"User logged in: user_id={user['id']}, username={username}, role=public")
-                flash(_("Login successful!"), "success")
+                session['role'] = role
                 
-                # Перевіряємо, чи є збережений артикул
-                next_url = session.pop('next_url', None)
+                logging.info(f"User logged in: user_id={user['id']}, username={user['username']}, role={role}")
+                
+                # Перевіряємо, чи є URL для перенаправлення
+                next_url = session.get('next_url')
                 if next_url:
-                    # Додаємо товар в кошик
-                    article = next_url.split('/')[-1]
-                    cart = session.get('public_cart', {})
-                    cart[article] = cart.get(article, 0) + 1
-                    session['public_cart'] = cart
-                    flash(_("Product added to cart!"), "success")
-                    return redirect(url_for('product_details', article=article, next=url_for('cart')))
-                else:
-                    return redirect(url_for('index'))
-            else:
-                flash(_("Invalid username or password."), "error")
-                return render_template('auth/login.html')
+                    session.pop('next_url', None)
+                    return redirect(next_url)
+                
+                return redirect(url_for('index'))
+            
+            flash(_("Invalid username or password"), "error")
+            return redirect(url_for('login'))
 
     return render_template('auth/login.html')
 
-
 @app.route('/public_place_order', methods=['POST'])
 def public_place_order():
-    """
-    Створює замовлення для публічного користувача
-    """
+    """Створює замовлення для публічного користувача"""
     try:
         user_id = session.get('user_id')
         if not user_id:
@@ -201,7 +231,8 @@ def public_place_order():
             ))
 
         # Очищаємо кошик
-        session.pop('public_cart', None)
+        session['public_cart'] = {}
+        session.modified = True
         
         conn.commit()
         flash(_("Order placed successfully!"), "success")
@@ -340,11 +371,9 @@ def logout():
 # Перегляд кошика публічного користувача
 @app.route('/public_cart')
 def public_cart():
-    """
-    Перегляд кошика публічного користувача
-    """
+    """Перегляд кошика публічного користувача"""
     cart = session.get('public_cart', {})
-    total_price = Decimal('0')  # Змінюємо тип на Decimal
+    total_price = Decimal('0')
     cart_items = []
 
     try:
@@ -369,7 +398,7 @@ def public_cart():
                     result = cursor.fetchone()
 
                     if result:
-                        # Конвертуємо price та quantity в правильні типи
+                        # Використовуємо ціну, яка вже збережена в кошику (вже з націнкою)
                         price = Decimal(str(item_details['price']))
                         quantity = int(item_details['quantity'])
                         item_total = price * quantity
@@ -381,7 +410,7 @@ def public_cart():
                             'description': result['description'],
                             'brand_name': result['brand_name'],
                             'table_name': table_name,
-                            'price': price,
+                            'price': price,  # Використовуємо збережену ціну з націнкою
                             'quantity': quantity,
                             'total': item_total,
                             'delivery_time': result['delivery_time']
@@ -489,37 +518,48 @@ def utility_processor():
         return 0
     return dict(get_user_cart_count=get_user_cart_count)
 
-
 @app.route('/product/<article>')
 def product_details(article):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Отримуємо дані з таблиці products
+        logging.info(f"=== Starting product_details for article: {article} ===")
+
+        # Get stock info first
+        cursor.execute("""
+            SELECT s.article, s.price, s.brand_id, b.name as brand_name
+            FROM stock s
+            LEFT JOIN brands b ON s.brand_id = b.id
+            WHERE s.article = %s
+        """, (article,))
+        stock_data = cursor.fetchone()
+        logging.info(f"Stock data: {dict(stock_data) if stock_data else 'Not found'}")
+
+        # Initialize product_data with stock info
+        product_data = {
+            'name': article,
+            'description': '',
+            'photo_urls': [],
+            'brand_name': stock_data['brand_name'] if stock_data else None,
+            'brand_id': stock_data['brand_id'] if stock_data else None
+        }
+
+        # Get product info
         cursor.execute("""
             SELECT article, name, description
             FROM products
             WHERE article = %s
         """, (article,))
-        result = cursor.fetchone()
         
-        # Ініціалізуємо product_data зі значеннями за замовчуванням
-        product_data = {
-            'article': article,
-            'name': article,  # За замовчуванням використовуємо артикул як назву
-            'description': '',  # Порожній опис за замовчуванням
-            'photo_urls': []
-        }
-
-        # Оновлюємо дані, якщо знайдено в БД
-        if result:
+        db_product = cursor.fetchone()
+        if db_product:
             product_data.update({
-                'name': result['name'] or article,
-                'description': result['description'] or ''
+                'name': db_product['name'] or article,
+                'description': db_product['description'] or ''
             })
 
-        # Отримуємо зображення
+        # Get photos
         cursor.execute("""
             SELECT image_url
             FROM product_images
@@ -527,67 +567,79 @@ def product_details(article):
         """, (article,))
         product_data['photo_urls'] = [row['image_url'] for row in cursor.fetchall()]
 
-        # Далі ваш існуючий код для отримання цін...
+        # Get all prices
         prices = []
-        cursor.execute("SELECT table_name, brand_id, delivery_time FROM price_lists")
+
+        # Add stock price if exists
+        if stock_data:
+            price_data = {
+                'table_name': 'stock',
+                'brand_name': stock_data['brand_name'],
+                'brand_id': stock_data['brand_id'],
+                'price': stock_data['price'],
+                'base_price': stock_data['price'],
+                'in_stock': True,
+                'delivery_time': _("In Stock")
+            }
+            prices.append(price_data)
+            logging.info(f"Added stock price: {price_data}")
+
+        # Get prices from price_lists
+        cursor.execute("""
+            SELECT pl.table_name, pl.brand_id, pl.delivery_time, b.name as brand_name 
+            FROM price_lists pl
+            LEFT JOIN brands b ON pl.brand_id = b.id
+            WHERE pl.table_name != 'stock'
+        """)
         tables = cursor.fetchall()
 
         for table in tables:
-            table_name = table['table_name']
-            brand_id = table['brand_id'] if table['brand_id'] else 'NULL'
-            
-            cursor.execute(f"""
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_name = %s
-                )
-            """, (table_name,))
-            
-            if cursor.fetchone()[0]:
-                query = f"""
-                    SELECT 
-                        article, 
-                        price, 
-                        '{table_name}' AS table_name,
-                        {brand_id} AS brand_id,
-                        '{table['delivery_time']}' AS delivery_time
-                    FROM {table_name}
-                    WHERE article = %s
-                """
-                cursor.execute(query, (article,))
-                result = cursor.fetchone()
+            if table['table_name'] != 'stock':  # Extra check to exclude stock
+                table_name = table['table_name']
+                brand_id = table['brand_id']
+                brand_name = table['brand_name']
                 
-                if result:
-                    price_data = dict(result)
-                    price_data['in_stock'] = price_data['delivery_time'] == '0'
-                    price_data['delivery_time'] = (_("In Stock") if price_data['in_stock'] 
-                                                 else f"{price_data['delivery_time']} {_('days')}")
-                    prices.append(price_data)
+                cursor.execute(f"""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = %s
+                    )
+                """, (table_name,))
+                
+                if cursor.fetchone()[0]:
+                    query = f"""
+                        SELECT 
+                            article, 
+                            price
+                        FROM {table_name}
+                        WHERE article = %s
+                    """
+                    cursor.execute(query, (article,))
+                    result = cursor.fetchone()
+                    
+                    if result:
+                        price_data = {
+                            'table_name': table_name,
+                            'brand_name': brand_name,
+                            'brand_id': brand_id,
+                            'price': result['price'],
+                            'base_price': result['price'],
+                            'in_stock': table['delivery_time'] == '0',
+                            'delivery_time': (_("In Stock") if table['delivery_time'] == '0' 
+                                            else f"{table['delivery_time']} {_('days')}")
+                        }
+                        prices.append(price_data)
+                        logging.info(f"Added price from {table_name}: {price_data}")
 
-        # Отримуємо назву бренду
-        brand_name = None
-        if prices and prices[0]['brand_id']:
-            cursor.execute("""
-                SELECT name 
-                FROM brands 
-                WHERE id = %s
-            """, (prices[0]['brand_id'],))
-            brand_result = cursor.fetchone()
-            brand_name = brand_result['name'] if brand_result else None
-
-        if not prices:
-            flash(_("Product not found."), "error")
-            return redirect(url_for('index'))
-
-        # Сортуємо ціни за зростанням
+        # Sort prices
         prices.sort(key=lambda x: float(x['price']))
+        logging.info(f"Final prices count: {len(prices)}")
 
         return render_template(
             'public/product_details.html',
             product_data=product_data,
             prices=prices,
-            article=article,
-            brand_name=brand_name
+            article=article
         )
 
     except Exception as e:
@@ -598,6 +650,71 @@ def product_details(article):
     finally:
         if 'conn' in locals() and conn:
             conn.close()
+
+@app.route('/update_public_cart', methods=['POST'])
+def update_public_cart():
+    """Оновлює кількість товару в публічному кошику"""
+    try:
+        article = request.form.get('article')
+        table_name = request.form.get('table_name')
+        new_quantity = int(request.form.get('quantity', 1))
+        
+        logging.info(f"Updating cart for user: {session.get('username')}")
+        logging.info(f"Article: {article}, Table: {table_name}, New quantity: {new_quantity}")
+
+        # Validate input
+        if not all([article, table_name]):
+            logging.error(f"Missing required data - Article: {article}, Table: {table_name}")
+            flash(_("Missing required information"), "error")
+            return redirect(url_for('public_cart'))
+
+        if new_quantity < 1:
+            logging.warning(f"Invalid quantity ({new_quantity}) for article {article}")
+            flash(_("Quantity must be at least 1"), "error")
+            return redirect(url_for('public_cart'))
+
+        cart = session.get('public_cart', {})
+        logging.debug(f"Current cart state: {cart}")
+
+        if article not in cart:
+            logging.warning(f"Article {article} not found in cart")
+            flash(_("Item not found in cart"), "error")
+            return redirect(url_for('public_cart'))
+
+        if table_name in cart[article]:
+            current_item = cart[article][table_name]
+            logging.debug(f"Current item state: {current_item}")
+
+            # Update quantity while preserving other item data
+            cart[article][table_name].update({
+                'quantity': new_quantity
+            })
+
+            # Important! Save updated cart to session
+            session['public_cart'] = cart
+            session.modified = True
+
+            logging.info(f"""
+                Cart updated successfully:
+                - Article: {article}
+                - Table: {table_name}
+                - Old quantity: {current_item['quantity']}
+                - New quantity: {new_quantity}
+            """)
+            flash(_("Cart updated successfully"), "success")
+        else:
+            logging.error(f"Table {table_name} not found for article {article}")
+            flash(_("Item not found in cart"), "error")
+
+    except ValueError as e:
+        logging.error(f"Invalid quantity value: {e}")
+        flash(_("Invalid quantity"), "error")
+    except Exception as e:
+        logging.error(f"Error updating cart: {e}", exc_info=True)
+        flash(_("Error updating cart"), "error")
+
+    return redirect(url_for('public_cart'))
+
 
 # Видалення товару з кошика публічного користувача
 @app.route('/public_remove_from_cart', methods=['POST'])
@@ -767,16 +884,23 @@ def calculate_price(base_price, markup_percentage):
 
 def get_markup_by_role(role_name):
     """
-    Отримання націнки за роллю.
+    Отримання націнки за роллю з бази даних.
     """
-    # Приклад: націнки для ролей
-    role_markup_mapping = {
-        "admin_user": 0,   # без націнки
-        "manager_user": 35,
-        "user_29": 29,
-        "user_25": 25,
-    }
-    return role_markup_mapping.get(role_name, 35)  # стандартна націнка 35%
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT markup_percentage 
+                FROM roles 
+                WHERE name = %s
+            """, (role_name,))
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            return 35.0  # Стандартна націнка, якщо роль не знайдена
+    except Exception as e:
+        logging.error(f"Error getting markup for role {role_name}: {e}")
+        return 35.0  # Стандартна націнка у випадку помилки
 
 
 # Функція для перевірки токена
@@ -969,76 +1093,136 @@ def token_index(token):
 # Головна сторінка
 @app.route('/')
 def index():
-    token = session.get('token')
-    if token:
-        # Користувач авторизований через токен
-        role = session.get('role')
-        if role == "admin":
-            logging.info(f"Redirecting to admin dashboard with token: {token}")
-            return redirect(url_for('admin_dashboard', token=token))
-        else:
-            logging.info(f"Rendering user index with token: {token}, role: {role}")
-            return render_template('user/index.html', role=role)
-    elif 'user_id' in session:
-        # Користувач авторизований через логін/пароль
-        role = session.get('role')
-        if not role:
-            # Якщо роль відсутня, можливо, сталася помилка при аутентифікації
-            logging.warning("Role is missing in session, redirecting to login")
-            return redirect(url_for('login'))
-        if role == 'public':
-            logging.info("Rendering public index for logged-in public user")
+    """Головна сторінка з розділенням на публічний та B2B доступ"""
+    user_id = session.get('user_id')
+    role = session.get('role')
+    
+    if user_id:
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT r.name as role_name
+                    FROM users u
+                    JOIN user_roles ur ON u.id = ur.user_id
+                    JOIN roles r ON ur.role_id = r.id
+                    WHERE u.id = %s
+                """, (user_id,))
+                result = cursor.fetchone()
+                role = result['role_name'] if result else 'public'
+                
+                # Update session with correct role
+                session['role'] = role
+                
+                # B2B користувачі (user, user_25, user_29)
+                if role in ['user', 'user_25', 'user_29']:
+                    logging.info(f"Rendering B2B index for user: {session.get('username')}, role: {role}")
+                    return render_template('user/index.html')
+                # Адміністратори системи
+                elif role in ['admin', 'manager']:
+                    logging.info(f"Rendering admin index for user: {session.get('username')}, role: {role}")
+                    return render_template('admin/index.html')
+                # Публічні користувачі (public)
+                else:
+                    logging.info(f"Rendering public index for user: {session.get('username')}, role: {role}")
+                    return render_template('public/index.html')
+                    
+        except Exception as e:
+            logging.error(f"Error getting user role: {e}")
             return render_template('public/index.html')
-        else:
-            logging.info(f"Rendering user index with username: {session['username']}, role: {session['role']}")
-            return render_template('user/index.html', 
-                                   username=session['username'],
-                                   role=role)
-    else:
-        # Користувач не авторизований
-        logging.info("Rendering public index")
-        return render_template('public/index.html')  # Відображаємо шаблон, а не перенаправляємо
-
-# Додавання товару в кошик публічного користувача
+    
+    # Для неавторизованих користувачів
+    logging.info("Rendering public index for anonymous user")
+    return render_template('public/index.html')
+    
 # Додавання товару в кошик публічного користувача
 @app.route('/public_add_to_cart', methods=['POST'])
 def public_add_to_cart():
-    article = request.form.get('article')
-    selected_price = request.form.get('selected_price')
-    if not selected_price:
-        flash(_("Please select a price option."), "error")
-        return redirect(request.referrer or url_for('index'))
-
-    table_name, price_brand = selected_price.split(':')
-    price, brand_id = price_brand.split('|')
-    price = Decimal(price)
-    quantity = int(request.form.get(f'quantity_{table_name}', 1))
-    comment = request.form.get(f'comment_{table_name}', '').strip() or None
-
-    if not article or not table_name or not price or not brand_id:
-        flash(_("Invalid article, table name, price, or brand ID."), "error")
-        return redirect(request.referrer or url_for('index'))
-
-    if 'user_id' not in session:
-        # Зберігаємо артикул в сесії
-        session['next_url'] = url_for('product_details', article=article)
-        flash(_("Please log in or register to add this item to your cart."), "info")
-        return redirect(url_for('login'))
-
     try:
-        cart = session.get('public_cart', {})
-        cart_item = cart.get(article, {})
-        cart_item[table_name] = cart_item.get(table_name, {'quantity': 0, 'price': price, 'brand_id': brand_id, 'comment': comment})
-        cart_item[table_name]['quantity'] += quantity
-        cart[article] = cart_item
-        session['public_cart'] = cart
-        logging.debug(f"Cart after adding: {session['public_cart']}")
-        flash(_("Product added to cart!"), "success")
-    except Exception as e:
-        logging.error(f"Error adding to cart: {e}", exc_info=True)
-        flash(_("Error adding product to cart."), "error")
+        article = request.form.get('article')
+        selected_price = request.form.get('selected_price')
+        
+        logging.debug(f"Adding to cart - Article: {article}, Selected price: {selected_price}")
 
-    return redirect(request.referrer or url_for('index'))
+        if not selected_price:
+            logging.warning(f"No price selected for article {article}")
+            flash(_("Please select a price option."), "error")
+            return redirect(request.referrer or url_for('index'))
+
+        table_name, price_brand = selected_price.split(':')
+        base_price = Decimal(price_brand.split('|')[0])  # Extract base price directly
+        brand_id = price_brand.split('|')[1]
+        
+        # Get markup for public user
+        user_id = session.get('user_id')
+        markup = get_markup_percentage(user_id)
+        
+        logging.info(f"""
+            Cart addition details:
+            - Article: {article}
+            - Table: {table_name}
+            - Base price: {base_price}
+            - Brand ID: {brand_id}
+            - User ID: {user_id}
+            - Markup: {markup}%
+        """)
+
+        # Calculate final price with markup
+        final_price = base_price #* (1 + Decimal(markup) / 100)
+        logging.debug(f"Calculated final price: {final_price}")
+
+        quantity = int(request.form.get(f'quantity_{table_name}', 1))
+
+        if 'user_id' not in session:
+            session['next_url'] = url_for('product_details', article=article)
+            flash(_("Please log in or register to add this item to your cart."), "info")
+            return redirect(url_for('login'))
+
+        # Initialize cart if not exists
+        if 'public_cart' not in session:
+            session['public_cart'] = {}
+            
+        cart = session['public_cart']
+        
+        # Initialize article dict if not exists
+        if article not in cart:
+            cart[article] = {}
+
+        # Add or update item in cart
+        if table_name in cart[article]:
+            cart[article][table_name]['quantity'] += quantity
+        else:
+            cart[article][table_name] = {
+                'quantity': quantity,
+                'base_price': str(base_price),
+                'price': str(final_price),
+                'brand_id': brand_id
+            }
+
+        # Save cart back to session
+        session['public_cart'] = cart
+        session.modified = True
+        
+        logging.info(f"""
+            Cart updated successfully:
+            - Article: {article}
+            - New quantity: {cart[article][table_name]['quantity']}
+            - Base price: {base_price}
+            - Final price: {final_price}
+        """)
+        
+        flash(_("Product added to cart!"), "success")
+        return redirect(request.referrer or url_for('index'))
+        
+    except Exception as e:
+        logging.error(f"Critical error in public_add_to_cart: {e}", exc_info=True)
+        flash(_("An error occurred while adding to cart."), "error")
+        return redirect(url_for('index'))
+    
+
+
+
+
 
 
 def get_public_cart_count():
@@ -1062,15 +1246,22 @@ def inject_public_cart_count():
 # Пошук для публічних користувачів
 @app.route('/public_search', methods=['GET', 'POST'])
 def public_search():
+    """Простий пошук товару за артикулом з перенаправленням на сторінку товару"""
     if request.method == 'POST':
-        article = request.form.get('article', '').strip()
+        article = request.form.get('article', '').strip()  # Змінено з search_query на article
+        logging.info(f"Search query received: {article}")
+        
         if not article:
-            flash(_("Please enter an article for search."), "error")
-            return redirect(url_for('public_search'))
+            logging.warning("Empty search query")
+            flash(_("Please enter an article for search."), "warning")
+            return redirect(url_for('index'))
 
+        # Пряме перенаправлення на сторінку товару
+        logging.info(f"Redirecting to product details for article: {article}")
         return redirect(url_for('product_details', article=article))
 
-    return render_template('public/search.html')
+    # GET запити перенаправляємо на головну
+    return redirect(url_for('index'))
 
 # Пошук для користувачів без токену
 @app.route('/simple_search', methods=['GET', 'POST'])
@@ -4718,23 +4909,34 @@ def accept_matches(token, invoice_id):
 
 
 def get_markup_percentage(user_id):
-    """
-    Отримує відсоток націнки для користувача за його роллю.
-    """
+    """Отримує відсоток націнки для користувача"""
     try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT r.markup_percentage
-                FROM user_roles ur
-                JOIN roles r ON ur.role_id = r.id
-                WHERE ur.user_id = %s
-            """, (user_id,))
-            result = cursor.fetchone()
-            return result[0] if result else 35  # За замовчуванням 35%
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Отримуємо націнку з ролі користувача
+        cursor.execute("""
+            SELECT r.markup_percentage
+            FROM users u
+            JOIN user_roles ur ON u.id = ur.user_id
+            JOIN roles r ON ur.role_id = r.id
+            WHERE u.id = %s
+        """, (user_id,))
+        
+        result = cursor.fetchone()
+        markup = result[0] if result else 50.0  # За замовчуванням 50%
+        
+        return markup
+        
     except Exception as e:
-        logging.error(f"Error fetching markup percentage for user_id={user_id}: {e}", exc_info=True)
-        return 35  # Повертає стандартну націнку у разі помилки
+        logging.error(f"Error getting markup percentage: {e}", exc_info=True)
+        return 50.0  # Повертаємо стандартну націнку у випадку помилки
+        
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
 
 
 @app.route('/<token>/admin/utilities')

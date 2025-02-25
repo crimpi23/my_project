@@ -35,7 +35,6 @@ msgid ""
 msgstr "Дякуємо за ваше замовлення!\n\nДеталі вашого замовлення:\n"
 
 #: app.py:301
-#, fuzzy
 msgid "Ordered items:\n"
 msgstr "Замовлені товари:\n"
 
@@ -47,12 +46,10 @@ msgstr "- Артикул: {article}, Ціна: {price:.2f}, Кількість: 
 
 #: app.py:312 templates/user/cart/cart.html:42
 #: templates/user/orders/order_details.html:63
-#, fuzzy
 msgid "No comment"
 msgstr "Без коментаря"
 
 #: app.py:316
-#, fuzzy
 msgid ""
 "\n"
 "Missing articles:\n"
@@ -71,12 +68,10 @@ msgid "Please enter at least one article."
 msgstr "Будь ласка, введіть хоча б один артикул."
 
 #: app.py:801
-#, fuzzy
 msgid "Articles not found: {articles}"
 msgstr "Артикули не знайдено: {articles}"
 
 #: app.py:830
-#, fuzzy
 msgid "Added to cart: {articles}"
 msgstr "Додано до кошика: {articles}"
 
@@ -113,12 +108,10 @@ msgid "Could not load your cart. Please try again."
 msgstr "Не вдалося завантажити ваш кошик. Будь ласка, спробуйте ще раз."
 
 #: app.py:1128 app.py:3916
-#, fuzzy
 msgid "User not authenticated"
-msgstr "Користувач не автентифікований."
+msgstr "Користувач не автентифікований"
 
 #: app.py:1173
-#, fuzzy
 msgid "No articles selected"
 msgstr "Не вибрано жодного артикула"
 
@@ -131,29 +124,24 @@ msgid "An error occurred during submission"
 msgstr "Під час надсилання сталася помилка"
 
 #: app.py:1222
-#, fuzzy
 msgid "Search results cleared successfully"
 msgstr "Результати пошуку успішно очищено"
 
 #: app.py:1228
-#, fuzzy
 msgid "Error clearing search results"
-msgstr "Результати пошуку"
+msgstr "Помилка очищення результатів пошуку"
 
 #: app.py:1256 app.py:1446
-#, fuzzy
 msgid "User is not authenticated. Please log in."
-msgstr "Користувач не автентифікований. Будь ласка, увійдіть."
+msgstr "Користувач не автентифікований. Будь ласка, увійдіть"
 
 #: app.py:1289
-#, fuzzy
 msgid "Product added to cart!"
 msgstr "Товар додано до кошика!"
 
 #: app.py:1292
-#, fuzzy
 msgid "Error adding product to cart."
-msgstr "Помилка додавання товару до кошика."
+msgstr "Помилка додавання товару до кошика"
 
 #: app.py:1321
 msgid "Missing required information for removal"
@@ -228,12 +216,10 @@ msgid "An error occurred while processing your selection. Please try again."
 msgstr "Під час обробки вашого вибору сталася помилка. Будь ласка, спробуйте ще раз."
 
 #: app.py:4214
-#, fuzzy
 msgid "News created successfully!"
 msgstr "Новину створено успішно!"
 
 #: app.py:4219
-#, fuzzy
 msgid "Error creating news"
 msgstr "Помилка створення новини"
 
@@ -377,7 +363,6 @@ msgid "Place Order"
 msgstr "Оформити замовлення"
 
 #: templates/user/cart/cart.html:74
-#, fuzzy
 msgid "Clear Cart"
 msgstr "Очистити кошик"
 
@@ -471,12 +456,10 @@ msgid "Back to Orders"
 msgstr "Назад до замовлень"
 
 #: templates/user/orders/order_details.html:21
-#, fuzzy
 msgid "Original Article"
 msgstr "Оригінальний артикул"
 
 #: templates/user/orders/order_details.html:23
-#, fuzzy
 msgid "Brand ID"
 msgstr "ID бренду"
 
@@ -558,23 +541,95 @@ msgid "Start Shopping"
 msgstr "Почати покупки"
 
 #: templates/user/search/intermediate.html:3
-#, fuzzy
 msgid "Select Price Lists"
 msgstr "Виберіть прайс-листи"
 
 #: templates/user/search/intermediate.html:7
-#, fuzzy
 msgid "Intermediate Results"
 msgstr "Проміжні результати"
+
+msgid "%(num_articles)s articles still need table selection."
+msgstr "Ще %(num_articles)s артикулам потрібно вибрати таблицю."
 
 #: templates/user/search/intermediate.html:8
 msgid "Please select a price list for each article."
 msgstr "Будь ласка, виберіть прайс-лист для кожного артикула."
 
 #: templates/user/search/intermediate.html:17
-#, fuzzy
 msgid "Available Price Lists"
 msgstr "Доступні прайс-листи"
+
+msgid "Welcome to AutogroupEU"
+msgstr "Вітаємо в AutogroupEU"
+
+msgid "Your reliable partner in auto parts supply across Europe. Enter the article number to check prices and availability."
+msgstr "Ваш надійний партнер з постачання автозапчастин у Європі. Введіть номер артикула для перевірки цін та наявності."
+
+msgid "Need Help?"
+msgstr "Потрібна допомога?"
+
+msgid "If you have any questions, don't hesitate to contact us:"
+msgstr "Якщо у вас виникли питання, не соромтеся звертатися до нас:"
+
+msgid "About Us"
+msgstr "Про нас"
+
+msgid "About AutogroupEU"
+msgstr "Про AutogroupEU"
+
+msgid "Auto Parts Store"
+msgstr "Магазин автозапчастин"
+
+msgid "Our Main Brands"
+msgstr "Наші основні бренди"
+
+msgid "My Orders"
+msgstr "Мої замовлення"
+
+msgid "Order #"
+msgstr "Замовлення №"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Items"
+msgstr "Товари"
+
+msgid "Total"
+msgstr "Сума"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Actions"
+msgstr "Дії"
+
+msgid "View"
+msgstr "Переглянути"
+
+msgid "You have no orders yet."
+msgstr "У вас ще немає замовлень."
+
+msgid "Back to Orders"
+msgstr "Назад до замовлень"
+
+msgid "Order Date"
+msgstr "Дата замовлення"
+
+msgid "Total Items"
+msgstr "Всього товарів"
+
+msgid "Total Amount"
+msgstr "Загальна сума"
+
+msgid "B2B Services"
+msgstr "B2B сервіси"
+
+msgid "For business clients interested in B2B access, please contact:"
+msgstr "Для бізнес-клієнтів, зацікавлених у доступі B2B, будь ласка, зв'яжіться:"
+
+msgid "Find Us"
+msgstr "Як нас знайти"
 
 #: templates/user/search/intermediate.html:61
 #: templates/user/search/search_results.html:82
@@ -582,12 +637,10 @@ msgid "Add to Cart"
 msgstr "Додати в кошик"
 
 #: templates/user/search/intermediate.html:64
-#, fuzzy
 msgid "Cancel"
 msgstr "Скасувати"
 
 #: templates/user/search/intermediate.html:71
-#, fuzzy
 msgid "Missing Articles"
 msgstr "Відсутні артикули"
 
@@ -712,7 +765,6 @@ msgid "(Deprecated) {text}"
 msgstr "(Застаріле) {text}"
 
 #: venv/Lib/site-packages/click/core.py:1396
-#, fuzzy
 msgid "Options"
 msgstr "Параметри"
 
@@ -841,11 +893,11 @@ msgstr "Використання:"
 
 #: venv/Lib/site-packages/click/parser.py:233
 msgid "Argument {name!r} takes {nargs} values."
-msgstr ""
+msgstr "Аргумент {name!r} приймає {nargs} значень."
 
 #: venv/Lib/site-packages/click/parser.py:415
 msgid "Option {name!r} does not take a value."
-msgstr ""
+msgstr "Опція {name!r} не приймає значення."
 
 #: venv/Lib/site-packages/click/parser.py:475
 msgid "Option {name!r} requires an argument."
@@ -856,19 +908,19 @@ msgstr[2] "Опція {name!r} вимагає {nargs} аргументів."
 
 #: venv/Lib/site-packages/click/shell_completion.py:325
 msgid "Shell completion is not supported for Bash versions older than 4.4."
-msgstr ""
+msgstr "Автодоповнення оболонки не підтримується для версій Bash старших за 4.4."
 
 #: venv/Lib/site-packages/click/shell_completion.py:333
 msgid "Couldn't detect Bash version, shell completion is not supported."
-msgstr ""
+msgstr "Не вдалося визначити версію Bash, автодоповнення оболонки не підтримується."
 
 #: venv/Lib/site-packages/click/termui.py:158
 msgid "Repeat for confirmation"
-msgstr ""
+msgstr "Повторіть для підтвердження"
 
 #: venv/Lib/site-packages/click/termui.py:174
 msgid "Error: The value you entered was invalid."
-msgstr ""
+msgstr "Помилка: Введене значення недійсне."
 
 #: venv/Lib/site-packages/click/termui.py:176
 msgid "Error: {e.message}"
@@ -876,51 +928,51 @@ msgstr "Помилка: {e.message}"
 
 #: venv/Lib/site-packages/click/termui.py:187
 msgid "Error: The two entered values do not match."
-msgstr ""
+msgstr "Помилка: Введені значення не співпадають."
 
 #: venv/Lib/site-packages/click/termui.py:243
 msgid "Error: invalid input"
-msgstr ""
+msgstr "Помилка: некоректне введення"
 
 #: venv/Lib/site-packages/click/termui.py:773
 msgid "Press any key to continue..."
-msgstr ""
+msgstr "Натисніть будь-яку клавішу для продовження..."
 
 #: venv/Lib/site-packages/click/types.py:267
 msgid ""
 "Choose from:\n"
 "\t{choices}"
-msgstr ""
+msgstr "Виберіть з:\n\t{choices}"
 
 #: venv/Lib/site-packages/click/types.py:301
 msgid "{value!r} is not {choice}."
 msgid_plural "{value!r} is not one of {choices}."
-msgstr[0] "Користувач не автентифікований."
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Значення {value!r} не є {choice}."
+msgstr[1] "Значення {value!r} не є одним із {choices}."
+msgstr[2] "Значення {value!r} не є одним із {choices}."
 
 #: venv/Lib/site-packages/click/types.py:395
 msgid "{value!r} does not match the format {format}."
 msgid_plural "{value!r} does not match the formats {formats}."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Значення {value!r} не відповідає формату {format}."
+msgstr[1] "Значення {value!r} не відповідає форматам {formats}."
+msgstr[2] "Значення {value!r} не відповідає форматам {formats}."
 
 #: venv/Lib/site-packages/click/types.py:415
 msgid "{value!r} is not a valid {number_type}."
-msgstr ""
+msgstr "Значення {value!r} не є допустимим {number_type}."
 
 #: venv/Lib/site-packages/click/types.py:471
 msgid "{value} is not in the range {range}."
-msgstr ""
+msgstr "Значення {value} не входить в діапазон {range}."
 
 #: venv/Lib/site-packages/click/types.py:612
 msgid "{value!r} is not a valid boolean."
-msgstr ""
+msgstr "Значення {value!r} не є допустимим логічним значенням."
 
 #: venv/Lib/site-packages/click/types.py:636
 msgid "{value!r} is not a valid UUID."
-msgstr ""
+msgstr "Значення {value!r} не є допустимим UUID."
 
 #: venv/Lib/site-packages/click/types.py:826
 msgid "file"
@@ -928,49 +980,76 @@ msgstr "Фільтрувати"
 
 #: venv/Lib/site-packages/click/types.py:828
 msgid "directory"
-msgstr ""
+msgstr "директорія"
 
 #: venv/Lib/site-packages/click/types.py:830
 msgid "path"
-msgstr ""
+msgstr "шлях"
 
 #: venv/Lib/site-packages/click/types.py:881
 msgid "{name} {filename!r} does not exist."
-msgstr ""
+msgstr "{name} {filename!r} не існує."
 
 #: venv/Lib/site-packages/click/types.py:890
 msgid "{name} {filename!r} is a file."
-msgstr ""
+msgstr "{name} {filename!r} є файлом."
 
 #: venv/Lib/site-packages/click/types.py:898
 msgid "{name} {filename!r} is a directory."
-msgstr ""
+msgstr "{name} {filename!r} є директорією."
 
 #: venv/Lib/site-packages/click/types.py:907
 msgid "{name} {filename!r} is not readable."
-msgstr ""
+msgstr "{name} {filename!r} не читається."
 
 #: venv/Lib/site-packages/click/types.py:916
 msgid "{name} {filename!r} is not writable."
-msgstr ""
+msgstr "{name} {filename!r} не записується."
 
 #: venv/Lib/site-packages/click/types.py:925
 msgid "{name} {filename!r} is not executable."
-msgstr ""
+msgstr "{name} {filename!r} не виконується."
 
 #: venv/Lib/site-packages/click/types.py:991
 msgid "{len_type} values are required, but {len_value} was given."
 msgid_plural "{len_type} values are required, but {len_value} were given."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Потрібно {len_type} значення, але надано {len_value}."
+msgstr[1] "Потрібно {len_type} значення, але надано {len_value}."
+msgstr[2] "Потрібно {len_type} значень, але надано {len_value}."
+
+msgid "View and manage your shopping cart at AutogroupEU. Check prices, quantities, and proceed to checkout."
+msgstr "Перегляньте та керуйте своїм кошиком в AutogroupEU. Перевірте ціни, кількості та перейдіть до оформлення замовлення."
+
+msgid "Choose from:\n\t{choices}"
+msgstr "Виберіть з:\n\t{choices}"
+
+msgid "Usage:"
+msgstr "Використання:"
+
+msgid "Commands"
+msgstr "Команди"
+
+msgid "In Stock"
+msgstr "В наявності"
+
+msgid "days"
+msgstr "днів"
+
+msgid "Continue Shopping"
+msgstr "Продовжити покупки"
+
+msgid "Product"
+msgstr "Товар"
+
+msgid "Delivery"
+msgstr "Доставка"
 
 #~ msgid "or"
-#~ msgstr ""
+#~ msgstr "або"
 
 #~ msgid "Error loading order changes."
 #~ msgstr "Помилка завантаження змін замовлення"
 
 #~ msgid "An error occurred during submission. Please try again."
-#~ msgstr ""
+#~ msgstr "Під час надсилання сталася помилка. Будь ласка, спробуйте ще раз."
 

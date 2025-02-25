@@ -1,0 +1,64 @@
+<!-- templates/admin/orders/process_orders.html -->
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Process Public Orders</h2>
+    </div>
+    <div class="card-body">
+        {% for order in orders %}
+        <div class="card mb-3">
+            <div class="card-header" data-bs-toggle="collapse" data-bs-target="#order{{ order.order_id }}">
+                Order ID: {{ order.order_id }} - Username: {{ order.username }} - Date: {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}
+                <span class="badge bg-info">Stock Items: {{ order.stock_items_count }}</span>
+                <span class="badge bg-warning">Pricelist Items: {{ order.pricelist_items_count }}</span>
+            </div>
+            <div id="order{{ order.order_id }}" class="collapse">
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Article</th>
+                                <th>Quantity</th>
+                                <th>Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order['items'] %}
+                            <tr>
+                                <td>{{ item.article }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.item_type }}</td>
+                                <td>
+                                    <form method="POST" class="d-inline">
+                                        <input type="hidden" name="order_id" value="{{ order.order_id }}">
+                                        <input type="hidden" name="article" value="{{ item.article }}">
+                                        <input type="hidden" name="quantity" value="{{ item.quantity }}">
+                                        <input type="hidden" name="item_type" value="{{ item.item_type }}">
+                                        <input type="hidden" name="order_detail_id" value="{{ item.id }}">
+                                        {% if item.item_type == 'stock' %}
+                                        <button type="submit" name="action" value="accept_stock"
+                                            class="btn btn-success btn-sm">Accept</button>
+                                        <button type="submit" name="action" value="reject_stock"
+                                            class="btn btn-danger btn-sm">Reject</button>
+                                        {% elif item.item_type == 'pricelist' %}
+                                        <button type="submit" name="action" value="accept_pricelist"
+                                            class="btn btn-success btn-sm">Accept</button>
+                                        <button type="submit" name="action" value="reject_pricelist"
+                                            class="btn btn-danger btn-sm">Reject</button>
+                                        {% endif %}
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

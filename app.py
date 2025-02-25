@@ -24,6 +24,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from flask import make_response
+import json
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -41,13 +42,14 @@ babel = Babel(app)
 
 # Налаштування Babel
 app.config['BABEL_DEFAULT_LOCALE'] = 'uk'
-app.config['BABEL_SUPPORTED_LOCALES'] = ['uk', 'en', 'sk']
+app.config['BABEL_SUPPORTED_LOCALES'] = ['uk', 'en', 'sk', 'pl']
 
 # Конфігурація доступних мов
 LANGUAGES = {
     'uk': 'Українська',
     'en': 'English',
-    'sk': 'Slovak'
+    'sk': 'Slovenský',
+    'pl': 'Polski'
 }
 
 
@@ -553,11 +555,6 @@ def product_details(article):
         """, (article,))
         
         db_product = cursor.fetchone()
-        if db_product:
-            product_data.update({
-                'name': db_product['name'] or article,
-                'description': db_product['description'] or ''
-            })
 
         # Get photos
         cursor.execute("""
@@ -593,6 +590,8 @@ def product_details(article):
         """)
         tables = cursor.fetchall()
 
+        price_found = False  # Додаємо прапорець
+
         for table in tables:
             if table['table_name'] != 'stock':  # Extra check to exclude stock
                 table_name = table['table_name']
@@ -618,12 +617,17 @@ def product_details(article):
                     result = cursor.fetchone()
                     
                     if result:
+                        price_found = True  # Встановлюємо прапорець, якщо ціна знайдена
+                        markup_percentage = get_markup_by_role('public')
+                        base_price = result['price']
+                        final_price = calculate_price(base_price, markup_percentage)
+
                         price_data = {
                             'table_name': table_name,
                             'brand_name': brand_name,
                             'brand_id': brand_id,
-                            'price': result['price'],
-                            'base_price': result['price'],
+                            'price': final_price,
+                            'base_price': base_price,
                             'in_stock': table['delivery_time'] == '0',
                             'delivery_time': (_("In Stock") if table['delivery_time'] == '0' 
                                             else f"{table['delivery_time']} {_('days')}")
@@ -634,6 +638,14 @@ def product_details(article):
         # Sort prices
         prices.sort(key=lambda x: float(x['price']))
         logging.info(f"Final prices count: {len(prices)}")
+
+        if not db_product and not stock_data and not price_found:  # Перевіряємо прапорець
+            # flash(_("Article not found."), "error")
+            # return redirect(url_for('index'))
+            return render_template(
+                'public/article_not_found.html',
+                article=article
+            )
 
         return render_template(
             'public/product_details.html',
@@ -5898,6 +5910,141 @@ def sitemap():
     finally:
         if 'conn' in locals() and conn:
             conn.close()
+
+
+
+
+@app.route('/<token>/admin/process-orders', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def process_orders(token):
+    try:
+        logging.info("Starting process_orders function")
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # SQL query without comments
+        sql_query = """
+            SELECT 
+                o.id as order_id,
+                o.order_date as created_at,
+                o.total_price,
+                o.status,
+                u.username,
+                po.id as public_order_id,  
+                COUNT(CASE WHEN od.table_name = 'stock' THEN 1 END) as stock_items_count,
+                COUNT(CASE WHEN od.table_name != 'stock' THEN 1 END) as pricelist_items_count,
+                -- Manually aggregate items
+                string_agg(
+                    concat(
+                        '{"article":"', od.article,
+                        '","table_name":"', od.table_name,
+                        '","quantity":', od.quantity::text,
+                        ',"item_type":"', CASE
+                            WHEN od.table_name = 'stock' THEN 'stock'
+                            ELSE 'pricelist'
+                        END,
+                        '","id":', od.id::text, '}'
+                    ),
+                    ','
+                ) as items
+            FROM orders o
+            JOIN public_orders po ON o.id = po.id
+            JOIN users u ON o.user_id = u.id
+            JOIN public_order_details od ON o.id = od.order_id
+            WHERE o.status = 'new'
+            GROUP BY o.id, o.order_date, o.total_price, o.status, u.username, po.id
+            ORDER BY o.order_date DESC
+        """
+        logging.info(f"Executing SQL query: {sql_query}")
+        
+        cursor.execute(sql_query)
+        orders = cursor.fetchall()
+        
+        logging.info(f"Found {len(orders)} orders")
+        for order in orders:
+            # Розпарсюємо JSON-рядок у список Python
+            if order['items']:
+                try:
+                    order['items'] = json.loads(f"[{order['items']}]")
+                except json.JSONDecodeError as e:
+                    logging.error(f"JSONDecodeError: {e}, items: {order['items']}")
+                    order['items'] = []  # Обробка помилки розпарсювання JSON
+            else:
+                order['items'] = []
+            logging.info(f"Order details: {dict(order)}")
+
+        if request.method == 'POST':
+            order_id = request.form.get('order_id')
+            article = request.form.get('article')
+            quantity = request.form.get('quantity')
+            item_type = request.form.get('item_type')
+            action = request.form.get('action')
+            order_detail_id = request.form.get('order_detail_id')
+
+            logging.info(f"Processing POST request for order_id: {order_id}, article: {article}, quantity: {quantity}, item_type: {item_type}, action: {action}, order_detail_id: {order_detail_id}")
+
+            if item_type == 'stock':
+                if action == 'accept_stock':
+                    # Process stock item
+                    cursor.execute("""
+                        UPDATE public_order_details
+                        SET status = 'processing'
+                        WHERE id = %s AND order_id = %s AND article = %s
+                    """, (order_detail_id, order_id, article))
+
+                    # Reduce stock quantity (add logic to handle insufficient stock)
+                    cursor.execute("""
+                        UPDATE stock
+                        SET quantity = quantity - %s
+                        WHERE article = %s
+                    """, (quantity, article))
+                    logging.info(f"Accepted stock item: order_id={order_id}, article={article}, quantity={quantity}")
+                elif action == 'reject_stock':
+                    cursor.execute("""
+                        UPDATE public_order_details
+                        SET status = 'rejected'
+                        WHERE id = %s AND order_id = %s AND article = %s
+                    """, (order_detail_id, order_id, article))
+                    logging.info(f"Rejected stock item: order_id={order_id}, article={article}")
+
+            elif item_type == 'pricelist':
+                if action == 'accept_pricelist':
+                    # Process pricelist item (add logic to create supplier order)
+                    cursor.execute("""
+                        UPDATE public_order_details
+                        SET status = 'ordered_supplier'
+                        WHERE id = %s AND order_id = %s AND article = %s
+                    """, (order_detail_id, order_id, article))
+                    logging.info(f"Accepted pricelist item: order_id={order_id}, article={article}")
+                elif action == 'reject_pricelist':
+                    cursor.execute("""
+                        UPDATE public_order_details
+                        SET status = 'rejected'
+                        WHERE id = %s AND order_id = %s AND article = %s
+                    """, (order_detail_id, order_id, article))
+                    logging.info(f"Rejected pricelist item: order_id={order_id}, article={article}")
+
+            conn.commit()
+            flash("Item processed successfully", "success")
+            return redirect(url_for('process_orders', token=token))
+
+        return render_template(
+            'admin/orders/process_orders.html',
+            orders=orders,
+            token=token
+        )
+
+    except Exception as e:
+        logging.error(f"Error in process_orders: {e}", exc_info=True)
+        flash("Error processing orders", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+    finally:
+        cursor.close()
+        conn.close()
+        logging.info("Connection closed")
+
+
 
 @app.route('/ping', methods=['GET'])
 def ping():

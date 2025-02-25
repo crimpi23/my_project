@@ -1,0 +1,1288 @@
+# Polish translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-02-25 01:15+0200\n"
+"PO-Revision-Date: 2025-02-25 01:21+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pl\n"
+"Language-Team: pl <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && "
+"(n%100<10 || n%100>=20) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: app.py:71
+msgid "Username or email already registered."
+msgstr ""
+
+#: app.py:102
+msgid "Registration successful! You are now logged in."
+msgstr ""
+
+#: app.py:107
+msgid "Registration failed. Please try again."
+msgstr ""
+
+#: app.py:164
+msgid "Invalid username or password"
+msgstr ""
+
+#: app.py:175
+msgid "Please log in to place an order."
+msgstr ""
+
+#: app.py:184
+msgid "Your cart is empty."
+msgstr ""
+
+#: app.py:239 app.py:2357
+msgid "Order placed successfully!"
+msgstr ""
+
+#: app.py:244
+msgid "Error placing order."
+msgstr ""
+
+#: app.py:254
+msgid "Cart cleared successfully"
+msgstr ""
+
+#: app.py:265
+msgid "Please log in to view your orders."
+msgstr ""
+
+#: app.py:295
+msgid "Error loading orders."
+msgstr ""
+
+#: app.py:309
+msgid "Please log in to view order details."
+msgstr ""
+
+#: app.py:329
+msgid "Order not found."
+msgstr ""
+
+#: app.py:355 app.py:2506
+msgid "Error loading order details."
+msgstr ""
+
+#: app.py:368
+msgid "You have been logged out."
+msgstr ""
+
+#: app.py:422 app.py:658 app.py:1666
+msgid "An error occurred while processing your request."
+msgstr ""
+
+#: app.py:578 app.py:631 templates/public/cart/cart.html:79
+#: templates/public/product_details.html:543
+msgid "In Stock"
+msgstr "W magazynie"
+
+#: app.py:632 templates/public/cart/cart.html:82
+msgid "days"
+msgstr "dni"
+
+#: app.py:679
+msgid "Missing required information"
+msgstr ""
+
+#: app.py:684
+msgid "Quantity must be at least 1"
+msgstr ""
+
+#: app.py:692 app.py:718 app.py:749 app.py:2156
+msgid "Item not found in cart"
+msgstr ""
+
+#: app.py:715
+msgid "Cart updated successfully"
+msgstr ""
+
+#: app.py:722
+msgid "Invalid quantity"
+msgstr ""
+
+#: app.py:725
+msgid "Error updating cart"
+msgstr ""
+
+#: app.py:737 app.py:2136
+msgid "Missing required information for removal"
+msgstr ""
+
+#: app.py:747
+msgid "Article removed successfully"
+msgstr ""
+
+#: app.py:752 app.py:2161
+msgid "Error removing item from cart"
+msgstr ""
+
+#: app.py:858 app.py:1095
+msgid "Invalid token."
+msgstr ""
+
+#: app.py:863 app.py:868
+msgid "Invalid token or role."
+msgstr ""
+
+#: app.py:959
+msgid ""
+"Thank you for your order!\n"
+"\n"
+"Your order details:\n"
+msgstr ""
+
+#: app.py:962
+msgid "Ordered items:\n"
+msgstr ""
+
+#: app.py:964
+msgid ""
+"- Article: {article}, Price: {price:.2f}, Quantity: {quantity}, Comment: "
+"{comment}\n"
+msgstr ""
+
+#: app.py:973 templates/user/cart/cart.html:42
+#: templates/user/orders/order_details.html:63
+msgid "No comment"
+msgstr ""
+
+#: app.py:977
+msgid ""
+"\n"
+"Missing articles:\n"
+msgstr ""
+
+#: app.py:1160
+msgid "Please select a price option."
+msgstr ""
+
+#: app.py:1189
+msgid "Please log in or register to add this item to your cart."
+msgstr ""
+
+#: app.py:1225 app.py:2099
+msgid "Product added to cart!"
+msgstr ""
+
+#: app.py:1230
+msgid "An error occurred while adding to cart."
+msgstr ""
+
+#: app.py:1267 app.py:1283
+msgid "Please enter an article for search."
+msgstr ""
+
+#: app.py:1310
+msgid "An error occurred during the search. Please try again later."
+msgstr ""
+
+#: app.py:1501
+msgid "Please enter at least one article."
+msgstr ""
+
+#: app.py:1612
+msgid "Articles not found: {articles}"
+msgstr ""
+
+#: app.py:1641
+msgid "Added to cart: {articles}"
+msgstr ""
+
+#: app.py:1678
+msgid "You need to log in to view search results."
+msgstr ""
+
+#: app.py:1740
+msgid "Your selection has been saved!"
+msgstr ""
+
+#: app.py:1744
+msgid "An error occurred while saving your selection. Please try again."
+msgstr ""
+
+#: app.py:1765
+msgid "No search results found. Please start a new search."
+msgstr ""
+
+#: app.py:1782
+msgid "An error occurred while retrieving search results."
+msgstr ""
+
+#: app.py:1802
+msgid "You need to log in to view your cart."
+msgstr ""
+
+#: app.py:1915
+msgid "Could not load your cart. Please try again."
+msgstr ""
+
+#: app.py:1935 app.py:4731
+msgid "User not authenticated"
+msgstr ""
+
+#: app.py:1984
+msgid "No articles selected"
+msgstr ""
+
+#: app.py:2013
+msgid "Selection successfully submitted!"
+msgstr ""
+
+#: app.py:2018
+msgid "An error occurred during submission"
+msgstr ""
+
+#: app.py:2032
+msgid "Search results cleared successfully"
+msgstr ""
+
+#: app.py:2038
+msgid "Error clearing search results"
+msgstr ""
+
+#: app.py:2066 app.py:2261
+msgid "User is not authenticated. Please log in."
+msgstr ""
+
+#: app.py:2102
+msgid "Error adding product to cart."
+msgstr ""
+
+#: app.py:2153
+msgid "Article {article} removed successfully"
+msgstr ""
+
+#: app.py:2180
+msgid "Invalid input: article or quantity missing."
+msgstr ""
+
+#: app.py:2187
+msgid "Quantity must be at least 1."
+msgstr ""
+
+#: app.py:2204
+msgid "Cart updated successfully!"
+msgstr ""
+
+#: app.py:2208
+msgid "Error updating cart."
+msgstr ""
+
+#: app.py:2279
+msgid "Your cart is empty!"
+msgstr ""
+
+#: app.py:2350
+msgid "Order placed, but we couldn't send a confirmation email."
+msgstr ""
+
+#: app.py:2364
+msgid "Error placing order: {error}"
+msgstr ""
+
+#: app.py:2382
+msgid "User is not authenticated."
+msgstr ""
+
+#: app.py:2448
+msgid "Error fetching orders."
+msgstr ""
+
+#: app.py:4798
+msgid "Some articles still need table selection."
+msgstr ""
+
+#: app.py:4800
+msgid "All selected articles have been added to your cart."
+msgstr ""
+
+#: app.py:4846
+msgid "An error occurred while processing your selection. Please try again."
+msgstr ""
+
+#: app.py:5040
+msgid "News created successfully!"
+msgstr ""
+
+#: app.py:5045
+msgid "Error creating news"
+msgstr ""
+
+#: app.py:5653
+msgid "Error loading news"
+msgstr ""
+
+#: app.py:5684
+msgid "News not found"
+msgstr ""
+
+#: templates/auth/login.html:4 templates/auth/login.html:11
+#: templates/auth/login.html:22 templates/base/public_base.html:212
+msgid "Login"
+msgstr "Logowanie"
+
+#: templates/auth/login.html:15 templates/auth/register.html:14
+msgid "Username"
+msgstr "Nazwa użytkownika"
+
+#: templates/auth/login.html:19 templates/auth/register.html:22
+msgid "Password"
+msgstr "Hasło"
+
+#: templates/auth/register.html:3 templates/auth/register.html:10
+#: templates/auth/register.html:25 templates/base/public_base.html:218
+msgid "Register"
+msgstr "Rejestracja"
+
+#: templates/auth/register.html:18
+msgid "Email"
+msgstr "Email"
+
+#: templates/base/base.html:6 templates/user/index.html:3
+msgid "Article Price Search"
+msgstr "Wyszukiwarka cen artykułów"
+
+#: templates/base/base.html:205 templates/user/news/user_news.html:3
+#: templates/user/news/user_news.html:7
+msgid "News"
+msgstr ""
+
+#: templates/base/base.html:213 templates/base/public_base.html:188
+msgid "Cart"
+msgstr "Koszyk"
+
+#: templates/base/base.html:222 templates/base/public_base.html:199
+msgid "Orders"
+msgstr "Zamówienia"
+
+#: templates/base/base.html:228 templates/user/orders/order_changes.html:5
+msgid "Order Changes History"
+msgstr ""
+
+#: templates/base/base.html:234 templates/user/shipments/shipments.html:3
+msgid "Shipments"
+msgstr ""
+
+#: templates/base/public_base.html:173
+msgid "Home"
+msgstr "Strona główna"
+
+#: templates/base/public_base.html:179
+msgid "About"
+msgstr "O nas"
+
+#: templates/base/public_base.html:205
+msgid "Logout"
+msgstr "Wyloguj"
+
+#: templates/base/public_base.html:265
+msgid "Contact Us"
+msgstr "Kontakt"
+
+#: templates/base/public_base.html:272
+msgid "Quick Links"
+msgstr "Szybkie linki"
+
+#: templates/base/public_base.html:274 templates/public/about.html:3
+msgid "About Us"
+msgstr "O nas"
+
+#: templates/base/public_base.html:275
+msgid "Terms & Conditions"
+msgstr "Regulamin"
+
+#: templates/base/public_base.html:276
+msgid "Privacy Policy"
+msgstr "Polityka prywatności"
+
+#: templates/base/public_base.html:280
+msgid "Follow Us"
+msgstr "Obserwuj nas"
+
+#: templates/base/public_base.html:290
+msgid "2024 AutogroupEU. All rights reserved."
+msgstr "2024 AutogroupEU. Wszelkie prawa zastrzeżone."
+
+#: templates/public/about.html:108
+msgid "About AutogroupEU"
+msgstr ""
+
+#: templates/public/about.html:109
+msgid "Your Trusted Partner in Auto Parts"
+msgstr ""
+
+#: templates/public/about.html:121
+msgid "Years Experience"
+msgstr ""
+
+#: templates/public/about.html:127
+msgid "Parts Available"
+msgstr ""
+
+#: templates/public/about.html:133
+msgid "Happy Clients"
+msgstr ""
+
+#: templates/public/about.html:139
+msgid "Support"
+msgstr ""
+
+#: templates/public/about.html:150
+msgid "Auto Parts Store"
+msgstr ""
+
+#: templates/public/about.html:153
+msgid ""
+"We are a specialized auto parts store serving business clients across "
+"Europe. With over 15 years of experience, we provide high-quality "
+"automotive parts and exceptional service to our B2B partners."
+msgstr ""
+
+#: templates/public/about.html:161
+msgid "Our Main Brands"
+msgstr ""
+
+#: templates/public/about.html:179
+msgid "B2B Services"
+msgstr ""
+
+#: templates/public/about.html:182
+msgid "For business clients interested in B2B access, please contact us:"
+msgstr ""
+
+#: templates/public/about.html:193
+msgid "Find Us"
+msgstr ""
+
+#: templates/public/article_not_found.html:3
+#: templates/public/article_not_found.html:169
+msgid "Article Not Found"
+msgstr ""
+
+#: templates/public/article_not_found.html:170
+msgid "Sorry, we could not find any information for article"
+msgstr ""
+
+#: templates/public/article_not_found.html:172
+msgid "You can try searching again or contact us for assistance."
+msgstr ""
+
+#: templates/public/article_not_found.html:181 templates/public/index.html:130
+msgid "Enter article number..."
+msgstr "Wprowadź numer artykułu..."
+
+#: templates/public/article_not_found.html:184 templates/public/index.html:133
+#: templates/user/index.html:24
+msgid "Search"
+msgstr "Szukaj"
+
+#: templates/public/article_not_found.html:197 templates/public/index.html:145
+msgid "Need Help?"
+msgstr "Potrzebujesz pomocy?"
+
+#: templates/public/article_not_found.html:200 templates/public/index.html:148
+msgid "If you have any questions, don't hesitate to contact us:"
+msgstr "Jeśli masz pytania, nie wahaj się z nami skontaktować:"
+
+#: templates/public/article_not_found.html:206 templates/public/index.html:154
+msgid "Mon-Fri: 9:00 - 19:00"
+msgstr "Pon-Pt: 9:00 - 19:00"
+
+#: templates/public/article_not_found.html:215
+msgid "Find Parts by VIN Code"
+msgstr "Znajdź części po kodzie VIN"
+
+#: templates/public/article_not_found.html:218
+msgid ""
+"Provide us with your VIN code and we will help you find the right parts "
+"for your vehicle."
+msgstr "Podaj nam swój kod VIN, a pomożemy Ci znaleźć odpowiednie części do Twojego pojazdu."
+
+#: templates/public/article_not_found.html:223
+msgid "Fast and Accurate"
+msgstr "Szybko i dokładnie"
+
+#: templates/public/article_not_found.html:224
+msgid "Professional parts selection"
+msgstr "Profesjonalny dobór części"
+
+#: templates/public/index.html:119
+msgid "Welcome to AutogroupEU"
+msgstr "Witamy w AutogroupEU"
+
+#: templates/public/index.html:121
+msgid ""
+"Your reliable partner in auto parts supply across Europe. Enter the "
+"article number to check prices and availability."
+msgstr ""
+
+#: templates/public/index.html:162
+msgid "Car Service & Programming"
+msgstr ""
+
+#: templates/public/index.html:165
+msgid ""
+"We offer professional car repair and programming services. Contact us for"
+" more information."
+msgstr ""
+
+#: templates/public/index.html:168
+msgid "Learn More"
+msgstr ""
+
+#: templates/public/product_details.html:6
+msgid "auto parts"
+msgstr ""
+
+#: templates/public/product_details.html:6
+msgid "spare parts"
+msgstr ""
+
+#: templates/public/product_details.html:500
+msgid "Description"
+msgstr "Opis"
+
+#: templates/public/cart/cart.html:42
+#: templates/public/orders/order_details.html:186
+#: templates/public/product_details.html:513 templates/user/cart/cart.html:16
+#: templates/user/search/intermediate.html:35
+msgid "Brand"
+msgstr "Marka"
+
+#: templates/public/cart/cart.html:40
+#: templates/public/orders/order_details.html:184
+#: templates/public/product_details.html:517 templates/user/cart/cart.html:14
+#: templates/user/orders/order_changes.html:13
+#: templates/user/orders/order_details.html:20
+#: templates/user/orders/orders.html:62
+#: templates/user/search/intermediate.html:16
+#: templates/user/search/search_results.html:15
+#: templates/user/shipments/shipments.html:23
+#: templates/user/shipments/view_shipment.html:39
+msgid "Article"
+msgstr "Artykuł"
+
+#: templates/public/product_details.html:566
+#: templates/user/search/intermediate.html:61
+#: templates/user/search/search_results.html:82
+msgid "Add to Cart"
+msgstr "Dodaj do koszyka"
+
+#: templates/public/cart/cart.html:5
+msgid ""
+"View and manage your shopping cart at AutogroupEU. Check prices, "
+"quantities, and proceed to checkout."
+msgstr "Przeglądaj i zarządzaj swoim koszykiem w AutogroupEU. Sprawdź ceny, ilości i przejdź do realizacji zamówienia."
+
+#: templates/public/cart/cart.html:28 templates/public/cart/cart.html:32
+#: templates/user/cart/cart.html:3 templates/user/cart/cart.html:7
+msgid "Shopping Cart"
+msgstr "Koszyk"
+
+#: templates/public/cart/cart.html:41
+msgid "Product"
+msgstr "Produkt"
+
+#: templates/public/cart/cart.html:42
+msgid "Brand"
+msgstr "Marka"
+
+#: templates/public/cart/cart.html:43
+msgid "Price"
+msgstr "Cena"
+
+#: templates/public/cart/cart.html:44
+msgid "Quantity"
+msgstr "Ilość"
+
+#: templates/public/cart/cart.html:45
+msgid "Total"
+msgstr "Suma"
+
+#: templates/public/cart/cart.html:46
+msgid "Delivery"
+msgstr "Dostawa"
+
+#: templates/public/cart/cart.html:47
+msgid "Actions"
+msgstr "Akcje"
+
+#: templates/public/cart/cart.html:103
+msgid "Total:"
+msgstr "Suma:"
+
+#: templates/public/cart/cart.html:114
+msgid "Continue Shopping"
+msgstr "Kontynuuj zakupy"
+
+#: templates/public/cart/cart.html:120
+msgid "Clear Cart"
+msgstr "Wyczyść koszyk"
+
+#: templates/public/cart/cart.html:129
+msgid "Place Order"
+msgstr "Złóż zamówienie"
+
+#: templates/public/cart/cart.html:137
+msgid "Your Cart is Empty"
+msgstr "Twój koszyk jest pusty"
+
+#: templates/public/cart/cart.html:138
+msgid "Start adding items to your cart!"
+msgstr "Zacznij dodawać produkty do koszyka!"
+
+#: templates/public/cart/cart.html:141 templates/user/cart/cart.html:96
+#: templates/user/index.html:11
+msgid "Search Articles"
+msgstr "Szukaj artykułów"
+
+#: templates/public/orders/list_orders.html:3
+#: templates/public/orders/list_orders.html:110
+#: templates/user/orders/orders.html:55
+msgid "My Orders"
+msgstr ""
+
+#: templates/public/orders/list_orders.html:119
+msgid "Order #"
+msgstr "Zamówienie nr"
+
+#: templates/public/orders/list_orders.html:120
+msgid "Date"
+msgstr "Data"
+
+#: templates/public/orders/list_orders.html:121
+msgid "Items"
+msgstr "Produkty"
+
+#: templates/public/orders/list_orders.html:123
+msgid "Status"
+msgstr "Status"
+
+#: templates/public/orders/list_orders.html:151
+msgid "View"
+msgstr "Zobacz"
+
+#: templates/public/orders/list_orders.html:162
+msgid "You have no orders yet."
+msgstr "Nie masz jeszcze żadnych zamówień"
+
+#: templates/public/orders/order_details.html:135
+msgid "Order"
+msgstr ""
+
+#: templates/public/orders/order_details.html:140
+msgid "Back to Orders"
+msgstr "Powrót do zamówień"
+
+#: templates/public/orders/order_details.html:151
+msgid "Order Date"
+msgstr "Data zamówienia"
+
+#: templates/public/orders/order_details.html:165
+msgid "Total Items"
+msgstr "Liczba produktów"
+
+#: templates/public/orders/order_details.html:169
+msgid "Total Amount"
+msgstr "Suma całkowita"
+
+#: templates/public/orders/order_details.html:185
+msgid "Name"
+msgstr "Nazwa"
+
+#: templates/user/index.html:15
+msgid "Enter Articles and Quantities:"
+msgstr ""
+
+#: templates/user/index.html:20
+msgid "Example:"
+msgstr ""
+
+#: templates/user/index.html:35
+msgid "Upload Articles File"
+msgstr ""
+
+#: templates/user/index.html:41
+msgid "Article/Quantity/Comment"
+msgstr ""
+
+#: templates/user/index.html:45
+msgid "Article/Quantity/Brand/Comment"
+msgstr ""
+
+#: templates/user/index.html:53
+msgid "Drag and drop your file here"
+msgstr ""
+
+#: templates/user/index.html:54
+msgid "or"
+msgstr ""
+
+#: templates/user/index.html:56
+msgid "Select File"
+msgstr ""
+
+#: templates/user/index.html:73
+msgid "Upload and Search"
+msgstr ""
+
+#: templates/user/cart/cart.html:15 templates/user/orders/order_details.html:22
+msgid "Price List"
+msgstr ""
+
+#: templates/user/cart/cart.html:20 templates/user/orders/order_details.html:27
+#: templates/user/search/intermediate.html:19
+#: templates/user/search/search_results.html:18
+#: templates/user/shipments/view_shipment.html:43
+msgid "Comment"
+msgstr ""
+
+#: templates/user/cart/cart.html:81
+#: templates/user/search/search_results.html:70
+msgid "Missing Articles:"
+msgstr ""
+
+#: templates/user/cart/cart.html:82
+msgid "The following articles were not found:"
+msgstr ""
+
+#: templates/user/news/user_news.html:12
+msgid "New Messages"
+msgstr ""
+
+#: templates/user/news/user_news.html:18 templates/user/orders/orders.html:69
+msgid "New"
+msgstr ""
+
+#: templates/user/news/user_news.html:26
+msgid "Read More"
+msgstr ""
+
+#: templates/user/news/user_news.html:36
+msgid "News Archive"
+msgstr ""
+
+#: templates/user/news/user_news.html:44 templates/user/orders/orders.html:124
+#: templates/user/shipments/list_shipments.html:36
+msgid "View Details"
+msgstr ""
+
+#: templates/user/news/view_news.html:9
+msgid "Mark as Read"
+msgstr ""
+
+#: templates/user/news/view_news.html:16
+msgid "Published:"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:12
+#: templates/user/orders/orders.html:99
+msgid "Order ID"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:14
+msgid "Change Type"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:15
+msgid "Old Value"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:16
+msgid "New Value"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:17
+msgid "Change Date"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:27
+msgid "Article Number Change"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:29
+msgid "Price Change"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:42
+msgid "No changes found."
+msgstr ""
+
+#: templates/user/orders/order_details.html:4
+#: templates/user/orders/order_details.html:9
+#: templates/user/shipments/shipments.html:19
+msgid "Order Details"
+msgstr "Szczegóły zamówienia"
+
+#: templates/user/orders/order_details.html:21
+msgid "Original Article"
+msgstr ""
+
+#: templates/user/orders/order_details.html:23
+msgid "Brand ID"
+msgstr ""
+
+#: templates/user/orders/order_details.html:86
+msgid "Total Order Amount:"
+msgstr ""
+
+#: templates/user/orders/order_details.html:96
+msgid "Order Timeline"
+msgstr ""
+
+#: templates/user/orders/order_details.html:115
+msgid "No Details Available"
+msgstr ""
+
+#: templates/user/orders/order_details.html:116
+msgid "The details for this order could not be found."
+msgstr ""
+
+#: templates/user/orders/orders.html:68
+msgid "All"
+msgstr ""
+
+#: templates/user/orders/orders.html:70
+msgid "Accepted"
+msgstr ""
+
+#: templates/user/orders/orders.html:71
+msgid "Cancelled"
+msgstr ""
+
+#: templates/user/orders/orders.html:75
+msgid "Start Date"
+msgstr ""
+
+#: templates/user/orders/orders.html:79
+msgid "End Date"
+msgstr ""
+
+#: templates/user/orders/orders.html:84
+msgid "Filter"
+msgstr ""
+
+#: templates/user/orders/orders.html:87
+msgid "Clear Filters"
+msgstr ""
+
+#: templates/user/orders/orders.html:101
+#: templates/user/shipments/list_shipments.html:21
+#: templates/user/shipments/shipments.html:26
+#: templates/user/shipments/view_shipment.html:42
+msgid "Total Price"
+msgstr ""
+
+#: templates/user/orders/orders.html:133
+msgid "No Orders Found"
+msgstr ""
+
+#: templates/user/orders/orders.html:134
+msgid "You haven't placed any orders yet."
+msgstr ""
+
+#: templates/user/search/intermediate.html:3
+msgid "Select Price Lists"
+msgstr ""
+
+#: templates/user/search/intermediate.html:7
+msgid "Intermediate Results"
+msgstr ""
+
+#: templates/user/search/intermediate.html:8
+msgid "Please select a price list for each article."
+msgstr ""
+
+#: templates/user/search/intermediate.html:17
+msgid "Available Price Lists"
+msgstr ""
+
+#: templates/user/search/intermediate.html:64
+msgid "Cancel"
+msgstr ""
+
+#: templates/user/search/intermediate.html:71
+msgid "Missing Articles"
+msgstr ""
+
+#: templates/user/search/intermediate.html:72
+#: templates/user/search/search_results.html:71
+msgid "The following articles were not found in any price list:"
+msgstr ""
+
+#: templates/user/search/search_results.html:3
+#: templates/user/search/search_results.html:7
+msgid "Search Results"
+msgstr ""
+
+#: templates/user/search/search_results.html:16
+msgid "Price Lists"
+msgstr ""
+
+#: templates/user/search/search_results.html:19
+msgid "Select"
+msgstr ""
+
+#: templates/user/search/search_results.html:86
+msgid "Clear Results"
+msgstr ""
+
+#: templates/user/search/search_results.html:92
+msgid "No Results Found"
+msgstr ""
+
+#: templates/user/search/search_results.html:93
+msgid "Try searching with different articles or check your input format."
+msgstr ""
+
+#: templates/user/search/search_results.html:95
+msgid "New Search"
+msgstr ""
+
+#: templates/user/shipments/list_shipments.html:9
+#: templates/user/shipments/shipments.html:7
+msgid "My Shipments"
+msgstr ""
+
+#: templates/user/shipments/list_shipments.html:17
+msgid "Shipment Date"
+msgstr ""
+
+#: templates/user/shipments/list_shipments.html:19
+msgid "Tracking Number"
+msgstr ""
+
+#: templates/user/shipments/list_shipments.html:20
+msgid "Items Count"
+msgstr ""
+
+#: templates/user/shipments/list_shipments.html:30
+msgid "N/A"
+msgstr ""
+
+#: templates/user/shipments/list_shipments.html:45
+#: templates/user/shipments/shipments.html:44
+msgid "No shipments found."
+msgstr ""
+
+#: templates/user/shipments/shipments.html:13
+msgid "Shipment Date:"
+msgstr ""
+
+#: templates/user/shipments/shipments.html:13
+#: templates/user/shipments/view_shipment.html:22
+msgid "Status:"
+msgstr ""
+
+#: templates/user/shipments/shipments.html:15
+#: templates/user/shipments/view_shipment.html:23
+msgid "Tracking Number:"
+msgstr ""
+
+#: templates/user/shipments/view_shipment.html:3
+#: templates/user/shipments/view_shipment.html:8
+msgid "Shipment Details"
+msgstr ""
+
+#: templates/user/shipments/view_shipment.html:10
+msgid "Back to Shipments"
+msgstr ""
+
+#: templates/user/shipments/view_shipment.html:16
+msgid "Shipment Information"
+msgstr ""
+
+#: templates/user/shipments/view_shipment.html:21
+msgid "Date:"
+msgstr ""
+
+#: templates/user/shipments/view_shipment.html:23
+msgid "Not specified"
+msgstr ""
+
+#: templates/user/shipments/view_shipment.html:60
+msgid "No items in this shipment."
+msgstr ""
+
+#: venv/Lib/site-packages/click/_termui_impl.py:556
+msgid "{editor}: Editing failed"
+msgstr ""
+
+#: venv/Lib/site-packages/click/_termui_impl.py:560
+msgid "{editor}: Editing failed: {e}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1124
+msgid "Aborted!"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1349
+#: venv/Lib/site-packages/click/core.py:1379
+msgid "(Deprecated) {text}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1396
+msgid "Options"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1424
+msgid "Got unexpected extra argument ({args})"
+msgid_plural "Got unexpected extra arguments ({args})"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/core.py:1437
+msgid "DeprecationWarning: The command {name!r} is deprecated."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1645
+msgid "Commands"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1677
+msgid "Missing command."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1755
+msgid "No such command {name!r}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2313
+msgid "Value must be an iterable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2336
+msgid "Takes {nargs} values but 1 was given."
+msgid_plural "Takes {nargs} values but {len} were given."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/core.py:2783
+msgid "env var: {var}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2813
+msgid "(dynamic)"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2828
+msgid "default: {default}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2841
+msgid "required"
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:457
+#, python-format
+msgid "%(prog)s, version %(version)s"
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:520
+msgid "Show the version and exit."
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:541
+msgid "Show this message and exit."
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:49
+#: venv/Lib/site-packages/click/exceptions.py:88
+msgid "Error: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:80
+msgid "Try '{command} {option}' for help."
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:129
+msgid "Invalid value: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:131
+msgid "Invalid value for {param_hint}: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:187
+msgid "Missing argument"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:189
+msgid "Missing option"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:191
+msgid "Missing parameter"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:193
+msgid "Missing {param_type}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:200
+msgid "Missing parameter: {param_name}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:220
+msgid "No such option: {name}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:234
+msgid "Did you mean {possibility}?"
+msgid_plural "(Possible options: {possibilities})"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/exceptions.py:270
+msgid "unknown error"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:277
+msgid "Could not open file {filename!r}: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/formatting.py:156
+msgid "Usage:"
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:233
+msgid "Argument {name!r} takes {nargs} values."
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:415
+msgid "Option {name!r} does not take a value."
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:475
+msgid "Option {name!r} requires an argument."
+msgid_plural "Option {name!r} requires {nargs} arguments."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/shell_completion.py:325
+msgid "Shell completion is not supported for Bash versions older than 4.4."
+msgstr ""
+
+#: venv/Lib/site-packages/click/shell_completion.py:333
+msgid "Couldn't detect Bash version, shell completion is not supported."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:158
+msgid "Repeat for confirmation"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:174
+msgid "Error: The value you entered was invalid."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:176
+msgid "Error: {e.message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:187
+msgid "Error: The two entered values do not match."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:243
+msgid "Error: invalid input"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:773
+msgid "Press any key to continue..."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:267
+msgid ""
+"Choose from:\n"
+"\t{choices}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:301
+msgid "{value!r} is not {choice}."
+msgid_plural "{value!r} is not one of {choices}."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/types.py:395
+msgid "{value!r} does not match the format {format}."
+msgid_plural "{value!r} does not match the formats {formats}."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: venv/Lib/site-packages/click/types.py:415
+msgid "{value!r} is not a valid {number_type}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:471
+msgid "{value} is not in the range {range}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:612
+msgid "{value!r} is not a valid boolean."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:636
+msgid "{value!r} is not a valid UUID."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:826
+msgid "file"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:828
+msgid "directory"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:830
+msgid "path"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:881
+msgid "{name} {filename!r} does not exist."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:890
+msgid "{name} {filename!r} is a file."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:898
+msgid "{name} {filename!r} is a directory."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:907
+msgid "{name} {filename!r} is not readable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:916
+msgid "{name} {filename!r} is not writable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:925
+msgid "{name} {filename!r} is not executable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:991
+msgid "{len_type} values are required, but {len_value} was given."
+msgid_plural "{len_type} values are required, but {len_value} were given."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+

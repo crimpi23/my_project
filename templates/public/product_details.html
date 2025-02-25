@@ -2,9 +2,9 @@
 
 {% block head %}
 <!-- SEO Meta Tags -->
-<meta name="description" content="{{ product_data.description[:160] }}">
-<meta name="keywords" content="{{ product_data.name }}, {{ article }}, автозапчастини, запчастини">
-<meta property="og:title" content="{{ product_data.name }} - AutogroupEU">
+<meta name="description" content="{{ _(product_data.description[:160]) }}">
+<meta name="keywords" content="{{ _(product_data.name) }}, {{ article }}, {{ _('auto parts') }}, {{ _('spare parts') }}">
+<meta property="og:title" content="{{ _(product_data.name) }} - AutogroupEU">
 <meta property="og:description" content="{{ product_data.description[:160] }}">
 <meta property="og:image" content="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}">
 <meta property="og:type" content="product">
@@ -56,8 +56,84 @@ gtag('event', 'view_item', {
 
 {% block extra_css %}
 <style>
+:root {
+    /*  ВАШІ ЗМІННІ ТУТ  */
+    --primary-color: #007bff;
+    --primary-color-dark: #0056b3;
+    --secondary-color: #6c757d;
+    --light-bg: #f8f9fa;
+    --border-color: #ddd;
+    --text-color: #212529;
+    --heading-color: #333;
+
+    --font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-family-headings: 'Arial', sans-serif;
+
+    --font-size-base: 1rem;
+    --font-size-h1: 2.5rem;
+    --font-size-h2: 2rem;
+    --font-size-h3: 1.5rem;
+
+    --spacing-unit: 1rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 2rem;
+
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    --border-radius: 0.375rem;
+}
+
+/*  ЗАГАЛЬНІ СТИЛІ (card, btn, etc.) */
+.btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: var(--font-size-base);
+    font-weight: bold;
+    text-decoration: none;
+    color: #fff;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.card {
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    margin-bottom: var(--spacing-md);
+}
+
+.card-body {
+    padding: var(--spacing-md);
+}
+
+.card-title {
+    font-size: var(--font-size-h3);
+    font-weight: bold;
+    margin-bottom: var(--spacing-sm);
+    color: var(--heading-color);
+}
+
+/*  СПЕЦИФІЧНІ СТИЛІ ДЛЯ product_details */
 .product-container {
-    max-width: 1400px; /* Збільшено на 30% від початкового розміру */
+    max-width: 1400px;
     width: 95%;
     margin: 2rem auto;
     padding: 2rem;
@@ -72,7 +148,7 @@ gtag('event', 'view_item', {
     border-radius: 0.75rem;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
-    height: 600px; /* Фіксована висота */
+    height: 600px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -81,7 +157,7 @@ gtag('event', 'view_item', {
 .image-container {
     position: relative;
     width: 100%;
-    height: 100%; /* Займає всю висоту батьківського елемента */
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -162,9 +238,9 @@ gtag('event', 'view_item', {
 
 .price-card {
     background: white;
-    padding: 0.75rem; /* Зменшено відступи */
+    padding: 0.75rem;
     border-radius: 0.5rem;
-    margin-bottom: 0.5rem; /* Зменшено відступ між картками */
+    margin-bottom: 0.5rem;
     border: 1px solid var(--border-color);
     transition: all 0.3s ease;
     display: flex;
@@ -177,13 +253,14 @@ gtag('event', 'view_item', {
 .price-card:hover {
     border-color: var(--primary-color);
     box-shadow: var(--shadow);
+    transform: translateY(-2px);
 }
 
 .price-value {
-    font-size: 1.4rem; /* Зменшено розмір шрифту */
+    font-size: 1.4rem;
     font-weight: 600;
     color: var(--primary-color);
-    margin: 0; /* Видалено відступ знизу */
+    margin: 0;
     min-width: 120px;
 }
 
@@ -200,23 +277,24 @@ gtag('event', 'view_item', {
 .cart-controls {
     display: flex;
     align-items: center;
-    gap: 0.5rem; /* Зменшено відступ між елементами */
+    gap: 0.5rem;
     margin-left: auto;
+    margin-top: 1rem;
 }
 
 .quantity-input {
-    width: 60px !important; /* Зменшено ширину */
+    width: 60px !important;
     text-align: center;
     border: 1px solid var(--border-color);
     border-radius: 0.375rem;
-    padding: 0.375rem; /* Зменшено padding */
-    height: 32px; /* Фіксована висота */
+    padding: 0.375rem;
+    height: 32px;
 }
 
 .btn-add-cart {
-    height: 32px; /* Фіксована висота */
-    padding: 0 1rem; /* Зменшено padding */
-    font-size: 0.9rem; /* Зменшено розмір шрифту */
+    height: 32px;
+    padding: 0 1rem;
+    font-size: 0.9rem;
     border-radius: 0.375rem;
     background: var(--primary-color);
     color: white;
@@ -233,112 +311,6 @@ gtag('event', 'view_item', {
     font-size: 1rem;
 }
 
-.product-container {
-    max-width: 1400px;
-    width: 95%;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: white;
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-@media (max-width: 768px) {
-    .product-container {
-        padding: 1rem;
-        margin: 1rem auto;
-    }
-
-    /* Змінюємо порядок відображення для мобільних */
-    .mobile-order-1 {
-        order: 1;
-    }
-    
-    .mobile-order-2 {
-        order: 2;
-    }
-
-    /* Стилі для основної інформації */
-    .product-info {
-        padding: 1rem;
-    }
-
-    .product-title {
-        font-size: 1.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .article-info {
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
-    }
-
-    /* Стилі для цін */
-    .price-card {
-        margin-bottom: 1rem;
-        padding: 0.75rem;
-    }
-
-    .price-value {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--primary-color);
-    }
-
-    /* Стилі для зображень */
-    .image-section {
-        height: auto;
-        margin-top: 1rem;
-    }
-
-    .image-container {
-        height: 300px;
-    }
-
-    .image-container img {
-        max-height: 100%;
-        width: auto;
-    }
-
-    /* Кнопки навігації для зображень */
-    .image-nav {
-        width: 30px;
-        height: 30px;
-    }
-
-    /* Адаптивні контроли кошика */
-    .cart-controls {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-        width: 100%;
-    }
-
-    .quantity-input {
-        width: 80px !important;
-        height: 40px;
-    }
-
-    .btn-add-cart {
-        flex-grow: 1;
-        height: 40px;
-        font-size: 1rem;
-    }
-
-    /* Кнопка "Повернутися до пошуку" */
-    .back-button {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        width: 100%;
-        padding: 0.5rem;
-        background: white;
-        border-bottom: 1px solid var(--border-color);
-        margin-bottom: 1rem;
-    }
-}
 .brand-info {
     display: flex;
     align-items: center;
@@ -350,6 +322,7 @@ gtag('event', 'view_item', {
 .brand-info i {
     font-size: 1rem;
 }
+
 .brand-section {
     border: 1px solid var(--border-color);
     border-radius: 0.75rem;
@@ -373,39 +346,6 @@ gtag('event', 'view_item', {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-}
-
-/* Для мобільних пристроїв */
-@media (max-width: 768px) {
-    .brand-section {
-        padding: 0.75rem;
-    }
-
-    .brand-title {
-        font-size: 1.1rem;
-    }
-}
-
-.cart-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1rem;
-}
-
-.quantity-input {
-    text-align: center;
-}
-
-@media (max-width: 768px) {
-    .cart-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .quantity-input {
-        width: 100% !important;
-    }
 }
 
 .left-column {
@@ -436,23 +376,90 @@ gtag('event', 'view_item', {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.price-card {
-    transition: all 0.3s ease;
-}
-
-.price-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
 .quantity-input:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb), 0.25);
 }
 
+/*  АДАПТИВНІСТЬ (@media) */
 @media (max-width: 768px) {
+    .product-container {
+        padding: 1rem;
+        margin: 1rem auto;
+    }
+
     .left-column {
         margin-bottom: 2rem;
+    }
+
+    .product-info {
+        padding: 1rem;
+    }
+
+    .product-title {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .article-info {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .price-card {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+    }
+
+    .price-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    .image-section {
+        height: auto;
+        margin-top: 1rem;
+    }
+
+    .image-container {
+        height: 300px;
+    }
+
+    .image-container img {
+        max-height: 100%;
+        width: auto;
+    }
+
+    .image-nav {
+        width: 30px;
+        height: 30px;
+    }
+
+    .cart-controls {
+        flex-direction: column;
+        align-items: stretch;
+        margin-top: 0.5rem;
+    }
+
+    .quantity-input {
+        width: 100% !important;
+        height: 40px;
+    }
+
+    .btn-add-cart {
+        width: 100%;
+        flex-grow: 1;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .brand-section {
+        padding: 0.75rem;
+    }
+
+    .brand-title {
+        font-size: 1.1rem;
     }
 }
 </style>
@@ -464,7 +471,7 @@ gtag('event', 'view_item', {
         <!-- Ліва колонка: фото + опис -->
         <div class="col-md-6">
             <div class="left-column">
-                <div class="image-section">
+                <div class="image-section card">
                     <div class="image-container">
                         <img id="productImage" 
                              src="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}" 
@@ -488,82 +495,83 @@ gtag('event', 'view_item', {
                 </div>
                 
                 <!-- Опис одразу після фото -->
-                <div class="description-section mt-3">
-                    <h2>{{ _('Description') }}</h2>
-                    <p itemprop="description">{{ product_data.description }}</p>
+                <div class="description-section card">
+                    <div class="card-body">
+                        <h2 class="card-title">{{ _('Description') }}</h2>
+                        <p itemprop="description">{{ product_data.description }}</p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Права колонка: ціни -->
         <div class="col-md-6">
-            <div class="product-info">
-                <h1 class="mb-3">{{ product_data.name }}</h1>
-                <div class="mb-4">
-                    <span class="text-muted">{{ _('Brand') }}:</span>
-                    <strong>{{ product_data.brand_name }}</strong>
-                </div>
-                <div class="mb-4">
-                    <span class="text-muted">{{ _('Article') }}:</span>
-                    <strong>{{ article }}</strong>
-                </div>
-
-                {% set grouped_prices = {} %}
-                {% for price in prices %}
-                    {% if price.brand_name not in grouped_prices %}
-                        {% set _ = grouped_prices.update({price.brand_name: []}) %}
-                    {% endif %}
-                    {% set _ = grouped_prices[price.brand_name].append(price) %}
-                {% endfor %}
-
-                {% for brand, brand_prices in grouped_prices.items() %}
-                    <div class="brand-section mb-4">
-                        <h3 class="brand-title">
-                            <i class="bi bi-tag-fill"></i> {{ brand }}
-                        </h3>
-                        
-                        <div class="brand-prices">
-                            {% for price in brand_prices %}
-                            <div class="price-card" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-                                <div class="price-info">
-                                    <div class="price-value">
-                                        <span>{{ "%.2f"|format(price.price|float) }}</span>
-                                        <span>EUR</span>
-                                    </div>
-                                    <div class="delivery-info">
-                                        {% if price.in_stock %}
-                                        <i class="bi bi-check-circle-fill text-success"></i>
-                                        <span>{{ _('In Stock') }}</span>
-                                        {% else %}
-                                        <i class="bi bi-clock"></i>
-                                        <span>{{ price.delivery_time }}</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-controls">
-                                    <input type="hidden" name="article" value="{{ article }}">  <!-- Змінено з item.article на article -->
-                                    <input type="hidden" name="selected_price" value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}">
-                                    
-                                    <div class="input-group me-2" style="width: auto;">
-                                        <input type="number" 
-                                               name="quantity_{{ price.table_name }}" 
-                                               value="1" 
-                                               min="1" 
-                                               class="form-control quantity-input"
-                                               style="width: 70px;">
-                                    </div>
-                                
-                                    <button type="submit" class="btn btn-add-to-cart">
-                                        <i class="bi bi-cart-plus"></i>
-                                        {{ _('Add to Cart') }}
-                                    </button>
-                                </form>
-                            </div>
-                            {% endfor %}
-                        </div>
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title">{{ product_data.name }}</h1>
+                    <div class="mb-4">
+                        <span class="text-muted">{{ _('Brand') }}:</span>
+                        <strong>{{ product_data.brand_name }}</strong>
                     </div>
-                {% endfor %}
+                    <div class="mb-4">
+                        <span class="text-muted">{{ _('Article') }}:</span>
+                        <strong>{{ article }}</strong>
+                    </div>
+
+                    {% set grouped_prices = {} %}
+                    {% for price in prices %}
+                        {% if price.brand_name not in grouped_prices %}
+                            {% set _ = grouped_prices.update({price.brand_name: []}) %}
+                        {% endif %}
+                        {% set _ = grouped_prices[price.brand_name].append(price) %}
+                    {% endfor %}
+
+                    {% for brand, brand_prices in grouped_prices.items() %}
+                        <div class="brand-section mb-4">
+                            <h3 class="brand-title"><i class="bi bi-tag-fill"></i> {{ brand }}</h3>
+                            <div class="brand-prices">
+                                {% for price in brand_prices %}
+                                    <div class="price-card" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                                        <div class="price-info">
+                                            <div class="price-value">
+                                                <span>{{ "%.2f"|format(price.price|float) }}</span>
+                                                <span>EUR</span>
+                                            </div>
+                                            <div class="delivery-info">
+                                                {% if price.in_stock %}
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                                <span>{{ _('In Stock') }}</span>
+                                                {% else %}
+                                                <i class="bi bi-clock"></i>
+                                                <span>{{ price.delivery_time }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-controls">
+                                            <input type="hidden" name="article" value="{{ article }}">
+                                            <input type="hidden" name="selected_price" value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}">
+                                            
+                                            <div class="input-group me-2" style="width: auto;">
+                                                <input type="number" 
+                                                       name="quantity_{{ price.table_name }}" 
+                                                       value="1" 
+                                                       min="1" 
+                                                       class="form-control quantity-input"
+                                                       style="width: 70px;">
+                                            </div>
+                                        
+                                            <button type="submit" class="btn btn-primary btn-add-to-cart">
+                                                <i class="bi bi-cart-plus"></i>
+                                                {{ _('Add to Cart') }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
@@ -591,22 +599,19 @@ function changeImage(newSrc, index) {
 }
 
 function prevImage() {
-    // Якщо поточний індекс 0, переходимо до останнього зображення
     let newIndex = currentImageIndex <= 0 ? images.length - 1 : currentImageIndex - 1;
     changeImage(images[newIndex], newIndex);
 }
 
 function nextImage() {
-    // Якщо поточний індекс останній, переходимо до першого зображення
     let newIndex = currentImageIndex >= images.length - 1 ? 0 : currentImageIndex + 1;
     changeImage(images[newIndex], newIndex);
 }
 
-// Додаємо автоматичне перегортання кожні 5 секунд (опціонально)
 function autoSlide() {
     nextImage();
 }
-// setInterval(autoSlide, 5000); // Розкоментуйте цей рядок, якщо потрібне автоматичне перегортання
+// setInterval(autoSlide, 5000);
 
 function trackAddToCart(form) {
     gtag('event', 'add_to_cart', {

@@ -2,19 +2,155 @@
 
 {% block title %}{{ _('About Us') }}{% endblock %}
 
+{% block extra_css %}
+<style>
+.about-header {
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/static/img/about-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 80px 0;
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.card-title {
+    color: var(--primary-color);
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.card-title i {
+    margin-right: 10px;
+}
+
+.brand-list li {
+    padding: 10px 0;
+    transition: transform 0.2s ease;
+    cursor: pointer;
+}
+
+.brand-list li:hover {
+    transform: translateX(10px);
+    color: var(--primary-color);
+}
+
+.brand-list i {
+    color: var(--primary-color);
+    margin-right: 10px;
+}
+
+.contact-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: var(--light-bg);
+    border-radius: 30px;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.contact-link:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.contact-link i {
+    margin-right: 8px;
+}
+
+.map-container {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.stats-section {
+    background-color: var(--light-bg);
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 20px;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5">
+<div class="about-header">
+    <div class="container">
+        <h1 class="display-4">{{ _('About AutogroupEU') }}</h1>
+        <p class="lead">{{ _('Your Trusted Partner in Auto Parts') }}</p>
+    </div>
+</div>
+
+<meta name="description" content="Learn more about AutogroupEU - your trusted partner in auto parts supply across Europe.">
+
+<div class="container">
+    <div class="stats-section">
+        <div class="row">
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <div class="stat-number">15+</div>
+                    <div class="stat-label">{{ _('Years Experience') }}</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <div class="stat-number">50K+</div>
+                    <div class="stat-label">{{ _('Parts Available') }}</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <div class="stat-number">1000+</</div>
+                    <div class="stat-label">{{ _('Happy Clients') }}</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">{{ _('Support') }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
-        <div class="col-md-8 mx-auto">
-            <h1 class="mb-4">{{ _('About AutogroupEU') }}</h1>
-            
+        <div class="col-lg-8 mx-auto">
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title">
                         <i class="bi bi-shop"></i> {{ _('Auto Parts Store') }}
                     </h5>
                     <p class="card-text">
-                        {{ _('We are a specialized auto parts store serving business clients across Europe.') }}
+                        {{ _('We are a specialized auto parts store serving business clients across Europe. With over 15 years of experience, we provide high-quality automotive parts and exceptional service to our B2B partners.') }}
                     </p>
                 </div>
             </div>
@@ -24,31 +160,30 @@
                     <h5 class="card-title">
                         <i class="bi bi-truck"></i> {{ _('Our Main Brands') }}
                     </h5>
-                    <ul class="list-unstyled">
-                        <li><i class="bi bi-check2"></i> Mercedes-Benz</li>
-                        <li><i class="bi bi-check2"></i> BMW</li>
-                        <li><i class="bi bi-check2"></i> Volkswagen Group</li>
-                        <li><i class="bi bi-check2"></i> Jaguar</li>
-                        <li><i class="bi bi-check2"></i> Land Rover</li>
-                        <li><i class="bi bi-check2"></i> Volvo</li>
-                        <li><i class="bi bi-check2"></i> Toyota</li>
-                        <li><i class="bi bi-check2"></i> Ford</li>
+                    <ul class="brand-list list-unstyled">
+                        <li><i class="bi bi-check2-circle"></i> Mercedes-Benz</li>
+                        <li><i class="bi bi-check2-circle"></i> BMW</li>
+                        <li><i class="bi bi-check2-circle"></i> Volkswagen Group</li>
+                        <li><i class="bi bi-check2-circle"></i> Jaguar</li>
+                        <li><i class="bi bi-check2-circle"></i> Land Rover</li>
+                        <li><i class="bi bi-check2-circle"></i> Volvo</li>
+                        <li><i class="bi bi-check2-circle"></i> Toyota</li>
+                        <li><i class="bi bi-check2-circle"></i> Ford</li>
                     </ul>
                 </div>
             </div>
 
             <div class="card mb-4">
-                <div class="card-body">
+                <div class="card-body text-center">
                     <h5 class="card-title">
                         <i class="bi bi-building"></i> {{ _('B2B Services') }}
                     </h5>
-                    <p class="card-text">
-                        {{ _('For business clients interested in B2B access, please contact:') }}
-                        <br>
-                        <a href="mailto:info@autogroup.sk" class="text-decoration-none">
-                            <i class="bi bi-envelope"></i> info@autogroup.sk
-                        </a>
+                    <p class="card-text mb-4">
+                        {{ _('For business clients interested in B2B access, please contact us:') }}
                     </p>
+                    <a href="mailto:info@autogroup.sk" class="contact-link">
+                        <i class="bi bi-envelope"></i> info@autogroup.sk
+                    </a>
                 </div>
             </div>
 
@@ -57,12 +192,14 @@
                     <h5 class="card-title">
                         <i class="bi bi-geo-alt"></i> {{ _('Find Us') }}
                     </h5>
-                    <div class="ratio ratio-16x9">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2624.9999999999995!2d21.907539999999998!3d48.937539999999996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x473e3d9999999999%3A0x9999999999999999!2sTušická%20Nová%20Ves%2090%2C%20072%2002%20Slovakia!5e0!3m2!1sen!2sus!4v1619999999999!5m2!1sen!2sus"
-                                style="border:0;" 
-                                allowfullscreen="" 
+                    <div class="map-container">
+                        <div class="ratio ratio-16x9">
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2624.9999999999995!2d21.907539999999998!3d48.937539999999996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x473e3d9999999999%3A0x9999999999999999!2sTušická%20Nová%20Ves%2090%2C%20072%2002%20Slovakia!5e0!3m2!1sen!2sus!4v1619999999999!5m2!1sen!2sus"
+                                style="border:0;"
+                                allowfullscreen=""
                                 loading="lazy">
-                        </iframe>
+                            </iframe>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -676,74 +676,70 @@ msgstr "Žiadne položky v tejto zásielke."
 
 #: venv/Lib/site-packages/click/_termui_impl.py:556
 msgid "{editor}: Editing failed"
-msgstr ""
+msgstr "{editor}: Úprava zlyhala"
 
 #: venv/Lib/site-packages/click/_termui_impl.py:560
 msgid "{editor}: Editing failed: {e}"
-msgstr ""
+msgstr "{editor}: Úprava zlyhala: {e}"
 
 #: venv/Lib/site-packages/click/core.py:1124
 msgid "Aborted!"
-msgstr ""
+msgstr "Prerušené!"
 
 #: venv/Lib/site-packages/click/core.py:1349
 #: venv/Lib/site-packages/click/core.py:1379
 msgid "(Deprecated) {text}"
-msgstr ""
-
-#: venv/Lib/site-packages/click/core.py:1396
-msgid "Options"
-msgstr "Akcie"
+msgstr "(Zastarané) {text}"
 
 #: venv/Lib/site-packages/click/core.py:1424
 msgid "Got unexpected extra argument ({args})"
 msgid_plural "Got unexpected extra arguments ({args})"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Získaný neočakávaný dodatočný argument ({args})"
+msgstr[1] "Získané neočakávané dodatočné argumenty ({args})"
+msgstr[2] "Získaných neočakávaných dodatočných argumentov ({args})"
 
 #: venv/Lib/site-packages/click/core.py:1437
 msgid "DeprecationWarning: The command {name!r} is deprecated."
-msgstr ""
+msgstr "DeprecationWarning: Príkaz {name!r} je zastaraný."
 
 #: venv/Lib/site-packages/click/core.py:1645
 msgid "Commands"
-msgstr "Komentár"
+msgstr "Príkazy"
 
 #: venv/Lib/site-packages/click/core.py:1677
 msgid "Missing command."
-msgstr ""
+msgstr "Chýbajúci príkaz."
 
 #: venv/Lib/site-packages/click/core.py:1755
 msgid "No such command {name!r}."
-msgstr ""
+msgstr "Príkaz {name!r} neexistuje."
 
 #: venv/Lib/site-packages/click/core.py:2313
 msgid "Value must be an iterable."
-msgstr ""
+msgstr "Hodnota musí byť iterovateľná."
 
 #: venv/Lib/site-packages/click/core.py:2336
 msgid "Takes {nargs} values but 1 was given."
 msgid_plural "Takes {nargs} values but {len} were given."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Vyžaduje {nargs} hodnôt, ale bola zadaná 1."
+msgstr[1] "Vyžaduje {nargs} hodnôt, ale boli zadané {len}."
+msgstr[2] "Vyžaduje {nargs} hodnôt, ale bolo zadaných {len}."
 
 #: venv/Lib/site-packages/click/core.py:2783
 msgid "env var: {var}"
-msgstr ""
+msgstr "premenná prostredia: {var}"
 
 #: venv/Lib/site-packages/click/core.py:2813
 msgid "(dynamic)"
-msgstr ""
+msgstr "(dynamické)"
 
 #: venv/Lib/site-packages/click/core.py:2828
 msgid "default: {default}"
-msgstr ""
+msgstr "predvolené: {default}"
 
 #: venv/Lib/site-packages/click/core.py:2841
 msgid "required"
-msgstr ""
+msgstr "povinné"
 
 #: venv/Lib/site-packages/click/decorators.py:457
 #, python-format
@@ -752,28 +748,31 @@ msgstr ""
 
 #: venv/Lib/site-packages/click/decorators.py:520
 msgid "Show the version and exit."
-msgstr ""
+msgstr "Zobraziť verziu a ukončiť."
 
 #: venv/Lib/site-packages/click/decorators.py:541
 msgid "Show this message and exit."
-msgstr ""
+msgstr "Zobraziť túto správu a ukončiť."
 
 #: venv/Lib/site-packages/click/exceptions.py:49
 #: venv/Lib/site-packages/click/exceptions.py:88
 msgid "Error: {message}"
-msgstr ""
+msgstr "Chyba: {message}"
+
+msgid "%(num_articles)s articles still need table selection."
+msgstr "%(num_articles)s položiek stále potrebuje výber tabuľky."
 
 #: venv/Lib/site-packages/click/exceptions.py:80
 msgid "Try '{command} {option}' for help."
-msgstr ""
+msgstr "Skúste '{command} {option}' pre pomoc."
 
 #: venv/Lib/site-packages/click/exceptions.py:129
 msgid "Invalid value: {message}"
-msgstr ""
+msgstr "Neplatná hodnota: {message}"
 
 #: venv/Lib/site-packages/click/exceptions.py:131
 msgid "Invalid value for {param_hint}: {message}"
-msgstr ""
+msgstr "Neplatná hodnota pre {param_hint}: {message}"
 
 #: venv/Lib/site-packages/click/exceptions.py:187
 msgid "Missing argument"
@@ -816,7 +815,7 @@ msgstr ""
 
 #: venv/Lib/site-packages/click/formatting.py:156
 msgid "Usage:"
-msgstr "Používateľ"
+msgstr "Použitie:"
 
 #: venv/Lib/site-packages/click/parser.py:233
 msgid "Argument {name!r} takes {nargs} values."
@@ -903,39 +902,39 @@ msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:826
 msgid "file"
-msgstr "Filter"
+msgstr "súbor"
 
 #: venv/Lib/site-packages/click/types.py:828
 msgid "directory"
-msgstr ""
+msgstr "adresár"
 
 #: venv/Lib/site-packages/click/types.py:830
 msgid "path"
-msgstr ""
+msgstr "cesta"
 
 #: venv/Lib/site-packages/click/types.py:881
 msgid "{name} {filename!r} does not exist."
-msgstr ""
+msgstr "Súbor {name} {filename!r} neexistuje."
 
 #: venv/Lib/site-packages/click/types.py:890
 msgid "{name} {filename!r} is a file."
-msgstr ""
+msgstr "Súbor {name} {filename!r} je súbor."
 
 #: venv/Lib/site-packages/click/types.py:898
 msgid "{name} {filename!r} is a directory."
-msgstr ""
+msgstr "Súbor {name} {filename!r} je adresár."
 
 #: venv/Lib/site-packages/click/types.py:907
 msgid "{name} {filename!r} is not readable."
-msgstr ""
+msgstr "Súbor {name} {filename!r} nie je čitateľný."
 
 #: venv/Lib/site-packages/click/types.py:916
 msgid "{name} {filename!r} is not writable."
-msgstr ""
+msgstr "Súbor {name} {filename!r} nie je zapisovateľný."
 
 #: venv/Lib/site-packages/click/types.py:925
 msgid "{name} {filename!r} is not executable."
-msgstr ""
+msgstr "Súbor {name} {filename!r} nie je spustiteľný."
 
 #: venv/Lib/site-packages/click/types.py:991
 msgid "{len_type} values are required, but {len_value} was given."

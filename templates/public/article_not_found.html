@@ -1,8 +1,9 @@
 {% extends "base/public_base.html" %}
 
+{% block title %}{{ _('Article Not Found') }}{% endblock %}
+
 {% block extra_css %}
 <style>
-    /*  ВАШІ ЗМІННІ ТУТ  */
     :root {
         --primary-color: #007bff;
         --primary-color-dark: #0056b3;
@@ -12,21 +13,15 @@
         --text-color: #212529;
         --heading-color: #333;
         --font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        --font-family-headings: 'Arial', sans-serif;
         --font-size-base: 1rem;
-        --font-size-h1: 2.5rem;
-        --font-size-h2: 2rem;
         --font-size-h3: 1.5rem;
         --spacing-unit: 1rem;
-        --spacing-sm: 0.5rem;
         --spacing-md: 1rem;
-        --spacing-lg: 2rem;
+        --spacing-sm: 0.5rem;
         --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
         --border-radius: 0.375rem;
     }
 
-    /*  ЗАГАЛЬНІ СТИЛІ (card, btn, etc.) */
     .btn {
         display: inline-block;
         padding: 0.5rem 1rem;
@@ -72,7 +67,77 @@
         color: var(--heading-color);
     }
 
-    /* Index page specific styles */
+    .input-group {
+        box-shadow: var(--shadow);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+    }
+
+    .form-control:focus {
+        box-shadow: none;
+        border-color: var(--primary-color);
+    }
+
+    .btn-primary {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    .alert {
+        position: relative;
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: 0.25rem;
+    }
+
+    .alert-warning {
+        color: #856404;
+        background-color: #fff3cd;
+        border-color: #ffeeba;
+    }
+
+    .alert-heading {
+        color: inherit;
+    }
+
+    .mb-0 {
+        margin-bottom: 0 !important;
+    }
+
+    .mb-3 {
+        margin-bottom: 1rem !important;
+    }
+
+    .mt-5 {
+        margin-top: 3rem !important;
+    }
+
+    .justify-content-center {
+        justify-content: center !important;
+    }
+
+    .col-md-8 {
+        flex: 0 0 66.666667%;
+        max-width: 66.666667%;
+    }
+
+    .input-group-append {
+        margin-left: -1px;
+        display: flex;
+    }
+
+    .btn-outline-info {
+        color: #17a2b8;
+        border-color: #17a2b8;
+    }
+
+    .btn-outline-info:hover {
+        color: #fff;
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+    }
+
     .welcome-section,
     .search-section,
     .contact-section,
@@ -90,36 +155,22 @@
     .service-info:hover {
         transform: translateY(-5px);
     }
-
-    .input-group {
-        box-shadow: var(--shadow);
-        border-radius: var(--border-radius);
-        overflow: hidden;
-    }
-
-    .form-control:focus {
-        box-shadow: none;
-        border-color: var(--primary-color);
-    }
-
-    .btn-primary {
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="row">
-        <!-- Ліва колонка з привітанням та пошуком -->
+        <!-- Ліва колонка -->
         <div class="col-lg-8">
-            <!-- Блок привітання -->
+            <!-- Блок з повідомленням про відсутність артикула -->
             <div class="welcome-section">
-                <h1 class="h3 mb-3">{{ _('Welcome to AutogroupEU') }}</h1>
-                <p class="lead text-muted">
-                    {{ _('Your reliable partner in auto parts supply across Europe. Enter the article number to check prices and availability.') }}
-                </p>
+                <div class="alert alert-warning mb-0">
+                    <h4 class="alert-heading mb-3">{{ _('Article Not Found') }}</h4>
+                    <p>{{ _('Sorry, we could not find any information for article') }} <strong>{{ article }}</strong>.</p>
+                    <hr>
+                    <p class="mb-0">{{ _('You can try searching again or contact us for assistance.') }}</p>
+                </div>
             </div>
 
             <!-- Блок пошуку -->
@@ -137,8 +188,9 @@
             </div>
         </div>
 
-        <!-- Права колонка з контактною інформацією -->
+        <!-- Права колонка -->
         <div class="col-lg-4">
+            <!-- Блок контактної інформації -->
             <div class="contact-section">
                 <h4 class="mb-3">
                     <i class="bi bi-headset me-2"></i>
@@ -155,18 +207,23 @@
                     </div>
                 </div>
             </div>
-             <!-- Блок інформації про сервіс -->
+
+            <!-- Блок VIN-коду -->
             <div class="service-info">
                 <h4 class="mb-3">
-                    <i class="bi bi-tools me-2"></i>
-                    {{ _('Car Service & Programming') }}
+                    <i class="bi bi-car-front me-2"></i>
+                    {{ _('Find Parts by VIN Code') }}
                 </h4>
                 <p class="text-muted mb-3">
-                    {{ _('We offer professional car repair and programming services. Contact us for more information.') }}
+                    {{ _('Provide us with your VIN code and we will help you find the right parts for your vehicle.') }}
                 </p>
-                <a href="#" class="btn btn-outline-primary">
-                    {{ _('Learn More') }}
-                </a>
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-key text-primary me-3 fs-3"></i>
+                    <div>
+                        <div class="fw-bold fs-5">{{ _('Fast and Accurate') }}</div>
+                        <small class="text-muted">{{ _('Professional parts selection') }}</small>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

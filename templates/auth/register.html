@@ -22,6 +22,20 @@
                             <label for="password" class="form-label">{{ _('Password') }}</label>
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
+                        <div class="form-group">
+                            <label for="phone">{{ _('Phone Number') }}</label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="phone" 
+                                   name="phone" 
+                                   placeholder="+421907123456"
+                                   pattern="^\+[0-9]{10,15}$"
+                                   title="{{ _('Phone number must be in international format (e.g. +421907123456)') }}"
+                                   required>
+                            <small class="form-text text-muted">
+                                {{ _('Enter phone number in international format (e.g. +421907123456)') }}
+                            </small>
+                        </div>
                         <button type="submit" class="btn btn-primary">{{ _('Register') }}</button>
                     </form>
                 </div>

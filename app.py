@@ -25,7 +25,8 @@ import numpy as np
 from datetime import datetime
 from flask import make_response
 import json
-
+import phonenumbers
+from phonenumbers import NumberParseException
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('psycopg2')
@@ -51,8 +52,22 @@ LANGUAGES = {
     'sk': 'Slovenský',
     'pl': 'Polski'
 }
-
-
+    
+# Функція валідації телефону
+def validate_phone(phone_number):
+    try:
+        # Парсимо номер
+        parsed_number = phonenumbers.parse(phone_number)
+        # Перевіряємо чи номер валідний
+        if not phonenumbers.is_valid_number(parsed_number):
+            return False, "Invalid phone number format"
+        # Перевіряємо чи це мобільний номер
+        number_type = phonenumbers.number_type(parsed_number)
+        if number_type != phonenumbers.PhoneNumberType.MOBILE:
+            return False, "Number must be mobile phone"
+        return True, phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.E164)
+    except NumberParseException as e:
+        return False, str(e)
 
 # Функція для реєстрації нового користувача
 @app.route('/register', methods=['GET', 'POST'])
@@ -61,15 +76,28 @@ def register():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
+        phone = request.form['phone']  # Нове поле
+
+        # Валідація телефону
+        is_valid_phone, phone_message = validate_phone(phone)
+        if not is_valid_phone:
+            flash(_(phone_message), "error")
+            return render_template('auth/register.html')
 
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
                 # Перевірка наявності користувача
-                cursor.execute("SELECT id FROM users WHERE username = %s OR email = %s", 
-                            (username, email))
+                cursor.execute("""
+                    SELECT id 
+                    FROM users 
+                    WHERE username = %s 
+                    OR email = %s 
+                    OR phone = %s
+                """, (username, email, phone_message))
+                
                 if cursor.fetchone():
-                    flash(_("Username or email already registered."), "error")
+                    flash(_("Username, email or phone already registered."), "error")
                     return render_template('auth/register.html')
 
                 # Хешування пароля
@@ -77,10 +105,10 @@ def register():
 
                 # Додавання нового користувача
                 cursor.execute("""
-                    INSERT INTO users (username, email, password_hash)
-                    VALUES (%s, %s, %s)
+                    INSERT INTO users (username, email, password_hash, phone)
+                    VALUES (%s, %s, %s, %s)
                     RETURNING id
-                """, (username, email, hashed_password))
+                """, (username, email, hashed_password, phone_message))
                 user_id = cursor.fetchone()[0]
 
                 # Отримуємо ID ролі 'public'
@@ -520,15 +548,36 @@ def utility_processor():
         return 0
     return dict(get_user_cart_count=get_user_cart_count)
 
+
+
+# Маршрут з префіксом мови
+@app.route('/<lang>/product/<article>')
+def localized_product_details(lang, article):
+    # Перевіряємо, чи підтримується мова
+    if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
+        return redirect(url_for('product_details', article=article))
+    
+    # Встановлюємо мову для поточного запиту
+    session['language'] = lang
+    g.locale = lang
+    
+    # Перенаправляємо на основну функцію product_details
+    return product_details(article)
+
+
+
+
 @app.route('/product/<article>')
 def product_details(article):
     try:
+        # Отримуємо поточну мову
+        lang = session.get('language', 'uk')
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         logging.info(f"=== Starting product_details for article: {article} ===")
 
-        # Get stock info first
+        # Get stock info first (залишаємо без змін)
         cursor.execute("""
             SELECT s.article, s.price, s.brand_id, b.name as brand_name
             FROM stock s
@@ -547,16 +596,22 @@ def product_details(article):
             'brand_id': stock_data['brand_id'] if stock_data else None
         }
 
-        # Get product info
-        cursor.execute("""
-            SELECT article, name, description
+        # Get product info with language-specific fields
+        cursor.execute(f"""
+            SELECT 
+                article,
+                name_{lang} as name,
+                description_{lang} as description
             FROM products
             WHERE article = %s
         """, (article,))
         
         db_product = cursor.fetchone()
+        if db_product:
+            product_data['name'] = db_product['name'] or article
+            product_data['description'] = db_product['description'] or ''
 
-        # Get photos
+        # Get photos (залишаємо без змін)
         cursor.execute("""
             SELECT image_url
             FROM product_images
@@ -564,10 +619,9 @@ def product_details(article):
         """, (article,))
         product_data['photo_urls'] = [row['image_url'] for row in cursor.fetchall()]
 
-        # Get all prices
+        # Решта коду залишається без змін...
         prices = []
 
-        # Add stock price if exists
         if stock_data:
             price_data = {
                 'table_name': 'stock',
@@ -581,7 +635,7 @@ def product_details(article):
             prices.append(price_data)
             logging.info(f"Added stock price: {price_data}")
 
-        # Get prices from price_lists
+        # Get prices from price_lists (залишаємо без змін)
         cursor.execute("""
             SELECT pl.table_name, pl.brand_id, pl.delivery_time, b.name as brand_name 
             FROM price_lists pl
@@ -590,10 +644,11 @@ def product_details(article):
         """)
         tables = cursor.fetchall()
 
-        price_found = False  # Додаємо прапорець
+        price_found = False
 
+        # Вся логіка обробки цін залишається без змін...
         for table in tables:
-            if table['table_name'] != 'stock':  # Extra check to exclude stock
+            if table['table_name'] != 'stock':
                 table_name = table['table_name']
                 brand_id = table['brand_id']
                 brand_name = table['brand_name']
@@ -607,9 +662,7 @@ def product_details(article):
                 
                 if cursor.fetchone()[0]:
                     query = f"""
-                        SELECT 
-                            article, 
-                            price
+                        SELECT article, price
                         FROM {table_name}
                         WHERE article = %s
                     """
@@ -617,7 +670,7 @@ def product_details(article):
                     result = cursor.fetchone()
                     
                     if result:
-                        price_found = True  # Встановлюємо прапорець, якщо ціна знайдена
+                        price_found = True
                         markup_percentage = get_markup_by_role('public')
                         base_price = result['price']
                         final_price = calculate_price(base_price, markup_percentage)
@@ -635,13 +688,10 @@ def product_details(article):
                         prices.append(price_data)
                         logging.info(f"Added price from {table_name}: {price_data}")
 
-        # Sort prices
         prices.sort(key=lambda x: float(x['price']))
         logging.info(f"Final prices count: {len(prices)}")
 
-        if not db_product and not stock_data and not price_found:  # Перевіряємо прапорець
-            # flash(_("Article not found."), "error")
-            # return redirect(url_for('index'))
+        if not db_product and not stock_data and not price_found:
             return render_template(
                 'public/article_not_found.html',
                 article=article
@@ -662,6 +712,55 @@ def product_details(article):
     finally:
         if 'conn' in locals() and conn:
             conn.close()
+
+
+# Google feed
+@app.route('/google-merchant-feed.xml')
+def google_merchant_feed():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # Для кожної мови створюємо окремий фід
+        languages = ['uk', 'en', 'sk', 'pl']
+        products_by_lang = {}
+
+        for lang in languages:
+            cursor.execute(f"""
+                SELECT 
+                    p.article,
+                    p.name_{lang} as name,
+                    p.description_{lang} as description,
+                    p.photo_urls[1] as image_url,
+                    MIN(pl.price) as price,
+                    b.name as brand_name
+                FROM products p
+                JOIN price_lists pl ON pl.table_name != 'stock'
+                LEFT JOIN brands b ON pl.brand_id = b.id
+                WHERE p.is_active = true 
+                AND p.name_{lang} IS NOT NULL
+                GROUP BY p.article, p.name_{lang}, p.description_{lang}, p.photo_urls, b.name
+            """)
+            products_by_lang[lang] = cursor.fetchall()
+
+        # Створюємо XML feed
+        xml = render_template(
+            'feeds/google_merchant.xml',
+            products_by_lang=products_by_lang,
+            domain=request.host_url.rstrip('/')
+        )
+        
+        response = make_response(xml)
+        response.headers['Content-Type'] = 'application/xml'
+        return response
+
+    except Exception as e:
+        logging.error(f"Error generating Google Merchant feed: {e}")
+        return "Error generating feed", 500
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
 
 @app.route('/update_public_cart', methods=['POST'])
 def update_public_cart():

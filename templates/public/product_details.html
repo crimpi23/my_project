@@ -2,11 +2,10 @@
 
 {% block head %}
 <!-- SEO Meta Tags -->
-<meta name="description" content="{{ _(product_data.description[:160]) }}">
-<meta name="keywords" content="{{ _(product_data.name) }}, {{ article }}, {{ _('auto parts') }}, {{ _('spare parts') }}">
-<meta property="og:title" content="{{ _(product_data.name) }} - AutogroupEU">
-<meta property="og:description" content="{{ product_data.description[:160] }}">
-<meta property="og:image" content="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}">
+<meta name="description" content="{{ product_data.description[:160]|replace('%', '%%')|replace('=', '\=') }}">
+<meta name="keywords" content="{{ product_data.name|replace('%', '%%')|replace('=', '\=') }}, {{ article }}, {{ _('auto parts') }}, {{ _('spare parts') }}">
+<meta property="og:title" content="{{ product_data.name|replace('%', '%%')|replace('=', '\=') }} - AutogroupEU">
+<meta property="og:description" content="{{ product_data.description[:160]|replace('%', '%%')|replace('=', '\=') }}">
 <meta property="og:type" content="product">
 <meta property="og:url" content="{{ request.url }}">
 

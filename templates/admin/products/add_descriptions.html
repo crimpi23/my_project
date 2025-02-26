@@ -1,0 +1,38 @@
+{# templates/admin/products/add_descriptions.html #}
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Додати/оновити описи товарів</h2>
+    
+    <form method="POST">
+        <div class="form-group">
+            <label>Мова:</label>
+            <select name="language" class="form-control">
+                <option value="uk">Українська</option>
+                <option value="en">English</option>
+                <option value="sk">Slovenský</option>
+                <option value="pl">Polski</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Режим оновлення:</label>
+            <select name="update_mode" class="form-control">
+                <option value="create">Тільки нові записи</option>
+                <option value="update">Оновлювати існуючі</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Дані (формат: артикул brand_id назва опис):</label>
+            <textarea name="descriptions_data" class="form-control" rows="10"></textarea>
+            <small class="form-text text-muted">
+                Кожен рядок повинен містити: артикул, brand_id, назву та опис, розділені табуляцією
+            </small>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Завантажити</button>
+    </form>
+</div>
+{% endblock %}

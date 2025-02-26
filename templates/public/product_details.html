@@ -612,9 +612,19 @@ gtag('event', 'view_item', {
                 <!-- Інформація про товар -->
                 <h1 class="product-title">{{ product_data.name }}</h1>
                 <div class="product-meta">
-                    <div><span class="text-muted">{{ _('Brand') }}:</span> {{ product_data.brand_name }}</div>
-                    <div><span class="text-muted">{{ _('Article') }}:</span> {{ article }}</div>
-                </div>
+    <div>
+        <span class="text-muted">{{ _('Brand') }}:</span> 
+        {% if prices and prices[0]['brand_name'] %}
+            {{ prices[0]['brand_name'] }}
+        {% else %}
+            {{ product_data.brand_name if product_data.brand_name else 'None' }}
+        {% endif %}
+    </div>
+    <div>
+        <span class="text-muted">{{ _('Article') }}:</span> 
+        {{ article }}
+    </div>
+</div>
 
                 <!-- Ціни (оригінальний блок) -->
                 {% for price in prices %}

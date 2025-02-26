@@ -94,6 +94,19 @@
                 </div>
             </div>
         </div>
+        <!-- Керування складом -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-box-seam fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Stock Management</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('manage_stock', token=token) }}" class="btn btn-admin mb-2">Manage Stock</a>
+                        <a href="{{ url_for('upload_stock', token=token) }}" class="btn btn-admin">Upload Stock</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Додаткові функції -->
@@ -134,6 +147,33 @@
                     <div class="d-grid gap-2">
                         <a href="{{ url_for('manage_google_feed', token=token) }}" class="btn btn-admin mb-2">Feed Settings</a>
                         <a href="/google-merchant-feed.xml" target="_blank" class="btn btn-admin">View Feed</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Керування зображеннями -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-images fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Product Images</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('add_product_images', token=token) }}" class="btn btn-admin">Add Images</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Керування описами товарів -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-text-fill fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Product Descriptions</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('add_product_descriptions', token=token) }}" class="btn btn-admin mb-2">Add Descriptions</a>
+                        <a href="{{ url_for('manage_descriptions', token=token) }}" class="btn btn-admin">Manage Descriptions</a>
                     </div>
                 </div>
             </div>

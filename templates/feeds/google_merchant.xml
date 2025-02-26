@@ -1,26 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
-  <channel>
-    <title>Auto Parts Store Feed</title>
-    <link>{{ domain }}</link>
-    <description>Auto parts catalog</description>
-    {% for lang, products in products_by_lang.items() %}
-      {% for product in products %}
+    <channel>
+        <title>Auto Parts Store Feed</title>
+        <link>{{ domain }}</link>
+        <description>Auto parts catalog</description>
+        {% for product in products %}
         <item>
-          <g:id>{{ product.article }}</g:id>
-          <title>{{ product.name }}</title>
-          <description>{{ product.description or '' }}</description>
-          <link>{{ domain }}/product/{{ product.article }}</link>
-          <g:price>{{ "%.2f"|format(product.price) }} EUR</g:price>
-          <g:condition>new</g:condition>
-          <g:availability>in stock</g:availability>
-          <g:brand>{{ product.brand_name }}</g:brand>
-          <g:google_product_category>{{ product.google_category }}</g:google_product_category>
-          {% if product.image_url %}
-          <g:image_link>{{ product.image_url }}</g:image_link>
-          {% endif %}
+            <g:id>{{ product.article }}</g:id>
+            <title>{{ product.name }}</title>
+            <description>{{ product.description }}</description>
+            <link>{{ domain }}/product/{{ product.article }}</link>
+            <g:price>{{ "%.2f"|format(product.price) }} EUR</g:price>
+            <g:condition>new</g:condition>
+            <g:availability>{{ 'in stock' if product.quantity and product.quantity > 0 else 'out of stock' }}</g:availability>
+            <g:brand>{{ product.brand_name }}</g:brand>
+            <g:google_product_category>{{ product.google_category }}</g:google_product_category>
+            {% if product.image_url %}
+            <g:image_link>{{ product.image_url }}</g:image_link>
+            {% endif %}
         </item>
-      {% endfor %}
-    {% endfor %}
-  </channel>
+        {% endfor %}
+    </channel>
 </rss>

@@ -1,0 +1,124 @@
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Управління складом</h2>
+
+    <!-- Форма завантаження файлу -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Завантаження даних (Excel)</h4>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('upload_stock', token=token) }}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Оберіть Excel файл з колонками: Артикуль, кть, Ціна, id бренду</label>
+                    <input type="file" class="form-control" name="file" accept=".xlsx,.xls" required>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Завантажити</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Форма додавання окремої позиції -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Додати нову позицію</h4>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('add_stock_item', token=token) }}" method="post">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Артикул</label>
+                        <input type="text" class="form-control" name="article" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Кількість</label>
+                        <input type="number" class="form-control" name="quantity" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Ціна</label>
+                        <input type="text" class="form-control" name="price" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Бренд</label>
+                        <select class="form-control" name="brand_id" required>
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}">{{ brand.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success">Додати</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Таблиця стоку -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4>Поточний сток</h4>
+            <form action="{{ url_for('clear_stock', token=token) }}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Ви впевнені що хочете очистити весь сток?')">
+                    Очистити сток
+                </button>
+            </form>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Артикул</th>
+                            <th>Кількість</th>
+                            <th>Ціна</th>
+                            <th>Бренд</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in stock_items %}
+                        <tr>
+                            <td>{{ item.article }}</td>
+                            <td>
+                                <form action="{{ url_for('update_stock_item', token=token, article=item.article) }}" 
+                                      method="post" class="d-inline">
+                                    <input type="number" name="quantity" value="{{ item.quantity }}" 
+                                           class="form-control form-control-sm d-inline" style="width: 80px;">
+                            </td>
+                            <td>
+                                <input type="text" name="price" value="{{ item.price }}" 
+                                       class="form-control form-control-sm d-inline" style="width: 80px;">
+                            </td>
+                            <td>
+                                <select name="brand_id" class="form-control form-control-sm d-inline">
+                                    {% for brand in brands %}
+                                    <option value="{{ brand.id }}" 
+                                            {% if brand.id == item.brand_id %}selected{% endif %}>
+                                        {{ brand.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-sm btn-primary">Оновити</button>
+                                </form>
+                                <form action="{{ url_for('delete_stock_item', token=token, article=item.article) }}" 
+                                      method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                            onclick="return confirm('Ви впевнені що хочете видалити цю позицію?')">
+                                        Видалити
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

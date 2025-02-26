@@ -650,10 +650,24 @@ def product_details(article):
 
         # Get photos (залишаємо без змін)
         cursor.execute("""
-            SELECT image_url
-            FROM product_images
-            WHERE product_article = %s
-        """, (article,))
+            SELECT image_url 
+            FROM product_images 
+            WHERE product_article = %s 
+            ORDER BY 
+                -- First priority: exact match with article number
+                CASE WHEN image_url LIKE %s THEN 0
+                -- Second priority: files with 'sh1' suffix
+                WHEN image_url LIKE %s THEN 1
+                -- Third priority: numbered suffixes like (1), (2), etc
+                WHEN image_url ~ '.+\\([0-9]+\\)\\..*$' THEN 2
+                -- All other cases
+                ELSE 3 END,
+                image_url
+        """, (
+            article,
+            f'%/{article}.jpg',  # Exact match pattern
+            f'%/{article} sh1%'  # sh1 pattern
+        ))
         product_data['photo_urls'] = [row['image_url'] for row in cursor.fetchall()]
 
         # Решта коду залишається без змін...
@@ -750,56 +764,76 @@ def product_details(article):
         if 'conn' in locals() and conn:
             conn.close()
 
+@app.route('/<token>/admin/google-feed/delete/<int:setting_id>', methods=['POST'])
+@requires_token_and_roles('admin')
+def delete_google_feed(token, setting_id):
+    """Delete Google Feed configuration"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Delete the feed configuration
+            cursor.execute("""
+                DELETE FROM google_feed_settings 
+                WHERE id = %s
+            """, (setting_id,))
+            
+            if cursor.rowcount > 0:
+                conn.commit()
+                flash("Feed configuration deleted successfully", "success")
+            else:
+                flash("Feed configuration not found", "error")
+                
+    except Exception as e:
+        logging.error(f"Error deleting Google feed setting: {e}")
+        flash("Error deleting feed configuration", "error")
+        
+    return redirect(url_for('manage_google_feed', token=token))
+
+def generate_feed_item(item, lang, settings):
+    """Generate feed item with proper language content"""
+    title = item.get(f'title_{lang}') or item.get('title_en')  # fallback to English
+    description = item.get(f'description_{lang}') or item.get('description_en')
+    
+    return f"""
+    <item>
+        <g:id>{item['article']}</g:id>
+        <title>{title}</title>
+        <description>{description}</description>
+        <link>http://127.0.0.1:5000/product/{item['article']}</link>
+        <g:price>{item['price']} EUR</g:price>
+        <g:condition>new</g:condition>
+        <g:availability>{'in stock' if item['quantity'] > 0 else 'out of stock'}</g:availability>
+        <g:brand>{item['brand_name']}</g:brand>
+        <g:google_product_category>{settings['category']}</g:google_product_category>
+        <g:image_link>https://image.autogroup.sk/products/{item['article']}.jpg</g:image_link>
+    </item>
+    """
 
 # Google feed
-@app.route('/google-merchant-feed.xml')
-def google_merchant_feed():
+@app.route('/google-merchant-feed/<language>.xml')
+def language_merchant_feed(language):  # Changed function name
+    """Generate Google Merchant feed for specific language"""
     try:
-        logging.info("Starting Google Merchant feed generation")
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        # Перевіряємо структуру таблиці products
-        logging.debug("Checking products table structure")
-        cursor.execute("""
-            SELECT column_name, data_type 
-            FROM information_schema.columns 
-            WHERE table_name = 'products'
-        """)
-        columns = cursor.fetchall()
-        logging.debug(f"Products table columns: {[col['column_name'] for col in columns]}")
-
-        # Отримуємо активні налаштування
-        logging.info("Fetching feed settings")
-        cursor.execute("""
-            SELECT gs.*, b.name as brand_name 
-            FROM google_feed_settings gs
-            LEFT JOIN brands b ON gs.brand_id = b.id
-            WHERE gs.enabled = true
-        """)
-        settings = cursor.fetchall()
-        logging.debug(f"Found {len(settings)} active feed settings")
-
-        if not settings:
-            logging.warning("No active feed settings found")
-            return "No active feed settings found", 404
-
-        products_by_lang = {}
-        
-        for setting in settings:
-            language = setting['language']
-            price_list = setting['price_list_id']
-            markup = setting['markup_percentage']
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
-            logging.info(f"""
-                Processing feed setting:
-                - Language: {language}
-                - Price list: {price_list}
-                - Markup: {markup}%
-                - Brand: {setting['brand_name']}
-            """)
+            # Get active feed settings for specific language
+            cursor.execute("""
+                SELECT gs.*, b.name as brand_name 
+                FROM google_feed_settings gs
+                LEFT JOIN brands b ON gs.brand_id = b.id
+                WHERE gs.enabled = TRUE AND gs.language = %s
+                ORDER BY gs.created_at DESC
+                LIMIT 1
+            """, (language,))
+            settings = cursor.fetchone()
             
-            # Змінюємо запит, прибравши перевірку is_active
+            if not settings:
+                return f"No active feed configuration found for language: {language}", 404
+
+            # Get products from configured price list
+            price_list = settings['price_list_id']
             query = f"""
                 SELECT 
                     p.article,
@@ -808,112 +842,204 @@ def google_merchant_feed():
                     pi.image_url,
                     pl.price * (1 + %s/100) as price,
                     b.name as brand_name,
-                    %s as google_category
-                FROM products p
+                    %s as google_category,
+                    s.quantity
+                FROM {price_list} pl
+                JOIN products p ON pl.article = p.article
+                LEFT JOIN stock s ON pl.article = s.article
                 LEFT JOIN (
-                    SELECT DISTINCT ON (product_article) product_article, image_url
+                    SELECT DISTINCT ON (product_article) 
+                        product_article, image_url
                     FROM product_images
                     ORDER BY product_article, id
                 ) pi ON p.article = pi.product_article
-                JOIN {price_list} pl ON p.article = pl.article
-                LEFT JOIN brands b ON b.id = %s
+                LEFT JOIN brands b ON s.brand_id = b.id
                 WHERE p.name_{language} IS NOT NULL
             """
             
-            logging.debug(f"Executing query with parameters: {(markup, setting['category'], setting['brand_id'])}")
-            cursor.execute(query, (markup, setting['category'], setting['brand_id']))
+            if settings['brand_id']:
+                query += " AND s.brand_id = %s"
+                cursor.execute(query, (
+                    settings['markup_percentage'],
+                    settings['category'],
+                    settings['brand_id']
+                ))
+            else:
+                cursor.execute(query, (
+                    settings['markup_percentage'],
+                    settings['category']
+                ))
             
-            results = cursor.fetchall()
-            logging.info(f"Found {len(results)} products for language {language}")
-            products_by_lang[language] = results
+            products = cursor.fetchall()
 
-        # Генеруємо XML
-        logging.info("Generating XML response")
-        xml_content = render_template(
-            'feeds/google_merchant.xml',
-            products_by_lang=products_by_lang,
-            domain=request.host_url.rstrip('/')
-        )
+            # Generate XML
+            xml_content = render_template(
+                'feeds/google_merchant.xml',
+                products=products,
+                domain=request.host_url.rstrip('/'),
+                language=language
+            )
 
-        # Якщо запит містить параметр download
-        if request.args.get('download'):
-            logging.info("Preparing downloadable response")
-            response = make_response(xml_content)
-            response.headers['Content-Type'] = 'application/xml'
-            response.headers['Content-Disposition'] = 'attachment; filename=google-merchant-feed.xml'
-            return response
-
-        # Інакше відображаємо в браузері
-        logging.info("Preparing browser response")
-        return xml_content, {'Content-Type': 'application/xml'}
+            # Set response headers
+            download = request.args.get('download', False)
+            if download:
+                response = make_response(xml_content)
+                response.headers['Content-Type'] = 'application/xml'
+                response.headers['Content-Disposition'] = f'attachment; filename=google-merchant-feed-{language}.xml'
+                return response
+            
+            return xml_content, 200, {'Content-Type': 'application/xml'}
 
     except Exception as e:
-        logging.error(f"Error generating Google Merchant feed: {e}", exc_info=True)
-        return f"Error generating feed: {str(e)}", 500
-    finally:
-        if 'conn' in locals():
-            conn.close()
-            logging.info("Database connection closed")
+        logging.error(f"Error generating feed: {e}")
+        return "Error generating feed", 500
+
+@app.route('/google-merchant-feed/<language>.xml')
+def google_merchant_feed(language):
+    """Generate Google Merchant feed for specific language"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Get active feed settings for specific language
+            cursor.execute("""
+                SELECT gs.*, b.name as brand_name 
+                FROM google_feed_settings gs
+                LEFT JOIN brands b ON gs.brand_id = b.id
+                WHERE gs.enabled = TRUE AND gs.language = %s
+                ORDER BY gs.created_at DESC
+                LIMIT 1
+            """, (language,))
+            settings = cursor.fetchone()
+            
+            if not settings:
+                return f"No active feed configuration found for language: {language}", 404
+
+            # Get products from configured price list
+            price_list = settings['price_list_id']
+            query = f"""
+                SELECT 
+                    p.article,
+                    p.name_{language} as name,
+                    p.description_{language} as description,
+                    pi.image_url,
+                    pl.price * (1 + %s/100) as price,
+                    b.name as brand_name,
+                    %s as google_category,
+                    s.quantity
+                FROM {price_list} pl
+                JOIN products p ON pl.article = p.article
+                LEFT JOIN stock s ON pl.article = s.article
+                LEFT JOIN (
+                    SELECT DISTINCT ON (product_article) 
+                        product_article, image_url
+                    FROM product_images
+                    ORDER BY product_article, id
+                ) pi ON p.article = pi.product_article
+                LEFT JOIN brands b ON s.brand_id = b.id
+                WHERE p.name_{language} IS NOT NULL
+            """
+            
+            if settings['brand_id']:
+                query += " AND s.brand_id = %s"
+                cursor.execute(query, (
+                    settings['markup_percentage'],
+                    settings['category'],
+                    settings['brand_id']
+                ))
+            else:
+                cursor.execute(query, (
+                    settings['markup_percentage'],
+                    settings['category']
+                ))
+            
+            products = cursor.fetchall()
+
+            # Generate XML
+            xml_content = render_template(
+                'feeds/google_merchant.xml',
+                products=products,
+                domain=request.host_url.rstrip('/'),
+                language=language
+            )
+
+            # Set response headers
+            download = request.args.get('download', False)
+            if download:
+                response = make_response(xml_content)
+                response.headers['Content-Type'] = 'application/xml'
+                response.headers['Content-Disposition'] = f'attachment; filename=google-merchant-feed-{language}.xml'
+                return response
+            
+            return xml_content, 200, {'Content-Type': 'application/xml'}
+
+    except Exception as e:
+        logging.error(f"Error generating feed: {e}")
+        return "Error generating feed", 500
 
 # Керування Google feed
 @app.route('/<token>/admin/google-feed', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
 def manage_google_feed(token):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        if request.method == 'POST':
-            enabled = request.form.get('enabled') == 'on'
-            category = request.form.get('category')
-            brand_id = request.form.get('brand_id')
-            language = request.form.get('language')
-            price_list_id = request.form.get('price_list_id')
-            markup = request.form.get('markup', 0)
-
-            cursor.execute("""
-                INSERT INTO google_feed_settings 
-                (enabled, category, brand_id, language, price_list_id, markup_percentage)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (enabled, category, brand_id, language, price_list_id, markup))
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
-            conn.commit()
-            flash("Feed settings saved successfully", "success")
+            # Get current settings with brand names
+            cursor.execute("""
+                SELECT gs.*, b.name as brand_name 
+                FROM google_feed_settings gs
+                LEFT JOIN brands b ON gs.brand_id = b.id
+                ORDER BY gs.created_at DESC
+            """)
+            settings = cursor.fetchall()
 
-        # Отримуємо поточні налаштування
-        cursor.execute("""
-            SELECT gs.*, b.name as brand_name, pl.table_name 
-            FROM google_feed_settings gs
-            LEFT JOIN brands b ON gs.brand_id = b.id
-            LEFT JOIN price_lists pl ON gs.price_list_id = pl.table_name
-            ORDER BY gs.created_at DESC
-        """)
-        settings = cursor.fetchall()
+            # Get brands list
+            cursor.execute("SELECT id, name FROM brands ORDER BY name")
+            brands = cursor.fetchall()
+            # Add "All Brands" option at the beginning of the list
+            brands = [(-1, "All Brands")] + list(brands)
 
-        # Отримуємо список брендів
-        cursor.execute("SELECT id, name FROM brands ORDER BY name")
-        brands = cursor.fetchall()
+            # Get price lists
+            cursor.execute("SELECT table_name FROM price_lists")
+            price_lists = cursor.fetchall()
 
-        # Отримуємо список прайс-листів
-        cursor.execute("SELECT table_name FROM price_lists ORDER BY table_name")
-        price_lists = cursor.fetchall()
+            # Languages list
+            languages = ['sk', 'en', 'pl']
 
-        return render_template(
-            'admin/google_feed/settings.html',
-            settings=settings,
-            brands=brands,
-            price_lists=price_lists,
-            languages=app.config['BABEL_SUPPORTED_LOCALES'],
-            token=token
-        )
+            if request.method == 'POST':
+                enabled = request.form.get('enabled') == 'on'
+                category = request.form.get('category')
+                brand_id = request.form.get('brand_id')
+                language = request.form.get('language')
+                price_list = request.form.get('price_list_id')
+                markup = request.form.get('markup', '0')
+
+                # Convert brand_id to None if "All Brands" is selected
+                if brand_id == '-1':
+                    brand_id = None
+
+                cursor.execute("""
+                    INSERT INTO google_feed_settings 
+                    (enabled, category, brand_id, language, price_list_id, markup_percentage)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (enabled, category, brand_id, language, price_list, markup))
+
+                conn.commit()
+                flash("Feed configuration added successfully", "success")
+                return redirect(url_for('manage_google_feed', token=token))
+
+            return render_template('admin/google_feed/settings.html',
+                                settings=settings,
+                                brands=brands,
+                                price_lists=price_lists,
+                                languages=languages,
+                                token=token)
 
     except Exception as e:
         logging.error(f"Error in manage_google_feed: {e}")
-        flash("Error managing feed settings", "error")
+        flash("Error managing Google feed settings", "error")
         return redirect(url_for('admin_dashboard', token=token))
-    finally:
-        if 'conn' in locals():
-            conn.close()
 
 @app.route('/update_public_cart', methods=['POST'])
 def update_public_cart():
@@ -3324,6 +3450,183 @@ def upload_price_list(token):
             if 'conn' in locals() and conn:
                 conn.close()
                 logging.info("Database connection closed.")
+
+
+# Оновлення та керування stock
+@app.route('/<token>/admin/manage-stock', methods=['GET'])
+@requires_token_and_roles('admin')
+def manage_stock(token):
+    """Сторінка управління складом"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо дані зі стоку з назвами брендів
+            cursor.execute("""
+                SELECT s.article, s.quantity, s.price, s.brand_id, b.name as brand_name 
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                ORDER BY s.article
+            """)
+            stock_items = cursor.fetchall()
+            
+            # Отримуємо список брендів для форми
+            cursor.execute("SELECT id, name FROM brands ORDER BY name")
+            brands = cursor.fetchall()
+            
+            return render_template(
+                'admin/stock/manage_stock.html',
+                stock_items=stock_items,
+                brands=brands,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in manage_stock: {e}")
+        flash("Error loading stock data", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+# Робота зі stock
+@app.route('/<token>/admin/stock/upload', methods=['POST'])
+@requires_token_and_roles('admin')
+def upload_stock(token):
+    """Завантаження Excel файлу зі стоком"""
+    try:
+        file = request.files.get('file')
+        if not file:
+            flash("No file uploaded", "error")
+            return redirect(url_for('manage_stock', token=token))
+
+        # Читаємо Excel файл
+        df = pd.read_excel(file)
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Додаємо кожен рядок в базу
+            for _, row in df.iterrows():
+                cursor.execute("""
+                    INSERT INTO stock (article, quantity, price, brand_id)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (article) 
+                    DO UPDATE SET
+                        quantity = stock.quantity + EXCLUDED.quantity,
+                        price = EXCLUDED.price,
+                        brand_id = EXCLUDED.brand_id
+                """, (
+                    str(row['Артикуль']).strip().upper(),
+                    int(row['кть']),
+                    float(str(row['Ціна']).replace(',', '.')),
+                    int(row['id бренду'])
+                ))
+            
+            conn.commit()
+            flash(f"Successfully uploaded {len(df)} items", "success")
+            
+    except Exception as e:
+        logging.error(f"Error in upload_stock: {e}")
+        flash(f"Error uploading file: {str(e)}", "error")
+        
+    return redirect(url_for('manage_stock', token=token))
+
+# Робота зі stock
+@app.route('/<token>/admin/stock/add', methods=['POST'])
+@requires_token_and_roles('admin')
+def add_stock_item(token):
+    """Додавання одного товару"""
+    try:
+        article = request.form.get('article').strip().upper()
+        quantity = int(request.form.get('quantity'))
+        price = float(request.form.get('price').replace(',', '.'))
+        brand_id = int(request.form.get('brand_id'))
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO stock (article, quantity, price, brand_id)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (article) 
+                DO UPDATE SET
+                    quantity = stock.quantity + EXCLUDED.quantity,
+                    price = EXCLUDED.price,
+                    brand_id = EXCLUDED.brand_id
+            """, (article, quantity, price, brand_id))
+            conn.commit()
+            
+        flash(f"Successfully added/updated article {article}", "success")
+        
+    except Exception as e:
+        logging.error(f"Error in add_stock_item: {e}")
+        flash(f"Error adding item: {str(e)}", "error")
+        
+    return redirect(url_for('manage_stock', token=token))
+
+# Робота зі stock
+@app.route('/<token>/admin/stock/update/<article>', methods=['POST'])
+@requires_token_and_roles('admin')
+def update_stock_item(token, article):
+    """Оновлення існуючого товару"""
+    try:
+        quantity = int(request.form.get('quantity'))
+        price = float(request.form.get('price').replace(',', '.'))
+        brand_id = int(request.form.get('brand_id'))
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE stock 
+                SET quantity = %s, price = %s, brand_id = %s
+                WHERE article = %s
+            """, (quantity, price, brand_id, article))
+            conn.commit()
+            
+        flash(f"Successfully updated article {article}", "success")
+        
+    except Exception as e:
+        logging.error(f"Error in update_stock_item: {e}")
+        flash(f"Error updating item: {str(e)}", "error")
+        
+    return redirect(url_for('manage_stock', token=token))
+
+# Робота зі stock
+@app.route('/<token>/admin/stock/delete/<article>', methods=['POST'])
+@requires_token_and_roles('admin')
+def delete_stock_item(token, article):
+    """Видалення товару"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM stock WHERE article = %s", (article,))
+            conn.commit()
+            
+        flash(f"Successfully deleted article {article}", "success")
+        
+    except Exception as e:
+        logging.error(f"Error in delete_stock_item: {e}")
+        flash(f"Error deleting item: {str(e)}", "error")
+        
+    return redirect(url_for('manage_stock', token=token))
+
+# Робота зі stock
+@app.route('/<token>/admin/stock/clear', methods=['POST'])
+@requires_token_and_roles('admin')
+def clear_stock(token):
+    """Очищення всього стоку"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("TRUNCATE TABLE stock")
+            conn.commit()
+            
+        flash("Successfully cleared all stock", "success")
+        
+    except Exception as e:
+        logging.error(f"Error in clear_stock: {e}")
+        flash(f"Error clearing stock: {str(e)}", "error")
+        
+    return redirect(url_for('manage_stock', token=token))
+
+
 
 # роут для керування постачальниками
 @app.route('/<token>/admin/manage-suppliers', methods=['GET', 'POST'])
@@ -6292,6 +6595,279 @@ def process_orders(token):
         conn.close()
         logging.info("Connection closed")
 
+
+
+# додавання фото
+@app.route('/<token>/admin/add_product_images', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def add_product_images(token):
+    if request.method == 'POST':
+        conn = None
+        try:
+            data = request.form.get('images_data')
+            logging.info("Starting image import process")
+            
+            if not data:
+                logging.warning("No image data provided")
+                flash("Please enter image data", "warning")
+                return redirect(url_for('add_product_images', token=token))
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Create table if not exists
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS product_images (
+                    id SERIAL PRIMARY KEY,
+                    product_article TEXT NOT NULL,
+                    image_url TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT unique_article_url UNIQUE (product_article, image_url)
+                )
+            """)
+            conn.commit()  # Commit table creation
+            
+            added = 0
+            errors = 0
+            skipped = 0
+            
+            for line in data.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                    
+                try:
+                    logging.info(f"Processing line: {line}")
+                    parts = line.split('\t')
+                    
+                    if len(parts) != 2:
+                        logging.error(f"Invalid line format (expected 2 parts, got {len(parts)}): {line}")
+                        errors += 1
+                        continue
+                        
+                    article, image_url = parts
+                    article = article.strip()
+                    image_url = image_url.strip()
+                    
+                    logging.info(f"Attempting to insert: Article={article}, URL={image_url}")
+                    
+                    try:
+                        cursor.execute("""
+                            INSERT INTO product_images (product_article, image_url)
+                            VALUES (%s, %s)
+                            ON CONFLICT ON CONSTRAINT unique_article_url DO NOTHING
+                        """, (article, image_url))
+                        conn.commit()  # Commit each insert
+                        
+                        if cursor.rowcount > 0:
+                            added += 1
+                            logging.info(f"Successfully added image for article {article}")
+                        else:
+                            skipped += 1
+                            logging.info(f"Skipped duplicate image for article {article}")
+                            
+                    except psycopg2.Error as e:
+                        logging.warning(f"Database error for {article}: {e}")
+                        conn.rollback()  # Rollback on error
+                        errors += 1
+                        continue
+                        
+                except Exception as e:
+                    logging.error(f"Error processing line '{line}': {str(e)}")
+                    errors += 1
+                    continue
+            
+            message_parts = []
+            if added > 0:
+                message_parts.append(f"Added {added} images")
+            if skipped > 0:
+                message_parts.append(f"Skipped {skipped} duplicates")
+            if errors > 0:
+                message_parts.append(f"Failed to process {errors} lines")
+                
+            flash(", ".join(message_parts), "success" if added > 0 else "warning")
+            logging.info(f"Import completed: {added} added, {skipped} skipped, {errors} errors")
+                
+        except Exception as e:
+            logging.error(f"Critical error during image import: {str(e)}", exc_info=True)
+            flash(f"Error occurred while adding images: {str(e)}", "danger")
+            if conn:
+                conn.rollback()
+            
+        finally:
+            if conn:
+                conn.close()
+                logging.info("Database connection closed")
+                
+        return redirect(url_for('add_product_images', token=token))
+
+    return render_template('admin/products/add_images.html', token=token)
+
+
+@app.route('/<token>/admin/manage-descriptions', methods=['GET'])
+@requires_token_and_roles('admin')
+def manage_descriptions(token):
+    """
+    Відображає сторінку керування описами товарів
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримуємо список товарів з описами
+        cursor.execute("""
+            SELECT 
+                article,
+                brand_id,
+                name_uk, description_uk,
+                name_en, description_en,
+                name_sk, description_sk,
+                name_pl, description_pl
+            FROM products
+            ORDER BY article
+        """)
+        
+        products = cursor.fetchall()
+        
+        return render_template(
+            'admin/products/manage_descriptions.html',
+            products=products,
+            token=token
+        )
+        
+    except Exception as e:
+        logging.error(f"Error managing descriptions: {e}")
+        flash("Error loading product descriptions", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+        
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+@app.route('/<token>/admin/update-description', methods=['POST'])
+@requires_token_and_roles('admin')
+def update_description(token):
+    try:
+        article = request.form.get('article')
+        brand_id = request.form.get('brand_id')
+        
+        if not all([article, brand_id]):
+            return jsonify({'error': 'Missing required fields'}), 400
+            
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Update descriptions for all languages
+        cursor.execute("""
+            UPDATE products 
+            SET name_uk = %s, description_uk = %s,
+                name_en = %s, description_en = %s,
+                name_sk = %s, description_sk = %s,
+                name_pl = %s, description_pl = %s
+            WHERE article = %s AND brand_id = %s
+        """, (
+            request.form.get('name_uk'), request.form.get('description_uk'),
+            request.form.get('name_en'), request.form.get('description_en'),
+            request.form.get('name_sk'), request.form.get('description_sk'),
+            request.form.get('name_pl'), request.form.get('description_pl'),
+            article, brand_id
+        ))
+        
+        conn.commit()
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        logging.error(f"Error updating description: {e}")
+        return jsonify({'error': str(e)}), 500
+        
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+@app.route('/<token>/admin/add_product_descriptions', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def add_product_descriptions(token):
+    if request.method == 'POST':
+        try:
+            data = request.form.get('descriptions_data')
+            language = request.form.get('language')
+            update_mode = request.form.get('update_mode', 'create') # create або update
+            
+            if not all([data, language]):
+                flash("Будь ласка, заповніть всі поля", "warning") 
+                return redirect(url_for('add_product_descriptions', token=token))
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            added = 0
+            updated = 0
+            errors = 0
+            
+            for line in data.splitlines():
+                if not line.strip():
+                    continue
+                    
+                parts = line.split('\t')
+                if len(parts) < 4:
+                    errors += 1
+                    continue
+                    
+                article, brand_id, name, description = parts[:4]
+                
+                try:
+                    # Перевіряємо чи існує товар
+                    cursor.execute(f"""
+                        SELECT id FROM products 
+                        WHERE article = %s
+                    """, (article,))
+                    
+                    exists = cursor.fetchone()
+                    
+                    if exists:
+                        if update_mode == 'update':
+                            # Оновлюємо існуючий опис
+                            cursor.execute(f"""
+                                UPDATE products 
+                                SET name_{language} = %s,
+                                    description_{language} = %s
+                                WHERE article = %s
+                            """, (name, description, article))
+                            updated += 1
+                    else:
+                        # Створюємо новий запис
+                        cursor.execute(f"""
+                            INSERT INTO products (
+                                article, brand_id, name_{language}, description_{language}
+                            ) VALUES (%s, %s, %s, %s)
+                        """, (article, brand_id, name, description))
+                        added += 1
+                        
+                    conn.commit()
+                    
+                except Exception as e:
+                    errors += 1
+                    logging.error(f"Error processing line: {line}. Error: {str(e)}")
+                    continue
+                    
+            flash(f"Додано: {added}, Оновлено: {updated}, Помилок: {errors}", "success")
+            
+        except Exception as e:
+            flash(f"Помилка: {str(e)}", "error")
+            
+        finally:
+            if conn:
+                conn.close()
+                
+        return redirect(url_for('add_product_descriptions', token=token))
+        
+    return render_template('admin/products/add_descriptions.html', token=token)
 
 
 @app.route('/ping', methods=['GET'])

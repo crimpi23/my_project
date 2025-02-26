@@ -1,0 +1,34 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Додавання зображень{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Додавання зображень товарів</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                <div class="form-group mb-3">
+                    <label for="images_data">Вставте дані зображень (Артикул ТАБ URL):</label>
+                    <textarea class="form-control" id="images_data" name="images_data" 
+                              rows="10" placeholder="LR014305&#9;https://image.autogroup.sk/products/LR014305.jpg"></textarea>
+                    <small class="text-muted">Формат: Артикул[TAB]URL (по одному на рядок)</small>
+                </div>
+                <button type="submit" class="btn btn-primary">Додати зображення</button>
+                <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn btn-secondary">Назад до панелі</a>
+            </form>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mt-3">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+{% endblock %}

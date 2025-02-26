@@ -1,3 +1,9 @@
+import csv
+import io
+import re
+import time
+import logging
+from flask_caching import Cache
 from datetime import datetime
 from decimal import Decimal
 import time
@@ -32,7 +38,6 @@ from functools import wraps
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('psycopg2')
-
 
 
 
@@ -3204,22 +3209,39 @@ def upload_price_list(token):
             reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
 
             # Обробка даних з файлу
+            # В функції upload_price_list змінимо обробку даних з файлу:
+
+            # Обробка даних з файлу
             data = []
             header_skipped = False
+
             for row in reader:
-                if len(row) < 2:
-                    logging.warning(f"Skipping invalid row: {row}")
-                    continue
-                if not header_skipped and not row[1].replace(',', '').replace('.', '').isdigit():
+                # Пропускаємо перший рядок (заголовок)
+                if not header_skipped:
                     header_skipped = True
-                    logging.info(f"Skipped header row: {row}")
                     continue
+                    
                 try:
-                    article = row[0].strip().replace(" ", "").upper()
-                    price = float(row[1].replace(",", ".").strip())
-                    data.append((article, price))
-                except ValueError:
-                    logging.warning(f"Skipping row with invalid price: {row}")
+                    if len(row) > 0:  # Перевіряємо, що рядок не порожній
+                        # Розділяємо рядок по розділювачу
+                        parts = row[0].split(';') if ';' in row[0] else row
+                        
+                        if len(parts) >= 2:
+                            article = parts[0].strip().replace(" ", "").upper()
+                            price_str = parts[1].strip().replace(',', '.')  # Заміняємо кому на крапку
+                            
+                            try:
+                                price = float(price_str)
+                                data.append((article, price))
+                                logging.debug(f"Processed row: article={article}, price={price}")
+                            except ValueError:
+                                logging.warning(f"Invalid price format: {price_str} for article {article}")
+                                continue
+                        else:
+                            logging.warning(f"Invalid row format: {row}")
+                            
+                except Exception as e:
+                    logging.warning(f"Error processing row {row}: {str(e)}")
                     continue
 
             logging.info(f"Parsed {len(data)} rows from file. Sample: {data[:5]}")
@@ -3242,17 +3264,19 @@ def upload_price_list(token):
                     return redirect(url_for('upload_price_list', token=token))
 
                 try:
+                    # Створюємо нову таблицю без brand_id в структурі
                     cursor.execute(f"""
                         CREATE TABLE IF NOT EXISTS {table_name} (
                             article TEXT PRIMARY KEY,
-                            price NUMERIC,
-                            brand_id INTEGER REFERENCES brands(id)
+                            price NUMERIC
                         );
                     """)
+                    # Додаємо запис в price_lists з brand_id
                     cursor.execute("""
-                        INSERT INTO price_lists (table_name, brand_id, created_at) VALUES (%s, %s, NOW())
-                        ON CONFLICT (table_name) DO UPDATE SET brand_id = %s
-                    """, (table_name, brand_id, brand_id))
+                        INSERT INTO price_lists (table_name, brand_id) 
+                        VALUES (%s, %s)
+                    """, (table_name, brand_id))
+                    
                     conn.commit()
                     logging.info(f"Created new table: {table_name}")
                 except Exception as e:
@@ -3280,12 +3304,14 @@ def upload_price_list(token):
             # Завантаження даних у таблицю
             output = io.StringIO()
             for row in data:
-                output.write(f"{row[0]},{row[1]},{brand_id}\n")
+                # Записуємо тільки article та price, без brand_id
+                output.write(f"{row[0]},{row[1]}\n")
             output.seek(0)
-            cursor.copy_expert(f"COPY {table_name} (article, price, brand_id) FROM STDIN WITH (FORMAT CSV);", output)
+            
+            # Змінюємо команду COPY, щоб вона відповідала структурі таблиці
+            cursor.copy_expert(f"COPY {table_name} (article, price) FROM STDIN WITH (FORMAT CSV);", output)
             conn.commit()
 
-            cache.delete_memoized(search_articles)
             flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "success")
             logging.info(f"Uploaded {len(data)} rows to table '{table_name}' in {time.time() - start_time:.2f} seconds.")
             return redirect(url_for('upload_price_list', token=token))

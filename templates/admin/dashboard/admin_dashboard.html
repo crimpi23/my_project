@@ -124,6 +124,20 @@
                 </div>
             </div>
         </div>
+
+        <!-- Керування Google Feed -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-google fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Google Merchant Feed</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('manage_google_feed', token=token) }}" class="btn btn-admin mb-2">Feed Settings</a>
+                        <a href="/google-merchant-feed.xml" target="_blank" class="btn btn-admin">View Feed</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Google Merchant Feed Settings</h2>
+
+    <!-- Форма додавання нової конфігурації -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Add New Feed Configuration</h5>
+            <form method="POST">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mb-3">
+                            <input type="checkbox" class="form-check-input" id="enabled" name="enabled" checked>
+                            <label class="form-check-label" for="enabled">Enable Feed</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Google Category</label>
+                            <input type="text" class="form-control" id="category" name="category" 
+                                   required placeholder="e.g. Vehicle Parts & Accessories > Car Parts">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="brand_id" class="form-label">Brand</label>
+                            <select class="form-select" id="brand_id" name="brand_id" required>
+                                {% for brand in brands %}
+                                <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="language" class="form-label">Language</label>
+                            <select class="form-select" id="language" name="language" required>
+                                {% for lang in languages %}
+                                <option value="{{ lang }}">{{ lang|upper }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Price List</label>
+                            <select name="price_list_id" class="form-control">
+                                {% for pl in price_lists %}
+                                <option value="{{ pl.table_name }}">{{ pl.table_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="markup" class="form-label">Markup Percentage</label>
+                            <input type="number" class="form-control" id="markup" name="markup" 
+                                   value="0" step="0.01" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save Configuration</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Поточні конфігурації -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0">Current Configurations</h3>
+                <div class="btn-group">
+                    <a href="/google-merchant-feed.xml" target="_blank" class="btn btn-primary">
+                        <i class="bi bi-eye"></i> View Feed
+                    </a>
+                    <a href="/google-merchant-feed.xml?download=1" class="btn btn-success">
+                        <i class="bi bi-download"></i> Download Feed
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Brand</th>
+                            <th>Category</th>
+                            <th>Language</th>
+                            <th>Price List</th>
+                            <th>Markup</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for setting in settings %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-{{ 'success' if setting.enabled else 'danger' }}">
+                                    {{ 'Active' if setting.enabled else 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>{{ setting.brand_name }}</td>
+                            <td>{{ setting.category }}</td>
+                            <td>{{ setting.language|upper }}</td>
+                            <td>{{ setting.table_name }}</td>
+                            <td>{{ setting.markup_percentage }}%</td>
+                            <td>{{ setting.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-danger">Delete</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

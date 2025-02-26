@@ -27,6 +27,8 @@ from flask import make_response
 import json
 import phonenumbers
 from phonenumbers import NumberParseException
+from functools import wraps
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('psycopg2')
@@ -462,6 +464,36 @@ def public_cart():
         total_price=total_price
     )
 
+
+# Запит про токен / Перевірка токена / Декоратор для перевірки токена
+def requires_token_and_roles(*allowed_roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            token = request.view_args.get('token')
+            if not token:
+                token = request.args.get('token')
+
+            if not token or not validate_token(token):
+                flash(_("Invalid token."), "error")
+                return redirect(url_for('index'))
+
+            session_role = session.get('role')
+            if not session_role:
+                flash(_("Invalid token or role."), "error")
+                return redirect(url_for('index'))
+
+            role_name = session_role
+            if allowed_roles and role_name not in allowed_roles:
+                flash(_("Invalid token or role."), "error")
+                return redirect(url_for('index'))
+
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
+
 def get_locale():
     if 'user_id' in session:
         # Якщо користувач авторизований, беремо його мову з БД
@@ -718,49 +750,165 @@ def product_details(article):
 @app.route('/google-merchant-feed.xml')
 def google_merchant_feed():
     try:
+        logging.info("Starting Google Merchant feed generation")
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Для кожної мови створюємо окремий фід
-        languages = ['uk', 'en', 'sk', 'pl']
-        products_by_lang = {}
+        # Перевіряємо структуру таблиці products
+        logging.debug("Checking products table structure")
+        cursor.execute("""
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'products'
+        """)
+        columns = cursor.fetchall()
+        logging.debug(f"Products table columns: {[col['column_name'] for col in columns]}")
 
-        for lang in languages:
-            cursor.execute(f"""
+        # Отримуємо активні налаштування
+        logging.info("Fetching feed settings")
+        cursor.execute("""
+            SELECT gs.*, b.name as brand_name 
+            FROM google_feed_settings gs
+            LEFT JOIN brands b ON gs.brand_id = b.id
+            WHERE gs.enabled = true
+        """)
+        settings = cursor.fetchall()
+        logging.debug(f"Found {len(settings)} active feed settings")
+
+        if not settings:
+            logging.warning("No active feed settings found")
+            return "No active feed settings found", 404
+
+        products_by_lang = {}
+        
+        for setting in settings:
+            language = setting['language']
+            price_list = setting['price_list_id']
+            markup = setting['markup_percentage']
+            
+            logging.info(f"""
+                Processing feed setting:
+                - Language: {language}
+                - Price list: {price_list}
+                - Markup: {markup}%
+                - Brand: {setting['brand_name']}
+            """)
+            
+            # Змінюємо запит, прибравши перевірку is_active
+            query = f"""
                 SELECT 
                     p.article,
-                    p.name_{lang} as name,
-                    p.description_{lang} as description,
-                    p.photo_urls[1] as image_url,
-                    MIN(pl.price) as price,
-                    b.name as brand_name
+                    p.name_{language} as name,
+                    p.description_{language} as description,
+                    pi.image_url,
+                    pl.price * (1 + %s/100) as price,
+                    b.name as brand_name,
+                    %s as google_category
                 FROM products p
-                JOIN price_lists pl ON pl.table_name != 'stock'
-                LEFT JOIN brands b ON pl.brand_id = b.id
-                WHERE p.is_active = true 
-                AND p.name_{lang} IS NOT NULL
-                GROUP BY p.article, p.name_{lang}, p.description_{lang}, p.photo_urls, b.name
-            """)
-            products_by_lang[lang] = cursor.fetchall()
+                LEFT JOIN (
+                    SELECT DISTINCT ON (product_article) product_article, image_url
+                    FROM product_images
+                    ORDER BY product_article, id
+                ) pi ON p.article = pi.product_article
+                JOIN {price_list} pl ON p.article = pl.article
+                LEFT JOIN brands b ON b.id = %s
+                WHERE p.name_{language} IS NOT NULL
+            """
+            
+            logging.debug(f"Executing query with parameters: {(markup, setting['category'], setting['brand_id'])}")
+            cursor.execute(query, (markup, setting['category'], setting['brand_id']))
+            
+            results = cursor.fetchall()
+            logging.info(f"Found {len(results)} products for language {language}")
+            products_by_lang[language] = results
 
-        # Створюємо XML feed
-        xml = render_template(
+        # Генеруємо XML
+        logging.info("Generating XML response")
+        xml_content = render_template(
             'feeds/google_merchant.xml',
             products_by_lang=products_by_lang,
             domain=request.host_url.rstrip('/')
         )
-        
-        response = make_response(xml)
-        response.headers['Content-Type'] = 'application/xml'
-        return response
+
+        # Якщо запит містить параметр download
+        if request.args.get('download'):
+            logging.info("Preparing downloadable response")
+            response = make_response(xml_content)
+            response.headers['Content-Type'] = 'application/xml'
+            response.headers['Content-Disposition'] = 'attachment; filename=google-merchant-feed.xml'
+            return response
+
+        # Інакше відображаємо в браузері
+        logging.info("Preparing browser response")
+        return xml_content, {'Content-Type': 'application/xml'}
 
     except Exception as e:
-        logging.error(f"Error generating Google Merchant feed: {e}")
-        return "Error generating feed", 500
+        logging.error(f"Error generating Google Merchant feed: {e}", exc_info=True)
+        return f"Error generating feed: {str(e)}", 500
     finally:
         if 'conn' in locals():
             conn.close()
+            logging.info("Database connection closed")
 
+# Керування Google feed
+@app.route('/<token>/admin/google-feed', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def manage_google_feed(token):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        if request.method == 'POST':
+            enabled = request.form.get('enabled') == 'on'
+            category = request.form.get('category')
+            brand_id = request.form.get('brand_id')
+            language = request.form.get('language')
+            price_list_id = request.form.get('price_list_id')
+            markup = request.form.get('markup', 0)
+
+            cursor.execute("""
+                INSERT INTO google_feed_settings 
+                (enabled, category, brand_id, language, price_list_id, markup_percentage)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (enabled, category, brand_id, language, price_list_id, markup))
+            
+            conn.commit()
+            flash("Feed settings saved successfully", "success")
+
+        # Отримуємо поточні налаштування
+        cursor.execute("""
+            SELECT gs.*, b.name as brand_name, pl.table_name 
+            FROM google_feed_settings gs
+            LEFT JOIN brands b ON gs.brand_id = b.id
+            LEFT JOIN price_lists pl ON gs.price_list_id = pl.table_name
+            ORDER BY gs.created_at DESC
+        """)
+        settings = cursor.fetchall()
+
+        # Отримуємо список брендів
+        cursor.execute("SELECT id, name FROM brands ORDER BY name")
+        brands = cursor.fetchall()
+
+        # Отримуємо список прайс-листів
+        cursor.execute("SELECT table_name FROM price_lists ORDER BY table_name")
+        price_lists = cursor.fetchall()
+
+        return render_template(
+            'admin/google_feed/settings.html',
+            settings=settings,
+            brands=brands,
+            price_lists=price_lists,
+            languages=app.config['BABEL_SUPPORTED_LOCALES'],
+            token=token
+        )
+
+    except Exception as e:
+        logging.error(f"Error in manage_google_feed: {e}")
+        flash("Error managing feed settings", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 @app.route('/update_public_cart', methods=['POST'])
 def update_public_cart():
@@ -945,32 +1093,6 @@ def get_db_connection():
         cursor_factory=psycopg2.extras.DictCursor
     )
 
-# Запит про токен / Перевірка токена / Декоратор для перевірки токена
-def requires_token_and_roles(*allowed_roles):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            token = request.view_args.get('token')
-            if not token:
-                token = request.args.get('token')
-
-            if not token or not validate_token(token):
-                flash(_("Invalid token."), "error")
-                return redirect(url_for('index'))
-
-            session_role = session.get('role')
-            if not session_role:
-                flash(_("Invalid token or role."), "error")
-                return redirect(url_for('index'))
-
-            role_name = session_role
-            if allowed_roles and role_name not in allowed_roles:
-                flash(_("Invalid token or role."), "error")
-                return redirect(url_for('index'))
-
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
 
 
 #  отримання даних з selection_buffer 
@@ -1359,8 +1481,9 @@ def inject_public_cart_count():
 def public_search():
     """Простий пошук товару за артикулом з перенаправленням на сторінку товару"""
     if request.method == 'POST':
-        article = request.form.get('article', '').strip()  # Змінено з search_query на article
-        logging.info(f"Search query received: {article}")
+        # Конвертуємо артикул у верхній регістр
+        article = request.form.get('article', '').strip().upper()
+        logging.info(f"Search query received and converted to uppercase: {article}")
         
         if not article:
             logging.warning("Empty search query")

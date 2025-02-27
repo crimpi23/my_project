@@ -59,6 +59,12 @@
         border-radius: var(--border-radius);
         box-shadow: var(--shadow);
         margin-bottom: var(--spacing-md);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
 
     .card-body {
@@ -105,6 +111,12 @@
     .btn-primary {
         padding-left: 1.5rem;
         padding-right: 1.5rem;
+    }
+
+    .badge {
+        font-size: 1rem;
+        font-weight: normal;
+        vertical-align: middle;
     }
 </style>
 {% endblock %}
@@ -170,5 +182,64 @@
             </div>
         </div>
     </div>
+
+    <!-- New Products Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h2 class="mb-4">{{ _('Available Products') }} 
+                <span class="badge bg-primary">{{ total_items }}</span>
+            </h2>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row row-cols-1 row-cols-md-5 g-4">
+        {% for product in products %}
+        <div class="col">
+            <div class="card h-100">
+                <!-- Product Image -->
+                {% if product.image_url %}
+                <img src="{{ product.image_url }}" class="card-img-top" 
+                     alt="{{ product.name or product.article }}"
+                     style="height: 200px; object-fit: contain; padding: 1rem;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                     style="height: 200px;">
+                    <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                </div>
+                {% endif %}
+
+                <!-- Product Info -->
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name or product.article }}</h5>
+                    <p class="card-text small">
+                        <strong>{{ _('Brand') }}:</strong> {{ product.brand_name }}<br>
+                        <strong>{{ _('Article') }}:</strong> {{ product.article }}<br>
+                        <strong>{{ _('Price') }}:</strong> {{ "%.2f"|format(product.price) }} EUR
+                    </p>
+                    {% if product.description %}
+                    <p class="card-text small text-muted">
+                        {{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- Product Actions -->
+                <div class="card-footer bg-transparent border-top-0">
+                    <a href="{{ url_for('product_details', article=product.article) }}" 
+                       class="btn btn-primary btn-sm w-100">{{ _('Details') }}</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Show More Button -->
+    {% if has_more %}
+    <div class="text-center mt-4 mb-4">
+        <a href="{{ url_for('index', page=(page or 1)|int + 1) }}" 
+           class="btn btn-outline-primary">{{ _('Show More') }}</a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -159,6 +159,7 @@
                     <i class="bi bi-images fs-1 text-primary mb-3"></i>
                     <h5 class="card-title">Product Images</h5>
                     <div class="d-grid gap-2">
+                        <a href="{{ url_for('manage_photos', token=token) }}" class="btn btn-admin mb-2">Manage Photos</a>
                         <a href="{{ url_for('add_product_images', token=token) }}" class="btn btn-admin">Add Images</a>
                     </div>
                 </div>

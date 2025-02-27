@@ -654,19 +654,18 @@ def product_details(article):
             FROM product_images 
             WHERE product_article = %s 
             ORDER BY 
-                -- First priority: exact match with article number
-                CASE WHEN image_url LIKE %s THEN 0
-                -- Second priority: files with 'sh1' suffix
-                WHEN image_url LIKE %s THEN 1
-                -- Third priority: numbered suffixes like (1), (2), etc
-                WHEN image_url ~ '.+\\([0-9]+\\)\\..*$' THEN 2
-                -- All other cases
-                ELSE 3 END,
+                CASE 
+                    WHEN is_main = TRUE THEN 0
+                    WHEN image_url LIKE %s THEN 1
+                    WHEN image_url LIKE %s THEN 2
+                    WHEN image_url ~ '.+\\([0-9]+\\)\\..*$' THEN 3
+                    ELSE 4
+                END,
                 image_url
         """, (
             article,
-            f'%/{article}.jpg',  # Exact match pattern
-            f'%/{article} sh1%'  # sh1 pattern
+            f'%/{article}.jpg',
+            f'%/{article} sh1%'
         ))
         product_data['photo_urls'] = [row['image_url'] for row in cursor.fetchall()]
 
@@ -763,6 +762,65 @@ def product_details(article):
     finally:
         if 'conn' in locals() and conn:
             conn.close()
+
+# обробка фотографій товарів основне фото
+@app.route('/<token>/admin/manage-photos', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def manage_photos(token):
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Fixed query with proper DISTINCT ON and ORDER BY
+            cursor.execute("""
+                SELECT 
+                    s.article,
+                    s.brand_id,
+                    b.name as brand_name,
+                    p.name_uk as name,
+                    array_agg(pi.image_url ORDER BY pi.is_main DESC, pi.id) as photos
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                LEFT JOIN products p ON s.article = p.article
+                LEFT JOIN product_images pi ON s.article = pi.product_article
+                GROUP BY s.article, s.brand_id, b.name, p.name_uk
+                ORDER BY s.article
+            """)
+            
+            products = cursor.fetchall()
+            
+            if request.method == 'POST':
+                article = request.form.get('article')
+                image_url = request.form.get('image_url')
+                
+                # First, reset main photo flag for this article
+                cursor.execute("""
+                    UPDATE product_images 
+                    SET is_main = FALSE 
+                    WHERE product_article = %s
+                """, (article,))
+                
+                # Set new main photo
+                cursor.execute("""
+                    UPDATE product_images 
+                    SET is_main = TRUE 
+                    WHERE product_article = %s AND image_url = %s
+                """, (article, image_url))
+                
+                conn.commit()
+                flash("Main photo updated successfully", "success")
+                return redirect(url_for('manage_photos', token=token))
+            
+            return render_template(
+                'admin/photos/manage_photos.html',
+                products=products,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in manage_photos: {e}")
+        flash("Error loading photos", "error")
+        return redirect(url_for('admin_dashboard', token=token))
 
 @app.route('/<token>/admin/google-feed/delete/<int:setting_id>', methods=['POST'])
 @requires_token_and_roles('admin')
@@ -1457,47 +1515,62 @@ def token_index(token):
 # Головна сторінка
 @app.route('/')
 def index():
-    """Головна сторінка з розділенням на публічний та B2B доступ"""
-    user_id = session.get('user_id')
-    role = session.get('role')
-    
-    if user_id:
-        try:
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT r.name as role_name
-                    FROM users u
-                    JOIN user_roles ur ON u.id = ur.user_id
-                    JOIN roles r ON ur.role_id = r.id
-                    WHERE u.id = %s
-                """, (user_id,))
-                result = cursor.fetchone()
-                role = result['role_name'] if result else 'public'
-                
-                # Update session with correct role
-                session['role'] = role
-                
-                # B2B користувачі (user, user_25, user_29)
-                if role in ['user', 'user_25', 'user_29']:
-                    logging.info(f"Rendering B2B index for user: {session.get('username')}, role: {role}")
-                    return render_template('user/index.html')
-                # Адміністратори системи
-                elif role in ['admin', 'manager']:
-                    logging.info(f"Rendering admin index for user: {session.get('username')}, role: {role}")
-                    return render_template('admin/index.html')
-                # Публічні користувачі (public)
-                else:
-                    logging.info(f"Rendering public index for user: {session.get('username')}, role: {role}")
-                    return render_template('public/index.html')
-                    
-        except Exception as e:
-            logging.error(f"Error getting user role: {e}")
-            return render_template('public/index.html')
-    
-    # Для неавторизованих користувачів
-    logging.info("Rendering public index for anonymous user")
-    return render_template('public/index.html')
+    """Головна сторінка з товарами"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = 25  # 5x5 сітка
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо загальну кількість товарів
+            cursor.execute("""
+                SELECT COUNT(*) 
+                FROM stock s
+                WHERE s.quantity > 0
+            """)
+            total_items = cursor.fetchone()[0]
+            
+            # Отримуємо товари з пагінацією
+            cursor.execute("""
+                SELECT 
+                    s.article,
+                    s.quantity,
+                    s.price,
+                    b.name as brand_name,
+                    p.name_uk as name,
+                    p.description_uk as description,
+                    pi.image_url
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                LEFT JOIN products p ON s.article = p.article
+                LEFT JOIN (
+                    SELECT DISTINCT ON (product_article) 
+                        product_article, image_url
+                    FROM product_images
+                    ORDER BY product_article, id
+                ) pi ON s.article = pi.product_article
+                WHERE s.quantity > 0
+                ORDER BY s.article
+                LIMIT %s OFFSET %s
+            """, (per_page, (page - 1) * per_page))
+            
+            products = cursor.fetchall()
+            
+            has_more = total_items > (page * per_page)
+
+            return render_template(
+                'public/index.html',
+                products=products,
+                page=page,
+                has_more=has_more,
+                total_items=total_items
+            )
+
+    except Exception as e:
+        logging.error(f"Error in index: {e}")
+        flash("Error loading products", "error")
+        return render_template('public/index.html')
     
 # Додавання товару в кошик публічного користувача
 @app.route('/public_add_to_cart', methods=['POST'])

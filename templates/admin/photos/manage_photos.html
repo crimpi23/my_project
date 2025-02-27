@@ -1,0 +1,77 @@
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Manage Product Photos</h2>
+    
+    <!-- Фільтр по артикулу -->
+    <div class="row mb-4">
+        <div class="col">
+            <input type="text" id="articleFilter" class="form-control" 
+                   placeholder="Filter by article...">
+        </div>
+    </div>
+    
+    <!-- Список товарів -->
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for product in products %}
+        <div class="col product-card" data-article="{{ product.article }}">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ product.article }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        <strong>Name:</strong> {{ product.name or 'N/A' }}<br>
+                        <strong>Brand:</strong> {{ product.brand_name }}
+                    </p>
+                    
+                    <!-- Галерея фотографій -->
+                    <div class="row g-2">
+                        {% if product.photos[0] != None %}
+                            {% for photo in product.photos %}
+                            <div class="col-4">
+                                <div class="position-relative">
+                                    <img src="{{ photo }}" 
+                                         class="img-thumbnail w-100" 
+                                         style="height: 100px; object-fit: contain;"
+                                         alt="{{ product.article }}">
+                                    
+                                    <!-- Форма для встановлення головного фото -->
+                                    <form method="POST" class="position-absolute top-0 end-0 m-1">
+                                        <input type="hidden" name="article" value="{{ product.article }}">
+                                        <input type="hidden" name="image_url" value="{{ photo }}">
+                                        <button type="submit" 
+                                                class="btn btn-sm btn-light"
+                                                title="Set as main photo"
+                                                {% if loop.first %}disabled{% endif %}>
+                                            <i class="bi bi-star{% if loop.first %}-fill{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12">
+                                <p class="text-muted">No photos available</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- JavaScript для фільтрації -->
+<script>
+document.getElementById('articleFilter').addEventListener('keyup', function() {
+    let filter = this.value.toUpperCase();
+    document.querySelectorAll('.product-card').forEach(card => {
+        let article = card.getAttribute('data-article').toUpperCase();
+        card.style.display = article.includes(filter) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

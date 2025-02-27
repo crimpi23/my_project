@@ -763,6 +763,7 @@ def product_details(article):
         if 'conn' in locals() and conn:
             conn.close()
 
+
 # обробка фотографій товарів основне фото
 @app.route('/<token>/admin/manage-photos', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
@@ -771,7 +772,40 @@ def manage_photos(token):
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
-            # Fixed query with proper DISTINCT ON and ORDER BY
+            if request.method == 'POST':
+                # Handle JSON requests for AJAX
+                if request.is_json:
+                    data = request.get_json()
+                    article = data.get('article')
+                    image_url = data.get('image_url')
+                else:
+                    article = request.form.get('article')
+                    image_url = request.form.get('image_url')
+                
+                # Reset main photo flag
+                cursor.execute("""
+                    UPDATE product_images 
+                    SET is_main = FALSE 
+                    WHERE product_article = %s
+                """, (article,))
+                
+                # Set new main photo
+                cursor.execute("""
+                    UPDATE product_images 
+                    SET is_main = TRUE 
+                    WHERE product_article = %s AND image_url = %s
+                """, (article, image_url))
+                
+                conn.commit()
+                
+                # Return JSON response for AJAX requests
+                if request.is_json:
+                    return jsonify({'success': True})
+                
+                flash("Main photo updated successfully", "success")
+                return redirect(url_for('manage_photos', token=token))
+            
+            # GET request - fetch photos
             cursor.execute("""
                 SELECT 
                     s.article,
@@ -789,28 +823,6 @@ def manage_photos(token):
             
             products = cursor.fetchall()
             
-            if request.method == 'POST':
-                article = request.form.get('article')
-                image_url = request.form.get('image_url')
-                
-                # First, reset main photo flag for this article
-                cursor.execute("""
-                    UPDATE product_images 
-                    SET is_main = FALSE 
-                    WHERE product_article = %s
-                """, (article,))
-                
-                # Set new main photo
-                cursor.execute("""
-                    UPDATE product_images 
-                    SET is_main = TRUE 
-                    WHERE product_article = %s AND image_url = %s
-                """, (article, image_url))
-                
-                conn.commit()
-                flash("Main photo updated successfully", "success")
-                return redirect(url_for('manage_photos', token=token))
-            
             return render_template(
                 'admin/photos/manage_photos.html',
                 products=products,
@@ -819,6 +831,8 @@ def manage_photos(token):
             
     except Exception as e:
         logging.error(f"Error in manage_photos: {e}")
+        if request.is_json:
+            return jsonify({'success': False, 'error': str(e)}), 500
         flash("Error loading photos", "error")
         return redirect(url_for('admin_dashboard', token=token))
 

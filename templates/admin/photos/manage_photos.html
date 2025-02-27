@@ -37,17 +37,13 @@
                                          style="height: 100px; object-fit: contain;"
                                          alt="{{ product.article }}">
                                     
-                                    <!-- Форма для встановлення головного фото -->
-                                    <form method="POST" class="position-absolute top-0 end-0 m-1">
-                                        <input type="hidden" name="article" value="{{ product.article }}">
-                                        <input type="hidden" name="image_url" value="{{ photo }}">
-                                        <button type="submit" 
-                                                class="btn btn-sm btn-light"
-                                                title="Set as main photo"
-                                                {% if loop.first %}disabled{% endif %}>
-                                            <i class="bi bi-star{% if loop.first %}-fill{% endif %}"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-light position-absolute top-0 end-0 m-1 main-photo-btn"
+                                            onclick="setMainPhoto(this, '{{ product.article }}', '{{ photo }}')"
+                                            {% if loop.first %}disabled{% endif %}
+                                            title="Set as main photo">
+                                        <i class="bi bi-star{% if loop.first %}-fill{% endif %}"></i>
+                                    </button>
                                 </div>
                             </div>
                             {% endfor %}
@@ -64,8 +60,54 @@
     </div>
 </div>
 
-<!-- JavaScript для фільтрації -->
 <script>
+function setMainPhoto(button, article, imageUrl) {
+    // Disable the button during the request
+    button.disabled = true;
+    
+    fetch('{{ url_for("manage_photos", token=token) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            article: article,
+            image_url: imageUrl
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update UI
+            const productCard = button.closest('.product-card');
+            const allButtons = productCard.querySelectorAll('.main-photo-btn');
+            
+            // Reset all buttons
+            allButtons.forEach(btn => {
+                btn.innerHTML = '<i class="bi bi-star"></i>';
+                btn.disabled = false;
+            });
+            
+            // Update clicked button
+            button.innerHTML = '<i class="bi bi-star-fill"></i>';
+            button.disabled = true;
+            
+            // Move the selected photo card to first position
+            const photoContainer = button.closest('.row');
+            const photoCard = button.closest('.col-4');
+            photoContainer.prepend(photoCard);
+        } else {
+            alert('Error updating main photo');
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating main photo');
+        button.disabled = false;
+    });
+}
+
 document.getElementById('articleFilter').addEventListener('keyup', function() {
     let filter = this.value.toUpperCase();
     document.querySelectorAll('.product-card').forEach(card => {

@@ -1,0 +1,37 @@
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Client Invoices</h2>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Client</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Invoice Details</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td>{{ invoice.id }}</td>
+                    <td>{{ invoice.username }}<br>
+                        <small class="text-muted">{{ invoice.email }}</small>
+                    </td>
+                    <td>{{ invoice.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ "%.2f"|format(invoice.total_price) }}</td>
+                    <td>{{ invoice.invoice_details }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary">Generate Invoice</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

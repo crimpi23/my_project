@@ -1,58 +1,230 @@
-<!-- templates/admin/orders/process_orders.html -->
 {% extends "base/admin_base.html" %}
 
 {% block content %}
 <div class="card">
     <div class="card-header">
-        <h2>Process Public Orders</h2>
+        <h2>{{ _("Process Public Orders") }}</h2>
     </div>
     <div class="card-body">
         {% for order in orders %}
         <div class="card mb-3">
             <div class="card-header" data-bs-toggle="collapse" data-bs-target="#order{{ order.order_id }}">
-                Order ID: {{ order.order_id }} - Username: {{ order.username }} - Date: {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}
-                <span class="badge bg-info">Stock Items: {{ order.stock_items_count }}</span>
-                <span class="badge bg-warning">Pricelist Items: {{ order.pricelist_items_count }}</span>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ _("Order ID") }}: {{ order.order_id }}</strong> - 
+                        {{ _("Username") }}: {{ order.username }} - 
+                        {{ _("Date") }}: {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        <span class="badge bg-info">{{ _("Stock Items") }}: {{ order.stock_items_count }}</span>
+                        <span class="badge bg-warning">{{ _("Pricelist Items") }}: {{ order.pricelist_items_count }}</span>
+                    </div>
+                    <div>
+                        <span class="badge bg-{{ 'success' if order.status == 'completed' 
+                                               else 'danger' if order.status == 'rejected' 
+                                               else 'warning' if order.status == 'processing' or order.status == 'ordered_supplier' or order.status == 'invoice_received'
+                                               else 'primary' if order.status == 'accepted' 
+                                               else 'secondary' }}">
+                            {{ order.status|upper }}
+                        </span>
+                    </div>
+                </div>
             </div>
             <div id="order{{ order.order_id }}" class="collapse">
                 <div class="card-body">
+                    <!-- User Contact Info -->
+                    <div class="mb-3">
+                        <h5>{{ _("User Information") }}</h5>
+                        <p>
+                            {{ _("Username") }}: {{ order.username }}<br>
+                            {{ _("Email") }}: {{ order.user_email }}
+                        </p>
+                    </div>
+                    
+                    <!-- Delivery Address -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5>{{ _("Delivery Address") }}</h5>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" 
+                                   data-bs-toggle="collapse" data-bs-target="#addressSelection{{ order.order_id }}">
+                                {{ _("Change Address") }}
+                            </button>
+                        </div>
+                        
+                        {% set delivery = order.delivery_address|from_json if order.delivery_address else {} %}
+                        {% if delivery %}
+                        <div class="card">
+                            <div class="card-body">
+                                <p class="mb-0">
+                                    <strong>{{ delivery.full_name }}</strong><br>
+                                    {{ delivery.street }}<br>
+                                    {{ delivery.postal_code }} {{ delivery.city }}<br>
+                                    {{ delivery.country }}<br>
+                                    {{ delivery.phone }}
+                                </p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-danger">{{ _("No delivery address provided") }}</p>
+                        {% endif %}
+                        
+                        <!-- Address Selection -->
+                        <div class="collapse mt-3" id="addressSelection{{ order.order_id }}">
+                            {% if order.saved_addresses %}
+                            <div class="card card-body">
+                                <h6>{{ _("Saved Addresses") }}</h6>
+                                <form method="POST">
+                                    <input type="hidden" name="order_id" value="{{ order.order_id }}">
+                                    <input type="hidden" name="action" value="update_address">
+                                    
+                                    <div class="form-group">
+                                        <select name="delivery_address_id" class="form-control mb-2">
+                                            {% for addr in order.saved_addresses %}
+                                            <option value="{{ addr.id }}">
+                                                {{ addr.full_name}} - {{ addr.street }}, {{ addr.city }}
+                                                {% if addr.is_default %} ({{ _("Default") }}){% endif %}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">{{ _("Update Address") }}</button>
+                                    </div>
+                                </form>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">{{ _("No saved addresses found") }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Invoice Details -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5>{{ _("Invoice Details") }}</h5>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" 
+                                   data-bs-toggle="collapse" data-bs-target="#invoiceSelection{{ order.order_id }}">
+                                {{ _("Change Invoice Details") }}
+                            </button>
+                        </div>
+                        
+                        {% if order.needs_invoice %}
+                            {% set invoice = order.invoice_details|from_json if order.invoice_details else {} %}
+                            {% if invoice %}
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="mb-0">
+                                        <strong>{{ _("Company Name") }}:</strong> {{ invoice.company_name }}<br>
+                                        <strong>{{ _("VAT Number") }}:</strong> {{ invoice.vat_number }}<br>
+                                        {% if invoice.registration_number %}
+                                        <strong>{{ _("Registration Number") }}:</strong> {{ invoice.registration_number }}<br>
+                                        {% endif %}
+                                        {% if invoice.address %}
+                                        <strong>{{ _("Company Address") }}:</strong> {{ invoice.address }}<br>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            {% else %}
+                            <p class="text-warning">{{ _("Invoice requested but details missing") }}</p>
+                            {% endif %}
+                        {% else %}
+                            <p>{{ _("No invoice requested") }}</p>
+                        {% endif %}
+                        
+                        <!-- Invoice Selection -->
+                        <div class="collapse mt-3" id="invoiceSelection{{ order.order_id }}">
+                            {% if order.saved_invoices %}
+                            <div class="card card-body">
+                                <h6>{{ _("Saved Invoice Details") }}</h6>
+                                <form method="POST">
+                                    <input type="hidden" name="order_id" value="{{ order.order_id }}">
+                                    <input type="hidden" name="action" value="update_invoice">
+                                    
+                                    <div class="form-group">
+                                        <select name="invoice_details" class="form-control mb-2">
+                                            {% for invoice in order.saved_invoices %}
+                                                {% set inv = invoice|from_json if invoice else {} %}
+                                                <option value='{{ invoice|tojson }}'>
+                                                    {{ inv.company_name }} - {{ inv.vat_number }}
+                                                    {% if inv.registration_number %} ({{ inv.registration_number }}){% endif %}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">{{ _("Update Invoice Details") }}</button>
+                                    </div>
+                                </form>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">{{ _("No saved invoice details found") }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Order Items -->
                     <table class="table table-sm">
                         <thead>
                             <tr>
-                                <th>Article</th>
-                                <th>Quantity</th>
-                                <th>Type</th>
-                                <th>Actions</th>
+                                <th>{{ _("Article") }}</th>
+                                <th>{{ _("Quantity") }}</th>
+                                <th>{{ _("Price") }}</th>
+                                <th>{{ _("Total") }}</th>
+                                <th>{{ _("Type") }}</th>
+                                <th>{{ _("Status") }}</th>
+                                <th>{{ _("Actions") }}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for item in order['items'] %}
-                            <tr>
-                                <td>{{ item.article }}</td>
-                                <td>{{ item.quantity }}</td>
-                                <td>{{ item.item_type }}</td>
-                                <td>
-                                    <form method="POST" class="d-inline">
-                                        <input type="hidden" name="order_id" value="{{ order.order_id }}">
-                                        <input type="hidden" name="article" value="{{ item.article }}">
-                                        <input type="hidden" name="quantity" value="{{ item.quantity }}">
-                                        <input type="hidden" name="item_type" value="{{ item.item_type }}">
-                                        <input type="hidden" name="order_detail_id" value="{{ item.id }}">
-                                        {% if item.item_type == 'stock' %}
-                                        <button type="submit" name="action" value="accept_stock"
-                                            class="btn btn-success btn-sm">Accept</button>
-                                        <button type="submit" name="action" value="reject_stock"
-                                            class="btn btn-danger btn-sm">Reject</button>
-                                        {% elif item.item_type == 'pricelist' %}
-                                        <button type="submit" name="action" value="accept_pricelist"
-                                            class="btn btn-success btn-sm">Accept</button>
-                                        <button type="submit" name="action" value="reject_pricelist"
-                                            class="btn btn-danger btn-sm">Reject</button>
+                            {% if order.items_list %}
+                                {% for item in order.items_list %}
+                                <tr>
+                                    <td>{{ item.article }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ "%.2f"|format(item.price|float) }} EUR</td>
+                                    <td>{{ "%.2f"|format(item.total_price|float) }} EUR</td>
+                                    <td>
+                                        <span class="badge {% if item.table_name == 'stock' %}bg-info{% else %}bg-warning{% endif %}">
+                                            {{ item.table_name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if item.status == 'processing' 
+                                                               else 'danger' if item.status == 'rejected'
+                                                               else 'warning' if item.status == 'ordered_supplier'
+                                                               else 'secondary' }}">
+                                            {{ item.status or 'new' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if not item.status or item.status == 'new' %}
+                                        <form method="POST" class="d-inline">
+                                            <input type="hidden" name="order_id" value="{{ order.order_id }}">
+                                            <input type="hidden" name="article" value="{{ item.article }}">
+                                            <input type="hidden" name="quantity" value="{{ item.quantity }}">
+                                            <input type="hidden" name="item_type" value="{{ 'stock' if item.table_name == 'stock' else 'pricelist' }}">
+                                            <input type="hidden" name="order_detail_id" value="{{ item.id }}">
+                                            
+                                            {% if item.table_name == 'stock' %}
+                                            <button type="submit" name="action" value="accept_stock" class="btn btn-sm btn-success">
+                                                <i class="bi bi-check"></i> {{ _("Accept") }}
+                                            </button>
+                                            <button type="submit" name="action" value="reject_stock" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-x"></i> {{ _("Reject") }}
+                                            </button>
+                                            {% else %}
+                                            <button type="submit" name="action" value="accept_pricelist" class="btn btn-sm btn-success">
+                                                <i class="bi bi-check"></i> {{ _("Accept") }}
+                                            </button>
+                                            <button type="submit" name="action" value="reject_pricelist" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-x"></i> {{ _("Reject") }}
+                                            </button>
+                                            {% endif %}
+                                        </form>
                                         {% endif %}
-                                    </form>
-                                </td>
-                            </tr>
-                            {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">{{ _("No items in this order") }}</td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>

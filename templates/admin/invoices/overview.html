@@ -1,0 +1,39 @@
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Invoices Overview</h2>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Client Invoices</h5>
+                </div>
+                <div class="card-body">
+                    <p>Total: {{ client_stats.total }}</p>
+                    <p>Pending: {{ client_stats.pending }}</p>
+                    <p>Generated: {{ client_stats.generated }}</p>
+                    <a href="{{ url_for('admin_client_invoices', token=token) }}" 
+                       class="btn btn-primary">View Client Invoices</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Supplier Invoices</h5>
+                </div>
+                <div class="card-body">
+                    <p>Total: {{ supplier_stats.total }}</p>
+                    <p>New: {{ supplier_stats.new }}</p>
+                    <p>Processed: {{ supplier_stats.processed }}</p>
+                    <a href="{{ url_for('admin_supplier_invoices', token=token) }}" 
+                       class="btn btn-primary">View Supplier Invoices</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

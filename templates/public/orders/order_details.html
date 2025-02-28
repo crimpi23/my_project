@@ -175,6 +175,56 @@
         </div>
     </div>
 
+    <!-- Delivery and Invoice Information -->
+    <div class="row mb-4">
+        <!-- Delivery Address -->
+        <div class="col-md-6">
+            <div class="summary-card card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{{ _('Delivery Address') }}</h5>
+                </div>
+                <div class="card-body">
+                    {% set address = order.delivery_address|from_json if order.delivery_address else {} %}
+                    {% if address %}
+                        <p class="mb-1"><strong>{{ address.full_name }}</strong></p>
+                        <p class="mb-1">{{ address.street }}</p>
+                        <p class="mb-1">{{ address.postal_code }} {{ address.city }}</p>
+                        <p class="mb-1">{{ address.country }}</p>
+                        <p class="mb-0">{{ address.phone }}</p>
+                    {% else %}
+                        <p class="text-secondary">{{ _("No delivery information provided") }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Details -->
+        {% if order.needs_invoice %}
+        <div class="col-md-6">
+            <div class="summary-card card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{{ _('Invoice Information') }}</h5>
+                </div>
+                <div class="card-body">
+                    {% set invoice = order.invoice_details|from_json if order.invoice_details else {} %}
+                    {% if invoice %}
+                        <p class="mb-1"><strong>{{ _('Company Name') }}:</strong> {{ invoice.company_name }}</p>
+                        <p class="mb-1"><strong>{{ _('VAT Number') }}:</strong> {{ invoice.vat_number }}</p>
+                        {% if invoice.registration_number %}
+                        <p class="mb-1"><strong>{{ _("Registration Number") }}:</strong> {{ invoice.registration_number }}</p>
+                        {% endif %}
+                        {% if invoice.address %}
+                        <p class="mb-0"><strong>{{ _("Company Address") }}:</strong> {{ invoice.address }}</p>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-secondary">{{ _("Invoice requested but details not provided") }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
     <!-- Items Table -->
     <div class="items-table card">
         <div class="table-responsive">

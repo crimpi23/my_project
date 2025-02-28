@@ -1,0 +1,35 @@
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Upload Invoice</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="supplier" class="form-label">Supplier</label>
+                    <select class="form-select" name="supplier_id" required>
+                        <option value="">Select supplier</option>
+                        {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="invoice_number" class="form-label">Invoice Number</label>
+                    <input type="text" class="form-control" name="invoice_number" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="file" class="form-label">Invoice File (Excel)</label>
+                    <input type="file" class="form-control" name="file" accept=".xls,.xlsx" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Upload Invoice</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

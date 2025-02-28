@@ -2,13 +2,12 @@ import csv
 import io
 import re
 import time
+import json
 import logging
 from flask_caching import Cache
 from datetime import datetime
 from decimal import Decimal
-import time
 import os
-import logging
 import bcrypt
 from functools import wraps
 import psycopg2
@@ -19,40 +18,45 @@ from flask import (
     send_file, get_flashed_messages, g
 )
 from flask_babel import Babel, gettext as _
-from openpyxl import Workbook
-from io import BytesIO
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import smtplib
-import random
-import string
-import pandas as pd
-import numpy as np
-from datetime import datetime
-from flask import make_response
-import json
-import phonenumbers
-from phonenumbers import NumberParseException
-from functools import wraps
+# from flask_wtf import CSRFProtect
+# from flask_wtf.csrf import generate_csrf
+import sys
+# ... rest of your imports ...
 
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger('psycopg2')
-
-
-
-# Налаштування логування
-logging.basicConfig(level=logging.DEBUG)
-
+# Create Flask app first
 app = Flask(__name__, template_folder='templates')
 
+# Set secret key for sessions and CSRF
+# app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
+
+# Initialize extensions
+# csrf = CSRFProtect(app)
 babel = Babel(app)
 
-# Налаштування Babel
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('app.log', encoding='utf-8')
+    ]
+)
+
+# Configure Babel
 app.config['BABEL_DEFAULT_LOCALE'] = 'uk'
 app.config['BABEL_SUPPORTED_LOCALES'] = ['uk', 'en', 'sk', 'pl']
 
-# Конфігурація доступних мов
+
+# Configure languages
+LANGUAGES = {
+    'uk': 'Українська',
+    'en': 'English',
+    'sk': 'Slovenský',
+    'pl': 'Polski'
+}
+
+    # Конфігурація доступних мов
 LANGUAGES = {
     'uk': 'Українська',
     'en': 'English',
@@ -62,19 +66,187 @@ LANGUAGES = {
     
 # Функція валідації телефону
 def validate_phone(phone_number):
+    """Basic phone number validation"""
     try:
-        # Парсимо номер
-        parsed_number = phonenumbers.parse(phone_number)
-        # Перевіряємо чи номер валідний
-        if not phonenumbers.is_valid_number(parsed_number):
-            return False, "Invalid phone number format"
-        # Перевіряємо чи це мобільний номер
-        number_type = phonenumbers.number_type(parsed_number)
-        if number_type != phonenumbers.PhoneNumberType.MOBILE:
-            return False, "Number must be mobile phone"
-        return True, phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.E164)
-    except NumberParseException as e:
+        # Видаляємо всі пробіли з номера
+        phone = phone_number.strip().replace(' ', '')
+        
+        # Перевіряємо базовий формат
+        if not phone:
+            return False, "Phone number is required"
+            
+        # Перевіряємо наявність '+' на початку
+        if not phone.startswith('+'):
+            return False, "Phone number must start with +"
+            
+        # Перевіряємо що решта символів - цифри
+        if not phone[1:].replace('-', '').isdigit():
+            return False, "Phone number must contain only digits after +"
+            
+        # Перевіряємо мінімальну довжину (включаючи '+' і код країни)
+        if len(phone) < 9:
+            return False, "Phone number is too short"
+            
+        return True, phone
+        
+    except Exception as e:
+        logging.error(f"Phone validation error: {e}")
         return False, str(e)
+
+@app.route('/save_delivery_address', methods=['POST'])
+def save_delivery_address():
+    try:
+        user_id = session['user_id']
+        address_data = {
+            'full_name': request.form['full_name'],
+            'phone': request.form['phone'],
+            'country': request.form['country'],
+            'postal_code': request.form['postal_code'],
+            'city': request.form['city'],
+            'street': request.form['street'],
+            'is_default': not bool(get_user_addresses(user_id))  # Перша адреса буде default
+        }
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO delivery_addresses 
+                (user_id, full_name, phone, country, postal_code, city, street, is_default)
+                VALUES (%(user_id)s, %(full_name)s, %(phone)s, %(country)s, 
+                        %(postal_code)s, %(city)s, %(street)s, %(is_default)s)
+            """, {**address_data, 'user_id': user_id})
+            conn.commit()
+
+        flash(_("Address saved successfully"), "success")
+        return redirect(url_for('public_cart'))
+
+    except Exception as e:
+        logging.error(f"Error saving address: {e}")
+        flash(_("Error saving address"), "error")
+        return redirect(url_for('public_cart'))
+
+
+def validate_eu_vat(vat_number):
+    """Validates European VAT number format"""
+    patterns = {
+        'AT': r'^ATU\d{8}$',                      # Austria
+        'BE': r'^BE0\d{9}$',                      # Belgium
+        'BG': r'^BG\d{9,10}$',                    # Bulgaria
+        'CY': r'^CY\d{8}[A-Z]$',                  # Cyprus
+        'CZ': r'^CZ\d{8,10}$',                    # Czech Republic
+        'DE': r'^DE\d{9}$',                       # Germany
+        'DK': r'^DK\d{8}$',                       # Denmark
+        'EE': r'^EE\d{9}$',                       # Estonia
+        'EL': r'^EL\d{9}$',                       # Greece
+        'ES': r'^ES[A-Z0-9]\d{7}[A-Z0-9]$',      # Spain
+        'FI': r'^FI\d{8}$',                       # Finland
+        'FR': r'^FR[A-HJ-NP-Z0-9]\d{9}$',        # France
+        'GB': r'^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$', # United Kingdom
+        'HR': r'^HR\d{11}$',                      # Croatia
+        'HU': r'^HU\d{8}$',                       # Hungary
+        'IE': r'^IE\d{7}[A-Z]{1,2}$',            # Ireland
+        'IT': r'^IT\d{11}$',                      # Italy
+        'LT': r'^LT(\d{9}|\d{12})$',             # Lithuania
+        'LU': r'^LU\d{8}$',                      # Luxembourg
+        'LV': r'^LV\d{11}$',                     # Latvia
+        'MT': r'^MT\d{8}$',                      # Malta
+        'NL': r'^NL\d{9}B\d{2}$',               # Netherlands
+        'PL': r'^PL\d{10}$',                     # Poland
+        'PT': r'^PT\d{9}$',                      # Portugal
+        'RO': r'^RO\d{2,10}$',                   # Romania
+        'SE': r'^SE\d{12}$',                     # Sweden
+        'SI': r'^SI\d{8}$',                      # Slovenia
+        'SK': r'^SK\d{10}$'                      # Slovakia
+    }
+
+    try:
+        # Очищаємо номер від пробілів та переводимо у верхній регістр
+        vat_number = vat_number.replace(' ', '').upper()
+        
+        # Отримуємо код країни (перші 2 символи)
+        country_code = vat_number[:2]
+        
+        if country_code not in patterns:
+            return {
+                'valid': False,
+                'message': f"Unknown country code: {country_code}",
+                'country': None
+            }
+
+        # Перевіряємо формат за допомогою регулярного виразу
+        if re.match(patterns[country_code], vat_number):
+            # Тут можна додати API перевірку через VIES (EU VAT validation service)
+            return {
+                'valid': True,
+                'message': "VAT number format is valid",
+                'country': country_code
+            }
+        else:
+            return {
+                'valid': False,
+                'message': f"Invalid format for {country_code} VAT number",
+                'country': country_code
+            }
+
+    except Exception as e:
+        logging.error(f"Error validating VAT number: {e}")
+        return {
+            'valid': False,
+            'message': "Error validating VAT number",
+            'country': None
+        }
+
+
+# Add near other template filters
+@app.template_filter('from_json')
+def from_json(value):
+    """Convert JSON string to Python dictionary"""
+    if not value:
+        return {}
+    if isinstance(value, dict):
+        return value
+    try:
+        return json.loads(value)
+    except:
+        return {}
+
+@app.route('/validate_phone', methods=['POST'])
+def validate_phone_route():
+    try:
+        phone = request.json.get('phone', '')
+        is_valid, message = validate_phone(phone)  # Використовуємо існуючу функцію
+        return jsonify({
+            'valid': is_valid,
+            'message': message
+        })
+    except Exception as e:
+        logging.error(f"Error validating phone: {e}")
+        return jsonify({
+            'valid': False,
+            'message': _("Error validating phone number")
+        }), 500
+
+@app.route('/validate-vat', methods=['POST'])
+def validate_vat_route():
+    """API endpoint для перевірки VAT номера"""
+    try:
+        vat_number = request.json.get('vat_number', '')
+        result = validate_eu_vat(vat_number)
+        return jsonify(result)
+    except Exception as e:
+        logging.error(f"Error in validate_vat_route: {e}")
+        return jsonify({
+            'valid': False,
+            'message': "Server error during validation",
+            'country': None
+        }), 500
+
+
+@app.template_filter('tojson')
+def filter_tojson(obj):
+    """Фільтр для перетворення Python об'єкту в JSON рядок"""
+    import json
+    return json.dumps(obj)
 
 # Функція для реєстрації нового користувача
 @app.route('/register', methods=['GET', 'POST'])
@@ -202,9 +374,28 @@ def login():
 
     return render_template('auth/login.html')
 
+
+
+def get_user_companies(user_id):
+    """Get all saved companies for a user"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            cursor.execute("""
+                SELECT * FROM user_companies 
+                WHERE user_id = %s 
+                ORDER BY is_default DESC, created_at DESC
+            """, (user_id,))
+            return cursor.fetchall()
+    except Exception as e:
+        logging.error(f"Error getting user companies: {e}")
+        return []
+
+
 @app.route('/public_place_order', methods=['POST'])
 def public_place_order():
-    """Створює замовлення для публічного користувача"""
+    """Creates order for public user with delivery address and invoice details"""
+    logging.info("=== Starting public_place_order process ===")
     try:
         user_id = session.get('user_id')
         if not user_id:
@@ -214,17 +405,142 @@ def public_place_order():
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Отримуємо товари з публічного кошика
+        # Get delivery data
+        delivery_data = {}
+        address_id = request.form.get('delivery_address')
+        use_new_address = request.form.get('use_new_address') == '1'
+        save_address = request.form.get('save_address') == 'on'
+        
+        logging.debug(f"Form data: {dict(request.form)}")
+        logging.debug(f"Address ID: {address_id}, Use new: {use_new_address}, Save: {save_address}")
+
+        if address_id and not use_new_address:
+            # Using existing address
+            logging.info(f"Using existing address ID: {address_id}")
+            cursor.execute("""
+                SELECT * FROM delivery_addresses 
+                WHERE id = %s AND user_id = %s
+            """, (address_id, user_id))
+            address = cursor.fetchone()
+            if address:
+                delivery_data = dict(address)
+                if 'created_at' in delivery_data:
+                    delivery_data['created_at'] = delivery_data['created_at'].isoformat()
+                logging.debug(f"Found existing address: {delivery_data}")
+            else:
+                flash(_("Selected address not found"), "error")
+                return redirect(url_for('public_cart'))
+        else:
+            # Using new address
+            delivery_data = {
+                'full_name': request.form.get('full_name'),
+                'phone': request.form.get('phone'),
+                'country': request.form.get('country'),
+                'postal_code': request.form.get('postal_code'),
+                'city': request.form.get('city'),
+                'street': request.form.get('street')
+            }
+
+            if save_address:
+                try:
+                    cursor.execute("""
+                        INSERT INTO delivery_addresses 
+                        (user_id, full_name, phone, country, postal_code, city, street, is_default)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        RETURNING id
+                    """, (
+                        user_id,
+                        delivery_data['full_name'],
+                        delivery_data['phone'],
+                        delivery_data['country'],
+                        delivery_data['postal_code'],
+                        delivery_data['city'],
+                        delivery_data['street'],
+                        False
+                    ))
+                    delivery_data['id'] = cursor.fetchone()['id']
+                    conn.commit()
+                    logging.info(f"New address saved with ID: {delivery_data['id']}")
+                except Exception as e:
+                    logging.error(f"Error saving address: {e}")
+                    conn.rollback()
+                    flash(_("Error saving address"), "error")
+                    return redirect(url_for('public_cart'))
+
+        # Get invoice details
+        needs_invoice = request.form.get('needs_invoice') == 'on'
+        invoice_details = None
+        
+        if needs_invoice:
+            # Перевіряємо, чи користувач вибрав існуючу компанію чи хоче додати нову
+            company_id = request.form.get('company_id')
+            use_new_company = request.form.get('use_new_company') == '1'
+            save_company = request.form.get('save_company') == 'on'
+            
+            if company_id and not use_new_company:
+                # Using existing company
+                logging.info(f"Using existing company ID: {company_id}")
+                cursor.execute("""
+                    SELECT * FROM user_companies 
+                    WHERE id = %s AND user_id = %s
+                """, (company_id, user_id))
+                company = cursor.fetchone()
+                
+                if company:
+                    invoice_details = {
+                        'company_name': company['company_name'],
+                        'vat_number': company['vat_number'],
+                        'registration_number': company['registration_number'],
+                        'address': company['address']
+                    }
+                    logging.debug(f"Found existing company: {invoice_details}")
+                else:
+                    flash(_("Selected company not found"), "error")
+                    return redirect(url_for('public_cart'))
+            else:
+                # Using new company details
+                invoice_details = {
+                    'company_name': request.form.get('company_name'),
+                    'vat_number': request.form.get('vat_number'),
+                    'registration_number': request.form.get('registration_number'),
+                    'address': request.form.get('company_address')
+                }
+                
+                # Save company if requested
+                if save_company:
+                    try:
+                        cursor.execute("""
+                            INSERT INTO user_companies 
+                            (user_id, company_name, vat_number, registration_number, address, is_default)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                            RETURNING id
+                        """, (
+                            user_id,
+                            invoice_details['company_name'],
+                            invoice_details['vat_number'],
+                            invoice_details['registration_number'],
+                            invoice_details['address'],
+                            False
+                        ))
+                        new_company_id = cursor.fetchone()['id']
+                        conn.commit()
+                        logging.info(f"New company saved with ID: {new_company_id}")
+                    except Exception as e:
+                        logging.error(f"Error saving company: {e}")
+                        conn.rollback()
+                        flash(_("Error saving company details"), "error")
+                        return redirect(url_for('public_cart'))
+
+        # Get cart items
         cart = session.get('public_cart', {})
         if not cart:
             flash(_("Your cart is empty."), "error")
             return redirect(url_for('public_cart'))
 
-        # Створюємо замовлення
+        # Process order items
         total_price = Decimal('0')
         order_items = []
 
-        # Формуємо список товарів і рахуємо загальну суму
         for article, table_data in cart.items():
             for table_name, item_data in table_data.items():
                 item_price = Decimal(str(item_data['price']))
@@ -238,19 +554,26 @@ def public_place_order():
                     'quantity': item_quantity,
                     'price': item_price,
                     'total_price': item_total,
-                    'brand_id': item_data['brand_id'],
+                    'brand_id': item_data.get('brand_id'),
                     'comment': item_data.get('comment', '')
                 })
 
-        # Створюємо замовлення
+        # Create order record with invoice details
         cursor.execute("""
-            INSERT INTO public_orders (user_id, total_price, status, created_at)
-            VALUES (%s, %s, 'new', NOW())
+            INSERT INTO public_orders 
+            (user_id, total_price, status, created_at, delivery_address, needs_invoice, invoice_details)
+            VALUES (%s, %s, 'new', NOW(), %s, %s, %s)
             RETURNING id
-        """, (user_id, total_price))
+        """, (
+            user_id,
+            total_price,
+            json.dumps(delivery_data),
+            needs_invoice,
+            json.dumps(invoice_details) if invoice_details else None
+        ))
         order_id = cursor.fetchone()['id']
 
-        # Додаємо деталі замовлення
+        # Add order details
         for item in order_items:
             cursor.execute("""
                 INSERT INTO public_order_details 
@@ -267,21 +590,26 @@ def public_place_order():
                 item['brand_id']
             ))
 
-        # Очищаємо кошик
+        # Clear cart and commit
         session['public_cart'] = {}
         session.modified = True
-        
         conn.commit()
+        
         flash(_("Order placed successfully!"), "success")
         return redirect(url_for('public_view_orders'))
 
     except Exception as e:
-        logging.error(f"Error placing public order: {e}", exc_info=True)
-        flash(_("Error placing order."), "error")
+        logging.error(f"Error in public_place_order: {e}", exc_info=True)
+        if 'conn' in locals():
+            conn.rollback()
+        flash(_("Error placing order"), "error")
         return redirect(url_for('public_cart'))
     finally:
         if 'conn' in locals():
             conn.close()
+        logging.info("=== Finished public_place_order process ===")
+
+
 
 @app.route('/cart/clear', methods=['POST'])
 def cart_clear():
@@ -336,9 +664,6 @@ def public_view_orders():
 
 @app.route('/public_order/<int:order_id>')
 def public_view_order_details(order_id):
-    """
-    Відображає деталі конкретного публічного замовлення
-    """
     try:
         user_id = session.get('user_id')
         if not user_id:
@@ -348,11 +673,9 @@ def public_view_order_details(order_id):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Перевіряємо, чи замовлення належить користувачу
+        # Get order details
         cursor.execute("""
-            SELECT 
-                o.*,
-                COUNT(od.id) as items_count
+            SELECT o.*, COUNT(od.id) as items_count
             FROM public_orders o
             LEFT JOIN public_order_details od ON o.id = od.order_id
             WHERE o.id = %s AND o.user_id = %s
@@ -365,11 +688,11 @@ def public_view_order_details(order_id):
             flash(_("Order not found."), "error")
             return redirect(url_for('public_view_orders'))
 
-        # Отримуємо деталі замовлення
+        # Get order items with correct product name
         cursor.execute("""
             SELECT 
                 od.*,
-                p.name as product_name,
+                COALESCE(p.name_uk, od.article) as product_name,
                 b.name as brand_name
             FROM public_order_details od
             LEFT JOIN products p ON od.article = p.article
@@ -406,58 +729,121 @@ def logout():
 
 
 # Перегляд кошика публічного користувача
+# Виправлення помилки в функції public_cart
+
 @app.route('/public_cart')
 def public_cart():
-    """Перегляд кошика публічного користувача"""
+    """View and manage public user's shopping cart"""
+    user_id = session.get('user_id')
+    if not user_id:
+        flash(_("Please log in to view your cart."), "error")
+        return redirect(url_for('login'))
+
     cart = session.get('public_cart', {})
     total_price = Decimal('0')
     cart_items = []
+    saved_addresses = []
+    saved_companies = []
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
+        # Get saved delivery addresses
+        cursor.execute("""
+            SELECT 
+                id, full_name, phone, country, 
+                postal_code, city, street, is_default
+            FROM delivery_addresses
+            WHERE user_id = %s
+            ORDER BY is_default DESC, created_at DESC
+        """, (user_id,))
+        saved_addresses = cursor.fetchall()
+        logging.debug(f"Found {len(saved_addresses)} saved addresses for user {user_id}")
+        
+        # Get saved companies
+        cursor.execute("""
+            SELECT 
+                id, company_name, vat_number, registration_number, 
+                address, is_default, created_at
+            FROM user_companies
+            WHERE user_id = %s
+            ORDER BY is_default DESC, created_at DESC
+        """, (user_id,))
+        saved_companies = cursor.fetchall()
+        logging.debug(f"Found {len(saved_companies)} saved companies for user {user_id}")
+
+        # Get current language
+        lang = session.get('language', 'uk')
+
+        # Process cart items
         for article, cart_item in cart.items():
             if isinstance(cart_item, dict):
                 for table_name, item_details in cart_item.items():
+                    # Виправлена версія запиту - прибрано посилання на зовнішню змінну item_details
                     cursor.execute("""
-                        SELECT p.article, p.name, p.description,
-                               b.name as brand_name,
-                               %s AS table_name,
-                               pl.delivery_time
+                        SELECT 
+                            p.article, 
+                            p.name_{} as name,
+                            p.description_{} as description,
+                            b.name as brand_name,
+                            %s AS table_name,
+                            pl.delivery_time,
+                            b.id as brand_id
                         FROM {} t
                         LEFT JOIN products p ON t.article = p.article
                         LEFT JOIN price_lists pl ON pl.table_name = %s
                         LEFT JOIN brands b ON pl.brand_id = b.id
                         WHERE t.article = %s
-                    """.format(table_name), (table_name, table_name, article))
+                    """.format(lang, lang, table_name), (table_name, table_name, article))
                     
                     result = cursor.fetchone()
 
                     if result:
-                        # Використовуємо ціну, яка вже збережена в кошику (вже з націнкою)
-                        price = Decimal(str(item_details['price']))
-                        quantity = int(item_details['quantity'])
-                        item_total = price * quantity
-                        total_price += item_total
-                        
-                        cart_items.append({
-                            'article': article,
-                            'name': result['name'],
-                            'description': result['description'],
-                            'brand_name': result['brand_name'],
-                            'table_name': table_name,
-                            'price': price,  # Використовуємо збережену ціну з націнкою
-                            'quantity': quantity,
-                            'total': item_total,
-                            'delivery_time': result['delivery_time']
-                        })
+                        try:
+                            # Використовуємо збережений brand_id з елемента кошика
+                            brand_id = item_details.get('brand_id')
+                            
+                            # Якщо brand_id є в item_details, знайдемо відповідну назву бренду
+                            if brand_id:
+                                cursor.execute("""
+                                    SELECT name FROM brands WHERE id = %s
+                                """, (brand_id,))
+                                brand_result = cursor.fetchone()
+                                brand_name = brand_result['name'] if brand_result else 'AutogroupEU'
+                            else:
+                                brand_name = result['brand_name'] if result['brand_name'] else 'AutogroupEU'
+                            
+                            # Use price saved in cart (already with markup)
+                            price = Decimal(str(item_details['price']))
+                            quantity = int(item_details['quantity'])
+                            item_total = price * quantity
+                            total_price += item_total
+                            
+                            cart_items.append({
+                                'article': article,
+                                'name': result['name'] or article,
+                                'description': result['description'] or '',
+                                'brand_name': brand_name,
+                                'brand_id': brand_id,
+                                'table_name': table_name,
+                                'price': price,
+                                'quantity': quantity,
+                                'total': item_total,
+                                'delivery_time': result['delivery_time'],
+                                'comment': item_details.get('comment', '')
+                            })
+                        except (TypeError, ValueError, KeyError) as e:
+                            logging.error(f"Error processing cart item {article}: {e}")
+                            continue
 
     except Exception as e:
         logging.error(f"Error in public_cart: {e}", exc_info=True)
         flash(_("An error occurred while processing your request."), "error")
         cart_items = []
         total_price = Decimal('0')
+        saved_addresses = []
+        saved_companies = []
 
     finally:
         if 'conn' in locals():
@@ -466,9 +852,10 @@ def public_cart():
     return render_template(
         'public/cart/cart.html',
         cart_items=cart_items,
-        total_price=total_price
+        total_price=total_price,
+        saved_addresses=saved_addresses,
+        saved_companies=saved_companies
     )
-
 
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
 def requires_token_and_roles(*allowed_roles):
@@ -476,27 +863,35 @@ def requires_token_and_roles(*allowed_roles):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             token = request.view_args.get('token')
+            
+            # Перевіряємо, чи це публічний маршрут
+            is_public_route = 'public' in request.path or not any(segment in request.path for segment in ['admin', 'dashboard'])
+            
             if not token:
-                token = request.args.get('token')
-
-            if not token or not validate_token(token):
-                flash(_("Invalid token."), "error")
                 return redirect(url_for('index'))
+
+            if not validate_token(token):
+                # Для публічних маршрутів тихе перенаправлення без повідомлення
+                if is_public_route:
+                    return redirect(url_for('index'))
+                else:
+                    # Для адмін-маршрутів показуємо помилку
+                    flash(_("Invalid token."), "error")
+                    return redirect(url_for('index'))
 
             session_role = session.get('role')
             if not session_role:
-                flash(_("Invalid token or role."), "error")
-                return redirect(url_for('index'))
+                flash(_("Please log in."), "error")
+                return redirect(url_for('login'))
 
             role_name = session_role
             if allowed_roles and role_name not in allowed_roles:
-                flash(_("Invalid token or role."), "error")
+                flash(_("You don't have permission to access this page."), "error")
                 return redirect(url_for('index'))
 
             return f(*args, **kwargs)
         return decorated_function
     return decorator
-
 
 
 def get_locale():
@@ -600,6 +995,7 @@ def localized_product_details(lang, article):
     
     # Перенаправляємо на основну функцію product_details
     return product_details(article)
+
 
 
 
@@ -1339,12 +1735,24 @@ def get_markup_by_role(role_name):
         return 35.0  # Стандартна націнка у випадку помилки
 
 
-# Функція для перевірки токена
+# Покращена функція validate_token з детальним логуванням
 def validate_token(token):
+    """Перевірка валідності токена з розширеним логуванням"""
+    logging.debug(f"==================== START TOKEN VALIDATION ====================")
     logging.debug(f"Validating token: {token}")
+    logging.debug(f"Request path: {request.path}")
+    logging.debug(f"Request endpoint: {request.endpoint}")
+    logging.debug(f"Request referrer: {request.referrer}")
+    
+    # Перевірка, чи токен не є назвою публічного маршруту
+    common_routes = ['favicon.ico', 'static', 'public', 'product', 'about']
+    if token in common_routes:
+        logging.debug(f"Token '{token}' is a common route name, skipping validation")
+        return False
+    
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("""
             SELECT u.id AS user_id, r.name AS role
             FROM tokens t
@@ -1358,13 +1766,22 @@ def validate_token(token):
         if result:
             session['user_id'] = result['user_id']
             session['role'] = result['role']  # зберігаємо тільки назву ролі
-            logging.debug(f"User ID: {result['user_id']}, Role: {result['role']}")
-
-        conn.close()
-        return result if result else None
+            logging.debug(f"Token valid. User ID: {result['user_id']}, Role: {result['role']}")
+            logging.debug(f"==================== END TOKEN VALIDATION (SUCCESS) ====================")
+            return result
+        
+        logging.debug(f"Token invalid. No matching record found for token: {token}")
+        logging.debug(f"==================== END TOKEN VALIDATION (FAILED) ====================")
+        return None
+    
     except Exception as e:
         logging.error(f"Error validating token: {e}")
+        logging.debug(f"==================== END TOKEN VALIDATION (ERROR) ====================")
         return None
+    
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 
 def send_email(to_email, subject, ordered_items, missing_articles):
@@ -1526,7 +1943,7 @@ def token_index(token):
     return render_template('user/index.html', role=user_data['role'])
 
 
-# Головна сторінка
+# Головна сторінка - сортування за ціною від високої до низької
 @app.route('/')
 def index():
     """Головна сторінка з товарами"""
@@ -1545,7 +1962,7 @@ def index():
             """)
             total_items = cursor.fetchone()[0]
             
-            # Отримуємо товари з пагінацією
+            # Отримуємо товари з пагінацією і сортуванням за ціною від найдорожчого
             cursor.execute("""
                 SELECT 
                     s.article,
@@ -1554,18 +1971,18 @@ def index():
                     b.name as brand_name,
                     p.name_uk as name,
                     p.description_uk as description,
-                    pi.image_url
+                    (
+                        SELECT image_url 
+                        FROM product_images pi 
+                        WHERE pi.product_article = s.article 
+                        ORDER BY is_main DESC, id ASC 
+                        LIMIT 1
+                    ) as image_url
                 FROM stock s
                 LEFT JOIN brands b ON s.brand_id = b.id
                 LEFT JOIN products p ON s.article = p.article
-                LEFT JOIN (
-                    SELECT DISTINCT ON (product_article) 
-                        product_article, image_url
-                    FROM product_images
-                    ORDER BY product_article, id
-                ) pi ON s.article = pi.product_article
                 WHERE s.quantity > 0
-                ORDER BY s.article
+                ORDER BY s.price DESC
                 LIMIT %s OFFSET %s
             """, (per_page, (page - 1) * per_page))
             
@@ -1577,8 +1994,7 @@ def index():
                 'public/index.html',
                 products=products,
                 page=page,
-                has_more=has_more,
-                total_items=total_items
+                has_more=has_more
             )
 
     except Exception as e:
@@ -1589,86 +2005,66 @@ def index():
 # Додавання товару в кошик публічного користувача
 @app.route('/public_add_to_cart', methods=['POST'])
 def public_add_to_cart():
+    """Add items to the public user's cart"""
+    article = None  # Оголошуємо змінну article тут для доступу в блоці finally
+    
     try:
         article = request.form.get('article')
         selected_price = request.form.get('selected_price')
         
-        logging.debug(f"Adding to cart - Article: {article}, Selected price: {selected_price}")
-
-        if not selected_price:
-            logging.warning(f"No price selected for article {article}")
-            flash(_("Please select a price option."), "error")
-            return redirect(request.referrer or url_for('index'))
-
-        table_name, price_brand = selected_price.split(':')
-        base_price = Decimal(price_brand.split('|')[0])  # Extract base price directly
-        brand_id = price_brand.split('|')[1]
+        if not article or not selected_price:
+            flash(_("Missing required product information"), "error")
+            return redirect(url_for('index'))
+            
+        # Parse the selected price value
+        parts = selected_price.split(':')
+        if len(parts) != 2:
+            flash(_("Invalid price format"), "error")
+            return redirect(url_for('index'))
+            
+        table_name = parts[0]
         
-        # Get markup for public user
-        user_id = session.get('user_id')
-        markup = get_markup_percentage(user_id)
+        # Extract price and brand_id from the second part
+        price_brand_parts = parts[1].split('|')
+        price = price_brand_parts[0]
+        brand_id = int(price_brand_parts[1]) if len(price_brand_parts) > 1 else None
         
-        logging.info(f"""
-            Cart addition details:
-            - Article: {article}
-            - Table: {table_name}
-            - Base price: {base_price}
-            - Brand ID: {brand_id}
-            - User ID: {user_id}
-            - Markup: {markup}%
-        """)
-
-        # Calculate final price with markup
-        final_price = base_price #* (1 + Decimal(markup) / 100)
-        logging.debug(f"Calculated final price: {final_price}")
-
-        quantity = int(request.form.get(f'quantity_{table_name}', 1))
-
-        if 'user_id' not in session:
-            session['next_url'] = url_for('product_details', article=article)
-            flash(_("Please log in or register to add this item to your cart."), "info")
-            return redirect(url_for('login'))
-
-        # Initialize cart if not exists
+        # Get quantity field name based on table_name
+        quantity_field = f"quantity_{table_name}"
+        quantity = int(request.form.get(quantity_field, 1))
+        
+        if quantity < 1:
+            flash(_("Quantity must be at least 1"), "error")
+            return redirect(url_for('product_details', article=article))
+            
+        # Initialize cart if needed
         if 'public_cart' not in session:
             session['public_cart'] = {}
             
-        cart = session['public_cart']
+        # Initialize article in cart if needed
+        if article not in session['public_cart']:
+            session['public_cart'][article] = {}
+            
+        # Add or update cart item
+        session['public_cart'][article][table_name] = {
+            'price': float(price),
+            'quantity': quantity,
+            'brand_id': brand_id  # Зберігаємо brand_id
+        }
         
-        # Initialize article dict if not exists
-        if article not in cart:
-            cart[article] = {}
-
-        # Add or update item in cart
-        if table_name in cart[article]:
-            cart[article][table_name]['quantity'] += quantity
-        else:
-            cart[article][table_name] = {
-                'quantity': quantity,
-                'base_price': str(base_price),
-                'price': str(final_price),
-                'brand_id': brand_id
-            }
-
-        # Save cart back to session
-        session['public_cart'] = cart
         session.modified = True
-        
-        logging.info(f"""
-            Cart updated successfully:
-            - Article: {article}
-            - New quantity: {cart[article][table_name]['quantity']}
-            - Base price: {base_price}
-            - Final price: {final_price}
-        """)
-        
-        flash(_("Product added to cart!"), "success")
-        return redirect(request.referrer or url_for('index'))
+        flash(_("Item added to cart"), "success")
         
     except Exception as e:
-        logging.error(f"Critical error in public_add_to_cart: {e}", exc_info=True)
-        flash(_("An error occurred while adding to cart."), "error")
-        return redirect(url_for('index'))
+        logging.error(f"Error adding to cart: {e}", exc_info=True)
+        flash(_("Error adding item to cart"), "error")
+        
+    finally:
+        # Повертаємо користувача на сторінку товару, а не в кошик
+        if article:
+            return redirect(url_for('product_details', article=article))
+        else:
+            return redirect(url_for('index'))
     
 
 
@@ -6560,110 +6956,250 @@ def process_orders(token):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # SQL query without comments
         sql_query = """
             SELECT 
-                o.id as order_id,
-                o.order_date as created_at,
-                o.total_price,
-                o.status,
+                po.id as order_id,
+                po.created_at,
+                po.total_price,
+                po.status,
+                po.delivery_address,
+                po.needs_invoice,
+                po.invoice_details,
                 u.username,
-                po.id as public_order_id,  
-                COUNT(CASE WHEN od.table_name = 'stock' THEN 1 END) as stock_items_count,
-                COUNT(CASE WHEN od.table_name != 'stock' THEN 1 END) as pricelist_items_count,
-                -- Manually aggregate items
-                string_agg(
-                    concat(
-                        '{"article":"', od.article,
-                        '","table_name":"', od.table_name,
-                        '","quantity":', od.quantity::text,
-                        ',"item_type":"', CASE
-                            WHEN od.table_name = 'stock' THEN 'stock'
-                            ELSE 'pricelist'
-                        END,
-                        '","id":', od.id::text, '}'
-                    ),
-                    ','
+                u.id as user_id,
+                u.email as user_email,
+                COUNT(CASE WHEN pod.table_name = 'stock' THEN 1 END) as stock_items_count,
+                COUNT(CASE WHEN pod.table_name != 'stock' THEN 1 END) as pricelist_items_count,
+                COALESCE(
+                    json_agg(
+                        json_build_object(
+                            'id', pod.id,
+                            'article', pod.article,
+                            'table_name', pod.table_name,
+                            'quantity', pod.quantity,
+                            'price', pod.price,
+                            'total_price', pod.total_price,
+                            'comment', pod.comment,
+                            'brand_id', pod.brand_id,
+                            'status', pod.status,
+                            'item_type', CASE 
+                                WHEN pod.table_name = 'stock' THEN 'stock'
+                                ELSE 'pricelist'
+                            END
+                        )
+                    ) FILTER (WHERE pod.id IS NOT NULL),
+                    '[]'::json
                 ) as items
-            FROM orders o
-            JOIN public_orders po ON o.id = po.id
-            JOIN users u ON o.user_id = u.id
-            JOIN public_order_details od ON o.id = od.order_id
-            WHERE o.status = 'new'
-            GROUP BY o.id, o.order_date, o.total_price, o.status, u.username, po.id
-            ORDER BY o.order_date DESC
+            FROM public_orders po
+            JOIN users u ON po.user_id = u.id
+            LEFT JOIN public_order_details pod ON po.id = pod.order_id
+            GROUP BY po.id, po.created_at, po.total_price, po.status, 
+                     po.delivery_address, po.needs_invoice, po.invoice_details, u.username, u.id, u.email
+            ORDER BY po.created_at DESC
         """
-        logging.info(f"Executing SQL query: {sql_query}")
-        
+        logging.info("Executing SQL query for orders")
         cursor.execute(sql_query)
-        orders = cursor.fetchall()
+        raw_orders = cursor.fetchall()
+        logging.info(f"Found {len(raw_orders)} orders")
         
-        logging.info(f"Found {len(orders)} orders")
-        for order in orders:
-            # Розпарсюємо JSON-рядок у список Python
-            if order['items']:
-                try:
-                    order['items'] = json.loads(f"[{order['items']}]")
-                except json.JSONDecodeError as e:
-                    logging.error(f"JSONDecodeError: {e}, items: {order['items']}")
-                    order['items'] = []  # Обробка помилки розпарсювання JSON
+        # Перетворюємо у чисті Python об'єкти
+        orders = []
+        for raw_order in raw_orders:
+            # Створюємо новий словник для кожного замовлення
+            order = {
+                'order_id': raw_order['order_id'],
+                'created_at': raw_order['created_at'],
+                'total_price': raw_order['total_price'],
+                'status': raw_order['status'],
+                'delivery_address': raw_order['delivery_address'],
+                'needs_invoice': raw_order['needs_invoice'],
+                'invoice_details': raw_order['invoice_details'],
+                'username': raw_order['username'],
+                'user_id': raw_order['user_id'],
+                'user_email': raw_order['user_email'],
+                'stock_items_count': raw_order['stock_items_count'],
+                'pricelist_items_count': raw_order['pricelist_items_count'],
+                'items_list': []  # Використовуємо нову назву, щоб уникнути конфлікту
+            }
+            
+            # Обробляємо items - перевіряємо чи це був метод і конвертуємо в список
+            items_value = raw_order['items']
+            try:
+                # Спробуємо перетворити на список, якщо це JSON-рядок
+                if isinstance(items_value, str):
+                    order['items_list'] = json.loads(items_value)
+                # Якщо це вже об'єкт Python від PostgreSQL
+                elif not callable(items_value) and items_value is not None:
+                    order['items_list'] = items_value
+            except Exception as e:
+                logging.warning(f"Error processing items for order {order['order_id']}: {e}")
+                order['items_list'] = []
+            
+            # Отримуємо попередні адреси та дані для рахунків-фактур
+            if raw_order['user_id']:
+                # Отримання збережених адрес доставки
+                cursor.execute("""
+                    SELECT id, country, city, postal_code, street, full_name, phone, is_default
+                    FROM delivery_addresses
+                    WHERE user_id = %s 
+                    ORDER BY is_default DESC, created_at DESC
+                """, (raw_order['user_id'],))
+                order['saved_addresses'] = cursor.fetchall()
+                
+                # Виправлений запит для отримання збережених даних для рахунків-фактур
+                cursor.execute("""
+                    SELECT DISTINCT invoice_details, created_at
+                    FROM public_orders
+                    WHERE user_id = %s AND invoice_details IS NOT NULL AND invoice_details != '{}'
+                    ORDER BY created_at DESC
+                    LIMIT 5
+                """, (raw_order['user_id'],))
+                order['saved_invoices'] = [row['invoice_details'] for row in cursor.fetchall()]
             else:
-                order['items'] = []
-            logging.info(f"Order details: {dict(order)}")
+                order['saved_addresses'] = []
+                order['saved_invoices'] = []
+                
+            orders.append(order)
+            logging.info(f"Processed order {order['order_id']} with {len(order['items_list'])} items")
 
         if request.method == 'POST':
             order_id = request.form.get('order_id')
             article = request.form.get('article')
-            quantity = request.form.get('quantity')
+            quantity = int(request.form.get('quantity', 0))
             item_type = request.form.get('item_type')
             action = request.form.get('action')
             order_detail_id = request.form.get('order_detail_id')
 
-            logging.info(f"Processing POST request for order_id: {order_id}, article: {article}, quantity: {quantity}, item_type: {item_type}, action: {action}, order_detail_id: {order_detail_id}")
+            logging.info(f"Processing order action - ID: {order_id}, Article: {article}, Action: {action}")
 
-            if item_type == 'stock':
+            # Додатково перевіряємо, чи оновлюємо адресу або дані для рахунку-фактури
+            if action == 'update_address':
+                address_id = request.form.get('delivery_address_id')
+                if address_id:
+                    # Отримуємо дані адреси
+                    cursor.execute("""
+                        SELECT * FROM delivery_addresses WHERE id = %s
+                    """, (address_id,))
+                    address = cursor.fetchone()
+                    if address:
+                        # Оновлюємо адресу в замовленні
+                        cursor.execute("""
+                            UPDATE public_orders
+                            SET delivery_address = %s
+                            WHERE id = %s
+                        """, (json.dumps(dict(address)), order_id))
+                        conn.commit()
+                        flash(_("Delivery address updated"), "success")
+                return redirect(url_for('process_orders', token=token))
+                
+            elif action == 'update_invoice':
+                invoice_data = request.form.get('invoice_details')
+                if invoice_data:
+                    try:
+                        invoice_json = json.loads(invoice_data)
+                        # Оновлюємо дані для рахунку-фактури
+                        cursor.execute("""
+                            UPDATE public_orders
+                            SET invoice_details = %s,
+                                needs_invoice = true
+                            WHERE id = %s
+                        """, (json.dumps(invoice_json), order_id))
+                        conn.commit()
+                        flash(_("Invoice details updated"), "success")
+                    except json.JSONDecodeError:
+                        flash(_("Invalid invoice data format"), "error")
+                return redirect(url_for('process_orders', token=token))
+
+            elif item_type == 'stock':
                 if action == 'accept_stock':
-                    # Process stock item
+                    # Check stock availability first
+                    cursor.execute("""
+                        SELECT quantity FROM stock 
+                        WHERE article = %s FOR UPDATE
+                    """, (article,))
+                    stock_item = cursor.fetchone()
+                    
+                    if not stock_item or stock_item['quantity'] < quantity:
+                        flash(f"Insufficient stock for article {article}", "error")
+                        return redirect(url_for('process_orders', token=token))
+
+                    # Update order detail status
                     cursor.execute("""
                         UPDATE public_order_details
                         SET status = 'processing'
                         WHERE id = %s AND order_id = %s AND article = %s
+                        RETURNING quantity
                     """, (order_detail_id, order_id, article))
 
-                    # Reduce stock quantity (add logic to handle insufficient stock)
+                    # Update stock quantity
                     cursor.execute("""
                         UPDATE stock
                         SET quantity = quantity - %s
                         WHERE article = %s
                     """, (quantity, article))
-                    logging.info(f"Accepted stock item: order_id={order_id}, article={article}, quantity={quantity}")
+                    
+                    logging.info(f"Processed stock item - Article: {article}, Quantity: {quantity}")
+
                 elif action == 'reject_stock':
                     cursor.execute("""
                         UPDATE public_order_details
                         SET status = 'rejected'
                         WHERE id = %s AND order_id = %s AND article = %s
                     """, (order_detail_id, order_id, article))
-                    logging.info(f"Rejected stock item: order_id={order_id}, article={article}")
+                    logging.info(f"Rejected stock item - Article: {article}")
 
             elif item_type == 'pricelist':
                 if action == 'accept_pricelist':
-                    # Process pricelist item (add logic to create supplier order)
                     cursor.execute("""
                         UPDATE public_order_details
                         SET status = 'ordered_supplier'
                         WHERE id = %s AND order_id = %s AND article = %s
                     """, (order_detail_id, order_id, article))
-                    logging.info(f"Accepted pricelist item: order_id={order_id}, article={article}")
+                    logging.info(f"Accepted pricelist item - Article: {article}")
+
                 elif action == 'reject_pricelist':
                     cursor.execute("""
                         UPDATE public_order_details
                         SET status = 'rejected'
                         WHERE id = %s AND order_id = %s AND article = %s
                     """, (order_detail_id, order_id, article))
-                    logging.info(f"Rejected pricelist item: order_id={order_id}, article={article}")
+                    logging.info(f"Rejected pricelist item - Article: {article}")
+
+            # Оновлюємо загальний статус замовлення на основі статусів деталей
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total,
+                    COUNT(CASE WHEN status = 'processing' THEN 1 END) as processing,
+                    COUNT(CASE WHEN status = 'ordered_supplier' THEN 1 END) as ordered,
+                    COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected,
+                    COUNT(CASE WHEN status = 'new' OR status IS NULL THEN 1 END) as new
+                FROM public_order_details 
+                WHERE order_id = %s
+            """, (order_id,))
+            
+            status_counts = cursor.fetchone()
+            
+            # Встановлюємо загальний статус замовлення
+            new_status = 'new'
+            if status_counts['total'] == status_counts['rejected']:
+                new_status = 'rejected'
+            elif status_counts['new'] == 0:
+                if status_counts['processing'] > 0 and status_counts['ordered'] > 0:
+                    new_status = 'processing'
+                elif status_counts['processing'] > 0:
+                    new_status = 'processing'
+                elif status_counts['ordered'] > 0:
+                    new_status = 'ordered_supplier'
+            
+            cursor.execute("""
+                UPDATE public_orders 
+                SET status = %s
+                WHERE id = %s
+            """, (new_status, order_id))
+            logging.info(f"Updated order status to {new_status}")
 
             conn.commit()
-            flash("Item processed successfully", "success")
+            flash(_("Item processed successfully"), "success")
             return redirect(url_for('process_orders', token=token))
 
         return render_template(
@@ -6674,13 +7210,17 @@ def process_orders(token):
 
     except Exception as e:
         logging.error(f"Error in process_orders: {e}", exc_info=True)
-        flash("Error processing orders", "error")
+        if 'conn' in locals():
+            conn.rollback()
+        flash(_("Error processing orders"), "error")
         return redirect(url_for('admin_dashboard', token=token))
 
     finally:
-        cursor.close()
-        conn.close()
-        logging.info("Connection closed")
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conn' in locals() and conn:
+            conn.close()
+        logging.info("Database connection closed")
 
 
 

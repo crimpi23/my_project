@@ -2,17 +2,23 @@
 {% block title %}Admin Login{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title text-center mb-4">Admin Login</h4>
-                <form method="POST">
-                    <div class="mb-3">
-                        <input type="password" name="password" class="form-control" placeholder="Enter admin password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Login</button>
-                </form>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">{{ _("Admin Login") }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        
+                        <div class="form-group">
+                            <label for="password">{{ _("Password") }}</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block mt-3">{{ _("Login") }}</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

@@ -44,8 +44,8 @@ gtag('event', 'view_item', {
   items: [{
     item_id: "{{ article }}",
     item_name: "{{ product_data.name }}",
-    item_brand: "{{ brand_name if brand_name else 'AutogroupEU' }}",
-    price: "{{ prices[0].price if prices }}"
+    item_brand: "{{ brand_name|default('AutogroupEU') }}",
+    price: "{{ prices[0].price if prices else '' }}"
   }]
 });
 </script>
@@ -573,27 +573,29 @@ gtag('event', 'view_item', {
             <div class="left-column">
                 <!-- Фото секція -->
                 <div class="image-section card">
-                    <div class="image-container">
-                        <img id="productImage" 
-                             src="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}" 
-                             alt="{{ product_data.name }}"
-                             itemprop="image">
-                    </div>
-                    {% if product_data.photo_urls|length > 1 %}
-                    <button class="image-nav prev" onclick="prevImage()">
-                        <i class="bi bi-chevron-left"></i>
-                    </button>
-                    <button class="image-nav next" onclick="nextImage()">
-                        <i class="bi bi-chevron-right"></i>
-                    </button>
-                    <div class="image-dots">
-                        {% for index in range(product_data.photo_urls|length) %}
-                        <div class="image-dot {% if loop.first %}active{% endif %}" 
-                             onclick="changeImage('{{ product_data.photo_urls[index] }}', {{ index }})"></div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
+    <div class="image-container">
+        <img id="productImage" 
+             src="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}" 
+             alt="{{ product_data.name }}"
+             itemprop="image"
+             style="transition: opacity 0.3s ease;">
+    </div>
+    
+    {% if product_data.photo_urls|length > 1 %}
+    <button type="button" class="image-nav prev">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+    <button type="button" class="image-nav next">
+        <i class="bi bi-chevron-right"></i>
+    </button>
+    <div class="image-dots">
+        {% for url in product_data.photo_urls %}
+        <div class="image-dot {% if loop.first %}active{% endif %}" 
+             data-index="{{ loop.index0 }}"></div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
 
                 <!-- Опис після фото -->
                 <div class="description-section card mt-4">
@@ -725,7 +727,7 @@ gtag('event', 'view_item', {
 
 .product-title {
     font-size: 1.75rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1рем;
 }
 
 .product-meta {
@@ -740,53 +742,95 @@ gtag('event', 'view_item', {
 </style>
 
 <script>
+// Зберігаємо всі шляхи до фотографій
+const images = {{ product_data.photo_urls | tojson | safe }};
 let currentImageIndex = 0;
-const images = {{ product_data.photo_urls | tojson }};
-const dots = document.querySelectorAll('.image-dot');
 
-function updateDots(index) {
-    dots.forEach(dot => dot.classList.remove('active'));
-    dots[index].classList.add('active');
-}
-
-function changeImage(newSrc, index) {
-    const img = document.getElementById('productImage');
-    img.style.opacity = '0';
-    setTimeout(() => {
-        img.src = newSrc;
-        img.style.opacity = '1';
-        currentImageIndex = index;
-        updateDots(index);
-    }, 300);
-}
-
-function prevImage() {
-    let newIndex = currentImageIndex <= 0 ? images.length - 1 : currentImageIndex - 1;
-    changeImage(images[newIndex], newIndex);
-}
-
-function nextImage() {
-    let newIndex = currentImageIndex >= images.length - 1 ? 0 : currentImageIndex + 1;
-    changeImage(images[newIndex], newIndex);
-}
-
-function autoSlide() {
-    nextImage();
-}
-// setInterval(autoSlide, 5000);
-
-function trackAddToCart(form) {
-    gtag('event', 'add_to_cart', {
-        currency: "EUR",
-        items: [{
-            item_id: "{{ article }}",
-            item_name: "{{ product_data.name }}",
-            item_brand: "{{ brand_name if brand_name else 'AutogroupEU' }}",
-            price: form.querySelector('button[type="submit"]').value.split(':')[1].split('|')[0],
-            quantity: parseInt(form.querySelector('input[type="number"]').value)
-        }]
+document.addEventListener('DOMContentLoaded', function() {
+    // Знаходимо всі елементи для навігації по фото
+    const dots = document.querySelectorAll('.image-dot');
+    const imgElement = document.getElementById('productImage');
+    const prevButton = document.querySelector('.image-nav.prev');
+    const nextButton = document.querySelector('.image-nav.next');
+    
+    if (!imgElement || images.length <= 1) return;
+    
+    // Функція оновлення індикаторів (точок)
+    function updateDots(index) {
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === index);
+        });
+    }
+    
+    // Функція зміни зображення
+    function changeImage(index) {
+        if (!imgElement) return;
+        imgElement.style.opacity = '0';
+        
+        setTimeout(() => {
+            imgElement.src = images[index];
+            imgElement.style.opacity = '1';
+            currentImageIndex = index;
+            updateDots(index);
+        }, 300);
+    }
+    
+    // Функція для переходу до попереднього зображення
+    function prevImage() {
+        if (images.length <= 1) return;
+        let newIndex = currentImageIndex <= 0 ? images.length - 1 : currentImageIndex - 1;
+        changeImage(newIndex);
+    }
+    
+    // Функція для переходу до наступного зображення
+    function nextImage() {
+        if (images.length <= 1) return;
+        let newIndex = currentImageIndex >= images.length - 1 ? 0 : currentImageIndex + 1;
+        changeImage(newIndex);
+    }
+    
+    // Додавання обробників подій для кнопок
+    if (prevButton) {
+        prevButton.addEventListener('click', prevImage);
+    }
+    
+    if (nextButton) {
+        nextButton.addEventListener('click', nextImage);
+    }
+    
+    // Додавання обробників подій для точок
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', function() {
+            changeImage(index);
+        });
     });
-    return true;
-}
+    
+    // Трекінг додавання до кошика
+    const forms = document.querySelectorAll('form.cart-form');
+    forms.forEach(function(form) {
+        form.addEventListener('submit', function() {
+            const selectedPriceField = this.querySelector('input[name="selected_price"]');
+            const quantityField = this.querySelector('input[type="number"]');
+            
+            if (selectedPriceField && quantityField) {
+                const selectedPriceValue = selectedPriceField.value;
+                const priceValue = selectedPriceValue.split(':')[1].split('|')[0];
+                
+                if (typeof gtag === 'function') {
+                    gtag('event', 'add_to_cart', {
+                        currency: "EUR",
+                        items: [{
+                            item_id: "{{ article }}",
+                            item_name: "{{ product_data.name }}",
+                            item_brand: "{{ product_data.brand_name|default('AutogroupEU') }}",
+                            price: priceValue,
+                            quantity: parseInt(quantityField.value)
+                        }]
+                    });
+                }
+            }
+        });
+    });
+});
 </script>
 {% endblock %}

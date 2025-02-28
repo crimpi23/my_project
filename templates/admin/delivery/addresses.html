@@ -1,0 +1,67 @@
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Delivery Addresses</h2>
+    
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <input type="text" id="addressFilter" class="form-control" 
+                   placeholder="Filter by address or username...">
+        </div>
+    </div>
+
+    <!-- Addresses Table -->
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Address</th>
+                    <th>Times Used</th>
+                    <th>Created</th>
+                    <th>Orders</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for addr in addresses %}
+                <tr>
+                    <td>
+                        {{ addr.username }}<br>
+                        <small class="text-muted">{{ addr.email }}</small>
+                    </td>
+                    <td>{{ addr.address }}</td>
+                    <td>{{ addr.times_used }}</td>
+                    <td>{{ addr.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('admin_orders', token=token, address=addr.address) }}" 
+                           class="btn btn-sm btn-outline-primary">
+                            View Orders
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// Filter functionality
+document.getElementById('addressFilter').addEventListener('keyup', function() {
+    let filter = this.value.toUpperCase();
+    let rows = document.querySelector('tbody').getElementsByTagName('tr');
+
+    for (let row of rows) {
+        let address = row.cells[1].textContent.toUpperCase();
+        let username = row.cells[0].textContent.toUpperCase();
+        if (address.includes(filter) || username.includes(filter)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    }
+});
+</script>
+{% endblock %}

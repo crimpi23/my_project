@@ -186,9 +186,7 @@
     <!-- New Products Section -->
     <div class="row mt-4">
         <div class="col-12">
-            <h2 class="mb-4">{{ _('Available Products') }} 
-                <span class="badge bg-primary">{{ total_items }}</span>
-            </h2>
+            <h2 class="mb-4">{{ _('Available Products') }} </h2>
         </div>
     </div>
 
@@ -242,4 +240,27 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Знаходимо всі посилання на товари
+    const productLinks = document.querySelectorAll('.product-card a');
+    
+    // Додаємо обробник подій для клацань середньою кнопкою миші (колесиком)
+    productLinks.forEach(link => {
+        link.addEventListener('auxclick', function(e) {
+            // Якщо натиснуто середню кнопку миші (код 1 або 2 залежно від браузера)
+            if (e.button === 1 || e.which === 2) {
+                e.preventDefault(); // Запобігаємо стандартній поведінці
+                
+                // Відкриваємо посилання в новому вікні, але з гарантованим параметром, 
+                // щоб не було помилки з токеном
+                const url = this.href;
+                window.open(url, '_blank');
+            }
+        });
+    });
+});
+</script>
+
 {% endblock %}

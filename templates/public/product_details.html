@@ -55,691 +55,604 @@ gtag('event', 'view_item', {
 
 {% block extra_css %}
 <style>
-:root {
-    /*  ВАШІ ЗМІННІ ТУТ  */
-    --primary-color: #007bff;
-    --primary-color-dark: #0056b3;
-    --secondary-color: #6c757d;
-    --light-bg: #f8f9fa;
-    --border-color: #ddd;
-    --text-color: #212529;
-    --heading-color: #333;
+    /* Додайте ці стилі в блок extra_css, якщо вони відсутні */
 
-    --font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --font-family-headings: 'Arial', sans-serif;
-
-    --font-size-base: 1rem;
-    --font-size-h1: 2.5rem;
-    --font-size-h2: 2rem;
-    --font-size-h3: 1.5rem;
-
-    --spacing-unit: 1rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 2rem;
-
-    --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-
-    --border-radius: 0.375rem;
-}
-
-/*  ЗАГАЛЬНІ СТИЛІ (card, btn, etc.) */
-.btn {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    font-size: var(--font-size-base);
-    font-weight: bold;
-    text-decoration: none;
-    color: #fff;
-    background-color: var(--primary-color);
-    border: none;
-    border-radius: var(--border-radius);
-    transition: background-color 0.3s ease;
-    cursor: pointer;
-}
-
-.btn:hover {
-    background-color: var(--primary-color-dark);
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-}
-
-.btn-primary:hover {
-    background-color: var(--primary-color-dark);
-}
-
-.card {
-    background-color: #fff;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-    margin-bottom: var(--spacing-md);
-}
-
-.card-body {
-    padding: 2rem;  /* Збільшуємо padding */
-}
-
-.card-title {
-    font-size: 1.75rem;
-    color: var(--heading-color);
-    margin-bottom: 1.5rem;
-}
-
-.text-muted {
-    min-width: 80px;  /* Фіксована ширина для міток */
-    display: inline-block;
-}
-
-.product-info {
-    margin-left: 0.5rem;  /* Додаємо відступ зліва */
-}
-
-.card-body {
-    padding: var(--spacing-md);
-}
-
-.card-title {
-    font-size: var(--font-size-h3);
-    font-weight: bold;
-    margin-bottom: var(--spacing-sm);
-    color: var(--heading-color);
-}
-
-/*  СПЕЦИФІЧНІ СТИЛІ ДЛЯ product_details */
-.product-container {
-    max-width: 1400px;
-    width: 95%;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: white;
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    animation: fadeIn 0.5s ease-in-out;
-}
-
-.image-section {
-    position: relative;
-    background: var(--light-bg);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    height: 600px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.image-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    border-radius: 0.75rem;
-}
-
-.image-container img {
-    max-width: 90%;
-    max-height: 90%;
-    object-fit: contain;
-    transition: transform 0.5s ease, filter 0.3s ease;
-}
-
-.image-container:hover img {
-    transform: scale(1.05);
-    filter: brightness(1.05);
-}
-
-.image-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 40px;
-    height: 40px;
-    background: white;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: var(--shadow);
-    z-index: 2;
-    transition: all 0.3s ease;
-    opacity: 0.7;
-}
-
-.image-nav:hover {
-    background: var(--primary-color);
-    color: white;
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-.image-nav.prev { left: 10px; }
-.image-nav.next { right: 10px; }
-
-.image-dots {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 8px;
-    padding: 8px 16px;
-    background: rgba(255,255,255,0.9);
-    border-radius: 20px;
-    z-index: 2;
-}
-
-.image-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--border-color);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.image-dot.active {
-    background: var(--primary-color);
-    transform: scale(1.2);
-}
-
-.product-info {
-    padding: 1.5rem;
-    background: white;
-    border-radius: 0.75rem;
-    border: 1px solid var(--border-color);
-}
-
-.price-card {
-    background: white;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-}
-
-.price-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-}
-
-.price-info {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-}
-
-.price-value {
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-right: auto;
-}
-
-.delivery-info {
-    color: var(--secondary-color);
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    margin: 0.5rem 0;
-}
-
-.quantity-input {
-    width: 70px !important;
-    text-align: center;
-    height: 38px;
-    transition: all 0.3s ease;
-}
-
-.quantity-input:focus {
-    transform: scale(1.02);
-}
-
-.btn-add-to-cart {
-    height: 38px;
-    padding: 0 1rem;
-    white-space: nowrap;
-}
-
-.cart-controls {
-    display: flex;
-    width: 100%;
-}
-
-.quantity-input {
-    width: 70px !important;
-    text-align: center;
-    border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
-    padding: 0.375rem;
-    height: 32px;
-}
-
-.btn-add-cart {
-    height: 32px;
-    padding: 0 1rem;
-    font-size: 0.9rem;
-    border-radius: 0.375rem;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.375rem;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.btn-add-cart i {
-    font-size: 1rem;
-}
-
-.brand-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--secondary-color);
-    font-size: 0.9rem;
-}
-
-.brand-info i {
-    font-size: 1rem;
-}
-
-.brand-section {
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    background: #fff;
-}
-
-.brand-title {
-    font-size: 1.2rem;
-    color: var(--primary-color);
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid var(--primary-color);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.brand-prices {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.left-column {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.description-section {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 0.75rem;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-}
-
-.description-section:hover {
-    box-shadow: var(--shadow);
-}
-
-.btn-add-to-cart {
-    flex: 1;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    padding: 0 15px;
-    white-space: nowrap;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    transition: all 0.3s ease;
-}
-
-.btn-add-to-cart:hover {
-    background: var(--primary-color-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.btn-add-to-cart:active {
-    transform: scale(0.95);
-}
-
-.quantity-input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb), 0.25);
-}
-
-/* Оновлюємо стилі форми */
-.cart-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    width: 100%;
-    align-items: center;
-}
-
-/*  АДАПТИВНІСТЬ (@media) */
-@media (max-width: 768px) {
-    .product-container {
-        padding: 1rem;
-        margin: 1rem auto;
+    /* ==== ПОШУКОВА СЕКЦІЯ ==== */
+    .search-card {
+        border: none;
+        box-shadow: var(--shadow);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        margin-bottom: 2.5rem;
+        transition: all 0.3s ease;
+        background-color: white;
     }
 
-    .left-column {
-        margin-bottom: 2rem;
+    .search-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
     }
 
-    .product-info {
-        padding: 1rem;
+    .search-body {
+        padding: 1.75rem;
+        background-color: white;
     }
 
-    .product-title {
-        font-size: 1.5rem;
-        margin-bottom: 0.5rem;
+    .input-group {
+        position: relative;
     }
 
-    .article-info {
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
-    }
-
-    .price-card {
-        margin-bottom: 1rem;
+    .form-control {
         padding: 0.75rem;
-    }
-
-    .price-value {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--primary-color);
-    }
-
-    .image-section {
-        height: auto;
-        margin-top: 1rem;
-    }
-
-    .image-container {
-        height: 300px;
-    }
-
-    .image-container img {
-        max-height: 100%;
-        width: auto;
-    }
-
-    .image-nav {
-        width: 30px;
-        height: 30px;
-    }
-
-    .cart-controls {
-        flex-direction: column;
-        align-items: stretch;
-        margin-top: 0.5rem;
-    }
-
-    .quantity-input {
-        width: 100% !important;
-        height: 40px;
-    }
-
-    .btn-add-cart {
-        width: 100%;
-        flex-grow: 1;
-        height: 40px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius) 0 0 var(--border-radius);
+        transition: all 0.3s ease;
         font-size: 1rem;
     }
 
-    .brand-section {
-        padding: 0.75rem;
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+        outline: none;
     }
 
-    .brand-title {
-        font-size: 1.1rem;
+    .btn-search {
+        padding: 0.75rem 1.5rem;
+        background-color: var(--primary-color);
+        border: none;
+        color: white;
+        border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
     }
 
-    .price-info {
-        flex-direction: column;
-        align-items: flex-start;
+    .btn-search:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
     }
 
-    .cart-form {
-        flex-direction: row;
-        justify-content: space-between;
+    @media (max-width: 768px) {
+        .search-body {
+            padding: 1.25rem;
+        }
+        
+        .btn-search {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    /* Кольорова гама */
+    :root {
+        --primary-color: #007bff;
+        --primary-hover: #0056b3;
+        --secondary-color: #6c757d;
+        --light-bg: #f8f9fa;
+        --dark-bg: #343a40;
+        --border-color: #dee2e6;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --info-color: #17a2b8;
+        
+        /* Тіні */
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+        --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        
+        /* Скруглення кутів */
+        --border-radius: 0.375rem;
+        --border-radius-lg: 0.5rem;
     }
 
-    .quantity-input {
-        width: 100px !important;
-        margin-right: 0.5rem;
+    /* === ЗАГАЛЬНІ СТИЛІ === */
+    .product-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        animation: fadeIn 0.5s ease-in-out;
     }
-
-    .btn-add-to-cart {
-        flex: 1;
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
-
-    .delivery-info {
-        order: -1;
-        margin-bottom: 1rem;
+    
+    /* === ЗОБРАЖЕННЯ ПРОДУКТУ === */
+    .image-section {
+        position: relative;
+        height: 450px;
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
     }
-}
-
-/* Анімації при завантаженні */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+    
+    .image-section:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
     }
-    to {
+    
+    .image-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+    
+    .image-container img {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+        transition: transform 0.5s ease, opacity 0.3s ease;
+    }
+    
+    .image-container:hover img {
+        transform: scale(1.05);
+    }
+    
+    .image-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 40px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: var(--shadow-sm);
+        z-index: 2;
+        border: none;
+        transition: all 0.3s ease;
+        opacity: 0.8;
+    }
+    
+    .image-nav:hover {
+        background-color: var(--primary-color);
+        color: white;
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(-50%) scale(1.1);
     }
-}
+    
+    .image-nav.prev {
+        left: 15px;
+    }
+    
+    .image-nav.next {
+        right: 15px;
+    }
+    
+    .image-dots {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        background: rgba(255,255,255,0.8);
+        padding: 5px 10px;
+        border-radius: 20px;
+        z-index: 2;
+    }
+    
+    .image-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: var(--border-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .image-dot.active {
+        background-color: var(--primary-color);
+        transform: scale(1.2);
+    }
+    
+    /* === ІНФОРМАЦІЯ ПРО ПРОДУКТ === */
+    .product-info-card {
+        border: none;
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+    }
+    
+    .product-info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .product-info-header {
+        background: linear-gradient(135deg, var(--primary-color), #0d6efd);
+        color: white;
+        padding: 1.25rem;
+        border: none;
+    }
+    
+    .product-info-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .product-info-body {
+        padding: 1.5rem;
+        background-color: white;
+    }
+    
+    .product-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .product-meta-item {
+        display: flex;
+        align-items: center;
+    }
+    
+    .meta-label {
+        font-weight: 600;
+        color: var(--secondary-color);
+        margin-right: 0.5rem;
+        min-width: 60px;
+    }
+    
+    .meta-value {
+        font-weight: 500;
+    }
+    
+    .article-badge {
+        background: var(--light-bg);
+        padding: 0.35rem 0.65rem;
+        border-radius: 4px;
+        font-family: monospace;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--dark-bg);
+        display: inline-block;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+    
+    .article-badge:hover {
+        background-color: #e9f2ff;
+        border-color: var(--primary-color);
+    }
+    
+    /* === ЦІНИ === */
+    .price-card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .price-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+        border-color: var(--primary-color);
+    }
+    
+    .price-info {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .price-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+    
+    .delivery-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        color: var(--secondary-color);
+        font-size: 0.95rem;
+        width: 100%;
+    }
+    
+    /* === СЕКЦІЯ ОПИСУ === */
+    .description-section {
+        border: none;
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+        margin-top: 1.5rem;
+    }
+    
+    .description-section:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .description-header {
+        padding: 1.25rem;
+        background: linear-gradient(135deg, var(--secondary-color), #495057);
+        color: white;
+        border: none;
+    }
+    
+    .description-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    
+    .description-body {
+        padding: 1.5rem;
+        background-color: white;
+        line-height: 1.7;
+    }
+    
+    /* === ФОРМА ДОДАВАННЯ В КОШИК === */
+    .cart-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        width: 100%;
+    }
+    
+    .quantity-input {
+        width: 80px !important;
+        text-align: center;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 0.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .quantity-input:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .btn-add-to-cart {
+        background-color: var(--success-color);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.25rem;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        flex-grow: 1;
+    }
+    
+    .btn-add-to-cart:hover {
+        background-color: #218838;
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+    
+    /* === АДАПТИВНІСТЬ === */
+    @media (max-width: 768px) {
+        .product-container {
+            padding: 1rem;
+            margin: 1rem auto;
+        }
+        
+        .image-section {
+            height: 300px;
+        }
+        
+        .product-info-header h1 {
+            font-size: 1.25rem;
+        }
+        
+        .price-value {
+            font-size: 1.5rem;
+        }
+        
+        .image-nav {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .product-meta {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .product-meta-item {
+            width: 100%;
+        }
+        
+        .cart-form {
+            flex-direction: column;
+        }
+        
+        .quantity-input {
+            width: 100% !important;
+        }
+        
+        .btn-add-to-cart {
+            width: 100%;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .image-section {
+            height: 250px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="product-container" itemscope itemtype="https://schema.org/Product">
-    <div class="row">
-        <!-- Ліва колонка: тільки фото -->
-        <div class="col-md-6">
-            <div class="left-column">
+<div class="container mt-4">
+    <div class="page-header fade-in">
+        <h2>{{ _("Product Details") }}</h2>
+    </div>
+        <!-- Пошукова форма -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="search-card fade-in">
+                <div class="search-body">
+                    <form method="POST" action="{{ url_for('public_search') }}" class="mb-0">
+                        <div class="input-group">
+                            <input type="text" name="article" class="form-control form-control-lg"
+                                placeholder="{{ _('Enter article number...') }}" required>
+                            <button type="submit" class="btn-search">
+                                <i class="bi bi-search me-2"></i>
+                                {{ _('Search') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="product-container fade-in" itemscope itemtype="https://schema.org/Product">
+        <div class="row">
+            <!-- Ліва колонка: зображення та опис -->
+            <div class="col-md-6">
                 <!-- Фото секція -->
-                <div class="image-section card">
-    <div class="image-container">
-        <img id="productImage" 
-             src="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}" 
-             alt="{{ product_data.name }}"
-             itemprop="image"
-             style="transition: opacity 0.3s ease;">
-    </div>
-    
-    {% if product_data.photo_urls|length > 1 %}
-    <button type="button" class="image-nav prev">
-        <i class="bi bi-chevron-left"></i>
-    </button>
-    <button type="button" class="image-nav next">
-        <i class="bi bi-chevron-right"></i>
-    </button>
-    <div class="image-dots">
-        {% for url in product_data.photo_urls %}
-        <div class="image-dot {% if loop.first %}active{% endif %}" 
-             data-index="{{ loop.index0 }}"></div>
-        {% endfor %}
-    </div>
-    {% endif %}
-</div>
+                <div class="image-section">
+                    <div class="image-container">
+                        <img id="productImage" 
+                             src="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}" 
+                             alt="{{ product_data.name }}"
+                             itemprop="image">
+                    </div>
+                    
+                    {% if product_data.photo_urls|length > 1 %}
+                    <button type="button" class="image-nav prev">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button type="button" class="image-nav next">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                    <div class="image-dots">
+                        {% for url in product_data.photo_urls %}
+                        <div class="image-dot {% if loop.first %}active{% endif %}" 
+                             data-index="{{ loop.index0 }}"></div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
 
-                <!-- Опис після фото -->
-                <div class="description-section card mt-4">
-                    <div class="card-body">
-                        <h2 class="card-title">{{ _('Description') }}</h2>
+                <!-- Опис -->
+                <div class="description-section">
+                    <div class="description-header">
+                        <h2><i class="bi bi-info-circle me-2"></i>{{ _('Description') }}</h2>
+                    </div>
+                    <div class="description-body">
                         <p itemprop="description">{{ product_data.description }}</p>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Права колонка -->
-        <div class="col-md-6">
-            <!-- Єдиний блок з рамкою -->
-            <div class="product-info-wrapper">
-                <!-- Інформація про товар -->
-                <h1 class="product-title">{{ product_data.name }}</h1>
-                <div class="product-meta">
-    <div>
-        <span class="text-muted">{{ _('Brand') }}:</span> 
-        {% if prices and prices[0]['brand_name'] %}
-            {{ prices[0]['brand_name'] }}
-        {% else %}
-            {{ product_data.brand_name if product_data.brand_name else 'None' }}
-        {% endif %}
-    </div>
-    <div>
-        <span class="text-muted">{{ _('Article') }}:</span> 
-        {{ article }}
-    </div>
-</div>
+            <!-- Права колонка: інформація та ціни -->
+            <div class="col-md-6">
+                <div class="product-info-card">
+                    <div class="product-info-header">
+                        <h1 itemprop="name">{{ product_data.name }}</h1>
+                    </div>
+                    <div class="product-info-body">
+                        <div class="product-meta">
+                            <div class="product-meta-item">
+                                <span class="meta-label">{{ _('Article') }}:</span>
+                                <span class="article-badge" itemprop="sku">{{ article }}</span>
+                            </div>
+                            
+                            <div class="product-meta-item">
+                                <span class="meta-label">{{ _('Brand') }}:</span>
+                                <span class="meta-value" itemprop="brand">
+                                    {% if prices and prices[0]['brand_name'] %}
+                                        {{ prices[0]['brand_name'] }}
+                                    {% else %}
+                                        {{ product_data.brand_name if product_data.brand_name else 'None' }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
 
-                <!-- Ціни (оригінальний блок) -->
-                {% for price in prices %}
-                <!-- Ціни -->
-<div class="price-card">
-    <div class="price-info">
-        <span class="price-value">{{ "%.2f"|format(price.price|float) }} EUR</span>
-        <span class="delivery-info">
-            {% if price.in_stock %}
-            <i class="bi bi-check-circle-fill text-success"></i>
-            {{ _('In Stock') }}
-            {% else %}
-            <i class="bi bi-clock"></i>
-            {{ price.delivery_time }}
-            {% endif %}
-        </span>
-        
-        <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-form">
-            <input type="hidden" name="article" value="{{ article }}">
-            <input type="hidden" name="selected_price" value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}">
-            <input type="number" 
-                   name="quantity_{{ price.table_name }}" 
-                   value="1" 
-                   min="1" 
-                   class="form-control quantity-input">
-            <button type="submit" class="btn btn-primary btn-add-to-cart">
-                <i class="bi bi-cart-plus"></i>
-                {{ _('Add to Cart') }}
-            </button>
-        </form>
-    </div>
-</div>
-                {% endfor %}
+                        <!-- Ціни -->
+                        <h4 class="mb-3"><i class="bi bi-tag-fill me-2 text-primary"></i>{{ _('Available Prices') }}</h4>
+                        {% for price in prices %}
+                        <div class="price-card">
+                            <div class="price-info">
+                                <span class="price-value" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                                    <span itemprop="price">{{ "%.2f"|format(price.price|float) }}</span> 
+                                    <span itemprop="priceCurrency">EUR</span>
+                                </span>
+                                
+                                <span class="delivery-info">
+                                    {% if price.in_stock %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    {{ _('In Stock') }}
+                                    {% else %}
+                                    <i class="bi bi-clock text-warning"></i>
+                                    {{ price.delivery_time }}
+                                    {% endif %}
+                                </span>
+                                
+                                <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-form">
+                                    <input type="hidden" name="article" value="{{ article }}">
+                                    <input type="hidden" name="selected_price" value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}">
+                                    <input type="number" 
+                                           name="quantity_{{ price.table_name }}" 
+                                           value="1" 
+                                           min="1" 
+                                           class="quantity-input">
+                                    <button type="submit" class="btn-add-to-cart">
+                                        <i class="bi bi-cart-plus me-2"></i>
+                                        {{ _('Add to Cart') }}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="mt-4">
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                {{ _('Continue Shopping') }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <style>
-.product-info-wrapper {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1.5rem;
-    background: #fff;
-}
-
-.product-title {
-    font-size: 1.75rem;
-    margin-bottom: 1rem;
-}
-
-.product-meta {
-    margin-bottom: 2rem;
-}
-
-.text-muted {
-    min-width: 80px;
-    display: inline-block;
-}
-</style>
     </div>
 </div>
-
-<style>
-.product-title {
-    font-size: 2rem;
-    color: var(--heading-color);
-    margin-bottom: 1rem;
-}
-
-.product-details {
-    font-size: 1.1rem;
-}
-
-.product-info {
-    padding: 0;
-    background: transparent;
-    border: none;
-}
-
-.price-card {
-    background: white;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
-}
-
-.price-card:hover {
-    box-shadow: var(--shadow);
-}
-
-.prices-wrapper {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1.5rem;
-    background-color: #fff;
-}
-
-.product-title {
-    font-size: 1.75rem;
-    margin-bottom: 1рем;
-}
-
-.product-meta {
-    font-size: 1.1rem;
-    margin-bottom: 2rem;
-}
-
-.text-muted {
-    min-width: 80px;
-    display: inline-block;
-}
-</style>
 
 <script>
 // Зберігаємо всі шляхи до фотографій
@@ -830,6 +743,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+    });
+    
+    // Додаємо клавіатурну навігацію для зображень
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') {
+            prevImage();
+        } else if (e.key === 'ArrowRight') {
+            nextImage();
+        }
     });
 });
 </script>

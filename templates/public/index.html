@@ -1,244 +1,628 @@
 {% extends "base/public_base.html" %}
 
+{% block head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ _('AutogroupEU - Your reliable partner in auto parts supply across Europe.') }}">
+<meta name="keywords" content="{{ _('auto parts, spare parts, car repair, programming, Slovakia') }}">
+<meta property="og:title" content="AutogroupEU - {{ _('Auto Parts Supply') }}">
+<meta property="og:description" content="{{ _('Find the best auto parts for your vehicle with quick delivery across Europe') }}">
+<meta property="og:type" content="website">
+{% endblock %}
+
+{% block title %}{{ _('Home') }} - AutogroupEU{% endblock %}
+
 {% block extra_css %}
 <style>
-    /*  ВАШІ ЗМІННІ ТУТ  */
+    /* Кольорова гама */
     :root {
         --primary-color: #007bff;
-        --primary-color-dark: #0056b3;
+        --primary-hover: #0056b3;
         --secondary-color: #6c757d;
         --light-bg: #f8f9fa;
-        --border-color: #ddd;
-        --text-color: #212529;
-        --heading-color: #333;
-        --font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        --font-family-headings: 'Arial', sans-serif;
-        --font-size-base: 1rem;
-        --font-size-h1: 2.5rem;
-        --font-size-h2: 2rem;
-        --font-size-h3: 1.5rem;
-        --spacing-unit: 1rem;
-        --spacing-sm: 0.5rem;
-        --spacing-md: 1rem;
-        --spacing-lg: 2rem;
-        --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --dark-bg: #343a40;
+        --border-color: #dee2e6;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --info-color: #17a2b8;
+        
+        /* Тіні */
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+        --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        
+        /* Скруглення кутів */
         --border-radius: 0.375rem;
+        --border-radius-lg: 0.5rem;
     }
-
-    /*  ЗАГАЛЬНІ СТИЛІ (card, btn, etc.) */
-    .btn {
-        display: inline-block;
-        padding: 0.5rem 1rem;
-        font-size: var(--font-size-base);
-        font-weight: bold;
-        text-decoration: none;
-        color: #fff;
+    
+    /* ==== ЗАГАЛЬНІ СТИЛІ ==== */
+    .page-sections {
+        padding-top: 1rem;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* ==== ВІТАЛЬНА СЕКЦІЯ ==== */
+    .welcome-card {
+        border: none;
+        box-shadow: var(--shadow);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+    
+    .welcome-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .welcome-header {
+        background: linear-gradient(135deg, var(--primary-color), #0d6efd);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border: none;
+    }
+    
+    .welcome-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .welcome-body {
+        padding: 1.75rem;
+        background-color: white;
+    }
+    
+    /* ==== ПОШУКОВА СЕКЦІЯ ==== */
+    .search-card {
+        border: none;
+        box-shadow: var(--shadow);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        margin-bottom: 2.5rem;
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+    
+    .search-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .search-body {
+        padding: 1.75rem;
+        background-color: white;
+    }
+    
+    .input-group {
+        position: relative;
+    }
+    
+    .form-control {
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius) 0 0 var(--border-radius);
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+        outline: none;
+    }
+    
+    .btn-search {
+        padding: 0.75rem 1.5rem;
         background-color: var(--primary-color);
         border: none;
-        border-radius: var(--border-radius);
-        transition: background-color 0.3s ease;
+        color: white;
+        border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
         cursor: pointer;
     }
-
-    .btn:hover {
-        background-color: var(--primary-color-dark);
+    
+    .btn-search:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
     }
-
-    .btn-primary {
-        background-color: var(--primary-color);
-    }
-
-    .btn-primary:hover {
-        background-color: var(--primary-color-dark);
-    }
-
-    .card {
-        background-color: #fff;
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
+    
+    /* ==== ІНФОРМАЦІЙНІ БЛОКИ ==== */
+    .info-card {
+        border: none;
         box-shadow: var(--shadow);
-        margin-bottom: var(--spacing-md);
-        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        background-color: white;
     }
-
-    .card:hover {
+    
+    .info-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        box-shadow: var(--shadow-lg);
     }
-
-    .card-body {
-        padding: var(--spacing-md);
+    
+    .info-card .card-header {
+        padding: 1.25rem;
+        border: none;
     }
-
-    .card-title {
-        font-size: var(--font-size-h3);
-        font-weight: bold;
-        margin-bottom: var(--spacing-sm);
-        color: var(--heading-color);
+    
+    .contact-header {
+        background: linear-gradient(135deg, var(--info-color), #0f9eb7);
+        color: white;
     }
-
-    /* Index page specific styles */
-    .welcome-section,
-    .search-section,
-    .contact-section,
-    .service-info {
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s;
-        background-color: #fff;
+    
+    .service-header {
+        background: linear-gradient(135deg, var(--warning-color), #ffa000);
+        color: white;
+    }
+    
+    .info-card .card-header h4 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+    
+    .info-card .card-body {
+        padding: 1.5rem;
+        background-color: white;
+    }
+    
+    .contact-phone {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem;
         border-radius: var(--border-radius);
+        background-color: rgba(23, 162, 184, 0.05);
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .contact-phone:hover {
+        background-color: rgba(23, 162, 184, 0.1);
+        transform: translateY(-3px);
+    }
+    
+    .phone-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--info-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    
+    .phone-number {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--dark-bg);
+        margin-bottom: 0.25rem;
+    }
+    
+    .phone-hours {
+        font-size: 0.85rem;
+        color: var(--secondary-color);
+    }
+    
+    .btn-learn-more {
+        padding: 0.75rem 1.5rem;
+        background-color: transparent;
+        border: 2px solid var(--warning-color);
+        color: var(--warning-color);
+        border-radius: var(--border-radius);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-top: 0.5rem;
+    }
+    
+    .btn-learn-more:hover {
+        background-color: var(--warning-color);
+        color: white;
+        transform: translateY(-3px);
         box-shadow: var(--shadow);
-        margin-bottom: var(--spacing-md);
-        padding: var(--spacing-md);
     }
-
-    .contact-section:hover,
-    .service-info:hover {
-        transform: translateY(-5px);
+    
+    /* ==== СЕКЦІЯ ПРОДУКТІВ ==== */
+    .products-section {
+        margin-top: 3rem;
     }
-
-    .input-group {
+    
+    .products-header {
+        background: linear-gradient(135deg, var(--secondary-color), #495057);
+        color: white;
+        padding: 1.25rem;
+        border-radius: var(--border-radius-lg);
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .products-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .products-header-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+    
+    /* ==== КАРТКИ ПРОДУКТІВ ==== */
+    .product-card {
+        border: none;
         box-shadow: var(--shadow);
         border-radius: var(--border-radius);
         overflow: hidden;
+        height: 100%;
+        transition: all 0.3s ease;
+        background-color: white;
     }
-
-    .form-control:focus {
-        box-shadow: none;
-        border-color: var(--primary-color);
+    
+    .product-card:hover {
+        transform: translateY(-7px);
+        box-shadow: var(--shadow-lg);
     }
-
-    .btn-primary {
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
+    
+    .product-img-container {
+        height: 200px;
+        padding: 1rem;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
     }
-
-    .badge {
-        font-size: 1rem;
-        font-weight: normal;
-        vertical-align: middle;
+    
+    .product-img {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+        transition: transform 0.5s ease;
+    }
+    
+    .product-card:hover .product-img {
+        transform: scale(1.1);
+    }
+    
+    .product-body {
+        padding: 1.25rem;
+    }
+    
+    .product-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: var(--dark-bg);
+        min-height: 40px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .product-meta {
+        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+        border-bottom: 1px dashed var(--border-color);
+        font-size: 0.9rem;
+    }
+    
+    .product-meta-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.25rem;
+    }
+    
+    .meta-label {
+        color: var(--secondary-color);
+        font-weight: 500;
+    }
+    
+    .meta-value {
+        font-weight: 600;
+    }
+    
+    .product-article {
+        background: var(--light-bg);
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+        font-family: monospace;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+    
+    .product-price {
+        color: var(--primary-color);
+    }
+    
+    .product-description {
+        font-size: 0.85rem;
+        color: var(--secondary-color);
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 40px;
+    }
+    
+    .btn-details {
+        width: 100%;
+        padding: 0.5rem 0;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-details:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    /* ==== КНОПКА "ПОКАЗАТИ БІЛЬШЕ" ==== */
+    .btn-show-more {
+        padding: 0.75rem 2rem;
+        background-color: transparent;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .btn-show-more:hover {
+        background-color: var(--primary-color);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+    
+    /* ==== АДАПТИВНІСТЬ ==== */
+    @media (max-width: 768px) {
+        .welcome-header, .products-header {
+            padding: 1rem;
+        }
+        
+        .welcome-header h1, .products-header h2 {
+            font-size: 1.25rem;
+        }
+        
+        .welcome-body, .search-body, .info-card .card-body {
+            padding: 1.25rem;
+        }
+        
+        .product-img-container {
+            height: 180px;
+            padding: 0.75rem;
+        }
+        
+        .product-title {
+            font-size: 1rem;
+            min-height: 35px;
+        }
+        
+        .product-description {
+            min-height: 35px;
+        }
+        
+        .btn-search, .btn-learn-more, .btn-show-more {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .product-img-container {
+            height: 160px;
+        }
+        
+        .welcome-header h1 {
+            font-size: 1.1rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4 page-sections">
     <div class="row">
         <!-- Ліва колонка з привітанням та пошуком -->
         <div class="col-lg-8">
             <!-- Блок привітання -->
-            <div class="welcome-section">
-                <h1 class="h3 mb-3">{{ _('Welcome to AutogroupEU') }}</h1>
-                <p class="lead text-muted">
-                    {{ _('Your reliable partner in auto parts supply across Europe. Enter the article number to check prices and availability.') }}
-                </p>
+            <div class="welcome-card fade-in">
+                <div class="welcome-header">
+                    <h1>{{ _('Welcome to AutogroupEU') }}</h1>
+                </div>
+                <div class="welcome-body">
+                    <p class="lead">
+                        {{ _('Your reliable partner in auto parts supply across Europe. Enter the article number to check prices and availability.') }}
+                    </p>
+                </div>
             </div>
 
             <!-- Блок пошуку -->
-            <div class="search-section">
-                <form method="POST" action="{{ url_for('public_search') }}" class="mb-0">
-                    <div class="input-group">
-                        <input type="text" name="article" class="form-control form-control-lg"
-                            placeholder="{{ _('Enter article number...') }}" required>
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-search me-1"></i>
-                            {{ _('Search') }}
-                        </button>
-                    </div>
-                </form>
+            <div class="search-card fade-in">
+                <div class="search-body">
+                    <form method="POST" action="{{ url_for('public_search') }}" class="mb-0">
+                        <div class="input-group">
+                            <input type="text" name="article" class="form-control form-control-lg"
+                                placeholder="{{ _('Enter article number...') }}" required>
+                            <button type="submit" class="btn-search">
+                                <i class="bi bi-search me-2"></i>
+                                {{ _('Search') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
         <!-- Права колонка з контактною інформацією -->
         <div class="col-lg-4">
-            <div class="contact-section">
-                <h4 class="mb-3">
-                    <i class="bi bi-headset me-2"></i>
-                    {{ _('Need Help?') }}
-                </h4>
-                <p class="text-muted mb-3">
-                    {{ _("If you have any questions, don't hesitate to contact us:") }}
-                </p>
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-telephone-fill text-primary me-3 fs-3"></i>
-                    <div>
-                        <div class="fw-bold fs-5">+421 907 539 325</div>
-                        <small class="text-muted">{{ _('Mon-Fri: 9:00 - 19:00') }}</small>
+            <div class="info-card fade-in">
+                <div class="card-header contact-header">
+                    <h4>
+                        <i class="bi bi-headset me-2"></i>
+                        {{ _('Need Help?') }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">
+                        {{ _("If you have any questions, don't hesitate to contact us:") }}
+                    </p>
+                    <div class="contact-phone">
+                        <div class="phone-icon">
+                            <i class="bi bi-telephone-fill"></i>
+                        </div>
+                        <div>
+                            <div class="phone-number">+421 907 539 325</div>
+                            <div class="phone-hours">{{ _('Mon-Fri: 9:00 - 19:00') }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
-             <!-- Блок інформації про сервіс -->
-            <div class="service-info">
-                <h4 class="mb-3">
-                    <i class="bi bi-tools me-2"></i>
-                    {{ _('Car Service & Programming') }}
-                </h4>
-                <p class="text-muted mb-3">
-                    {{ _('We offer professional car repair and programming services. Contact us for more information.') }}
-                </p>
-                <a href="#" class="btn btn-outline-primary">
-                    {{ _('Learn More') }}
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- New Products Section -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <h2 class="mb-4">{{ _('Available Products') }} </h2>
-        </div>
-    </div>
-
-    <!-- Products Grid -->
-    <div class="row row-cols-1 row-cols-md-5 g-4">
-        {% for product in products %}
-        <div class="col">
-            <div class="card h-100">
-                <!-- Product Image -->
-                {% if product.image_url %}
-                <img src="{{ product.image_url }}" class="card-img-top" 
-                     alt="{{ product.name or product.article }}"
-                     style="height: 200px; object-fit: contain; padding: 1rem;">
-                {% else %}
-                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
-                     style="height: 200px;">
-                    <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+             
+            <!-- Блок інформації про сервіс -->
+            <div class="info-card fade-in">
+                <div class="card-header service-header">
+                    <h4>
+                        <i class="bi bi-tools me-2"></i>
+                        {{ _('Car Service & Programming') }}
+                    </h4>
                 </div>
-                {% endif %}
-
-                <!-- Product Info -->
                 <div class="card-body">
-                    <h5 class="card-title">{{ product.name or product.article }}</h5>
-                    <p class="card-text small">
-                        <strong>{{ _('Brand') }}:</strong> {{ product.brand_name }}<br>
-                        <strong>{{ _('Article') }}:</strong> {{ product.article }}<br>
-                        <strong>{{ _('Price') }}:</strong> {{ "%.2f"|format(product.price) }} EUR
+                    <p class="mb-3">
+                        {{ _('We offer professional car repair and programming services. Contact us for more information.') }}
                     </p>
-                    {% if product.description %}
-                    <p class="card-text small text-muted">
-                        {{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}
-                    </p>
-                    {% endif %}
-                </div>
-
-                <!-- Product Actions -->
-                <div class="card-footer bg-transparent border-top-0">
-                    <a href="{{ url_for('product_details', article=product.article) }}" 
-                       class="btn btn-primary btn-sm w-100">{{ _('Details') }}</a>
+                    <a href="#" class="btn-learn-more">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ _('Learn More') }}
+                    </a>
                 </div>
             </div>
         </div>
-        {% endfor %}
     </div>
 
-    <!-- Show More Button -->
-    {% if has_more %}
-    <div class="text-center mt-4 mb-4">
-        <a href="{{ url_for('index', page=(page or 1)|int + 1) }}" 
-           class="btn btn-outline-primary">{{ _('Show More') }}</a>
+    <!-- Products Section -->
+    <div class="products-section fade-in">
+        <div class="products-header">
+            <div class="products-header-icon">
+                <i class="bi bi-box"></i>
+            </div>
+            <h2>{{ _('Available Products') }}</h2>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="row row-cols-1 row-cols-md-5 g-4">
+            {% for product in products %}
+            <div class="col">
+                <div class="product-card">
+                    <!-- Product Image -->
+                    <div class="product-img-container">
+                        {% if product.image_url %}
+                        <img src="{{ product.image_url }}" class="product-img" 
+                             alt="{{ product.name or product.article }}">
+                        {% else %}
+                        <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                        {% endif %}
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="product-body">
+                        <h5 class="product-title">{{ product.name or product.article }}</h5>
+                        <div class="product-meta">
+                            <div class="product-meta-item">
+                                <span class="meta-label">{{ _('Brand') }}</span>
+                                <span class="meta-value">{{ product.brand_name }}</span>
+                            </div>
+                            <div class="product-meta-item">
+                                <span class="meta-label">{{ _('Article') }}</span>
+                                <span class="product-article">{{ product.article }}</span>
+                            </div>
+                            <div class="product-meta-item">
+                                <span class="meta-label">{{ _('Price') }}</span>
+                                <span class="meta-value product-price">{{ "%.2f"|format(product.price) }} €</span>
+                            </div>
+                        </div>
+                        {% if product.description %}
+                        <p class="product-description">
+                            {{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}
+                        </p>
+                        {% else %}
+                        <p class="product-description">{{ _('No description available.') }}</p>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('product_details', article=product.article) }}" 
+                           class="btn-details">
+                            <i class="bi bi-eye-fill"></i>
+                            {{ _('View Details') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Show More Button -->
+        {% if has_more %}
+        <div class="text-center mt-4 mb-4">
+            <a href="{{ url_for('index', page=(page or 1)|int + 1) }}" 
+               class="btn-show-more">
+                <i class="bi bi-plus-circle"></i>
+                {{ _('Show More Products') }}
+            </a>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 
 <script>

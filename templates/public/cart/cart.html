@@ -1,7 +1,7 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
-<!-- Неперекладені рядки -->
+<!-- SEO Meta Tags -->
 <meta name="description" content="{{ _('View and manage your shopping cart at AutogroupEU. Check prices, quantities, and proceed to checkout.') }}">
 <meta name="robots" content="noindex, nofollow">
 
@@ -27,14 +27,490 @@ gtag('event', 'view_cart', {
 
 {% block title %}{{ _('Shopping Cart') }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Кольорова гама */
+    :root {
+        --primary-color: #007bff;
+        --primary-hover: #0056b3;
+        --secondary-color: #6c757d;
+        --light-bg: #f8f9fa;
+        --dark-bg: #343a40;
+        --border-color: #dee2e6;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --info-color: #17a2b8;
+        
+        /* Тіні */
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+        --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        
+        /* Скруглення кутів */
+        --border-radius: 0.375rem;
+        --border-radius-lg: 0.5rem;
+    }
+    
+    /* ===== СТИЛІ ТАБЛИЦІ КОШИКА ===== */
+    .cart-table {
+        background-color: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        border: none;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .cart-table thead {
+        background: linear-gradient(135deg, var(--primary-color), #0d6efd);
+    }
+    
+    .cart-table th {
+        color: white;
+        font-weight: 500;
+        padding: 1rem;
+        border: none;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .cart-table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+    
+    .cart-table tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .cart-table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .cart-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .cart-table tfoot {
+        background-color: rgba(0, 123, 255, 0.08);
+    }
+    
+    .cart-table tfoot td {
+        padding: 1.25rem 1rem;
+        font-weight: 600;
+        border: none;
+    }
+    
+    /* Стилі для артикула */
+    .article-badge {
+        background: var(--light-bg);
+        padding: 0.35rem 0.65rem;
+        border-radius: 4px;
+        font-family: monospace;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--dark-bg);
+        display: inline-block;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+    
+    tr:hover .article-badge {
+        background-color: #e9f2ff;
+        border-color: var(--primary-color);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    /* Стилі для ціни */
+    .price-value {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    .total-value {
+        color: var(--primary-color);
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+    
+    /* ===== СТИЛІ ФОРМИ ДОСТАВКИ ===== */
+    .delivery-card {
+        border: none;
+        box-shadow: var(--shadow);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .delivery-card:hover {
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .delivery-card .card-header {
+        background: linear-gradient(135deg, var(--primary-color), #0d6efd);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border: none;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        font-size: 1.1rem;
+    }
+    
+    .delivery-card .card-body {
+        padding: 1.75rem;
+        background-color: white;
+    }
+    
+    /* Стилі для карток адрес і компаній */
+    .address-card {
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        background-color: white;
+    }
+    
+    .address-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--primary-color);
+        box-shadow: var(--shadow);
+    }
+    
+    .address-card.selected {
+        border-left: 4px solid var(--primary-color);
+        background-color: rgba(0, 123, 255, 0.03);
+    }
+    
+    .address-card .card-body {
+        padding: 1.25rem;
+    }
+    
+    .address-card .form-check-label {
+        padding-left: 0.5rem;
+    }
+    
+    .address-card .form-check {
+        margin: 0;
+    }
+    
+    .address-info {
+        padding-left: 1.75rem;
+        color: var(--secondary-color);
+        margin-top: 0.5rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    
+    .address-info .address-name {
+        font-weight: 600;
+        color: var(--dark-bg);
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+    
+    /* Phone badge */
+    .phone-badge {
+        display: inline-block;
+        background-color: var(--info-color);
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+    
+    /* Стилі для заголовків секцій */
+    .section-title {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(0, 123, 255, 0.1);
+        position: relative;
+    }
+    
+    .section-title:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: -2px;
+        width: 50px;
+        height: 2px;
+        background-color: var(--primary-color);
+    }
+    
+    /* Стилі для роздільника секцій */
+    .section-divider {
+        height: 4px;
+        background: linear-gradient(to right, var(--light-bg), var(--primary-color), var(--light-bg));
+        margin: 2rem 0;
+        border-radius: 2px;
+        opacity: 0.5;
+    }
+    
+    /* Стилі для полів форми */
+    .form-control, .form-select {
+        border: 1px solid var(--border-color);
+        padding: 0.75rem;
+        border-radius: var(--border-radius);
+        transition: all 0.3s ease;
+        background-color: #fff;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+        outline: none;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--dark-bg);
+    }
+    
+    /* Стилі для чекбоксів і радіокнопок */
+    .form-check-input {
+        width: 1.1rem;
+        height: 1.1rem;
+        border-color: var(--border-color);
+        cursor: pointer;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .form-check-input:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: none;
+    }
+    
+    .form-check-label {
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    /* Стилі для поля кількості */
+    .quantity-input {
+        width: 70px !important;
+        text-align: center;
+        margin-right: 0.5rem;
+        padding: 0.375rem;
+        min-width: 70px;
+        max-width: 70px;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+    }
+    
+    /* Стилі для кнопок оновлення та видалення */
+    .btn-update {
+        padding: 0.375rem 0.75rem;
+        background-color: var(--primary-color);
+        border: none;
+        color: white;
+        border-radius: var(--border-radius);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-update:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-remove {
+        padding: 0.375rem 0.75rem;
+        background-color: var(--danger-color);
+        border: none;
+        color: white;
+        border-radius: var(--border-radius);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-remove:hover {
+        background-color: #c82333;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    /* Стилі для VAT валідації */
+    .vat-badge {
+        display: inline-block;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: var(--border-radius);
+        background-color: var(--warning-color);
+        color: #212529;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Стилі для порожнього кошика */
+    .empty-cart {
+        text-align: center;
+        padding: 5rem 0;
+        background: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow);
+    }
+    
+    .empty-cart-icon {
+        font-size: 5.5rem;
+        color: var(--secondary-color);
+        opacity: 0.7;
+        margin-bottom: 1.5rem;
+        animation: pulse 2s infinite ease-in-out;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    /* Стилі для кнопок завершення покупки */
+    .checkout-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 2.5rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .btn-continue {
+        padding: 0.75rem 1.5rem;
+        background-color: transparent;
+        border: 2px solid var(--secondary-color);
+        color: var(--secondary-color);
+        border-radius: var(--border-radius);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .btn-continue:hover {
+        background-color: var(--secondary-color);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+    
+    .btn-place-order {
+        padding: 0.75rem 2rem;
+        background-color: var(--success-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-place-order:hover {
+        background-color: #218838;
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+    
+    /* Додаткові елементи для покращення зовнішнього вигляду */
+    .invoice-toggle {
+        padding: 0.75rem;
+        border-radius: var(--border-radius);
+        background-color: #f8f9fa;
+        border-left: 4px solid var(--info-color);
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .invoice-toggle:hover {
+        background-color: #e9f2ff;
+        border-left-color: var(--primary-color);
+    }
+    
+    .invoice-toggle .form-check-label {
+        font-size: 1.05rem;
+    }
+    
+    /* Стилі для опцій нової адреси/компанії */
+    .form-check.mt-3 {
+        padding: 0.75rem;
+        border-radius: var(--border-radius);
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    
+    .form-check.mt-3:hover {
+        background-color: #e9f2ff;
+    }
+    
+    .form-check.mt-3 .form-check-label {
+        color: var(--primary-color);
+    }
+    
+    /* Адаптивність для мобільних пристроїв */
+    @media (max-width: 768px) {
+        .cart-table {
+            border-radius: 0;
+        }
+        
+        .quantity-input {
+            width: 60px !important;
+            min-width: 60px;
+            max-width: 60px;
+        }
+        
+        .checkout-actions {
+            flex-direction: column-reverse;
+            gap: 1rem;
+        }
+        
+        .btn-continue, .btn-place-order {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .card-header, .delivery-card .card-body {
+            padding: 1.25rem 1rem;
+        }
+        
+        .section-title {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-    <h2>{{ _("Shopping Cart") }}</h2>
+    <div class="page-header fade-in">
+        <h2>{{ _("Shopping Cart") }}</h2>
+    </div>
 
     {% if cart_items %}
     <!-- Cart Items Table -->
-    <div class="table-responsive mb-4">
-        <table class="table">
+    <div class="table-responsive mb-4 fade-in">
+        <table class="cart-table">
             <thead>
                 <tr>
                     <th>{{ _("Article") }}</th>
@@ -49,24 +525,30 @@ gtag('event', 'view_cart', {
             <tbody>
                 {% for item in cart_items %}
                 <tr>
-                    <td>{{ item.article }}</td>
+                    <td><span class="article-badge">{{ item.article }}</span></td>
                     <td>{{ item.name }}</td>
                     <td>{{ item.brand_name if item.brand_name and item.brand_name != 'None' else 'AutogroupEU' }}</td>
-                    <td>{{ "%.2f"|format(item.price) }}</td>
+                    <td><span class="price-value">{{ "%.2f"|format(item.price) }} €</span></td>
                     <td>
                         <form action="{{ url_for('update_public_cart') }}" method="POST" class="d-flex align-items-center">
                             <input type="hidden" name="article" value="{{ item.article }}">
                             <input type="hidden" name="table_name" value="{{ item.table_name }}">
-                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control form-control-sm" style="width: 70px;">
-                            <button type="submit" class="btn btn-sm btn-outline-primary ms-2">{{ _("Update") }}</button>
+                            <div class="d-flex align-items-center">
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control quantity-input">
+                                <button type="submit" class="btn btn-update">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
                         </form>
                     </td>
-                    <td>{{ "%.2f"|format(item.total) }}</td>
+                    <td><span class="price-value">{{ "%.2f"|format(item.total) }} €</span></td>
                     <td>
                         <form action="{{ url_for('public_remove_from_cart') }}" method="POST" class="d-inline">
                             <input type="hidden" name="article" value="{{ item.article }}">
                             <input type="hidden" name="table_name" value="{{ item.table_name }}">
-                            <button type="submit" class="btn btn-sm btn-danger">{{ _("Remove") }}</button>
+                            <button type="submit" class="btn btn-remove">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </form>
                     </td>
                 </tr>
@@ -75,7 +557,7 @@ gtag('event', 'view_cart', {
             <tfoot>
                 <tr>
                     <td colspan="5" class="text-end"><strong>{{ _("Total:") }}</strong></td>
-                    <td><strong>{{ "%.2f"|format(total_price) }}</strong></td>
+                    <td><span class="total-value">{{ "%.2f"|format(total_price) }} €</span></td>
                     <td></td>
                 </tr>
             </tfoot>
@@ -83,8 +565,8 @@ gtag('event', 'view_cart', {
     </div>
 
     <!-- Delivery and Invoice Form -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
+    <div class="delivery-card fade-in">
+        <div class="card-header">
             <h5 class="mb-0">{{ _('Delivery Information') }}</h5>
         </div>
         <div class="card-body">
@@ -92,9 +574,10 @@ gtag('event', 'view_cart', {
                 <!-- Saved Addresses Section -->
                 {% if saved_addresses %}
                 <div class="mb-4">
-                    <h6>{{ _('Select Saved Address') }}</h6>
+                    <h6 class="section-title">{{ _('Select Saved Address') }}</h6>
+                    
                     {% for address in saved_addresses %}
-                    <div class="card mb-2 border-light">
+                    <div class="address-card {% if address.is_default %}selected{% endif %}">
                         <div class="card-body">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" 
@@ -103,24 +586,27 @@ gtag('event', 'view_cart', {
                                        id="address_{{ address.id }}"
                                        {% if address.is_default %}checked{% endif %}>
                                 <label class="form-check-label" for="address_{{ address.id }}">
-                                    <strong>{{ address.full_name }}</strong><br>
+                                    <span class="address-name">{{ address.full_name }}</span>
+                                </label>
+                                
+                                <div class="address-info">
                                     {{ address.street }}<br>
                                     {{ address.postal_code }} {{ address.city }}<br>
                                     {{ address.country }}<br>
-                                    {{ address.phone }}
-                                </label>
+                                    <span class="phone-badge">{{ address.phone }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
                     
-                    <div class="form-check mb-3">
+                    <div class="form-check mt-3">
                         <input class="form-check-input" type="radio" 
                                name="use_new_address" 
                                id="useNewAddress"
                                value="1">
                         <label class="form-check-label" for="useNewAddress">
-                            {{ _('Use new address') }}
+                            <i class="bi bi-plus-circle me-2"></i>{{ _('Use new address') }}
                         </label>
                     </div>
                 </div>
@@ -128,6 +614,10 @@ gtag('event', 'view_cart', {
 
                 <!-- New Address Form -->
                 <div id="newAddressForm" {% if saved_addresses %}style="display: none;"{% endif %}>
+                    {% if saved_addresses %}
+                    <h6 class="section-title">{{ _('New Delivery Address') }}</h6>
+                    {% endif %}
+                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">{{ _('Full Name') }}</label>
@@ -171,12 +661,15 @@ gtag('event', 'view_cart', {
                     </div>
                 </div>
 
+                <!-- Divider -->
+                <div class="section-divider"></div>
+
                 <!-- Invoice Information -->
                 <div class="mb-4">
-                    <div class="form-check mb-3">
+                    <div class="form-check mb-3 invoice-toggle">
                         <input type="checkbox" class="form-check-input" id="needsInvoice" name="needs_invoice">
                         <label class="form-check-label" for="needsInvoice">
-                            {{ _('Need invoice with VAT number') }}
+                            <i class="bi bi-receipt me-2"></i>{{ _('Need invoice with VAT number') }}
                         </label>
                     </div>
                     
@@ -184,9 +677,10 @@ gtag('event', 'view_cart', {
                         <!-- Saved Companies Section -->
                         {% if saved_companies %}
                         <div class="mb-3">
-                            <h6>{{ _('Select Saved Company') }}</h6>
+                            <h6 class="section-title">{{ _('Select Saved Company') }}</h6>
+                            
                             {% for company in saved_companies %}
-                            <div class="card mb-2 border-light">
+                            <div class="address-card {% if company.is_default %}selected{% endif %}">
                                 <div class="card-body">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" 
@@ -195,28 +689,31 @@ gtag('event', 'view_cart', {
                                             id="company_{{ company.id }}"
                                             {% if company.is_default %}checked{% endif %}>
                                         <label class="form-check-label" for="company_{{ company.id }}">
-                                            <strong>{{ company.company_name }}</strong><br>
-                                            {{ _('VAT Number') }}: {{ company.vat_number }}<br>
+                                            <span class="address-name">{{ company.company_name }}</span>
+                                        </label>
+                                        
+                                        <div class="address-info">
+                                            <span class="vat-badge">{{ _('VAT Number') }}: {{ company.vat_number }}</span><br>
                                             {% if company.registration_number %}
                                             {{ _('Registration Number') }}: {{ company.registration_number }}<br>
                                             {% endif %}
                                             {% if company.address %}
                                             {{ _('Address') }}: {{ company.address }}
                                             {% endif %}
-                                        </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             {% endfor %}
                             
-                            <div class="form-check mb-3">
+                            <div class="form-check mt-3">
                                 <input class="form-check-input" type="radio" 
                                     name="use_new_company" 
                                     id="useNewCompany"
                                     value="1"
                                     {% if not saved_companies %}checked{% endif %}>
                                 <label class="form-check-label" for="useNewCompany">
-                                    {{ _('Use new company details') }}
+                                    <i class="bi bi-plus-circle me-2"></i>{{ _('Use new company details') }}
                                 </label>
                             </div>
                         </div>
@@ -224,6 +721,10 @@ gtag('event', 'view_cart', {
 
                         <!-- New Company Form -->
                         <div id="newCompanyForm" {% if saved_companies %}style="display: none;"{% endif %}>
+                            {% if saved_companies %}
+                            <h6 class="section-title">{{ _('New Company Details') }}</h6>
+                            {% endif %}
+                            
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">{{ _('Company Name') }}</label>
@@ -258,11 +759,11 @@ gtag('event', 'view_cart', {
                 </div>
 
                 <!-- Submit Buttons -->
-                <div class="d-flex justify-content-between align-items-center">
-                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <div class="checkout-actions">
+                    <a href="{{ url_for('index') }}" class="btn-continue">
                         <i class="bi bi-arrow-left me-2"></i>{{ _('Continue Shopping') }}
                     </a>
-                    <button type="submit" class="btn btn-primary" id="placeOrderBtn">
+                    <button type="submit" class="btn-place-order" id="placeOrderBtn">
                         <i class="bi bi-check-circle me-2"></i>{{ _('Place Order') }}
                     </button>
                 </div>
@@ -271,11 +772,12 @@ gtag('event', 'view_cart', {
     </div>
 
     {% else %}
-    <div class="text-center py-5">
-        <i class="bi bi-cart-x display-1 text-muted mb-4"></i>
-        <h2>{{ _('Your Cart is Empty') }}</h2>
-        <p class="text-muted">{{ _('Start adding items to your cart!') }}</p>
-        <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">
+    <!-- Порожній кошик -->
+    <div class="empty-cart fade-in">
+        <i class="bi bi-cart-x empty-cart-icon"></i>
+        <h3 class="mt-3">{{ _('Your Cart is Empty') }}</h3>
+        <p class="text-muted mb-4">{{ _('Start adding items to your cart!') }}</p>
+        <a href="{{ url_for('index') }}" class="btn-continue">
             <i class="bi bi-search me-2"></i>
             {{ _('Search Articles') }}
         </a>

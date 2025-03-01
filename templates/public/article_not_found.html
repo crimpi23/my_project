@@ -1,231 +1,385 @@
 {% extends "base/public_base.html" %}
 
+{% block head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ _('The requested article was not found in our catalog.') }}">
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
 {% block title %}{{ _('Article Not Found') }}{% endblock %}
 
 {% block extra_css %}
 <style>
+    /* Кольорова гама */
     :root {
         --primary-color: #007bff;
-        --primary-color-dark: #0056b3;
+        --primary-hover: #0056b3;
         --secondary-color: #6c757d;
         --light-bg: #f8f9fa;
-        --border-color: #ddd;
-        --text-color: #212529;
-        --heading-color: #333;
-        --font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        --font-size-base: 1rem;
-        --font-size-h3: 1.5rem;
-        --spacing-unit: 1rem;
-        --spacing-md: 1rem;
-        --spacing-sm: 0.5rem;
-        --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        --dark-bg: #343a40;
+        --border-color: #dee2e6;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --info-color: #17a2b8;
+        
+        /* Тіні */
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+        --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        
+        /* Скруглення кутів */
         --border-radius: 0.375rem;
+        --border-radius-lg: 0.5rem;
     }
-
-    .btn {
-        display: inline-block;
+    
+    /* ==== ЗАГАЛЬНІ СТИЛІ ==== */
+    .page-not-found {
+        animation: fadeIn 0.5s ease-in-out;
+        padding: 2rem 0;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* ==== КАРТКА НЕ ЗНАЙДЕНО ==== */
+    .not-found-card {
+        border: none;
+        box-shadow: var(--shadow);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        background-color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .not-found-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .not-found-header {
+        background: linear-gradient(135deg, var(--danger-color), #c82333);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .not-found-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .header-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+    
+    .not-found-body {
+        padding: 2.5rem;
+        text-align: center;
+    }
+    
+    /* ==== ІКОНКА ПОШУКУ ==== */
+    .search-icon-container {
+        margin-bottom: 2rem;
+    }
+    
+    .search-icon {
+        font-size: 5rem;
+        color: var(--danger-color);
+        opacity: 0.8;
+        animation: pulse 2s infinite ease-in-out;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.8; }
+    }
+    
+    .article-badge {
+        background: var(--light-bg);
         padding: 0.5rem 1rem;
-        font-size: var(--font-size-base);
-        font-weight: bold;
-        text-decoration: none;
-        color: #fff;
+        border-radius: 4px;
+        font-family: monospace;
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: var(--dark-bg);
+        display: inline-block;
+        margin: 1rem 0;
+        border-left: 3px solid var(--danger-color);
+    }
+    
+    /* ==== ПОШУКОВА ФОРМА ==== */
+    .search-form {
+        max-width: 500px;
+        margin: 2rem auto 0;
+    }
+    
+    .input-group {
+        position: relative;
+    }
+    
+    .form-control {
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius) 0 0 var(--border-radius);
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+        outline: none;
+    }
+    
+    .btn-search {
+        padding: 0.75rem 1.5rem;
         background-color: var(--primary-color);
         border: none;
-        border-radius: var(--border-radius);
-        transition: background-color 0.3s ease;
+        color: white;
+        border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
         cursor: pointer;
     }
-
-    .btn:hover {
-        background-color: var(--primary-color-dark);
+    
+    .btn-search:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
     }
-
-    .btn-primary {
-        background-color: var(--primary-color);
-    }
-
-    .btn-primary:hover {
-        background-color: var(--primary-color-dark);
-    }
-
-    .card {
-        background-color: #fff;
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow);
-        margin-bottom: var(--spacing-md);
-    }
-
-    .card-body {
-        padding: var(--spacing-md);
-    }
-
-    .card-title {
-        font-size: var(--font-size-h3);
-        font-weight: bold;
-        margin-bottom: var(--spacing-sm);
-        color: var(--heading-color);
-    }
-
-    .input-group {
-        box-shadow: var(--shadow);
-        border-radius: var(--border-radius);
-        overflow: hidden;
-    }
-
-    .form-control:focus {
-        box-shadow: none;
-        border-color: var(--primary-color);
-    }
-
-    .btn-primary {
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-    }
-
-    .alert {
-        position: relative;
-        padding: 0.75rem 1.25rem;
-        margin-bottom: 1rem;
-        border: 1px solid transparent;
-        border-radius: 0.25rem;
-    }
-
-    .alert-warning {
-        color: #856404;
-        background-color: #fff3cd;
-        border-color: #ffeeba;
-    }
-
-    .alert-heading {
-        color: inherit;
-    }
-
-    .mb-0 {
-        margin-bottom: 0 !important;
-    }
-
-    .mb-3 {
-        margin-bottom: 1rem !important;
-    }
-
-    .mt-5 {
-        margin-top: 3rem !important;
-    }
-
-    .justify-content-center {
-        justify-content: center !important;
-    }
-
-    .col-md-8 {
-        flex: 0 0 66.666667%;
-        max-width: 66.666667%;
-    }
-
-    .input-group-append {
-        margin-left: -1px;
+    
+    /* ==== КНОПКИ ПОВЕРНЕННЯ ==== */
+    .action-buttons {
         display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 2.5rem;
+        flex-wrap: wrap;
     }
-
-    .btn-outline-info {
-        color: #17a2b8;
-        border-color: #17a2b8;
-    }
-
-    .btn-outline-info:hover {
-        color: #fff;
-        background-color: #17a2b8;
-        border-color: #17a2b8;
-    }
-
-    .welcome-section,
-    .search-section,
-    .contact-section,
-    .service-info {
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s;
-        background-color: #fff;
+    
+    .btn-home {
+        padding: 0.75rem 1.5rem;
+        background-color: transparent;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
         border-radius: var(--border-radius);
-        box-shadow: var(--shadow);
-        margin-bottom: var(--spacing-md);
-        padding: var(--spacing-md);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
     }
-
-    .contact-section:hover,
-    .service-info:hover {
-        transform: translateY(-5px);
+    
+    .btn-home:hover {
+        background-color: var(--primary-color);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+    
+    .btn-contact {
+        padding: 0.75rem 1.5rem;
+        background-color: var(--info-color);
+        border: none;
+        color: white;
+        border-radius: var(--border-radius);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn-contact:hover {
+        background-color: #138496;
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+        color: white;
+    }
+    
+    /* ==== РЕКОМЕНДОВАНІ ТОВАРИ ==== */
+    .recommendations {
+        margin-top: 3rem;
+    }
+    
+    .recommendations-header {
+        background: linear-gradient(135deg, var(--secondary-color), #495057);
+        color: white;
+        padding: 1.25rem;
+        border-radius: var(--border-radius-lg);
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .recommendations-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+    
+    /* ==== АДАПТИВНІСТЬ ==== */
+    @media (max-width: 768px) {
+        .not-found-header {
+            padding: 1rem;
+        }
+        
+        .not-found-header h2 {
+            font-size: 1.25rem;
+        }
+        
+        .not-found-body {
+            padding: 1.5rem;
+        }
+        
+        .search-icon {
+            font-size: 4rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn-home, .btn-contact {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <!-- Ліва колонка -->
-        <div class="col-lg-8">
-            <!-- Блок з повідомленням про відсутність артикула -->
-            <div class="welcome-section">
-                <div class="alert alert-warning mb-0">
-                    <h4 class="alert-heading mb-3">{{ _('Article Not Found') }}</h4>
-                    <p>{{ _('Sorry, we could not find any information for article') }} <strong>{{ article }}</strong>.</p>
-                    <hr>
-                    <p class="mb-0">{{ _('You can try searching again or contact us for assistance.') }}</p>
-                </div>
+<div class="container mt-4 page-not-found">
+    <div class="not-found-card fade-in">
+        <div class="not-found-header">
+            <div class="header-icon">
+                <i class="bi bi-exclamation-triangle"></i>
             </div>
-
-            <!-- Блок пошуку -->
-            <div class="search-section">
-                <form method="POST" action="{{ url_for('public_search') }}" class="mb-0">
-                    <div class="input-group">
-                        <input type="text" name="article" class="form-control form-control-lg"
-                            placeholder="{{ _('Enter article number...') }}" required>
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-search me-1"></i>
-                            {{ _('Search') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
+            <h2>{{ _('Article Not Found') }}</h2>
         </div>
-
-        <!-- Права колонка -->
-        <div class="col-lg-4">
-            <!-- Блок контактної інформації -->
-            <div class="contact-section">
-                <h4 class="mb-3">
-                    <i class="bi bi-headset me-2"></i>
-                    {{ _('Need Help?') }}
-                </h4>
-                <p class="text-muted mb-3">
-                    {{ _("If you have any questions, don't hesitate to contact us:") }}
-                </p>
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-telephone-fill text-primary me-3 fs-3"></i>
-                    <div>
-                        <div class="fw-bold fs-5">+421 907 539 325</div>
-                        <small class="text-muted">{{ _('Mon-Fri: 9:00 - 19:00') }}</small>
-                    </div>
-                </div>
+        <div class="not-found-body">
+            <div class="search-icon-container">
+                <i class="bi bi-search search-icon"></i>
             </div>
-
-            <!-- Блок VIN-коду -->
-            <div class="service-info">
-                <h4 class="mb-3">
-                    <i class="bi bi-car-front me-2"></i>
-                    {{ _('Find Parts by VIN Code') }}
-                </h4>
-                <p class="text-muted mb-3">
-                    {{ _('Provide us with your VIN code and we will help you find the right parts for your vehicle.') }}
-                </p>
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-key text-primary me-3 fs-3"></i>
-                    <div>
-                        <div class="fw-bold fs-5">{{ _('Fast and Accurate') }}</div>
-                        <small class="text-muted">{{ _('Professional parts selection') }}</small>
-                    </div>
+            
+            <h3>{{ _('The requested article was not found in our catalog') }}</h3>
+            
+            {% if article %}
+            <div class="article-badge">{{ article }}</div>
+            {% endif %}
+            
+            <p class="text-muted">
+                {{ _('The article you are looking for might have been discontinued, or the number might be incorrect.') }}
+                {{ _('Please check the article number and try again or contact our support team for assistance.') }}
+            </p>
+            
+            <form method="POST" action="{{ url_for('public_search') }}" class="search-form">
+                <div class="input-group">
+                    <input type="text" name="article" class="form-control"
+                           placeholder="{{ _('Enter article number...') }}" 
+                           {% if article %}value="{{ article }}"{% endif %}
+                           required>
+                    <button type="submit" class="btn-search">
+                        <i class="bi bi-search me-2"></i>
+                        {{ _('Search') }}
+                    </button>
                 </div>
+            </form>
+            
+            <div class="action-buttons">
+                <a href="{{ url_for('index') }}" class="btn-home">
+                    <i class="bi bi-house me-2"></i>
+                    {{ _('Back to Home') }}
+                </a>
+                <a href="#" class="btn-contact">
+                    <i class="bi bi-headset me-2"></i>
+                    {{ _('Contact Support') }}
+                </a>
             </div>
         </div>
     </div>
+    
+    {% if similar_products and similar_products|length > 0 %}
+    <div class="recommendations fade-in">
+        <div class="recommendations-header">
+            <div class="header-icon">
+                <i class="bi bi-lightbulb"></i>
+            </div>
+            <h3>{{ _('Recommended Products') }}</h3>
+        </div>
+        
+        <div class="row row-cols-1 row-cols-md-4 g-4">
+            {% for product in similar_products %}
+            <div class="col">
+                <div class="card h-100 product-card">
+                    <!-- Product Image -->
+                    <div class="product-img-container">
+                        {% if product.image_url %}
+                        <img src="{{ product.image_url }}" class="product-img" 
+                             alt="{{ product.name or product.article }}">
+                        {% else %}
+                        <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body">
+                        <h5 class="product-title">{{ product.name or product.article }}</h5>
+                        <div class="product-meta">
+                            <div class="product-meta-item">
+                                <span class="meta-label">{{ _('Brand') }}</span>
+                                <span class="meta-value">{{ product.brand_name }}</span>
+                            </div>
+                            <div class="product-meta-item">
+                                <span class="meta-label">{{ _('Article') }}</span>
+                                <span class="product-article">{{ product.article }}</span>
+                            </div>
+                            <div class="product-meta-item">
+                                <span class="meta-label">{{ _('Price') }}</span>
+                                <span class="meta-value product-price">{{ "%.2f"|format(product.price) }} €</span>
+                            </div>
+                        </div>
+                        
+                        <a href="{{ url_for('product_details', article=product.article) }}" 
+                           class="btn btn-primary btn-sm w-100 mt-2">
+                            <i class="bi bi-eye-fill me-2"></i>
+                            {{ _('View Details') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -2,140 +2,381 @@
 
 {% block head %}
 {{ super() }}
-<!-- Your existing SEO, Analytics and Structured Data -->
+<!-- SEO, Analytics, etc... -->
 {% endblock %}
+
+{% block title %}{{ _('Order Details') }} #{{ order.id }}{% endblock %}
 
 {% block extra_css %}
 <style>
-.order-header {
-    background: var(--light-bg);
-    padding: 30px 0;
-    border-radius: 15px;
-    margin-bottom: 30px;
-}
-
-.order-number {
-    color: var(--primary-color);
-    font-weight: 600;
-}
-
-.back-button {
-    padding: 10px 20px;
-    border-radius: 30px;
-    transition: all 0.3s ease;
-    border: 2px solid var(--border-color);
-}
-
-.back-button:hover {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.summary-card {
-    background: white;
-    border-radius: 15px;
-    border: none;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-}
-
-.summary-label {
-    color: var(--secondary-color);
-    font-size: 0.9rem;
-    margin-bottom: 5px;
-}
-
-.summary-value {
-    font-size: 1.2rem;
-    font-weight: 500;
-}
-
-.total-amount {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary-color);
-}
-
-.items-table {
-    border-radius: 15px;
-    overflow: hidden;
-}
-
-.table thead {
-    background: var(--primary-color);
-    color: white;
-}
-
-.table th {
-    border: none;
-    padding: 15px;
-    font-weight: 600;
-}
-
-.table td {
-    padding: 15px;
-    vertical-align: middle;
-}
-
-.table tbody tr {
-    transition: background-color 0.3s ease;
-}
-
-.table tbody tr:hover {
-    background-color: var(--light-bg);
-}
-
-.article-link {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.article-link:hover {
-    color: var(--primary-color-dark);
-    text-decoration: underline;
-}
-
-.badge {
-    padding: 8px 12px;
-    border-radius: 20px;
-    font-weight: 500;
-}
-
-.table tfoot {
-    background: var(--light-bg);
-    font-weight: 600;
-}
-
-@media (max-width: 768px) {
+    /* Кольорова гама */
+    :root {
+        --primary-color: #007bff;
+        --primary-hover: #0056b3;
+        --secondary-color: #6c757d;
+        --light-bg: #f8f9fa;
+        --dark-bg: #343a40;
+        --border-color: #dee2e6;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --info-color: #17a2b8;
+        
+        /* Тіні */
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+        --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        
+        /* Скруглення кутів */
+        --border-radius: 0.375rem;
+        --border-radius-lg: 0.5rem;
+    }
+    
+    /* Загальні стилі */
+    .page-order {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Шапка замовлення */
+    .order-header-card {
+        border: none;
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+    
+    .order-header-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
     .order-header {
-        text-align: center;
+        background: linear-gradient(135deg, var(--primary-color), #0d6efd);
+        color: white;
+        padding: 1.5rem;
+        border: none;
     }
-
-    .back-button {
-        width: 100%;
-        margin-top: 15px;
+    
+    .order-header h2 {
+        margin: 0;
+        display: flex;
+        align-items: center;
     }
-
+    
+    .order-number {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.35rem 0.75rem;
+        border-radius: var(--border-radius);
+        margin-left: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .btn-back {
+        background-color: transparent;
+        border: 2px solid white;
+        color: white;
+        border-radius: var(--border-radius);
+        padding: 0.5rem 1.25rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        text-decoration: none;
+    }
+    
+    .btn-back:hover {
+        background-color: white;
+        color: var(--primary-color);
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+    
+    /* Картка зведення замовлення */
     .summary-card {
-        text-align: center;
+        border: none;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+        background-color: white;
     }
-}
+    
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .summary-label {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .summary-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--dark-bg);
+    }
+    
+    .total-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+    
+    /* Картки адрес і інвойсів */
+    .info-card {
+        border: none;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        height: 100%;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .info-card-header {
+        padding: 1.25rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        background-color: var(--light-bg);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .info-card-header i {
+        color: var(--primary-color);
+    }
+    
+    .address-details {
+        padding: 1.25rem;
+        line-height: 1.6;
+    }
+    
+    .address-name {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        color: var(--dark-bg);
+        display: block;
+    }
+    
+    .address-line {
+        margin-bottom: 0.25rem;
+    }
+    
+    .phone-badge {
+        display: inline-block;
+        background-color: var(--info-color);
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+    
+    /* Таблиця товарів */
+    .items-table-card {
+        border: none;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+    
+    .items-table-card:hover {
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .items-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .items-table thead th {
+        background: linear-gradient(135deg, var(--primary-color), #0d6efd);
+        color: white;
+        padding: 1rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+        border: none;
+    }
+    
+    .items-table tbody tr {
+        transition: all 0.2s ease;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .items-table tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+        transform: translateY(-2px);
+    }
+    
+    .items-table tbody tr:last-child {
+        border-bottom: none;
+    }
+    
+    .items-table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+    
+    .items-table tfoot {
+        background-color: rgba(0, 123, 255, 0.08);
+    }
+    
+    .items-table tfoot td {
+        padding: 1.25rem 1rem;
+        font-weight: 600;
+    }
+    
+    /* Артикули і товари */
+    .article-badge {
+        background: var(--light-bg);
+        padding: 0.35rem 0.65rem;
+        border-radius: 4px;
+        font-family: monospace;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--dark-bg);
+        display: inline-block;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+    
+    tr:hover .article-badge {
+        background-color: #e9f2ff;
+        border-color: var(--primary-color);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .article-link {
+        color: var(--primary-color);
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .article-link:hover {
+        color: var(--primary-hover);
+        text-decoration: underline;
+    }
+    
+    .price-value {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-family: monospace;
+    }
+    
+    /* Статуси */
+    .status-badge {
+        padding: 0.35rem 0.7rem;
+        border-radius: var(--border-radius);
+        font-weight: 500;
+        font-size: 0.85rem;
+        text-align: center;
+        min-width: 100px;
+        display: inline-block;
+    }
+    
+    .status-pending {
+        background-color: var(--warning-color);
+        color: #212529;
+    }
+    
+    .status-processing {
+        background-color: var(--info-color);
+        color: white;
+    }
+    
+    .status-shipped {
+        background-color: #6f42c1;
+        color: white;
+    }
+    
+    .status-delivered {
+        background-color: var(--success-color);
+        color: white;
+    }
+    
+    .status-canceled {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    /* Адаптивність */
+    @media (max-width: 768px) {
+        .order-header {
+            padding: 1.25rem;
+        }
+        
+        .btn-back {
+            margin-top: 1rem;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .order-number {
+            display: block;
+            margin: 0.5rem 0 0 0;
+            text-align: center;
+        }
+        
+        .items-table th, .items-table td {
+            padding: 0.75rem;
+        }
+        
+        .items-table .d-none-mobile {
+            display: none;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container mt-4 page-order">
     <!-- Order Header -->
-    <div class="order-header">
-        <div class="container">
+    <div class="order-header-card">
+        <div class="order-header">
             <div class="d-flex flex-wrap justify-content-between align-items-center">
-                <h1 class="h2 mb-0">
+                <h2>
                     {{ _('Order') }}
                     <span class="order-number">#{{ order.id }}</span>
-                </h1>
-                <a href="{{ url_for('public_view_orders') }}" class="back-button btn">
+                </h2>
+                <a href="{{ url_for('public_view_orders') }}" class="btn-back">
                     <i class="bi bi-arrow-left me-2"></i>
                     {{ _('Back to Orders') }}
                 </a>
@@ -144,31 +385,35 @@
     </div>
 
     <!-- Order Summary -->
-    <div class="summary-card card mb-4">
+    <div class="summary-card">
         <div class="card-body">
             <div class="row g-4">
-                <div class="col-md-3">
+                <div class="col-md-3 col-6">
                     <div class="summary-label">{{ _('Order Date') }}</div>
                     <div class="summary-value">
+                        <i class="bi bi-calendar2-check me-2 text-primary"></i>
                         {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-6">
                     <div class="summary-label">{{ _('Status') }}</div>
                     <div class="summary-value">
-                        <span class="badge bg-{{ order.status|status_color }}">
+                        <span class="status-badge status-{{ order.status|lower }}">
                             {{ _(order.status) }}
                         </span>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-6">
                     <div class="summary-label">{{ _('Total Items') }}</div>
-                    <div class="summary-value">{{ order.items_count }}</div>
+                    <div class="summary-value">
+                        <i class="bi bi-box me-2 text-primary"></i>
+                        {{ order.items_count }}
+                    </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-6">
                     <div class="summary-label">{{ _('Total Amount') }}</div>
                     <div class="total-amount">
-                        {{ "%.2f"|format(order.total_price) }} EUR
+                        {{ "%.2f"|format(order.total_price) }} €
                     </div>
                 </div>
             </div>
@@ -176,21 +421,22 @@
     </div>
 
     <!-- Delivery and Invoice Information -->
-    <div class="row mb-4">
+    <div class="row">
         <!-- Delivery Address -->
         <div class="col-md-6">
-            <div class="summary-card card h-100">
-                <div class="card-header bg-light">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="bi bi-truck"></i>
                     <h5 class="mb-0">{{ _('Delivery Address') }}</h5>
                 </div>
-                <div class="card-body">
+                <div class="address-details">
                     {% set address = order.delivery_address|from_json if order.delivery_address else {} %}
                     {% if address %}
-                        <p class="mb-1"><strong>{{ address.full_name }}</strong></p>
-                        <p class="mb-1">{{ address.street }}</p>
-                        <p class="mb-1">{{ address.postal_code }} {{ address.city }}</p>
-                        <p class="mb-1">{{ address.country }}</p>
-                        <p class="mb-0">{{ address.phone }}</p>
+                        <span class="address-name">{{ address.full_name }}</span>
+                        <div class="address-line">{{ address.street }}</div>
+                        <div class="address-line">{{ address.postal_code }} {{ address.city }}</div>
+                        <div class="address-line">{{ address.country }}</div>
+                        <div class="address-line"><span class="phone-badge">{{ address.phone }}</span></div>
                     {% else %}
                         <p class="text-secondary">{{ _("No delivery information provided") }}</p>
                     {% endif %}
@@ -201,20 +447,23 @@
         <!-- Invoice Details -->
         {% if order.needs_invoice %}
         <div class="col-md-6">
-            <div class="summary-card card h-100">
-                <div class="card-header bg-light">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="bi bi-receipt"></i>
                     <h5 class="mb-0">{{ _('Invoice Information') }}</h5>
                 </div>
-                <div class="card-body">
+                <div class="address-details">
                     {% set invoice = order.invoice_details|from_json if order.invoice_details else {} %}
                     {% if invoice %}
-                        <p class="mb-1"><strong>{{ _('Company Name') }}:</strong> {{ invoice.company_name }}</p>
-                        <p class="mb-1"><strong>{{ _('VAT Number') }}:</strong> {{ invoice.vat_number }}</p>
+                        <span class="address-name">{{ invoice.company_name }}</span>
+                        <div class="address-line"><strong>{{ _('VAT Number') }}:</strong> 
+                            <span class="vat-badge">{{ invoice.vat_number }}</span>
+                        </div>
                         {% if invoice.registration_number %}
-                        <p class="mb-1"><strong>{{ _("Registration Number") }}:</strong> {{ invoice.registration_number }}</p>
+                        <div class="address-line"><strong>{{ _("Registration Number") }}:</strong> {{ invoice.registration_number }}</div>
                         {% endif %}
                         {% if invoice.address %}
-                        <p class="mb-0"><strong>{{ _("Company Address") }}:</strong> {{ invoice.address }}</p>
+                        <div class="address-line"><strong>{{ _("Company Address") }}:</strong> {{ invoice.address }}</div>
                         {% endif %}
                     {% else %}
                         <p class="text-secondary">{{ _("Invoice requested but details not provided") }}</p>
@@ -226,9 +475,9 @@
     </div>
 
     <!-- Items Table -->
-    <div class="items-table card">
+    <div class="items-table-card">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="items-table">
                 <thead>
                     <tr>
                         <th>{{ _('Article') }}</th>
@@ -246,16 +495,16 @@
                         <td>
                             <a href="{{ url_for('product_details', article=item.article) }}"
                                class="article-link">
-                                {{ item.article }}
+                                <span class="article-badge">{{ item.article }}</span>
                             </a>
                         </td>
                         <td>{{ item.product_name or '-' }}</td>
-                        <td>{{ item.brand_name or '-' }}</td>
-                        <td class="text-end">{{ "%.2f"|format(item.price) }} EUR</td>
+                        <td class="d-none-mobile">{{ item.brand_name or '-' }}</td>
+                        <td class="text-end"><span class="price-value">{{ "%.2f"|format(item.price) }} €</span></td>
                         <td class="text-center">{{ item.quantity }}</td>
-                        <td class="text-end">{{ "%.2f"|format(item.total_price) }} EUR</td>
+                        <td class="text-end"><span class="price-value">{{ "%.2f"|format(item.total_price) }} €</span></td>
                         <td class="text-center">
-                            <span class="badge bg-{{ item.status|status_color }}">
+                            <span class="status-badge status-{{ item.status|lower }}">
                                 {{ _(item.status) }}
                             </span>
                         </td>
@@ -268,7 +517,7 @@
                             <strong>{{ _('Total:') }}</strong>
                         </td>
                         <td class="text-end">
-                            <strong>{{ "%.2f"|format(order.total_price) }} EUR</strong>
+                            <span class="total-amount">{{ "%.2f"|format(order.total_price) }} €</span>
                         </td>
                         <td></td>
                     </tr>

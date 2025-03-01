@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AutogroupEU{% endblock %}</title>
     
+    <!-- Favicon -->
+    <link rel="icon" href="https://image.autogroup.sk/static/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="https://image.autogroup.sk/static/favicon.ico" type="image/x-icon">
+    
     <!-- SEO Meta Tags -->
     <meta name="description" content="{% block meta_description %}AutogroupEU - Your reliable partner in auto parts supply across Europe{% endblock %}">
     <meta name="keywords" content="auto parts, car parts, automotive, spare parts, Europe">
@@ -34,137 +38,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
 
     <!-- Custom CSS -->
-    <style>
-        :root {
-            --primary-color: #0d6efd;
-            --secondary-color: #6c757d;
-            --success-color: #198754;
-            --danger-color: #dc3545;
-            --warning-color: #ffc107;
-            --info-color: #0dcaf0;
-            --light-bg: #f8f9fa;
-            --dark-bg: #212529;
-            --border-color: #dee2e6;
-            --shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--light-bg);
-        }
-
-        .navbar {
-            box-shadow: var(--shadow);
-        }
-
-        .navbar-brand img {
-            height: 60px;
-            width: auto;
-            transition: transform 0.3s ease;
-        }
-
-        .navbar-brand img:hover {
-            transform: scale(1.05);
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link i {
-            font-size: 1.2rem;
-        }
-
-        .cart-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 5px;
-            border-radius: 9px;
-            background: var(--danger-color);
-            color: white;
-            font-size: 0.75rem;
-            line-height: 18px;
-            text-align: center;
-        }
-
-        .footer {
-            margin-top: auto;
-            padding: 2rem 0;
-            background-color: var(--light-bg);
-            border-top: 1px solid var(--border-color);
-        }
-
-        .footer h5 {
-            color: var(--dark-bg);
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .footer a {
-            color: var(--secondary-color);
-            transition: color 0.3s ease;
-        }
-
-        .footer a:hover {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .social-links a {
-            font-size: 1.5rem;
-            transition: transform 0.3s ease;
-        }
-
-        .social-links a:hover {
-            transform: translateY(-2px);
-        }
-
-        .alert {
-            border-radius: 8px;
-            border: none;
-            box-shadow: var(--shadow);
-        }
-
-        @media (max-width: 768px) {
-            .navbar-brand img {
-                height: 40px;
-            }
-            
-            .container {
-                padding: 1rem;
-            }
-            
-            .footer {
-                text-align: center;
-            }
-        }
-
-        .card {
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
-            transform: translateY(-2px);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}">
 
     {% block extra_css %}{% endblock %}
 
@@ -183,89 +57,88 @@
 </head>	
 <body class="d-flex flex-column min-vh-100">
     <!-- Navigation -->
-    <!-- Navigation -->
-	<nav class="navbar navbar-expand-lg navbar-light bg-light">
-		<div class="container">
-			<a class="navbar-brand" href="{{ url_for('index') }}">
-				<img src="https://autogroup.sk/imgbank/Image/AUtogroupEU.png" alt="AutogroupEU">
-			</a>
-			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="navbarNav">
-				<ul class="navbar-nav me-auto">
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('index') }}">
-							<i class="bi bi-house"></i>
-							<span>{{ _('Home') }}</span>
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('about') }}">
-							<i class="bi bi-info-circle"></i>
-							<span>{{ _('About') }}</span>
-						</a>
-					</li>
-				</ul>
-				<ul class="navbar-nav">
-					{% if 'user_id' in session %}
-						<li class="nav-item">
-							<a class="nav-link position-relative" href="{{ url_for('public_cart') }}">
-								<i class="bi bi-cart3"></i>
-								<span>{{ _('Cart') }}</span>
-								{% if get_public_cart_count() > 0 %}
-									<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge">
-										{{ get_public_cart_count() }}
-									</span>
-								{% endif %}
-							</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" href="{{ url_for('public_view_orders') }}">
-								<i class="bi bi-box"></i>
-								<span>{{ _('Orders') }}</span>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" href="{{ url_for('logout') }}">
-								<i class="bi bi-box-arrow-right"></i>
-								<span>{{ _('Logout') }}</span>
-							</a>
-						</li>
-					{% else %}
-						<li class="nav-item">
-							<a class="nav-link" href="{{ url_for('login') }}">
-								<i class="bi bi-box-arrow-in-right"></i>
-								<span>{{ _('Login') }}</span>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" href="{{ url_for('register') }}">
-								<i class="bi bi-person-plus"></i>
-								<span>{{ _('Register') }}</span>
-							</a>
-						</li>
-					{% endif %}
-					<!-- Language dropdown -->
-					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown">
-							<i class="bi bi-globe"></i>
-							<span>{{ LANGUAGES[g.locale] }}</span>
-						</a>
-						<ul class="dropdown-menu">
-							{% for code, name in LANGUAGES.items() %}
-								<li>
-									<a class="dropdown-item" href="{{ url_for('set_language', language=code) }}">
-										{{ name }}
-									</a>
-								</li>
-							{% endfor %}
-						</ul>
-					</li>
-				</ul>
-			</div>
-		</div>
-	</nav>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <img src="https://autogroup.sk/imgbank/Image/AUtogroupEU.png" alt="AutogroupEU">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="bi bi-house"></i>
+                            <span>{{ _('Home') }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('about') }}">
+                            <i class="bi bi-info-circle"></i>
+                            <span>{{ _('About') }}</span>
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if 'user_id' in session %}
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{{ url_for('public_cart') }}">
+                                <i class="bi bi-cart3"></i>
+                                <span>{{ _('Cart') }}</span>
+                                {% if get_public_cart_count() > 0 %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge">
+                                        {{ get_public_cart_count() }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('public_view_orders') }}">
+                                <i class="bi bi-box"></i>
+                                <span>{{ _('Orders') }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>{{ _('Logout') }}</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">
+                                <i class="bi bi-box-arrow-in-right"></i>
+                                <span>{{ _('Login') }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('register') }}">
+                                <i class="bi bi-person-plus"></i>
+                                <span>{{ _('Register') }}</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    <!-- Language dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-globe"></i>
+                            <span>{{ LANGUAGES[g.locale] }}</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            {% for code, name in LANGUAGES.items() %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('set_language', language=code) }}">
+                                        {{ name }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}

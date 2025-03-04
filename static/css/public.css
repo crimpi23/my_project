@@ -878,11 +878,6 @@ body {
     margin-top: 1.5rem;
 }
 
-.btn-continue, .btn-home, .btn-show-more {
-    /* Використовуємо базовий клас через HTML */
-    /* class="btn-outline btn-outline-primary" */
-}
-
 .btn-place-order {
     padding: 0.75rem 1.5rem;
     background-color: var(--success-color);
@@ -915,6 +910,8 @@ body {
     font-size: 5rem;
     color: var(--secondary-color);
     opacity: 0.7;
+    margin-bottom: 1.5rem;
+    animation: pulse 2s infinite ease-in-out;
 }
 
 /* === СТОРІНКА ЗАМОВЛЕННЯ === */
@@ -1145,6 +1142,13 @@ tr:hover .article-badge {
 .orders-header {
     background: linear-gradient(135deg, var(--secondary-color), #495057);
     color: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius-lg);
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 /* Таблиця замовлень */
@@ -1250,10 +1254,10 @@ tr:hover .article-badge {
 
 /* Стилі для порожнього результату */
 .empty-orders {
+    text-align: center;
+    padding: 3rem 2rem;
     background-color: white;
     border-radius: var(--border-radius-lg);
-    padding: 3rem 2rem;
-    text-align: center;
     box-shadow: var(--shadow);
 }
 
@@ -1318,8 +1322,10 @@ tr:hover .article-badge {
 .not-found-header {
     background: linear-gradient(135deg, var(--danger-color), #c82333);
     color: white;
-    padding: 1.25rem 1.5rem;
-    border: none;
+    padding: 1.5rem;
+    border-radius: var(--border-radius-lg 
+    var(--border-radius-lg) 0 0);
+    box-shadow: var(--shadow);
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -1383,10 +1389,10 @@ tr:hover .article-badge {
     border: none;
     color: white;
     border-radius: var(--border-radius);
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    font-weight: 600;
     transition: all 0.3s ease;
     text-decoration: none;
 }
@@ -1406,11 +1412,10 @@ tr:hover .article-badge {
 .recommendations-header {
     background: linear-gradient(135deg, var(--secondary-color), #495057);
     color: white;
-    padding: 1.25rem;
+    padding: 1.5rem;
     border-radius: var(--border-radius-lg);
     margin-bottom: 1.5rem;
     box-shadow: var(--shadow);
-    position: relative;
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -1717,11 +1722,10 @@ tr:hover .article-badge {
 .products-header {
     background: linear-gradient(135deg, var(--secondary-color), #495057);
     color: white;
-    padding: 1.25rem;
+    padding: 1.5rem;
     border-radius: var(--border-radius-lg);
     margin-bottom: 1.5rem;
     box-shadow: var(--shadow);
-    position: relative;
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -1875,8 +1879,17 @@ tr:hover .article-badge {
 
 /* Кнопка "Показати більше" */
 .btn-show-more {
-    /* Використовуємо базовий клас через HTML */
-    /* class="btn-outline btn-outline-primary" */
+    padding: 0.75rem 1.5rem;
+    background-color: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 2rem auto;
+    transition: all 0.3s ease;
 }
 
 /* Адаптивність головної сторінки */
@@ -2068,32 +2081,49 @@ tr:hover .article-badge {
     border-radius: var(--border-radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow);
-    transition: all 0.3s ease;
     margin-top: 1.5rem;
-}
-
-.description-section:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
+    background-color: white;
+    border: 1px solid var(--border-color);
 }
 
 .description-header {
-    padding: 1.25rem;
-    background: linear-gradient(135deg, var(--secondary-color), #495057);
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, var(--info-color), #0dcaf0);
+    border-bottom: 1px solid var(--border-color);
     color: white;
-    border: none;
 }
 
 .description-header h2 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
 }
 
 .description-body {
     padding: 1.5rem;
-    background-color: white;
-    line-height: 1.7;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--dark-bg);
+}
+
+.description-body p {
+    margin-bottom: 0.5rem;
+}
+
+/* Для мобільної версії */
+@media (max-width: 767px) {
+    .description-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .description-body {
+        padding: 1rem;
+        font-size: 1rem;
+    }
 }
 
 /* === ЦІНИ === */
@@ -2548,13 +2578,13 @@ tr:hover .article-badge {
 .btn-shop-now:hover {
     background-color: var(--primary-hover);
     transform: translateY(-3px);
-    box-shadow: var(--shadow);  /* Виправлено пробіл */
+    box-shadow: var (--shadow);  /* Виправлено пробіл */
     color: white;
 }
 
 .product-card:hover {
     transform: translateY(-7px);
-    box-shadow: var(--shadow-lg);  /* Виправлено пробіл */
+    box-shadow: var (--shadow-lg);  /* Виправлено пробіл */
 }
 
 .product-price {
@@ -2812,14 +2842,99 @@ tr:hover .article-badge {
     }
     
     .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
+        padding: 0.25rem 0.5рем;
+        font-size: 0.75рем;
     }
 }
 
 /* Виправлення стилю для кнопки "Show More Products" */
 .btn-show-more-container {
-    margin: 2rem 0 1rem;
+    margin: 2рем 0 1рем;
+}
+
+/* === ОПТИМІЗАЦІЯ ПОРЯДКУ ВІДОБРАЖЕННЯ НА МОБІЛЬНИХ === */
+@media (max-width: 767px) {
+    /* Порядок відображення на мобільних пристроях */
+    .mobile-first {
+        order: 1;
+        margin-bottom: 1rem; /* Уніфікований відступ */
+    }
+    
+    .mobile-second {
+        order: 2;
+        margin-bottom: 1rem; /* Уніфікований відступ */
+    }
+    
+    .mobile-last {
+        order: 3;
+    }
+    
+    /* Менші відступи для контейнера продукту */
+    .product-container {
+        padding: 1rem;
+    }
+    
+    /* Оновлення відступів між секціями до уніфікованого розміру */
+    .product-container .row {
+        margin-bottom: 1rem;
+    }
+    
+    .product-container .row + .row {
+        margin-top: 0; /* Прибираємо подвійні відступи між рядками */
+    }
+    
+    /* Уніфіковані внутрішні відступи для карток */
+    .product-info-body, 
+    .description-body {
+        padding: 1rem;
+    }
+    
+    .product-info-header,
+    .description-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Зменшуємо висоту зображення для мобільних */
+    .image-section {
+        height: 250px;
+        margin-bottom: 0; /* Прибираємо додатковий нижній відступ */
+    }
+    
+    /* Прибираємо зайві відступи */
+    .product-info-card {
+        margin-bottom: 0;
+    }
+    
+    .description-section {
+        margin-top: 0;
+    }
+    
+    /* Оптимізація форм додавання в кошик */
+    .cart-form {
+        margin-top: 0.5rem;
+    }
+    
+    /* Зменшуємо відступи між елементами метаданих */
+    .product-meta-item {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Зменшуємо відступи карток цін */
+    .price-card {
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* Додаткові стилі для дуже малих екранів */
+@media (max-width: 480px) {
+    .image-section {
+        height: 200px;
+    }
+    
+    .product-info-header h1 {
+        font-size: 1.25rem;
+    }
 }
 
 /* === ОПТИМІЗАЦІЯ ПОРЯДКУ ВІДОБРАЖЕННЯ НА МОБІЛЬНИХ === */
@@ -2870,14 +2985,14 @@ tr:hover .article-badge {
     
     /* Додаткові оптимізації */
     .product-container {
-        padding: 1rem;
-        margin: 1rem auto;
+        padding: 1рем;
+        margin: 1рем auto;
     }
     
     /* Зробимо кнопки більш помітними */
     .btn-add-to-cart {
         width: 100%;
-        padding: 0.75rem;
+        padding: 0.75рем;
     }
     
     .btn.btn-outline-primary {
@@ -2898,10 +3013,10 @@ tr:hover .article-badge {
     }
     
     .meta-value, .article-badge {
-        margin-top: 0.25rem;
+        margin-top: 0.25рем;
     }
 }
-оптимі
+
 /* Альтернативний підхід з використанням flexbox */
 @media (max-width: 767px) {
     .product-container .row {
@@ -2919,5 +3034,285 @@ tr:hover .article-badge {
     
     .description-section {
         order: 3; /* Показати третім */
+    }
+}
+
+/* Невикористані стилі для видалення */
+
+/* Застарілі заголовки - замінені на section-header */
+.orders-header {
+    background: linear-gradient(135deg, var(--secondary-color), #495057);
+    color: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius-lg);
+    margin-bottom: 1.5рем;
+    box-shadow: var (--shadow);
+    display: flex;
+    align-items: center;
+    gap: 0.75рем;
+}
+
+.products-header {
+    background: linear-gradient(135deg, var(--secondary-color), #495057);
+    color: white;
+    padding: 1.5рем;
+    border-radius: var(--border-radius-lg);
+    margin-bottom: 1.5рем;
+    box-shadow: var (--shadow);
+    display: flex;
+    align-items: center;
+    gap: 0.75рем;
+}
+
+.recommendations-header {
+    background: linear-gradient(135deg, var(--secondary-color), #495057);
+    color: white;
+    padding: 1.5рем;
+    border-radius: var(--border-radius-lg);
+    margin-bottom: 1.5рем;
+    box-shadow: var (--shadow);
+    display: flex;
+    align-items: center;
+    gap: 0.75рем;
+}
+
+.not-found-header {
+    background: linear-gradient(135deg, var(--danger-color), #c82333);
+    color: white;
+    padding: 1.5рем;
+    border-radius: var(--border-radius-lg 
+    var(--border-radius-lg) 0 0);
+    box-shadow: var (--shadow);
+    display: flex;
+    align-items: center;
+    gap: 0.75рем;
+}
+
+/* Застарілі іконки заголовків - замінені на header-icon */
+.products-header-icon, .orders-header-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1рем;
+}
+
+/* Застарілі кнопки - замінені базовими класами */
+.btn-home {
+    padding: 0.75рем 1.5рем;
+    background-color: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5рем;
+    transition: all 0.3s ease;
+}
+
+.btn-continue {
+    padding: 0.75рем 1.5рем;
+    background-color: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5рем;
+    transition: all 0.3s ease;
+}
+
+.btn-show-more {
+    padding: 0.75рем 1.5рем;
+    background-color: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5рем;
+    margin: 2рем auto;
+    transition: all 0.3s ease;
+}
+
+.btn-contact {
+    padding: 0.75рем 1.5рем;
+    background-color: var(--info-color);
+    border: none;
+    color: white;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5рем;
+    transition: all 0.3s ease;
+}
+
+/* Застарілі порожні стани - замінені на empty-state */
+.empty-cart {
+    text-align: center;
+    padding: 3рем 2рем;
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var (--shadow);
+}
+
+.empty-cart-icon {
+    font-size: 5рем;
+    color: var(--secondary-color);
+    opacity: 0.7;
+    margin-bottom: 1.5рем;
+    animation: pulse 2s infinite ease-in-out;
+}
+
+.empty-orders {
+    text-align: center;
+    padding: 3рем 2рем;
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var (--shadow);
+}
+
+/* Застарілі заголовки сторінок - об'єднані в section-header */
+.store-header {
+    background: linear-gradient(135deg, var(--primary-color), #0d6efd);
+    color: white;
+}
+
+.brands-header {
+    background: linear-gradient(135deg, var(--warning-color), #e5a800);
+    color: white;
+}
+
+.services-header {
+    background: linear-gradient(135deg, var(--info-color), #0f9еб7);
+    color: white;
+}
+
+.location-header {
+    background: linear-gradient(135deg, var(--success-color), #1e9739);
+    color: white;
+}
+
+/* Невикористані утиліти */
+.search-icon-lg {
+    font-size: 6рем;
+    color: var(--muted-text);
+    opacity: 0.6;
+    margin-bottom: 2рем;
+}
+
+.product-card-compact {
+    border: none;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.rating-stars {
+    color: var(--warning-color);
+    font-size: 0.9рем;
+}
+
+/* Дублікати медіа-запитів (видалити другі входження) */
+@media (max-width: 768px) {
+    .orders-table td {
+        text-align: right;
+        padding: 0.75рем 1рем;
+        position: relative;
+        padding-left: 50%;
+    }
+
+    .order-id, .order-date, .order-items, .order-total {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 576px) {
+    .btn-view {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Дублікати стилів, що покращено */
+.welcome-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.product-info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Невикористані анімації */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Стилі що використовуються через shorthand */
+.product-body {
+    flex: 1;
+}
+
+/* Cookie Consent Banner */
+.cookie-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    padding: 15px;
+    border-top: 1px solid #e9ecef;
+}
+
+.cookie-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.cookie-text {
+    flex: 1;
+    min-width: 280px;
+}
+
+.cookie-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    .cookie-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .cookie-buttons {
+        width: 100%;
+        justify-content: space-between;
     }
 }

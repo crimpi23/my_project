@@ -1851,10 +1851,10 @@ def get_markup_by_role(role_name):
             result = cursor.fetchone()
             if result:
                 return result[0]
-            return 35.0  # Стандартна націнка, якщо роль не знайдена
+            return 39.0  # Стандартна націнка, якщо роль не знайдена
     except Exception as e:
         logging.error(f"Error getting markup for role {role_name}: {e}")
-        return 35.0  # Стандартна націнка у випадку помилки
+        return 39.0  # Стандартна націнка у випадку помилки
 
 
 # Покращена функція validate_token з детальним логуванням
@@ -3874,9 +3874,9 @@ def manage_price_lists(token):
                 pl.id,
                 pl.table_name,
                 s.name as supplier_name,
-                s.delivery_time,
+                pl.delivery_time,  -- Явно додаємо поле delivery_time з price_lists
                 pl.created_at,
-                s.id as supplier_id
+                pl.supplier_id
             FROM price_lists pl
             LEFT JOIN suppliers s ON pl.supplier_id = s.id
             ORDER BY pl.created_at DESC
@@ -3967,21 +3967,26 @@ def update_price_list_supplier(token):
     try:
         price_list_id = request.form.get('price_list_id')
         supplier_id = request.form.get('supplier_id')
+        delivery_time = request.form.get('delivery_time')  # Додаємо отримання терміну доставки
+
+        # Логуємо отримані дані
+        logging.info(f"Updating price list ID: {price_list_id}, supplier_id: {supplier_id}, delivery_time: {delivery_time}")
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE price_lists
-                SET supplier_id = %s
+                SET supplier_id = %s,
+                    delivery_time = %s
                 WHERE id = %s
-            """, (supplier_id, price_list_id))
+            """, (supplier_id, delivery_time, price_list_id))
             conn.commit()
 
-        flash("Постачальника успішно оновлено", "success")
+        flash("Постачальника та термін доставки успішно оновлено", "success")
 
     except Exception as e:
-        logging.error(f"Error updating supplier: {e}")
-        flash("Помилка при оновленні постачальника", "error")
+        logging.error(f"Error updating supplier and delivery time: {e}")
+        flash("Помилка при оновленні постачальника та терміну доставки", "error")
 
     return redirect(url_for('manage_price_lists', token=token))
 
@@ -3999,24 +4004,54 @@ def upload_price_list(token):
         try:
             logging.info(f"Accessing upload page for token: {token}")
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо список прайс-листів
             cursor.execute("SELECT table_name FROM price_lists;")
             price_lists = cursor.fetchall()
 
             # Отримуємо список брендів для вибору
-            cursor.execute("SELECT id, name FROM brands;")
+            cursor.execute("SELECT id, name FROM brands ORDER BY name;")
             brands = cursor.fetchall()
+            
+            # Отримуємо розширену інформацію про прайс-листи для відображення в таблиці
+            cursor.execute("""
+                SELECT 
+                    pl.id, 
+                    pl.table_name, 
+                    pl.created_at, 
+                    pl.supplier_id,
+                    pl.brand_id, 
+                    pl.delivery_time,
+                    pl.last_updated,
+                    b.name as brand_name
+                FROM price_lists pl
+                LEFT JOIN brands b ON pl.brand_id = b.id
+                ORDER BY pl.created_at DESC;
+            """)
+            price_lists_info = cursor.fetchall()
 
             conn.close()
-            logging.info(f"Fetched price lists: {price_lists}")
-            return render_template('admin/price_lists/upload_price_list.html', price_lists=price_lists,
-                                   brands=brands, token=token)
+            
+            return render_template(
+                'admin/price_lists/upload_price_list.html', 
+                price_lists=price_lists,
+                price_lists_info=price_lists_info,
+                brands=brands, 
+                token=token
+            )
+            
         except Exception as e:
             logging.error(f"Error during GET request: {e}")
             flash("Error loading the upload page.", "error")
             return redirect(url_for('admin_dashboard', token=token))
 
     if request.method == 'POST':
+        conn = None
+        cursor = None
+        # Зберігаємо поточний рівень логування
+        current_log_level = logging.getLogger().level
+        
         try:
             logging.info(f"Starting file upload for token: {token}")
             start_time = time.time()
@@ -4027,57 +4062,116 @@ def upload_price_list(token):
             brand_id = request.form.get('brand_id')  # Отримання brand_id
             file = request.files.get('file')
 
-            # Логування вхідних даних
-            logging.debug(f"Received table_name: {table_name}, new_table_name: {new_table_name}, brand_id: {brand_id}")
+            # Базове логування вхідних даних
+            logging.info(f"Processing file upload: table_name={table_name}, new_table_name={new_table_name}, brand_id={brand_id}")
 
             if not file or file.filename == '':
                 flash("No file uploaded or selected.", "error")
-                logging.warning("No file uploaded or selected.")
                 return redirect(url_for('upload_price_list', token=token))
 
-            # Читання файлу
-            file_content = file.read().decode('utf-8', errors='ignore')
-            delimiter = detect_delimiter(file_content)
-            logging.debug(f"Detected delimiter: {delimiter}")
-            reader = csv.reader(io.StringIO(file_content), delimiter=delimiter)
-
-            # Обробка даних з файлу
-            # В функції upload_price_list змінимо обробку даних з файлу:
-
-            # Обробка даних з файлу
-            data = []
-            header_skipped = False
-
-            for row in reader:
-                # Пропускаємо перший рядок (заголовок)
-                if not header_skipped:
-                    header_skipped = True
-                    continue
+            # Встановлюємо вищий рівень логування під час обробки файлу (тільки ERROR і вище)
+            logging.getLogger().setLevel(logging.ERROR)
+            
+            # Збільшуємо максимальний розмір поля для CSV-читача
+            csv.field_size_limit(sys.maxsize)
+            
+            # Змінюємо підхід для обробки файлу залежно від розширення
+            filename = file.filename.lower()
+            logging.info(f"Processing file: {filename}")
+            
+            data = []  # Тут зберігатимемо дані для завантаження
+            
+            if filename.endswith('.xlsx') or filename.endswith('.xls'):
+                # Обробка Excel файлу
+                logging.info("Detected Excel file format")
+                df = pd.read_excel(file)
+                # Переконуємося, що у нас є правильні стовпці
+                if len(df.columns) >= 2:
+                    # Приводимо назви стовпців до нижнього регістру
+                    df.columns = [str(col).lower() for col in df.columns]
+                    # Шукаємо стовпці з артикулом і ціною
+                    article_col = None
+                    price_col = None
                     
-                try:
-                    if len(row) > 0:  # Перевіряємо, що рядок не порожній
-                        # Розділяємо рядок по розділювачу
-                        parts = row[0].split(';') if ';' in row[0] else row
-                        
-                        if len(parts) >= 2:
-                            article = parts[0].strip().replace(" ", "").upper()
-                            price_str = parts[1].strip().replace(',', '.')  # Заміняємо кому на крапку
-                            
-                            try:
-                                price = float(price_str)
+                    # Відповідність можливих назв стовпців
+                    article_names = ['article', 'артикул', 'код', 'code', 'номер', 'number']
+                    price_names = ['price', 'ціна', 'цена', 'price', 'cost', 'вартість']
+                    
+                    for col in df.columns:
+                        if article_col is None and any(name in col.lower() for name in article_names):
+                            article_col = col
+                        if price_col is None and any(name in col.lower() for name in price_names):
+                            price_col = col
+                    
+                    # Якщо не знайдено, використовуємо перші два стовпці
+                    if article_col is None:
+                        article_col = df.columns[0]
+                    if price_col is None:
+                        price_col = df.columns[1]
+                    
+                    logging.info(f"Using columns: article_col={article_col}, price_col={price_col}")
+                    logging.info(f"Processing {len(df)} rows from Excel file")
+                    
+                    # Обробляємо дані
+                    for _, row in df.iterrows():
+                        try:
+                            article = str(row[article_col]).strip().upper()
+                            price_str = str(row[price_col]).replace(',', '.')
+                            price = float(price_str)
+                            if article and price > 0:
                                 data.append((article, price))
-                                logging.debug(f"Processed row: article={article}, price={price}")
-                            except ValueError:
-                                logging.warning(f"Invalid price format: {price_str} for article {article}")
-                                continue
-                        else:
-                            logging.warning(f"Invalid row format: {row}")
-                            
-                except Exception as e:
-                    logging.warning(f"Error processing row {row}: {str(e)}")
-                    continue
+                        except Exception:
+                            # Пропускаємо некоректні рядки
+                            continue
+                else:
+                    logging.warning(f"Invalid Excel format: only {len(df.columns)} columns found")
+                        
+            else:
+                # Обробка CSV/TXT файлу
+                logging.info("Detected CSV/TXT file format")
+                file_content = file.read().decode('utf-8', errors='ignore')
+                
+                # Визначаємо розділювач
+                delimiters = [',', ';', '\t']
+                delimiter = max(delimiters, key=lambda d: file_content.count(d))
+                logging.info(f"Detected delimiter: '{delimiter}'")
+                
+                # Читаємо рядки
+                lines = file_content.strip().split('\n')
+                total_lines = len(lines)
+                logging.info(f"Total lines in file: {total_lines}")
+                
+                # Пропускаємо заголовок
+                processed_lines = 0
+                for line_index, line in enumerate(lines):
+                    if line_index == 0 and any(c.isalpha() for c in line):
+                        continue
+                    
+                    parts = line.split(delimiter)
+                    if len(parts) >= 2:
+                        try:
+                            article = parts[0].strip().replace(" ", "").upper()
+                            price_str = parts[1].strip().replace(',', '.')
+                            price = float(price_str)
+                            if article and price > 0:
+                                data.append((article, price))
+                                processed_lines += 1
+                        except Exception:
+                            # Пропускаємо некоректні рядки
+                            continue
+                
+                logging.info(f"Successfully processed {processed_lines} out of {total_lines} lines")
 
-            logging.info(f"Parsed {len(data)} rows from file. Sample: {data[:5]}")
+            # Відновлюємо рівень логування для виводу інформації
+            logging.getLogger().setLevel(current_log_level)
+            
+            # Логування кількості успішно оброблених рядків
+            valid_rows = len(data)
+            logging.info(f"Total valid rows extracted: {valid_rows}")
+            
+            if valid_rows == 0:
+                flash("No valid data found in file.", "error")
+                return redirect(url_for('upload_price_list', token=token))
 
             # Підключення до бази даних
             conn = get_db_connection()
@@ -4087,12 +4181,10 @@ def upload_price_list(token):
             if table_name == 'new':
                 if not new_table_name:
                     flash("New table name is required.", "error")
-                    logging.error("New table name was not provided.")
                     return redirect(url_for('upload_price_list', token=token))
 
                 table_name = new_table_name.strip().replace(" ", "_").lower()
                 if not re.match(r'^[a-z_][a-z0-9_]*$', table_name):
-                    logging.warning(f"Invalid table name: {table_name}")
                     flash("Invalid table name. Only lowercase letters, numbers, and underscores are allowed.", "error")
                     return redirect(url_for('upload_price_list', token=token))
 
@@ -4106,14 +4198,14 @@ def upload_price_list(token):
                     """)
                     # Додаємо запис в price_lists з brand_id
                     cursor.execute("""
-                        INSERT INTO price_lists (table_name, brand_id) 
-                        VALUES (%s, %s)
+                        INSERT INTO price_lists (table_name, brand_id, created_at) 
+                        VALUES (%s, %s, NOW())
                     """, (table_name, brand_id))
                     
                     conn.commit()
-                    logging.info(f"Created new table: {table_name}")
+                    logging.info(f"Created new price list table: {table_name}")
                 except Exception as e:
-                    logging.error(f"Error creating new table {table_name}: {e}")
+                    logging.error(f"Error creating new table: {e}")
                     flash("Error creating new table. Please check the table name and try again.", "error")
                     return redirect(url_for('upload_price_list', token=token))
 
@@ -4122,7 +4214,6 @@ def upload_price_list(token):
                 cursor.execute(f"SELECT 1 FROM information_schema.tables WHERE table_name = %s;", (table_name,))
                 if cursor.fetchone() is None:
                     flash(f"Table '{table_name}' does not exist. Please try again.", "error")
-                    logging.error(f"Table '{table_name}' does not exist.")
                     return redirect(url_for('upload_price_list', token=token))
             except Exception as e:
                 logging.error(f"Error checking table existence: {e}")
@@ -4134,30 +4225,117 @@ def upload_price_list(token):
             conn.commit()
             logging.info(f"Truncated table: {table_name}")
 
-            # Завантаження даних у таблицю
-            output = io.StringIO()
-            for row in data:
-                # Записуємо тільки article та price, без brand_id
-                output.write(f"{row[0]},{row[1]}\n")
-            output.seek(0)
+            # Завантаження даних пакетами для підвищення продуктивності
+            batch_size = 5000
+            total_batches = (len(data) + batch_size - 1) // batch_size
             
-            # Змінюємо команду COPY, щоб вона відповідала структурі таблиці
-            cursor.copy_expert(f"COPY {table_name} (article, price) FROM STDIN WITH (FORMAT CSV);", output)
-            conn.commit()
-
-            flash(f"Uploaded {len(data)} rows to table '{table_name}' successfully.", "success")
-            logging.info(f"Uploaded {len(data)} rows to table '{table_name}' in {time.time() - start_time:.2f} seconds.")
+            logging.info(f"Starting data upload: {valid_rows} rows in {total_batches} batches")
+            for batch_num in range(total_batches):
+                start_idx = batch_num * batch_size
+                end_idx = min(start_idx + batch_size, len(data))
+                batch = data[start_idx:end_idx]
+                batch_size = len(batch)
+                
+                # Використовуємо execute_values для пакетного додавання (швидше ніж COPY)
+                psycopg2.extras.execute_values(
+                    cursor,
+                    f"INSERT INTO {table_name} (article, price) VALUES %s ON CONFLICT (article) DO UPDATE SET price = EXCLUDED.price",
+                    [(a, p) for a, p in batch],
+                    template="(%s, %s)",
+                    page_size=1000
+                )
+                conn.commit()
+                logging.info(f"Batch {batch_num+1}/{total_batches}: Inserted {batch_size} rows")
+            
+            # Оновлюємо brand_id та last_updated в price_lists
+            try:
+                cursor.execute("""
+                    UPDATE price_lists 
+                    SET brand_id = %s,
+                        last_updated = NOW()
+                    WHERE table_name = %s
+                """, (brand_id, table_name))
+                conn.commit()
+                logging.info(f"Updated brand_id={brand_id} and last_updated for price_list: {table_name}")
+            except Exception as update_error:
+                logging.warning(f"Could not update price_lists metadata: {update_error}")
+                # Продовжуємо виконання, оскільки дані вже завантажені успішно
+            
+            execution_time = time.time() - start_time
+            execution_time_formatted = f"{execution_time:.2f}"
+            
+            # Детальний лог з інформацією про результати
+            logging.info(f"Price list upload complete: {valid_rows} rows imported to '{table_name}' in {execution_time_formatted} seconds")
+            
+            # Інформативне повідомлення для користувача
+            upload_info = f"Uploaded {valid_rows} items to '{table_name}' in {execution_time_formatted} seconds"
+            flash(upload_info, "success")
+            
             return redirect(url_for('upload_price_list', token=token))
 
         except Exception as e:
-            logging.error(f"Error during POST request: {e}")
-            flash("An error occurred during upload.", "error")
+            logging.error(f"Error during price list upload: {e}", exc_info=True)
+            flash(f"An error occurred during upload: {str(e)}", "error")
+            if conn:
+                conn.rollback()
             return redirect(url_for('upload_price_list', token=token))
+            
         finally:
-            if 'conn' in locals() and conn:
+            # Відновлюємо початковий рівень логування
+            logging.getLogger().setLevel(current_log_level)
+            
+            if cursor:
+                cursor.close()
+            if conn:
                 conn.close()
-                logging.info("Database connection closed.")
+                logging.info("Database connection closed")
 
+
+@app.route('/<token>/admin/add-brand', methods=['POST'])
+@requires_token_and_roles('admin')
+def add_brand(token):
+    """Додає новий бренд до бази даних"""
+    try:
+        brand_name = request.form.get('brand_name')
+        if not brand_name:
+            flash("Brand name is required", "error")
+            return redirect(url_for('upload_price_list', token=token))
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            # Перевірка, чи вже існує бренд з таким іменем
+            cursor.execute("SELECT id FROM brands WHERE name = %s", (brand_name,))
+            existing_brand = cursor.fetchone()
+            
+            if existing_brand:
+                flash(f"Brand '{brand_name}' already exists", "warning")
+            else:
+                # Спочатку отримуємо максимальне значення id
+                cursor.execute("SELECT MAX(id) FROM brands")
+                max_id = cursor.fetchone()[0] or 0
+                
+                # Синхронізуємо послідовність з поточним максимальним значенням
+                cursor.execute("SELECT setval('brands_id_seq', %s)", (max_id,))
+                
+                # Потім виконуємо вставку
+                cursor.execute(
+                    "INSERT INTO brands (name) VALUES (%s)", 
+                    (brand_name,)
+                )
+                conn.commit()
+                
+                # Отримуємо id нового бренду для логування
+                cursor.execute("SELECT id FROM brands WHERE name = %s", (brand_name,))
+                new_id = cursor.fetchone()[0]
+                flash(f"New brand '{brand_name}' (ID: {new_id}) added successfully", "success")
+                logging.info(f"New brand created: {brand_name} (ID: {new_id})")
+                
+        return redirect(url_for('upload_price_list', token=token))
+        
+    except Exception as e:
+        logging.error(f"Error adding new brand: {e}", exc_info=True)
+        flash(f"Error adding new brand: {str(e)}", "error")
+        return redirect(url_for('upload_price_list', token=token))
 
 # Оновлення та керування stock
 @app.route('/<token>/admin/manage-stock', methods=['GET'])

@@ -5,198 +5,170 @@
 {% block content %}
 <div class="container-fluid py-4">
     <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Upload Price List</h5>
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Upload Price List</h6>
                 </div>
                 <div class="card-body">
-                    <form id="uploadForm" method="POST" enctype="multipart/form-data" action="/{{ token }}/admin/upload_price_list">
-                        <div class="row g-3">
-                            <!-- Table Selection -->
+                    <form action="{{ url_for('upload_price_list', token=token) }}" method="post" enctype="multipart/form-data" class="mb-4">
+                        <div class="row">
                             <div class="col-md-6">
-                                <label class="form-label">Select Table</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-table"></i>
-                                    </span>
-                                    <select name="table_name" id="table_name" class="form-select" required>
-                                        {% for table in price_lists %}
-                                        <option value="{{ table.table_name }}">{{ table.table_name }}</option>
+                                <div class="form-group">
+                                    <label for="table_name">Select Existing Price List or Create New</label>
+                                    <select class="form-control" id="table_name" name="table_name" onchange="toggleNewTable()">
+                                        {% for price_list in price_lists %}
+                                            <option value="{{ price_list[0] }}">{{ price_list[0] }}</option>
                                         {% endfor %}
-                                        <option value="new">Create New Table</option>
+                                        <option value="new">Create New Price List</option>
                                     </select>
                                 </div>
                             </div>
-
-                            <!-- New Table Name -->
-                            <div class="col-md-6" id="new_table_name_container" style="display: none;">
-                                <label class="form-label">New Table Name</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-plus-square"></i>
-                                    </span>
-                                    <input type="text" 
-                                           name="new_table_name" 
-                                           class="form-control"
-                                           pattern="[a-z0-9_]+"
-                                           title="Only lowercase letters, numbers, and underscores allowed">
+                            
+                            <div class="col-md-6" id="new_table_div" style="display: none;">
+                                <div class="form-group">
+                                    <label for="new_table_name">New Price List Name</label>
+                                    <input type="text" class="form-control" id="new_table_name" name="new_table_name" placeholder="Enter new table name (lowercase, no spaces)">
+                                    <small class="form-text text-muted">Use only lowercase letters, numbers, and underscores.</small>
                                 </div>
                             </div>
-
-                            <!-- Brand Selection -->
+                        </div>
+                        
+                        <div class="row mt-3">
                             <div class="col-md-6">
-                                <label class="form-label">Select Brand</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-tags"></i>
-                                    </span>
-                                    <select name="brand_id" id="brand_id" class="form-select" required>
-                                        {% for brand in brands %}
-                                        <option value="{{ brand.id }}">{{ brand.name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                <div class="form-group">
+                                    <label for="brand_id">Select Brand</label>
+                                    <div class="d-flex">
+                                        <select class="form-control" id="brand_id" name="brand_id">
+                                            {% for brand in brands %}
+                                                <option value="{{ brand[0] }}">{{ brand[1] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#addBrandModal">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-
-                            <!-- File Upload -->
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="file">Upload File</label>
+                                    <input type="file" class="form-control" id="file" name="file" accept=".csv,.txt,.xlsx,.xls">
+                                    <small class="form-text text-muted">Supported formats: CSV, TXT, XLSX, XLS</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
                             <div class="col-12">
-                                <label class="form-label">Upload File</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-file-earmark-text"></i>
-                                    </span>
-                                    <input type="file" 
-                                           name="file" 
-                                           class="form-control" 
-                                           accept=".csv,.txt,.xlsx"
-                                           required>
-                                </div>
-                                <div class="form-text">Supported formats: CSV, TXT, XLSX</div>
-                            </div>
-
-                            <!-- Progress Bar -->
-                            <div class="col-12" id="progressContainer" style="display: none;">
-                                <div class="progress" style="height: 25px;">
-                                    <div id="progressBar" 
-                                         class="progress-bar progress-bar-striped progress-bar-animated"
-                                         role="progressbar"></div>
-                                </div>
-                                <p id="progressText" class="text-center mt-2"></p>
-                            </div>
-
-                            <!-- Submit Button -->
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-admin">
-                                    <i class="bi bi-cloud-upload"></i> Upload Price List
-                                </button>
+                                <button type="submit" class="btn btn-primary">Upload Price List</button>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Instructions Card -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Upload Instructions</h5>
+    <!-- Price Lists Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Current Price Lists</h6>
                 </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            <i class="bi bi-1-circle"></i> Select existing table or create new
-                        </li>
-                        <li class="list-group-item">
-                            <i class="bi bi-2-circle"></i> Select brand for the price list
-                        </li>
-                        <li class="list-group-item">
-                            <i class="bi bi-3-circle"></i> Prepare your file (CSV, TXT, XLSX)
-                        </li>
-                        <li class="list-group-item">
-                            <i class="bi bi-4-circle"></i> File should have columns: Article, Price
-                        </li>
-                        <li class="list-group-item">
-                            <i class="bi bi-5-circle"></i> Click upload and wait for confirmation
-                        </li>
-                    </ul>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Brand</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Created At</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Last Updated</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Delivery Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pl in price_lists_info %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 class="mb-0 text-sm">{{ pl.table_name }}</h6>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ pl.brand_name }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs text-secondary mb-0">{{ pl.created_at.strftime('%Y-%m-%d %H:%M') if pl.created_at else '-' }}</p>
+                                    </td>
+                                    <td>
+                                        <span class="text-xs font-weight-bold mb-0">
+                                            {% if pl.last_updated %}
+                                                {{ pl.last_updated.strftime('%Y-%m-%d %H:%M') }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="text-xs font-weight-bold mb-0">{{ pl.delivery_time or '-' }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div> 
-{% endblock %}
+</div>
 
-{% block extra_js %}
+<!-- Modal for adding a new brand -->
+<div class="modal fade" id="addBrandModal" tabindex="-1" role="dialog" aria-labelledby="addBrandModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addBrandModalLabel">Add New Brand</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addBrandForm" action="{{ url_for('add_brand', token=token) }}" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="brand_name">Brand Name</label>
+                        <input type="text" class="form-control" id="brand_name" name="brand_name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Brand</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
-document.getElementById('table_name').addEventListener('change', function() {
-    const newTableContainer = document.getElementById('new_table_name_container');
-    newTableContainer.style.display = this.value === 'new' ? 'block' : 'none';
-});
-
-document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const progressContainer = document.getElementById('progressContainer');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-
-    progressContainer.style.display = 'block';
-    progressBar.style.width = '0%';
-    progressText.textContent = 'Starting upload...';
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', this.action, true);
-
-    xhr.upload.onprogress = function(event) {
-        if (event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 100);
-            progressBar.style.width = percent + '%';
-            progressBar.setAttribute('aria-valuenow', percent);
-            progressText.textContent = `Uploading: ${percent}%`;
-        }
-    };
-
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            progressBar.classList.remove('progress-bar-animated');
-            progressBar.classList.add('bg-success');
-            progressText.textContent = 'Upload successful!';
-            setTimeout(() => location.reload(), 1500);
+    // Toggle display of new table name input
+    function toggleNewTable() {
+        var selectElement = document.getElementById('table_name');
+        var newTableDiv = document.getElementById('new_table_div');
+        
+        if (selectElement.value === 'new') {
+            newTableDiv.style.display = 'block';
         } else {
-            progressBar.classList.add('bg-danger');
-            progressText.textContent = 'Upload failed. Please try again.';
+            newTableDiv.style.display = 'none';
         }
-    };
+    }
 
-    xhr.onerror = function() {
-        progressBar.classList.add('bg-danger');
-        progressText.textContent = 'Network error. Please try again.';
-    };
-
-    xhr.send(formData);
-});
-
-// Keep-alive ping
-setInterval(() => {
-    fetch('/ping').catch(console.error);
-}, 300000);
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleNewTable();
+    });
 </script>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-.list-group-item i {
-    margin-right: 10px;
-    color: #dc3545;
-}
-.progress {
-    background-color: #f8f9fa;
-}
-.form-text {
-    font-size: 0.8rem;
-    color: #6c757d;
-}
-</style>
 {% endblock %}

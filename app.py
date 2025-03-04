@@ -728,9 +728,96 @@ def logout():
     return redirect(url_for('index'))
 
 
-# Перегляд кошика публічного користувача
-# Виправлення помилки в функції public_cart
 
+
+#Продукти зі складу на головній
+@app.route('/api/products', methods=['GET'])
+def api_products():
+    """API endpoint для отримання додаткових продуктів без перезавантаження сторінки"""
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 10))
+        brand_id = request.args.get('brand')
+        
+        # Встановлюємо offset для пагінації
+        offset = (page - 1) * per_page
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Базовий запит
+            query = """
+                SELECT 
+                    s.article, 
+                    s.price,
+                    b.name as brand_name,
+                    p.name_uk as name,
+                    p.description_uk as description,
+                    (
+                        SELECT image_url 
+                        FROM product_images 
+                        WHERE product_article = s.article
+                        ORDER BY is_main DESC
+                        LIMIT 1
+                    ) as image_url
+                FROM stock s
+                LEFT JOIN products p ON s.article = p.article
+                LEFT JOIN brands b ON s.brand_id = b.id
+                WHERE s.quantity > 0
+            """
+            
+            params = []
+            
+            # Додаємо фільтр за брендом, якщо він вказаний
+            if brand_id:
+                query += " AND s.brand_id = %s"
+                params.append(int(brand_id))
+                
+            # Додаємо пагінацію
+            query += " ORDER BY s.article LIMIT %s OFFSET %s"
+            params.extend([per_page, offset])
+            
+            cursor.execute(query, params)
+            products = cursor.fetchall()
+            
+            # Перевіряємо, чи є ще продукти для наступної сторінки
+            query_count = """
+                SELECT COUNT(*) FROM stock s WHERE s.quantity > 0
+            """
+            
+            params_count = []
+            if brand_id:
+                query_count += " AND s.brand_id = %s"
+                params_count.append(int(brand_id))
+                
+            cursor.execute(query_count, params_count)
+            total_count = cursor.fetchone()[0]
+            
+            has_more = total_count > offset + len(products)
+            
+            # Перетворюємо результат у звичайний список словників для JSON
+            result = []
+            for product in products:
+                product_dict = dict(product)
+                # Конвертуємо Decimal у float для JSON-серіалізації
+                if isinstance(product_dict['price'], Decimal):
+                    product_dict['price'] = float(product_dict['price'])
+                result.append(product_dict)
+            
+            return jsonify({
+                'products': result, 
+                'has_more': has_more, 
+                'next_page': page + 1 if has_more else None,
+                'total_count': total_count
+            })
+            
+    except Exception as e:
+        logging.error(f"Error in api_products: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+
+# Перегляд кошика публічного користувача
 @app.route('/public_cart')
 def public_cart():
     """View and manage public user's shopping cart"""
@@ -776,66 +863,84 @@ def public_cart():
         # Get current language
         lang = session.get('language', 'uk')
 
-        # Process cart items
-        for article, cart_item in cart.items():
-            if isinstance(cart_item, dict):
-                for table_name, item_details in cart_item.items():
-                    # Виправлена версія запиту - прибрано посилання на зовнішню змінну item_details
-                    cursor.execute("""
-                        SELECT 
-                            p.article, 
-                            p.name_{} as name,
-                            p.description_{} as description,
-                            b.name as brand_name,
-                            %s AS table_name,
-                            pl.delivery_time,
-                            b.id as brand_id
-                        FROM {} t
-                        LEFT JOIN products p ON t.article = p.article
-                        LEFT JOIN price_lists pl ON pl.table_name = %s
-                        LEFT JOIN brands b ON pl.brand_id = b.id
-                        WHERE t.article = %s
-                    """.format(lang, lang, table_name), (table_name, table_name, article))
-                    
-                    result = cursor.fetchone()
+        # Get price lists information for delivery time
+        cursor.execute("""
+            SELECT table_name, delivery_time 
+            FROM price_lists
+        """)
+        delivery_times = {row['table_name']: row['delivery_time'] for row in cursor.fetchall()}
 
-                    if result:
-                        try:
-                            # Використовуємо збережений brand_id з елемента кошика
-                            brand_id = item_details.get('brand_id')
-                            
-                            # Якщо brand_id є в item_details, знайдемо відповідну назву бренду
-                            if brand_id:
-                                cursor.execute("""
-                                    SELECT name FROM brands WHERE id = %s
-                                """, (brand_id,))
-                                brand_result = cursor.fetchone()
-                                brand_name = brand_result['name'] if brand_result else 'AutogroupEU'
-                            else:
-                                brand_name = result['brand_name'] if result['brand_name'] else 'AutogroupEU'
-                            
-                            # Use price saved in cart (already with markup)
-                            price = Decimal(str(item_details['price']))
-                            quantity = int(item_details['quantity'])
-                            item_total = price * quantity
-                            total_price += item_total
-                            
-                            cart_items.append({
-                                'article': article,
-                                'name': result['name'] or article,
-                                'description': result['description'] or '',
-                                'brand_name': brand_name,
-                                'brand_id': brand_id,
-                                'table_name': table_name,
-                                'price': price,
-                                'quantity': quantity,
-                                'total': item_total,
-                                'delivery_time': result['delivery_time'],
-                                'comment': item_details.get('comment', '')
-                            })
-                        except (TypeError, ValueError, KeyError) as e:
-                            logging.error(f"Error processing cart item {article}: {e}")
-                            continue
+        # Process cart items
+        for article, article_items in cart.items():
+            for table_name, item_data in article_items.items():
+                # Get item details from DB by article
+                cursor.execute(f"""
+                    SELECT 
+                        article,
+                        name_{lang} as name,
+                        description_{lang} as description
+                    FROM products
+                    WHERE article = %s
+                """, (article,))
+                product = cursor.fetchone()
+                
+                # Set defaults if product not found
+                name = article
+                description = ""
+                
+                if product:
+                    name = product['name'] or article
+                    description = product['description'] or ''
+                
+                # Get brand name
+                brand_id = item_data.get('brand_id')
+                brand_name = "AutogroupEU"
+                
+                if brand_id:
+                    cursor.execute("SELECT name FROM brands WHERE id = %s", (brand_id,))
+                    brand_result = cursor.fetchone()
+                    if brand_result:
+                        brand_name = brand_result['name']
+                
+                # Calculate values
+                price = Decimal(str(item_data['price']))
+                quantity = item_data['quantity']
+                item_total = price * quantity
+                total_price += item_total
+                
+                # Determine if item is in stock and delivery time
+                in_stock = False
+                delivery_time = None
+                
+                if table_name == 'stock':
+                    # If from stock, check if really in stock
+                    cursor.execute("""
+                        SELECT quantity FROM stock WHERE article = %s
+                    """, (article,))
+                    stock_info = cursor.fetchone()
+                    if stock_info and stock_info['quantity'] > 0:
+                        in_stock = True
+                else:
+                    # If from price list, get delivery time
+                    delivery_time = delivery_times.get(table_name)
+                
+                # Create cart item object
+                cart_item = {
+                    'article': article,
+                    'name': name,
+                    'description': description,
+                    'brand_name': brand_name,
+                    'brand_id': brand_id,
+                    'price': float(price),
+                    'quantity': quantity,
+                    'total': float(item_total),
+                    'table_name': table_name,
+                    'comment': item_data.get('comment', ''),
+                    'in_stock': in_stock,
+                    'delivery_time': delivery_time
+                }
+                
+                cart_items.append(cart_item)
 
     except Exception as e:
         logging.error(f"Error in public_cart: {e}", exc_info=True)
@@ -1266,8 +1371,8 @@ def generate_feed_item(item, lang, settings):
     """
 
 # Google feed
-@app.route('/google-merchant-feed/<language>.xml')
-def language_merchant_feed(language):  # Changed function name
+@app.route('/google-merchant-feed-legacy/<language>.xml') 
+def language_merchant_feed(language): 
     """Generate Google Merchant feed for specific language"""
     try:
         with get_db_connection() as conn:
@@ -1410,17 +1515,37 @@ def google_merchant_feed(language):
             products = cursor.fetchall()
             
             # Process JSON data for additional images
-            import json
             for product in products:
-                if product['additional_images'] and isinstance(product['additional_images'], str):
-                    try:
-                        product['additional_images'] = json.loads(product['additional_images'])
-                    except json.JSONDecodeError:
+                # Validate main image URL
+                if product['main_image_url'] and not product['main_image_url'].startswith(('http://', 'https://')):
+                    product['main_image_url'] = f"{request.host_url.rstrip('/')}/{product['main_image_url'].lstrip('/')}"
+                
+                # Process additional images
+                if product['additional_images']:
+                    if isinstance(product['additional_images'], str):
+                        try:
+                            product['additional_images'] = json.loads(product['additional_images'])
+                        except (json.JSONDecodeError, TypeError):
+                            product['additional_images'] = []
+                    
+                    # Make sure it's a list
+                    if not isinstance(product['additional_images'], list):
                         product['additional_images'] = []
-                elif not product['additional_images']:
+                    
+                    # Filter out invalid image URLs and ensure full URLs
+                    valid_images = []
+                    for img_url in product['additional_images']:
+                        if img_url and isinstance(img_url, str):
+                            # Make sure URL has proper protocol
+                            if not img_url.startswith(('http://', 'https://')):
+                                img_url = f"{request.host_url.rstrip('/')}/{img_url.lstrip('/')}"
+                            valid_images.append(img_url)
+                    product['additional_images'] = valid_images
+                else:
                     product['additional_images'] = []
             
-            # Generate XML
+            # Generate XML - використовуємо Response для коректного повернення XML
+            from flask import Response
             xml_content = render_template(
                 'feeds/google_merchant.xml',
                 products=products,
@@ -1440,6 +1565,7 @@ def google_merchant_feed(language):
     except Exception as e:
         logging.error(f"Error generating feed: {e}")
         return "Error generating feed", 500
+    
 
 # Керування Google feed
 @app.route('/<token>/admin/google-feed', methods=['GET', 'POST'])
@@ -2021,21 +2147,25 @@ def index():
 # Додавання товару в кошик публічного користувача
 @app.route('/public_add_to_cart', methods=['POST'])
 def public_add_to_cart():
-    """Add items to the public user's cart"""
+    """Add items to the public user's shopping cart"""
     article = None  # Оголошуємо змінну article тут для доступу в блоці finally
     
     try:
         article = request.form.get('article')
         selected_price = request.form.get('selected_price')
         
+        logging.debug(f"Adding to cart - Article: {article}, Selected price: {selected_price}")
+
         if not article or not selected_price:
             flash(_("Missing required product information"), "error")
+            logging.error(f"Missing article={article} or selected_price={selected_price}")
             return redirect(url_for('index'))
             
         # Parse the selected price value
         parts = selected_price.split(':')
         if len(parts) != 2:
             flash(_("Invalid price format"), "error")
+            logging.error(f"Invalid price format: {selected_price}")
             return redirect(url_for('index'))
             
         table_name = parts[0]
@@ -2049,9 +2179,17 @@ def public_add_to_cart():
         quantity_field = f"quantity_{table_name}"
         quantity = int(request.form.get(quantity_field, 1))
         
+        logging.info(f"Adding to cart: article={article}, table={table_name}, price={price}, quantity={quantity}, brand_id={brand_id}")
+        
         if quantity < 1:
             flash(_("Quantity must be at least 1"), "error")
             return redirect(url_for('product_details', article=article))
+        
+        # Перевірка авторизації    
+        if 'user_id' not in session:
+            session['next_url'] = url_for('product_details', article=article)
+            flash(_("Please log in or register to add this item to your cart."), "info")
+            return redirect(url_for('login'))
             
         # Initialize cart if needed
         if 'public_cart' not in session:
@@ -2065,10 +2203,14 @@ def public_add_to_cart():
         session['public_cart'][article][table_name] = {
             'price': float(price),
             'quantity': quantity,
-            'brand_id': brand_id  # Зберігаємо brand_id
+            'brand_id': brand_id,
+            'comment': request.form.get('comment', '')
         }
         
+        # Важливо - явно помітити сесію як модифіковану
         session.modified = True
+        
+        logging.info(f"Cart after adding: {session.get('public_cart')}")
         flash(_("Item added to cart"), "success")
         
     except Exception as e:
@@ -2076,13 +2218,11 @@ def public_add_to_cart():
         flash(_("Error adding item to cart"), "error")
         
     finally:
-        # Повертаємо користувача на сторінку товару, а не в кошик
+        # Повертаємо користувача на сторінку товару
         if article:
             return redirect(url_for('product_details', article=article))
         else:
             return redirect(url_for('index'))
-    
-
 
 
 

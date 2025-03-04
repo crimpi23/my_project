@@ -3316,3 +3316,704 @@ tr:hover .article-badge {
         justify-content: space-between;
     }
 }
+/* Додайте це в ваш файл стилів */
+
+/* Стилі для галереї зображень продукту */
+.image-section {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 350px;
+    overflow: hidden;
+    border: 1px solid #e9e9e9;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: opacity 0.3s ease;
+}
+
+/* Стилі для контейнера мініатюр */
+.thumbnails-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    margin-top: 10px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #e9e9e9;
+}
+
+/* Приховуємо скролбар в Chrome */
+.thumbnails-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.thumbnails-container::-webkit-scrollbar-thumb {
+    background-color: #007bff;
+    border-radius: 6px;
+}
+
+.thumbnails-container::-webkit-scrollbar-track {
+    background-color: #e9e9e9;
+}
+
+/* Стилі для окремих мініатюр */
+.thumbnail {
+    flex: 0 0 70px;
+    width: 70px;
+    height: 70px;
+    border: 2px solid #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.thumbnail:hover {
+    border-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.thumbnail.active {
+    border-color: #007bff;
+    border-width: 3px;
+}
+
+.thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Кнопки навігації */
+.image-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #333;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    z-index: 5;
+}
+
+.image-nav:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.image-nav.prev {
+    left: 10px;
+}
+
+.image-nav.next {
+    right: 10px;
+}
+
+/* Стилі для точок (навігація на мобільних) */
+.image-dots {
+    display: none; /* За замовчуванням приховано, на мобільних відображається */
+    justify-content: center;
+    margin-top: 10px;
+    gap: 8px;
+}
+
+.image-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ccc;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.image-dot.active {
+    background-color: #007bff;
+    transform: scale(1.2);
+}
+
+/* Медіа запити для адаптивності */
+@media (max-width: 768px) {
+    .image-container {
+        height: 250px;
+    }
+    
+    .thumbnail {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (max-width: 576px) {
+    .image-container {
+        height: 200px;
+    }
+    
+    .thumbnails-container {
+        gap: 6px;
+    }
+    
+    .thumbnail {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .image-dots {
+        display: flex;
+    }
+}
+
+/* Додайте до вашого CSS файлу */
+.spinner-border {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    vertical-align: text-bottom;
+    border: 0.2em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border .75s linear infinite;
+}
+
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+
+/* Додайте ці стилі в кінець вашого CSS файлу */
+
+/* Стилі для цінових карток */
+.price-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.price-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+    border-color: var(--primary-color);
+}
+
+/* Контейнер для інформації про ціну */
+.price-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Стилі для мобільних (вертикальне розташування) */
+@media (max-width: 991px) {
+    .price-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .price-column, .availability-column, .quantity-column, .button-column {
+        width: 100%;
+        margin-bottom: 0.75rem;
+    }
+    
+    .price-column, .availability-column {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+    
+    .cart-form {
+        width: 100%;
+    }
+    
+    .quantity-column {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .quantity-input {
+        max-width: 120px;
+    }
+    
+    .btn-add-to-cart {
+        width: 100%;
+    }
+}
+
+/* Стилі для десктопів (горизонтальне розташування) */
+@media (min-width: 992px) {
+    .price-info {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .price-column, .availability-column {
+        display: flex;
+        flex-direction: column;
+        min-width: 120px;
+    }
+    
+    .price-label, .availability-label, .quantity-label {
+        font-size: 0.85rem;
+        color: var(--secondary-color);
+        margin-bottom: 0.25rem;
+    }
+    
+    .cart-form {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-grow: 1;
+        justify-content: flex-end;
+    }
+    
+    .quantity-column {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .quantity-input {
+        width: 75px;
+    }
+    
+    .btn-add-to-cart {
+        white-space: nowrap;
+        height: 40px;
+    }
+}
+
+/* Спільні стилі для обох варіантів */
+.price-value {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.delivery-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-add-to-cart {
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-add-to-cart:hover {
+    background-color: #218838;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+}
+
+.quantity-input {
+    text-align: center;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    padding: 0.375rem 0.75rem;
+}
+
+/* Додатковий адаптивний стиль для компактного режиму на планшетах */
+@media (min-width: 768px) and (max-width: 991px) {
+    .price-info {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .price-column, .availability-column {
+        width: auto;
+        margin-right: 1.5rem;
+    }
+    
+    .cart-form {
+        display: flex;
+        width: 100%;
+        margin-top: 0.75rem;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .quantity-column {
+        width: auto;
+    }
+    
+    .button-column {
+        width: auto;
+    }
+    
+    .btn-add-to-cart {
+        white-space: nowrap;
+    }
+}
+
+/* Медіа-запит для дуже малих екранів */
+@media (max-width: 375px) {
+    .button-text {
+        display: none; /* Приховуємо текст кнопки на дуже малих екранах */
+    }
+    
+    .btn-add-to-cart {
+        padding: 0.5rem;
+    }
+    
+    .btn-add-to-cart i {
+        margin-right: 0;
+    }
+}
+
+/* Додайте ці стилі в ваш CSS файл */
+
+/* Стилі для цінових опцій */
+.price-option {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 0.5rem;
+    background-color: #fff;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.price-option:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.price-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Стилі для всіх контейнерів інформації */
+.price-value-container,
+.availability-container,
+.quantity-container,
+.cart-button-container {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Стилі для заголовків */
+.price-label,
+.availability-label,
+.quantity-label {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+/* Стилі для значень */
+.price-value {
+    font-weight: 700;
+    color: #007bff;
+    font-size: 1.1rem;
+}
+
+.availability-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Стилі для форми */
+.cart-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+/* Стилі для кнопки */
+.btn-add-to-cart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.btn-add-to-cart:hover {
+    background-color: #218838;
+}
+
+.quantity-input {
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
+
+/* Адаптивність для десктопів (в один рядок) */
+@media (min-width: 992px) {
+    .price-info {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .price-value-container,
+    .availability-container {
+        flex: 0 0 auto;
+        margin-right: 2rem;
+    }
+    
+    .cart-form {
+        flex-direction: row;
+        align-items: center;
+        flex: 1;
+    }
+    
+    .quantity-container {
+        flex: 0 0 auto;
+        margin-right: 1rem;
+    }
+    
+    .cart-button-container {
+        flex: 1;
+    }
+    
+    .quantity-input {
+        width: 80px;
+    }
+}
+
+/* Додаткова оптимізація для планшетів */
+@media (min-width: 768px) and (max-width: 991px) {
+    .cart-form {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .quantity-container {
+        flex: 0 0 auto;
+        margin-right: 1rem;
+    }
+    
+    .cart-button-container {
+        flex: 1;
+    }
+    
+    .quantity-input {
+        width: 80px;
+    }
+}
+
+/* Дуже малі екрани - ховаємо текст кнопки */
+@media (max-width: 350px) {
+    .btn-add-to-cart span {
+        display: none;
+    }
+}
+
+/* Додайте ці стилі до вашого CSS файлу */
+
+/* Стилі для карток з цінами */
+.price-card {
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.price-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.price-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+/* Стилі для контейнерів даних */
+.price-column,
+.availability-column {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.price-label,
+.availability-label,
+.quantity-label {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.price-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #007bff;
+}
+
+.availability-value {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+}
+
+.text-success {
+    color: #28a745;
+}
+
+.text-warning {
+    color: #ffc107;
+}
+
+/* Форма та кнопка */
+.cart-form {
+    display: flex;
+    width: 100%;
+    margin-top: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.quantity-column {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity-input {
+    width: 60px;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    text-align: center;
+}
+
+.btn-add-to-cart {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-add-to-cart:hover {
+    background-color: #218838;
+}
+
+.btn-add-to-cart i {
+    font-size: 1.25rem;
+}
+
+/* Десктоп версія - все в одному рядку */
+@media (min-width: 992px) {
+    .price-info {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .price-column,
+    .availability-column {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        width: auto;
+        margin-right: 1rem;
+    }
+    
+    .cart-form {
+        flex-grow: 1;
+        margin-top: 0;
+        margin-left: auto;
+        width: auto;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+    
+    .quantity-column {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Планшети */
+@media (min-width: 768px) and (max-width: 991px) {
+    .price-card {
+        padding: 0.75rem 1rem;
+    }
+    
+    .cart-form {
+        flex-direction: row;
+        gap: 1rem;
+    }
+}
+
+/* Мобільні пристрої */
+@media (max-width: 767px) {
+    .price-card {
+        padding: 0.75rem;
+    }
+    
+    .cart-form {
+        flex-wrap: wrap;
+    }
+    
+    .quantity-column {
+        width: 50%;
+    }
+    
+    .button-column {
+        width: 50%;
+        display: flex;
+        justify-content: flex-end;
+    }
+}

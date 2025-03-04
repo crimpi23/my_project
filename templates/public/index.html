@@ -179,18 +179,30 @@
             {% endfor %}
         </div>
 
-        <!-- Show More Button -->
-        {% if has_more %}
-        <div class="text-center mt-4 mb-4">
-            <a href="{{ url_for('index', page=(page or 1)|int + 1) }}" 
-               class="btn-outline btn-outline-primary">
-                <i class="bi bi-plus-circle"></i>
-                {{ _('Show More Products') }}
-            </a>
-        </div>
-        {% endif %}
+        <!-- Замінюємо блок з кнопкою "Show More Products" -->
+{% if has_more %}
+<div class="text-center mt-4 mb-4">
+    <button id="loadMoreButton" class="btn-outline btn-outline-primary" data-next-page="{{ (page or 1)|int + 1 }}">
+        <i class="bi bi-plus-circle"></i>
+        <span class="button-text">{{ _('Show More Products') }}</span>
+        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+    </button>
+</div>
+{% endif %}
     </div>
 </div>
+
+<!-- Додайте перед вашим JavaScript-кодом -->
+<script>
+// Передаємо переклади з серверу для використання в JavaScript
+window.translations = {
+    'Brand': '{{ _("Brand") }}',
+    'Article': '{{ _("Article") }}',
+    'Price': '{{ _("Price") }}',
+    'No description available.': '{{ _("No description available.") }}',
+    'View Details': '{{ _("View Details") }}'
+};
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -211,6 +223,129 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Новий код для кнопки "Show More Products"
+    const loadMoreButton = document.getElementById('loadMoreButton');
+    if (loadMoreButton) {
+        loadMoreButton.addEventListener('click', function() {
+            // Отримуємо номер наступної сторінки з data-атрибуту
+            let nextPage = parseInt(this.getAttribute('data-next-page'));
+            // Отримуємо поточний фільтр за брендом
+            const brandFilter = document.getElementById('brandFilter');
+            const brandId = brandFilter ? brandFilter.value : '';
+            
+            // Відображаємо індикатор завантаження
+            const spinner = this.querySelector('.spinner-border');
+            const buttonText = this.querySelector('.button-text');
+            spinner.classList.remove('d-none');
+            buttonText.classList.add('d-none');
+            this.disabled = true;
+            
+            // Виконуємо AJAX-запит
+            fetch(`/api/products?page=${nextPage}&brand=${brandId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Додаємо отримані продукти на сторінку
+                    const productsContainer = document.querySelector('.row-cols-1.row-cols-md-5');
+                    
+                    data.products.forEach(product => {
+                        const productHtml = createProductCard(product);
+                        // Створюємо новий елемент div
+                        const productCol = document.createElement('div');
+                        productCol.className = 'col';
+                        productCol.innerHTML = productHtml;
+                        productsContainer.appendChild(productCol);
+                        
+                        // Додаємо обробник для нового продукту (середня кнопка миші)
+                        const newProductLink = productCol.querySelector('.product-card a');
+                        if (newProductLink) {
+                            newProductLink.addEventListener('auxclick', function(e) {
+                                if (e.button === 1 || e.which === 2) {
+                                    e.preventDefault();
+                                    window.open(this.href, '_blank');
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Оновлюємо кнопку
+                    if (data.has_more) {
+                        loadMoreButton.setAttribute('data-next-page', nextPage + 1);
+                        loadMoreButton.disabled = false;
+                        spinner.classList.add('d-none');
+                        buttonText.classList.remove('d-none');
+                    } else {
+                        // Якщо більше немає продуктів, ховаємо кнопку
+                        loadMoreButton.parentElement.classList.add('d-none');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching products:', error);
+                    // Відновлюємо стан кнопки при помилці
+                    loadMoreButton.disabled = false;
+                    spinner.classList.add('d-none');
+                    buttonText.classList.remove('d-none');
+                });
+        });
+    }
+    
+    // Функція для створення HTML-карточки продукту
+    function createProductCard(product) {
+        // Отримуємо переклади з window.translations, якщо вони є
+        const translations = window.translations || {};
+        const t = function(text) {
+            return translations[text] || text;
+        };
+        
+        return `
+            <div class="product-card">
+                <!-- Product Image -->
+                <div class="product-img-container">
+                    ${product.image_url 
+                        ? `<img src="${product.image_url}" class="product-img" alt="${product.name || product.article}">`
+                        : `<i class="bi bi-image text-muted" style="font-size: 2rem;"></i>`
+                    }
+                </div>
+
+                <!-- Product Info -->
+                <div class="product-body">
+                    <h5 class="product-title">${product.name || product.article}</h5>
+                    <div class="product-meta">
+                        <div class="product-meta-item">
+                            <span class="meta-label">${t('Brand')}</span>
+                            <span class="meta-value">${product.brand_name}</span>
+                        </div>
+                        <div class="product-meta-item">
+                            <span class="meta-label">${t('Article')}</span>
+                            <span class="product-article">${product.article}</span>
+                        </div>
+                        <div class="product-meta-item">
+                            <span class="meta-label">${t('Price')}</span>
+                            <span class="meta-value product-price">${product.price.toFixed(2)} €</span>
+                        </div>
+                    </div>
+                    <p class="product-description">
+                        ${product.description 
+                            ? (product.description.length > 100 
+                                ? product.description.substring(0, 100) + '...' 
+                                : product.description)
+                            : t('No description available.')
+                        }
+                    </p>
+                    
+                    <a href="/product/${product.article}" class="btn-details">
+                        <i class="bi bi-eye-fill"></i>
+                        ${t('View Details')}
+                    </a>
+                </div>
+            </div>
+        `;
+    }
 });
 </script>
 

@@ -84,13 +84,15 @@ gtag('event', 'view_item', {
                 {% if product_data.photo_urls and product_data.photo_urls|length > 0 %}
                 <!-- Фото секція - відображається лише якщо є фотографії -->
                 <div class="image-section">
+                    <!-- Основне зображення -->
                     <div class="image-container">
                         <img id="productImage" 
-                             src="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}" 
+                             src="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='images/placeholder.png') }}" 
                              alt="{{ product_data.name }}"
                              itemprop="image">
                     </div>
                     
+                    <!-- Кнопки навігації для перемикання фото -->
                     {% if product_data.photo_urls|length > 1 %}
                     <button type="button" class="image-nav prev">
                         <i class="bi bi-chevron-left"></i>
@@ -98,6 +100,18 @@ gtag('event', 'view_item', {
                     <button type="button" class="image-nav next">
                         <i class="bi bi-chevron-right"></i>
                     </button>
+                    
+                    <!-- Контейнер з мініатюрами, відображається одразу -->
+                    <div class="thumbnails-container">
+                        {% for url in product_data.photo_urls %}
+                        <div class="thumbnail {% if loop.first %}active{% endif %}" 
+                             data-index="{{ loop.index0 }}">
+                            <img src="{{ url }}" alt="{{ product_data.name }} - Image {{ loop.index }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Точки для мобільної версії -->
                     <div class="image-dots">
                         {% for url in product_data.photo_urls %}
                         <div class="image-dot {% if loop.first %}active{% endif %}" 
@@ -139,33 +153,44 @@ gtag('event', 'view_item', {
                         {% for price in prices %}
                         <div class="price-card">
                             <div class="price-info">
-                                <span class="price-value" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-                                    <span itemprop="price">{{ "%.2f"|format(price.price|float) }}</span> 
-                                    <span itemprop="priceCurrency">EUR</span>
-                                </span>
+                                <!-- Ціна -->
+                                <div class="price-column">
+                                    <span class="price-label">{{ _('Price') }}:</span>
+                                    <span class="price-value">{{ "%.2f"|format(price.price|float) }} €</span>
+                                </div>
                                 
-                                <span class="delivery-info">
-                                    {% if price.in_stock %}
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                    {{ _('In Stock') }}
-                                    {% else %}
-                                    <i class="bi bi-clock text-warning"></i>
-                                    {{ price.delivery_time }}
-                                    {% endif %}
-                                </span>
+                                <!-- Доступність -->
+                                <div class="availability-column">
+                                    <span class="availability-label">{{ _('Availability') }}:</span>
+                                    <span class="availability-value {% if price.in_stock %}text-success{% else %}text-warning{% endif %}">
+                                        {% if price.in_stock %}
+                                        <i class="bi bi-check-circle-fill"></i> {{ _('In Stock') }}
+                                        {% else %}
+                                        <i class="bi bi-clock"></i> {{ price.delivery_time }}
+                                        {% endif %}
+                                    </span>
+                                </div>
                                 
+                                <!-- Форма додавання в кошик -->
                                 <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-form">
                                     <input type="hidden" name="article" value="{{ article }}">
                                     <input type="hidden" name="selected_price" value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}">
-                                    <input type="number" 
-                                           name="quantity_{{ price.table_name }}" 
-                                           value="1" 
-                                           min="1" 
-                                           class="quantity-input">
-                                    <button type="submit" class="btn-add-to-cart">
-                                        <i class="bi bi-cart-plus me-2"></i>
-                                        {{ _('Add to Cart') }}
-                                    </button>
+                                    
+                                    <div class="quantity-column">
+                                        <label for="quantity_{{ price.table_name }}" class="quantity-label">{{ _('Qty') }}:</label>
+                                        <input type="number" 
+                                               id="quantity_{{ price.table_name }}"
+                                               name="quantity_{{ price.table_name }}" 
+                                               value="1" 
+                                               min="1" 
+                                               class="quantity-input">
+                                    </div>
+                                    
+                                    <div class="button-column">
+                                        <button type="submit" class="btn-add-to-cart" title="{{ _('Add to Cart') }}">
+                                            <i class="bi bi-cart-plus"></i>
+                                        </button>
+                                    </div>
                                 </form>
                             </div>
                         </div>
@@ -198,12 +223,18 @@ gtag('event', 'view_item', {
     </div>
 </div>
 
+<!-- JavaScript для управління фото та мініатюрами -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Перевіряємо, чи є фотографії
+    {% if product_data.photo_urls %}
     const images = {{ product_data.photo_urls | tojson | safe }};
-    if (!images || images.length === 0) {
-        return; // Якщо фотографій немає, завершуємо виконання скрипту
+    {% else %}
+    const images = [];
+    {% endif %}
+    
+    if (!images || images.length <= 1) {
+        return; // Якщо фотографій немає або лише одна, завершуємо виконання скрипту
     }
 
     let currentImageIndex = 0;
@@ -211,9 +242,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevButton = document.querySelector('.image-nav.prev');
     const nextButton = document.querySelector('.image-nav.next');
     const dots = document.querySelectorAll('.image-dot');
+    const thumbnails = document.querySelectorAll('.thumbnail');
+    
+    // Активуємо першу мініатюру при завантаженні
+    if (thumbnails.length > 0) {
+        thumbnails[0].classList.add('active');
+        
+        // Прокручуємо до активної мініатюри
+        const thumbnailsContainer = document.querySelector('.thumbnails-container');
+        if (thumbnailsContainer) {
+            thumbnailsContainer.scrollLeft = 0;
+        }
+    }
 
     // Функція для оновлення зображення
     function updateImage(index) {
+        if (index < 0 || index >= images.length) {
+            return;
+        }
+        
         currentImageIndex = index;
         
         // Оновлюємо зображення з ефектом плавного переходу
@@ -221,28 +268,56 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             imgElement.src = images[currentImageIndex];
             imgElement.style.opacity = '1';
-        }, 300);
+        }, 200);
         
         // Оновлюємо активну точку
         dots.forEach((dot, idx) => {
             dot.classList.toggle('active', idx === currentImageIndex);
         });
+        
+        // Оновлюємо активну мініатюру
+        thumbnails.forEach((thumb, idx) => {
+            thumb.classList.toggle('active', idx === currentImageIndex);
+        });
+        
+        // Прокручуємо до активної мініатюри
+        if (thumbnails.length > 0 && thumbnails[currentImageIndex]) {
+            const activeThumb = thumbnails[currentImageIndex];
+            const container = document.querySelector('.thumbnails-container');
+            
+            if (container) {
+                // Розраховуємо, щоб активна мініатюра була по центру
+                const containerWidth = container.clientWidth;
+                const thumbWidth = activeThumb.clientWidth;
+                const scrollLeft = activeThumb.offsetLeft - (containerWidth / 2) + (thumbWidth / 2);
+                
+                container.scrollTo({
+                    left: scrollLeft,
+                    behavior: 'smooth'
+                });
+            }
+        }
     }
 
-    // Обробники подій
+    // Функції для перемикання зображень
+    function nextImage() {
+        let newIndex = (currentImageIndex + 1) % images.length;
+        updateImage(newIndex);
+    }
+    
+    function prevImage() {
+        let newIndex = currentImageIndex - 1;
+        if (newIndex < 0) newIndex = images.length - 1;
+        updateImage(newIndex);
+    }
+
+    // Обробники подій для кнопок
     if (prevButton) {
-        prevButton.addEventListener('click', () => {
-            let newIndex = currentImageIndex - 1;
-            if (newIndex < 0) newIndex = images.length - 1;
-            updateImage(newIndex);
-        });
+        prevButton.addEventListener('click', prevImage);
     }
 
     if (nextButton) {
-        nextButton.addEventListener('click', () => {
-            let newIndex = (currentImageIndex + 1) % images.length;
-            updateImage(newIndex);
-        });
+        nextButton.addEventListener('click', nextImage);
     }
 
     // Обробники для точок
@@ -252,30 +327,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Трекінг додавання до кошика
-    const forms = document.querySelectorAll('form.cart-form');
-    forms.forEach(function(form) {
-        form.addEventListener('submit', function() {
-            const selectedPriceField = this.querySelector('input[name="selected_price"]');
-            const quantityField = this.querySelector('input[type="number"]');
-            
-            if (selectedPriceField && quantityField) {
-                const selectedPriceValue = selectedPriceField.value;
-                const priceValue = selectedPriceValue.split(':')[1].split('|')[0];
-                
-                if (typeof gtag === 'function') {
-                    gtag('event', 'add_to_cart', {
-                        currency: "EUR",
-                        items: [{
-                            item_id: "{{ article }}",
-                            item_name: "{{ product_data.name }}",
-                            item_brand: "{{ product_data.brand_name|default('AutogroupEU') }}",
-                            price: priceValue,
-                            quantity: parseInt(quantityField.value)
-                        }]
-                    });
-                }
-            }
+    // Обробники для мініатюр
+    thumbnails.forEach((thumb, idx) => {
+        thumb.addEventListener('click', () => {
+            updateImage(idx);
         });
     });
     
@@ -287,6 +342,31 @@ document.addEventListener('DOMContentLoaded', function() {
             nextImage();
         }
     });
+    
+    // Додаємо підтримку свайпу для мобільних пристроїв
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    if (imgElement) {
+        imgElement.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }, false);
+        
+        imgElement.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, false);
+        
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                // Свайп вліво - наступне фото
+                nextImage();
+            } else if (touchEndX > touchStartX + 50) {
+                // Свайп вправо - попереднє фото
+                prevImage();
+            }
+        }
+    }
 });
 </script>
 {% endblock %}

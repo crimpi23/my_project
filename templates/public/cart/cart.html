@@ -45,6 +45,7 @@ gtag('event', 'view_cart', {
                     <th>{{ _("Price") }}</th>
                     <th>{{ _("Quantity") }}</th>
                     <th>{{ _("Total") }}</th>
+                    <th>{{ _("Status") }}</th>
                     <th>{{ _("Actions") }}</th>
                 </tr>
             </thead>
@@ -68,6 +69,13 @@ gtag('event', 'view_cart', {
                         </form>
                     </td>
                     <td><span class="price-value">{{ "%.2f"|format(item.total) }} €</span></td>
+                    <td>
+                        {% if item.in_stock %}
+                            <span class="badge bg-success">{{ _("In Stock") }}</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">{{ item.delivery_time or _("To Order") }}</span>
+                        {% endif %}
+                    </td>
                     <td>
                         <form action="{{ url_for('public_remove_from_cart') }}" method="POST" class="d-inline">
                             <input type="hidden" name="article" value="{{ item.article }}">

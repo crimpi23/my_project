@@ -79,11 +79,11 @@ gtag('event', 'view_item', {
     
     <div class="product-container fade-in" itemscope itemtype="https://schema.org/Product">
         <div class="row">
-            <!-- Ліва колонка: зображення та опис (на мобільних буде другою) -->
-            <div class="col-md-6 mobile-second">
-                <!-- Фото секція -->
+            <!-- Ліва колонка: зображення (на мобільних буде першою) -->
+            <div class="col-md-6 mobile-first">
+                {% if product_data.photo_urls and product_data.photo_urls|length > 0 %}
+                <!-- Фото секція - відображається лише якщо є фотографії -->
                 <div class="image-section">
-                    <!-- Вміст без змін -->
                     <div class="image-container">
                         <img id="productImage" 
                              src="{{ product_data.photo_urls[0] if product_data.photo_urls else url_for('static', filename='placeholder.png') }}" 
@@ -106,26 +106,16 @@ gtag('event', 'view_item', {
                     </div>
                     {% endif %}
                 </div>
-
-                <!-- Опис (на мобільних буде останнім) -->
-                <div class="description-section mobile-last">
-                    <div class="description-header">
-                        <h2><i class="bi bi-info-circle me-2"></i>{{ _('Description') }}</h2>
-                    </div>
-                    <div class="description-body">
-                        <p itemprop="description">{{ product_data.description }}</p>
-                    </div>
-                </div>
+                {% endif %}
             </div>
 
-            <!-- Права колонка: інформація та ціни (на мобільних буде першою) -->
-            <div class="col-md-6 mobile-first">
+            <!-- Права колонка: інформація та ціни (на мобільних буде другою) -->
+            <div class="col-md-6 mobile-second">
                 <div class="product-info-card">
                     <div class="product-info-header">
                         <h1 itemprop="name">{{ product_data.name }}</h1>
                     </div>
                     <div class="product-info-body">
-                        <!-- Вміст без змін -->
                         <div class="product-meta">
                             <div class="product-meta-item">
                                 <span class="meta-label">{{ _('Article') }}:</span>
@@ -148,7 +138,6 @@ gtag('event', 'view_item', {
                         <h4 class="mb-3"><i class="bi bi-tag-fill me-2 text-primary"></i>{{ _('Available Prices') }}</h4>
                         {% for price in prices %}
                         <div class="price-card">
-                            <!-- Вміст карток ціни без змін -->
                             <div class="price-info">
                                 <span class="price-value" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
                                     <span itemprop="price">{{ "%.2f"|format(price.price|float) }}</span> 
@@ -183,7 +172,7 @@ gtag('event', 'view_item', {
                         {% endfor %}
                         
                         <div class="mt-4">
-                            <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                            <a href="{{ url_for('index') }}" class="btn-outline btn-outline-primary">
                                 <i class="bi bi-arrow-left me-2"></i>
                                 {{ _('Continue Shopping') }}
                             </a>
@@ -192,70 +181,74 @@ gtag('event', 'view_item', {
                 </div>
             </div>
         </div>
+
+        <!-- Опис (на мобільних буде третім, на весь екран) -->
+        <div class="row mt-4">
+            <div class="col-12 mobile-last">
+                <div class="description-section">
+                    <div class="description-header">
+                        <h2><i class="bi bi-info-circle me-2"></i>{{ _('Description') }}</h2>
+                    </div>
+                    <div class="description-body">
+                        <p itemprop="description">{{ product_data.description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-// Зберігаємо всі шляхи до фотографій
-const images = {{ product_data.photo_urls | tojson | safe }};
-let currentImageIndex = 0;
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Знаходимо всі елементи для навігації по фото
-    const dots = document.querySelectorAll('.image-dot');
+    // Перевіряємо, чи є фотографії
+    const images = {{ product_data.photo_urls | tojson | safe }};
+    if (!images || images.length === 0) {
+        return; // Якщо фотографій немає, завершуємо виконання скрипту
+    }
+
+    let currentImageIndex = 0;
     const imgElement = document.getElementById('productImage');
     const prevButton = document.querySelector('.image-nav.prev');
     const nextButton = document.querySelector('.image-nav.next');
-    
-    if (!imgElement || images.length <= 1) return;
-    
-    // Функція оновлення індикаторів (точок)
-    function updateDots(index) {
-        dots.forEach((dot, i) => {
-            dot.classList.toggle('active', i === index);
+    const dots = document.querySelectorAll('.image-dot');
+
+    // Функція для оновлення зображення
+    function updateImage(index) {
+        currentImageIndex = index;
+        
+        // Оновлюємо зображення з ефектом плавного переходу
+        imgElement.style.opacity = '0';
+        setTimeout(() => {
+            imgElement.src = images[currentImageIndex];
+            imgElement.style.opacity = '1';
+        }, 300);
+        
+        // Оновлюємо активну точку
+        dots.forEach((dot, idx) => {
+            dot.classList.toggle('active', idx === currentImageIndex);
         });
     }
-    
-    // Функція зміни зображення
-    function changeImage(index) {
-        if (!imgElement) return;
-        imgElement.style.opacity = '0';
-        
-        setTimeout(() => {
-            imgElement.src = images[index];
-            imgElement.style.opacity = '1';
-            currentImageIndex = index;
-            updateDots(index);
-        }, 300);
-    }
-    
-    // Функція для переходу до попереднього зображення
-    function prevImage() {
-        if (images.length <= 1) return;
-        let newIndex = currentImageIndex <= 0 ? images.length - 1 : currentImageIndex - 1;
-        changeImage(newIndex);
-    }
-    
-    // Функція для переходу до наступного зображення
-    function nextImage() {
-        if (images.length <= 1) return;
-        let newIndex = currentImageIndex >= images.length - 1 ? 0 : currentImageIndex + 1;
-        changeImage(newIndex);
-    }
-    
-    // Додавання обробників подій для кнопок
+
+    // Обробники подій
     if (prevButton) {
-        prevButton.addEventListener('click', prevImage);
+        prevButton.addEventListener('click', () => {
+            let newIndex = currentImageIndex - 1;
+            if (newIndex < 0) newIndex = images.length - 1;
+            updateImage(newIndex);
+        });
     }
-    
+
     if (nextButton) {
-        nextButton.addEventListener('click', nextImage);
+        nextButton.addEventListener('click', () => {
+            let newIndex = (currentImageIndex + 1) % images.length;
+            updateImage(newIndex);
+        });
     }
-    
-    // Додавання обробників подій для точок
-    dots.forEach((dot, index) => {
-        dot.addEventListener('click', function() {
-            changeImage(index);
+
+    // Обробники для точок
+    dots.forEach((dot, idx) => {
+        dot.addEventListener('click', () => {
+            updateImage(idx);
         });
     });
     

@@ -1,0 +1,240 @@
+{% extends "base/public_base.html" %}
+
+{% block head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ _('Terms and Conditions for using AutogroupEU services.') }}">
+<meta name="keywords" content="{{ _('terms, conditions, legal, agreement, policy, usage') }}">
+<meta property="og:title" content="{{ _('Terms & Conditions') }} - AutogroupEU">
+<meta property="og:description" content="{{ _('Terms and Conditions for using AutogroupEU services.') }}">
+<meta property="og:type" content="website">
+{% endblock %}
+
+{% block title %}{{ _('Terms & Conditions') }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="page-header fade-in">
+        <h2>{{ _('Terms & Conditions') }}</h2>
+        <p class="lead text-muted">{{ _('Please read these terms carefully before using our services') }}</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Вступ -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(0,123,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-file-text text-primary"></i>
+                    </div>
+                    <h5 class="mb-0 text-primary">{{ _('Introduction') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('These Terms and Conditions govern your use of the AutogroupEU website and services provided by AutogroupEU, accessible at autogroup.sk. By accessing and using our website and services, you accept these Terms and Conditions in full. If you disagree with any part of these terms, please do not use our website or services.') }}
+                    </p>
+                    <p>
+                        {{ _('Last Updated: March 1, 2025') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Товари та послуги -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(255,193,7,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-box-seam text-warning"></i>
+                    </div>
+                    <h5 class="mb-0 text-warning">{{ _('Products and Services') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('1. All products displayed on our website are subject to availability.') }}
+                    </p>
+                    <p>
+                        {{ _('2. We reserve the right to discontinue any product or service at any time.') }}
+                    </p>
+                    <p>
+                        {{ _('3. Prices for products are subject to change without notice.') }}
+                    </p>
+                    <p>
+                        {{ _('4. We make every effort to display the accurate colors and features of our products, but cannot guarantee that your display will accurately portray the actual color of the product.') }}
+                    </p>
+                    <p>
+                        {{ _('5. Product specifications, prices, and availability may differ from region to region.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Замовлення та оплата -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(23,162,184,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-credit-card text-info"></i>
+                    </div>
+                    <h5 class="mb-0 text-info">{{ _('Orders and Payment') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('1. By placing an order, you are making an offer to purchase the products subject to these Terms and Conditions.') }}
+                    </p>
+                    <p>
+                        {{ _('2. All orders are subject to acceptance and availability. We reserve the right to refuse any order without providing a reason.') }}
+                    </p>
+                    <p>
+                        {{ _('3. Payment for all orders must be made in advance unless otherwise agreed upon in writing.') }}
+                    </p>
+                    <p>
+                        {{ _('4. We accept payment via bank transfers, credit cards, and other payment methods as specified during the checkout process.') }}
+                    </p>
+                    <p>
+                        {{ _('5. For business customers, payment terms will be as per the agreed contract conditions.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Доставка -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(40,167,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-truck text-success"></i>
+                    </div>
+                    <h5 class="mb-0 text-success">{{ _('Shipping and Delivery') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('1. Delivery times are estimates only and may vary based on supplier availability, location, and other factors.') }}
+                    </p>
+                    <p>
+                        {{ _('2. We are not responsible for delays in delivery caused by circumstances beyond our control.') }}
+                    </p>
+                    <p>
+                        {{ _('3. Risk of loss or damage to products passes to you upon delivery.') }}
+                    </p>
+                    <p>
+                        {{ _('4. It is your responsibility to provide accurate shipping information. Additional charges may apply for redelivery if incorrect information is provided.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Повернення та гарантії -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(108,117,125,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-arrow-return-left text-secondary"></i>
+                    </div>
+                    <h5 class="mb-0 text-secondary">{{ _('Returns and Warranties') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('1. Returns are accepted within 14 days of receipt, subject to the product being in its original condition and packaging.') }}
+                    </p>
+                    <p>
+                        {{ _('2. To initiate a return, please contact our customer service team.') }}
+                    </p>
+                    <p>
+                        {{ _('3. Refunds will be processed within 14 business days of receiving the returned product.') }}
+                    </p>
+                    <p>
+                        {{ _('4. Products carry the manufacturers warranty only, unless otherwise specified.') }}
+                    </p>
+                    <p>
+                        {{ _('5. We do not accept returns on special order items, unless they are defective.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Відповідальність та обмеження -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(220,53,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-shield text-danger"></i>
+                    </div>
+                    <h5 class="mb-0 text-danger">{{ _('Liability and Limitations') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('1. Our liability is limited to the purchase price of the product in question.') }}
+                    </p>
+                    <p>
+                        {{ _('2. We are not liable for any indirect, incidental, or consequential damages.') }}
+                    </p>
+                    <p>
+                        {{ _('3. To the extent permitted by law, we disclaim all warranties, express or implied, including but not limited to merchantability and fitness for a particular purpose.') }}
+                    </p>
+                    <p>
+                        {{ _('4. We do not guarantee that our website will be error-free or uninterrupted.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Інтелектуальна власність -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(111,66,193,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-badge-tm text-purple"></i>
+                    </div>
+                    <h5 class="mb-0" style="color: #6f42c1;">{{ _('Intellectual Property') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('1. All content on this website, including but not limited to text, graphics, logos, images, and software, is the property of AutogroupEU or its content suppliers and is protected by copyright laws.') }}
+                    </p>
+                    <p>
+                        {{ _('2. You may not reproduce, distribute, modify, or create derivative works from any content without our express written consent.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Зміни умов -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(52,58,64,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-pencil text-dark"></i>
+                    </div>
+                    <h5 class="mb-0 text-dark">{{ _('Modifications to Terms') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('1. We reserve the right to modify these Terms and Conditions at any time.') }}
+                    </p>
+                    <p>
+                        {{ _('2. Changes will be effective immediately upon posting on the website.') }}
+                    </p>
+                    <p>
+                        {{ _('3. Your continued use of our website and services after any changes to the Terms constitutes your acceptance of the new Terms.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Контакт -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(0,123,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-envelope text-primary"></i>
+                    </div>
+                    <h5 class="mb-0 text-primary">{{ _('Contact Us') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('If you have any questions about these Terms and Conditions, please contact us at:') }}
+                    </p>
+                    <p>
+                        <strong>Email:</strong> info@autogroup.sk<br>
+                        <strong>Phone:</strong> +421 907 539 325<br>
+                        <strong>Address:</strong> Tušická Nová Ves 90, 072 02 Slovakia
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

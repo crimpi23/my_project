@@ -12,27 +12,25 @@
 {% block title %}{{ _('About Us') }}{% endblock %}
 
 {% block content %}
-<div class="about-header">
-    <div class="container">
-        <h1 class="display-4 fade-in">{{ _('About AutogroupEU') }}</h1>
-        <p class="lead fade-in">{{ _('Your Trusted Partner in Auto Parts') }}</p>
+<!-- Оновлений світлий заголовок -->
+<div class="container mt-4">
+    <div class="page-header fade-in">
+        <h2>{{ _('About AutogroupEU') }}</h2>
+        <p class="lead text-muted">{{ _('Your Trusted Partner in Auto Parts') }}</p>
     </div>
-</div>
 
-<div class="container page-about">
     <div class="row">
         <div class="col-lg-8 mx-auto">
             <!-- Блок про автомагазин -->
-            <div class="info-card fade-in">
-                <div class="info-card-header section-header-primary">
-                    <h5>
-                        <div class="header-icon">
-                            <i class="bi bi-shop"></i>
-                        </div>
-                        {{ _('Auto Parts Store') }}
-                    </h5>
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(0,123,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-shop text-primary"></i>
+                    </div>
+                    <h5 class="mb-0 text-primary">{{ _('Auto Parts Store') }}</h5>
                 </div>
-                <div class="info-card-body">
+                <hr class="mx-4 my-0">
+                <div class="p-4">
                     <p class="mb-0">
                         {{ _('We are a specialized auto parts store serving business clients across Europe. With over 15 years of experience, we provide high-quality automotive parts and exceptional service to our B2B partners.') }}
                     </p>
@@ -40,40 +38,38 @@
             </div>
 
             <!-- Блок з брендами -->
-            <div class="info-card fade-in">
-                <div class="info-card-header brands-header">
-                    <h5>
-                        <div class="header-icon">
-                            <i class="bi bi-truck"></i>
-                        </div>
-                        {{ _('Our Main Brands') }}
-                    </h5>
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(255,193,7,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-truck text-warning"></i>
+                    </div>
+                    <h5 class="mb-0 text-warning">{{ _('Our Main Brands') }}</h5>
                 </div>
-                <div class="info-card-body">
+                <hr class="mx-4 my-0">
+                <div class="p-4">
                     <ul class="brand-list list-unstyled">
-                        <li><i class="bi bi-check2-circle"></i> Mercedes-Benz</li>
-                        <li><i class="bi bi-check2-circle"></i> BMW</li>
-                        <li><i class="bi bi-check2-circle"></i> Volkswagen Group</li>
-                        <li><i class="bi bi-check2-circle"></i> Jaguar</li>
-                        <li><i class="bi bi-check2-circle"></i> Land Rover</li>
-                        <li><i class="bi bi-check2-circle"></i> Volvo</li>
-                        <li><i class="bi bi-check2-circle"></i> Toyota</li>
-                        <li><i class="bi bi-check2-circle"></i> Ford</li>
+                        <li><i class="bi bi-check2-circle text-warning"></i> Mercedes-Benz</li>
+                        <li><i class="bi bi-check2-circle text-warning"></i> BMW</li>
+                        <li><i class="bi bi-check2-circle text-warning"></i> Volkswagen Group</li>
+                        <li><i class="bi bi-check2-circle text-warning"></i> Jaguar</li>
+                        <li><i class="bi bi-check2-circle text-warning"></i> Land Rover</li>
+                        <li><i class="bi bi-check2-circle text-warning"></i> Volvo</li>
+                        <li><i class="bi bi-check2-circle text-warning"></i> Toyota</li>
+                        <li><i class="bi bi-check2-circle text-warning"></i> Ford</li>
                     </ul>
                 </div>
             </div>
 
             <!-- Блок з B2B сервісами -->
-            <div class="info-card fade-in">
-                <div class="info-card-header services-header">
-                    <h5>
-                        <div class="header-icon">
-                            <i class="bi bi-building"></i>
-                        </div>
-                        {{ _('B2B Services') }}
-                    </h5>
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(23,162,184,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-building text-info"></i>
+                    </div>
+                    <h5 class="mb-0 text-info">{{ _('B2B Services') }}</h5>
                 </div>
-                <div class="info-card-body text-center">
+                <hr class="mx-4 my-0">
+                <div class="p-4 text-center">
                     <p class="mb-4">
                         {{ _('For business clients interested in B2B access, please contact us:') }}
                     </p>
@@ -86,16 +82,15 @@
             </div>
 
             <!-- Блок з картою -->
-            <div class="info-card fade-in">
-                <div class="info-card-header location-header">
-                    <h5>
-                        <div class="header-icon">
-                            <i class="bi bi-geo-alt"></i>
-                        </div>
-                        {{ _('Find Us') }}
-                    </h5>
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(40,167,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-geo-alt text-success"></i>
+                    </div>
+                    <h5 class="mb-0 text-success">{{ _('Find Us') }}</h5>
                 </div>
-                <div class="info-card-body">
+                <hr class="mx-4 my-0">
+                <div class="p-4">
                     <div class="map-container">
                         <div class="ratio ratio-16x9">
                             <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2624.9999999999995!2d21.907539999999998!3d48.937539999999996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x473e3d9999999999%3A0x9999999999999999!2sTušická%20Nová%20Ves%2090%2C%20072%2002%20Slovakia!5e0!3m2!1sen!2sus!4v1619999999999!5m2!1sen!2sus"

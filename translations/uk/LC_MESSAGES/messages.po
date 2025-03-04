@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-02-16 15:14+0200\n"
-"PO-Revision-Date: 2025-02-16 16:22+0200\n"
-"Last-Translator: GitHub Copilot <copilot@github.com>\n"
+"POT-Creation-Date: 2025-03-03 22:26+0200\n"
+"PO-Revision-Date: 2025-03-03 22:26+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: uk\n"
 "Language-Team: uk <LL@li.org>\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
@@ -19,294 +19,596 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app.py:204 app.py:434
+#: app.py:120
+msgid "Address saved successfully"
+msgstr ""
+
+#: app.py:125 app.py:467
+msgid "Error saving address"
+msgstr ""
+
+#: app.py:226
+msgid "Error validating phone number"
+msgstr ""
+
+#: app.py:279
+msgid "Username, email or phone already registered."
+msgstr ""
+
+#: app.py:310
+msgid "Registration successful! You are now logged in."
+msgstr ""
+
+#: app.py:315
+msgid "Registration failed. Please try again."
+msgstr ""
+
+#: app.py:372
+msgid "Invalid username or password"
+msgstr ""
+
+#: app.py:402
+msgid "Please log in to place an order."
+msgstr ""
+
+#: app.py:431
+msgid "Selected address not found"
+msgstr ""
+
+#: app.py:498
+msgid "Selected company not found"
+msgstr ""
+
+#: app.py:531
+msgid "Error saving company details"
+msgstr ""
+
+#: app.py:537
+msgid "Your cart is empty."
+msgstr ""
+
+#: app.py:598 app.py:3201
+msgid "Order placed successfully!"
+msgstr ""
+
+#: app.py:605
+msgid "Error placing order"
+msgstr ""
+
+#: app.py:618
+msgid "Cart cleared successfully"
+msgstr ""
+
+#: app.py:629
+msgid "Please log in to view your orders."
+msgstr ""
+
+#: app.py:659
+msgid "Error loading orders."
+msgstr ""
+
+#: app.py:670
+msgid "Please log in to view order details."
+msgstr ""
+
+#: app.py:688
+msgid "Order not found."
+msgstr ""
+
+#: app.py:714 app.py:3350
+msgid "Error loading order details."
+msgstr ""
+
+#: app.py:727
+msgid "You have been logged out."
+msgstr ""
+
+#: app.py:739
+msgid "Please log in to view your cart."
+msgstr ""
+
+#: app.py:842 app.py:1142 app.py:2510
+msgid "An error occurred while processing your request."
+msgstr ""
+
+#: app.py:879 app.py:1924
 msgid "Invalid token."
-msgstr "Недійсний токен."
+msgstr ""
 
-#: app.py:209 app.py:214 app.py:459
-msgid "Invalid token or role."
-msgstr "Недійсний токен або роль."
+#: app.py:884
+msgid "Please log in."
+msgstr ""
 
-#: app.py:298
+#: app.py:889
+msgid "You don't have permission to access this page."
+msgstr ""
+
+#: app.py:1066 app.py:1118 templates/public/product_details.html:150
+msgid "In Stock"
+msgstr ""
+
+#: app.py:1119
+msgid "days"
+msgstr ""
+
+#: app.py:1513
+msgid "Missing required information"
+msgstr ""
+
+#: app.py:1518 app.py:2044
+msgid "Quantity must be at least 1"
+msgstr ""
+
+#: app.py:1526 app.py:1552 app.py:1583 app.py:3000
+msgid "Item not found in cart"
+msgstr ""
+
+#: app.py:1549
+msgid "Cart updated successfully"
+msgstr ""
+
+#: app.py:1556
+msgid "Invalid quantity"
+msgstr ""
+
+#: app.py:1559
+msgid "Error updating cart"
+msgstr ""
+
+#: app.py:1571 app.py:2980
+msgid "Missing required information for removal"
+msgstr ""
+
+#: app.py:1581
+msgid "Article removed successfully"
+msgstr ""
+
+#: app.py:1586 app.py:3005
+msgid "Error removing item from cart"
+msgstr ""
+
+#: app.py:1788
 msgid ""
 "Thank you for your order!\n"
 "\n"
 "Your order details:\n"
-msgstr "Дякуємо за ваше замовлення!\n\nДеталі вашого замовлення:\n"
+msgstr ""
 
-#: app.py:301
+#: app.py:1791
 msgid "Ordered items:\n"
-msgstr "Замовлені товари:\n"
+msgstr ""
 
-#: app.py:303
+#: app.py:1793
 msgid ""
 "- Article: {article}, Price: {price:.2f}, Quantity: {quantity}, Comment: "
 "{comment}\n"
-msgstr "- Артикул: {article}, Ціна: {price:.2f}, Кількість: {quantity}, Коментар: {comment}\n"
+msgstr ""
 
-#: app.py:312 templates/user/cart/cart.html:42
+#: app.py:1802 templates/user/cart/cart.html:42
 #: templates/user/orders/order_details.html:63
 msgid "No comment"
-msgstr "Без коментаря"
+msgstr ""
 
-#: app.py:316
+#: app.py:1806
 msgid ""
 "\n"
 "Missing articles:\n"
-msgstr "\nВідсутні артикули:\n"
-
-#: app.py:470
-msgid "Please enter an article for search."
-msgstr "Будь ласка, введіть артикул для пошуку."
-
-#: app.py:497
-msgid "An error occurred during the search. Please try again later."
-msgstr "Під час пошуку сталася помилка. Будь ласка, спробуйте пізніше."
-
-#: app.py:688
-msgid "Please enter at least one article."
-msgstr "Будь ласка, введіть хоча б один артикул."
-
-#: app.py:801
-msgid "Articles not found: {articles}"
-msgstr "Артикули не знайдено: {articles}"
-
-#: app.py:830
-msgid "Added to cart: {articles}"
-msgstr "Додано до кошика: {articles}"
-
-#: app.py:855
-msgid "An error occurred while processing your request."
-msgstr "Під час обробки вашого запиту сталася помилка."
-
-#: app.py:867
-msgid "You need to log in to view search results."
-msgstr "Вам потрібно увійти, щоб переглянути результати пошуку."
-
-#: app.py:929
-msgid "Your selection has been saved!"
-msgstr "Ваш вибір збережено!"
-
-#: app.py:933
-msgid "An error occurred while saving your selection. Please try again."
-msgstr "Під час збереження вашого вибору сталася помилка. Будь ласка, спробуйте ще раз."
-
-#: app.py:954
-msgid "No search results found. Please start a new search."
-msgstr "Результатів пошуку не знайдено. Будь ласка, почніть новий пошук."
-
-#: app.py:971
-msgid "An error occurred while retrieving search results."
-msgstr "Під час отримання результатів пошуку сталася помилка."
-
-#: app.py:991
-msgid "You need to log in to view your cart."
-msgstr "Вам потрібно увійти, щоб переглянути свій кошик."
-
-#: app.py:1104
-msgid "Could not load your cart. Please try again."
-msgstr "Не вдалося завантажити ваш кошик. Будь ласка, спробуйте ще раз."
-
-#: app.py:1128 app.py:3916
-msgid "User not authenticated"
-msgstr "Користувач не автентифікований"
-
-#: app.py:1173
-msgid "No articles selected"
-msgstr "Не вибрано жодного артикула"
-
-#: app.py:1202
-msgid "Selection successfully submitted!"
-msgstr "Вибір успішно надіслано!"
-
-#: app.py:1207
-msgid "An error occurred during submission"
-msgstr "Під час надсилання сталася помилка"
-
-#: app.py:1222
-msgid "Search results cleared successfully"
-msgstr "Результати пошуку успішно очищено"
-
-#: app.py:1228
-msgid "Error clearing search results"
-msgstr "Помилка очищення результатів пошуку"
-
-#: app.py:1256 app.py:1446
-msgid "User is not authenticated. Please log in."
-msgstr "Користувач не автентифікований. Будь ласка, увійдіть"
-
-#: app.py:1289
-msgid "Product added to cart!"
-msgstr "Товар додано до кошика!"
-
-#: app.py:1292
-msgid "Error adding product to cart."
-msgstr "Помилка додавання товару до кошика"
-
-#: app.py:1321
-msgid "Missing required information for removal"
-msgstr "Відсутня необхідна інформація для видалення"
-
-#: app.py:1338
-msgid "Article {article} removed successfully"
-msgstr "Артикул {article} успішно видалено"
-
-#: app.py:1341
-msgid "Item not found in cart"
-msgstr "Товар не знайдено в кошику"
-
-#: app.py:1346
-msgid "Error removing item from cart"
-msgstr "Помилка видалення товару з кошика"
-
-#: app.py:1365
-msgid "Invalid input: article or quantity missing."
-msgstr "Некоректний ввід: відсутній артикул або кількість."
-
-#: app.py:1372
-msgid "Quantity must be at least 1."
-msgstr "Кількість повинна бути не менше 1."
-
-#: app.py:1389
-msgid "Cart updated successfully!"
-msgstr "Кошик успішно оновлено!"
-
-#: app.py:1393
-msgid "Error updating cart."
-msgstr "Помилка оновлення кошика."
-
-#: app.py:1464
-msgid "Your cart is empty!"
-msgstr "Ваш кошик порожній!"
-
-#: app.py:1535
-msgid "Order placed, but we couldn't send a confirmation email."
-msgstr "Замовлення розміщено, але не вдалося надіслати підтвердження на email."
-
-#: app.py:1542
-msgid "Order placed successfully!"
-msgstr "Замовлення успішно розміщено!"
-
-#: app.py:1549
-msgid "Error placing order: {error}"
-msgstr "Помилка розміщення замовлення: {error}"
-
-#: app.py:1567
-msgid "User is not authenticated."
-msgstr "Користувач не автентифікований."
-
-#: app.py:1633
-msgid "Error fetching orders."
-msgstr "Помилка отримання замовлень."
-
-#: app.py:1691
-msgid "Error loading order details."
-msgstr "Помилка завантаження деталей замовлення."
-
-#: app.py:3983
-msgid "Some articles still need table selection."
-msgstr "Деякі артикули ще потребують вибору таблиці."
-
-#: app.py:3985
-msgid "All selected articles have been added to your cart."
-msgstr "Усі вибрані артикули додано до вашого кошика."
-
-#: app.py:4031
-msgid "An error occurred while processing your selection. Please try again."
-msgstr "Під час обробки вашого вибору сталася помилка. Будь ласка, спробуйте ще раз."
-
-#: app.py:4214
-msgid "News created successfully!"
-msgstr "Новину створено успішно!"
-
-#: app.py:4219
-msgid "Error creating news"
-msgstr "Помилка створення новини"
-
-#: app.py:4827
-msgid "Error loading news"
-msgstr "Помилка завантаження новин"
-
-#: app.py:4858
-msgid "News not found"
-msgstr "Новину не знайдено"
-
-#: templates/base/base.html:6 templates/user/index.html:4
-msgid "Article Price Search"
-msgstr "Пошук цін артикулів"
-
-#: templates/base/base.html:125 templates/user/news/user_news.html:3
-#: templates/user/news/user_news.html:7
-msgid "News"
-msgstr "Новини"
-
-#: templates/base/base.html:133
-msgid "Cart"
-msgstr "Кошик"
-
-#: templates/base/base.html:142
-msgid "Orders"
-msgstr "Замовлення"
-
-#: templates/base/base.html:148 templates/user/orders/order_changes.html:5
-msgid "Order Changes History"
-msgstr "Історія змін замовлення"
-
-#: templates/base/base.html:154 templates/user/shipments/shipments.html:3
-msgid "Shipments"
-msgstr "Відвантаження"
-
-#: templates/user/index.html:6
-msgid "Welcome to the advanced search system! Use the tools below:"
 msgstr ""
-"Ласкаво просимо до розширеної системи пошуку! Використовуйте інструменти "
-"нижче:"
 
-#: templates/user/index.html:14
-msgid "Upload Articles File"
-msgstr "Завантажити файл з артикулами"
+#: app.py:2023
+msgid "Missing required product information"
+msgstr ""
 
-#: templates/user/index.html:17
-msgid "Article/Quantity/Comment"
-msgstr "Артикул/Кількість/Коментар"
+#: app.py:2029
+msgid "Invalid price format"
+msgstr ""
 
-#: templates/user/index.html:20
-msgid "Article/Quantity/Brand/Comment"
-msgstr "Артикул/Кількість/Бренд/Коментар"
+#: app.py:2063
+msgid "Item added to cart"
+msgstr ""
 
-#: templates/user/index.html:24
-msgid "Drag and drop your file here, or click to select"
-msgstr "Перетягніть файл сюди або натисніть для вибору"
+#: app.py:2067
+msgid "Error adding item to cart"
+msgstr ""
 
-#: templates/user/index.html:30
-msgid "Upload and Search"
-msgstr "Завантажити та шукати"
+#: app.py:2111 app.py:2127
+msgid "Please enter an article for search."
+msgstr ""
 
-#: templates/user/cart/cart.html:96 templates/user/index.html:41
-msgid "Search Articles"
-msgstr "Пошук артикулів"
+#: app.py:2154
+msgid "An error occurred during the search. Please try again later."
+msgstr ""
 
-#: templates/user/index.html:44
-msgid "Enter Articles and Quantities:"
-msgstr "Введіть артикули та кількість:"
+#: app.py:2345
+msgid "Please enter at least one article."
+msgstr ""
 
-#: templates/user/index.html:46
-msgid "Example:"
-msgstr "Приклад:"
+#: app.py:2456
+msgid "Articles not found: {articles}"
+msgstr ""
 
-#: templates/user/index.html:50
-msgid "Search"
-msgstr "Пошук"
+#: app.py:2485
+msgid "Added to cart: {articles}"
+msgstr ""
 
-#: templates/user/index.html:97 templates/user/index.html:104
-msgid "File selected:"
-msgstr "Вибраний файл:"
+#: app.py:2522
+msgid "You need to log in to view search results."
+msgstr ""
 
-#: templates/user/cart/cart.html:3 templates/user/cart/cart.html:7
-msgid "Shopping Cart"
-msgstr "Кошик покупок"
+#: app.py:2584
+msgid "Your selection has been saved!"
+msgstr ""
 
-#: templates/user/cart/cart.html:14 templates/user/orders/order_changes.html:13
+#: app.py:2588
+msgid "An error occurred while saving your selection. Please try again."
+msgstr ""
+
+#: app.py:2609
+msgid "No search results found. Please start a new search."
+msgstr ""
+
+#: app.py:2626
+msgid "An error occurred while retrieving search results."
+msgstr ""
+
+#: app.py:2646
+msgid "You need to log in to view your cart."
+msgstr ""
+
+#: app.py:2759
+msgid "Could not load your cart. Please try again."
+msgstr ""
+
+#: app.py:2779 app.py:5841
+msgid "User not authenticated"
+msgstr ""
+
+#: app.py:2828
+msgid "No articles selected"
+msgstr ""
+
+#: app.py:2857
+msgid "Selection successfully submitted!"
+msgstr ""
+
+#: app.py:2862
+msgid "An error occurred during submission"
+msgstr ""
+
+#: app.py:2876
+msgid "Search results cleared successfully"
+msgstr ""
+
+#: app.py:2882
+msgid "Error clearing search results"
+msgstr ""
+
+#: app.py:2910 app.py:3105
+msgid "User is not authenticated. Please log in."
+msgstr ""
+
+#: app.py:2943
+msgid "Product added to cart!"
+msgstr ""
+
+#: app.py:2946
+msgid "Error adding product to cart."
+msgstr ""
+
+#: app.py:2997
+msgid "Article {article} removed successfully"
+msgstr ""
+
+#: app.py:3024
+msgid "Invalid input: article or quantity missing."
+msgstr ""
+
+#: app.py:3031
+msgid "Quantity must be at least 1."
+msgstr ""
+
+#: app.py:3048
+msgid "Cart updated successfully!"
+msgstr ""
+
+#: app.py:3052
+msgid "Error updating cart."
+msgstr ""
+
+#: app.py:3123
+msgid "Your cart is empty!"
+msgstr ""
+
+#: app.py:3194
+msgid "Order placed, but we couldn't send a confirmation email."
+msgstr ""
+
+#: app.py:3208
+msgid "Error placing order: {error}"
+msgstr ""
+
+#: app.py:3226
+msgid "User is not authenticated."
+msgstr ""
+
+#: app.py:3292
+msgid "Error fetching orders."
+msgstr ""
+
+#: app.py:5908
+msgid "Some articles still need table selection."
+msgstr ""
+
+#: app.py:5910
+msgid "All selected articles have been added to your cart."
+msgstr ""
+
+#: app.py:5956
+msgid "An error occurred while processing your selection. Please try again."
+msgstr ""
+
+#: app.py:6150
+msgid "News created successfully!"
+msgstr ""
+
+#: app.py:6155
+msgid "Error creating news"
+msgstr ""
+
+#: app.py:6763
+msgid "Error loading news"
+msgstr ""
+
+#: app.py:6794
+msgid "News not found"
+msgstr ""
+
+#: app.py:7167
+msgid "Delivery address updated"
+msgstr ""
+
+#: app.py:7183
+msgid "Invoice details updated"
+msgstr ""
+
+#: app.py:7185
+msgid "Invalid invoice data format"
+msgstr ""
+
+#: app.py:7277
+msgid "Item processed successfully"
+msgstr ""
+
+#: app.py:7290
+msgid "Error processing orders"
+msgstr ""
+
+#: app.py:7584
+msgid "Please login to access your profile"
+msgstr ""
+
+#: app.py:7634
+msgid "Invalid email format"
+msgstr ""
+
+#: app.py:7641 app.py:7695
+msgid "This email is already in use by another user"
+msgstr ""
+
+#: app.py:7647 app.py:7697
+msgid "This phone number is already in use by another user"
+msgstr ""
+
+#: app.py:7658
+msgid "Current password is incorrect"
+msgstr ""
+
+#: app.py:7663
+msgid "New passwords do not match"
+msgstr ""
+
+#: app.py:7676
+msgid "Profile and password updated successfully"
+msgstr ""
+
+#: app.py:7689
+msgid "Profile updated successfully"
+msgstr ""
+
+#: app.py:7699
+msgid "Error updating profile: duplicate value"
+msgstr ""
+
+#: app.py:7730
+msgid "Address added successfully"
+msgstr ""
+
+#: app.py:7742
+msgid "Address deleted successfully"
+msgstr ""
+
+#: app.py:7764
+msgid "Default address updated"
+msgstr ""
+
+#: app.py:7791
+msgid "Company added successfully"
+msgstr ""
+
+#: app.py:7803
+msgid "Company deleted successfully"
+msgstr ""
+
+#: app.py:7825
+msgid "Default company updated"
+msgstr ""
+
+#: app.py:7833
+msgid "Ukrainian"
+msgstr ""
+
+#: app.py:7833
+msgid "English"
+msgstr ""
+
+#: app.py:7833
+msgid "Slovak"
+msgstr ""
+
+#: app.py:7833
+msgid "Polish"
+msgstr ""
+
+#: app.py:7839
+msgid "Error accessing user profile"
+msgstr ""
+
+#: templates/admin/admin_login.html:10
+msgid "Admin Login"
+msgstr ""
+
+#: templates/admin/admin_login.html:16 templates/auth/login.html:25
+#: templates/auth/register.html:29 templates/public/user/profile.html:33
+msgid "Password"
+msgstr ""
+
+#: templates/admin/admin_login.html:19 templates/auth/login.html:3
+#: templates/auth/login.html:15 templates/auth/login.html:30
+#: templates/base/public_base.html:118
+msgid "Login"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:6
+msgid "Process Public Orders"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:14
+#: templates/user/orders/order_changes.html:12
+#: templates/user/orders/orders.html:99
+msgid "Order ID"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:15
+#: templates/admin/orders/process_orders.html:37 templates/auth/login.html:21
+#: templates/auth/register.html:21 templates/public/user/profile.html:54
+msgid "Username"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:16
+#: templates/public/orders/list_orders.html:28
+#: templates/public/orders/list_orders.html:43
+#: templates/user/orders/orders.html:100
+msgid "Date"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:17
+msgid "Stock Items"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:18
+msgid "Pricelist Items"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:35
+msgid "User Information"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:38
+#: templates/auth/register.html:25 templates/public/user/profile.html:60
+msgid "Email"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:45
+#: templates/public/orders/order_details.html:71
+msgid "Delivery Address"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:48
+msgid "Change Address"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:66
+msgid "No delivery address provided"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:73
+msgid "Saved Addresses"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:83
+#: templates/public/user/profile.html:112
+#: templates/public/user/profile.html:232
+msgid "Default"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:87
+msgid "Update Address"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:92
+msgid "No saved addresses found"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:100
+msgid "Invoice Details"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:103
+msgid "Change Invoice Details"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:113
+#: templates/public/cart/cart.html:256 templates/public/user/profile.html:279
+msgid "Company Name"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:114
+#: templates/public/cart/cart.html:222 templates/public/cart/cart.html:260
+#: templates/public/orders/order_details.html:100
+#: templates/public/user/profile.html:283
+msgid "VAT Number"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:116
+#: templates/public/cart/cart.html:224 templates/public/cart/cart.html:267
+#: templates/public/orders/order_details.html:104
+#: templates/public/user/profile.html:287
+msgid "Registration Number"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:119
+#: templates/public/cart/cart.html:271
+#: templates/public/orders/order_details.html:107
+#: templates/public/user/profile.html:291
+msgid "Company Address"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:125
+msgid "Invoice requested but details missing"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:128
+msgid "No invoice requested"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:135
+msgid "Saved Invoice Details"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:150
+msgid "Update Invoice Details"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:155
+msgid "No saved invoice details found"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:164
+#: templates/public/article_not_found.html:97
+#: templates/public/cart/cart.html:42 templates/public/index.html:155
+#: templates/public/orders/order_details.html:124
+#: templates/public/product_details.html:121 templates/user/cart/cart.html:14
+#: templates/user/orders/order_changes.html:13
 #: templates/user/orders/order_details.html:20
 #: templates/user/orders/orders.html:62
 #: templates/user/search/intermediate.html:16
@@ -314,742 +616,1961 @@ msgstr "Кошик покупок"
 #: templates/user/shipments/shipments.html:23
 #: templates/user/shipments/view_shipment.html:39
 msgid "Article"
-msgstr "Артикул"
+msgstr ""
 
-#: templates/user/cart/cart.html:15 templates/user/orders/order_details.html:22
-msgid "Price List"
-msgstr "Прайс-лист"
-
-#: templates/user/cart/cart.html:16 templates/user/search/intermediate.html:35
-msgid "Brand"
-msgstr "Бренд"
-
-#: templates/user/cart/cart.html:17 templates/user/orders/order_details.html:24
-#: templates/user/shipments/shipments.html:25
-#: templates/user/shipments/view_shipment.html:41
-msgid "Price"
-msgstr "Ціна"
-
+#: templates/admin/orders/process_orders.html:165
+#: templates/public/cart/cart.html:46
+#: templates/public/orders/order_details.html:128
 #: templates/user/cart/cart.html:18 templates/user/orders/order_details.html:25
 #: templates/user/search/intermediate.html:18
 #: templates/user/search/search_results.html:17
 #: templates/user/shipments/shipments.html:24
 #: templates/user/shipments/view_shipment.html:40
 msgid "Quantity"
-msgstr "Кількість"
+msgstr ""
 
+#: templates/admin/orders/process_orders.html:166
+#: templates/public/article_not_found.html:101
+#: templates/public/cart/cart.html:45 templates/public/index.html:159
+#: templates/public/orders/order_details.html:127
+#: templates/user/cart/cart.html:17 templates/user/orders/order_details.html:24
+#: templates/user/shipments/shipments.html:25
+#: templates/user/shipments/view_shipment.html:41
+msgid "Price"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:167
+#: templates/public/cart/cart.html:47
+#: templates/public/orders/list_orders.html:30
+#: templates/public/orders/list_orders.html:52
+#: templates/public/orders/order_details.html:129
 #: templates/user/cart/cart.html:19 templates/user/orders/order_details.html:26
 msgid "Total"
-msgstr "Сума"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:168
+msgid "Type"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:169
+#: templates/public/orders/list_orders.html:31
+#: templates/public/orders/list_orders.html:55
+#: templates/public/orders/order_details.html:40
+#: templates/public/orders/order_details.html:130
+#: templates/user/orders/order_details.html:28
+#: templates/user/orders/orders.html:66 templates/user/orders/orders.html:102
+#: templates/user/shipments/list_shipments.html:18
+msgid "Status"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:170
+#: templates/public/cart/cart.html:48
+#: templates/public/orders/list_orders.html:32
+#: templates/public/orders/list_orders.html:77 templates/user/cart/cart.html:21
+#: templates/user/orders/orders.html:103
+#: templates/user/shipments/list_shipments.html:22
+msgid "Actions"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:205
+#: templates/admin/orders/process_orders.html:212
+#: templates/base/public_base.html:170
+msgid "Accept"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:208
+#: templates/admin/orders/process_orders.html:215
+msgid "Reject"
+msgstr ""
+
+#: templates/admin/orders/process_orders.html:225
+msgid "No items in this order"
+msgstr ""
+
+#: templates/auth/login.html:32
+msgid "Don't have an account?"
+msgstr ""
+
+#: templates/auth/login.html:33
+msgid "Register here"
+msgstr ""
+
+#: templates/auth/register.html:3 templates/auth/register.html:15
+#: templates/auth/register.html:48 templates/base/public_base.html:124
+msgid "Register"
+msgstr ""
+
+#: templates/auth/register.html:33
+msgid "Phone Number"
+msgstr ""
+
+#: templates/auth/register.html:40 templates/public/user/profile.html:67
+msgid "Phone number must be in international format (e.g. +421907123456)"
+msgstr ""
+
+#: templates/auth/register.html:43 templates/public/user/profile.html:68
+msgid "Enter phone number in international format (e.g. +421907123456)"
+msgstr ""
+
+#: templates/auth/register.html:50
+msgid "Already have an account?"
+msgstr ""
+
+#: templates/auth/register.html:51
+msgid "Login here"
+msgstr ""
+
+#: templates/base/base.html:6 templates/user/index.html:3
+msgid "Article Price Search"
+msgstr ""
+
+#: templates/base/base.html:205 templates/user/news/user_news.html:3
+#: templates/user/news/user_news.html:7
+msgid "News"
+msgstr ""
+
+#: templates/base/base.html:213 templates/base/public_base.html:88
+msgid "Cart"
+msgstr ""
+
+#: templates/base/base.html:222 templates/base/public_base.html:105
+msgid "Orders"
+msgstr ""
+
+#: templates/base/base.html:228 templates/user/orders/order_changes.html:5
+msgid "Order Changes History"
+msgstr ""
+
+#: templates/base/base.html:234 templates/user/shipments/shipments.html:3
+msgid "Shipments"
+msgstr ""
+
+#: templates/base/public_base.html:73 templates/public/index.html:12
+msgid "Home"
+msgstr ""
+
+#: templates/base/public_base.html:79
+msgid "About"
+msgstr ""
+
+#: templates/base/public_base.html:99 templates/public/user/profile.html:6
+msgid "My Profile"
+msgstr ""
+
+#: templates/base/public_base.html:111
+msgid "Logout"
+msgstr ""
+
+#: templates/base/public_base.html:167
+msgid "This website uses cookies..."
+msgstr ""
+
+#: templates/base/public_base.html:167 templates/base/public_base.html:195
+#: templates/base/public_base.html:217 templates/public/privacy.html:7
+#: templates/public/privacy.html:12 templates/public/privacy.html:17
+msgid "Privacy Policy"
+msgstr ""
+
+#: templates/base/public_base.html:171
+msgid "Only Essential"
+msgstr ""
+
+#: templates/base/public_base.html:184 templates/public/privacy.html:269
+#: templates/public/terms.html:223
+msgid "Contact Us"
+msgstr ""
+
+#: templates/base/public_base.html:191
+msgid "Quick Links"
+msgstr ""
+
+#: templates/base/public_base.html:193 templates/base/public_base.html:215
+#: templates/public/about.html:7 templates/public/about.html:12
+msgid "About Us"
+msgstr ""
+
+#: templates/base/public_base.html:194 templates/base/public_base.html:216
+#: templates/public/terms.html:7 templates/public/terms.html:12
+#: templates/public/terms.html:17
+msgid "Terms & Conditions"
+msgstr ""
+
+#: templates/base/public_base.html:199
+msgid "Follow Us"
+msgstr ""
+
+#: templates/base/public_base.html:212
+msgid "2024 AutogroupEU. All rights reserved."
+msgstr ""
+
+#: templates/base/public_base.html:218
+msgid "Cookie Settings"
+msgstr ""
+
+#: templates/public/about.html:5 templates/public/about.html:8
+msgid ""
+"Learn more about AutogroupEU - your trusted partner in auto parts supply "
+"across Europe."
+msgstr ""
+
+#: templates/public/about.html:6
+msgid "about us, auto parts, European supplier, car parts, B2B"
+msgstr ""
+
+#: templates/public/about.html:18
+msgid "About AutogroupEU"
+msgstr ""
+
+#: templates/public/about.html:19
+msgid "Your Trusted Partner in Auto Parts"
+msgstr ""
+
+#: templates/public/about.html:30
+msgid "Auto Parts Store"
+msgstr ""
+
+#: templates/public/about.html:35
+msgid ""
+"We are a specialized auto parts store serving business clients across "
+"Europe. With over 15 years of experience, we provide high-quality "
+"automotive parts and exceptional service to our B2B partners."
+msgstr ""
+
+#: templates/public/about.html:46
+msgid "Our Main Brands"
+msgstr ""
+
+#: templates/public/about.html:69
+msgid "B2B Services"
+msgstr ""
+
+#: templates/public/about.html:74
+msgid "For business clients interested in B2B access, please contact us:"
+msgstr ""
+
+#: templates/public/about.html:90
+msgid "Find Us"
+msgstr ""
+
+#: templates/public/article_not_found.html:5
+msgid "The requested article was not found in our catalog."
+msgstr ""
+
+#: templates/public/article_not_found.html:9
+msgid "Article Not Found"
+msgstr ""
+
+#: templates/public/article_not_found.html:18
+msgid "Product Not Found"
+msgstr ""
+
+#: templates/public/article_not_found.html:25
+msgid "The requested article was not found in our catalog"
+msgstr ""
+
+#: templates/public/article_not_found.html:32
+msgid ""
+"The article you are looking for might have been discontinued, or the "
+"number might be incorrect."
+msgstr ""
+
+#: templates/public/article_not_found.html:33
+msgid ""
+"Please check the article number and try again or contact our support team"
+" for assistance."
+msgstr ""
+
+#: templates/public/article_not_found.html:41 templates/public/index.html:37
+#: templates/public/product_details.html:66
+msgid "Enter article number..."
+msgstr ""
+
+#: templates/public/article_not_found.html:46 templates/public/index.html:40
+#: templates/public/product_details.html:69 templates/user/index.html:24
+msgid "Search"
+msgstr ""
+
+#: templates/public/article_not_found.html:56
+msgid "Back to Home"
+msgstr ""
+
+#: templates/public/article_not_found.html:60
+msgid "Contact Support"
+msgstr ""
+
+#: templates/public/article_not_found.html:72
+msgid "Recommended Products"
+msgstr ""
+
+#: templates/public/article_not_found.html:93
+#: templates/public/cart/cart.html:44 templates/public/index.html:151
+#: templates/public/orders/order_details.html:126
+#: templates/public/product_details.html:126 templates/user/cart/cart.html:16
+#: templates/user/search/intermediate.html:35
+msgid "Brand"
+msgstr ""
+
+#: templates/public/article_not_found.html:109 templates/public/index.html:174
+#: templates/public/orders/list_orders.html:81
+#: templates/user/news/user_news.html:44 templates/user/orders/orders.html:124
+#: templates/user/shipments/list_shipments.html:36
+msgid "View Details"
+msgstr ""
+
+#: templates/public/index.html:5
+msgid "AutogroupEU - Your reliable partner in auto parts supply across Europe."
+msgstr ""
+
+#: templates/public/index.html:6
+msgid "auto parts, spare parts, car repair, programming, Slovakia"
+msgstr ""
+
+#: templates/public/index.html:7
+msgid "Auto Parts Supply"
+msgstr ""
+
+#: templates/public/index.html:8
+msgid ""
+"Find the best auto parts for your vehicle with quick delivery across "
+"Europe"
+msgstr ""
+
+#: templates/public/index.html:22
+msgid "Welcome to AutogroupEU"
+msgstr ""
+
+#: templates/public/index.html:26
+msgid ""
+"Your reliable partner in auto parts supply across Europe. Enter the "
+"article number to check prices and availability."
+msgstr ""
+
+#: templates/public/index.html:55
+msgid "Need Help?"
+msgstr ""
+
+#: templates/public/index.html:59
+msgid "If you have any questions, don't hesitate to contact us:"
+msgstr ""
+
+#: templates/public/index.html:66
+msgid "Mon-Fri: 9:00 - 19:00"
+msgstr ""
+
+#: templates/public/index.html:77
+msgid "Car Service & Programming"
+msgstr ""
+
+#: templates/public/index.html:81
+msgid "We offer professional car repair and programming services."
+msgstr ""
+
+#: templates/public/index.html:84
+msgid "Learn More"
+msgstr ""
+
+#: templates/public/index.html:99
+msgid "Items in Our Stock"
+msgstr ""
+
+#: templates/public/index.html:110
+msgid "Filter by brand:"
+msgstr ""
+
+#: templates/public/index.html:113
+msgid "All Brands"
+msgstr ""
+
+#: templates/public/index.html:122
+msgid "Clear"
+msgstr ""
+
+#: templates/public/index.html:168
+msgid "No description available."
+msgstr ""
+
+#: templates/public/index.html:188
+msgid "Show More Products"
+msgstr ""
+
+#: templates/public/privacy.html:5 templates/public/privacy.html:8
+msgid ""
+"Privacy Policy for AutogroupEU - how we collect, use, and protect your "
+"personal data."
+msgstr ""
+
+#: templates/public/privacy.html:6
+msgid "privacy policy, data protection, GDPR, personal data, cookies"
+msgstr ""
+
+#: templates/public/privacy.html:18
+msgid "How we collect, use, and protect your personal information"
+msgstr ""
+
+#: templates/public/privacy.html:29 templates/public/terms.html:29
+msgid "Introduction"
+msgstr ""
+
+#: templates/public/privacy.html:34
+msgid ""
+"At AutogroupEU, we are committed to protecting your privacy and ensuring "
+"the security of your personal information. This Privacy Policy explains "
+"how we collect, use, and safeguard your data when you use our website or "
+"services."
+msgstr ""
+
+#: templates/public/privacy.html:37
+msgid ""
+"By using our website and services, you consent to the practices described"
+" in this policy. This policy complies with the General Data Protection "
+"Regulation (GDPR) and relevant data protection laws."
+msgstr ""
+
+#: templates/public/privacy.html:40 templates/public/terms.html:37
+msgid "Last Updated: March 1, 2025"
+msgstr ""
+
+#: templates/public/privacy.html:51
+msgid "Information We Collect"
+msgstr ""
+
+#: templates/public/privacy.html:56
+msgid "Personal Information:"
+msgstr ""
+
+#: templates/public/privacy.html:56
+msgid "We collect personal information that you provide directly to us, such as:"
+msgstr ""
+
+#: templates/public/privacy.html:59
+msgid "Name, email address, phone number, and postal address"
+msgstr ""
+
+#: templates/public/privacy.html:60
+msgid "Account login details, such as username and password"
+msgstr ""
+
+#: templates/public/privacy.html:61
+msgid ""
+"Company information, such as business name, VAT number, and registration "
+"details"
+msgstr ""
+
+#: templates/public/privacy.html:62
+msgid "Payment information (though we do not store complete credit card details)"
+msgstr ""
+
+#: templates/public/privacy.html:63
+msgid "Order history and preferences"
+msgstr ""
+
+#: templates/public/privacy.html:64
+msgid "Communication history with our customer service team"
+msgstr ""
+
+#: templates/public/privacy.html:68
+msgid "Automatically Collected Information:"
+msgstr ""
+
+#: templates/public/privacy.html:68
+msgid ""
+"When you visit our website, we automatically collect certain information "
+"about your device and usage, including:"
+msgstr ""
+
+#: templates/public/privacy.html:71
+msgid "IP address and location information"
+msgstr ""
+
+#: templates/public/privacy.html:72
+msgid "Browser and device information"
+msgstr ""
+
+#: templates/public/privacy.html:73
+msgid "Pages visited and time spent on our website"
+msgstr ""
+
+#: templates/public/privacy.html:74
+msgid "Referring websites or sources"
+msgstr ""
+
+#: templates/public/privacy.html:75
+msgid "Cookies and similar tracking technologies"
+msgstr ""
+
+#: templates/public/privacy.html:86
+msgid "How We Use Your Information"
+msgstr ""
+
+#: templates/public/privacy.html:90
+msgid "We use the information we collect for the following purposes:"
+msgstr ""
+
+#: templates/public/privacy.html:92
+msgid ""
+"To provide and maintain our services, including processing orders and "
+"managing accounts"
+msgstr ""
+
+#: templates/public/privacy.html:93
+msgid "To communicate with you about orders, account status, and customer service"
+msgstr ""
+
+#: templates/public/privacy.html:94
+msgid "To improve our website, products, and services"
+msgstr ""
+
+#: templates/public/privacy.html:95
+msgid ""
+"To send promotional materials and information about new products (only "
+"with your consent)"
+msgstr ""
+
+#: templates/public/privacy.html:96
+msgid "To detect and prevent fraudulent activities and security breaches"
+msgstr ""
+
+#: templates/public/privacy.html:97
+msgid "To comply with legal obligations and enforce our policies"
+msgstr ""
+
+#: templates/public/privacy.html:108
+msgid "Information Sharing and Disclosure"
+msgstr ""
+
+#: templates/public/privacy.html:112
+msgid "We may share your information with:"
+msgstr ""
+
+#: templates/public/privacy.html:114
+msgid ""
+"Service providers who help us operate our business (shipping companies, "
+"payment processors, etc.)"
+msgstr ""
+
+#: templates/public/privacy.html:115
+msgid ""
+"Professional advisors such as lawyers, accountants, and insurers when "
+"necessary"
+msgstr ""
+
+#: templates/public/privacy.html:116
+msgid "Government bodies or law enforcement agencies when required by law"
+msgstr ""
+
+#: templates/public/privacy.html:117
+msgid "Business partners with your explicit consent"
+msgstr ""
+
+#: templates/public/privacy.html:120
+msgid ""
+"We do not sell, rent, or trade your personal information to third parties"
+" for marketing purposes without your explicit consent."
+msgstr ""
+
+#: templates/public/privacy.html:131
+msgid "Cookies and Tracking Technologies"
+msgstr ""
+
+#: templates/public/privacy.html:136
+msgid ""
+"We use cookies and similar tracking technologies to track activity on our"
+" website and hold certain information. Cookies are files with small "
+"amount of data that may include an anonymous unique identifier."
+msgstr ""
+
+#: templates/public/privacy.html:139
+msgid "We use the following types of cookies:"
+msgstr ""
+
+#: templates/public/privacy.html:142
+msgid "Essential cookies:"
+msgstr ""
+
+#: templates/public/privacy.html:142
+msgid "Required for the operation of our website"
+msgstr ""
+
+#: templates/public/privacy.html:143
+msgid "Analytical/performance cookies:"
+msgstr ""
+
+#: templates/public/privacy.html:143
+msgid "Help us improve our website by tracking how visitors use it"
+msgstr ""
+
+#: templates/public/privacy.html:144
+msgid "Functionality cookies:"
+msgstr ""
+
+#: templates/public/privacy.html:144
+msgid "Allow us to recognize you and remember your preferences"
+msgstr ""
+
+#: templates/public/privacy.html:145
+msgid "Targeting cookies:"
+msgstr ""
+
+#: templates/public/privacy.html:145
+msgid "Record your visit, the pages you visit, and the links you follow"
+msgstr ""
+
+#: templates/public/privacy.html:148
+msgid ""
+"You can instruct your browser to refuse all cookies or to indicate when a"
+" cookie is being sent. However, if you do not accept cookies, you may not"
+" be able to use some portions of our service."
+msgstr ""
+
+#: templates/public/privacy.html:159
+msgid "Data Security"
+msgstr ""
+
+#: templates/public/privacy.html:164
+msgid ""
+"The security of your data is important to us. We implement appropriate "
+"security measures to protect your personal information from unauthorized "
+"access, alteration, disclosure, or destruction. These measures include:"
+msgstr ""
+
+#: templates/public/privacy.html:167
+msgid "Encryption of sensitive data"
+msgstr ""
+
+#: templates/public/privacy.html:168
+msgid "Regular security assessments"
+msgstr ""
+
+#: templates/public/privacy.html:169
+msgid "Access controls and authentication procedures"
+msgstr ""
+
+#: templates/public/privacy.html:170
+msgid "Secure network architecture"
+msgstr ""
+
+#: templates/public/privacy.html:171
+msgid "Regular backups and data recovery protocols"
+msgstr ""
+
+#: templates/public/privacy.html:174
+#, python-format
+msgid ""
+"However, please be aware that no method of transmission over the Internet"
+" or electronic storage is 100% secure, and we cannot guarantee absolute "
+"security."
+msgstr ""
+
+#: templates/public/privacy.html:185
+msgid "Your Data Protection Rights"
+msgstr ""
+
+#: templates/public/privacy.html:190
+msgid ""
+"Under the GDPR and other applicable data protection laws, you have the "
+"following rights:"
+msgstr ""
+
+#: templates/public/privacy.html:193
+msgid "Right to access:"
+msgstr ""
+
+#: templates/public/privacy.html:193
+msgid "You can request copies of your personal data."
+msgstr ""
+
+#: templates/public/privacy.html:194
+msgid "Right to rectification:"
+msgstr ""
+
+#: templates/public/privacy.html:194
+msgid ""
+"You can request that we correct inaccurate or complete incomplete "
+"information."
+msgstr ""
+
+#: templates/public/privacy.html:195
+msgid "Right to erasure:"
+msgstr ""
+
+#: templates/public/privacy.html:195
+msgid ""
+"You can request that we delete your personal data in certain "
+"circumstances."
+msgstr ""
+
+#: templates/public/privacy.html:196
+msgid "Right to restrict processing:"
+msgstr ""
+
+#: templates/public/privacy.html:196
+msgid "You can request that we limit how we use your data."
+msgstr ""
+
+#: templates/public/privacy.html:197
+msgid "Right to data portability:"
+msgstr ""
+
+#: templates/public/privacy.html:197
+msgid ""
+"You can request that we transfer your data to another organization or "
+"directly to you."
+msgstr ""
+
+#: templates/public/privacy.html:198
+msgid "Right to object:"
+msgstr ""
+
+#: templates/public/privacy.html:198
+msgid "You can object to our processing of your personal data."
+msgstr ""
+
+#: templates/public/privacy.html:201
+msgid ""
+"To exercise any of these rights, please contact us using the details "
+"provided below. We will respond to your request within 30 days."
+msgstr ""
+
+#: templates/public/privacy.html:212
+msgid "Data Retention"
+msgstr ""
+
+#: templates/public/privacy.html:217
+msgid ""
+"We will retain your personal information only for as long as necessary to"
+" fulfill the purposes for which it was collected, including for "
+"satisfying legal, accounting, or reporting requirements."
+msgstr ""
+
+#: templates/public/privacy.html:220
+msgid ""
+"For business customers, we typically retain account information and order"
+" history for up to 7 years to comply with tax and business regulations."
+msgstr ""
+
+#: templates/public/privacy.html:223
+msgid ""
+"After the retention period, your personal data will be securely deleted "
+"or anonymized."
+msgstr ""
+
+#: templates/public/privacy.html:234
+msgid "Children's Privacy"
+msgstr ""
+
+#: templates/public/privacy.html:239
+msgid ""
+"Our service is not intended for use by individuals under the age of 18. "
+"We do not knowingly collect personal information from children. If you "
+"are a parent or guardian and believe that your child has provided us with"
+" personal information, please contact us so that we can take necessary "
+"actions."
+msgstr ""
+
+#: templates/public/privacy.html:250
+msgid "Changes to This Privacy Policy"
+msgstr ""
+
+#: templates/public/privacy.html:255
+msgid ""
+"We may update our Privacy Policy from time to time. We will notify you of"
+" any changes by posting the new Privacy Policy on this page and updating "
+"the \"Last Updated\" date."
+msgstr ""
+
+#: templates/public/privacy.html:258
+msgid ""
+"You are advised to review this Privacy Policy periodically for any "
+"changes. Changes to this Privacy Policy are effective when they are "
+"posted on this page."
+msgstr ""
+
+#: templates/public/privacy.html:274
+msgid ""
+"If you have any questions about this Privacy Policy or our data "
+"practices, please contact our Data Protection Officer at:"
+msgstr ""
+
+#: templates/public/privacy.html:282
+msgid ""
+"You have the right to lodge a complaint with your local data protection "
+"authority if you have concerns about how we process your personal data."
+msgstr ""
+
+#: templates/public/product_details.html:6
+msgid "auto parts"
+msgstr ""
+
+#: templates/public/product_details.html:6
+msgid "spare parts"
+msgstr ""
+
+#: templates/public/product_details.html:138
+msgid "Available Prices"
+msgstr ""
+
+#: templates/public/product_details.html:167
+#: templates/user/search/intermediate.html:61
+#: templates/user/search/search_results.html:82
+msgid "Add to Cart"
+msgstr ""
+
+#: templates/public/cart/cart.html:290
+#: templates/public/product_details.html:177
+msgid "Continue Shopping"
+msgstr ""
+
+#: templates/public/product_details.html:190
+msgid "Description"
+msgstr ""
+
+#: templates/public/terms.html:5 templates/public/terms.html:8
+msgid "Terms and Conditions for using AutogroupEU services."
+msgstr ""
+
+#: templates/public/terms.html:6
+msgid "terms, conditions, legal, agreement, policy, usage"
+msgstr ""
+
+#: templates/public/terms.html:18
+msgid "Please read these terms carefully before using our services"
+msgstr ""
+
+#: templates/public/terms.html:34
+msgid ""
+"These Terms and Conditions govern your use of the AutogroupEU website and"
+" services provided by AutogroupEU, accessible at autogroup.sk. By "
+"accessing and using our website and services, you accept these Terms and "
+"Conditions in full. If you disagree with any part of these terms, please "
+"do not use our website or services."
+msgstr ""
+
+#: templates/public/terms.html:48
+msgid "Products and Services"
+msgstr ""
+
+#: templates/public/terms.html:53
+msgid "1. All products displayed on our website are subject to availability."
+msgstr ""
+
+#: templates/public/terms.html:56
+msgid "2. We reserve the right to discontinue any product or service at any time."
+msgstr ""
+
+#: templates/public/terms.html:59
+msgid "3. Prices for products are subject to change without notice."
+msgstr ""
+
+#: templates/public/terms.html:62
+msgid ""
+"4. We make every effort to display the accurate colors and features of "
+"our products, but cannot guarantee that your display will accurately "
+"portray the actual color of the product."
+msgstr ""
+
+#: templates/public/terms.html:65
+msgid ""
+"5. Product specifications, prices, and availability may differ from "
+"region to region."
+msgstr ""
+
+#: templates/public/terms.html:76
+msgid "Orders and Payment"
+msgstr ""
+
+#: templates/public/terms.html:81
+msgid ""
+"1. By placing an order, you are making an offer to purchase the products "
+"subject to these Terms and Conditions."
+msgstr ""
+
+#: templates/public/terms.html:84
+msgid ""
+"2. All orders are subject to acceptance and availability. We reserve the "
+"right to refuse any order without providing a reason."
+msgstr ""
+
+#: templates/public/terms.html:87
+msgid ""
+"3. Payment for all orders must be made in advance unless otherwise agreed"
+" upon in writing."
+msgstr ""
+
+#: templates/public/terms.html:90
+msgid ""
+"4. We accept payment via bank transfers, credit cards, and other payment "
+"methods as specified during the checkout process."
+msgstr ""
+
+#: templates/public/terms.html:93
+msgid ""
+"5. For business customers, payment terms will be as per the agreed "
+"contract conditions."
+msgstr ""
+
+#: templates/public/terms.html:104
+msgid "Shipping and Delivery"
+msgstr ""
+
+#: templates/public/terms.html:109
+msgid ""
+"1. Delivery times are estimates only and may vary based on supplier "
+"availability, location, and other factors."
+msgstr ""
+
+#: templates/public/terms.html:112
+msgid ""
+"2. We are not responsible for delays in delivery caused by circumstances "
+"beyond our control."
+msgstr ""
+
+#: templates/public/terms.html:115
+msgid "3. Risk of loss or damage to products passes to you upon delivery."
+msgstr ""
+
+#: templates/public/terms.html:118
+msgid ""
+"4. It is your responsibility to provide accurate shipping information. "
+"Additional charges may apply for redelivery if incorrect information is "
+"provided."
+msgstr ""
+
+#: templates/public/terms.html:129
+msgid "Returns and Warranties"
+msgstr ""
+
+#: templates/public/terms.html:134
+msgid ""
+"1. Returns are accepted within 14 days of receipt, subject to the product"
+" being in its original condition and packaging."
+msgstr ""
+
+#: templates/public/terms.html:137
+msgid "2. To initiate a return, please contact our customer service team."
+msgstr ""
+
+#: templates/public/terms.html:140
+msgid ""
+"3. Refunds will be processed within 14 business days of receiving the "
+"returned product."
+msgstr ""
+
+#: templates/public/terms.html:143
+msgid ""
+"4. Products carry the manufacturers warranty only, unless otherwise "
+"specified."
+msgstr ""
+
+#: templates/public/terms.html:146
+msgid ""
+"5. We do not accept returns on special order items, unless they are "
+"defective."
+msgstr ""
+
+#: templates/public/terms.html:157
+msgid "Liability and Limitations"
+msgstr ""
+
+#: templates/public/terms.html:162
+msgid ""
+"1. Our liability is limited to the purchase price of the product in "
+"question."
+msgstr ""
+
+#: templates/public/terms.html:165
+msgid ""
+"2. We are not liable for any indirect, incidental, or consequential "
+"damages."
+msgstr ""
+
+#: templates/public/terms.html:168
+msgid ""
+"3. To the extent permitted by law, we disclaim all warranties, express or"
+" implied, including but not limited to merchantability and fitness for a "
+"particular purpose."
+msgstr ""
+
+#: templates/public/terms.html:171
+msgid ""
+"4. We do not guarantee that our website will be error-free or "
+"uninterrupted."
+msgstr ""
+
+#: templates/public/terms.html:182
+msgid "Intellectual Property"
+msgstr ""
+
+#: templates/public/terms.html:187
+msgid ""
+"1. All content on this website, including but not limited to text, "
+"graphics, logos, images, and software, is the property of AutogroupEU or "
+"its content suppliers and is protected by copyright laws."
+msgstr ""
+
+#: templates/public/terms.html:190
+msgid ""
+"2. You may not reproduce, distribute, modify, or create derivative works "
+"from any content without our express written consent."
+msgstr ""
+
+#: templates/public/terms.html:201
+msgid "Modifications to Terms"
+msgstr ""
+
+#: templates/public/terms.html:206
+msgid "1. We reserve the right to modify these Terms and Conditions at any time."
+msgstr ""
+
+#: templates/public/terms.html:209
+msgid "2. Changes will be effective immediately upon posting on the website."
+msgstr ""
+
+#: templates/public/terms.html:212
+msgid ""
+"3. Your continued use of our website and services after any changes to "
+"the Terms constitutes your acceptance of the new Terms."
+msgstr ""
+
+#: templates/public/terms.html:228
+msgid ""
+"If you have any questions about these Terms and Conditions, please "
+"contact us at:"
+msgstr ""
+
+#: templates/public/cart/cart.html:5
+msgid ""
+"View and manage your shopping cart at AutogroupEU. Check prices, "
+"quantities, and proceed to checkout."
+msgstr ""
+
+#: templates/public/cart/cart.html:28 templates/public/cart/cart.html:33
+#: templates/user/cart/cart.html:3 templates/user/cart/cart.html:7
+msgid "Shopping Cart"
+msgstr ""
+
+#: templates/public/cart/cart.html:43
+#: templates/public/orders/order_details.html:125
+msgid "Name"
+msgstr ""
+
+#: templates/public/cart/cart.html:85
+#: templates/public/orders/order_details.html:158
+#: templates/user/cart/cart.html:57
+msgid "Total:"
+msgstr ""
+
+#: templates/public/cart/cart.html:96
+msgid "Delivery Information"
+msgstr ""
+
+#: templates/public/cart/cart.html:103
+msgid "Select Saved Address"
+msgstr ""
+
+#: templates/public/cart/cart.html:135
+msgid "Use new address"
+msgstr ""
+
+#: templates/public/cart/cart.html:144
+msgid "New Delivery Address"
+msgstr ""
+
+#: templates/public/cart/cart.html:149 templates/public/user/profile.html:160
+msgid "Full Name"
+msgstr ""
+
+#: templates/public/cart/cart.html:153 templates/public/user/profile.html:65
+#: templates/public/user/profile.html:119
+#: templates/public/user/profile.html:164
+msgid "Phone"
+msgstr ""
+
+#: templates/public/cart/cart.html:160 templates/public/user/profile.html:173
+msgid "Country"
+msgstr ""
+
+#: templates/public/cart/cart.html:168 templates/public/user/profile.html:184
+msgid "City"
+msgstr ""
+
+#: templates/public/cart/cart.html:172 templates/public/user/profile.html:188
+msgid "Postal Code"
+msgstr ""
+
+#: templates/public/cart/cart.html:177 templates/public/user/profile.html:169
+msgid "Street Address"
+msgstr ""
+
+#: templates/public/cart/cart.html:184
+msgid "Save address for future orders"
+msgstr ""
+
+#: templates/public/cart/cart.html:198
+msgid "Need invoice with VAT number"
+msgstr ""
+
+#: templates/public/cart/cart.html:206
+msgid "Select Saved Company"
+msgstr ""
+
+#: templates/public/cart/cart.html:227 templates/public/user/profile.html:239
+msgid "Address"
+msgstr ""
+
+#: templates/public/cart/cart.html:242
+msgid "Use new company details"
+msgstr ""
+
+#: templates/public/cart/cart.html:251
+msgid "New Company Details"
+msgstr ""
+
+#: templates/public/cart/cart.html:279
+msgid "Save company details for future orders"
+msgstr ""
+
+#: templates/public/cart/cart.html:293 templates/user/cart/cart.html:68
+msgid "Place Order"
+msgstr ""
+
+#: templates/public/cart/cart.html:308 templates/user/cart/cart.html:93
+msgid "Your Cart is Empty"
+msgstr ""
+
+#: templates/public/cart/cart.html:315 templates/user/cart/cart.html:94
+msgid "Start adding items to your cart!"
+msgstr ""
+
+#: templates/public/cart/cart.html:318 templates/user/cart/cart.html:96
+#: templates/user/index.html:11
+msgid "Search Articles"
+msgstr ""
+
+#: templates/public/cart/cart.html:455
+msgid "VAT number is valid"
+msgstr ""
+
+#: templates/public/cart/cart.html:455
+msgid "VAT number is invalid"
+msgstr ""
+
+#: templates/public/cart/cart.html:486
+msgid "Please provide company name and VAT number"
+msgstr ""
+
+#: templates/public/cart/cart.html:493
+msgid "Please select a company or enter new company details"
+msgstr ""
+
+#: templates/public/cart/cart.html:572
+msgid "Please select a delivery address or enter a new one."
+msgstr ""
+
+#: templates/public/cart/cart.html:582
+msgid "Please fill in all required fields."
+msgstr ""
+
+#: templates/public/cart/cart.html:591
+msgid "Processing..."
+msgstr ""
+
+#: templates/public/orders/list_orders.html:5
+msgid ""
+"View your order history at AutogroupEU. Track your purchases and check "
+"delivery status."
+msgstr ""
+
+#: templates/public/orders/list_orders.html:9
+#: templates/public/orders/list_orders.html:18
+#: templates/user/orders/orders.html:55
+msgid "My Orders"
+msgstr ""
+
+#: templates/public/orders/list_orders.html:27
+#: templates/public/orders/list_orders.html:38
+msgid "Order #"
+msgstr ""
+
+#: templates/public/orders/list_orders.html:29
+#: templates/public/orders/list_orders.html:49
+#: templates/user/shipments/view_shipment.html:31
+msgid "Items"
+msgstr ""
+
+#: templates/public/orders/list_orders.html:93
+#: templates/user/orders/orders.html:133
+msgid "No Orders Found"
+msgstr ""
+
+#: templates/public/orders/list_orders.html:94
+msgid "You have not placed any orders yet."
+msgstr ""
+
+#: templates/public/orders/list_orders.html:97
+#: templates/user/orders/orders.html:136
+msgid "Start Shopping"
+msgstr ""
+
+#: templates/public/orders/order_details.html:8
+#: templates/user/orders/order_details.html:4
+#: templates/user/orders/order_details.html:9
+#: templates/user/shipments/shipments.html:19
+msgid "Order Details"
+msgstr ""
+
+#: templates/public/orders/order_details.html:17
+msgid "Order"
+msgstr ""
+
+#: templates/public/orders/order_details.html:22
+#: templates/user/orders/order_details.html:11
+msgid "Back to Orders"
+msgstr ""
+
+#: templates/public/orders/order_details.html:33
+msgid "Order Date"
+msgstr ""
+
+#: templates/public/orders/order_details.html:48
+msgid "Total Items"
+msgstr ""
+
+#: templates/public/orders/order_details.html:55
+msgid "Total Amount"
+msgstr ""
+
+#: templates/public/orders/order_details.html:82
+msgid "No delivery information provided"
+msgstr ""
+
+#: templates/public/orders/order_details.html:94
+msgid "Invoice Information"
+msgstr ""
+
+#: templates/public/orders/order_details.html:110
+msgid "Invoice requested but details not provided"
+msgstr ""
+
+#: templates/public/user/profile.html:7
+msgid "Manage your personal information, addresses and company details"
+msgstr ""
+
+#: templates/public/user/profile.html:15
+msgid "Profile"
+msgstr ""
+
+#: templates/public/user/profile.html:21
+msgid "Addresses"
+msgstr ""
+
+#: templates/public/user/profile.html:27
+msgid "Companies"
+msgstr ""
+
+#: templates/public/user/profile.html:46
+msgid "Personal Information"
+msgstr ""
+
+#: templates/public/user/profile.html:56
+msgid "Username cannot be changed"
+msgstr ""
+
+#: templates/public/user/profile.html:72
+msgid "Preferred Language"
+msgstr ""
+
+#: templates/public/user/profile.html:83
+msgid "Update Profile"
+msgstr ""
+
+#: templates/public/user/profile.html:97
+msgid "Delivery Addresses"
+msgstr ""
+
+#: templates/public/user/profile.html:102
+msgid "Your Addresses"
+msgstr ""
+
+#: templates/public/user/profile.html:129
+#: templates/public/user/profile.html:248
+msgid "Set as Default"
+msgstr ""
+
+#: templates/public/user/profile.html:134
+msgid "Are you sure you want to delete this address?"
+msgstr ""
+
+#: templates/public/user/profile.html:138
+#: templates/public/user/profile.html:257
+msgid "Delete"
+msgstr ""
+
+#: templates/public/user/profile.html:149
+msgid "You have no saved addresses yet."
+msgstr ""
+
+#: templates/public/user/profile.html:154
+msgid "Add New Address"
+msgstr ""
+
+#: templates/public/user/profile.html:175
+msgid "Choose..."
+msgstr ""
+
+#: templates/public/user/profile.html:176
+msgid "Slovakia"
+msgstr ""
+
+#: templates/public/user/profile.html:177
+msgid "Ukraine"
+msgstr ""
+
+#: templates/public/user/profile.html:178
+msgid "Czech Republic"
+msgstr ""
+
+#: templates/public/user/profile.html:179
+msgid "Hungary"
+msgstr ""
+
+#: templates/public/user/profile.html:180
+msgid "Poland"
+msgstr ""
+
+#: templates/public/user/profile.html:195
+msgid "Set as default address"
+msgstr ""
+
+#: templates/public/user/profile.html:201
+msgid "Add Address"
+msgstr ""
+
+#: templates/public/user/profile.html:217
+msgid "Company Information"
+msgstr ""
+
+#: templates/public/user/profile.html:222
+msgid "Your Companies"
+msgstr ""
+
+#: templates/public/user/profile.html:235
+msgid "VAT"
+msgstr ""
+
+#: templates/public/user/profile.html:237
+msgid "Registration No."
+msgstr ""
+
+#: templates/public/user/profile.html:253
+msgid "Are you sure you want to delete this company?"
+msgstr ""
+
+#: templates/public/user/profile.html:268
+msgid "You have no saved companies yet."
+msgstr ""
+
+#: templates/public/user/profile.html:273
+msgid "Add New Company"
+msgstr ""
+
+#: templates/public/user/profile.html:287
+msgid "(optional)"
+msgstr ""
+
+#: templates/public/user/profile.html:298
+msgid "Set as default company"
+msgstr ""
+
+#: templates/public/user/profile.html:304
+msgid "Add Company"
+msgstr ""
+
+#: templates/public/user/profile.html:320
+#: templates/public/user/profile.html:348
+msgid "Change Password"
+msgstr ""
+
+#: templates/public/user/profile.html:331
+msgid "Current Password"
+msgstr ""
+
+#: templates/public/user/profile.html:336
+msgid "New Password"
+msgstr ""
+
+#: templates/public/user/profile.html:339
+msgid "Password must be at least 8 characters long"
+msgstr ""
+
+#: templates/public/user/profile.html:343
+msgid "Confirm New Password"
+msgstr ""
+
+#: templates/user/index.html:15
+msgid "Enter Articles and Quantities:"
+msgstr ""
+
+#: templates/user/index.html:20
+msgid "Example:"
+msgstr ""
+
+#: templates/user/index.html:35
+msgid "Upload Articles File"
+msgstr ""
+
+#: templates/user/index.html:41
+msgid "Article/Quantity/Comment"
+msgstr ""
+
+#: templates/user/index.html:45
+msgid "Article/Quantity/Brand/Comment"
+msgstr ""
+
+#: templates/user/index.html:53
+msgid "Drag and drop your file here"
+msgstr ""
+
+#: templates/user/index.html:54
+msgid "or"
+msgstr ""
+
+#: templates/user/index.html:56
+msgid "Select File"
+msgstr ""
+
+#: templates/user/index.html:73
+msgid "Upload and Search"
+msgstr ""
+
+#: templates/user/cart/cart.html:15 templates/user/orders/order_details.html:22
+msgid "Price List"
+msgstr ""
 
 #: templates/user/cart/cart.html:20 templates/user/orders/order_details.html:27
 #: templates/user/search/intermediate.html:19
 #: templates/user/search/search_results.html:18
 #: templates/user/shipments/view_shipment.html:43
 msgid "Comment"
-msgstr "Коментар"
-
-#: templates/user/cart/cart.html:21 templates/user/orders/orders.html:103
-#: templates/user/shipments/list_shipments.html:22
-msgid "Actions"
-msgstr "Дії"
-
-#: templates/user/cart/cart.html:57
-msgid "Total:"
-msgstr "Всього:"
-
-#: templates/user/cart/cart.html:68
-msgid "Place Order"
-msgstr "Оформити замовлення"
+msgstr ""
 
 #: templates/user/cart/cart.html:74
 msgid "Clear Cart"
-msgstr "Очистити кошик"
+msgstr ""
 
 #: templates/user/cart/cart.html:81
 #: templates/user/search/search_results.html:70
 msgid "Missing Articles:"
-msgstr "Відсутні артикули:"
+msgstr ""
 
 #: templates/user/cart/cart.html:82
 msgid "The following articles were not found:"
-msgstr "Наступні артикули не знайдено:"
-
-#: templates/user/cart/cart.html:93
-msgid "Your Cart is Empty"
-msgstr "Ваш кошик порожній"
-
-#: templates/user/cart/cart.html:94
-msgid "Start adding items to your cart!"
-msgstr "Почніть додавати товари до кошика!"
+msgstr ""
 
 #: templates/user/news/user_news.html:12
 msgid "New Messages"
-msgstr "Нові повідомлення"
+msgstr ""
 
 #: templates/user/news/user_news.html:18 templates/user/orders/orders.html:69
 msgid "New"
-msgstr "Нові"
+msgstr ""
 
 #: templates/user/news/user_news.html:26
 msgid "Read More"
-msgstr "Читати далі"
+msgstr ""
 
 #: templates/user/news/user_news.html:36
 msgid "News Archive"
-msgstr "Архів новин"
-
-#: templates/user/news/user_news.html:44 templates/user/orders/orders.html:124
-#: templates/user/shipments/list_shipments.html:36
-msgid "View Details"
-msgstr "Переглянути деталі"
+msgstr ""
 
 #: templates/user/news/view_news.html:9
 msgid "Mark as Read"
-msgstr "Позначити як прочитане"
+msgstr ""
 
 #: templates/user/news/view_news.html:16
 msgid "Published:"
-msgstr "Опубліковано:"
-
-#: templates/user/orders/order_changes.html:12
-#: templates/user/orders/orders.html:99
-msgid "Order ID"
-msgstr "ID замовлення"
+msgstr ""
 
 #: templates/user/orders/order_changes.html:14
 msgid "Change Type"
-msgstr "Тип зміни"
+msgstr ""
 
 #: templates/user/orders/order_changes.html:15
 msgid "Old Value"
-msgstr "Старе значення"
+msgstr ""
 
 #: templates/user/orders/order_changes.html:16
 msgid "New Value"
-msgstr "Нове значення"
+msgstr ""
 
 #: templates/user/orders/order_changes.html:17
 msgid "Change Date"
-msgstr "Дата зміни"
+msgstr ""
 
 #: templates/user/orders/order_changes.html:27
 msgid "Article Number Change"
-msgstr "Зміна номера артикула"
+msgstr ""
 
 #: templates/user/orders/order_changes.html:29
 msgid "Price Change"
-msgstr "Зміна ціни"
+msgstr ""
 
 #: templates/user/orders/order_changes.html:42
 msgid "No changes found."
-msgstr "Змін не знайдено"
-
-#: templates/user/orders/order_details.html:4
-#: templates/user/orders/order_details.html:9
-#: templates/user/shipments/shipments.html:19
-msgid "Order Details"
-msgstr "Деталі замовлення"
-
-#: templates/user/orders/order_details.html:11
-msgid "Back to Orders"
-msgstr "Назад до замовлень"
+msgstr ""
 
 #: templates/user/orders/order_details.html:21
 msgid "Original Article"
-msgstr "Оригінальний артикул"
+msgstr ""
 
 #: templates/user/orders/order_details.html:23
 msgid "Brand ID"
-msgstr "ID бренду"
-
-#: templates/user/orders/order_details.html:28
-#: templates/user/orders/orders.html:66 templates/user/orders/orders.html:102
-#: templates/user/shipments/list_shipments.html:18
-msgid "Status"
-msgstr "Статус"
+msgstr ""
 
 #: templates/user/orders/order_details.html:86
 msgid "Total Order Amount:"
-msgstr "Загальна сума замовлення:"
+msgstr ""
 
 #: templates/user/orders/order_details.html:96
 msgid "Order Timeline"
-msgstr "Хронологія замовлення"
+msgstr ""
 
 #: templates/user/orders/order_details.html:115
 msgid "No Details Available"
-msgstr "Деталі відсутні"
+msgstr ""
 
 #: templates/user/orders/order_details.html:116
 msgid "The details for this order could not be found."
-msgstr "Деталі цього замовлення не знайдено."
-
-#: templates/user/orders/orders.html:55
-msgid "My Orders"
-msgstr "Мої замовлення"
+msgstr ""
 
 #: templates/user/orders/orders.html:68
 msgid "All"
-msgstr "Всі"
+msgstr ""
 
 #: templates/user/orders/orders.html:70
 msgid "Accepted"
-msgstr "Прийняті"
+msgstr ""
 
 #: templates/user/orders/orders.html:71
 msgid "Cancelled"
-msgstr "Скасовані"
+msgstr ""
 
 #: templates/user/orders/orders.html:75
 msgid "Start Date"
-msgstr "Дата початку"
+msgstr ""
 
 #: templates/user/orders/orders.html:79
 msgid "End Date"
-msgstr "Дата кінця"
+msgstr ""
 
 #: templates/user/orders/orders.html:84
 msgid "Filter"
-msgstr "Фільтрувати"
+msgstr ""
 
 #: templates/user/orders/orders.html:87
 msgid "Clear Filters"
-msgstr "Очистити фільтри"
-
-#: templates/user/orders/orders.html:100
-msgid "Date"
-msgstr "Дата"
+msgstr ""
 
 #: templates/user/orders/orders.html:101
 #: templates/user/shipments/list_shipments.html:21
 #: templates/user/shipments/shipments.html:26
 #: templates/user/shipments/view_shipment.html:42
 msgid "Total Price"
-msgstr "Загальна ціна"
-
-#: templates/user/orders/orders.html:133
-msgid "No Orders Found"
-msgstr "Замовлень не знайдено"
+msgstr ""
 
 #: templates/user/orders/orders.html:134
 msgid "You haven't placed any orders yet."
-msgstr "Ви ще не розмістили жодного замовлення."
-
-#: templates/user/orders/orders.html:136
-msgid "Start Shopping"
-msgstr "Почати покупки"
+msgstr ""
 
 #: templates/user/search/intermediate.html:3
 msgid "Select Price Lists"
-msgstr "Виберіть прайс-листи"
+msgstr ""
 
 #: templates/user/search/intermediate.html:7
 msgid "Intermediate Results"
-msgstr "Проміжні результати"
-
-msgid "%(num_articles)s articles still need table selection."
-msgstr "Ще %(num_articles)s артикулам потрібно вибрати таблицю."
+msgstr ""
 
 #: templates/user/search/intermediate.html:8
 msgid "Please select a price list for each article."
-msgstr "Будь ласка, виберіть прайс-лист для кожного артикула."
+msgstr ""
 
 #: templates/user/search/intermediate.html:17
 msgid "Available Price Lists"
-msgstr "Доступні прайс-листи"
-
-msgid "Welcome to AutogroupEU"
-msgstr "Вітаємо в AutogroupEU"
-
-msgid "Your reliable partner in auto parts supply across Europe. Enter the article number to check prices and availability."
-msgstr "Ваш надійний партнер з постачання автозапчастин у Європі. Введіть номер артикула для перевірки цін та наявності."
-
-msgid "Need Help?"
-msgstr "Потрібна допомога?"
-
-msgid "If you have any questions, don't hesitate to contact us:"
-msgstr "Якщо у вас виникли питання, не соромтеся звертатися до нас:"
-
-msgid "About Us"
-msgstr "Про нас"
-
-msgid "About AutogroupEU"
-msgstr "Про AutogroupEU"
-
-msgid "Auto Parts Store"
-msgstr "Магазин автозапчастин"
-
-msgid "Our Main Brands"
-msgstr "Наші основні бренди"
-
-msgid "My Orders"
-msgstr "Мої замовлення"
-
-msgid "Order #"
-msgstr "Замовлення №"
-
-msgid "Date"
-msgstr "Дата"
-
-msgid "Items"
-msgstr "Товари"
-
-msgid "Total"
-msgstr "Сума"
-
-msgid "Status"
-msgstr "Статус"
-
-msgid "Actions"
-msgstr "Дії"
-
-msgid "View"
-msgstr "Переглянути"
-
-msgid "You have no orders yet."
-msgstr "У вас ще немає замовлень."
-
-msgid "Back to Orders"
-msgstr "Назад до замовлень"
-
-msgid "Order Date"
-msgstr "Дата замовлення"
-
-msgid "Total Items"
-msgstr "Всього товарів"
-
-msgid "Total Amount"
-msgstr "Загальна сума"
-
-msgid "B2B Services"
-msgstr "B2B сервіси"
-
-msgid "For business clients interested in B2B access, please contact:"
-msgstr "Для бізнес-клієнтів, зацікавлених у доступі B2B, будь ласка, зв'яжіться:"
-
-msgid "Find Us"
-msgstr "Як нас знайти"
-
-#: templates/user/search/intermediate.html:61
-#: templates/user/search/search_results.html:82
-msgid "Add to Cart"
-msgstr "Додати в кошик"
+msgstr ""
 
 #: templates/user/search/intermediate.html:64
 msgid "Cancel"
-msgstr "Скасувати"
+msgstr ""
 
 #: templates/user/search/intermediate.html:71
 msgid "Missing Articles"
-msgstr "Відсутні артикули"
+msgstr ""
 
 #: templates/user/search/intermediate.html:72
 #: templates/user/search/search_results.html:71
 msgid "The following articles were not found in any price list:"
-msgstr "Наступні артикули не знайдено в жодному прайс-листі:"
+msgstr ""
 
 #: templates/user/search/search_results.html:3
 #: templates/user/search/search_results.html:7
 msgid "Search Results"
-msgstr "Результати пошуку"
+msgstr ""
 
 #: templates/user/search/search_results.html:16
 msgid "Price Lists"
-msgstr "Прайс-листи"
+msgstr ""
 
 #: templates/user/search/search_results.html:19
 msgid "Select"
-msgstr "Вибрати"
+msgstr ""
 
 #: templates/user/search/search_results.html:86
 msgid "Clear Results"
-msgstr "Очистити результати"
+msgstr ""
 
 #: templates/user/search/search_results.html:92
 msgid "No Results Found"
-msgstr "Результатів не знайдено"
+msgstr ""
 
 #: templates/user/search/search_results.html:93
 msgid "Try searching with different articles or check your input format."
-msgstr "Спробуйте пошук з іншими артикулами або перевірте формат введення."
+msgstr ""
 
 #: templates/user/search/search_results.html:95
 msgid "New Search"
-msgstr "Новий пошук"
+msgstr ""
 
 #: templates/user/shipments/list_shipments.html:9
 #: templates/user/shipments/shipments.html:7
 msgid "My Shipments"
-msgstr "Мої відвантаження"
+msgstr ""
 
 #: templates/user/shipments/list_shipments.html:17
 msgid "Shipment Date"
-msgstr "Дата відвантаження"
+msgstr ""
 
 #: templates/user/shipments/list_shipments.html:19
 msgid "Tracking Number"
-msgstr "Номер відстеження"
+msgstr ""
 
 #: templates/user/shipments/list_shipments.html:20
 msgid "Items Count"
-msgstr "Кількість товарів"
+msgstr ""
 
 #: templates/user/shipments/list_shipments.html:30
 msgid "N/A"
-msgstr "Немає даних"
+msgstr ""
 
 #: templates/user/shipments/list_shipments.html:45
 #: templates/user/shipments/shipments.html:44
 msgid "No shipments found."
-msgstr "Відвантажень не знайдено."
+msgstr ""
 
 #: templates/user/shipments/shipments.html:13
 msgid "Shipment Date:"
-msgstr "Дата відвантаження:"
+msgstr ""
 
 #: templates/user/shipments/shipments.html:13
 #: templates/user/shipments/view_shipment.html:22
 msgid "Status:"
-msgstr "Статус:"
+msgstr ""
 
 #: templates/user/shipments/shipments.html:15
 #: templates/user/shipments/view_shipment.html:23
 msgid "Tracking Number:"
-msgstr "Номер відстеження:"
+msgstr ""
 
 #: templates/user/shipments/view_shipment.html:3
 #: templates/user/shipments/view_shipment.html:8
 msgid "Shipment Details"
-msgstr "Деталі відвантаження"
+msgstr ""
 
 #: templates/user/shipments/view_shipment.html:10
 msgid "Back to Shipments"
-msgstr "Назад до відвантажень"
+msgstr ""
 
 #: templates/user/shipments/view_shipment.html:16
 msgid "Shipment Information"
-msgstr "Інформація про відвантаження"
+msgstr ""
 
 #: templates/user/shipments/view_shipment.html:21
 msgid "Date:"
-msgstr "Дата:"
+msgstr ""
 
 #: templates/user/shipments/view_shipment.html:23
 msgid "Not specified"
-msgstr "Не вказано"
-
-#: templates/user/shipments/view_shipment.html:31
-msgid "Items"
-msgstr "Товари"
+msgstr ""
 
 #: templates/user/shipments/view_shipment.html:60
 msgid "No items in this shipment."
-msgstr "Немає товарів у цьому відвантаженні."
+msgstr ""
 
 #: venv/Lib/site-packages/click/_termui_impl.py:556
 msgid "{editor}: Editing failed"
-msgstr "{editor}: Не вдалося редагувати"
+msgstr ""
 
 #: venv/Lib/site-packages/click/_termui_impl.py:560
 msgid "{editor}: Editing failed: {e}"
-msgstr "{editor}: Не вдалося редагувати: {e}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1124
 msgid "Aborted!"
-msgstr "Скасовано!"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1349
 #: venv/Lib/site-packages/click/core.py:1379
 msgid "(Deprecated) {text}"
-msgstr "(Застаріле) {text}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1396
 msgid "Options"
-msgstr "Параметри"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1424
 msgid "Got unexpected extra argument ({args})"
 msgid_plural "Got unexpected extra arguments ({args})"
-msgstr[0] "Отримано неочікуваний додатковий аргумент ({args})"
-msgstr[1] "Отримано неочікувані додаткові аргументи ({args})"
-msgstr[2] "Отримано неочікувані додаткові аргументи ({args})"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #: venv/Lib/site-packages/click/core.py:1437
 msgid "DeprecationWarning: The command {name!r} is deprecated."
-msgstr "DeprecationWarning: Команда {name!r} застаріла."
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1645
 msgid "Commands"
-msgstr "Команди"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1677
 msgid "Missing command."
-msgstr "Відсутня команда."
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1755
 msgid "No such command {name!r}."
-msgstr "Немає такої команди {name!r}."
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:2313
 msgid "Value must be an iterable."
-msgstr "Значення має бути iterable."
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:2336
 msgid "Takes {nargs} values but 1 was given."
 msgid_plural "Takes {nargs} values but {len} were given."
-msgstr[0] "Потрібно {nargs} значення, але надано 1."
-msgstr[1] "Потрібно {nargs} значення, але надано {len}."
-msgstr[2] "Потрібно {nargs} значень, але надано {len}."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #: venv/Lib/site-packages/click/core.py:2783
 msgid "env var: {var}"
-msgstr "змінна середовища: {var}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:2813
 msgid "(dynamic)"
-msgstr "(динамічний)"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:2828
 msgid "default: {default}"
-msgstr "за замовчуванням: {default}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:2841
 msgid "required"
-msgstr "обов'язково"
+msgstr ""
 
 #: venv/Lib/site-packages/click/decorators.py:457
 #, python-format
 msgid "%(prog)s, version %(version)s"
-msgstr "%(prog)s, версія %(version)s"
+msgstr ""
 
 #: venv/Lib/site-packages/click/decorators.py:520
 msgid "Show the version and exit."
-msgstr "Показати версію та вийти."
+msgstr ""
 
 #: venv/Lib/site-packages/click/decorators.py:541
 msgid "Show this message and exit."
-msgstr "Показати це повідомлення та вийти."
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:49
 #: venv/Lib/site-packages/click/exceptions.py:88
 msgid "Error: {message}"
-msgstr "Помилка: {message}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:80
 msgid "Try '{command} {option}' for help."
-msgstr "Спробуйте '{command} {option}' для отримання довідки."
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:129
 msgid "Invalid value: {message}"
-msgstr "Недійсне значення: {message}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:131
 msgid "Invalid value for {param_hint}: {message}"
-msgstr "Недійсне значення для {param_hint}: {message}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:187
 msgid "Missing argument"
-msgstr "Відсутній аргумент"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:189
 msgid "Missing option"
-msgstr "Відсутня опція"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:191
 msgid "Missing parameter"
-msgstr "Відсутній параметр"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:193
 msgid "Missing {param_type}"
-msgstr "Відсутній {param_type}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:200
 msgid "Missing parameter: {param_name}"
-msgstr "Відсутній параметр: {param_name}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:220
 msgid "No such option: {name}"
-msgstr "Немає такої опції: {name}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:234
 msgid "Did you mean {possibility}?"
 msgid_plural "(Possible options: {possibilities})"
-msgstr[0] "Можливо, ви мали на увазі {possibility}?"
-msgstr[1] "(Можливі опції: {possibilities})"
-msgstr[2] "(Можливі опції: {possibilities})"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #: venv/Lib/site-packages/click/exceptions.py:270
 msgid "unknown error"
-msgstr "невідома помилка"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:277
 msgid "Could not open file {filename!r}: {message}"
-msgstr "Не вдалося відкрити файл {filename!r}: {message}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/formatting.py:156
 msgid "Usage:"
-msgstr "Використання:"
+msgstr ""
 
 #: venv/Lib/site-packages/click/parser.py:233
 msgid "Argument {name!r} takes {nargs} values."
-msgstr "Аргумент {name!r} приймає {nargs} значень."
+msgstr ""
 
 #: venv/Lib/site-packages/click/parser.py:415
 msgid "Option {name!r} does not take a value."
-msgstr "Опція {name!r} не приймає значення."
+msgstr ""
 
 #: venv/Lib/site-packages/click/parser.py:475
 msgid "Option {name!r} requires an argument."
 msgid_plural "Option {name!r} requires {nargs} arguments."
-msgstr[0] "Опція {name!r} вимагає аргумент."
-msgstr[1] "Опція {name!r} вимагає {nargs} аргументи."
-msgstr[2] "Опція {name!r} вимагає {nargs} аргументів."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #: venv/Lib/site-packages/click/shell_completion.py:325
 msgid "Shell completion is not supported for Bash versions older than 4.4."
-msgstr "Автодоповнення оболонки не підтримується для версій Bash старших за 4.4."
+msgstr ""
 
 #: venv/Lib/site-packages/click/shell_completion.py:333
 msgid "Couldn't detect Bash version, shell completion is not supported."
-msgstr "Не вдалося визначити версію Bash, автодоповнення оболонки не підтримується."
+msgstr ""
 
 #: venv/Lib/site-packages/click/termui.py:158
 msgid "Repeat for confirmation"
-msgstr "Повторіть для підтвердження"
+msgstr ""
 
 #: venv/Lib/site-packages/click/termui.py:174
 msgid "Error: The value you entered was invalid."
-msgstr "Помилка: Введене значення недійсне."
+msgstr ""
 
 #: venv/Lib/site-packages/click/termui.py:176
 msgid "Error: {e.message}"
-msgstr "Помилка: {e.message}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/termui.py:187
 msgid "Error: The two entered values do not match."
-msgstr "Помилка: Введені значення не співпадають."
+msgstr ""
 
 #: venv/Lib/site-packages/click/termui.py:243
 msgid "Error: invalid input"
-msgstr "Помилка: некоректне введення"
+msgstr ""
 
 #: venv/Lib/site-packages/click/termui.py:773
 msgid "Press any key to continue..."
-msgstr "Натисніть будь-яку клавішу для продовження..."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:267
 msgid ""
 "Choose from:\n"
 "\t{choices}"
-msgstr "Виберіть з:\n\t{choices}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:301
 msgid "{value!r} is not {choice}."
 msgid_plural "{value!r} is not one of {choices}."
-msgstr[0] "Значення {value!r} не є {choice}."
-msgstr[1] "Значення {value!r} не є одним із {choices}."
-msgstr[2] "Значення {value!r} не є одним із {choices}."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #: venv/Lib/site-packages/click/types.py:395
 msgid "{value!r} does not match the format {format}."
 msgid_plural "{value!r} does not match the formats {formats}."
-msgstr[0] "Значення {value!r} не відповідає формату {format}."
-msgstr[1] "Значення {value!r} не відповідає форматам {formats}."
-msgstr[2] "Значення {value!r} не відповідає форматам {formats}."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #: venv/Lib/site-packages/click/types.py:415
 msgid "{value!r} is not a valid {number_type}."
-msgstr "Значення {value!r} не є допустимим {number_type}."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:471
 msgid "{value} is not in the range {range}."
-msgstr "Значення {value} не входить в діапазон {range}."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:612
 msgid "{value!r} is not a valid boolean."
-msgstr "Значення {value!r} не є допустимим логічним значенням."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:636
 msgid "{value!r} is not a valid UUID."
-msgstr "Значення {value!r} не є допустимим UUID."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:826
 msgid "file"
-msgstr "Фільтрувати"
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:828
 msgid "directory"
-msgstr "директорія"
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:830
 msgid "path"
-msgstr "шлях"
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:881
 msgid "{name} {filename!r} does not exist."
-msgstr "{name} {filename!r} не існує."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:890
 msgid "{name} {filename!r} is a file."
-msgstr "{name} {filename!r} є файлом."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:898
 msgid "{name} {filename!r} is a directory."
-msgstr "{name} {filename!r} є директорією."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:907
 msgid "{name} {filename!r} is not readable."
-msgstr "{name} {filename!r} не читається."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:916
 msgid "{name} {filename!r} is not writable."
-msgstr "{name} {filename!r} не записується."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:925
 msgid "{name} {filename!r} is not executable."
-msgstr "{name} {filename!r} не виконується."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:991
 msgid "{len_type} values are required, but {len_value} was given."
 msgid_plural "{len_type} values are required, but {len_value} were given."
-msgstr[0] "Потрібно {len_type} значення, але надано {len_value}."
-msgstr[1] "Потрібно {len_type} значення, але надано {len_value}."
-msgstr[2] "Потрібно {len_type} значень, але надано {len_value}."
-
-msgid "View and manage your shopping cart at AutogroupEU. Check prices, quantities, and proceed to checkout."
-msgstr "Перегляньте та керуйте своїм кошиком в AutogroupEU. Перевірте ціни, кількості та перейдіть до оформлення замовлення."
-
-msgid "Choose from:\n\t{choices}"
-msgstr "Виберіть з:\n\t{choices}"
-
-msgid "Usage:"
-msgstr "Використання:"
-
-msgid "Commands"
-msgstr "Команди"
-
-msgid "In Stock"
-msgstr "В наявності"
-
-msgid "days"
-msgstr "днів"
-
-msgid "Continue Shopping"
-msgstr "Продовжити покупки"
-
-msgid "Product"
-msgstr "Товар"
-
-msgid "Delivery"
-msgstr "Доставка"
-
-#~ msgid "or"
-#~ msgstr "або"
-
-#~ msgid "Error loading order changes."
-#~ msgstr "Помилка завантаження змін замовлення"
-
-#~ msgid "An error occurred during submission. Please try again."
-#~ msgstr "Під час надсилання сталася помилка. Будь ласка, спробуйте ще раз."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 

@@ -1,0 +1,289 @@
+{% extends "base/public_base.html" %}
+
+{% block head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ _('Privacy Policy for AutogroupEU - how we collect, use, and protect your personal data.') }}">
+<meta name="keywords" content="{{ _('privacy policy, data protection, GDPR, personal data, cookies') }}">
+<meta property="og:title" content="{{ _('Privacy Policy') }} - AutogroupEU">
+<meta property="og:description" content="{{ _('Privacy Policy for AutogroupEU - how we collect, use, and protect your personal data.') }}">
+<meta property="og:type" content="website">
+{% endblock %}
+
+{% block title %}{{ _('Privacy Policy') }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="page-header fade-in">
+        <h2>{{ _('Privacy Policy') }}</h2>
+        <p class="lead text-muted">{{ _('How we collect, use, and protect your personal information') }}</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Вступ -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(0,123,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-shield-lock text-primary"></i>
+                    </div>
+                    <h5 class="mb-0 text-primary">{{ _('Introduction') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('At AutogroupEU, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our website or services.') }}
+                    </p>
+                    <p>
+                        {{ _('By using our website and services, you consent to the practices described in this policy. This policy complies with the General Data Protection Regulation (GDPR) and relevant data protection laws.') }}
+                    </p>
+                    <p>
+                        {{ _('Last Updated: March 1, 2025') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Інформація, яку ми збираємо -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(23,162,184,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-file-earmark-text text-info"></i>
+                    </div>
+                    <h5 class="mb-0 text-info">{{ _('Information We Collect') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        <strong>{{ _('Personal Information:') }}</strong> {{ _('We collect personal information that you provide directly to us, such as:') }}
+                    </p>
+                    <ul>
+                        <li>{{ _('Name, email address, phone number, and postal address') }}</li>
+                        <li>{{ _('Account login details, such as username and password') }}</li>
+                        <li>{{ _('Company information, such as business name, VAT number, and registration details') }}</li>
+                        <li>{{ _('Payment information (though we do not store complete credit card details)') }}</li>
+                        <li>{{ _('Order history and preferences') }}</li>
+                        <li>{{ _('Communication history with our customer service team') }}</li>
+                    </ul>
+                    
+                    <p>
+                        <strong>{{ _('Automatically Collected Information:') }}</strong> {{ _('When you visit our website, we automatically collect certain information about your device and usage, including:') }}
+                    </p>
+                    <ul>
+                        <li>{{ _('IP address and location information') }}</li>
+                        <li>{{ _('Browser and device information') }}</li>
+                        <li>{{ _('Pages visited and time spent on our website') }}</li>
+                        <li>{{ _('Referring websites or sources') }}</li>
+                        <li>{{ _('Cookies and similar tracking technologies') }}</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Як ми використовуємо інформацію -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(40,167,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-gear text-success"></i>
+                    </div>
+                    <h5 class="mb-0 text-success">{{ _('How We Use Your Information') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>{{ _('We use the information we collect for the following purposes:') }}</p>
+                    <ul>
+                        <li>{{ _('To provide and maintain our services, including processing orders and managing accounts') }}</li>
+                        <li>{{ _('To communicate with you about orders, account status, and customer service') }}</li>
+                        <li>{{ _('To improve our website, products, and services') }}</li>
+                        <li>{{ _('To send promotional materials and information about new products (only with your consent)') }}</li>
+                        <li>{{ _('To detect and prevent fraudulent activities and security breaches') }}</li>
+                        <li>{{ _('To comply with legal obligations and enforce our policies') }}</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Розкриття інформації -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(255,193,7,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-share text-warning"></i>
+                    </div>
+                    <h5 class="mb-0 text-warning">{{ _('Information Sharing and Disclosure') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>{{ _('We may share your information with:') }}</p>
+                    <ul>
+                        <li>{{ _('Service providers who help us operate our business (shipping companies, payment processors, etc.)') }}</li>
+                        <li>{{ _('Professional advisors such as lawyers, accountants, and insurers when necessary') }}</li>
+                        <li>{{ _('Government bodies or law enforcement agencies when required by law') }}</li>
+                        <li>{{ _('Business partners with your explicit consent') }}</li>
+                    </ul>
+                    <p>
+                        {{ _('We do not sell, rent, or trade your personal information to third parties for marketing purposes without your explicit consent.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Cookies та інші технології відстеження -->
+            <div id="cookies" class="card-base fade-in mb-4"> <!-- додали id="cookies" -->
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(108,117,125,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-cookie text-secondary"></i>
+                    </div>
+                    <h5 class="mb-0 text-secondary">{{ _('Cookies and Tracking Technologies') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('We use cookies and similar tracking technologies to track activity on our website and hold certain information. Cookies are files with small amount of data that may include an anonymous unique identifier.') }}
+                    </p>
+                    <p>
+                        {{ _('We use the following types of cookies:') }}
+                    </p>
+                    <ul>
+                        <li><strong>{{ _('Essential cookies:') }}</strong> {{ _('Required for the operation of our website') }}</li>
+                        <li><strong>{{ _('Analytical/performance cookies:') }}</strong> {{ _('Help us improve our website by tracking how visitors use it') }}</li>
+                        <li><strong>{{ _('Functionality cookies:') }}</strong> {{ _('Allow us to recognize you and remember your preferences') }}</li>
+                        <li><strong>{{ _('Targeting cookies:') }}</strong> {{ _('Record your visit, the pages you visit, and the links you follow') }}</li>
+                    </ul>
+                    <p>
+                        {{ _('You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you do not accept cookies, you may not be able to use some portions of our service.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Безпека даних -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(220,53,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-lock text-danger"></i>
+                    </div>
+                    <h5 class="mb-0 text-danger">{{ _('Data Security') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('The security of your data is important to us. We implement appropriate security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction. These measures include:') }}
+                    </p>
+                    <ul>
+                        <li>{{ _('Encryption of sensitive data') }}</li>
+                        <li>{{ _('Regular security assessments') }}</li>
+                        <li>{{ _('Access controls and authentication procedures') }}</li>
+                        <li>{{ _('Secure network architecture') }}</li>
+                        <li>{{ _('Regular backups and data recovery protocols') }}</li>
+                    </ul>
+                    <p>
+                        {{ _('However, please be aware that no method of transmission over the Internet or electronic storage is 100% secure, and we cannot guarantee absolute security.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Ваші права -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(111,66,193,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-person-check text-purple"></i>
+                    </div>
+                    <h5 class="mb-0" style="color: #6f42c1;">{{ _('Your Data Protection Rights') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('Under the GDPR and other applicable data protection laws, you have the following rights:') }}
+                    </p>
+                    <ul>
+                        <li><strong>{{ _('Right to access:') }}</strong> {{ _('You can request copies of your personal data.') }}</li>
+                        <li><strong>{{ _('Right to rectification:') }}</strong> {{ _('You can request that we correct inaccurate or complete incomplete information.') }}</li>
+                        <li><strong>{{ _('Right to erasure:') }}</strong> {{ _('You can request that we delete your personal data in certain circumstances.') }}</li>
+                        <li><strong>{{ _('Right to restrict processing:') }}</strong> {{ _('You can request that we limit how we use your data.') }}</li>
+                        <li><strong>{{ _('Right to data portability:') }}</strong> {{ _('You can request that we transfer your data to another organization or directly to you.') }}</li>
+                        <li><strong>{{ _('Right to object:') }}</strong> {{ _('You can object to our processing of your personal data.') }}</li>
+                    </ul>
+                    <p>
+                        {{ _('To exercise any of these rights, please contact us using the details provided below. We will respond to your request within 30 days.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Зберігання даних -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(52,58,64,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-clock-history text-dark"></i>
+                    </div>
+                    <h5 class="mb-0 text-dark">{{ _('Data Retention') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('We will retain your personal information only for as long as necessary to fulfill the purposes for which it was collected, including for satisfying legal, accounting, or reporting requirements.') }}
+                    </p>
+                    <p>
+                        {{ _('For business customers, we typically retain account information and order history for up to 7 years to comply with tax and business regulations.') }}
+                    </p>
+                    <p>
+                        {{ _('After the retention period, your personal data will be securely deleted or anonymized.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Діти -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(253,126,20,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-person text-orange" style="color: #fd7e14;"></i>
+                    </div>
+                    <h5 class="mb-0" style="color: #fd7e14;">{{ _('Children\'s Privacy') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('Our service is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from children. If you are a parent or guardian and believe that your child has provided us with personal information, please contact us so that we can take necessary actions.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Зміни в політиці конфіденційності -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(23,162,184,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-pencil-square text-info"></i>
+                    </div>
+                    <h5 class="mb-0 text-info">{{ _('Changes to This Privacy Policy') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.') }}
+                    </p>
+                    <p>
+                        {{ _('You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.') }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Контакт -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(0,123,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-envelope text-primary"></i>
+                    </div>
+                    <h5 class="mb-0 text-primary">{{ _('Contact Us') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('If you have any questions about this Privacy Policy or our data practices, please contact our Data Protection Officer at:') }}
+                    </p>
+                    <p>
+                        <strong>Email:</strong> privacy@autogroup.sk<br>
+                        <strong>Phone:</strong> +421 907 539 325<br>
+                        <strong>Address:</strong> Tušická Nová Ves 90, 072 02 Slovakia
+                    </p>
+                    <p>
+                        {{ _('You have the right to lodge a complaint with your local data protection authority if you have concerns about how we process your personal data.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -7,26 +7,166 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-02-16 15:14+0200\n"
-"PO-Revision-Date: 2025-01-28 18:10+0200\n"
+"POT-Creation-Date: 2025-03-03 22:26+0200\n"
+"PO-Revision-Date: 2025-03-03 22:26+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: sk\n"
 "Language-Team: sk <LL@li.org>\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"Plural-Forms: nplurals=3; plural=((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app.py:204 app.py:434
+#: app.py:120
+msgid "Address saved successfully"
+msgstr "Adresa bola úspešne uložená"
+
+#: app.py:125 app.py:467
+msgid "Error saving address"
+msgstr "Chyba pri ukladaní adresy"
+
+#: app.py:226
+msgid "Error validating phone number"
+msgstr "Chyba pri overovaní telefónneho čísla"
+
+#: app.py:279
+msgid "Username, email or phone already registered."
+msgstr "Používateľské meno, e-mail alebo telefón je už zaregistrovaný."
+
+#: app.py:310
+msgid "Registration successful! You are now logged in."
+msgstr "Registrácia úspešná! Ste prihlásený."
+
+#: app.py:315
+msgid "Registration failed. Please try again."
+msgstr "Registrácia zlyhala. Prosím, skúste znova."
+
+#: app.py:372
+msgid "Invalid username or password"
+msgstr "Neplatné používateľské meno alebo heslo"
+
+#: app.py:402
+msgid "Please log in to place an order."
+msgstr "Pre zadanie objednávky sa prosím prihláste."
+
+#: app.py:431
+msgid "Selected address not found"
+msgstr "Vybraná adresa nebola nájdená"
+
+#: app.py:498
+msgid "Selected company not found"
+msgstr "Vybraná spoločnosť nebola nájdená"
+
+#: app.py:531
+msgid "Error saving company details"
+msgstr "Chyba pri ukladaní údajov spoločnosti"
+
+#: app.py:537
+msgid "Your cart is empty."
+msgstr "Váš košík je prázdny."
+
+#: app.py:598 app.py:3201
+msgid "Order placed successfully!"
+msgstr "Objednávka bola úspešne odoslaná!"
+
+#: app.py:605
+msgid "Error placing order"
+msgstr "Chyba pri zadávaní objednávky"
+
+#: app.py:618
+msgid "Cart cleared successfully"
+msgstr "Košík bol úspešne vymazaný"
+
+#: app.py:629
+msgid "Please log in to view your orders."
+msgstr "Pre zobrazenie objednávok sa prosím prihláste."
+
+#: app.py:659
+msgid "Error loading orders."
+msgstr "Chyba pri načítavaní objednávok."
+
+#: app.py:670
+msgid "Please log in to view order details."
+msgstr "Pre zobrazenie detailov objednávky sa prosím prihláste."
+
+#: app.py:688
+msgid "Order not found."
+msgstr "Objednávka nebola nájdená."
+
+#: app.py:714 app.py:3350
+msgid "Error loading order details."
+msgstr "Chyba pri načítavaní detailov objednávky."
+
+#: app.py:727
+msgid "You have been logged out."
+msgstr "Boli ste odhlásený."
+
+#: app.py:739
+msgid "Please log in to view your cart."
+msgstr "Pre zobrazenie košíka sa prosím prihláste."
+
+#: app.py:842 app.py:1142 app.py:2510
+msgid "An error occurred while processing your request."
+msgstr "Pri spracovaní vašej požiadavky došlo k chybe."
+
+#: app.py:879 app.py:1924
 msgid "Invalid token."
 msgstr "Neplatný token."
 
-#: app.py:209 app.py:214 app.py:459
-msgid "Invalid token or role."
-msgstr "Neplatný token alebo rola."
+#: app.py:884
+msgid "Please log in."
+msgstr "Prosím, prihláste sa."
 
-#: app.py:298
+#: app.py:889
+msgid "You don't have permission to access this page."
+msgstr "Nemáte oprávnenie na prístup k tejto stránke."
+
+#: app.py:1066 app.py:1118 templates/public/product_details.html:150
+msgid "In Stock"
+msgstr "Na sklade"
+
+#: app.py:1119
+msgid "days"
+msgstr "dní"
+
+#: app.py:1513
+msgid "Missing required information"
+msgstr "Chýbajúce povinné informácie"
+
+#: app.py:1518 app.py:2044
+msgid "Quantity must be at least 1"
+msgstr "Množstvo musí byť aspoň 1"
+
+#: app.py:1526 app.py:1552 app.py:1583 app.py:3000
+msgid "Item not found in cart"
+msgstr "Položka nebola v košíku nájdená"
+
+#: app.py:1549
+msgid "Cart updated successfully"
+msgstr "Košík bol úspešne aktualizovaný"
+
+#: app.py:1556
+msgid "Invalid quantity"
+msgstr "Neplatné množstvo"
+
+#: app.py:1559
+msgid "Error updating cart"
+msgstr "Chyba pri aktualizácii košíka"
+
+#: app.py:1571 app.py:2980
+msgid "Missing required information for removal"
+msgstr "Chýbajúce informácie potrebné na odstránenie"
+
+#: app.py:1581
+msgid "Article removed successfully"
+msgstr "Položka bola úspešne odstránená"
+
+#: app.py:1586 app.py:3005
+msgid "Error removing item from cart"
+msgstr "Chyba pri odstraňovaní položky z košíka"
+
+#: app.py:1788
 msgid ""
 "Thank you for your order!\n"
 "\n"
@@ -34,281 +174,447 @@ msgid ""
 msgstr ""
 "Ďakujeme za vašu objednávku!\n"
 "\n"
-"Podrobnosti Vašej objednávky:\n"
+"Detaily vašej objednávky:\n"
 
-#: app.py:301
+#: app.py:1791
 msgid "Ordered items:\n"
 msgstr "Objednané položky:\n"
 
-#: app.py:303
+#: app.py:1793
 msgid ""
 "- Article: {article}, Price: {price:.2f}, Quantity: {quantity}, Comment: "
 "{comment}\n"
 msgstr ""
-"- Číslo dielu: {article}, Cena: {price:.2f}, Množstvo: {quantity}, Komentár: {comment}\n"
+"- Kód: {article}, Cena: {price:.2f}, Množstvo: {quantity}, Komentár: "
+"{comment}\n"
 
-#: app.py:312 templates/user/cart/cart.html:42
+#: app.py:1802 templates/user/cart/cart.html:42
 #: templates/user/orders/order_details.html:63
 msgid "No comment"
 msgstr "Bez komentára"
 
-#: app.py:316
+#: app.py:1806
 msgid ""
 "\n"
 "Missing articles:\n"
 msgstr ""
-"\nChýbajúce položky:\n"
+"\n"
+"Chýbajúce položky:\n"
 
-#: app.py:470
+#: app.py:2023
+msgid "Missing required product information"
+msgstr "Chýbajúce povinné informácie o produkte"
+
+#: app.py:2029
+msgid "Invalid price format"
+msgstr "Neplatný formát ceny"
+
+#: app.py:2063
+msgid "Item added to cart"
+msgstr "Položka bola pridaná do košíka"
+
+#: app.py:2067
+msgid "Error adding item to cart"
+msgstr "Chyba pri pridávaní položky do košíka"
+
+#: app.py:2111 app.py:2127
 msgid "Please enter an article for search."
-msgstr "Zadajte číslo dielu pre vyhľadávanie."
+msgstr "Zadajte kód tovaru pre vyhľadávanie."
 
-#: app.py:497
+#: app.py:2154
 msgid "An error occurred during the search. Please try again later."
-msgstr "Pri vyhľadávaní sa vyskytla chyba. Skúste to znova neskôr."
+msgstr "Počas vyhľadávania došlo k chybe. Skúste to prosím neskôr."
 
-#: app.py:688
+#: app.py:2345
 msgid "Please enter at least one article."
-msgstr "Zadajte aspoň jedno číslo dielu."
+msgstr "Zadajte aspoň jeden kód tovaru."
 
-#: app.py:801
+#: app.py:2456
 msgid "Articles not found: {articles}"
-msgstr "Položky neboli nájdené: {articles}"
+msgstr "Nenájdené položky: {articles}"
 
-#: app.py:830
+#: app.py:2485
 msgid "Added to cart: {articles}"
 msgstr "Pridané do košíka: {articles}"
 
-#: app.py:855
-msgid "An error occurred while processing your request."
-msgstr "Vyskytla sa chyba pri spracovaní vašej žiadosti."
-
-#: app.py:867
+#: app.py:2522
 msgid "You need to log in to view search results."
 msgstr "Pre zobrazenie výsledkov vyhľadávania sa musíte prihlásiť."
 
-#: app.py:929
+#: app.py:2584
 msgid "Your selection has been saved!"
 msgstr "Váš výber bol uložený!"
 
-#: app.py:933
+#: app.py:2588
 msgid "An error occurred while saving your selection. Please try again."
-msgstr "Pri ukladaní vášho výberu sa vyskytla chyba. Skúste to znova."
+msgstr "Pri ukladaní vášho výberu došlo k chybe. Skúste to znova."
 
-#: app.py:954
+#: app.py:2609
 msgid "No search results found. Please start a new search."
-msgstr "Neboli nájdené žiadne výsledky vyhľadávania. Začnite nové vyhľadávanie."
+msgstr "Neboli nájdené žiadne výsledky. Začnite nové vyhľadávanie."
 
-#: app.py:971
+#: app.py:2626
 msgid "An error occurred while retrieving search results."
-msgstr "Pri získavaní výsledkov vyhľadávania sa vyskytla chyba."
+msgstr "Pri získavaní výsledkov vyhľadávania došlo k chybe."
 
-#: app.py:991
+#: app.py:2646
 msgid "You need to log in to view your cart."
-msgstr "Pre zobrazenie košíka sa musíte prihlásiť."
+msgstr "Pre zobrazenie vášho košíka sa musíte prihlásiť."
 
-#: app.py:1104
+#: app.py:2759
 msgid "Could not load your cart. Please try again."
 msgstr "Nepodarilo sa načítať váš košík. Skúste to znova."
 
-#: app.py:1128 app.py:3916
+#: app.py:2779 app.py:5841
 msgid "User not authenticated"
-msgstr "Používateľ nie je overený."
+msgstr "Používateľ nie je autentifikovaný"
 
-#: app.py:1173
+#: app.py:2828
 msgid "No articles selected"
-msgstr "Neboli vybraté žiadne položky."
+msgstr "Nie sú vybrané žiadne položky"
 
-#: app.py:1202
+#: app.py:2857
 msgid "Selection successfully submitted!"
-msgstr "Výber úspešne odoslaný!"
+msgstr "Výber bol úspešne odoslaný!"
 
-#: app.py:1207
+#: app.py:2862
 msgid "An error occurred during submission"
-msgstr "Pri odosielaní sa vyskytla chyba."
+msgstr "Počas odosielania došlo k chybe"
 
-#: app.py:1222
+#: app.py:2876
 msgid "Search results cleared successfully"
-msgstr "Výsledky vyhľadávania boli úspešne vymazané."
+msgstr "Výsledky vyhľadávania boli úspešne vymazané"
 
-#: app.py:1228
+#: app.py:2882
 msgid "Error clearing search results"
-msgstr "Chyba pri mazaní výsledkov vyhľadávania."
+msgstr "Chyba pri mazaní výsledkov vyhľadávania"
 
-#: app.py:1256 app.py:1446
+#: app.py:2910 app.py:3105
 msgid "User is not authenticated. Please log in."
-msgstr "Používateľ nie je overený. Prihláste sa."
+msgstr "Používateľ nie je autentifikovaný. Prosím, prihláste sa."
 
-#: app.py:1289
+#: app.py:2943
 msgid "Product added to cart!"
 msgstr "Produkt bol pridaný do košíka!"
 
-#: app.py:1292
+#: app.py:2946
 msgid "Error adding product to cart."
 msgstr "Chyba pri pridávaní produktu do košíka."
 
-#: app.py:1321
-msgid "Missing required information for removal"
-msgstr "Chýbajú potrebné informácie pre odstránenie."
-
-#: app.py:1338
+#: app.py:2997
 msgid "Article {article} removed successfully"
-msgstr "Položka {article} bola úspešne odstránená."
+msgstr "Položka {article} bola úspešne odstránená"
 
-#: app.py:1341
-msgid "Item not found in cart"
-msgstr "Položka sa nenašla v košíku."
-
-#: app.py:1346
-msgid "Error removing item from cart"
-msgstr "Chyba pri odstraňovaní položky z košíka."
-
-#: app.py:1365
+#: app.py:3024
 msgid "Invalid input: article or quantity missing."
-msgstr "Neplatný vstup: chýba číslo dielu alebo množstvo."
+msgstr "Neplatný vstup: chýba kód tovaru alebo množstvo."
 
-#: app.py:1372
+#: app.py:3031
 msgid "Quantity must be at least 1."
 msgstr "Množstvo musí byť aspoň 1."
 
-#: app.py:1389
+#: app.py:3048
 msgid "Cart updated successfully!"
 msgstr "Košík bol úspešne aktualizovaný!"
 
-#: app.py:1393
+#: app.py:3052
 msgid "Error updating cart."
 msgstr "Chyba pri aktualizácii košíka."
 
-#: app.py:1464
+#: app.py:3123
 msgid "Your cart is empty!"
 msgstr "Váš košík je prázdny!"
 
-#: app.py:1535
+#: app.py:3194
 msgid "Order placed, but we couldn't send a confirmation email."
-msgstr "Objednávka bola zadaná, ale nepodarilo sa odoslať potvrdzovací e-mail."
+msgstr "Objednávka bola zadaná, ale nemohli sme odoslať potvrdzovací e-mail."
 
-#: app.py:1542
-msgid "Order placed successfully!"
-msgstr "Objednávka bola úspešne zadaná!"
-
-#: app.py:1549
+#: app.py:3208
 msgid "Error placing order: {error}"
 msgstr "Chyba pri zadávaní objednávky: {error}"
 
-#: app.py:1567
+#: app.py:3226
 msgid "User is not authenticated."
-msgstr "Používateľ nie je overený."
+msgstr "Používateľ nie je autentifikovaný."
 
-#: app.py:1633
+#: app.py:3292
 msgid "Error fetching orders."
-msgstr "Chyba pri načítaní objednávok."
+msgstr "Chyba pri načítavaní objednávok."
 
-#: app.py:1691
-msgid "Error loading order details."
-msgstr "Chyba pri načítaní podrobností objednávky."
-
-#: app.py:3983
+#: app.py:5908
 msgid "Some articles still need table selection."
-msgstr "Niektoré položky stále potrebujú výber tabuľky."
+msgstr "Niektoré položky ešte vyžadujú výber tabuľky."
 
-#: app.py:3985
+#: app.py:5910
 msgid "All selected articles have been added to your cart."
-msgstr "Všetky vybraté položky boli pridané do vášho košíka."
+msgstr "Všetky vybrané položky boli pridané do vášho košíka."
 
-#: app.py:4031
+#: app.py:5956
 msgid "An error occurred while processing your selection. Please try again."
-msgstr "Pri spracovaní vášho výberu sa vyskytla chyba. Skúste to znova."
+msgstr "Pri spracovaní vášho výberu došlo k chybe. Skúste to znova."
 
-#: app.py:4214
+#: app.py:6150
 msgid "News created successfully!"
-msgstr "Novinka úspešne vytvorená!"
+msgstr "Novinky boli úspešne vytvorené!"
 
-#: app.py:4219
+#: app.py:6155
 msgid "Error creating news"
-msgstr "Chyba pri vytváraní novinky."
+msgstr "Chyba pri vytváraní noviniek"
 
-#: app.py:4827
+#: app.py:6763
 msgid "Error loading news"
-msgstr "Chyba pri načítaní noviniek."
+msgstr "Chyba pri načítavaní noviniek"
 
-#: app.py:4858
+#: app.py:6794
 msgid "News not found"
-msgstr "Novinka nebola nájdená."
+msgstr "Novinky neboli nájdené"
 
-#: templates/base/base.html:6 templates/user/index.html:4
-msgid "Article Price Search"
-msgstr "Vyhľadávanie cien položiek"
+#: app.py:7167
+msgid "Delivery address updated"
+msgstr "Doručovacia adresa bola aktualizovaná"
 
-#: templates/base/base.html:125 templates/user/news/user_news.html:3
-#: templates/user/news/user_news.html:7
-msgid "News"
-msgstr "Novinky"
+#: app.py:7183
+msgid "Invoice details updated"
+msgstr "Fakturačné údaje boli aktualizované"
 
-#: templates/base/base.html:133
-msgid "Cart"
-msgstr "Košík"
+#: app.py:7185
+msgid "Invalid invoice data format"
+msgstr "Neplatný formát fakturačných údajov"
 
-#: templates/base/base.html:142
-msgid "Orders"
-msgstr "Objednávky"
+#: app.py:7277
+msgid "Item processed successfully"
+msgstr "Položka bola úspešne spracovaná"
 
-#: templates/base/base.html:148 templates/user/orders/order_changes.html:5
-msgid "Order Changes History"
-msgstr "História zmien objednávky"
+#: app.py:7290
+msgid "Error processing orders"
+msgstr "Chyba pri spracovaní objednávok"
 
-#: templates/base/base.html:154 templates/user/shipments/shipments.html:3
-msgid "Shipments"
-msgstr "Zásielky"
+#: app.py:7584
+msgid "Please login to access your profile"
+msgstr "Pre prístup k profilu sa prosím prihláste"
 
-#: templates/user/index.html:6
-msgid "Welcome to the advanced search system! Use the tools below:"
-msgstr "Vitajte v pokročilom vyhľadávacom systéme! Použite nástroje uvedené nižšie:"
+#: app.py:7634
+msgid "Invalid email format"
+msgstr "Neplatný formát e-mailu"
 
-#: templates/user/index.html:14
-msgid "Upload Articles File"
-msgstr "Nahrať súbor položiek"
+#: app.py:7641 app.py:7695
+msgid "This email is already in use by another user"
+msgstr "Tento e-mail už používa iný používateľ"
 
-#: templates/user/index.html:17
-msgid "Article/Quantity/Comment"
-msgstr "Položka/Množstvo/Komentár"
+#: app.py:7647 app.py:7697
+msgid "This phone number is already in use by another user"
+msgstr "Toto telefónne číslo už používa iný používateľ"
 
-#: templates/user/index.html:20
-msgid "Article/Quantity/Brand/Comment"
-msgstr "Položka/Množstvo/Značka/Komentár"
+#: app.py:7658
+msgid "Current password is incorrect"
+msgstr "Aktuálne heslo je nesprávne"
 
-#: templates/user/index.html:24
-msgid "Drag and drop your file here, or click to select"
-msgstr "Pretiahnite sem súbor alebo kliknite pre výber"
+#: app.py:7663
+msgid "New passwords do not match"
+msgstr "Nové heslá sa nezhodujú"
 
-#: templates/user/index.html:30
-msgid "Upload and Search"
-msgstr "Nahrať a vyhľadať"
+#: app.py:7676
+msgid "Profile and password updated successfully"
+msgstr "Profil a heslo boli úspešne aktualizované"
 
-#: templates/user/cart/cart.html:96 templates/user/index.html:41
-msgid "Search Articles"
-msgstr "Vyhľadávanie položiek"
+#: app.py:7689
+msgid "Profile updated successfully"
+msgstr "Profil bol úspešne aktualizovaný"
 
-#: templates/user/index.html:44
-msgid "Enter Articles and Quantities:"
-msgstr "Zadajte položky a množstvá:"
+#: app.py:7699
+msgid "Error updating profile: duplicate value"
+msgstr "Chyba pri aktualizácii profilu: duplicitná hodnota"
 
-#: templates/user/index.html:46
-msgid "Example:"
-msgstr "Príklad:"
+#: app.py:7730
+msgid "Address added successfully"
+msgstr "Adresa bola úspešne pridaná"
 
-#: templates/user/index.html:50
-msgid "Search"
-msgstr "Vyhľadať"
+#: app.py:7742
+msgid "Address deleted successfully"
+msgstr "Adresa bola úspešne odstránená"
 
-#: templates/user/index.html:97 templates/user/index.html:104
-msgid "File selected:"
-msgstr "Vybraný súbor:"
+#: app.py:7764
+msgid "Default address updated"
+msgstr "Predvolená adresa bola aktualizovaná"
 
-#: templates/user/cart/cart.html:3 templates/user/cart/cart.html:7
-msgid "Shopping Cart"
-msgstr "Nákupný košík"
+#: app.py:7791
+msgid "Company added successfully"
+msgstr "Spoločnosť bola úspešne pridaná"
 
-#: templates/user/cart/cart.html:14 templates/user/orders/order_changes.html:13
+#: app.py:7803
+msgid "Company deleted successfully"
+msgstr "Spoločnosť bola úspešne odstránená"
+
+#: app.py:7825
+msgid "Default company updated"
+msgstr "Predvolená spoločnosť bola aktualizovaná"
+
+#: app.py:7833
+msgid "Ukrainian"
+msgstr "Ukrajinčina"
+
+#: app.py:7833
+msgid "English"
+msgstr "Angličtina"
+
+#: app.py:7833
+msgid "Slovak"
+msgstr "Slovenčina"
+
+#: app.py:7833
+msgid "Polish"
+msgstr "Poľština"
+
+#: app.py:7839
+msgid "Error accessing user profile"
+msgstr "Chyba pri prístupe k používateľskému profilu"
+
+#: templates/admin/admin_login.html:10
+msgid "Admin Login"
+msgstr "Prihlásenie správcu"
+
+#: templates/admin/admin_login.html:16 templates/auth/login.html:25
+#: templates/auth/register.html:29 templates/public/user/profile.html:33
+msgid "Password"
+msgstr "Heslo"
+
+#: templates/admin/admin_login.html:19 templates/auth/login.html:3
+#: templates/auth/login.html:15 templates/auth/login.html:30
+#: templates/base/public_base.html:118
+msgid "Login"
+msgstr "Prihlásiť sa"
+
+#: templates/admin/orders/process_orders.html:6
+msgid "Process Public Orders"
+msgstr "Spracovať verejné objednávky"
+
+#: templates/admin/orders/process_orders.html:14
+#: templates/user/orders/order_changes.html:12
+#: templates/user/orders/orders.html:99
+msgid "Order ID"
+msgstr "ID objednávky"
+
+#: templates/admin/orders/process_orders.html:15
+#: templates/admin/orders/process_orders.html:37 templates/auth/login.html:21
+#: templates/auth/register.html:21 templates/public/user/profile.html:54
+msgid "Username"
+msgstr "Používateľské meno"
+
+#: templates/admin/orders/process_orders.html:16
+#: templates/public/orders/list_orders.html:28
+#: templates/public/orders/list_orders.html:43
+#: templates/user/orders/orders.html:100
+msgid "Date"
+msgstr "Dátum"
+
+#: templates/admin/orders/process_orders.html:17
+msgid "Stock Items"
+msgstr "Skladové položky"
+
+#: templates/admin/orders/process_orders.html:18
+msgid "Pricelist Items"
+msgstr "Položky cenníka"
+
+#: templates/admin/orders/process_orders.html:35
+msgid "User Information"
+msgstr "Informácie o používateľovi"
+
+#: templates/admin/orders/process_orders.html:38
+#: templates/auth/register.html:25 templates/public/user/profile.html:60
+msgid "Email"
+msgstr "E-mail"
+
+#: templates/admin/orders/process_orders.html:45
+#: templates/public/orders/order_details.html:71
+msgid "Delivery Address"
+msgstr "Doručovacia adresa"
+
+#: templates/admin/orders/process_orders.html:48
+msgid "Change Address"
+msgstr "Zmeniť adresu"
+
+#: templates/admin/orders/process_orders.html:66
+msgid "No delivery address provided"
+msgstr "Nebola poskytnutá doručovacia adresa"
+
+#: templates/admin/orders/process_orders.html:73
+msgid "Saved Addresses"
+msgstr "Uložené adresy"
+
+#: templates/admin/orders/process_orders.html:83
+#: templates/public/user/profile.html:112
+#: templates/public/user/profile.html:232
+msgid "Default"
+msgstr "Predvolená"
+
+#: templates/admin/orders/process_orders.html:87
+msgid "Update Address"
+msgstr "Aktualizovať adresu"
+
+#: templates/admin/orders/process_orders.html:92
+msgid "No saved addresses found"
+msgstr "Neboli nájdené žiadne uložené adresy"
+
+#: templates/admin/orders/process_orders.html:100
+msgid "Invoice Details"
+msgstr "Fakturačné údaje"
+
+#: templates/admin/orders/process_orders.html:103
+msgid "Change Invoice Details"
+msgstr "Zmeniť fakturačné údaje"
+
+#: templates/admin/orders/process_orders.html:113
+#: templates/public/cart/cart.html:256 templates/public/user/profile.html:279
+msgid "Company Name"
+msgstr "Názov spoločnosti"
+
+#: templates/admin/orders/process_orders.html:114
+#: templates/public/cart/cart.html:222 templates/public/cart/cart.html:260
+#: templates/public/orders/order_details.html:100
+#: templates/public/user/profile.html:283
+msgid "VAT Number"
+msgstr "IČ DPH"
+
+#: templates/admin/orders/process_orders.html:116
+#: templates/public/cart/cart.html:224 templates/public/cart/cart.html:267
+#: templates/public/orders/order_details.html:104
+#: templates/public/user/profile.html:287
+msgid "Registration Number"
+msgstr "IČO"
+
+#: templates/admin/orders/process_orders.html:119
+#: templates/public/cart/cart.html:271
+#: templates/public/orders/order_details.html:107
+#: templates/public/user/profile.html:291
+msgid "Company Address"
+msgstr "Adresa spoločnosti"
+
+#: templates/admin/orders/process_orders.html:125
+msgid "Invoice requested but details missing"
+msgstr "Faktúra vyžiadaná, ale chýbajú údaje"
+
+#: templates/admin/orders/process_orders.html:128
+msgid "No invoice requested"
+msgstr "Faktúra nevyžiadaná"
+
+#: templates/admin/orders/process_orders.html:135
+msgid "Saved Invoice Details"
+msgstr "Uložené fakturačné údaje"
+
+#: templates/admin/orders/process_orders.html:150
+msgid "Update Invoice Details"
+msgstr "Aktualizovať fakturačné údaje"
+
+#: templates/admin/orders/process_orders.html:155
+msgid "No saved invoice details found"
+msgstr "Neboli nájdené žiadne uložené fakturačné údaje"
+
+#: templates/admin/orders/process_orders.html:164
+#: templates/public/article_not_found.html:97
+#: templates/public/cart/cart.html:42 templates/public/index.html:155
+#: templates/public/orders/order_details.html:124
+#: templates/public/product_details.html:121 templates/user/cart/cart.html:14
+#: templates/user/orders/order_changes.html:13
 #: templates/user/orders/order_details.html:20
 #: templates/user/orders/orders.html:62
 #: templates/user/search/intermediate.html:16
@@ -316,22 +622,11 @@ msgstr "Nákupný košík"
 #: templates/user/shipments/shipments.html:23
 #: templates/user/shipments/view_shipment.html:39
 msgid "Article"
-msgstr "Položka"
+msgstr "Kód tovaru"
 
-#: templates/user/cart/cart.html:15 templates/user/orders/order_details.html:22
-msgid "Price List"
-msgstr "Cenník"
-
-#: templates/user/cart/cart.html:16 templates/user/search/intermediate.html:35
-msgid "Brand"
-msgstr "Značka"
-
-#: templates/user/cart/cart.html:17 templates/user/orders/order_details.html:24
-#: templates/user/shipments/shipments.html:25
-#: templates/user/shipments/view_shipment.html:41
-msgid "Price"
-msgstr "Cena"
-
+#: templates/admin/orders/process_orders.html:165
+#: templates/public/cart/cart.html:46
+#: templates/public/orders/order_details.html:128
 #: templates/user/cart/cart.html:18 templates/user/orders/order_details.html:25
 #: templates/user/search/intermediate.html:18
 #: templates/user/search/search_results.html:17
@@ -340,406 +635,1679 @@ msgstr "Cena"
 msgid "Quantity"
 msgstr "Množstvo"
 
+#: templates/admin/orders/process_orders.html:166
+#: templates/public/article_not_found.html:101
+#: templates/public/cart/cart.html:45 templates/public/index.html:159
+#: templates/public/orders/order_details.html:127
+#: templates/user/cart/cart.html:17 templates/user/orders/order_details.html:24
+#: templates/user/shipments/shipments.html:25
+#: templates/user/shipments/view_shipment.html:41
+msgid "Price"
+msgstr "Cena"
+
+#: templates/admin/orders/process_orders.html:167
+#: templates/public/cart/cart.html:47
+#: templates/public/orders/list_orders.html:30
+#: templates/public/orders/list_orders.html:52
+#: templates/public/orders/order_details.html:129
 #: templates/user/cart/cart.html:19 templates/user/orders/order_details.html:26
 msgid "Total"
 msgstr "Celkom"
 
-#: templates/user/cart/cart.html:20 templates/user/orders/order_details.html:27
-#: templates/user/search/intermediate.html:19
-#: templates/user/search/search_results.html:18
-#: templates/user/shipments/view_shipment.html:43
-msgid "Comment"
-msgstr "Komentár"
+#: templates/admin/orders/process_orders.html:168
+msgid "Type"
+msgstr "Typ"
 
-#: templates/user/cart/cart.html:21 templates/user/orders/orders.html:103
-#: templates/user/shipments/list_shipments.html:22
-msgid "Actions"
-msgstr "Akcie"
-
-#: templates/user/cart/cart.html:57
-msgid "Total:"
-msgstr "Celkom:"
-
-#: templates/user/cart/cart.html:68
-msgid "Place Order"
-msgstr "Umiestniť objednávku"
-
-#: templates/user/cart/cart.html:74
-msgid "Clear Cart"
-msgstr "Vyčistiť košík"
-
-#: templates/user/cart/cart.html:81
-#: templates/user/search/search_results.html:70
-msgid "Missing Articles:"
-msgstr "Chýbajúce položky:"
-
-#: templates/user/cart/cart.html:82
-msgid "The following articles were not found:"
-msgstr "Nasledujúce položky neboli nájdené:"
-
-#: templates/user/cart/cart.html:93
-msgid "Your Cart is Empty"
-msgstr "Váš košík je prázdny"
-
-#: templates/user/cart/cart.html:94
-msgid "Start adding items to your cart!"
-msgstr "Začnite pridávať položky do košíka!"
-
-#: templates/user/news/user_news.html:12
-msgid "New Messages"
-msgstr "Nové správy"
-
-#: templates/user/news/user_news.html:18 templates/user/orders/orders.html:69
-msgid "New"
-msgstr "Nové"
-
-#: templates/user/news/user_news.html:26
-msgid "Read More"
-msgstr "Čítať viac"
-
-#: templates/user/news/user_news.html:36
-msgid "News Archive"
-msgstr "Archív správ"
-
-#: templates/user/news/user_news.html:44 templates/user/orders/orders.html:124
-#: templates/user/shipments/list_shipments.html:36
-msgid "View Details"
-msgstr "Zobraziť podrobnosti"
-
-#: templates/user/news/view_news.html:9
-msgid "Mark as Read"
-msgstr "Označiť ako prečítané"
-
-#: templates/user/news/view_news.html:16
-msgid "Published:"
-msgstr "Publikované:"
-
-#: templates/user/orders/order_changes.html:12
-#: templates/user/orders/orders.html:99
-msgid "Order ID"
-msgstr "ID objednávky"
-
-#: templates/user/orders/order_changes.html:14
-msgid "Change Type"
-msgstr "Typ zmeny"
-
-#: templates/user/orders/order_changes.html:15
-msgid "Old Value"
-msgstr "Stará hodnota"
-
-#: templates/user/orders/order_changes.html:16
-msgid "New Value"
-msgstr "Nová hodnota"
-
-#: templates/user/orders/order_changes.html:17
-msgid "Change Date"
-msgstr "Dátum zmeny"
-
-#: templates/user/orders/order_changes.html:27
-msgid "Article Number Change"
-msgstr "Zmena čísla položky"
-
-#: templates/user/orders/order_changes.html:29
-msgid "Price Change"
-msgstr "Zmena ceny"
-
-#: templates/user/orders/order_changes.html:42
-msgid "No changes found."
-msgstr "Neboli nájdené žiadne zmeny."
-
-#: templates/user/orders/order_details.html:4
-#: templates/user/orders/order_details.html:9
-#: templates/user/shipments/shipments.html:19
-msgid "Order Details"
-msgstr "Podrobnosti objednávky"
-
-#: templates/user/orders/order_details.html:11
-msgid "Back to Orders"
-msgstr "Späť na objednávky"
-
-#: templates/user/orders/order_details.html:21
-msgid "Original Article"
-msgstr "Pôvodná položka"
-
-#: templates/user/orders/order_details.html:23
-msgid "Brand ID"
-msgstr "ID značky"
-
+#: templates/admin/orders/process_orders.html:169
+#: templates/public/orders/list_orders.html:31
+#: templates/public/orders/list_orders.html:55
+#: templates/public/orders/order_details.html:40
+#: templates/public/orders/order_details.html:130
 #: templates/user/orders/order_details.html:28
 #: templates/user/orders/orders.html:66 templates/user/orders/orders.html:102
 #: templates/user/shipments/list_shipments.html:18
 msgid "Status"
 msgstr "Stav"
 
-#: templates/user/orders/order_details.html:86
-msgid "Total Order Amount:"
-msgstr "Celková suma objednávky:"
+#: templates/admin/orders/process_orders.html:170
+#: templates/public/cart/cart.html:48
+#: templates/public/orders/list_orders.html:32
+#: templates/public/orders/list_orders.html:77 templates/user/cart/cart.html:21
+#: templates/user/orders/orders.html:103
+#: templates/user/shipments/list_shipments.html:22
+msgid "Actions"
+msgstr "Akcie"
 
-#: templates/user/orders/order_details.html:96
-msgid "Order Timeline"
-msgstr "Časová os objednávky"
+#: templates/admin/orders/process_orders.html:205
+#: templates/admin/orders/process_orders.html:212
+#: templates/base/public_base.html:170
+msgid "Accept"
+msgstr "Prijať"
 
-#: templates/user/orders/order_details.html:115
-msgid "No Details Available"
-msgstr "Žiadne dostupné podrobnosti"
+#: templates/admin/orders/process_orders.html:208
+#: templates/admin/orders/process_orders.html:215
+msgid "Reject"
+msgstr "Odmietnuť"
 
-#: templates/user/orders/order_details.html:116
-msgid "The details for this order could not be found."
-msgstr "Podrobnosti pre túto objednávku sa nenašli."
+#: templates/admin/orders/process_orders.html:225
+msgid "No items in this order"
+msgstr "V tejto objednávke nie sú žiadne položky"
 
-#: templates/user/orders/orders.html:55
-msgid "My Orders"
-msgstr "Moje objednávky"
+#: templates/auth/login.html:32
+msgid "Don't have an account?"
+msgstr "Nemáte účet?"
 
-#: templates/user/orders/orders.html:68
-msgid "All"
-msgstr "Všetky"
+#: templates/auth/login.html:33
+msgid "Register here"
+msgstr "Zaregistrujte sa tu"
 
-#: templates/user/orders/orders.html:70
-msgid "Accepted"
-msgstr "Prijaté"
+#: templates/auth/register.html:3 templates/auth/register.html:15
+#: templates/auth/register.html:48 templates/base/public_base.html:124
+msgid "Register"
+msgstr "Registrovať sa"
 
-#: templates/user/orders/orders.html:71
-msgid "Cancelled"
-msgstr "Zrušené"
+#: templates/auth/register.html:33
+msgid "Phone Number"
+msgstr "Telefónne číslo"
 
-#: templates/user/orders/orders.html:75
-msgid "Start Date"
-msgstr "Dátum začiatku"
+#: templates/auth/register.html:40 templates/public/user/profile.html:67
+msgid "Phone number must be in international format (e.g. +421907123456)"
+msgstr "Telefónne číslo musí byť v medzinárodnom formáte (napr. +421907123456)"
 
-#: templates/user/orders/orders.html:79
-msgid "End Date"
-msgstr "Dátum konca"
+#: templates/auth/register.html:43 templates/public/user/profile.html:68
+msgid "Enter phone number in international format (e.g. +421907123456)"
+msgstr "Zadajte telefónne číslo v medzinárodnom formáte (napr. +421907123456)"
 
-#: templates/user/orders/orders.html:84
-msgid "Filter"
-msgstr "Filter"
+#: templates/auth/register.html:50
+msgid "Already have an account?"
+msgstr "Už máte účet?"
 
-#: templates/user/orders/orders.html:87
-msgid "Clear Filters"
-msgstr "Vyčistiť filtre"
+#: templates/auth/register.html:51
+msgid "Login here"
+msgstr "Prihláste sa tu"
 
-#: templates/user/orders/orders.html:100
-msgid "Date"
-msgstr "Dátum"
+#: templates/base/base.html:6 templates/user/index.html:3
+msgid "Article Price Search"
+msgstr "Vyhľadávanie cien produktov"
 
-#: templates/user/orders/orders.html:101
-#: templates/user/shipments/list_shipments.html:21
-#: templates/user/shipments/shipments.html:26
-#: templates/user/shipments/view_shipment.html:42
-msgid "Total Price"
-msgstr "Celková cena"
+#: templates/base/base.html:205 templates/user/news/user_news.html:3
+#: templates/user/news/user_news.html:7
+msgid "News"
+msgstr "Novinky"
 
-#: templates/user/orders/orders.html:133
-msgid "No Orders Found"
-msgstr "Nenašli sa žiadne objednávky."
+#: templates/base/base.html:213 templates/base/public_base.html:88
+msgid "Cart"
+msgstr "Košík"
 
-#: templates/user/orders/orders.html:134
-msgid "You haven't placed any orders yet."
-msgstr "Zatiaľ ste neuskutočnili žiadne objednávky."
+#: templates/base/base.html:222 templates/base/public_base.html:105
+msgid "Orders"
+msgstr "Objednávky"
 
-#: templates/user/orders/orders.html:136
-msgid "Start Shopping"
-msgstr "Začať nakupovať"
+#: templates/base/base.html:228 templates/user/orders/order_changes.html:5
+msgid "Order Changes History"
+msgstr "História zmien objednávky"
 
-#: templates/user/search/intermediate.html:3
-msgid "Select Price Lists"
-msgstr "Vyberte cenníky"
+#: templates/base/base.html:234 templates/user/shipments/shipments.html:3
+msgid "Shipments"
+msgstr "Zásielky"
 
-#: templates/user/search/intermediate.html:7
-msgid "Intermediate Results"
-msgstr "Medzivýsledky"
+#: templates/base/public_base.html:73 templates/public/index.html:12
+msgid "Home"
+msgstr "Domov"
 
-#: templates/user/search/intermediate.html:8
-msgid "Please select a price list for each article."
-msgstr "Prosím, vyberte cenník pre každú položku."
+#: templates/base/public_base.html:79
+msgid "About"
+msgstr "O nás"
 
-#: templates/user/search/intermediate.html:17
-msgid "Available Price Lists"
-msgstr "Dostupné cenníky"
+#: templates/base/public_base.html:88
+msgid "Cart"
+msgstr "Košík"
 
-#: templates/user/search/intermediate.html:61
-#: templates/user/search/search_results.html:82
+#: templates/base/public_base.html:99 templates/public/user/profile.html:6
+msgid "My Profile"
+msgstr "Môj profil"
+
+#: templates/base/public_base.html:105
+msgid "Orders"
+msgstr "Objednávky"
+
+#: templates/base/public_base.html:111
+msgid "Logout"
+msgstr "Odhlásiť sa"
+
+#: templates/base/public_base.html:118
+msgid "Login"
+msgstr "Prihlásiť sa"
+
+#: templates/base/public_base.html:124
+msgid "Register"
+msgstr "Registrovať sa"
+
+#: templates/base/public_base.html:73 templates/public/index.html:12
+msgid "Home"
+msgstr "Domov"
+
+#: templates/base/public_base.html:79
+msgid "About"
+msgstr "O nás"
+
+#: templates/base/public_base.html:99 templates/public/user/profile.html:6
+msgid "My Profile"
+msgstr "Môj profil"
+
+#: templates/base/public_base.html:111
+msgid "Logout"
+msgstr "Odhlásiť sa"
+
+#: templates/base/public_base.html:167
+msgid "This website uses cookies..."
+msgstr "Táto webstránka používa cookies..."
+
+#: templates/base/public_base.html:167 templates/base/public_base.html:195
+#: templates/base/public_base.html:217 templates/public/privacy.html:7
+#: templates/public/privacy.html:12 templates/public/privacy.html:17
+msgid "Privacy Policy"
+msgstr "Ochrana osobných údajov"
+
+#: templates/base/public_base.html:171
+msgid "Only Essential"
+msgstr "Len nevyhnutné"
+
+#: templates/base/public_base.html:184 templates/public/privacy.html:269
+#: templates/public/terms.html:223
+msgid "Contact Us"
+msgstr "Kontaktujte nás"
+
+#: templates/base/public_base.html:191
+msgid "Quick Links"
+msgstr "Rýchle odkazy"
+
+#: templates/base/public_base.html:193 templates/base/public_base.html:215
+#: templates/public/about.html:7 templates/public/about.html:12
+msgid "About Us"
+msgstr "O nás"
+
+#: templates/base/public_base.html:194 templates/base/public_base.html:216
+#: templates/public/terms.html:7 templates/public/terms.html:12
+#: templates/public/terms.html:17
+msgid "Terms & Conditions"
+msgstr "Obchodné podmienky"
+
+#: templates/base/public_base.html:199
+msgid "Follow Us"
+msgstr "Sledujte nás"
+
+#: templates/base/public_base.html:212
+msgid "2024 AutogroupEU. All rights reserved."
+msgstr "2024 AutogroupEU. Všetky práva vyhradené."
+
+#: templates/base/public_base.html:218
+msgid "Cookie Settings"
+msgstr "Nastavenia cookies"
+
+#: templates/public/about.html:5 templates/public/about.html:8
+msgid "Learn more about AutogroupEU - your trusted partner in auto parts supply across Europe."
+msgstr "Dozviete sa viac o spoločnosti AutogroupEU - vašom spoľahlivom partnerovi v dodávkach autodielov po celej Európe."
+
+#: templates/public/about.html:6
+msgid "about us, auto parts, European supplier, car parts, B2B"
+msgstr "o nás, autodiely, európsky dodávateľ, náhradné diely, B2B"
+
+#: templates/public/about.html:18
+msgid "About AutogroupEU"
+msgstr "O spoločnosti AutogroupEU"
+
+#: templates/public/about.html:19
+msgid "Your Trusted Partner in Auto Parts"
+msgstr "Váš spoľahlivý partner v autodieloch"
+
+#: templates/public/about.html:30
+msgid "Auto Parts Store"
+msgstr "Predajňa autodielov"
+
+#: templates/public/about.html:35
+msgid "We are a specialized auto parts store serving business clients across Europe. With over 15 years of experience, we provide high-quality automotive parts and exceptional service to our B2B partners."
+msgstr "Sme špecializovaná predajňa autodielov slúžiaca podnikateľským klientom v celej Európe. S viac ako 15-ročnými skúsenosťami poskytujeme vysokokvalitné automobilové diely a výnimočné služby našim B2B partnerom."
+
+#: templates/public/about.html:46
+msgid "Our Main Brands"
+msgstr "Naše hlavné značky"
+
+#: templates/public/about.html:69
+msgid "B2B Services"
+msgstr "B2B služby"
+
+#: templates/public/about.html:74
+msgid "For business clients interested in B2B access, please contact us:"
+msgstr "Pre obchodných klientov so záujmom o B2B prístup nás kontaktujte:"
+
+#: templates/public/about.html:90
+msgid "Find Us"
+msgstr "Nájdite nás"
+
+#: templates/public/article_not_found.html:5
+msgid "The requested article was not found in our catalog."
+msgstr "Požadovaný tovar nebol nájdený v našom katalógu."
+
+#: templates/public/article_not_found.html:9
+msgid "Article Not Found"
+msgstr "Tovar nebol nájdený"
+
+#: templates/public/article_not_found.html:18
+msgid "Product Not Found"
+msgstr "Produkt nebol nájdený"
+
+#: templates/public/article_not_found.html:25
+msgid "The requested article was not found in our catalog"
+msgstr "Požadovaný tovar nebol nájdený v našom katalógu"
+
+#: templates/public/article_not_found.html:32
+msgid "The article you are looking for might have been discontinued, or the number might be incorrect."
+msgstr "Tovar, ktorý hľadáte, mohol byť vyradený, alebo je číslo nesprávne."
+
+#: templates/public/article_not_found.html:33
+msgid "Please check the article number and try again or contact our support team for assistance."
+msgstr "Prosím, skontrolujte kód tovaru a skúste znova, alebo kontaktujte našu podporu pre pomoc."
+
+#: templates/public/article_not_found.html:41 templates/public/index.html:37
+#: templates/public/product_details.html:66
+msgid "Enter article number..."
+msgstr "Zadajte kód tovaru..."
+
+#: templates/public/article_not_found.html:46 templates/public/index.html:40
+#: templates/public/product_details.html:69 templates/user/index.html:24
+msgid "Search"
+msgstr "Vyhľadať"
+
+#: templates/public/article_not_found.html:56
+msgid "Back to Home"
+msgstr "Späť domov"
+
+#: templates/public/article_not_found.html:60
+msgid "Contact Support"
+msgstr "Kontaktovať podporu"
+
+#: templates/public.article_not_found.html:72
+msgid "Recommended Products"
+msgstr "Odporúčané produkty"
+
+#: templates/public.article_not_found.html:93
+#: templates/public/cart/cart.html:44 templates/public/index.html:151
+#: templates/public/orders/order_details.html:126
+#: templates/public/product_details.html:126 templates/user/cart/cart.html:16
+#: templates/user/search/intermediate.html:35
+msgid "Brand"
+msgstr "Značka"
+
+#: templates/public.article_not_found.html:109 templates.public.index.html:174
+#: templates/public/orders/list_orders.html:81
+#: templates/user/news/user_news.html:44 templates/user/orders/orders.html:124
+#: templates/user/shipments/list_shipments.html:36
+msgid "View Details"
+msgstr "Zobraziť detaily"
+
+#: templates.public.index.html:5
+msgid "AutogroupEU - Your reliable partner in auto parts supply across Europe."
+msgstr "AutogroupEU - Váš spoľahlivý partner v dodávkach autodielov po celej Európe."
+
+#: templates.public.index.html:6
+msgid "auto parts, spare parts, car repair, programming, Slovakia"
+msgstr "autodiely, náhradné diely, oprava áut, programovanie, Slovensko"
+
+#: templates.public.index.html:7
+msgid "Auto Parts Supply"
+msgstr "Dodávka autodielov"
+
+#: templates.public.index.html:8
+msgid "Find the best auto parts for your vehicle with quick delivery across Europe"
+msgstr "Nájdite najlepšie autodiely pre vaše vozidlo s rýchlym doručením po celej Európe"
+
+#: templates.public.index.html:22
+msgid "Welcome to AutogroupEU"
+msgstr "Vitajte v AutogroupEU"
+
+#: templates.public.index.html:26
+msgid "Your reliable partner in auto parts supply across Europe. Enter the article number to check prices and availability."
+msgstr "Váš spoľahlivý partner v dodávkach autodielov po celej Európe. Zadajte kód tovaru pre kontrolu cien a dostupnosti."
+
+#: templates.public.index.html:55
+msgid "Need Help?"
+msgstr "Potrebujete pomoc?"
+
+#: templates.public.index.html:59
+msgid "If you have any questions, don't hesitate to contact us:"
+msgstr "Ak máte akékoľvek otázky, neváhajte nás kontaktovať:"
+
+#: templates.public.index.html:66
+msgid "Mon-Fri: 9:00 - 19:00"
+msgstr "Po-Pi: 9:00 - 19:00"
+
+#: templates.public.index.html:77
+msgid "Car Service & Programming"
+msgstr "Autoservis a programovanie"
+
+#: templates.public.index.html:81
+msgid "We offer professional car repair and programming services."
+msgstr "Ponúkame profesionálne služby opravy a programovania vozidiel."
+
+#: templates.public.index.html:84
+msgid "Learn More"
+msgstr "Zistiť viac"
+
+#: templates.public.index.html:99
+msgid "Items in Our Stock"
+msgstr "Položky na našom sklade"
+
+#: templates.public.index.html:110
+msgid "Filter by brand:"
+msgstr "Filtrovať podľa značky:"
+
+#: templates.public.index.html:113
+msgid "All Brands"
+msgstr "Všetky značky"
+
+#: templates.public.index.html:122
+msgid "Clear"
+msgstr "Vyčistiť"
+
+#: templates.public.index.html:168
+msgid "No description available."
+msgstr "Popis nie je k dispozícii."
+
+#: templates.public.index.html:188
+msgid "Show More Products"
+msgstr "Zobraziť viac produktov"
+
+#: templates.public.privacy.html:5 templates.public.privacy.html:8
+msgid "Privacy Policy for AutogroupEU - how we collect, use, and protect your personal data."
+msgstr "Ochrana osobných údajov pre AutogroupEU - ako zhromažďujeme, používame a chránime vaše osobné údaje."
+
+#: templates.public.privacy.html:6
+msgid "privacy policy, data protection, GDPR, personal data, cookies"
+msgstr "ochrana osobných údajov, ochrana údajov, GDPR, osobné údaje, cookies"
+
+#: templates.public.privacy.html:18
+msgid "How we collect, use, and protect your personal information"
+msgstr "Ako zhromažďujeme, používame a chránime vaše osobné údaje"
+
+#: templates.public.privacy.html:29 templates.public.terms.html:29
+msgid "Introduction"
+msgstr "Úvod"
+
+#: templates.public.privacy.html:34
+msgid "At AutogroupEU, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our website or services."
+msgstr "V spoločnosti AutogroupEU sa zaväzujeme chrániť vaše súkromie a zaistiť bezpečnosť vašich osobných údajov. Táto politika ochrany osobných údajov vysvetľuje, ako zhromažďujeme, používame a chránime vaše údaje pri používaní našich webových stránok alebo služieb."
+
+#: templates.public.privacy.html:37
+msgid "By using our website and services, you consent to the practices described in this policy. This policy complies with the General Data Protection Regulation (GDPR) and relevant data protection laws."
+msgstr "Používaním našich webových stránok a služieb súhlasíte s postupmi popísanými v tejto politike. Táto politika je v súlade s Všeobecným nariadením o ochrane údajov (GDPR) a príslušnými zákonmi o ochrane údajov."
+
+#: templates.public.privacy.html:40 templates.public.terms.html:37
+msgid "Last Updated: March 1, 2025"
+msgstr "Posledná aktualizácia: 1. marca 2025"
+
+#: templates.public.privacy.html:51
+msgid "Information We Collect"
+msgstr "Informácie, ktoré zhromažďujeme"
+
+#: templates.public.privacy.html:56
+msgid "Personal Information:"
+msgstr "Osobné údaje:"
+
+#: templates.public.privacy.html:56
+msgid "We collect personal information that you provide directly to us, such as:"
+msgstr "Zhromažďujeme osobné údaje, ktoré nám priamo poskytnete, ako napríklad:"
+
+#: templates.public.privacy.html:59
+msgid "Name, email address, phone number, and postal address"
+msgstr "Meno, e-mailová adresa, telefónne číslo a poštová adresa"
+
+#: templates.public.privacy.html:60
+msgid "Account login details, such as username and password"
+msgstr "Prihlasovacie údaje k účtu, ako používateľské meno a heslo"
+
+#: templates.public.privacy.html:61
+msgid "Company information, such as business name, VAT number, and registration details"
+msgstr "Informácie o spoločnosti, ako názov firmy, IČ DPH a registračné údaje"
+
+#: templates.public.privacy.html:62
+msgid "Payment information (though we do not store complete credit card details)"
+msgstr "Platobné informácie (aj keď neukladáme úplné údaje o kreditných kartách)"
+
+#: templates.public.privacy.html:63
+msgid "Order history and preferences"
+msgstr "História objednávok a preferencie"
+
+#: templates.public.privacy.html:64
+msgid "Communication history with our customer service team"
+msgstr "História komunikácie s našim zákazníckym servisom"
+
+#: templates.public.privacy.html:68
+msgid "Automatically Collected Information:"
+msgstr "Automaticky zhromažďované informácie:"
+
+#: templates.public.privacy.html:68
+msgid "When you visit our website, we automatically collect certain information about your device and usage, including:"
+msgstr "Keď navštívite našu webovú stránku, automaticky zhromažďujeme určité informácie o vašom zariadení a používaní, vrátane:"
+
+#: templates.public.privacy.html:71
+msgid "IP address and location information"
+msgstr "IP adresa a informácie o polohe"
+
+#: templates.public.privacy.html:72
+msgid "Browser and device information"
+msgstr "Informácie o prehliadači a zariadení"
+
+#: templates.public.privacy.html:73
+msgid "Pages visited and time spent on our website"
+msgstr "Navštívené stránky a čas strávený na našej webovej stránke"
+
+#: templates.public.privacy.html:74
+msgid "Referring websites or sources"
+msgstr "Odkazujúce webové stránky alebo zdroje"
+
+#: templates.public.privacy.html:75
+msgid "Cookies and similar tracking technologies"
+msgstr "Cookies a podobné sledovacie technológie"
+
+#: templates.public.privacy.html:86
+msgid "How We Use Your Information"
+msgstr "Ako používame vaše informácie"
+
+#: templates.public.privacy.html:90
+msgid "We use the information we collect for the following purposes:"
+msgstr "Informácie, ktoré zhromažďujeme, používame na nasledujúce účely:"
+
+#: templates.public.privacy.html:92
+msgid "To provide and maintain our services, including processing orders and managing accounts"
+msgstr "Poskytovanie a udržiavanie našich služieb, vrátane spracovania objednávok a správy účtov"
+
+#: templates.public.privacy.html:93
+msgid "To communicate with you about orders, account status, and customer service"
+msgstr "Komunikácia s vami ohľadom objednávok, stavu účtu a zákazníckeho servisu"
+
+#: templates.public.privacy.html:94
+msgid "To improve our website, products, and services"
+msgstr "Zlepšovanie našej webovej stránky, produktov a služieb"
+
+#: templates.public.privacy.html:95
+msgid "To send promotional materials and information about new products (only with your consent)"
+msgstr "Zasielanie propagačných materiálov a informácií o nových produktoch (iba s vaším súhlasom)"
+
+#: templates.public.privacy.html:96
+msgid "To detect and prevent fraudulent activities and security breaches"
+msgstr "Odhaľovanie a predchádzanie podvodným aktivitám a narušeniam bezpečnosti"
+
+#: templates.public.privacy.html:97
+msgid "To comply with legal obligations and enforce our policies"
+msgstr "Dodržiavanie právnych povinností a presadzovanie našich zásad"
+
+#: templates.public.privacy.html:108
+msgid "Information Sharing and Disclosure"
+msgstr "Zdieľanie a zverejňovanie informácií"
+
+#: templates.public.privacy.html:112
+msgid "We may share your information with:"
+msgstr "Vaše informácie môžeme zdieľať s:"
+
+#: templates.public.privacy.html:114
+msgid "Service providers who help us operate our business (shipping companies, payment processors, etc.)"
+msgstr "Poskytovateľmi služieb, ktorí nám pomáhajú prevádzkovať naše podnikanie (prepravné spoločnosti, spracovateľov platieb atď.)"
+
+#: templates.public.privacy.html:115
+msgid "Professional advisors such as lawyers, accountants, and insurers when necessary"
+msgstr "Profesionálnymi poradcami, ako sú právnici, účtovníci a poisťovatelia, keď je to potrebné"
+
+#: templates.public.privacy.html:116
+msgid "Government bodies or law enforcement agencies when required by law"
+msgstr "Vládnymi orgánmi alebo orgánmi činnými v trestnom konaní, keď to vyžaduje zákon"
+
+#: templates.public.privacy.html:117
+msgid "Business partners with your explicit consent"
+msgstr "Obchodnými partnermi s vaším výslovným súhlasom"
+
+#: templates.public.privacy.html:120
+msgid "We do not sell, rent, or trade your personal information to third parties for marketing purposes without your explicit consent."
+msgstr "Nepredávame, neprenajímame ani neobchodujeme s vašimi osobnými údajmi tretím stranám na marketingové účely bez vášho výslovného súhlasu."
+
+#: templates.public.privacy.html:131
+msgid "Cookies and Tracking Technologies"
+msgstr "Cookies a sledovacie technológie"
+
+#: templates.public.privacy.html:136
+msgid "We use cookies and similar tracking technologies to track activity on our website and hold certain information. Cookies are files with small amount of data that may include an anonymous unique identifier."
+msgstr "Používame cookies a podobné sledovacie technológie na sledovanie aktivity na našej webovej stránke a uchovávanie určitých informácií. Cookies sú súbory s malým množstvom údajov, ktoré môžu obsahovať anonymný jedinečný identifikátor."
+
+#: templates.public.privacy.html:139
+msgid "We use the following types of cookies:"
+msgstr "Používame nasledujúce typy cookies:"
+
+#: templates.public.privacy.html:142
+msgid "Essential cookies:"
+msgstr "Nevyhnutné cookies:"
+
+#: templates.public.privacy.html:142
+msgid "Required for the operation of our website"
+msgstr "Potrebné pre fungovanie našej webovej stránky"
+
+#: templates.public.privacy.html:143
+msgid "Analytical/performance cookies:"
+msgstr "Analytické/výkonnostné cookies:"
+
+#: templates.public.privacy.html:143
+msgid "Help us improve our website by tracking how visitors use it"
+msgstr "Pomáhajú nám zlepšovať našu webovú stránku sledovaním toho, ako ju návštevníci používajú"
+
+#: templates.public.privacy.html:144
+msgid "Functionality cookies:"
+msgstr "Funkčné cookies:"
+
+#: templates.public.privacy.html:144
+msgid "Allow us to recognize you and remember your preferences"
+msgstr "Umožňujú nám rozpoznať vás a zapamätať si vaše preferencie"
+
+#: templates.public.privacy.html:145
+msgid "Targeting cookies:"
+msgstr "Cielené cookies:"
+
+#: templates.public.privacy.html:145
+msgid "Record your visit, the pages you visit, and the links you follow"
+msgstr "Zaznamenávajú vašu návštevu, stránky, ktoré navštívite, a odkazy, ktoré sledujete"
+
+#: templates.public.privacy.html:148
+msgid "You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you do not accept cookies, you may not be able to use some portions of our service."
+msgstr "Môžete nastaviť svoj prehliadač tak, aby odmietol všetky cookies alebo aby upozornil, keď sa odosiela cookie. Ak však neprijímate cookies, možno nebudete môcť používať niektoré časti našej služby."
+
+#: templates.public.privacy.html:159
+msgid "Data Security"
+msgstr "Bezpečnosť údajov"
+
+#: templates.public.privacy.html:164
+msgid "The security of your data is important to us. We implement appropriate security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction. These measures include:"
+msgstr "Bezpečnosť vašich údajov je pre nás dôležitá. Implementujeme vhodné bezpečnostné opatrenia na ochranu vašich osobných údajov pred neoprávneným prístupom, zmenou, zverejnením alebo zničením. Tieto opatrenia zahŕňajú:"
+
+#: templates.public.privacy.html:167
+msgid "Encryption of sensitive data"
+msgstr "Šifrovanie citlivých údajov"
+
+#: templates.public.privacy.html:168
+msgid "Regular security assessments"
+msgstr "Pravidelné hodnotenia bezpečnosti"
+
+#: templates.public.privacy.html:169
+msgid "Access controls and authentication procedures"
+msgstr "Kontroly prístupu a autentifikačné postupy"
+
+#: templates.public.privacy.html:170
+msgid "Secure network architecture"
+msgstr "Bezpečná sieťová architektúra"
+
+#: templates.public.privacy.html:171
+msgid "Regular backups and data recovery protocols"
+msgstr "Pravidelné zálohy a protokoly obnovy údajov"
+
+#: templates.public.privacy.html:174
+#, python-format
+msgid "However, please be aware that no method of transmission over the Internet or electronic storage is 100% secure, and we cannot guarantee absolute security."
+msgstr "Uvedomte si však, že žiadna metóda prenosu cez internet alebo elektronického ukladania nie je 100% bezpečná a nemôžeme zaručiť absolútnu bezpečnosť."
+
+#: templates.public.privacy.html:185
+msgid "Your Data Protection Rights"
+msgstr "Vaše práva na ochranu údajov"
+
+#: templates.public.privacy.html:190
+msgid "Under the GDPR and other applicable data protection laws, you have the following rights:"
+msgstr "Podľa GDPR a iných platných zákonov o ochrane údajov máte nasledujúce práva:"
+
+#: templates.public.privacy.html:193
+msgid "Right to access:"
+msgstr "Právo na prístup:"
+
+#: templates.public.privacy.html:193
+msgid "You can request copies of your personal data."
+msgstr "Môžete požiadať o kópie vašich osobných údajov."
+
+#: templates.public.privacy.html:194
+msgid "Right to rectification:"
+msgstr "Právo na opravu:"
+
+#: templates.public.privacy.html:194
+msgid "You can request that we correct inaccurate or complete incomplete information."
+msgstr "Môžete požiadať, aby sme opravili nepresné alebo doplnili neúplné informácie."
+
+#: templates.public.privacy.html:195
+msgid "Right to erasure:"
+msgstr "Právo na vymazanie:"
+
+#: templates.public.privacy.html:195
+msgid "You can request that we delete your personal data in certain circumstances."
+msgstr "Môžete požiadať, aby sme vymazali vaše osobné údaje za určitých okolností."
+
+#: templates.public.privacy.html:196
+msgid "Right to restrict processing:"
+msgstr "Právo na obmedzenie spracovania:"
+
+#: templates.public.privacy.html:196
+msgid "You can request that we limit how we use your data."
+msgstr "Môžete požiadať, aby sme obmedzili spôsob, akým používame vaše údaje."
+
+#: templates.public.privacy.html:197
+msgid "Right to data portability:"
+msgstr "Právo na prenosnosť údajov:"
+
+#: templates.public.privacy.html:197
+msgid "You can request that we transfer your data to another organization or directly to you."
+msgstr "Môžete požiadať, aby sme preniesli vaše údaje do inej organizácie alebo priamo vám."
+
+#: templates.public.privacy.html:198
+msgid "Right to object:"
+msgstr "Právo namietať:"
+
+#: templates.public.privacy.html:198
+msgid "You can object to our processing of your personal data."
+msgstr "Môžete namietať proti nášmu spracovaniu vašich osobných údajov."
+
+#: templates.public.privacy.html:201
+msgid "To exercise any of these rights, please contact us using the details provided below. We will respond to your request within 30 days."
+msgstr "Ak chcete uplatniť ktorékoľvek z týchto práv, kontaktujte nás pomocou údajov uvedených nižšie. Na vašu žiadosť odpovieme do 30 dní."
+
+#: templates.public.privacy.html:212
+msgid "Data Retention"
+msgstr "Uchovávanie údajov"
+
+#: templates.public.privacy.html:217
+msgid "We will retain your personal information only for as long as necessary to fulfill the purposes for which it was collected, including for satisfying legal, accounting, or reporting requirements."
+msgstr "Vaše osobné údaje budeme uchovávať len tak dlho, ako je potrebné na splnenie účelov, pre ktoré boli zhromaždené, vrátane splnenia právnych, účtovných alebo vykazovacích požiadaviek."
+
+#: templates.public.privacy.html:220
+msgid "For business customers, we typically retain account information and order history for up to 7 years to comply with tax and business regulations."
+msgstr "V prípade firemných zákazníkov zvyčajne uchovávame informácie o účte a históriu objednávok až do 7 rokov, aby sme dodržali daňové a obchodné predpisy."
+
+#: templates.public.privacy.html:223
+msgid "After the retention period, your personal data will be securely deleted or anonymized."
+msgstr "Po uplynutí doby uchovávania budú vaše osobné údaje bezpečne vymazané alebo anonymizované."
+
+#: templates.public.privacy.html:234
+msgid "Children's Privacy"
+msgstr "Ochrana súkromia detí"
+
+#: templates.public.privacy.html:239
+msgid "Our service is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from children. If you are a parent or guardian and believe that your child has provided us with personal information, please contact us so that we can take necessary actions."
+msgstr "Naša služba nie je určená na používanie osobami mladšími ako 18 rokov. Vedome nezhromažďujeme osobné údaje od detí. Ak ste rodič alebo opatrovník a domnievate sa, že nám vaše dieťa poskytlo osobné údaje, kontaktujte nás, aby sme mohli prijať potrebné opatrenia."
+
+#: templates.public.privacy.html:250
+msgid "Changes to This Privacy Policy"
+msgstr "Zmeny v tejto politike ochrany osobných údajov"
+
+#: templates.public.privacy.html:255
+msgid "We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the \"Last Updated\" date."
+msgstr "Našu politiku ochrany osobných údajov môžeme z času na čas aktualizovať. O akýchkoľvek zmenách vás budeme informovať zverejnením novej politiky ochrany osobných údajov na tejto stránke a aktualizáciou dátumu „Posledná aktualizácia"."
+
+#: templates.public.privacy.html:258
+msgid "You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page."
+msgstr "Odporúčame vám pravidelne kontrolovať túto politiku ochrany osobných údajov. Zmeny v tejto politike ochrany osobných údajov sú účinné, keď sú zverejnené na tejto stránke."
+
+#: templates.public.privacy.html:274
+msgid "If you have any questions about this Privacy Policy or our data practices, please contact our Data Protection Officer at:"
+msgstr "Ak máte akékoľvek otázky týkajúce sa tejto politiky ochrany osobných údajov alebo našich postupov pri spracovaní údajov, kontaktujte nášho úradníka pre ochranu údajov na adrese:"
+
+#: templates.public.privacy.html:282
+msgid "You have the right to lodge a complaint with your local data protection authority if you have concerns about how we process your personal data."
+msgstr "Máte právo podať sťažnosť na vašom miestnom úrade pre ochranu údajov, ak máte obavy o tom, ako spracovávame vaše osobné údaje."
+
+#: templates.public.product_details.html:6
+msgid "auto parts"
+msgstr "autodiely"
+
+#: templates.public.product_details.html:6
+msgid "spare parts"
+msgstr "náhradné diely"
+
+#: templates.public.product_details.html:138
+msgid "Available Prices"
+msgstr "Dostupné ceny"
+
+#: templates.public.product_details.html:167
+#: templates.user.search.intermediate.html:61
+#: templates.user.search.search_results.html:82
 msgid "Add to Cart"
 msgstr "Pridať do košíka"
 
-#: templates/user/search/intermediate.html:64
-msgid "Cancel"
-msgstr "Zrušiť"
+#: templates.public.cart.cart.html:290
+#: templates.public.product_details.html:177
+msgid "Continue Shopping"
+msgstr "Pokračovať v nákupe"
 
-#: templates/user/search/intermediate.html:71
-msgid "Missing Articles"
-msgstr "Chýbajúce položky"
+#: templates.public.product_details.html:190
+msgid "Description"
+msgstr "Popis"
 
-#: templates/user/search/intermediate.html:72
-#: templates/user/search/search_results.html:71
-msgid "The following articles were not found in any price list:"
-msgstr "Nasledujúce položky sa nenašli v žiadnom cenníku:"
+#: templates.public.terms.html:5 templates.public.terms.html:8
+msgid "Terms and Conditions for using AutogroupEU services."
+msgstr "Podmienky používania služieb spoločnosti AutogroupEU."
 
-#: templates/user/search/search_results.html:3
-#: templates/user/search/search_results.html:7
-msgid "Search Results"
-msgstr "Výsledky vyhľadávania"
+#: templates.public.terms.html:6
+msgid "terms, conditions, legal, agreement, policy, usage"
+msgstr "podmienky, zmluvné podmienky, právne, dohoda, zásady, používanie"
 
-#: templates/user/search/search_results.html:16
-msgid "Price Lists"
-msgstr "Cenníky"
+#: templates.public.terms.html:18
+msgid "Please read these terms carefully before using our services"
+msgstr "Pred používaním našich služieb si pozorne prečítajte tieto podmienky"
 
-#: templates/user/search/search_results.html:19
-msgid "Select"
-msgstr "Vybrať"
+#: templates.public.terms.html:34
+msgid "These Terms and Conditions govern your use of the AutogroupEU website and services provided by AutogroupEU, accessible at autogroup.sk. By accessing and using our website and services, you accept these Terms and Conditions in full. If you disagree with any part of these terms, please do not use our website or services."
+msgstr "Tieto Obchodné podmienky upravujú vaše používanie webovej stránky AutogroupEU a služieb poskytovaných spoločnosťou AutogroupEU, dostupných na adrese autogroup.sk. Prístupom a používaním našej webovej stránky a služieb v plnom rozsahu súhlasíte s týmito Obchodnými podmienkami. Ak nesúhlasíte s ktoroukoľvek časťou týchto podmienok, nepoužívajte našu webovú stránku ani služby."
 
-#: templates/user/search/search_results.html:86
-msgid "Clear Results"
-msgstr "Vyčistiť výsledky"
+#: templates.public.terms.html:48
+msgid "Products and Services"
+msgstr "Produkty a služby"
 
-#: templates/user/search/search_results.html:92
-msgid "No Results Found"
-msgstr "Nenašli sa žiadne výsledky"
+#: templates.public.terms.html:53
+msgid "1. All products displayed on our website are subject to availability."
+msgstr "1. Všetky produkty zobrazené na našej webovej stránke podliehajú dostupnosti."
 
-#: templates/user/search/search_results.html:93
-msgid "Try searching with different articles or check your input format."
-msgstr "Skúste vyhľadávanie s inými položkami alebo skontrolujte formát vstupu."
+#: templates.public.terms.html:56
+msgid "2. We reserve the right to discontinue any product or service at any time."
+msgstr "2. Vyhradzujeme si právo kedykoľvek ukončiť akýkoľvek produkt alebo službu."
 
-#: templates/user/search/search_results.html:95
-msgid "New Search"
-msgstr "Nové vyhľadávanie"
+#: templates.public.terms.html:59
+msgid "3. Prices for products are subject to change without notice."
+msgstr "3. Ceny produktov sa môžu zmeniť bez predchádzajúceho upozornenia."
 
-#: templates/user/shipments/list_shipments.html:9
-#: templates/user/shipments/shipments.html:7
-msgid "My Shipments"
-msgstr "Moje zásielky"
+#: templates.public.terms.html:62
+msgid "4. We make every effort to display the accurate colors and features of our products, but cannot guarantee that your display will accurately portray the actual color of the product."
+msgstr "4. Vynakladáme všetko úsilie na zobrazenie presných farieb a vlastností našich produktov, ale nemôžeme zaručiť, že váš displej presne zobrazí skutočnú farbu produktu."
 
-#: templates/user/shipments/list_shipments.html:17
-msgid "Shipment Date"
-msgstr "Dátum odoslania"
+#: templates.public.terms.html:65
+msgid "5. Product specifications, prices, and availability may differ from region to region."
+msgstr "5. Špecifikácie produktov, ceny a dostupnosť sa môžu líšiť podľa regiónu."
 
-#: templates/user/shipments/list_shipments.html:19
-msgid "Tracking Number"
-msgstr "Sledovacie číslo"
+#: templates.public.terms.html:76
+msgid "Orders and Payment"
+msgstr "Objednávky a platby"
 
-#: templates/user/shipments/list_shipments.html:20
-msgid "Items Count"
-msgstr "Počet položiek"
+#: templates.public.terms.html:81
+msgid "1. By placing an order, you are making an offer to purchase the products subject to these Terms and Conditions."
+msgstr "1. Zadaním objednávky predkladáte ponuku na nákup produktov podliehajúcich týmto Obchodným podmienkam."
 
-#: templates/user/shipments/list_shipments.html:30
-msgid "N/A"
-msgstr "N/A"
+#: templates.public.terms.html:84
+msgid "2. All orders are subject to acceptance and availability. We reserve the right to refuse any order without providing a reason."
+msgstr "2. Všetky objednávky podliehajú prijatiu a dostupnosti. Vyhradzujeme si právo odmietnuť akúkoľvek objednávku bez udania dôvodu."
 
-#: templates/user/shipments/list_shipments.html:45
-#: templates/user/shipments/shipments.html:44
-msgid "No shipments found."
-msgstr "Nenašli sa žiadne zásielky."
+#: templates.public.terms.html:87
+msgid "3. Payment for all orders must be made in advance unless otherwise agreed upon in writing."
+msgstr "3. Platba za všetky objednávky musí byť vykonaná vopred, pokiaľ nie je písomne dohodnuté inak."
 
-#: templates/user/shipments/shipments.html:13
-msgid "Shipment Date:"
-msgstr "Dátum odoslania:"
+#: templates.public.terms.html:90
+msgid "4. We accept payment via bank transfers, credit cards, and other payment methods as specified during the checkout process."
+msgstr "4. Akceptujeme platby prostredníctvom bankových prevodov, kreditných kariet a ďalších platobných metód, ako je uvedené počas procesu platby."
 
-#: templates/user/shipments/shipments.html:13
-#: templates/user/shipments/view_shipment.html:22
-msgid "Status:"
-msgstr "Stav:"
+#: templates.public.terms.html:93
+msgid "5. For business customers, payment terms will be as per the agreed contract conditions."
+msgstr "5. Pre firemných zákazníkov platia platobné podmienky podľa dohodnutých zmluvných podmienok."
 
-#: templates/user/shipments/shipments.html:15
-#: templates/user/shipments/view_shipment.html:23
-msgid "Tracking Number:"
-msgstr "Sledovacie číslo:"
+#: templates.public.terms.html:104
+msgid "Shipping and Delivery"
+msgstr "Doprava a doručenie"
 
-#: templates/user/shipments/view_shipment.html:3
-#: templates/user/shipments/view_shipment.html:8
-msgid "Shipment Details"
-msgstr "Podrobnosti zásielky"
+#: templates.public.terms.html:109
+msgid "1. Delivery times are estimates only and may vary based on supplier availability, location, and other factors."
+msgstr "1. Dodacie lehoty sú iba odhadom a môžu sa líšiť v závislosti od dostupnosti dodávateľa, polohy a ďalších faktorov."
 
-#: templates/user/shipments/view_shipment.html:10
-msgid "Back to Shipments"
-msgstr "Späť na zásielky"
+#: templates.public.terms.html:112
+msgid "2. We are not responsible for delays in delivery caused by circumstances beyond our control."
+msgstr "2. Nezodpovedáme za oneskorenia dodávky spôsobené okolnosťami mimo našej kontroly."
 
-#: templates/user/shipments/view_shipment.html:16
-msgid "Shipment Information"
-msgstr "Informácie o zásielke"
+#: templates.public.terms.html:115
+msgid "3. Risk of loss or damage to products passes to you upon delivery."
+msgstr "3. Riziko straty alebo poškodenia produktov prechádza na vás pri doručení."
 
-#: templates/user/shipments/view_shipment.html:21
-msgid "Date:"
-msgstr "Dátum:"
+#: templates.public.terms.html:118
+msgid "4. It is your responsibility to provide accurate shipping information. Additional charges may apply for redelivery if incorrect information is provided."
+msgstr "4. Je vašou zodpovednosťou poskytnúť presné dodacie údaje. Ak budú poskytnuté nesprávne informácie, môžu sa účtovať dodatočné poplatky za opätovné doručenie."
 
-#: templates/user/shipments/view_shipment.html:23
-msgid "Not specified"
-msgstr "Nešpecifikované"
+#: templates.public.terms.html:129
+msgid "Returns and Warranties"
+msgstr "Vrátenie a záruky"
 
-#: templates/user/shipments/view_shipment.html:31
+#: templates.public.terms.html:134
+msgid "1. Returns are accepted within 14 days of receipt, subject to the product being in its original condition and packaging."
+msgstr "1. Vrátenie tovaru je akceptované do 14 dní od prevzatia, za predpokladu, že produkt je v pôvodnom stave a balení."
+
+#: templates.public.terms.html:137
+msgid "2. To initiate a return, please contact our customer service team."
+msgstr "2. Pre začatie procesu vrátenia kontaktujte náš zákaznícky servis."
+
+#: templates.public.terms.html:140
+msgid "3. Refunds will be processed within 14 business days of receiving the returned product."
+msgstr "3. Vrátenie peňazí bude spracované do 14 pracovných dní od prijatia vráteného produktu."
+
+#: templates.public.terms.html:143
+msgid "4. Products carry the manufacturers warranty only, unless otherwise specified."
+msgstr "4. Produkty majú len záruku výrobcu, pokiaľ nie je uvedené inak."
+
+#: templates.public.terms.html:146
+msgid "5. We do not accept returns on special order items, unless they are defective."
+msgstr "5. Neprijímame vrátenie tovaru na špeciálne objednané položky, pokiaľ nie sú chybné."
+
+#: templates.public.terms.html:157
+msgid "Liability and Limitations"
+msgstr "Zodpovednosť a obmedzenia"
+
+#: templates.public.terms.html:162
+msgid "1. Our liability is limited to the purchase price of the product in question."
+msgstr "1. Naša zodpovednosť je obmedzená na kúpnu cenu príslušného produktu."
+
+#: templates.public.terms.html:165
+msgid "2. We are not liable for any indirect, incidental, or consequential damages."
+msgstr "2. Nezodpovedáme za žiadne nepriame, náhodné alebo následné škody."
+
+#: templates.public.terms.html:168
+msgid "3. To the extent permitted by law, we disclaim all warranties, express or implied, including but not limited to merchantability and fitness for a particular purpose."
+msgstr "3. V rozsahu povolenom zákonom sa zriekame všetkých záruk, výslovných alebo predpokladaných, vrátane, ale nielen, obchodovateľnosti a vhodnosti na konkrétny účel."
+
+#: templates.public.terms.html:171
+msgid "4. We do not guarantee that our website will be error-free or uninterrupted."
+msgstr "4. Negarantujeme, že naša webová stránka bude bez chýb alebo neprerušená."
+
+#: templates.public.terms.html:182
+msgid "Intellectual Property"
+msgstr "Duševné vlastníctvo"
+
+#: templates.public.terms.html:187
+msgid "1. All content on this website, including but not limited to text, graphics, logos, images, and software, is the property of AutogroupEU or its content suppliers and is protected by copyright laws."
+msgstr "1. Všetok obsah na tejto webovej stránke, vrátane, ale nielen, textov, grafiky, lôg, obrázkov a softvéru, je majetkom spoločnosti AutogroupEU alebo jej dodávateľov obsahu a je chránený autorskými právami."
+
+#: templates.public.terms.html:190
+msgid "2. You may not reproduce, distribute, modify, or create derivative works from any content without our express written consent."
+msgstr "2. Nesmiete reprodukovať, distribuovať, upravovať alebo vytvárať odvodené diela z akéhokoľvek obsahu bez nášho výslovného písomného súhlasu."
+
+#: templates.public.terms.html:201
+msgid "Modifications to Terms"
+msgstr "Zmeny podmienok"
+
+#: templates.public.terms.html:206
+msgid "1. We reserve the right to modify these Terms and Conditions at any time."
+msgstr "1. Vyhradzujeme si právo kedykoľvek upraviť tieto Obchodné podmienky."
+
+#: templates.public.terms.html:209
+msgid "2. Changes will be effective immediately upon posting on the website."
+msgstr "2. Zmeny nadobúdajú účinnosť okamžite po zverejnení na webovej stránke."
+
+#: templates.public.terms.html:212
+msgid "3. Your continued use of our website and services after any changes to the Terms constitutes your acceptance of the new Terms."
+msgstr "3. Vaše pokračujúce používanie našej webovej stránky a služieb po akýchkoľvek zmenách podmienok znamená váš súhlas s novými podmienkami."
+
+#: templates.public.terms.html:228
+msgid "If you have any questions about these Terms and Conditions, please contact us at:"
+msgstr "Ak máte akékoľvek otázky týkajúce sa týchto Obchodných podmienok, kontaktujte nás na adrese:"
+
+#: templates.public.cart.cart.html:5
+msgid "View and manage your shopping cart at AutogroupEU. Check prices, quantities, and proceed to checkout."
+msgstr "Zobraziť a spravovať svoj nákupný košík v AutogroupEU. Skontrolujte ceny, množstvá a pokračujte k pokladni."
+
+#: templates.public.cart.cart.html:28 templates.public.cart.cart.html:33
+#: templates.user.cart.cart.html:3 templates.user.cart.cart.html:7
+msgid "Shopping Cart"
+msgstr "Nákupný košík"
+
+#: templates.public.cart.cart.html:43
+#: templates.public.orders.order_details.html:125
+msgid "Name"
+msgstr "Názov"
+
+#: templates.public.cart.cart.html:85
+#: templates.public.orders.order_details.html:158
+#: templates.user.cart.cart.html:57
+msgid "Total:"
+msgstr "Celkom:"
+
+#: templates.public.cart.cart.html:96
+msgid "Delivery Information"
+msgstr "Informácie o doručení"
+
+#: templates.public.cart.cart.html:103
+msgid "Select Saved Address"
+msgstr "Vyberte uloženú adresu"
+
+#: templates.public.cart.cart.html:135
+msgid "Use new address"
+msgstr "Použiť novú adresu"
+
+#: templates.public.cart.cart.html:144
+msgid "New Delivery Address"
+msgstr "Nová doručovacia adresa"
+
+#: templates.public.cart.cart.html:149 templates.public.user.profile.html:160
+msgid "Full Name"
+msgstr "Celé meno"
+
+#: templates.public.cart.cart.html:153 templates.public.user.profile.html:65
+#: templates.public.user.profile.html:119
+#: templates.public.user.profile.html:164
+msgid "Phone"
+msgstr "Telefón"
+
+#: templates.public.cart.cart.html:160 templates.public.user.profile.html:173
+msgid "Country"
+msgstr "Krajina"
+
+#: templates.public.cart.cart.html:168 templates.public.user.profile.html:184
+msgid "City"
+msgstr "Mesto"
+
+#: templates.public.cart.cart.html:172 templates.public.user.profile.html:188
+msgid "Postal Code"
+msgstr "PSČ"
+
+#: templates.public.cart.cart.html:177 templates.public.user.profile.html:169
+msgid "Street Address"
+msgstr "Ulica"
+
+#: templates.public.cart.cart.html:184
+msgid "Save address for future orders"
+msgstr "Uložiť adresu pre budúce objednávky"
+
+#: templates.public.cart.cart.html:198
+msgid "Need invoice with VAT number"
+msgstr "Potrebujem faktúru s IČ DPH"
+
+#: templates.public.cart.cart.html:206
+msgid "Select Saved Company"
+msgstr "Vyberte uloženú spoločnosť"
+
+#: templates.public.cart.cart.html:227 templates.public.user.profile.html:239
+msgid "Address"
+msgstr "Adresa"
+
+#: templates.public.cart.cart.html:242
+msgid "Use new company details"
+msgstr "Použiť nové údaje spoločnosti"
+
+#: templates.public.cart.cart.html:251
+msgid "New Company Details"
+msgstr "Nové údaje spoločnosti"
+
+#: templates.public.cart.cart.html:279
+msgid "Save company details for future orders"
+msgstr "Uložiť údaje spoločnosti pre budúce objednávky"
+
+#: templates.public.cart.cart.html:293 templates.user.cart.cart.html:68
+msgid "Place Order"
+msgstr "Odoslať objednávku"
+
+#: templates.public.cart.cart.html:308 templates.user.cart.cart.html:93
+msgid "Your Cart is Empty"
+msgstr "Váš košík je prázdny"
+
+#: templates.public.cart.cart.html:315 templates.user.cart.cart.html:94
+msgid "Start adding items to your cart!"
+msgstr "Začnite pridávať položky do košíka!"
+
+#: templates.public.cart.cart.html:318 templates.user.cart.cart.html:96
+#: templates.user.index.html:11
+msgid "Search Articles"
+msgstr "Vyhľadávanie tovaru"
+
+#: templates.public.cart.cart.html:455
+msgid "VAT number is valid"
+msgstr "IČ DPH je platné"
+
+#: templates.public.cart.cart.html:455
+msgid "VAT number is invalid"
+msgstr "IČ DPH je neplatné"
+
+#: templates.public.cart.cart.html:486
+msgid "Please provide company name and VAT number"
+msgstr "Prosím, zadajte názov spoločnosti a IČ DPH"
+
+#: templates.public.cart.cart.html:493
+msgid "Please select a company or enter new company details"
+msgstr "Prosím, vyberte spoločnosť alebo zadajte nové údaje spoločnosti"
+
+#: templates.public.cart.cart.html:572
+msgid "Please select a delivery address or enter a new one."
+msgstr "Prosím, vyberte doručovaciu adresu alebo zadajte novú."
+
+#: templates.public.cart.cart.html:582
+msgid "Please fill in all required fields."
+msgstr "Prosím, vyplňte všetky povinné polia."
+
+#: templates.public.cart.cart.html:591
+msgid "Processing..."
+msgstr "Spracováva sa..."
+
+#: templates.public.orders.list_orders.html:5
+msgid "View your order history at AutogroupEU. Track your purchases and check delivery status."
+msgstr "Zobraziť históriu vašich objednávok v AutogroupEU. Sledovať vaše nákupy a skontrolovať stav doručenia."
+
+#: templates.public.orders.list_orders.html:9
+#: templates.public.orders.list_orders.html:18
+#: templates.user.orders.orders.html:55
+msgid "My Orders"
+msgstr "Moje objednávky"
+
+#: templates.public.orders.list_orders.html:27
+#: templates.public.orders.list_orders.html:38
+msgid "Order #"
+msgstr "Objednávka č."
+
+#: templates.public.orders.list_orders.html:29
+#: templates.public.orders.list_orders.html:49
+#: templates.user.shipments.view_shipment.html:31
 msgid "Items"
 msgstr "Položky"
 
-#: templates/user/shipments/view_shipment.html:60
+#: templates.public.orders.list_orders.html:93
+#: templates.user.orders.orders.html:133
+msgid "No Orders Found"
+msgstr "Neboli nájdené žiadne objednávky"
+
+#: templates.public.orders.list_orders.html:94
+msgid "You have not placed any orders yet."
+msgstr "Zatiaľ ste nezadali žiadne objednávky."
+
+#: templates.public.orders.list_orders.html:97
+#: templates.user.orders.orders.html:136
+msgid "Start Shopping"
+msgstr "Začnite nakupovať"
+
+#: templates.public.orders.order_details.html:8
+#: templates.user.orders.order_details.html:4
+#: templates.user.orders.order_details.html:9
+#: templates.user.shipments.shipments.html:19
+msgid "Order Details"
+msgstr "Detaily objednávky"
+
+#: templates.public.orders.order_details.html:17
+msgid "Order"
+msgstr "Objednávka"
+
+#: templates.public.orders.order_details.html:22
+#: templates.user.orders.order_details.html:11
+msgid "Back to Orders"
+msgstr "Späť na objednávky"
+
+#: templates.public.orders.order_details.html:33
+msgid "Order Date"
+msgstr "Dátum objednávky"
+
+#: templates.public.orders.order_details.html:48
+msgid "Total Items"
+msgstr "Celkový počet položiek"
+
+#: templates.public.orders.order_details.html:55
+msgid "Total Amount"
+msgstr "Celková suma"
+
+#: templates.public.orders.order_details.html:82
+msgid "No delivery information provided"
+msgstr "Neboli poskytnuté žiadne informácie o doručení"
+
+#: templates.public.orders.order_details.html:94
+msgid "Invoice Information"
+msgstr "Informácie o faktúre"
+
+#: templates.public.orders.order_details.html:110
+msgid "Invoice requested but details not provided"
+msgstr "Faktúra vyžiadaná, ale neboli poskytnuté údaje"
+
+#: templates.public.user.profile.html:7
+msgid "Manage your personal information, addresses and company details"
+msgstr "Spravujte svoje osobné údaje, adresy a informácie o spoločnosti"
+
+#: templates.public.user.profile.html:15
+msgid "Profile"
+msgstr "Profil"
+
+#: templates.public.user.profile.html:21
+msgid "Addresses"
+msgstr "Adresy"
+
+#: templates.public.user.profile.html:27
+msgid "Companies"
+msgstr "Spoločnosti"
+
+#: templates.public.user.profile.html:33
+msgid "Password"
+msgstr "Heslo"
+
+#: templates.public.user.profile.html:46
+msgid "Personal Information"
+msgstr "Osobné údaje"
+
+#: templates.public.user.profile.html:54
+msgid "Username"
+msgstr "Používateľské meno"
+
+#: templates.public.user.profile.html:56
+msgid "Username cannot be changed"
+msgstr "Používateľské meno nie je možné zmeniť"
+
+#: templates.public.user.profile.html:60
+msgid "Email"
+msgstr "E-mail"
+
+#: templates.public.user.profile.html:65
+msgid "Phone"
+msgstr "Telefón"
+
+#: templates.public.user.profile.html:67
+msgid "Phone number must be in international format (e.g. +421907123456)"
+msgstr "Telefónne číslo musí byť v medzinárodnom formáte (napr. +421907123456)"
+
+#: templates.public.user.profile.html:72
+msgid "Preferred Language"
+msgstr "Preferovaný jazyk"
+
+#: templates.public.user.profile.html:83
+msgid "Update Profile"
+msgstr "Aktualizovať profil"
+
+#: templates.public.user.profile.html:97
+msgid "Delivery Addresses"
+msgstr "Doručovacie adresy"
+
+#: templates.public.user.profile.html:102
+msgid "Your Addresses"
+msgstr "Vaše adresy"
+
+#: templates.public.user.profile.html:112
+msgid "Default"
+msgstr "Predvolená"
+
+#: templates.public.user.profile.html:129
+msgid "Set as Default"
+msgstr "Nastaviť ako predvolenú"
+
+#: templates.public.user.profile.html:134
+msgid "Are you sure you want to delete this address?"
+msgstr "Naozaj chcete odstrániť túto adresu?"
+
+#: templates.public.user.profile.html:138
+msgid "Delete"
+msgstr "Odstrániť"
+
+#: templates.public.user.profile.html:149
+msgid "You have no saved addresses yet."
+msgstr "Zatiaľ nemáte uložené žiadne adresy."
+
+#: templates.public.user.profile.html:154
+msgid "Add New Address"
+msgstr "Pridať novú adresu"
+
+#: templates.public.user.profile.html:160
+msgid "Full Name"
+msgstr "Celé meno"
+
+#: templates.public.user.profile.html:169
+msgid "Street Address"
+msgstr "Ulica"
+
+#: templates.public.user.profile.html:173
+msgid "Country"
+msgstr "Krajina"
+
+#: templates.public.user.profile.html:175
+msgid "Choose..."
+msgstr "Vyberte..."
+
+#: templates.public.user.profile.html:176
+msgid "Slovakia"
+msgstr "Slovensko"
+
+#: templates.public.user.profile.html:177
+msgid "Ukraine"
+msgstr "Ukrajina"
+
+#: templates.public.user.profile.html:178
+msgid "Czech Republic"
+msgstr "Česká republika"
+
+#: templates.public.user.profile.html:179
+msgid "Hungary"
+msgstr "Maďarsko"
+
+#: templates.public.user.profile.html:180
+msgid "Poland"
+msgstr "Poľsko"
+
+#: templates.public.user.profile.html:195
+msgid "Set as default address"
+msgstr "Nastaviť ako predvolenú adresu"
+
+#: templates.public.user.profile.html:201
+msgid "Add Address"
+msgstr "Pridať adresu"
+
+#: templates.public.user.profile.html:217
+msgid "Company Information"
+msgstr "Informácie o spoločnosti"
+
+#: templates.public.user.profile.html:222
+msgid "Your Companies"
+msgstr "Vaše spoločnosti"
+
+#: templates.public.user.profile.html:235
+msgid "VAT"
+msgstr "IČ DPH"
+
+#: templates.public.user.profile.html:237
+msgid "Registration No."
+msgstr "IČO"
+
+#: templates.public.user.profile.html:239
+msgid "Address"
+msgstr "Adresa"
+
+#: templates.public.user.profile.html:253
+msgid "Are you sure you want to delete this company?"
+msgstr "Naozaj chcete odstrániť túto spoločnosť?"
+
+#: templates.public.user.profile.html:268
+msgid "You have no saved companies yet."
+msgstr "Zatiaľ nemáte uložené žiadne spoločnosti."
+
+#: templates.public.user.profile.html:273
+msgid "Add New Company"
+msgstr "Pridať novú spoločnosť"
+
+#: templates.public.user.profile.html:279
+msgid "Company Name"
+msgstr "Názov spoločnosti"
+
+#: templates.public.user.profile.html:283
+msgid "VAT Number"
+msgstr "IČ DPH"
+
+#: templates.public.user.profile.html:287
+msgid "Registration Number"
+msgstr "IČO"
+
+#: templates.public.user.profile.html:287
+msgid "(optional)"
+msgstr "(voliteľné)"
+
+#: templates.public.user.profile.html:291
+msgid "Company Address"
+msgstr "Adresa spoločnosti"
+
+#: templates.public.user.profile.html:298
+msgid "Set as default company"
+msgstr "Nastaviť ako predvolenú spoločnosť"
+
+#: templates.public.user.profile.html:304
+msgid "Add Company"
+msgstr "Pridať spoločnosť"
+
+#: templates.user.index.html:15
+msgid "Enter Articles and Quantities:"
+msgstr "Zadajte kódy tovaru a množstvá:"
+
+#: templates.user.index.html:20
+msgid "Example:"
+msgstr "Príklad:"
+
+#: templates.user.index.html:35
+msgid "Upload Articles File"
+msgstr "Nahrať súbor s kódmi tovaru"
+
+#: templates.user.index.html:41
+msgid "Article/Quantity/Comment"
+msgstr "Kód tovaru/Množstvo/Komentár"
+
+#: templates.user.index.html:45
+msgid "Article/Quantity/Brand/Comment"
+msgstr "Kód tovaru/Množstvo/Značka/Komentár"
+
+#: templates.user.index.html:53
+msgid "Drag and drop your file here"
+msgstr "Presuňte a pustite váš súbor sem"
+
+#: templates.user.index.html:54
+msgid "or"
+msgstr "alebo"
+
+#: templates.user.index.html:56
+msgid "Select File"
+msgstr "Vybrať súbor"
+
+#: templates.user.index.html:73
+msgid "Upload and Search"
+msgstr "Nahrať a vyhľadať"
+
+#: templates.user.cart.cart.html:15 templates.user.orders.order_details.html:22
+msgid "Price List"
+msgstr "Cenník"
+
+#: templates.user.cart.cart.html:20 templates.user.orders.order_details.html:27
+#: templates.user.search.intermediate.html:19
+#: templates.user.search.search_results.html:18
+#: templates.user.shipments.view_shipment.html:43
+msgid "Comment"
+msgstr "Komentár"
+
+#: templates.user.cart.cart.html:74
+msgid "Clear Cart"
+msgstr "Vymazať košík"
+
+#: templates.user.cart.cart.html:81
+#: templates.user.search.search_results.html:70
+msgid "Missing Articles:"
+msgstr "Chýbajúce položky:"
+
+#: templates.user.cart.cart.html:82
+msgid "The following articles were not found:"
+msgstr "Nasledujúce položky neboli nájdené:"
+
+#: templates.user.news.user_news.html:12
+msgid "New Messages"
+msgstr "Nové správy"
+
+#: templates.user.news.user_news.html:18 templates.user.orders.orders.html:69
+msgid "New"
+msgstr "Nové"
+
+#: templates.user.news.user_news.html:26
+msgid "Read More"
+msgstr "Čítať viac"
+
+#: templates.user.news.user_news.html:36
+msgid "News Archive"
+msgstr "Archív noviniek"
+
+#: templates.user.news.view_news.html:9
+msgid "Mark as Read"
+msgstr "Označiť ako prečítané"
+
+#: templates.user.news.view_news.html:16
+msgid "Published:"
+msgstr "Publikované:"
+
+#: templates.user.orders.order_changes.html:14
+msgid "Change Type"
+msgstr "Typ zmeny"
+
+#: templates.user.orders.order_changes.html:15
+msgid "Old Value"
+msgstr "Stará hodnota"
+
+#: templates.user.orders.order_changes.html:16
+msgid "New Value"
+msgstr "Nová hodnota"
+
+#: templates.user.orders.order_changes.html:17
+msgid "Change Date"
+msgstr "Dátum zmeny"
+
+#: templates.user.orders.order_changes.html:27
+msgid "Article Number Change"
+msgstr "Zmena kódu tovaru"
+
+#: templates.user.orders.order_changes.html:29
+msgid "Price Change"
+msgstr "Zmena ceny"
+
+#: templates.user.orders.order_changes.html:42
+msgid "No changes found."
+msgstr "Neboli nájdené žiadne zmeny."
+
+#: templates.user.orders.order_details.html:21
+msgid "Original Article"
+msgstr "Pôvodný kód tovaru"
+
+#: templates.user.orders.order_details.html:23
+msgid "Brand ID"
+msgstr "ID značky"
+
+#: templates.user.orders.order_details.html:86
+msgid "Total Order Amount:"
+msgstr "Celková suma objednávky:"
+
+#: templates.user.orders.order_details.html:96
+msgid "Order Timeline"
+msgstr "Časová os objednávky"
+
+#: templates.user.orders.order_details.html:115
+msgid "No Details Available"
+msgstr "Nie sú k dispozícii žiadne detaily"
+
+#: templates.user.orders.order_details.html:116
+msgid "The details for this order could not be found."
+msgstr "Detaily tejto objednávky neboli nájdené."
+
+#: templates.user.orders.orders.html:68
+msgid "All"
+msgstr "Všetky"
+
+#: templates.user.orders.orders.html:70
+msgid "Accepted"
+msgstr "Prijaté"
+
+#: templates.user.orders.orders.html:71
+msgid "Cancelled"
+msgstr "Zrušené"
+
+#: templates.user.orders.orders.html:75
+msgid "Start Date"
+msgstr "Dátum začiatku"
+
+#: templates.user.orders.orders.html:79
+msgid "End Date"
+msgstr "Dátum konca"
+
+#: templates.user.orders.orders.html:84
+msgid "Filter"
+msgstr "Filtrovať"
+
+#: templates.user.orders.orders.html:87
+msgid "Clear Filters"
+msgstr "Vymazať filtre"
+
+#: templates.user.orders.orders.html:101
+#: templates.user.shipments.list_shipments.html:21
+#: templates.user.shipments.shipments.html:26
+#: templates.user.shipments.view_shipment.html:42
+msgid "Total Price"
+msgstr "Celková cena"
+
+#: templates.user.orders.orders.html:134
+msgid "You haven't placed any orders yet."
+msgstr "Zatiaľ ste nezadali žiadne objednávky."
+
+#: templates.user.search.intermediate.html:3
+msgid "Select Price Lists"
+msgstr "Vyberte cenníky"
+
+#: templates.user.search.intermediate.html:7
+msgid "Intermediate Results"
+msgstr "Medzi výsledky"
+
+#: templates.user.search.intermediate.html:8
+msgid "Please select a price list for each article."
+msgstr "Prosím, vyberte cenník pre každý kód tovaru."
+
+#: templates.user.search.intermediate.html:17
+msgid "Available Price Lists"
+msgstr "Dostupné cenníky"
+
+#: templates.user.search.intermediate.html:64
+msgid "Cancel"
+msgstr "Zrušiť"
+
+#: templates.user.search.intermediate.html:71
+msgid "Missing Articles"
+msgstr "Chýbajúce položky"
+
+#: templates.user.search.intermediate.html:72
+#: templates.user.search.search_results.html:71
+msgid "The following articles were not found in any price list:"
+msgstr "Nasledujúce položky neboli nájdené v žiadnom cenníku:"
+
+#: templates.user.search.search_results.html:3
+#: templates.user.search.search_results.html:7
+msgid "Search Results"
+msgstr "Výsledky vyhľadávania"
+
+#: templates.user.search.search_results.html:16
+msgid "Price Lists"
+msgstr "Cenníky"
+
+#: templates.user.search.search_results.html:19
+msgid "Select"
+msgstr "Vybrať"
+
+#: templates.user.search.search_results.html:86
+msgid "Clear Results"
+msgstr "Vymazať výsledky"
+
+#: templates.user.search.search_results.html:92
+msgid "No Results Found"
+msgstr "Neboli nájdené žiadne výsledky"
+
+#: templates.user.search.search_results.html:93
+msgid "Try searching with different articles or check your input format."
+msgstr "Skúste vyhľadávať s inými kódmi tovaru alebo skontrolujte formát vstupu."
+
+#: templates.user.search.search_results.html:95
+msgid "New Search"
+msgstr "Nové vyhľadávanie"
+
+#: templates.user.shipments.list_shipments.html:9
+#: templates.user.shipments.shipments.html:7
+msgid "My Shipments"
+msgstr "Moje zásielky"
+
+#: templates.user.shipments.list_shipments.html:17
+msgid "Shipment Date"
+msgstr "Dátum zásielky"
+
+#: templates.user.shipments.list_shipments.html:19
+msgid "Tracking Number"
+msgstr "Sledovacie číslo"
+
+#: templates.user.shipments.list_shipments.html:20
+msgid "Items Count"
+msgstr "Počet položiek"
+
+#: templates.user.shipments.list_shipments.html:30
+msgid "N/A"
+msgstr "N/A"
+
+#: templates.user.shipments.list_shipments.html:45
+#: templates.user.shipments.shipments.html:44
+msgid "No shipments found."
+msgstr "Neboli nájdené žiadne zásielky."
+
+#: templates.user.shipments.shipments.html:13
+msgid "Shipment Date:"
+msgstr "Dátum zásielky:"
+
+#: templates.user.shipments.shipments.html:13
+#: templates.user.shipments.view_shipment.html:22
+msgid "Status:"
+msgstr "Stav:"
+
+#: templates.user.shipments.shipments.html:15
+#: templates.user.shipments.view_shipment.html:23
+msgid "Tracking Number:"
+msgstr "Sledovacie číslo:"
+
+#: templates.user.shipments.view_shipment.html:3
+#: templates.user.shipments.view_shipment.html:8
+msgid "Shipment Details"
+msgstr "Detaily zásielky"
+
+#: templates.user.shipments.view_shipment.html:10
+msgid "Back to Shipments"
+msgstr "Späť na zásielky"
+
+#: templates.user.shipments.view_shipment.html:16
+msgid "Shipment Information"
+msgstr "Informácie o zásielke"
+
+#: templates.user.shipments.view_shipment.html:21
+msgid "Date:"
+msgstr "Dátum:"
+
+#: templates.user.shipments.view_shipment.html:23
+msgid "Not specified"
+msgstr "Nešpecifikované"
+
+#: templates.user.shipments.view_shipment.html:60
 msgid "No items in this shipment."
-msgstr "Žiadne položky v tejto zásielke."
+msgstr "V tejto zásielke nie sú žiadne položky."
 
 #: venv/Lib/site-packages/click/_termui_impl.py:556
 msgid "{editor}: Editing failed"
-msgstr "{editor}: Úprava zlyhala"
+msgstr ""
 
 #: venv/Lib/site-packages/click/_termui_impl.py:560
 msgid "{editor}: Editing failed: {e}"
-msgstr "{editor}: Úprava zlyhala: {e}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1124
 msgid "Aborted!"
-msgstr "Prerušené!"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1349
 #: venv/Lib/site-packages/click/core.py:1379
 msgid "(Deprecated) {text}"
-msgstr "(Zastarané) {text}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1396
+msgid "Options"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1424
 msgid "Got unexpected extra argument ({args})"
 msgid_plural "Got unexpected extra arguments ({args})"
-msgstr[0] "Získaný neočakávaný dodatočný argument ({args})"
-msgstr[1] "Získané neočakávané dodatočné argumenty ({args})"
-msgstr[2] "Získaných neočakávaných dodatočných argumentov ({args})"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #: venv/Lib/site-packages/click/core.py:1437
 msgid "DeprecationWarning: The command {name!r} is deprecated."
-msgstr "DeprecationWarning: Príkaz {name!r} je zastaraný."
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1645
 msgid "Commands"
-msgstr "Príkazy"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1677
 msgid "Missing command."
-msgstr "Chýbajúci príkaz."
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:1755
 msgid "No such command {name!r}."
-msgstr "Príkaz {name!r} neexistuje."
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:2313
 msgid "Value must be an iterable."
-msgstr "Hodnota musí byť iterovateľná."
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:2336
 msgid "Takes {nargs} values but 1 was given."
 msgid_plural "Takes {nargs} values but {len} were given."
-msgstr[0] "Vyžaduje {nargs} hodnôt, ale bola zadaná 1."
-msgstr[1] "Vyžaduje {nargs} hodnôt, ale boli zadané {len}."
-msgstr[2] "Vyžaduje {nargs} hodnôt, ale bolo zadaných {len}."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #: venv/Lib/site-packages/click/core.py:2783
 msgid "env var: {var}"
-msgstr "premenná prostredia: {var}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:2813
 msgid "(dynamic)"
-msgstr "(dynamické)"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:2828
 msgid "default: {default}"
-msgstr "predvolené: {default}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/core.py:2841
 msgid "required"
-msgstr "povinné"
+msgstr ""
 
 #: venv/Lib/site-packages/click/decorators.py:457
 #, python-format
@@ -748,47 +2316,44 @@ msgstr ""
 
 #: venv/Lib/site-packages/click/decorators.py:520
 msgid "Show the version and exit."
-msgstr "Zobraziť verziu a ukončiť."
+msgstr ""
 
 #: venv/Lib/site-packages/click/decorators.py:541
 msgid "Show this message and exit."
-msgstr "Zobraziť túto správu a ukončiť."
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:49
 #: venv/Lib/site-packages/click/exceptions.py:88
 msgid "Error: {message}"
-msgstr "Chyba: {message}"
-
-msgid "%(num_articles)s articles still need table selection."
-msgstr "%(num_articles)s položiek stále potrebuje výber tabuľky."
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:80
 msgid "Try '{command} {option}' for help."
-msgstr "Skúste '{command} {option}' pre pomoc."
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:129
 msgid "Invalid value: {message}"
-msgstr "Neplatná hodnota: {message}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:131
 msgid "Invalid value for {param_hint}: {message}"
-msgstr "Neplatná hodnota pre {param_hint}: {message}"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:187
 msgid "Missing argument"
-msgstr "Chýbajúce články:"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:189
 msgid "Missing option"
-msgstr "Chýbajúce články:"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:191
 msgid "Missing parameter"
-msgstr "Chýbajúce články:"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:193
 msgid "Missing {param_type}"
-msgstr "Chýbajúce články:"
+msgstr ""
 
 #: venv/Lib/site-packages/click/exceptions.py:200
 msgid "Missing parameter: {param_name}"
@@ -815,7 +2380,7 @@ msgstr ""
 
 #: venv/Lib/site-packages/click/formatting.py:156
 msgid "Usage:"
-msgstr "Použitie:"
+msgstr ""
 
 #: venv/Lib/site-packages/click/parser.py:233
 msgid "Argument {name!r} takes {nargs} values."
@@ -902,39 +2467,39 @@ msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:826
 msgid "file"
-msgstr "súbor"
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:828
 msgid "directory"
-msgstr "adresár"
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:830
 msgid "path"
-msgstr "cesta"
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:881
 msgid "{name} {filename!r} does not exist."
-msgstr "Súbor {name} {filename!r} neexistuje."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:890
 msgid "{name} {filename!r} is a file."
-msgstr "Súbor {name} {filename!r} je súbor."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:898
 msgid "{name} {filename!r} is a directory."
-msgstr "Súbor {name} {filename!r} je adresár."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:907
 msgid "{name} {filename!r} is not readable."
-msgstr "Súbor {name} {filename!r} nie je čitateľný."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:916
 msgid "{name} {filename!r} is not writable."
-msgstr "Súbor {name} {filename!r} nie je zapisovateľný."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:925
 msgid "{name} {filename!r} is not executable."
-msgstr "Súbor {name} {filename!r} nie je spustiteľný."
+msgstr ""
 
 #: venv/Lib/site-packages/click/types.py:991
 msgid "{len_type} values are required, but {len_value} was given."
@@ -942,89 +2507,4 @@ msgid_plural "{len_type} values are required, but {len_value} were given."
 msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
-
-#~ msgid "Cart cleared successfully."
-#~ msgstr "Košík bol úspešne vyčistený."
-
-#~ msgid "MySite"
-#~ msgstr "Moja stránka"
-
-#~ msgid "Home"
-#~ msgstr "Domov"
-
-#~ msgid "Clear Cart"
-#~ msgstr "Vyčistiť košík"
-
-#~ msgid "Admin Dashboard"
-#~ msgstr "Administrátorský panel"
-
-#~ msgid "System Statistics"
-#~ msgstr "Systémové štatistiky"
-
-#~ msgid "User Management"
-#~ msgstr "Správa používateľov"
-
-#~ msgid "Price Lists Management"
-#~ msgstr "Správa cenníkov"
-
-#~ msgid "Server Error"
-#~ msgstr "Chyba servera"
-
-#~ msgid "Access Denied"
-#~ msgstr "Prístup zamietnutý"
-
-#~ msgid "order_statuses"
-#~ msgstr ""
-
-#~ msgid "new"
-#~ msgstr "Nové"
-
-#~ msgid "in_review"
-#~ msgstr "Na kontrole"
-
-#~ msgid "pending"
-#~ msgstr "Čakajúce"
-
-#~ msgid "accepted"
-#~ msgstr "Prijaté"
-
-#~ msgid "ordered_supplier"
-#~ msgstr "Objednané od dodávateľa"
-
-#~ msgid "invoice_received"
-#~ msgstr "Faktúra prijatá"
-
-#~ msgid "in_transit"
-#~ msgstr "V preprave"
-
-#~ msgid "ready_pickup"
-#~ msgstr "Pripravené na vyzdvihnutie"
-
-#~ msgid "completed"
-#~ msgstr "Dokončené"
-
-#~ msgid "cancelled"
-#~ msgstr "Zrušené"
-
-# sk/LC_MESSAGES/messages.po
-#~ msgid "Orders Management"
-#~ msgstr "Správa objednávok"
-
-#~ msgid "Dashboard"
-#~ msgstr "Nástenka"
-
-#~ msgid "Filter by Status"
-#~ msgstr "Filter podľa stavu"
-
-#~ msgid "All Statuses"
-#~ msgstr "Všetky stavy"
-
-#~ msgid "Details"
-#~ msgstr "Podrobnosti"
-
-#~ msgid "or"
-#~ msgstr "alebo"
-
-#~ msgid "Error loading order changes."
-#~ msgstr "Chyba pri načítaní zmien objednávky"
 

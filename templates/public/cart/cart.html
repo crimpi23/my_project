@@ -298,19 +298,28 @@ gtag('event', 'view_cart', {
     </div>
 
     {% else %}
-    <!-- Порожній кошик -->
-    <div class="empty-state fade-in">
-        <div class="empty-icon">
-            <i class="bi bi-cart-x"></i>
+<!-- Порожній кошик -->
+<div class="info-card fade-in mb-4">
+    <div class="info-card-header section-header-primary">
+        <h5>
+            <div class="header-icon">
+                <i class="bi bi-cart-x"></i>
+            </div>
+            {{ _('Your Cart is Empty') }}
+        </h5>
+    </div>
+    <div class="card-body text-center py-5">
+        <div class="empty-icon mb-4">
+            <i class="bi bi-cart-x" style="font-size: 3rem; opacity: 0.5;"></i>
         </div>
-        <h3 class="mt-3">{{ _('Your Cart is Empty') }}</h3>
         <p class="text-muted mb-4">{{ _('Start adding items to your cart!') }}</p>
-        <a href="{{ url_for('index') }}" class="btn-continue">
+        <a href="{{ url_for('index') }}" class="btn-action btn-action-primary">
             <i class="bi bi-search me-2"></i>
             {{ _('Search Articles') }}
         </a>
     </div>
-    {% endif %}
+</div>
+{% endif %}
 </div>
 {% endblock %}
 

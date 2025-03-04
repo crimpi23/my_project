@@ -1,0 +1,356 @@
+{% extends "base/public_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="page-header fade-in">
+        <h2>{{ _('My Profile') }}</h2>
+        <p class="lead text-muted">{{ _('Manage your personal information, addresses and company details') }}</p>
+    </div>
+
+    <!-- Вкладки для різних секцій профілю -->
+    <ul class="nav nav-tabs mb-4" id="profileTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" 
+                type="button" role="tab" aria-controls="profile" aria-selected="true">
+                <i class="bi bi-person me-2"></i>{{ _('Profile') }}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" 
+                type="button" role="tab" aria-controls="address" aria-selected="false">
+                <i class="bi bi-geo-alt me-2"></i>{{ _('Addresses') }}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="company-tab" data-bs-toggle="tab" data-bs-target="#company" 
+                type="button" role="tab" aria-controls="company" aria-selected="false">
+                <i class="bi bi-building me-2"></i>{{ _('Companies') }}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" 
+                type="button" role="tab" aria-controls="password" aria-selected="false">
+                <i class="bi bi-key me-2"></i>{{ _('Password') }}
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="profileTabContent">
+        <!-- Вкладка профілю -->
+        <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(0,123,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-person text-primary"></i>
+                    </div>
+                    <h5 class="mb-0 text-primary">{{ _('Personal Information') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <form method="post" action="{{ url_for('public_user_profile') }}">
+                        <input type="hidden" name="action" value="update_profile">
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">{{ _('Username') }}</label>
+                            <input type="text" class="form-control" id="username" value="{{ user.username }}" disabled>
+                            <small class="text-muted">{{ _('Username cannot be changed') }}</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">{{ _('Email') }}</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">{{ _('Phone') }}</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone }}" 
+                                pattern="^\+[0-9]{10,15}$" title="{{ _('Phone number must be in international format (e.g. +421907123456)') }}">
+                            <small class="text-muted">{{ _('Enter phone number in international format (e.g. +421907123456)') }}</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="preferred_language" class="form-label">{{ _('Preferred Language') }}</label>
+                            <select class="form-select" id="preferred_language" name="preferred_language">
+                                {% for lang_code, lang_name in available_languages %}
+                                    <option value="{{ lang_code }}" {% if user.preferred_language == lang_code %}selected{% endif %}>
+                                        {{ lang_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn-action btn-action-primary">
+                            <i class="bi bi-check-circle me-2"></i>{{ _('Update Profile') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Вкладка адрес -->
+        <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(40,167,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-geo-alt text-success"></i>
+                    </div>
+                    <h5 class="mb-0 text-success">{{ _('Delivery Addresses') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <!-- Список існуючих адрес -->
+                    <h6 class="mb-3">{{ _('Your Addresses') }}</h6>
+                    
+                    {% if addresses %}
+                        <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
+                            {% for address in addresses %}
+                            <div class="col">
+                                <div class="card h-100 {% if address.is_default %}border-success{% endif %}">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ address.full_name }} 
+                                            {% if address.is_default %}
+                                            <span class="badge bg-success">{{ _('Default') }}</span>
+                                            {% endif %}
+                                        </h6>
+                                        <address class="mb-0">
+                                            {{ address.street }}<br>
+                                            {{ address.postal_code }} {{ address.city }}<br>
+                                            {{ address.country }}<br>
+                                            <abbr title="{{ _('Phone') }}"><i class="bi bi-telephone"></i></abbr> {{ address.phone }}
+                                        </address>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <div class="d-flex justify-content-between">
+                                            {% if not address.is_default %}
+                                            <form method="post" action="{{ url_for('public_user_profile') }}" class="me-2">
+                                                <input type="hidden" name="action" value="set_default_address">
+                                                <input type="hidden" name="address_id" value="{{ address.id }}">
+                                                <button type="submit" class="btn btn-outline-success btn-sm">
+                                                    <i class="bi bi-check-circle"></i> {{ _('Set as Default') }}
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            <form method="post" action="{{ url_for('public_user_profile') }}"
+                                                onsubmit="return confirm('{{ _('Are you sure you want to delete this address?') }}')">
+                                                <input type="hidden" name="action" value="delete_address">
+                                                <input type="hidden" name="address_id" value="{{ address.id }}">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="bi bi-trash"></i> {{ _('Delete') }}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> {{ _('You have no saved addresses yet.') }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Форма для додавання нової адреси -->
+                    <h6 class="mb-3 mt-4">{{ _('Add New Address') }}</h6>
+                    <form method="post" action="{{ url_for('public_user_profile') }}">
+                        <input type="hidden" name="action" value="add_address">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="full_name" class="form-label">{{ _('Full Name') }}</label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="address_phone" class="form-label">{{ _('Phone') }}</label>
+                                <input type="tel" class="form-control" id="address_phone" name="address_phone" 
+                                    pattern="^\+[0-9]{10,15}$" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="street" class="form-label">{{ _('Street Address') }}</label>
+                                <input type="text" class="form-control" id="street" name="street" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="country" class="form-label">{{ _('Country') }}</label>
+                                <select class="form-select" id="country" name="country" required>
+                                    <option value="">{{ _('Choose...') }}</option>
+                                    <option value="SK">{{ _('Slovakia') }}</option>
+                                    <option value="UA">{{ _('Ukraine') }}</option>
+                                    <option value="CZ">{{ _('Czech Republic') }}</option>
+                                    <option value="HU">{{ _('Hungary') }}</option>
+                                    <option value="PL">{{ _('Poland') }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <label for="city" class="form-label">{{ _('City') }}</label>
+                                <input type="text" class="form-control" id="city" name="city" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="postal_code" class="form-label">{{ _('Postal Code') }}</label>
+                                <input type="text" class="form-control" id="postal_code" name="postal_code" required>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_default" name="is_default">
+                                    <label class="form-check-label" for="is_default">
+                                        {{ _('Set as default address') }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn-action btn-action-success mt-2">
+                                    <i class="bi bi-plus-circle me-2"></i>{{ _('Add Address') }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Вкладка компаній -->
+        <div class="tab-pane fade" id="company" role="tabpanel" aria-labelledby="company-tab">
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(23,162,184,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-building text-info"></i>
+                    </div>
+                    <h5 class="mb-0 text-info">{{ _('Company Information') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <!-- Список існуючих компаній -->
+                    <h6 class="mb-3">{{ _('Your Companies') }}</h6>
+                    
+                    {% if companies %}
+                        <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
+                            {% for company in companies %}
+                            <div class="col">
+                                <div class="card h-100 {% if company.is_default %}border-info{% endif %}">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ company.company_name }} 
+                                            {% if company.is_default %}
+                                            <span class="badge bg-info">{{ _('Default') }}</span>
+                                            {% endif %}
+                                        </h6>
+                                        <p class="mb-1"><strong>{{ _('VAT') }}:</strong> {{ company.vat_number }}</p>
+                                        {% if company.registration_number %}
+                                        <p class="mb-1"><strong>{{ _('Registration No.') }}:</strong> {{ company.registration_number }}</p>
+                                        {% endif %}
+                                        <p class="mb-0"><strong>{{ _('Address') }}:</strong> {{ company.address }}</p>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <div class="d-flex justify-content-between">
+                                            {% if not company.is_default %}
+                                            <form method="post" action="{{ url_for('public_user_profile') }}" class="me-2">
+                                                <input type="hidden" name="action" value="set_default_company">
+                                                <input type="hidden" name="company_id" value="{{ company.id }}">
+                                                <button type="submit" class="btn btn-outline-info btn-sm">
+                                                    <i class="bi bi-check-circle"></i> {{ _('Set as Default') }}
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            <form method="post" action="{{ url_for('public_user_profile') }}"
+                                                onsubmit="return confirm('{{ _('Are you sure you want to delete this company?') }}')">
+                                                <input type="hidden" name="action" value="delete_company">
+                                                <input type="hidden" name="company_id" value="{{ company.id }}">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="bi bi-trash"></i> {{ _('Delete') }}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> {{ _('You have no saved companies yet.') }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Форма для додавання нової компанії -->
+                    <h6 class="mb-3 mt-4">{{ _('Add New Company') }}</h6>
+                    <form method="post" action="{{ url_for('public_user_profile') }}">
+                        <input type="hidden" name="action" value="add_company">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="company_name" class="form-label">{{ _('Company Name') }}</label>
+                                <input type="text" class="form-control" id="company_name" name="company_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="vat_number" class="form-label">{{ _('VAT Number') }}</label>
+                                <input type="text" class="form-control" id="vat_number" name="vat_number" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="registration_number" class="form-label">{{ _('Registration Number') }} <span class="text-muted">{{ _('(optional)') }}</span></label>
+                                <input type="text" class="form-control" id="registration_number" name="registration_number">
+                            </div>
+                            <div class="col-12">
+                                <label for="company_address" class="form-label">{{ _('Company Address') }}</label>
+                                <input type="text" class="form-control" id="company_address" name="company_address" required>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_default_company" name="is_default">
+                                    <label class="form-check-label" for="is_default_company">
+                                        {{ _('Set as default company') }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn-action btn-action-info mt-2">
+                                    <i class="bi bi-plus-circle me-2"></i>{{ _('Add Company') }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Вкладка пароля -->
+        <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(220,53,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-key text-danger"></i>
+                    </div>
+                    <h5 class="mb-0 text-danger">{{ _('Change Password') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <form method="post" action="{{ url_for('public_user_profile') }}">
+                        <input type="hidden" name="action" value="update_profile">
+                        <input type="hidden" name="email" value="{{ user.email }}">
+                        <input type="hidden" name="phone" value="{{ user.phone }}">
+                        <input type="hidden" name="preferred_language" value="{{ user.preferred_language }}">
+                        
+                        <div class="mb-3">
+                            <label for="current_password" class="form-label">{{ _('Current Password') }}</label>
+                            <input type="password" class="form-control" id="current_password" name="current_password" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">{{ _('New Password') }}</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" 
+                                required minlength="8">
+                            <small class="text-muted">{{ _('Password must be at least 8 characters long') }}</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">{{ _('Confirm New Password') }}</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                        
+                        <button type="submit" class="btn-action btn-action-danger">
+                            <i class="bi bi-shield-lock me-2"></i>{{ _('Change Password') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

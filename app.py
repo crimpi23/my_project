@@ -1044,28 +1044,15 @@ def product_details(article):
             product_data['name'] = db_product['name'] or article
             product_data['description'] = db_product['description'] or ''
 
-        # Get photos (залишаємо без змін)
+        # Оновлений запит для отримання фотографій з правильним сортуванням
         cursor.execute("""
             SELECT image_url 
             FROM product_images 
             WHERE product_article = %s 
-            ORDER BY 
-                CASE 
-                    WHEN is_main = TRUE THEN 0
-                    WHEN image_url LIKE %s THEN 1
-                    WHEN image_url LIKE %s THEN 2
-                    WHEN image_url ~ '.+\\([0-9]+\\)\\..*$' THEN 3
-                    ELSE 4
-                END,
-                image_url
-        """, (
-            article,
-            f'%/{article}.jpg',
-            f'%/{article} sh1%'
-        ))
+            ORDER BY is_main DESC, id ASC
+        """, (article,))
         product_data['photo_urls'] = [row['image_url'] for row in cursor.fetchall()]
 
-        # Решта коду залишається без змін...
         prices = []
 
         if stock_data:
@@ -1381,48 +1368,58 @@ def google_merchant_feed(language):
             settings = cursor.fetchone()
             
             if not settings:
-                return f"No active feed configuration found for language: {language}", 404
+                return "No active feed settings found for this language", 404
 
             # Get products from configured price list
             price_list = settings['price_list_id']
+            markup_percentage = settings['markup_percentage'] or 0
+            
             query = f"""
                 SELECT 
                     p.article,
                     p.name_{language} as name,
                     p.description_{language} as description,
-                    pi.image_url,
                     pl.price * (1 + %s/100) as price,
                     b.name as brand_name,
                     %s as google_category,
-                    s.quantity
+                    COALESCE(s.quantity, 0) as quantity,
+                    (
+                        SELECT image_url FROM product_images 
+                        WHERE product_article = p.article AND is_main = TRUE
+                        LIMIT 1
+                    ) as main_image_url,
+                    (
+                        SELECT json_agg(image_url) FROM product_images 
+                        WHERE product_article = p.article AND is_main = FALSE
+                        LIMIT 10
+                    ) as additional_images
                 FROM {price_list} pl
                 JOIN products p ON pl.article = p.article
                 LEFT JOIN stock s ON pl.article = s.article
-                LEFT JOIN (
-                    SELECT DISTINCT ON (product_article) 
-                        product_article, image_url
-                    FROM product_images
-                    ORDER BY product_article, id
-                ) pi ON p.article = pi.product_article
                 LEFT JOIN brands b ON s.brand_id = b.id
                 WHERE p.name_{language} IS NOT NULL
             """
             
+            params = [markup_percentage, settings['category']]
+            
             if settings['brand_id']:
                 query += " AND s.brand_id = %s"
-                cursor.execute(query, (
-                    settings['markup_percentage'],
-                    settings['category'],
-                    settings['brand_id']
-                ))
-            else:
-                cursor.execute(query, (
-                    settings['markup_percentage'],
-                    settings['category']
-                ))
+                params.append(settings['brand_id'])
             
+            cursor.execute(query, params)
             products = cursor.fetchall()
-
+            
+            # Process JSON data for additional images
+            import json
+            for product in products:
+                if product['additional_images'] and isinstance(product['additional_images'], str):
+                    try:
+                        product['additional_images'] = json.loads(product['additional_images'])
+                    except json.JSONDecodeError:
+                        product['additional_images'] = []
+                elif not product['additional_images']:
+                    product['additional_images'] = []
+            
             # Generate XML
             xml_content = render_template(
                 'feeds/google_merchant.xml',
@@ -1434,12 +1431,11 @@ def google_merchant_feed(language):
             # Set response headers
             download = request.args.get('download', False)
             if download:
-                response = make_response(xml_content)
-                response.headers['Content-Type'] = 'application/xml'
-                response.headers['Content-Disposition'] = f'attachment; filename=google-merchant-feed-{language}.xml'
+                response = Response(xml_content, mimetype='application/xml')
+                response.headers["Content-Disposition"] = f"attachment; filename=google_feed_{language}.xml"
                 return response
             
-            return xml_content, 200, {'Content-Type': 'application/xml'}
+            return Response(xml_content, mimetype='application/xml')
 
     except Exception as e:
         logging.error(f"Error generating feed: {e}")
@@ -1950,25 +1946,29 @@ def index():
     try:
         page = request.args.get('page', 1, type=int)
         per_page = 25  # 5x5 сітка
+        brand_filter = request.args.get('brand', type=int)
         
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
-            # Отримуємо загальну кількість товарів
+            # Отримання доступних брендів з товарів на складі
             cursor.execute("""
-                SELECT COUNT(*) 
+                SELECT DISTINCT b.id, b.name 
                 FROM stock s
+                JOIN brands b ON s.brand_id = b.id
                 WHERE s.quantity > 0
+                ORDER BY b.name
             """)
-            total_items = cursor.fetchone()[0]
+            brands = cursor.fetchall()
             
-            # Отримуємо товари з пагінацією і сортуванням за ціною від найдорожчого
-            cursor.execute("""
+            # Базовий SQL-запит
+            base_query = """
                 SELECT 
                     s.article,
                     s.quantity,
                     s.price,
                     b.name as brand_name,
+                    b.id as brand_id,
                     p.name_uk as name,
                     p.description_uk as description,
                     (
@@ -1982,10 +1982,25 @@ def index():
                 LEFT JOIN brands b ON s.brand_id = b.id
                 LEFT JOIN products p ON s.article = p.article
                 WHERE s.quantity > 0
-                ORDER BY s.price DESC
-                LIMIT %s OFFSET %s
-            """, (per_page, (page - 1) * per_page))
+            """
             
+            # Додаємо фільтр за брендом, якщо вказано
+            params = []
+            if brand_filter:
+                base_query += " AND s.brand_id = %s"
+                params.append(brand_filter)
+            
+            # Спершу підрахуємо загальну кількість товарів
+            count_query = f"SELECT COUNT(*) FROM ({base_query}) AS filtered_stock"
+            cursor.execute(count_query, params)
+            total_items = cursor.fetchone()[0]
+            
+            # Додаємо сортування та пагінацію
+            base_query += " ORDER BY s.price DESC LIMIT %s OFFSET %s"
+            params.extend([per_page, (page - 1) * per_page])
+            
+            # Виконуємо запит з товарами
+            cursor.execute(base_query, params)
             products = cursor.fetchall()
             
             has_more = total_items > (page * per_page)
@@ -1993,6 +2008,7 @@ def index():
             return render_template(
                 'public/index.html',
                 products=products,
+                brands=brands,
                 page=page,
                 has_more=has_more
             )
@@ -3735,6 +3751,74 @@ def manage_price_lists(token):
                            price_lists=price_lists,
                            suppliers=suppliers,
                            token=token)
+
+
+
+# видалення прайслистів в manage price lists
+@app.route('/<token>/admin/delete-price-list/<int:price_list_id>', methods=['POST'])
+@requires_token_and_roles('admin')
+def delete_price_list(token, price_list_id):
+    """
+    Видаляє прайс-лист повністю, незалежно від посилань на нього.
+    - Видаляє запис з таблиці price_lists
+    - Видаляє саму таблицю прайс-листа
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримуємо інформацію про прайс-лист
+        cursor.execute("SELECT table_name FROM price_lists WHERE id = %s", (price_list_id,))
+        price_list = cursor.fetchone()
+        
+        if not price_list:
+            flash("Прайс-лист не знайдено", "error")
+            return redirect(url_for('manage_price_lists', token=token))
+        
+        table_name = price_list['table_name']
+        logging.info(f"Deleting price list: {table_name} (ID: {price_list_id})")
+        
+        # Перевіряємо, чи є посилання на цей прайс-лист в order_details
+        cursor.execute("""
+            SELECT COUNT(*) FROM order_details 
+            WHERE table_name = %s
+        """, (table_name,))
+        references_count = cursor.fetchone()[0]
+        
+        if references_count > 0:
+            logging.info(f"Price list {table_name} has {references_count} references in order_details, but we will delete it anyway")
+        
+        # Видаляємо запис з таблиці price_lists
+        cursor.execute("DELETE FROM price_lists WHERE id = %s", (price_list_id,))
+        
+        # Перевіряємо, чи існує таблиця, перш ніж її видаляти
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = %s
+            )
+        """, (table_name,))
+        table_exists = cursor.fetchone()[0]
+        
+        if table_exists:
+            # Видаляємо саму таблицю прайс-листа
+            cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
+            flash(f"Прайс-лист '{table_name}' та таблицю повністю видалено", "success")
+        else:
+            flash(f"Прайс-лист '{table_name}' видалено з реєстру, але таблиці з такою назвою не існувало", "warning")
+        
+        conn.commit()
+        
+    except Exception as e:
+        logging.error(f"Error deleting price list: {e}", exc_info=True)
+        conn.rollback()
+        flash(f"Помилка при видаленні прайс-листа: {str(e)}", "error")
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return redirect(url_for('manage_price_lists', token=token))
 
 
 @app.route('/<token>/admin/update-price-list-supplier', methods=['POST'])
@@ -7495,6 +7579,288 @@ def add_product_descriptions(token):
         return redirect(url_for('add_product_descriptions', token=token))
         
     return render_template('admin/products/add_descriptions.html', token=token)
+
+
+
+
+@app.route('/user-profile', methods=['GET', 'POST'])
+def public_user_profile():
+    """
+    Кабінет для публічного користувача
+    """
+    user_id = session.get('user_id')
+    if not user_id:
+        flash(_("Please login to access your profile"), "error")
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        # Отримуємо дані користувача
+        cursor.execute("""
+            SELECT id, username, email, phone, preferred_language
+            FROM users
+            WHERE id = %s
+        """, (user_id,))
+        user = cursor.fetchone()
+
+        # Отримуємо збережені адреси доставки
+        cursor.execute("""
+            SELECT id, country, city, postal_code, street, full_name, 
+                   phone, is_default, created_at
+            FROM delivery_addresses
+            WHERE user_id = %s
+            ORDER BY is_default DESC, created_at DESC
+        """, (user_id,))
+        addresses = cursor.fetchall()
+        
+        # Отримуємо дані компаній користувача
+        cursor.execute("""
+            SELECT id, company_name, vat_number, registration_number, 
+                   address, is_default, created_at
+            FROM user_companies
+            WHERE user_id = %s
+            ORDER BY is_default DESC, created_at DESC
+        """, (user_id,))
+        companies = cursor.fetchall()
+
+        # POST запит для оновлення профілю
+        if request.method == 'POST':
+            action = request.form.get('action', '')
+            
+            # Оновлення основної інформації
+            if action == 'update_profile':
+                email = request.form.get('email')
+                phone = request.form.get('phone')
+                preferred_language = request.form.get('preferred_language')
+                current_password = request.form.get('current_password')
+                new_password = request.form.get('new_password')
+                confirm_password = request.form.get('confirm_password')
+                
+                # Валідація email
+                if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                    flash(_("Invalid email format"), "error")
+                    return redirect(url_for('public_user_profile'))
+                
+                # Перевірка чи вже використовується email або телефон іншим користувачем
+                if email != user['email']:
+                    cursor.execute("SELECT id FROM users WHERE email = %s AND id != %s", (email, user_id))
+                    if cursor.fetchone():
+                        flash(_("This email is already in use by another user"), "error")
+                        return redirect(url_for('public_user_profile'))
+                
+                if phone and phone != user['phone']:
+                    cursor.execute("SELECT id FROM users WHERE phone = %s AND id != %s", (phone, user_id))
+                    if cursor.fetchone():
+                        flash(_("This phone number is already in use by another user"), "error")
+                        return redirect(url_for('public_user_profile'))
+                
+                try:
+                    # Оновлення паролю, якщо вказано поточний і новий пароль
+                    if current_password and new_password:
+                        # Перевірка поточного паролю
+                        cursor.execute("SELECT password_hash FROM users WHERE id = %s", (user_id,))
+                        stored_hash = cursor.fetchone()[0]
+                        
+                        if not verify_password(current_password, stored_hash):
+                            flash(_("Current password is incorrect"), "error")
+                            return redirect(url_for('public_user_profile'))
+                        
+                        # Перевірка, що нові паролі співпадають
+                        if new_password != confirm_password:
+                            flash(_("New passwords do not match"), "error")
+                            return redirect(url_for('public_user_profile'))
+                        
+                        # Хешування нового паролю
+                        password_hash = hash_password(new_password)
+                        
+                        # Оновлення даних користувача з новим паролем
+                        cursor.execute("""
+                            UPDATE users 
+                            SET email = %s, phone = %s, preferred_language = %s, password_hash = %s
+                            WHERE id = %s
+                        """, (email, phone, preferred_language, password_hash, user_id))
+                        
+                        flash(_("Profile and password updated successfully"), "success")
+                    else:
+                        # Оновлення тільки email і телефону
+                        cursor.execute("""
+                            UPDATE users 
+                            SET email = %s, phone = %s, preferred_language = %s
+                            WHERE id = %s
+                        """, (email, phone, preferred_language, user_id))
+                        
+                        # Оновлюємо мову в сесії
+                        session['language'] = preferred_language
+                        session.modified = True
+                        
+                        flash(_("Profile updated successfully"), "success")
+                    
+                    conn.commit()
+                except psycopg2.errors.UniqueViolation as e:
+                    conn.rollback()
+                    if "idx_users_email" in str(e):
+                        flash(_("This email is already in use by another user"), "error")
+                    elif "idx_users_phone" in str(e):
+                        flash(_("This phone number is already in use by another user"), "error")
+                    else:
+                        flash(_("Error updating profile: duplicate value"), "error")
+                    return redirect(url_for('public_user_profile'))
+                
+                return redirect(url_for('public_user_profile'))
+                
+            # Додавання нової адреси
+            elif action == 'add_address':
+                country = request.form.get('country')
+                city = request.form.get('city')
+                postal_code = request.form.get('postal_code')
+                street = request.form.get('street')
+                full_name = request.form.get('full_name')
+                phone = request.form.get('address_phone')
+                is_default = 'is_default' in request.form
+                
+                if is_default:
+                    # Скидаємо попередню адресу за замовчуванням
+                    cursor.execute("""
+                        UPDATE delivery_addresses 
+                        SET is_default = false
+                        WHERE user_id = %s
+                    """, (user_id,))
+                
+                # Додаємо нову адресу
+                cursor.execute("""
+                    INSERT INTO delivery_addresses 
+                    (user_id, country, city, postal_code, street, full_name, phone, is_default)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (user_id, country, city, postal_code, street, full_name, phone, is_default))
+                
+                conn.commit()
+                flash(_("Address added successfully"), "success")
+                return redirect(url_for('public_user_profile'))
+                
+            # Видалення адреси
+            elif action == 'delete_address' and request.form.get('address_id'):
+                address_id = request.form.get('address_id')
+                cursor.execute("""
+                    DELETE FROM delivery_addresses 
+                    WHERE id = %s AND user_id = %s
+                """, (address_id, user_id))
+                
+                conn.commit()
+                flash(_("Address deleted successfully"), "success")
+                return redirect(url_for('public_user_profile'))
+                
+            # Встановлення адреси за замовчуванням
+            elif action == 'set_default_address' and request.form.get('address_id'):
+                address_id = request.form.get('address_id')
+                
+                # Скидаємо всі адреси
+                cursor.execute("""
+                    UPDATE delivery_addresses 
+                    SET is_default = false
+                    WHERE user_id = %s
+                """, (user_id,))
+                
+                # Встановлюємо нову адресу за замовчуванням
+                cursor.execute("""
+                    UPDATE delivery_addresses 
+                    SET is_default = true
+                    WHERE id = %s AND user_id = %s
+                """, (address_id, user_id))
+                
+                conn.commit()
+                flash(_("Default address updated"), "success")
+                return redirect(url_for('public_user_profile'))
+                
+            # Додавання нової компанії
+            elif action == 'add_company':
+                company_name = request.form.get('company_name')
+                vat_number = request.form.get('vat_number')
+                registration_number = request.form.get('registration_number')
+                address = request.form.get('company_address')
+                is_default = 'is_default' in request.form
+                
+                if is_default:
+                    # Скидаємо попередню компанію за замовчуванням
+                    cursor.execute("""
+                        UPDATE user_companies 
+                        SET is_default = false
+                        WHERE user_id = %s
+                    """, (user_id,))
+                
+                # Додаємо нову компанію
+                cursor.execute("""
+                    INSERT INTO user_companies 
+                    (user_id, company_name, vat_number, registration_number, address, is_default)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (user_id, company_name, vat_number, registration_number, address, is_default))
+                
+                conn.commit()
+                flash(_("Company added successfully"), "success")
+                return redirect(url_for('public_user_profile'))
+                
+            # Видалення компанії
+            elif action == 'delete_company' and request.form.get('company_id'):
+                company_id = request.form.get('company_id')
+                cursor.execute("""
+                    DELETE FROM user_companies 
+                    WHERE id = %s AND user_id = %s
+                """, (company_id, user_id))
+                
+                conn.commit()
+                flash(_("Company deleted successfully"), "success")
+                return redirect(url_for('public_user_profile'))
+                
+            # Встановлення компанії за замовчуванням
+            elif action == 'set_default_company' and request.form.get('company_id'):
+                company_id = request.form.get('company_id')
+                
+                # Скидаємо всі компанії
+                cursor.execute("""
+                    UPDATE user_companies 
+                    SET is_default = false
+                    WHERE user_id = %s
+                """, (user_id,))
+                
+                # Встановлюємо нову компанію за замовчуванням
+                cursor.execute("""
+                    UPDATE user_companies 
+                    SET is_default = true
+                    WHERE id = %s AND user_id = %s
+                """, (company_id, user_id))
+                
+                conn.commit()
+                flash(_("Default company updated"), "success")
+                return redirect(url_for('public_user_profile'))
+
+        return render_template(
+            'public/user/profile.html',
+            user=user,
+            addresses=addresses,
+            companies=companies,
+            available_languages=[('uk', _('Ukrainian')), ('en', _('English')), ('sk', _('Slovak')), ('pl', _('Polish'))]
+        )
+
+    except Exception as e:
+        conn.rollback()
+        logging.error(f"Error in user_profile: {e}", exc_info=True)
+        flash(_("Error accessing user profile"), "error")
+        return redirect(url_for('index'))
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route('/terms')
+def terms():
+    return render_template('public/terms.html')
+
+
+@app.route('/privacy')
+def privacy():
+    return render_template('public/privacy.html')
 
 
 @app.route('/ping', methods=['GET'])

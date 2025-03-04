@@ -1,13 +1,20 @@
-{% extends "base/base.html" %}
+{% extends "base/public_base.html" %}
 
 {% block title %}{{ _('Register') }}{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">{{ _('Register') }}</div>
+        <div class="col-lg-6 col-md-8">
+            <div class="info-card fade-in">
+                <div class="info-card-header section-header-info">
+                    <h5>
+                        <div class="header-icon">
+                            <i class="bi bi-person-plus"></i>
+                        </div>
+                        {{ _('Register') }}
+                    </h5>
+                </div>
                 <div class="card-body">
                     <form method="post">
                         <div class="mb-3">
@@ -22,7 +29,7 @@
                             <label for="password" class="form-label">{{ _('Password') }}</label>
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="phone">{{ _('Phone Number') }}</label>
                             <input type="tel" 
                                    class="form-control" 
@@ -36,7 +43,14 @@
                                 {{ _('Enter phone number in international format (e.g. +421907123456)') }}
                             </small>
                         </div>
-                        <button type="submit" class="btn btn-primary">{{ _('Register') }}</button>
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <button type="submit" class="btn-action btn-action-info">
+                                <i class="bi bi-person-check me-2"></i>{{ _('Register') }}
+                            </button>
+                            <span class="text-muted">{{ _("Already have an account?") }} 
+                                <a href="{{ url_for('login') }}" class="text-decoration-none">{{ _('Login here') }}</a>
+                            </span>
+                        </div>
                     </form>
                 </div>
             </div>

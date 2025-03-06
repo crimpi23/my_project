@@ -21,7 +21,9 @@ from flask_babel import Babel, gettext as _
 # from flask_wtf import CSRFProtect
 # from flask_wtf.csrf import generate_csrf
 import sys
-# ... rest of your imports ...
+import urllib.parse
+import requests
+
 
 # Create Flask app first
 app = Flask(__name__, template_folder='templates')
@@ -195,6 +197,200 @@ def validate_eu_vat(vat_number):
             'message': "Error validating VAT number",
             'country': None
         }
+
+
+
+
+
+
+
+
+# ______________________________   Тест API ________________________________
+# __________________________________________________________________________
+def get_public_api_price(article_numbers):
+    """
+    Функція для отримання цін та інформації про запчастини через зовнішнє API
+    
+    Args:
+        article_numbers (list): Список артикулів для пошуку
+        
+    Returns:
+        dict: Результати пошуку або помилка
+    """
+    try:
+        # API параметри
+        api_url = "https://autocarat.de/api/search.php"  # Правильний URL API
+        api_token = os.environ.get('API_CONNECT', 'ee76b66cc64b642563991955e8d65b4844bca449')
+        
+        logging.info(f"Making API request for {len(article_numbers)} articles")
+        
+        # Формуємо URL з параметрами для GET запиту
+        params = {'t': api_token}
+        
+        # Додаємо артикули як параметри numbers[]
+        for article in article_numbers:
+            params.setdefault('numbers[]', []).append(article.strip().upper())
+        
+        # Виконуємо запит
+        response = requests.get(api_url, params=params, timeout=15)
+        
+        # Перевіряємо статус відповіді
+        if response.status_code == 200:
+            result = response.json()
+            logging.info(f"API returned info for {len(result.get('results', {}))} articles")
+            return result
+        else:
+            logging.error(f"API request failed with status {response.status_code}: {response.text}")
+            return {"error": f"API request failed with status {response.status_code}"}
+            
+    except requests.RequestException as e:
+        logging.error(f"API request error: {e}")
+        return {"error": f"Connection error: {str(e)}"}
+        
+    except ValueError as e:
+        logging.error(f"API JSON parsing error: {e}")
+        return {"error": "Error parsing API response"}
+        
+    except Exception as e:
+        logging.error(f"Unexpected error in API request: {e}", exc_info=True)
+        return {"error": f"Unexpected error: {str(e)}"}
+
+@app.route('/api-search', methods=['GET', 'POST'])
+def api_part_search():
+    """
+    Публічний маршрут для пошуку запчастин через API
+    """
+    try:
+        if request.method == 'POST':
+            # Отримуємо введені артикули
+            articles_input = request.form.get('articles', '').strip()
+            
+            if not articles_input:
+                flash(_("Please enter at least one article number"), "warning")
+                return render_template('public/api_search.html')
+            
+            # Розділяємо введені артикули (можуть бути розділені комами, пробілами або переносами рядків)
+            articles = re.split(r'[\s,;]+', articles_input)
+            articles = [a.strip().upper() for a in articles if a.strip()]
+            
+            # Обмежуємо кількість артикулів для одного запиту
+            max_articles = 10
+            if len(articles) > max_articles:
+                flash(_("Maximum {max_articles} articles per request. Only first {max_articles} will be processed.").format(
+                    max_articles=max_articles), "warning")
+                articles = articles[:max_articles]
+            
+            # Викликаємо API
+            api_response = get_public_api_price(articles)
+            
+            # Перевіряємо на помилки
+            if "error" in api_response:
+                flash(_(api_response["error"]), "error")
+                return render_template('public/api_search.html', articles=articles_input)
+            
+            # Формуємо результати для відображення
+            return render_template(
+                'public/api_search_results.html',
+                articles=articles,
+                results=api_response.get("results", {}),
+                input_text=articles_input
+            )
+            
+        # GET запит - показуємо форму пошуку
+        return render_template('public/api_search.html')
+        
+    except Exception as e:
+        logging.error(f"Error in API search route: {e}", exc_info=True)
+        flash(_("An error occurred while processing your request"), "error")
+        return render_template('public/api_search.html')
+
+
+@app.route('/api-add-to-cart-bulk', methods=['POST'])
+def public_add_to_cart_bulk():
+    """Додає вибрані товари з результатів API пошуку в кошик"""
+    try:
+        # Отримуємо вибрані товари
+        selected_parts = request.form.getlist('selected_parts[]')
+        
+        if not selected_parts:
+            flash(_("No parts selected"), "warning")
+            return redirect(url_for('api_part_search'))
+        
+        # Відновлюємо вихідний текст для повторного пошуку, якщо потрібно
+        input_text = request.form.get('input_text', '')
+        
+        # Повторно виконуємо пошук для отримання даних
+        articles = re.split(r'[\s,;]+', input_text)
+        articles = [a.strip().upper() for a in articles if a.strip()]
+        
+        api_response = get_public_api_price(articles)
+        
+        if "error" in api_response:
+            flash(_(api_response["error"]), "error")
+            return redirect(url_for('api_part_search'))
+        
+        results = api_response.get("results", {})
+        
+        # Ініціалізуємо кошик, якщо потрібно
+        if 'public_cart' not in session:
+            session['public_cart'] = {}
+        
+        # Додаємо кожний вибраний товар у кошик
+        added_count = 0
+        for part_key in selected_parts:
+            try:
+                article, index = part_key.split(':')
+                index = int(index)
+                
+                # Отримуємо дані товару з результатів
+                if article in results and index < len(results[article]):
+                    part_data = results[article][index]
+                    quantity = int(request.form.get(f'quantity_{article}_{index}', 1))
+                    
+                    # Форматуємо для кошика
+                    price_eur = part_data['cent'] / 100  # Конвертуємо центи в євро
+                    
+                    # Додаємо в кошик
+                    if article not in session['public_cart']:
+                        session['public_cart'][article] = {}
+                    
+                    # Використовуємо brand як table_name для сумісності з існуючою структурою
+                    table_name = f"api_{part_data['make'].lower()}"
+                    
+                    session['public_cart'][article][table_name] = {
+                        'price': float(price_eur),
+                        'quantity': quantity,
+                        'brand_id': None,  # API не надає brand_id
+                        'comment': f"{part_data['title']} - {part_data['term']} days"
+                    }
+                    
+                    added_count += 1
+            except Exception as e:
+                logging.error(f"Error adding item to cart: {e}", exc_info=True)
+                continue
+        
+        # Явно позначаємо сесію як модифіковану
+        session.modified = True
+        
+        if added_count > 0:
+            flash(_("{count} items added to cart").format(count=added_count), "success")
+            return redirect(url_for('public_cart'))
+        else:
+            flash(_("No items were added to cart"), "warning")
+            return redirect(url_for('api_part_search'))
+        
+    except Exception as e:
+        logging.error(f"Error in bulk add to cart: {e}", exc_info=True)
+        flash(_("An error occurred while adding items to cart"), "error")
+        return redirect(url_for('api_part_search'))
+
+
+
+# __________________________________________________________________
+# __________________________________________________________________
+# __________________________________________________________________
+# __________________________________________________________________
+# __________________________________________________________________
 
 
 # Add near other template filters
@@ -559,6 +755,7 @@ def public_place_order():
                 })
 
         # Create order record with invoice details
+        # ВИПРАВЛЕНО: видалено стовпець payment_status, якого не існує
         cursor.execute("""
             INSERT INTO public_orders 
             (user_id, total_price, status, created_at, delivery_address, needs_invoice, invoice_details)
@@ -593,10 +790,50 @@ def public_place_order():
         # Clear cart and commit
         session['public_cart'] = {}
         session.modified = True
+        
+        # Зберігаємо дані замовлення для сторінки підтвердження
+        order_data = {
+            'id': order_id,
+            'total_price': float(total_price),
+            'created_at': datetime.now().isoformat(),
+            'items': []
+        }
+        
+        for item in order_items:
+            order_data['items'].append({
+                'article': item['article'],
+                'quantity': item['quantity'],
+                'price': float(item['price']),
+                'total_price': float(item['total_price']),
+                'brand_id': item['brand_id'],
+                'product_name': item['article']  # За замовчуванням використовуємо артикул як назву
+            })
+            
+        # Отримуємо назви товарів
+        articles = [item['article'] for item in order_items]
+        if articles:
+            placeholders = ','.join(['%s'] * len(articles))
+            cursor.execute(f"""
+                SELECT article, name_uk as product_name, name_en
+                FROM products
+                WHERE article IN ({placeholders})
+            """, articles)
+            
+            products = {row['article']: row for row in cursor.fetchall()}
+            
+            # Оновлюємо назви продуктів
+            for item in order_data['items']:
+                article = item['article']
+                if article in products:
+                    item['product_name'] = products[article]['product_name'] or products[article]['name_en'] or article
+        
+        # Зберігаємо дані в сесії для сторінки підтвердження
+        session['order_confirmation_data'] = order_data
         conn.commit()
         
         flash(_("Order placed successfully!"), "success")
-        return redirect(url_for('public_view_orders'))
+        # Перенаправляємо на сторінку підтвердження замість списку замовлень
+        return redirect(url_for('order_confirmation', order_id=order_id))
 
     except Exception as e:
         logging.error(f"Error in public_place_order: {e}", exc_info=True)
@@ -608,6 +845,119 @@ def public_place_order():
         if 'conn' in locals():
             conn.close()
         logging.info("=== Finished public_place_order process ===")
+
+
+# У вашому Flask-додатку додайте route для сторінки успішного оформлення замовлення
+@app.route('/order/confirmation/<order_id>')
+def order_confirmation(order_id):
+    """Сторінка підтвердження замовлення з відстеженням електронної комерції"""
+    try:
+        # Якщо дані збережені в сесії, використовуємо їх
+        order_data = session.get('order_confirmation_data')
+        
+        # Якщо немає даних у сесії, отримуємо з БД
+        if not order_data or str(order_data.get('id')) != str(order_id):
+            order = get_order_by_id(order_id)
+            if not order:
+                flash(_("Order not found"), "error")
+                return redirect(url_for('public_view_orders'))
+                
+            order_items = get_order_items(order_id)
+            if not order_items:
+                flash(_("Order items not found"), "error")
+                return redirect(url_for('public_view_orders'))
+                
+            # Формуємо дані для шаблону
+            order_data = {
+                'id': order['id'],
+                'total_price': float(order['total_price']),
+                'created_at': order['created_at'].isoformat() if isinstance(order['created_at'], datetime) else order['created_at'],
+                'items': []
+            }
+            
+            for item in order_items:
+                order_data['items'].append({
+                    'article': item['article'],
+                    'quantity': item['quantity'],
+                    'price': float(item['price']),
+                    'total_price': float(item['total_price']),
+                    'brand_id': item['brand_id'],
+                    'product_name': item.get('product_name', item['article'])
+                })
+        
+        # Очищаємо дані з сесії після використання
+        if 'order_confirmation_data' in session:
+            session.pop('order_confirmation_data')
+            
+        # Визначаємо, чи це перше завантаження сторінки
+        is_first_view = session.get('viewed_order_' + str(order_id)) is None
+        if is_first_view:
+            session['viewed_order_' + str(order_id)] = True
+            
+        return render_template(
+            'public/orders/confirmation.html',
+            order=order_data,
+            items=order_data['items'],
+            is_first_view=is_first_view
+        )
+        
+    except Exception as e:
+        logging.error(f"Error in order_confirmation: {e}", exc_info=True)
+        flash(_("Error loading order confirmation"), "error")
+        return redirect(url_for('public_view_orders'))
+
+
+
+
+def get_order_by_id(order_id):
+    """Отримує інформацію про замовлення за його ID"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            cursor.execute("""
+                SELECT * FROM public_orders WHERE id = %s
+            """, (order_id,))
+            return cursor.fetchone()
+    except Exception as e:
+        logging.error(f"Error getting order by id: {e}", exc_info=True)
+        return None
+
+def get_order_items(order_id):
+    """Отримує позиції замовлення за його ID"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            cursor.execute("""
+                SELECT od.*,
+                       COALESCE(p.name_uk, od.article) as product_name,
+                       b.name as brand_name
+                FROM public_order_details od
+                LEFT JOIN products p ON od.article = p.article
+                LEFT JOIN brands b ON od.brand_id = b.id
+                WHERE od.order_id = %s
+            """, (order_id,))
+            return cursor.fetchall()
+    except Exception as e:
+        logging.error(f"Error getting order items: {e}", exc_info=True)
+        return []
+
+
+@app.template_filter('datetime')
+def format_datetime(value, format='%d.%m.%Y %H:%M'):
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        except ValueError:
+            return value
+    return value.strftime(format)
+
+@app.template_filter('currency')
+def format_currency(value):
+    if value is None:
+        return "€0.00"
+    return f"€{float(value):.2f}"
 
 
 

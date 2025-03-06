@@ -1,0 +1,97 @@
+{% extends "base/public_base.html" %}
+
+{% block title %}{{ _("Search Results") }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <a href="{{ url_for('api_part_search') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> {{ _("Back to Search") }}
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>{{ _("Search Results") }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('public_add_to_cart_bulk') }}">
+                        <input type="hidden" name="input_text" value="{{ input_text }}">
+                        
+                        {% for article in articles %}
+                            <div class="card mb-4">
+                                <div class="card-header{% if not results[article] %} bg-light{% endif %}">
+                                    <h5>{{ article }}</h5>
+                                </div>
+                                
+                                {% if results[article] and results[article]|length > 0 %}
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>{{ _("Brand") }}</th>
+                                                    <th>{{ _("Title") }}</th>
+                                                    <th>{{ _("Price") }}</th>
+                                                    <th>{{ _("Delivery") }}</th>
+                                                    <th>{{ _("Add to Cart") }}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in results[article] %}
+                                                <tr>
+                                                    <td>{{ item.make }}</td>
+                                                    <td>
+                                                        {{ item.title }}
+                                                        {% if item.warning %}
+                                                            <div class="text-warning"><small>{{ item.warning }}</small></div>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <strong>{{ (item.cent / 100)|round(2) }} €</strong>
+                                                        {% if item.discount %}
+                                                            <div><small>{{ _("Discount") }}: {{ item.discount }}%</small></div>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ item.term }} {{ _("days") }}</td>
+                                                    <td>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="selected_parts[]" 
+                                                                value="{{ article }}:{{ loop.index0 }}" id="part_{{ article }}_{{ loop.index0 }}">
+                                                            <label class="form-check-label" for="part_{{ article }}_{{ loop.index0 }}">
+                                                                {{ _("Select") }}
+                                                            </label>
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <input type="number" name="quantity_{{ article }}_{{ loop.index0 }}" 
+                                                                class="form-control form-control-sm" value="1" min="1">
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <div class="card-body">
+                                        <p class="text-muted">{{ _("No results found for this part number") }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="d-grid gap-2 col-md-4 mx-auto mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-shopping-cart"></i> {{ _("Add Selected to Cart") }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

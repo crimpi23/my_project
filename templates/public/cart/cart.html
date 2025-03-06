@@ -5,24 +5,7 @@
 <meta name="description" content="{{ _('View and manage your shopping cart at AutogroupEU. Check prices, quantities, and proceed to checkout.') }}">
 <meta name="robots" content="noindex, nofollow">
 
-<!-- Google Analytics Enhanced Ecommerce -->
-<script>
-gtag('event', 'view_cart', {
-    currency: "EUR",
-    value: {{ total_price }},
-    items: [
-        {% for item in cart_items %}
-        {
-            item_id: '{{ item.article }}',
-            item_name: '{{ item.name }}',
-            brand: '{{ item.brand_name }}',
-            price: '{{ item.price }}',
-            quantity: {{ item.quantity }}
-        }{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ]
-});
-</script>
+
 {% endblock %}
 
 {% block title %}{{ _('Shopping Cart') }}{% endblock %}
@@ -638,6 +621,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+});
+</script>
+<script>
+document.getElementById('orderForm').addEventListener('submit', function() {
+  window.dataLayer = window.dataLayer || [];
+  dataLayer.push({
+    'event': 'begin_checkout',
+    'ecommerce': {
+      'currency': 'EUR',
+      'value': {{ total_price }},
+      'items': [
+        {% for item in cart_items %}
+        {
+          'item_id': '{{ item.article }}',
+          'item_name': '{{ item.name }}',
+          'item_brand': '{{ item.brand_name }}',
+          'price': '{{ item.price }}',
+          'quantity': {{ item.quantity }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ]
+    }
+  });
 });
 </script>
 {% endblock %}

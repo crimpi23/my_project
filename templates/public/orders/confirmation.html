@@ -1,0 +1,131 @@
+{% extends "base/public_base.html" %}
+
+{% block head %}
+{{ super() }}
+{% if is_first_view %}
+<!-- Відстеження електронної комерції через GTM dataLayer -->
+<script>
+window.dataLayer = window.dataLayer || [];
+dataLayer.push({
+  'event': 'purchase',
+  'ecommerce': {
+    'transaction_id': '{{ order.id }}',
+    'value': {{ order.total_price }},
+    'currency': 'EUR',
+    'items': [
+      {% for item in items %}
+      {
+        'item_id': '{{ item.article }}',
+        'item_name': '{{ item.product_name }}',
+        'price': {{ item.price }},
+        'quantity': {{ item.quantity }},
+        {% if item.brand_name %}
+        'item_brand': '{{ item.brand_name }}',
+        {% endif %}
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+});
+
+// Додати відстеження для Facebook Pixel
+if (typeof fbq !== 'undefined') {
+  fbq('track', 'Purchase', {
+    value: {{ order.total_price }},
+    currency: 'EUR',
+    content_type: 'product',
+    contents: [
+      {% for item in items %}
+      {
+        id: '{{ item.article }}',
+        quantity: {{ item.quantity }}
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  });
+}
+{% endif %}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block title %}{{ _('Order Confirmation') }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+  <div class="row">
+    <div class="col-lg-10 mx-auto">
+      <div class="card-base fade-in mb-4">
+        <div class="d-flex align-items-center mb-3 px-4 pt-4">
+          <div class="me-3" style="width: 48px; height: 48px; background-color: rgba(40,167,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-check-circle text-success" style="font-size: 24px;"></i>
+          </div>
+          <h4 class="mb-0 text-success">{{ _('Order #%(id)s placed successfully!', id=order.id) }}</h4>
+        </div>
+        <hr class="mx-4 my-0">
+        
+        <div class="p-4">
+          <p class="lead">{{ _('Thank you for your order. We have received your purchase request.') }}</p>
+          
+          <div class="order-summary mb-4">
+            <h5>{{ _('Order Summary') }}</h5>
+            <p>{{ _('Order date:') }} <strong>{{ order.created_at|datetime }}</strong></p>
+            <p>{{ _('Order total:') }} <strong>{{ order.total_price|currency }}</strong></p>
+            
+            <div class="order-items mt-4">
+              <h5>{{ _('Ordered Items') }}</h5>
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>{{ _('Article') }}</th>
+                      <th>{{ _('Product') }}</th>
+                      <th class="text-center">{{ _('Quantity') }}</th>
+                      <th class="text-end">{{ _('Price') }}</th>
+                      <th class="text-end">{{ _('Total') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in items %}
+                    <tr>
+                      <td>{{ item.article }}</td>
+                      <td>{{ item.product_name }}</td>
+                      <td class="text-center">{{ item.quantity }}</td>
+                      <td class="text-end">{{ item.price|currency }}</td>
+                      <td class="text-end">{{ item.total_price|currency }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="4" class="text-end"><strong>{{ _('Total:') }}</strong></td>
+                      <td class="text-end"><strong>{{ order.total_price|currency }}</strong></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <hr>
+          
+          <div class="mt-4">
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{{ url_for('public_view_order_details', order_id=order.id) }}" class="btn btn-outline-primary">
+                  <i class="bi bi-eye"></i> {{ _('View Order Details') }}
+                </a>
+              </div>
+              <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                  <i class="bi bi-house"></i> {{ _('Continue Shopping') }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

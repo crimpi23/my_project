@@ -2,6 +2,44 @@
 <html lang="{{ g.locale }}">
 <head>
     <meta charset="UTF-8">
+    
+    <!-- Cookie Consent Check і ініціалізація GTM та Facebook Pixel -->
+    <script>
+    // Ініціалізація dataLayer перед усіма скриптами
+    window.dataLayer = window.dataLayer || [];
+    
+    // Функція для GTM
+    function initGTM() {
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-РЕАЛЬНИЙ-ID');
+    }
+    
+    // Функція для Facebook Pixel
+    function initFacebookPixel() {
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', 'FACEBOOK_PIXEL_ID');
+        fbq('track', 'PageView');
+    }
+    
+    // Перевірка згоди перед завантаженням всіх тегів
+    const consentGiven = localStorage.getItem('cookieConsent') === 'full';
+    if (consentGiven) {
+        initGTM();
+        initFacebookPixel();
+    }
+    </script>
+    <!-- End Cookie Consent Check -->
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AutogroupEU{% endblock %}</title>
     
@@ -42,20 +80,20 @@
 
     {% block extra_css %}{% endblock %}
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=YOUR-GA-ID"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'YOUR-GA-ID', {
-            'currency': 'EUR'
-        });
-    </script>
-
     {% block head %}{% endblock %}
 </head>	
 <body class="d-flex flex-column min-vh-100">
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-РЕАЛЬНИЙ-ID"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    
+    <!-- Facebook Pixel (noscript) -->
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=FACEBOOK_PIXEL_ID&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Facebook Pixel (noscript) -->
+
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
@@ -77,6 +115,11 @@
                         <a class="nav-link" href="{{ url_for('about') }}">
                             <i class="bi bi-info-circle"></i>
                             <span>{{ _('About') }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('api_part_search') }}">
+                            <i class="fas fa-search"></i> {{ _("Parts Search") }}
                         </a>
                     </li>
                 </ul>
@@ -227,55 +270,49 @@
     <!-- Cookie Consent Script -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Перевіряємо статус згоди при завантаженні
-        var consentStatus = localStorage.getItem('cookieConsent');
+        // Знаходимо елементи банера cookie
+        const cookieBanner = document.getElementById('cookie-consent-banner');
+        const acceptBtn = document.getElementById('cookie-accept');
+        const essentialBtn = document.getElementById('cookie-decline');
+        const cookieSettings = document.getElementById('cookie-settings');
         
-        // Якщо користувач дав повну згоду, ініціалізуємо аналітику
-        if (consentStatus === 'full') {
-            enableAllCookies();
+        // Перевіряємо існуючу згоду
+        const consentStatus = localStorage.getItem('cookieConsent');
+        
+        // Функція для ініціалізації всіх скриптів відстеження
+        function enableAllTrackingScripts() {
+            // GTM
+            initGTM();
+            
+            // Facebook Pixel
+            initFacebookPixel();
         }
         
-        // Якщо згоди ще нема, показуємо банер
+        // Показуємо банер, якщо згоди ще немає
         if (!consentStatus) {
-            document.getElementById('cookie-consent-banner').style.display = 'block';
+            cookieBanner.style.display = 'block';
+        } else if (consentStatus === 'full') {
+            // Якщо користувач вже дав повну згоду, завантажуємо всі скрипти
+            enableAllTrackingScripts();
         }
-        
-        // Інший код...
         
         // Обробка натискання "Accept"
-        document.getElementById('cookie-accept').addEventListener('click', function() {
-            // Зберігаємо згоду в локальному сховищі
+        acceptBtn.addEventListener('click', function() {
             localStorage.setItem('cookieConsent', 'full');
-            // Ховаємо банер
-            document.getElementById('cookie-consent-banner').style.display = 'none';
-            // Тут можна ініціалізувати аналітику та інші cookies
-            enableAllCookies();
+            cookieBanner.style.display = 'none';
+            enableAllTrackingScripts();
         });
         
         // Обробка натискання "Only Essential"
-        document.getElementById('cookie-decline').addEventListener('click', function() {
-            // Зберігаємо вибір користувача
+        essentialBtn.addEventListener('click', function() {
             localStorage.setItem('cookieConsent', 'essential');
-            // Ховаємо банер
-            document.getElementById('cookie-consent-banner').style.display = 'none';
+            cookieBanner.style.display = 'none';
         });
         
-        // Функція для включення всіх cookies
-        function enableAllCookies() {
-            // Google Analytics
-            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-            })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-            
-            ga('create', 'UA-XXXXX-Y', 'auto');
-            ga('send', 'pageview');
-        }
-
         // Обробка натискання "Cookie Settings"
-        document.getElementById('cookie-settings').addEventListener('click', function(e) {
+        cookieSettings.addEventListener('click', function(e) {
             e.preventDefault();
-            document.getElementById('cookie-consent-banner').style.display = 'block';
+            cookieBanner.style.display = 'block';
         });
     });
     </script>

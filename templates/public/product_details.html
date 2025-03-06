@@ -37,18 +37,6 @@
 }
 </script>
 
-<!-- Google Analytics Enhanced Ecommerce -->
-<script>
-gtag('event', 'view_item', {
-  currency: "EUR",
-  items: [{
-    item_id: "{{ article }}",
-    item_name: "{{ product_data.name }}",
-    item_brand: "{{ brand_name|default('AutogroupEU') }}",
-    price: "{{ prices[0].price if prices else '' }}"
-  }]
-});
-</script>
 {% endblock %}
 
 {% block title %}{{ product_data.name }}{% endblock %}
@@ -367,6 +355,50 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+});
+
+// Додати в скрипт кнопок додавання в кошик
+document.querySelectorAll('form.cart-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const articleId = this.querySelector('input[name="article"]').value;
+        const quantity = parseInt(this.querySelector('input[name="quantity"]').value || 1);
+        const price = parseFloat(this.closest('.price-card').querySelector('.price-value').textContent);
+        const productName = document.querySelector('h1[itemprop="name"]').textContent;
+        const brandName = document.querySelector('span[itemprop="brand"]') ? 
+                          document.querySelector('span[itemprop="brand"]').textContent :
+                          '{{ brand_name|default('AutogroupEU') }}';
+        
+        window.dataLayer = window.dataLayer || [];
+        dataLayer.push({
+            'event': 'add_to_cart',
+            'ecommerce': {
+                'currency': 'EUR',
+                'value': price * quantity,
+                'items': [{
+                    'item_id': articleId,
+                    'item_name': productName,
+                    'item_brand': brandName,
+                    'price': price,
+                    'quantity': quantity
+                }]
+            }
+        });
+    });
+});
+
+// Структурована подія перегляду товару
+dataLayer.push({
+  'event': 'view_item',
+  'ecommerce': {
+    'currency': 'EUR',
+    'value': {{ prices[0].price if prices else 0 }},
+    'items': [{
+      'item_id': '{{ article }}',
+      'item_name': '{{ product_data.name }}',
+      'item_brand': '{{ brand_name|default('AutogroupEU') }}',
+      'price': {{ prices[0].price if prices else 0 }}
+    }]
+  }
 });
 </script>
 {% endblock %}

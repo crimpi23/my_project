@@ -8531,11 +8531,6 @@ def privacy():
     return render_template('public/privacy.html')
 
 
-@app.route('/ping', methods=['GET'])
-def ping():
-    logging.info("ping function called.")  
-    return "OK", 200
-
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"Starting server on port {port}...")

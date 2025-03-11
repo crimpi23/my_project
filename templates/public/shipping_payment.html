@@ -1,0 +1,327 @@
+{% extends "base/public_base.html" %}
+
+{% block head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ _('Information about shipping methods and payment options at AutogroupEU.') }}">
+<meta name="keywords" content="{{ _('shipping, delivery, payment, payment options, bank transfer, GLS delivery') }}">
+<meta property="og:title" content="{{ _('Shipping & Payment') }} - AutogroupEU">
+<meta property="og:description" content="{{ _('Information about shipping methods and payment options at AutogroupEU.') }}">
+<meta property="og:type" content="website">
+{% endblock %}
+
+{% block title %}{{ _('Shipping & Payment') }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="page-header fade-in">
+        <h2>{{ _('Shipping & Payment') }}</h2>
+        <p class="lead text-muted">{{ _('Information about delivery and payment options') }}</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Секція доставки -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(0,123,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-truck text-primary"></i>
+                    </div>
+                    <h5 class="mb-0 text-primary">{{ _('Delivery Information') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('We ship all products from our warehouse within one business day after receiving your order and payment. For products that need to be ordered, we will contact you to discuss delivery details before you make a payment.') }}
+                    </p>
+                    
+                    <h6 class="mt-4 mb-3">{{ _('Delivery Methods') }}</h6>
+                    
+                    <div class="shipping-method mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-box-seam me-2 text-primary"></i>
+                            <strong>{{ _('Standard Shipping') }}</strong>
+                        </div>
+                        <div class="ps-4">
+                            <p class="mb-1">{{ _('Delivery time:') }} 1-5 {{ _('business days') }}</p>
+                            <p class="mb-1">{{ _('Cost:') }} {{ _('Starting from') }} €5</p>
+                        </div>
+                    </div>
+                    
+                    <div class="shipping-method mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-lightning me-2 text-warning"></i>
+                            <strong>{{ _('Express Shipping') }}</strong>
+                        </div>
+                        <div class="ps-4">
+                            <p class="mb-1">{{ _('Delivery time:') }} 1-2 {{ _('business days') }}</p>
+                            <p class="mb-1">{{ _('Cost:') }} {{ _('Starting from') }} €15</p>
+                            <p class="text-muted small">{{ _('Available for most locations in Europe. Contact us for specific pricing.') }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="shipping-method mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-shop me-2 text-success"></i>
+                            <strong>{{ _('Pickup from Warehouse') }}</strong>
+                        </div>
+                        <div class="ps-4">
+                            <p class="mb-1">{{ _('Location:') }} Tušická Nová Ves 90, Tušice 07202, {{ _('Slovakia') }}</p>
+                            <p class="mb-1">{{ _('Cost:') }} {{ _('Free') }}</p>
+                            <p class="text-muted small">{{ _('Please call us in advance to arrange pickup.') }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- НОВИЙ РОЗДІЛ: GLS Доставка -->
+                    <div class="shipping-method mb-3 mt-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-globe me-2 text-primary"></i>
+                            <strong>{{ _('GLS International Delivery') }}</strong>
+                        </div>
+                        <div class="ps-4">
+                            <p>{{ _('Our main international shipping partner is GLS, offering reliable delivery service across Europe.') }}</p>
+                            
+                            <!-- GLS: Зони доставки -->
+                            <h6 class="mt-3 mb-2">{{ _('Delivery Zones & Estimated Times') }}</h6>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>{{ _('Eurozone') }}</th>
+                                            <th>{{ _('Countries') }}</th>
+                                            <th>{{ _('Delivery Time') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Euro I</td>
+                                            <td>Hungary (1), Czech Republic (2), Austria (2-3), Croatia (2-3), Romania (2-3), Slovenia (2-3)</td>
+                                            <td>1-3 days</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Euro II</td>
+                                            <td>Poland (2-3), Germany (2-3), Belgium (3), Bulgaria (3), Luxembourg (2-3), Netherlands (3)</td>
+                                            <td>2-3 days</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Euro III</td>
+                                            <td>Denmark (3), France (3), Ireland (4), Italy (3)</td>
+                                            <td>3-4 days</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Euro IV</td>
+                                            <td>Spain (4-7), Portugal (4-7), Sweden (3-5), Finland (4-6), Estonia (3-4), Latvia (3), Lithuania (3-4)</td>
+                                            <td>3-7 days</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="text-muted small">{{ _('Note: Delivery times are indicative and depend on the pickup time by the courier.') }}</p>
+                            
+                            <div class="alert alert-warning mt-2 mb-3">
+                                <small><strong>{{ _('Excluded from EU deliveries:') }}</strong> {{ _('Andorra, Büsingen am Hochrhein, Ceuta, Gibraltar, Great Britain, Greece, Livigno, Malta, Melilla, Monaco, Norway, San Marino, Switzerland and all European islands (except for the German Islands).') }}</small>
+                            </div>
+                            
+                            <!-- GLS: Міжнародні тарифи -->
+                            <h6 class="mt-3 mb-2">{{ _('International Shipping Rates') }}</h6>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>{{ _('Parcel Size') }}</th>
+                                            <th>Euro I</th>
+                                            <th>Euro II</th>
+                                            <th>Euro III</th>
+                                            <th>Euro IV</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>XS</td>
+                                            <td>10,00 €</td>
+                                            <td>14,00 €</td>
+                                            <td>18,00 €</td>
+                                            <td>26,00 €</td>
+                                        </tr>
+                                        <tr>
+                                            <td>S</td>
+                                            <td>12,00 €</td>
+                                            <td>17,00 €</td>
+                                            <td>22,00 €</td>
+                                            <td>32,00 €</td>
+                                        </tr>
+                                        <tr>
+                                            <td>M</td>
+                                            <td>16,00 €</td>
+                                            <td>19,00 €</td>
+                                            <td>25,00 €</td>
+                                            <td>34,00 €</td>
+                                        </tr>
+                                        <tr>
+                                            <td>L</td>
+                                            <td>19,00 €</td>
+                                            <td>21,00 €</td>
+                                            <td>28,00 €</td>
+                                            <td>38,00 €</td>
+                                        </tr>
+                                        <tr>
+                                            <td>XL</td>
+                                            <td>22,00 €</td>
+                                            <td>25,00 €</td>
+                                            <td>39,00 €</td>
+                                            <td>66,00 €</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- GLS: Тарифи для Словаччини -->
+                            <h6 class="mt-3 mb-2">{{ _('Delivery within Slovakia') }}</h6>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>{{ _('Dimension') }}</th>
+                                            <th>{{ _('The longest + the shortest edge max.') }}</th>
+                                            <th>{{ _('Price') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>XS</td>
+                                            <td>max. 35 cm</td>
+                                            <td>4,50 €</td>
+                                        </tr>
+                                        <tr>
+                                            <td>S</td>
+                                            <td>max. 50 cm</td>
+                                            <td>5,00 €</td>
+                                        </tr>
+                                        <tr>
+                                            <td>M</td>
+                                            <td>max. 65 cm</td>
+                                            <td>5,50 €</td>
+                                        </tr>
+                                        <tr>
+                                            <td>L</td>
+                                            <td>max. 80 cm</td>
+                                            <td>6,50 €</td>
+                                        </tr>
+                                        <tr>
+                                            <td>XL</td>
+                                            <td>max. 3 m of circumference</td>
+                                            <td>7,50 €</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="alert alert-info mt-2">
+                                <small><i class="bi bi-info-circle me-1"></i> {{ _('A parcel can weigh up to 31,5 kg.') }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ _('For urgent deliveries or special shipping requests, please contact us directly.') }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Секція оплати -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(40,167,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-credit-card text-success"></i>
+                    </div>
+                    <h5 class="mb-0 text-success">{{ _('Payment Methods') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>
+                        {{ _('We accept payments via bank transfer to our account. When making a payment, please include your order number in the payment description.') }}
+                    </p>
+                    
+                    <div class="payment-details mt-4">
+                        <h6 class="mb-3">{{ _('Bank Account Details') }}</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p class="mb-1"><strong>{{ _('Bank') }}:</strong></p>
+                                <p class="mb-3">Slovenská sporiteľňa, a.s.</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="mb-1"><strong>IBAN:</strong></p>
+                                <p class="mb-3">SK51 0900 0000 0050 6892 5563</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="mb-1"><strong>BIC/SWIFT:</strong></p>
+                                <p class="mb-3">GIBASKBX</p>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            {{ _('Important: Always include your order number in the payment description.') }}
+                        </div>
+                    </div>
+                    
+                    <h6 class="mt-4 mb-3">{{ _('Order Processing') }}</h6>
+                    <p>
+                        {{ _('For items in stock, we will process and ship your order within one business day after receiving payment. For items that need to be ordered from our suppliers, we will contact you to discuss delivery times and payment details before processing.') }}
+                    </p>
+                    
+                    <div class="alert alert-info mt-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ _('If you have any questions about payment or need additional information, please contact our customer service.') }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Додайте цей блок до секції оплати на сторінці -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(23,162,184,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-receipt text-info"></i>
+                    </div>
+                    <h5 class="mb-0 text-info">{{ _('VAT Information') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <div class="mb-3">
+                        <h6 class="mb-2">{{ _('All prices on our website include VAT') }}</h6>
+                        <p>{{ _('All prices shown on our website include VAT (Value Added Tax) at the applicable rate.') }}</p>
+                    </div>
+                    
+                    <div class="vat-policies mb-3">
+                        <h6 class="mb-2">{{ _('VAT policies by customer type:') }}</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>{{ _('Slovak customers:') }}</strong> 
+                                {{ _('All invoices include 23%% Slovak VAT as required by law.') }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>{{ _('EU business customers with valid VAT ID:') }}</strong> 
+                                {{ _('Invoices are issued without VAT under the reverse-charge mechanism. Please provide your valid EU VAT number during checkout.') }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>{{ _('EU private customers:') }}</strong>
+                                {{ _('Invoices include Slovak VAT at 23%% rate.') }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>{{ _('Non-EU customers:') }}</strong> 
+                                {{ _('Special export rules may apply. Please contact us for detailed information.') }}
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ _('To receive an invoice without VAT, EU business customers must provide a valid VAT identification number during checkout. VAT ID will be verified through the VIES system.') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!-- templates/admin/categories/recategorize.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Recategorize Products{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Recategorize Products</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Categorization Statistics</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Total Products:</strong> {{ stats.total_products }}</p>
+            <p><strong>Categorized Products:</strong> {{ stats.categorized_products }}</p>
+            <p><strong>Available Keywords:</strong> {{ stats.keywords_count }}</p>
+            
+            <div class="progress mb-3">
+                <div class="progress-bar" role="progressbar" 
+                     style="width: {{ (stats.categorized_products / stats.total_products) * 100 if stats.total_products > 0 else 0 }}%" 
+                     aria-valuenow="{{ stats.categorized_products }}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="{{ stats.total_products }}">
+                    {{ stats.categorized_products }} / {{ stats.total_products }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <form method="POST" action="{{ url_for('recategorize_all_products', token=token) }}">
+        <div class="alert alert-warning">
+            <p><strong>Warning:</strong> This will remove all existing product categorizations and recategorize them based on product names and descriptions.</p>
+            <p>The process may take some time depending on the number of products.</p>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-sync-alt"></i> Recategorize All Products
+        </button>
+    </form>
+</div>
+{% endblock %}

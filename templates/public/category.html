@@ -1,0 +1,359 @@
+{% extends "base/public_base.html" %}
+
+{% block title %}{{ category['name_' + g.locale] or category.name_uk or category.name_en }} - {{ _('AutogroupEU') }}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ category.description or _('Browse our collection of') }} {{ category['name_' + g.locale] or category.name_uk or category.name_en }} {{ _('products at AutogroupEU') }}">
+<meta name="keywords" content="{{ category['name_' + g.locale] or category.name_uk or category.name_en }}, {{ _('auto parts, automotive parts') }}">
+
+<!-- Open Graph Meta Tags -->
+<meta property="og:title" content="{{ category['name_' + g.locale] or category.name_uk or category.name_en }} - {{ _('AutogroupEU') }}">
+<meta property="og:description" content="{{ _('Browse our collection of') }} {{ category['name_' + g.locale] or category.name_uk or category.name_en }} {{ _('products at AutogroupEU') }}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.url }}">
+{% if category.image_url %}
+<meta property="og:image" content="{{ category.image_url }}">
+{% endif %}
+
+<!-- Structured Data for Category -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "{{ category['name_' + g.locale] or category.name_uk or category.name_en }}",
+  "description": "{{ category.description or _('Browse our collection of') }} {{ category['name_' + g.locale] or category.name_uk or category.name_en }} {{ _('products at AutogroupEU') }}",
+  "url": "{{ request.url }}",
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {% for crumb in breadcrumbs %}
+      {
+        "@type": "ListItem",
+        "position": {{ loop.index }},
+        "item": {
+          "@id": "{{ url_for('view_category', slug=crumb.slug, _external=True) }}",
+          "name": "{{ crumb['name_' + g.locale] or crumb.name_uk or crumb.name_en }}"
+        }
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+}
+</script>
+
+<!-- Додаємо спеціальні стилі для нових фільтрів -->
+<style>
+  /* Стилі для нових фільтрів */
+  .new-filter-section {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .new-filter-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.5rem;
+  }
+  
+  .new-filter-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .new-filter-option {
+    margin-bottom: 0.75rem;
+  }
+  
+  .new-filter-radio {
+    display: inline-block;
+    margin-right: 0.5rem;
+  }
+  
+  .new-filter-label {
+    display: inline-block;
+    cursor: pointer;
+  }
+  
+  .new-filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  
+  /* Стилі для підкатегорій */
+  .subcategory-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .subcategory-item {
+    margin-bottom: 0.5rem;
+  }
+  
+  .subcategory-link {
+    display: block;
+    padding: 0.5rem 0;
+    color: #0d6efd;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  .subcategory-link:hover {
+    color: #0a58ca;
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-3">
+    <!-- Навігаційні хлібні крихти -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">{{ _('Home') }}</a></li>
+            {% for bc in breadcrumbs[:-1] %}
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('view_category', slug=bc.slug) }}">
+                        {{ bc['name_' + g.locale] or bc.name_uk or bc.name_en }}
+                    </a>
+                </li>
+            {% endfor %}
+            <li class="breadcrumb-item active" aria-current="page">
+                {{ category['name_' + g.locale] or category.name_uk or category.name_en }}
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Заголовок категорії з кількістю товарів -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">{{ category['name_' + g.locale] or category.name_uk or category.name_en }}</h1>
+        <span class="text-muted small">{{ total_products }} {{ _('products') }}</span>
+    </div>
+
+    <!-- Початок блоку з фільтрами та товарами -->
+    <div class="row">
+        <!-- Нова бічна панель з фільтрами -->
+        <div class="col-lg-3">
+            <!-- Підкатегорії -->
+            {% if subcategories %}
+            <div class="new-filter-section">
+                <h3 class="new-filter-title">{{ _('Subcategories') }}</h3>
+                <ul class="subcategory-list">
+                    {% for subcategory in subcategories %}
+                    <li class="subcategory-item">
+                        <a href="{{ url_for('view_category', slug=subcategory.slug) }}" 
+                           class="subcategory-link">
+                            {{ subcategory['name_' + g.locale] or subcategory.name_uk or subcategory.name_en }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Фільтр брендів -->
+            {% if brands %}
+            <div class="new-filter-section">
+                <h3 class="new-filter-title">{{ _('Brand Filter') }}</h3>
+                <form action="{{ url_for('view_category', slug=category.slug) }}" method="get" id="brandFilterForm">
+                    <!-- Приховані поля для збереження інших параметрів -->
+                    {% if request.args.get('sort') %}
+                    <input type="hidden" name="sort" value="{{ request.args.get('sort') }}">
+                    {% endif %}
+                    
+                    <ul class="new-filter-list">
+                        <!-- "Всі бренди" опція -->
+                        <li class="new-filter-option">
+                            <input type="radio" name="brand" id="all_brands" value="" 
+                                   class="new-filter-radio"
+                                   {% if not request.args.get('brand') %}checked{% endif %}>
+                            <label for="all_brands" class="new-filter-label">{{ _('All Brands') }}</label>
+                        </li>
+                        
+                        <!-- Список брендів -->
+                        {% for b in brands %}
+                        <li class="new-filter-option">
+                            <input type="radio" name="brand" id="brand_{{ b.brand_id }}" value="{{ b.brand_name }}"
+                                   class="new-filter-radio"
+                                   {% if request.args.get('brand') == b.brand_name %}checked{% endif %}>
+                            <label for="brand_{{ b.brand_id }}" class="new-filter-label">{{ b.brand_name }}</label>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <button type="submit" class="btn btn-primary btn-sm w-100 mt-2">
+                        {{ _('Apply Filter') }}
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Сортування -->
+            <div class="new-filter-section">
+                <h3 class="new-filter-title">{{ _('Sort by') }}</h3>
+                <form action="{{ url_for('view_category', slug=category.slug) }}" method="get" id="sortingForm">
+                    <!-- Приховані поля -->
+                    {% if request.args.get('brand') %}
+                    <input type="hidden" name="brand" value="{{ request.args.get('brand') }}">
+                    {% endif %}
+                    
+                    <ul class="new-filter-list">
+                        <li class="new-filter-option">
+                            <input type="radio" name="sort" id="sort_name_asc" value="name_asc"
+                                   class="new-filter-radio"
+                                   {% if sort == 'name_asc' %}checked{% endif %}>
+                            <label for="sort_name_asc" class="new-filter-label">{{ _('Name A-Z') }}</label>
+                        </li>
+                        <li class="new-filter-option">
+                            <input type="radio" name="sort" id="sort_name_desc" value="name_desc"
+                                   class="new-filter-radio"
+                                   {% if sort == 'name_desc' %}checked{% endif %}>
+                            <label for="sort_name_desc" class="new-filter-label">{{ _('Name Z-A') }}</label>
+                        </li>
+                        <li class="new-filter-option">
+                            <input type="radio" name="sort" id="sort_price_asc" value="price_asc"
+                                   class="new-filter-radio"
+                                   {% if sort == 'price_asc' %}checked{% endif %}>
+                            <label for="sort_price_asc" class="new-filter-label">{{ _('Price Low to High') }}</label>
+                        </li>
+                        <li class="new-filter-option">
+                            <input type="radio" name="sort" id="sort_price_desc" value="price_desc"
+                                   class="new-filter-radio"
+                                   {% if sort == 'price_desc' %}checked{% endif %}>
+                            <label for="sort_price_desc" class="new-filter-label">{{ _('Price High to Low') }}</label>
+                        </li>
+                    </ul>
+                    
+                    <button type="submit" class="btn btn-primary btn-sm w-100 mt-2">
+                        {{ _('Apply Sorting') }}
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Кнопка скидання фільтрів -->
+            <div class="mb-4">
+                <a href="{{ url_for('view_category', slug=category.slug) }}" class="btn btn-outline-secondary w-100">
+                    {{ _('Reset All Filters') }}
+                </a>
+            </div>
+        </div>
+        
+        <!-- Головний контент з товарами -->
+        <div class="col-lg-9">
+            <!-- Товари -->
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+                {% for product in products %}
+                <div class="col fade-in">
+                    <div class="product-card h-100">
+                        <div class="product-img-container">
+                            <a href="{{ url_for('product_details', article=product.article) }}">
+                                {% if product.image_url %}
+                                <img src="{{ product.image_url }}" class="product-img" alt="{{ product.name or product.article }}">
+                                {% else %}
+                                <div class="no-image-placeholder">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="product-body">
+                            <h5 class="product-title">
+                                <a href="{{ url_for('product_details', article=product.article) }}">
+                                    {{ product.name }}
+                                </a>
+                            </h5>
+                            <div class="product-meta">
+                                <div class="product-meta-item">
+                                    <span class="meta-label">{{ _('Article:') }}</span>
+                                    <span class="meta-value">{{ product.article }}</span>
+                                </div>
+                                {% if product.brand_name %}
+                                <div class="product-meta-item">
+                                    <span class="meta-label">{{ _('Brand:') }}</span>
+                                    <span class="meta-value">{{ product.brand_name }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% if product.price %}
+                            <div class="product-price">{{ "%.2f"|format(product.price) }} €</div>
+                            {% endif %}
+                            <div class="product-actions">
+                                <a href="{{ url_for('product_details', article=product.article) }}" class="btn-details">
+                                    <i class="bi bi-eye-fill me-2"></i>{{ _('View Details') }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">{{ _('No products found in this category') }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Пагінація -->
+            {% if pagination.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if pagination.page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('view_category', slug=category.slug, page=pagination.page-1, **pagination_args) }}">
+                            {{ _('Previous') }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">{{ _('Previous') }}</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% set start_page = [pagination.page - 2, 1]|max %}
+                    {% set end_page = [start_page + 4, pagination.pages]|min %}
+                    {% set start_page = [end_page - 4, 1]|max %}
+                    
+                    {% for p in range(start_page, end_page + 1) %}
+                    <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('view_category', slug=category.slug, page=p, **pagination_args) }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if pagination.page < pagination.pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('view_category', slug=category.slug, page=pagination.page+1, **pagination_args) }}">
+                            {{ _('Next') }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">{{ _('Next') }}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Мобільна версія фільтрів як offcanvas -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileFilters">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">{{ _('Filters') }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <!-- Сюди додайте спрощений варіант фільтрів для мобільних -->
+    </div>
+</div>
+{% endblock %}

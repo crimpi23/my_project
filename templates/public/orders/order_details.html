@@ -1,170 +1,191 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
-{{ super() }}
-<!-- SEO, Analytics, etc... -->
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ _('Order details at AutogroupEU. View products, prices, and delivery information.') }}">
+<meta name="robots" content="noindex, nofollow">
 {% endblock %}
 
-{% block title %}{{ _('Order Details') }} #{{ order.id }}{% endblock %}
+{% block title %}{{ _('Order') }} #{{ order.id }} - {{ _('Details') }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4 page-order">
-    <!-- Order Header -->
-    <div class="order-header-card">
-        <div class="order-header">
-            <div class="d-flex flex-wrap justify-content-between align-items-center">
-                <h2>
-                    {{ _('Order') }}
-                    <span class="order-number">#{{ order.id }}</span>
-                </h2>
-                <a href="{{ url_for('public_view_orders') }}" class="btn-back">
-                    <i class="bi bi-arrow-left me-2"></i>
-                    {{ _('Back to Orders') }}
-                </a>
-            </div>
-        </div>
+<div class="container mt-4 mb-5">
+    <!-- Навігація назад до списку замовлень -->
+    <div class="mb-3">
+        <a href="{{ url_for('public_view_orders') }}" class="back-link">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Orders') }}
+        </a>
     </div>
-
-    <!-- Order Summary -->
-    <div class="summary-card">
-        <div class="card-body">
-            <div class="row g-4">
-                <div class="col-md-3 col-6">
-                    <div class="summary-label">{{ _('Order Date') }}</div>
-                    <div class="summary-value">
-                        <i class="bi bi-calendar2-check me-2 text-primary"></i>
-                        {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="summary-label">{{ _('Status') }}</div>
-                    <div class="summary-value">
-                        <span class="status-badge status-{{ order.status|lower }}">
-                            {{ _(order.status) }}
-                        </span>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="summary-label">{{ _('Total Items') }}</div>
-                    <div class="summary-value">
-                        <i class="bi bi-box me-2 text-primary"></i>
-                        {{ order.items_count }}
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="summary-label">{{ _('Total Amount') }}</div>
-                    <div class="total-amount">
-                        {{ "%.2f"|format(order.total_price) }} €
-                    </div>
-                </div>
-            </div>
+    
+    <!-- Заголовок замовлення -->
+    <div class="section-header section-header-primary mb-4 fade-in">
+        <div class="header-icon">
+            <i class="bi bi-box-seam"></i>
         </div>
+        <h2>{{ _('Order') }} #{{ order.id }}</h2>
     </div>
-
-    <!-- Delivery and Invoice Information -->
-    <div class="row">
-        <!-- Delivery Address -->
-        <div class="col-md-6">
-            <div class="info-card">
-                <div class="info-card-header">
-                    <i class="bi bi-truck"></i>
-                    <h5 class="mb-0">{{ _('Delivery Address') }}</h5>
+    
+    <!-- Інформація про замовлення -->
+    <div class="row fade-in">
+        <!-- Деталі замовлення -->
+        <div class="col-md-6 mb-4">
+            <div class="order-details-card">
+                <div class="card-header">
+                    <h5>{{ _('Order Information') }}</h5>
                 </div>
-                <div class="address-details">
-                    {% set address = order.delivery_address|from_json if order.delivery_address else {} %}
-                    {% if address %}
-                        <span class="address-name">{{ address.full_name }}</span>
-                        <div class="address-line">{{ address.street }}</div>
-                        <div class="address-line">{{ address.postal_code }} {{ address.city }}</div>
-                        <div class="address-line">{{ address.country }}</div>
-                        <div class="address-line"><span class="phone-badge">{{ address.phone }}</span></div>
-                    {% else %}
-                        <p class="text-secondary">{{ _("No delivery information provided") }}</p>
-                    {% endif %}
+                <div class="card-body">
+                    <ul class="order-info-list">
+                        <li>
+                            <div class="info-label">{{ _('Order Date') }}:</div>
+                            <div class="info-value">{{ order.created_at|datetime }}</div>
+                        </li>
+                        <li>
+                            <div class="info-label">{{ _('Status') }}:</div>
+                            <div class="info-value">
+                                {% set status_translation = {
+                                    'new': _('New'),
+                                    'processing': _('Processing'),
+                                    'shipped': _('Shipped'),
+                                    'delivered': _('Delivered'),
+                                    'cancelled': _('Cancelled')
+                                } %}
+                                
+                                {% set status_class = {
+                                    'new': 'text-primary',
+                                    'processing': 'text-info',
+                                    'shipped': 'text-warning',
+                                    'delivered': 'text-success',
+                                    'cancelled': 'text-danger'
+                                } %}
+                                
+                                <span class="{{ status_class[order.status] }}">
+                                    {{ status_translation[order.status] }}
+                                </span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="info-label">{{ _('Payment Status') }}:</div>
+                            <div class="info-value">
+                                {% if order.payment_status == 'paid' %}
+                                <span class="text-success">{{ _('Paid') }}</span>
+                                {% else %}
+                                <span class="text-warning">{{ _('Pending') }}</span>
+                                {% endif %}
+                            </div>
+                        </li>
+                        <li>
+                            <div class="info-label">{{ _('Total') }}:</div>
+                            <div class="info-value fw-bold">{{ order.total_price|currency }}</div>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
-
-        <!-- Invoice Details -->
-        {% if order.needs_invoice %}
-        <div class="col-md-6">
-            <div class="info-card">
-                <div class="info-card-header">
-                    <i class="bi bi-receipt"></i>
-                    <h5 class="mb-0">{{ _('Invoice Information') }}</h5>
+        
+        <!-- Адреса доставки -->
+        <div class="col-md-6 mb-4">
+            <div class="order-details-card">
+                <div class="card-header">
+                    <h5>{{ _('Delivery Address') }}</h5>
                 </div>
-                <div class="address-details">
-                    {% set invoice = order.invoice_details|from_json if order.invoice_details else {} %}
-                    {% if invoice %}
-                        <span class="address-name">{{ invoice.company_name }}</span>
-                        <div class="address-line"><strong>{{ _('VAT Number') }}:</strong> 
-                            <span class="vat-badge">{{ invoice.vat_number }}</span>
+                <div class="card-body">
+                    {% set delivery_address = order.delivery_address|from_json %}
+                    {% if delivery_address %}
+                    <div class="address-box">
+                        <div class="address-name">{{ delivery_address.full_name }}</div>
+                        <div class="address-details">
+                            {{ delivery_address.street }}<br>
+                            {{ delivery_address.postal_code }} {{ delivery_address.city }}<br>
+                            {{ delivery_address.country }}<br>
                         </div>
-                        {% if invoice.registration_number %}
-                        <div class="address-line"><strong>{{ _("Registration Number") }}:</strong> {{ invoice.registration_number }}</div>
-                        {% endif %}
-                        {% if invoice.address %}
-                        <div class="address-line"><strong>{{ _("Company Address") }}:</strong> {{ invoice.address }}</div>
-                        {% endif %}
+                        <div class="address-phone mt-2">
+                            <i class="bi bi-telephone"></i> {{ delivery_address.phone }}
+                        </div>
+                    </div>
                     {% else %}
-                        <p class="text-secondary">{{ _("Invoice requested but details not provided") }}</p>
+                    <div class="text-muted">{{ _('No delivery address information') }}</div>
                     {% endif %}
                 </div>
             </div>
+            
+            <!-- Інформація про інвойс -->
+            {% if order.needs_invoice and order.invoice_details %}
+            <div class="order-details-card mt-4">
+                <div class="card-header">
+                    <h5>{{ _('Invoice Information') }}</h5>
+                </div>
+                <div class="card-body">
+                    {% set invoice_details = order.invoice_details|from_json %}
+                    {% if invoice_details %}
+                    <div class="invoice-box">
+                        <div class="company-name">{{ invoice_details.company_name }}</div>
+                        <div class="vat-number">
+                            {{ _('VAT Number') }}: <strong>{{ invoice_details.vat_number }}</strong>
+                        </div>
+                        {% if invoice_details.registration_number %}
+                        <div class="reg-number">
+                            {{ _('Registration Number') }}: {{ invoice_details.registration_number }}
+                        </div>
+                        {% endif %}
+                        {% if invoice_details.address %}
+                        <div class="company-address mt-2">
+                            {{ _('Address') }}: {{ invoice_details.address }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
-
-    <!-- Items Table -->
-    <div class="items-table-card">
+    
+    <!-- Товари замовлення -->
+    <div class="order-items-card mt-2 fade-in">
+        <div class="card-header">
+            <h5>{{ _('Order Items') }}</h5>
+        </div>
         <div class="table-responsive">
-            <table class="items-table">
+            <table class="table table-hover">
                 <thead>
                     <tr>
                         <th>{{ _('Article') }}</th>
-                        <th>{{ _('Name') }}</th>
+                        <th>{{ _('Product') }}</th>
                         <th>{{ _('Brand') }}</th>
-                        <th class="text-end">{{ _('Price') }}</th>
-                        <th class="text-center">{{ _('Quantity') }}</th>
-                        <th class="text-end">{{ _('Total') }}</th>
-                        <th class="text-center">{{ _('Status') }}</th>
+                        <th>{{ _('Price') }}</th>
+                        <th>{{ _('Quantity') }}</th>
+                        <th>{{ _('Total') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in items %}
                     <tr>
                         <td>
-                            <a href="{{ url_for('product_details', article=item.article) }}"
-                               class="article-link">
-                                <span class="article-badge">{{ item.article }}</span>
-                            </a>
+                            <span class="badge bg-secondary">{{ item.article }}</span>
                         </td>
-                        <td>{{ item.product_name or '-' }}</td>
-                        <td class="d-none-mobile">{{ item.brand_name or '-' }}</td>
-                        <td class="text-end"><span class="price-value">{{ "%.2f"|format(item.price) }} €</span></td>
-                        <td class="text-center">{{ item.quantity }}</td>
-                        <td class="text-end"><span class="price-value">{{ "%.2f"|format(item.total_price) }} €</span></td>
-                        <td class="text-center">
-                            <span class="status-badge status-{{ item.status|lower }}">
-                                {{ _(item.status) }}
-                            </span>
-                        </td>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.brand_name or '-' }}</td>
+                        <td>{{ item.price|currency }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.total_price|currency }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5" class="text-end">
-                            <strong>{{ _('Total:') }}</strong>
-                        </td>
-                        <td class="text-end">
-                            <span class="total-amount">{{ "%.2f"|format(order.total_price) }} €</span>
-                        </td>
-                        <td></td>
+                        <td colspan="5" class="text-end"><strong>{{ _('Total') }}:</strong></td>
+                        <td><strong>{{ order.total_price|currency }}</strong></td>
                     </tr>
                 </tfoot>
             </table>
         </div>
+    </div>
+    
+    <!-- Кнопка для повторення замовлення -->
+    <div class="d-flex justify-content-end mt-4 fade-in">
+        <a href="{{ url_for('public_view_orders') }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Orders') }}
+        </a>
     </div>
 </div>
 {% endblock %}

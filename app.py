@@ -7,6 +7,7 @@ import logging
 from flask_caching import Cache
 from datetime import datetime
 from decimal import Decimal
+from datetime import datetime
 import os
 import bcrypt
 from functools import wraps
@@ -15,7 +16,7 @@ import psycopg2.extras
 from flask import (
     Flask, render_template, request, session,
     redirect, url_for, flash, jsonify,
-    send_file, get_flashed_messages, g
+    send_file, get_flashed_messages, g, send_from_directory
 )
 from flask_babel import Babel, gettext as _
 # from flask_wtf import CSRFProtect
@@ -46,26 +47,36 @@ logging.basicConfig(
 )
 
 # Configure Babel
-app.config['BABEL_DEFAULT_LOCALE'] = 'uk'
-app.config['BABEL_SUPPORTED_LOCALES'] = ['uk', 'en', 'sk', 'pl']
+app.config['BABEL_DEFAULT_LOCALE'] = 'sk'
+app.config['BABEL_SUPPORTED_LOCALES'] = ['sk', 'en', 'pl']
 
 
 # Configure languages
 LANGUAGES = {
-    'uk': 'Українська',
-    'en': 'English',
     'sk': 'Slovenský',
+    'en': 'English',
     'pl': 'Polski'
 }
 
-    # Конфігурація доступних мов
-LANGUAGES = {
-    'uk': 'Українська',
-    'en': 'English',
-    'sk': 'Slovenský',
-    'pl': 'Polski'
-}
+#    # Конфігурація доступних мов
+# LANGUAGES = {
+#    'uk': 'Українська',
+#    'en': 'English',
+#    'sk': 'Slovenský',
+#    'pl': 'Polski'
+#}
     
+
+# Додайте на початку файлу або в підходящому місці
+@app.before_request
+def log_request_info():
+    if request.path.startswith('/public_cart') or request.path.startswith('/public_remove_from_cart'):
+        logging.info(f"Request: {request.path}, Method: {request.method}")
+        logging.info(f"Form data: {dict(request.form)}")
+        logging.info(f"Session user_id: {session.get('user_id')}")
+        logging.info(f"Session cart_count: {session.get('cart_count')}")
+
+
 # Функція валідації телефону
 def validate_phone(phone_number):
     """Basic phone number validation"""
@@ -201,7 +212,20 @@ def validate_eu_vat(vat_number):
 
 
 
+# Сторінка "Доставка і оплата"
+@app.route('/shipping-payment')
+def shipping_payment():
+    return render_template('public/shipping_payment.html')
 
+# Сторінка "Повернення та обмін"
+@app.route('/returns')
+def returns():
+    return render_template('public/returns.html')
+
+# Сторінка "Контакти"
+@app.route('/contacts')
+def contacts():
+    return render_template('public/contacts.html')
 
 
 
@@ -438,6 +462,238 @@ def validate_vat_route():
         }), 500
 
 
+
+# Заміните існуючу функцію get_categories_for_menu()
+def get_categories_for_menu():
+    """Отримує повну ієрархію категорій для меню"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримуємо поточну мову
+        lang = session.get('language', 'sk')
+        
+        # Отримуємо всі категорії одним запитом
+        cursor.execute(f"""
+            SELECT 
+                id, 
+                name_{lang} as name,
+                name_uk as name_uk, 
+                name_en as name_en,
+                name_sk as name_sk,
+                name_pl as name_pl,
+                parent_id,
+                slug
+            FROM categories 
+            ORDER BY order_index
+        """)
+        
+        # Конвертуємо результат в список словників
+        all_categories = [dict(row) for row in cursor.fetchall()]
+        
+        # Створюємо словник для швидкого доступу до категорій за ID
+        categories_dict = {cat['id']: cat for cat in all_categories}
+        
+        # Створюємо ієрархічну структуру
+        for category in all_categories:
+            category['subcategories'] = []
+        
+        # Заповнюємо підкатегорії
+        main_categories = []
+        for category in all_categories:
+            if category['parent_id'] is None:
+                main_categories.append(category)
+            else:
+                parent = categories_dict.get(category['parent_id'])
+                if parent:
+                    parent.setdefault('subcategories', []).append(category)
+        
+        cursor.close()
+        conn.close()
+        return main_categories
+        
+    except Exception as e:
+        logging.error(f"Error getting main categories: {e}", exc_info=True)
+        return []
+
+
+
+def get_subcategories(parent_id):
+    """Отримує підкатегорії для вказаної батьківської категорії"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримуємо поточну мову
+        lang = session.get('language', 'uk')
+        
+        # Запит для отримання підкатегорій
+        cursor.execute(f"""
+            SELECT 
+                id, 
+                name_{lang} as name,
+                name_uk as name_uk, 
+                name_en as name_en,
+                name_sk as name_sk,
+                name_pl as name_pl,
+                slug
+            FROM categories 
+            WHERE parent_id = %s 
+            ORDER BY order_index
+        """, (parent_id,))
+        
+        # Конвертуємо в звичайні словники
+        subcategories = [dict(row) for row in cursor.fetchall()]
+        
+        cursor.close()
+        conn.close()
+        return subcategories
+        
+    except Exception as e:
+        logging.error(f"Error getting subcategories: {e}", exc_info=True)
+        return []
+
+
+
+@app.context_processor
+def inject_category_function():
+    """Додає функцію для отримання категорій до контексту шаблону"""
+    
+    def get_main_categories():
+        """Отримує ієрархічну структуру категорій для меню"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо всі категорії
+            cursor.execute("""
+                SELECT id, name_uk, name_en, name_sk, name_pl, parent_id, slug
+                FROM categories
+                ORDER BY order_index, id
+            """)
+            all_cats = cursor.fetchall()
+            
+            # Конвертуємо в список словників
+            categories = [dict(row) for row in all_cats]
+            
+            # Створюємо словник для швидкого доступу до категорій за ID
+            categories_by_id = {}
+            for category in categories:
+                categories_by_id[category['id']] = category
+                # Додаємо порожній список для підкатегорій
+                category['subcategories'] = []
+            
+            # Заповнюємо ієрархію
+            root_categories = []
+            for category in categories:
+                if category['parent_id'] is None:
+                    root_categories.append(category)
+                else:
+                    parent = categories_by_id.get(category['parent_id'])
+                    if parent:
+                        parent['subcategories'].append(category)
+            
+            cursor.close()
+            conn.close()
+            return root_categories
+            
+        except Exception as e:
+            logging.error(f"Error getting categories: {e}", exc_info=True)
+            return []
+    
+    return {'get_main_categories': get_main_categories}
+
+
+# Розширена функція inject_template_vars з підтримкою категорій
+# Замініть весь блок inject_template_vars наступним кодом:
+
+@app.context_processor
+def inject_template_vars():
+    """Інжекція змінних для всіх шаблонів"""
+    
+    # Поточний рік для футера
+    def today_year():
+        return datetime.now().year
+    
+    # Підрахунок кількості товарів у кошику
+    def get_user_cart_count():
+        user_id = session.get('user_id')
+        if user_id:
+            # Для авторизованих користувачів рахуємо з бази даних
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT COALESCE(SUM(quantity), 0) 
+                    FROM cart 
+                    WHERE user_id = %s
+                """, (user_id,))
+                count = cursor.fetchone()[0]
+                return int(count)
+            except Exception as e:
+                logging.error(f"Error getting cart count: {e}")
+                return 0
+            finally:
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+        else:
+            # Для неавторизованих користувачів, рахуємо з сесії
+            cart = session.get('public_cart', {})
+            total_count = 0
+            for article_data in cart.values():
+                for item_data in article_data.values():
+                    total_count += item_data.get('quantity', 0)
+            return total_count
+    
+    # Функція для отримання підкатегорій
+    def get_subcategories(parent_id):
+        """Отримує підкатегорії для вказаної батьківської категорії"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо поточну мову
+            lang = session.get('language', 'uk')
+            
+            # Запит для отримання підкатегорій
+            cursor.execute(f"""
+                SELECT 
+                    id, 
+                    name_{lang} as name,
+                    name_uk as name_uk, 
+                    name_en as name_en,
+                    name_sk as name_sk,
+                    name_pl as name_pl,
+                    slug
+                FROM categories 
+                WHERE parent_id = %s 
+                ORDER BY order_index
+            """, (parent_id,))
+            
+            # Конвертуємо в звичайні словники
+            subcategories = [dict(row) for row in cursor.fetchall()]
+            
+            cursor.close()
+            conn.close()
+            return subcategories
+            
+        except Exception as e:
+            logging.error(f"Error getting subcategories: {e}", exc_info=True)
+            return []
+  
+    
+    # Повертаємо всі необхідні змінні в єдиному словнику
+    return dict(
+        get_user_cart_count=get_user_cart_count,
+        today_year=today_year,
+        LANGUAGES=LANGUAGES,
+        get_main_categories=get_categories_for_menu,
+        get_subcategories=get_subcategories
+    )
+
+
 @app.template_filter('tojson')
 def filter_tojson(obj):
     """Фільтр для перетворення Python об'єкту в JSON рядок"""
@@ -598,6 +854,15 @@ def public_place_order():
             flash(_("Please log in to place an order."), "error")
             return redirect(url_for('login'))
 
+        # Функція для серіалізації datetime в JSON
+        def json_serial(obj):
+            """Конвертує нестандартні типи для JSON"""
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            if isinstance(obj, Decimal):
+                return float(obj)
+            raise TypeError(f"Type {type(obj)} not serializable")
+
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
@@ -620,7 +885,8 @@ def public_place_order():
             address = cursor.fetchone()
             if address:
                 delivery_data = dict(address)
-                if 'created_at' in delivery_data:
+                # Важливо - конвертуємо datetime поля
+                if 'created_at' in delivery_data and delivery_data['created_at']:
                     delivery_data['created_at'] = delivery_data['created_at'].isoformat()
                 logging.debug(f"Found existing address: {delivery_data}")
             else:
@@ -637,43 +903,13 @@ def public_place_order():
                 'street': request.form.get('street')
             }
 
-            if save_address:
-                try:
-                    cursor.execute("""
-                        INSERT INTO delivery_addresses 
-                        (user_id, full_name, phone, country, postal_code, city, street, is_default)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                        RETURNING id
-                    """, (
-                        user_id,
-                        delivery_data['full_name'],
-                        delivery_data['phone'],
-                        delivery_data['country'],
-                        delivery_data['postal_code'],
-                        delivery_data['city'],
-                        delivery_data['street'],
-                        False
-                    ))
-                    delivery_data['id'] = cursor.fetchone()['id']
-                    conn.commit()
-                    logging.info(f"New address saved with ID: {delivery_data['id']}")
-                except Exception as e:
-                    logging.error(f"Error saving address: {e}")
-                    conn.rollback()
-                    flash(_("Error saving address"), "error")
-                    return redirect(url_for('public_cart'))
-
-        # Get invoice details
+        # Get invoice details - ВИПРАВЛЕНА ПРОБЛЕМА
         needs_invoice = request.form.get('needs_invoice') == 'on'
         invoice_details = None
         
         if needs_invoice:
-            # Перевіряємо, чи користувач вибрав існуючу компанію чи хоче додати нову
             company_id = request.form.get('company_id')
-            use_new_company = request.form.get('use_new_company') == '1'
-            save_company = request.form.get('save_company') == 'on'
-            
-            if company_id and not use_new_company:
+            if company_id:
                 # Using existing company
                 logging.info(f"Using existing company ID: {company_id}")
                 cursor.execute("""
@@ -683,12 +919,10 @@ def public_place_order():
                 company = cursor.fetchone()
                 
                 if company:
-                    invoice_details = {
-                        'company_name': company['company_name'],
-                        'vat_number': company['vat_number'],
-                        'registration_number': company['registration_number'],
-                        'address': company['address']
-                    }
+                    invoice_details = dict(company)
+                    # Важливо - конвертуємо datetime поля
+                    if 'created_at' in invoice_details and invoice_details['created_at']:
+                        invoice_details['created_at'] = invoice_details['created_at'].isoformat()
                     logging.debug(f"Found existing company: {invoice_details}")
                 else:
                     flash(_("Selected company not found"), "error")
@@ -701,81 +935,73 @@ def public_place_order():
                     'registration_number': request.form.get('registration_number'),
                     'address': request.form.get('company_address')
                 }
-                
-                # Save company if requested
-                if save_company:
-                    try:
-                        cursor.execute("""
-                            INSERT INTO user_companies 
-                            (user_id, company_name, vat_number, registration_number, address, is_default)
-                            VALUES (%s, %s, %s, %s, %s, %s)
-                            RETURNING id
-                        """, (
-                            user_id,
-                            invoice_details['company_name'],
-                            invoice_details['vat_number'],
-                            invoice_details['registration_number'],
-                            invoice_details['address'],
-                            False
-                        ))
-                        new_company_id = cursor.fetchone()['id']
-                        conn.commit()
-                        logging.info(f"New company saved with ID: {new_company_id}")
-                    except Exception as e:
-                        logging.error(f"Error saving company: {e}")
-                        conn.rollback()
-                        flash(_("Error saving company details"), "error")
-                        return redirect(url_for('public_cart'))
 
-        # Get cart items
+        # Process cart items
         cart = session.get('public_cart', {})
+        logging.debug(f"Cart data in session: {cart}")
+        
         if not cart:
+            logging.warning("Cart is empty in session")
             flash(_("Your cart is empty."), "error")
             return redirect(url_for('public_cart'))
 
-        # Process order items
         total_price = Decimal('0')
         order_items = []
-
-        for article, table_data in cart.items():
-            for table_name, item_data in table_data.items():
+        
+        # Обробка товарів з кошика
+        for article, article_items in cart.items():
+            for table_name, item_data in article_items.items():
+                if 'price' not in item_data or 'quantity' not in item_data:
+                    logging.warning(f"Invalid item data: {item_data}")
+                    continue
+                    
                 item_price = Decimal(str(item_data['price']))
-                item_quantity = int(item_data['quantity'])
+                item_quantity = int(item_data['quantity']) 
                 item_total = item_price * item_quantity
                 total_price += item_total
                 
                 order_items.append({
                     'article': article,
                     'table_name': table_name,
-                    'quantity': item_quantity,
                     'price': item_price,
+                    'quantity': item_quantity,
                     'total_price': item_total,
                     'brand_id': item_data.get('brand_id'),
                     'comment': item_data.get('comment', '')
                 })
 
-        # Create order record with invoice details
-        # ВИПРАВЛЕНО: видалено стовпець payment_status, якого не існує
+        logging.debug(f"Order items processed: {len(order_items)}")
+        logging.debug(f"Total price calculated: {total_price}")
+        
+        if not order_items:
+            logging.warning("No items to process in cart")
+            flash(_("Your cart is empty"), "error")
+            return redirect(url_for('public_cart'))
+
+        # Create order in database
+        logging.debug("Creating order in database")
         cursor.execute("""
             INSERT INTO public_orders 
-            (user_id, total_price, status, created_at, delivery_address, needs_invoice, invoice_details)
-            VALUES (%s, %s, 'new', NOW(), %s, %s, %s)
+            (user_id, total_price, status, created_at, updated_at, delivery_address, needs_invoice, invoice_details, payment_status)
+            VALUES (%s, %s, 'new', NOW(), NOW(), %s, %s, %s, 'unpaid')
             RETURNING id
         """, (
             user_id,
             total_price,
-            json.dumps(delivery_data),
+            json.dumps(delivery_data, default=json_serial),
             needs_invoice,
-            json.dumps(invoice_details) if invoice_details else None
+            json.dumps(invoice_details, default=json_serial) if invoice_details else None
         ))
+        
         order_id = cursor.fetchone()['id']
+        logging.info(f"Created order with ID: {order_id}")
 
         # Add order details
         for item in order_items:
             cursor.execute("""
                 INSERT INTO public_order_details 
-                (order_id, article, table_name, price, quantity, total_price, comment, brand_id)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                (order_id, article, table_name, price, quantity, total_price, comment, brand_id, status, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'new', NOW())
             """, (
                 order_id,
                 item['article'],
@@ -786,53 +1012,19 @@ def public_place_order():
                 item['comment'],
                 item['brand_id']
             ))
-
-        # Clear cart and commit
+        
+        # Clear cart
+        logging.info("Clearing cart")
         session['public_cart'] = {}
+        session['cart_count'] = 0
         session.modified = True
         
-        # Зберігаємо дані замовлення для сторінки підтвердження
-        order_data = {
-            'id': order_id,
-            'total_price': float(total_price),
-            'created_at': datetime.now().isoformat(),
-            'items': []
-        }
-        
-        for item in order_items:
-            order_data['items'].append({
-                'article': item['article'],
-                'quantity': item['quantity'],
-                'price': float(item['price']),
-                'total_price': float(item['total_price']),
-                'brand_id': item['brand_id'],
-                'product_name': item['article']  # За замовчуванням використовуємо артикул як назву
-            })
-            
-        # Отримуємо назви товарів
-        articles = [item['article'] for item in order_items]
-        if articles:
-            placeholders = ','.join(['%s'] * len(articles))
-            cursor.execute(f"""
-                SELECT article, name_uk as product_name, name_en
-                FROM products
-                WHERE article IN ({placeholders})
-            """, articles)
-            
-            products = {row['article']: row for row in cursor.fetchall()}
-            
-            # Оновлюємо назви продуктів
-            for item in order_data['items']:
-                article = item['article']
-                if article in products:
-                    item['product_name'] = products[article]['product_name'] or products[article]['name_en'] or article
-        
-        # Зберігаємо дані в сесії для сторінки підтвердження
-        session['order_confirmation_data'] = order_data
+        # Commit database changes
         conn.commit()
         
         flash(_("Order placed successfully!"), "success")
-        # Перенаправляємо на сторінку підтвердження замість списку замовлень
+        logging.info(f"Order {order_id} placed successfully, redirecting to confirmation")
+        logging.info("=== Finished public_place_order process ===")
         return redirect(url_for('order_confirmation', order_id=order_id))
 
     except Exception as e:
@@ -846,66 +1038,46 @@ def public_place_order():
             conn.close()
         logging.info("=== Finished public_place_order process ===")
 
-
-# У вашому Flask-додатку додайте route для сторінки успішного оформлення замовлення
+# сторінка успішного оформлення замовлення
 @app.route('/order/confirmation/<order_id>')
 def order_confirmation(order_id):
-    """Сторінка підтвердження замовлення з відстеженням електронної комерції"""
+    """Відображає сторінку підтвердження замовлення"""
+    logging.info(f"Displaying confirmation for order ID: {order_id}")
     try:
-        # Якщо дані збережені в сесії, використовуємо їх
-        order_data = session.get('order_confirmation_data')
+        user_id = session.get('user_id')
+        if not user_id:
+            flash(_("Please log in to view order details."), "error")
+            return redirect(url_for('login'))
         
-        # Якщо немає даних у сесії, отримуємо з БД
-        if not order_data or str(order_data.get('id')) != str(order_id):
-            order = get_order_by_id(order_id)
-            if not order:
-                flash(_("Order not found"), "error")
-                return redirect(url_for('public_view_orders'))
-                
-            order_items = get_order_items(order_id)
-            if not order_items:
-                flash(_("Order items not found"), "error")
-                return redirect(url_for('public_view_orders'))
-                
-            # Формуємо дані для шаблону
-            order_data = {
-                'id': order['id'],
-                'total_price': float(order['total_price']),
-                'created_at': order['created_at'].isoformat() if isinstance(order['created_at'], datetime) else order['created_at'],
-                'items': []
-            }
+        # Отримуємо деталі замовлення
+        order = get_order_by_id(order_id)
+        if not order:
+            flash(_("Order not found"), "error")
+            return redirect(url_for('public_view_orders'))
             
-            for item in order_items:
-                order_data['items'].append({
-                    'article': item['article'],
-                    'quantity': item['quantity'],
-                    'price': float(item['price']),
-                    'total_price': float(item['total_price']),
-                    'brand_id': item['brand_id'],
-                    'product_name': item.get('product_name', item['article'])
-                })
+        if order['user_id'] != user_id:
+            flash(_("Access denied"), "error")
+            return redirect(url_for('public_view_orders'))
         
-        # Очищаємо дані з сесії після використання
-        if 'order_confirmation_data' in session:
-            session.pop('order_confirmation_data')
-            
-        # Визначаємо, чи це перше завантаження сторінки
-        is_first_view = session.get('viewed_order_' + str(order_id)) is None
-        if is_first_view:
-            session['viewed_order_' + str(order_id)] = True
-            
+        # ВАЖЛИВО: Конвертуємо DictRow в звичайний словник
+        order_dict = dict(order)
+        
+        # Отримуємо товари замовлення як окремий об'єкт
+        order_items = get_order_items(order_id)
+        logging.debug(f"Found {len(order_items)} items for order {order_id}")
+        
+        # Передаємо в шаблон два окремих параметри
+        logging.info(f"Rendering confirmation template for order {order_id}")
         return render_template(
             'public/orders/confirmation.html',
-            order=order_data,
-            items=order_data['items'],
-            is_first_view=is_first_view
+            order=order_dict,
+            order_items=order_items
         )
         
     except Exception as e:
-        logging.error(f"Error in order_confirmation: {e}", exc_info=True)
-        flash(_("Error loading order confirmation"), "error")
+        logging.error(f"Error displaying order confirmation: {e}", exc_info=True)
+        flash(_("Error displaying order confirmation."), "error")
         return redirect(url_for('public_view_orders'))
-
 
 
 
@@ -973,44 +1145,37 @@ def public_view_orders():
     """
     Відображає список замовлень публічного користувача
     """
+    user_id = session.get('user_id')
+    if not user_id:
+        flash(_("Please log in to view your orders."), "error")
+        return redirect(url_for('login'))
+    
+    orders = []
+    
     try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash(_("Please log in to view your orders."), "error")
-            return redirect(url_for('login'))
-
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        # Отримуємо всі замовлення користувача
+        
+        # Змініть запит для отримання кількості товарів у кожному замовленні
         cursor.execute("""
-            SELECT 
-                o.id,
-                o.created_at,
-                o.total_price,
-                o.status,
-                COUNT(od.id) as items_count
+            SELECT o.*, COUNT(d.id) as items_count
             FROM public_orders o
-            LEFT JOIN public_order_details od ON o.id = od.order_id
+            LEFT JOIN public_order_details d ON o.id = d.order_id
             WHERE o.user_id = %s
-            GROUP BY o.id, o.created_at, o.total_price, o.status
+            GROUP BY o.id
             ORDER BY o.created_at DESC
         """, (user_id,))
         
         orders = cursor.fetchall()
-
-        return render_template(
-            'public/orders/list_orders.html',
-            orders=orders
-        )
-
+        
     except Exception as e:
-        logging.error(f"Error viewing public orders: {e}", exc_info=True)
-        flash(_("Error loading orders."), "error")
-        return redirect(url_for('index'))
+        logging.error(f"Error fetching orders: {e}", exc_info=True)
+        flash(_("Error retrieving your orders"), "error")
     finally:
         if 'conn' in locals():
             conn.close()
+    
+    return render_template('public/orders/orders.html', orders=orders)
 
 @app.route('/public_order/<int:order_id>')
 def public_view_order_details(order_id):
@@ -1070,10 +1235,16 @@ def public_view_order_details(order_id):
 # Функція для виходу з облікового запису
 @app.route('/logout')
 def logout():
+    # Видаляємо інформацію про користувача
     session.pop('user_id', None)
     session.pop('username', None)
     session.pop('role', None)
-    logging.info("User logged out")
+    
+    # Очищаємо кошик
+    if 'public_cart' in session:
+        session.pop('public_cart', None)
+    
+    logging.info("User logged out, cart cleared")
     flash(_("You have been logged out."), "info")
     return redirect(url_for('index'))
 
@@ -1085,87 +1256,68 @@ def logout():
 def api_products():
     """API endpoint для отримання додаткових продуктів без перезавантаження сторінки"""
     try:
-        page = int(request.args.get('page', 1))
-        per_page = int(request.args.get('per_page', 10))
-        brand_id = request.args.get('brand')
+        page = request.args.get('page', 1, type=int)
+        per_page = 8  # Кількість товарів на сторінці
+        brand_id = request.args.get('brand', type=int)
         
-        # Встановлюємо offset для пагінації
-        offset = (page - 1) * per_page
+        # Отримуємо мову з параметра запиту або з сесії
+        lang = request.args.get('lang') or session.get('language', 'sk')
         
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Базовий запит
-            query = """
-                SELECT 
-                    s.article, 
-                    s.price,
-                    b.name as brand_name,
-                    p.name_uk as name,
-                    p.description_uk as description,
-                    (
-                        SELECT image_url 
-                        FROM product_images 
-                        WHERE product_article = s.article
-                        ORDER BY is_main DESC
-                        LIMIT 1
-                    ) as image_url
-                FROM stock s
-                LEFT JOIN products p ON s.article = p.article
-                LEFT JOIN brands b ON s.brand_id = b.id
-                WHERE s.quantity > 0
-            """
-            
-            params = []
-            
-            # Додаємо фільтр за брендом, якщо він вказаний
-            if brand_id:
-                query += " AND s.brand_id = %s"
-                params.append(int(brand_id))
-                
-            # Додаємо пагінацію
-            query += " ORDER BY s.article LIMIT %s OFFSET %s"
-            params.extend([per_page, offset])
-            
-            cursor.execute(query, params)
-            products = cursor.fetchall()
-            
-            # Перевіряємо, чи є ще продукти для наступної сторінки
-            query_count = """
-                SELECT COUNT(*) FROM stock s WHERE s.quantity > 0
-            """
-            
-            params_count = []
-            if brand_id:
-                query_count += " AND s.brand_id = %s"
-                params_count.append(int(brand_id))
-                
-            cursor.execute(query_count, params_count)
-            total_count = cursor.fetchone()[0]
-            
-            has_more = total_count > offset + len(products)
-            
-            # Перетворюємо результат у звичайний список словників для JSON
-            result = []
-            for product in products:
-                product_dict = dict(product)
-                # Конвертуємо Decimal у float для JSON-серіалізації
-                if isinstance(product_dict['price'], Decimal):
-                    product_dict['price'] = float(product_dict['price'])
-                result.append(product_dict)
-            
-            return jsonify({
-                'products': result, 
-                'has_more': has_more, 
-                'next_page': page + 1 if has_more else None,
-                'total_count': total_count
-            })
+        # Підключення до бази даних
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # ПІДХІД, ЯК У index() - вибирає перше зображення з сортуванням за is_main DESC
+        query = f"""
+            SELECT 
+                s.article, 
+                s.price, 
+                COALESCE(p.name_{lang}, p.name_uk, p.name_en, p.name_sk, s.article) as name, 
+                b.name as brand_name,
+                b.id as brand_id,
+                (
+                    SELECT image_url 
+                    FROM product_images pi 
+                    WHERE pi.product_article = s.article 
+                    ORDER BY is_main DESC, id ASC 
+                    LIMIT 1
+                ) as image_url
+            FROM stock s
+            LEFT JOIN products p ON s.article = p.article
+            LEFT JOIN brands b ON s.brand_id = b.id
+            WHERE s.quantity > 0
+        """
+        params = []
+        
+        # Додаємо фільтр за брендом, якщо вказано
+        if brand_id:
+            query += " AND s.brand_id = %s"
+            params.append(brand_id)
+        
+        # Додаємо сортування і пагінацію
+        query += " ORDER BY s.price DESC LIMIT %s OFFSET %s"
+        params.extend([per_page, (page - 1) * per_page])
+        
+        # Отримання товарів
+        cursor.execute(query, params)
+        products = cursor.fetchall()
+        
+        # Перевіряємо, чи є ще товари для наступної сторінки
+        has_more = len(products) == per_page
+        
+        cursor.close()
+        conn.close()
+        
+        # Повертаємо результат
+        return jsonify({
+            'products': [dict(p) for p in products],
+            'next_page': page + 1,
+            'has_more': has_more
+        })
             
     except Exception as e:
         logging.error(f"Error in api_products: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
-
-
 
 # Перегляд кошика публічного користувача
 @app.route('/public_cart')
@@ -1177,6 +1329,7 @@ def public_cart():
         return redirect(url_for('login'))
 
     cart = session.get('public_cart', {})
+    logging.debug(f"Cart data in session: {cart}")
     total_price = Decimal('0')
     cart_items = []
     saved_addresses = []
@@ -1211,7 +1364,7 @@ def public_cart():
         logging.debug(f"Found {len(saved_companies)} saved companies for user {user_id}")
 
         # Get current language
-        lang = session.get('language', 'uk')
+        lang = session.get('language', 'sk')
 
         # Get price lists information for delivery time
         cursor.execute("""
@@ -1222,7 +1375,22 @@ def public_cart():
 
         # Process cart items
         for article, article_items in cart.items():
+            logging.debug(f"Processing article: {article}")
+            if not isinstance(article_items, dict):
+                logging.warning(f"Ignoring non-dictionary article_items: {article_items}")
+                continue
+            
             for table_name, item_data in article_items.items():
+                logging.debug(f"Processing table: {table_name}")
+                if not isinstance(item_data, dict):
+                    logging.warning(f"Ignoring non-dictionary item_data: {item_data}")
+                    continue
+                
+                # Перевірка наявності ключа 'price'
+                if 'price' not in item_data:
+                    logging.warning(f"Missing 'price' key for article {article}, table {table_name}")
+                    continue  # Пропускаємо цей товар, якщо немає ціни
+                
                 # Get item details from DB by article
                 cursor.execute(f"""
                     SELECT 
@@ -1317,8 +1485,11 @@ def requires_token_and_roles(*allowed_roles):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+            # Для статических файлов не проверяем токен
+            if request.path.startswith('/static/'):
+                return f(*args, **kwargs)
+                
             token = request.view_args.get('token')
-            
             # Перевіряємо, чи це публічний маршрут
             is_public_route = 'public' in request.path or not any(segment in request.path for segment in ['admin', 'dashboard'])
             
@@ -1348,7 +1519,6 @@ def requires_token_and_roles(*allowed_roles):
         return decorated_function
     return decorator
 
-
 def get_locale():
     if 'user_id' in session:
         # Якщо користувач авторизований, беремо його мову з БД
@@ -1361,13 +1531,20 @@ def get_locale():
                 )
                 result = cursor.fetchone()
                 if result and result[0]:
+                    # Якщо мова користувача українська, змінюємо на словацьку
+                    if result[0] == 'uk':
+                        return 'sk'
                     return result[0]
         except Exception as e:
             logging.error(f"Error getting user language: {e}")
     
     # Якщо користувач не авторизований або виникла помилка,
     # використовуємо мову з сесії або стандартну
-    return session.get('language', app.config['BABEL_DEFAULT_LOCALE'])
+    language = session.get('language', app.config['BABEL_DEFAULT_LOCALE'])
+    # Якщо мова українська, змінюємо на словацьку
+    if language == 'uk':
+        return 'sk'
+    return language
 
 babel.init_app(app, locale_selector=get_locale)
 
@@ -1424,18 +1601,56 @@ def get_cart_count(user_id):
         if 'conn' in locals():
             conn.close()
 
-# Кількість товару в кошику користувача
-@app.context_processor
-def utility_processor():
-    """Додає допоміжні функції до контексту шаблону"""
-    def get_user_cart_count():
-        user_id = session.get('user_id')
-        if user_id:
-            return get_cart_count(user_id)
-        return 0
-    return dict(get_user_cart_count=get_user_cart_count)
 
 
+@app.route('/debug_cart')
+def debug_cart():
+    """Тимчасовий маршрут для відлагодження кошика (видалити після завершення розробки)"""
+    if not app.debug:
+        return "Debug mode is off"
+        
+    user_id = session.get('user_id')
+    if not user_id:
+        return "Not logged in"
+        
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        cursor.execute("""
+            SELECT * FROM cart WHERE user_id = %s
+        """, (user_id,))
+        
+        cart_items = cursor.fetchall()
+        result = "<h2>Cart Items in Database</h2>"
+        
+        if not cart_items:
+            result += "<p>No items found in database</p>"
+        else:
+            result += "<table border='1'><tr><th>ID</th><th>Article</th><th>Quantity</th><th>Price</th><th>Table</th></tr>"
+            for item in cart_items:
+                result += f"<tr><td>{item['id']}</td><td>{item['article']}</td><td>{item['quantity']}</td><td>{item['base_price']}</td><td>{item['table_name']}</td></tr>"
+            result += "</table>"
+            
+        # Також перевірте таблицю cart на наявність колонки updated_at
+        cursor.execute("""
+            SELECT column_name FROM information_schema.columns 
+            WHERE table_name = 'cart'
+        """)
+        
+        columns = [row['column_name'] for row in cursor.fetchall()]
+        result += "<h2>Cart Table Columns</h2>"
+        result += "<ul>"
+        for col in columns:
+            result += f"<li>{col}</li>"
+        result += "</ul>"
+            
+        return result
+    except Exception as e:
+        return f"Error: {str(e)}"
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 # Маршрут з префіксом мови
 @app.route('/<lang>/product/<article>')
@@ -1459,7 +1674,7 @@ def localized_product_details(lang, article):
 def product_details(article):
     try:
         # Отримуємо поточну мову
-        lang = session.get('language', 'uk')
+        lang = session.get('language', 'sk')
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
@@ -1483,6 +1698,15 @@ def product_details(article):
             'brand_name': stock_data['brand_name'] if stock_data else None,
             'brand_id': stock_data['brand_id'] if stock_data else None
         }
+         # Отримуємо категорії товару
+        cursor.execute("""
+            SELECT c.*
+            FROM product_categories pc
+            JOIN categories c ON pc.category_id = c.id
+            WHERE pc.article = %s
+            ORDER BY c.parent_id NULLS FIRST, c.order_index
+        """, (article,))
+        product_categories = cursor.fetchall()
 
         # Get product info with language-specific fields
         cursor.execute(f"""
@@ -1579,6 +1803,9 @@ def product_details(article):
         prices.sort(key=lambda x: float(x['price']))
         logging.info(f"Final prices count: {len(prices)}")
 
+        # Додати цей рядок
+        price = prices[0] if prices else None
+
         if not db_product and not stock_data and not price_found:
             return render_template(
                 'public/article_not_found.html',
@@ -1589,7 +1816,10 @@ def product_details(article):
             'public/product_details.html',
             product_data=product_data,
             prices=prices,
-            article=article
+            price=price,
+            brand_name=brand_name,
+            article=article,
+            product_categories=product_categories  # Додано кому тут
         )
 
     except Exception as e:
@@ -1600,6 +1830,7 @@ def product_details(article):
     finally:
         if 'conn' in locals() and conn:
             conn.close()
+
 
 
 # обробка фотографій товарів основне фото
@@ -1701,24 +1932,94 @@ def delete_google_feed(token, setting_id):
     return redirect(url_for('manage_google_feed', token=token))
 
 def generate_feed_item(item, lang, settings):
-    """Generate feed item with proper language content"""
-    title = item.get(f'title_{lang}') or item.get('title_en')  # fallback to English
-    description = item.get(f'description_{lang}') or item.get('description_en')
-    
-    return f"""
-    <item>
-        <g:id>{item['article']}</g:id>
-        <title>{title}</title>
-        <description>{description}</description>
-        <link>http://127.0.0.1:5000/product/{item['article']}</link>
-        <g:price>{item['price']} EUR</g:price>
-        <g:condition>new</g:condition>
-        <g:availability>{'in stock' if item['quantity'] > 0 else 'out of stock'}</g:availability>
-        <g:brand>{item['brand_name']}</g:brand>
-        <g:google_product_category>{settings['category']}</g:google_product_category>
-        <g:image_link>https://image.autogroup.sk/products/{item['article']}.jpg</g:image_link>
-    </item>
-    """
+    """Генерує елемент товару для Google Merchant Feed"""
+    try:
+        # Отримуємо з'єднання з базою даних
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Додати категорію
+        cursor.execute("""
+            SELECT c.*
+            FROM product_categories pc
+            JOIN categories c ON pc.category_id = c.id
+            WHERE pc.article = %s
+            ORDER BY c.parent_id NULLS FIRST, c.order_index
+        """, (item['article'],))
+        categories = cursor.fetchall()
+        
+        google_category_id = None
+        product_type = []
+        
+        # Шукаємо google_category_id та будуємо ієрархію категорій
+        for cat in categories:
+            if cat['google_category_id'] and not google_category_id:
+                google_category_id = cat['google_category_id']
+            
+            cat_name = cat[f'name_{lang}'] or cat['name_en'] or cat['name_uk']
+            if cat_name:
+                product_type.append(cat_name)
+        
+        # Створюємо елемент feed
+        feed_item = []
+        feed_item.append(f"<item>")
+        feed_item.append(f"<g:id>{item['article']}</g:id>")
+        feed_item.append(f"<title>{html.escape(item['name'] or item['article'])}</title>")
+        
+        # Додаємо опис якщо він є
+        if item['description']:
+            description = item['description'][:5000]  # Обмеження довжини опису для Google
+            feed_item.append(f"<description>{html.escape(description)}</description>")
+        else:
+            feed_item.append(f"<description>{html.escape(item['name'] or item['article'])}</description>")
+        
+        # Додаємо посилання на товар
+        product_url = f"{settings['domain_url']}/product/{item['article']}"
+        feed_item.append(f"<link>{product_url}</link>")
+        
+        # Додаємо зображення
+        if item['main_image_url']:
+            feed_item.append(f"<g:image_link>{item['main_image_url']}</g:image_link>")
+        
+        # Додаємо додаткові зображення якщо вони є
+        if item['additional_images'] and isinstance(item['additional_images'], list):
+            for img_url in item['additional_images'][:10]:  # Google дозволяє до 10 додаткових зображень
+                feed_item.append(f"<g:additional_image_link>{img_url}</g:additional_image_link>")
+        
+        # Додаємо інформацію про наявність
+        availability = "in_stock" if item['quantity'] > 0 else "out_of_stock"
+        feed_item.append(f"<g:availability>{availability}</g:availability>")
+        
+        # Додаємо ціну
+        price = float(item['price'])
+        feed_item.append(f"<g:price>{price:.2f} EUR</g:price>")
+        
+        # Додаємо бренд
+        if item['brand_name']:
+            feed_item.append(f"<g:brand>{html.escape(item['brand_name'])}</g:brand>")
+        
+        # Додаємо категорії до фіду
+        if google_category_id:
+            feed_item.append(f"<g:google_product_category>{google_category_id}</g:google_product_category>")
+            
+        if product_type:
+            product_type_str = " > ".join(product_type)
+            feed_item.append(f"<g:product_type>{html.escape(product_type_str)}</g:product_type>")
+        
+        # Закриваємо елемент
+        feed_item.append("</item>")
+        
+        # Закриваємо з'єднання
+        cursor.close()
+        conn.close()
+        
+        # Повертаємо рядок з елементом
+        return "\n".join(feed_item)
+        
+    except Exception as e:
+        logging.error(f"Error generating feed item for article {item['article']}: {e}", exc_info=True)
+        return ""
+
 
 # Google feed
 @app.route('/google-merchant-feed-legacy/<language>.xml') 
@@ -1981,109 +2282,188 @@ def manage_google_feed(token):
         flash("Error managing Google feed settings", "error")
         return redirect(url_for('admin_dashboard', token=token))
 
+
+
+
 @app.route('/update_public_cart', methods=['POST'])
 def update_public_cart():
     """Оновлює кількість товару в публічному кошику"""
     try:
+        user_id = session.get('user_id')
+        if not user_id:
+            flash(_("Please log in to manage your cart."), "error")
+            return redirect(url_for('login'))
+        
         article = request.form.get('article')
         table_name = request.form.get('table_name')
         new_quantity = int(request.form.get('quantity', 1))
         
         logging.info(f"Updating cart for user: {session.get('username')}")
         logging.info(f"Article: {article}, Table: {table_name}, New quantity: {new_quantity}")
-
-        # Validate input
-        if not all([article, table_name]):
-            logging.error(f"Missing required data - Article: {article}, Table: {table_name}")
-            flash(_("Missing required information"), "error")
+        logging.debug(f"Current cart before update: {session.get('public_cart')}")
+        
+        # Validate inputs
+        if not article or not table_name:
+            flash(_("Missing article information"), "error")
             return redirect(url_for('public_cart'))
-
+        
         if new_quantity < 1:
-            logging.warning(f"Invalid quantity ({new_quantity}) for article {article}")
             flash(_("Quantity must be at least 1"), "error")
             return redirect(url_for('public_cart'))
-
+        
+        # Отримуємо кошик з сесії
         cart = session.get('public_cart', {})
-        logging.debug(f"Current cart state: {cart}")
-
-        if article not in cart:
-            logging.warning(f"Article {article} not found in cart")
-            flash(_("Item not found in cart"), "error")
-            return redirect(url_for('public_cart'))
-
-        if table_name in cart[article]:
-            current_item = cart[article][table_name]
-            logging.debug(f"Current item state: {current_item}")
-
-            # Update quantity while preserving other item data
-            cart[article][table_name].update({
-                'quantity': new_quantity
-            })
-
-            # Important! Save updated cart to session
+        
+        # Перевіряємо, чи є артикул в кошику
+        if article in cart and table_name in cart[article]:
+            # Оновлюємо кількість товару
+            cart[article][table_name]['quantity'] = new_quantity
+            
+            # Зберігаємо оновлений кошик в сесії
             session['public_cart'] = cart
             session.modified = True
-
-            logging.info(f"""
-                Cart updated successfully:
-                - Article: {article}
-                - Table: {table_name}
-                - Old quantity: {current_item['quantity']}
-                - New quantity: {new_quantity}
-            """)
+            
+            # Оновлюємо лічильник товарів
+            update_cart_count_in_session()
+            
+            logging.info(f"Updated quantity for article {article} in table {table_name} to {new_quantity}")
             flash(_("Cart updated successfully"), "success")
         else:
-            logging.error(f"Table {table_name} not found for article {article}")
+            logging.warning(f"Article {article} or table {table_name} not found in cart")
             flash(_("Item not found in cart"), "error")
-
-    except ValueError as e:
-        logging.error(f"Invalid quantity value: {e}")
+        
+        # Додаємо логування для перевірки даних
+        logging.debug(f"Form data: {request.form}")
+        logging.debug(f"Updated cart after quantity change: {session.get('public_cart')}")
+        
+        return redirect(url_for('public_cart'))
+        
+    except ValueError:
         flash(_("Invalid quantity"), "error")
+        return redirect(url_for('public_cart'))
     except Exception as e:
         logging.error(f"Error updating cart: {e}", exc_info=True)
         flash(_("Error updating cart"), "error")
-
-    return redirect(url_for('public_cart'))
-
-
-# Видалення товару з кошика публічного користувача
-@app.route('/public_remove_from_cart', methods=['POST'])
-def public_remove_from_cart():
-    article = request.form.get('article')
-    table_name = request.form.get('table_name')
-
-    if not article or not table_name:
-        flash(_("Missing required information for removal"), "error")
         return redirect(url_for('public_cart'))
 
+
+# Видалення товару з кошика публічного користувача@app.route('/public_remove_from_cart', methods=['POST'])
+@app.route('/public_remove_from_cart', methods=['POST'])
+def public_remove_from_cart():
+    """Видаляє товар з кошика користувача"""
     try:
+        article = request.form.get('article')
+        table_name = request.form.get('table_name')
+
+        logging.info(f"Removing from cart for user {session.get('user_id')}: article={article}, table={table_name}")
+        
+        if not article or not table_name:
+            flash(_("Missing article or table name"), "error")
+            return redirect(url_for('public_cart'))
+        
+        # Отримуємо кошик з сесії
         cart = session.get('public_cart', {})
+        
+        # Детальніше логування для відлагодження
+        logging.debug(f"Current cart before removal: {cart}")
+        logging.debug(f"Looking for article={article}, table_name={table_name}")
+        
         if article in cart and table_name in cart[article]:
+            # Видаляємо товар
             del cart[article][table_name]
+            logging.debug(f"Deleted table_name={table_name} from article={article}")
+            
+            # Якщо після видалення table_name для артикула не залишилось інших table_name, видаляємо і сам артикул
             if not cart[article]:
                 del cart[article]
+                logging.debug(f"Deleted article={article} from cart as it's empty")
+            
+            # Зберігаємо оновлений кошик в сесії
             session['public_cart'] = cart
-            flash(_("Article removed successfully"), "success")
+            session.modified = True
+            
+            # Оновлюємо лічильник товарів
+            update_cart_count_in_session()
+            
+            logging.info(f"Removed item from cart: article={article}, table_name={table_name}")
+            flash(_("Item removed from cart"), "success")
         else:
-            flash(_("Item not found in cart"), "warning")
+            logging.warning(f"Item not found in cart: article={article}, table_name={table_name}")
+            flash(_("Item not found in your cart"), "warning")
+        
+        # Додаємо логування для перевірки даних
+        logging.debug(f"Form data: {request.form}")
+        logging.debug(f"Updated cart after removal: {session.get('public_cart')}")
+        logging.debug(f"Session data: {session}")
+        
     except Exception as e:
         logging.error(f"Error removing from cart: {e}", exc_info=True)
         flash(_("Error removing item from cart"), "error")
-
-    return redirect(url_for('public_cart')) 
-
-
-# Make LANGUAGES available to all templates
-@app.context_processor
-def inject_languages():
-    return dict(LANGUAGES=LANGUAGES)
-
-@app.route('/set_language/<language>')
-def set_language(language):
-    if language not in app.config['BABEL_SUPPORTED_LOCALES']:
-        return redirect(request.referrer or url_for('index'))
         
-    session['language'] = language
+    finally:
+        return redirect(url_for('public_cart'))
+
+
+def update_cart_count_in_session(user_id=None):
+    """Оновлює кількість товарів у кошику в сесії користувача"""
+    try:
+        if not user_id:
+            user_id = session.get('user_id')
+        
+        if user_id:
+            # Спочатку перевірте, чи є public_cart в сесії і чи є в ньому товари
+            cart = session.get('public_cart', {})
+            if cart:
+                # Рахуємо загальну кількість товарів у public_cart
+                total_count = 0
+                for article, article_items in cart.items():
+                    if isinstance(article_items, dict):
+                        for table_name, item_data in article_items.items():
+                            if isinstance(item_data, dict) and 'quantity' in item_data:
+                                total_count += item_data['quantity']
+                
+                session['cart_count'] = total_count
+                logging.info(f"Updated cart count from public_cart: {total_count}")
+            else:
+                # Якщо public_cart порожній, перевіряємо базу даних
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT COALESCE(SUM(quantity), 0) 
+                    FROM cart 
+                    WHERE user_id = %s
+                """, (user_id,))
+                count = cursor.fetchone()[0]
+                session['cart_count'] = int(count or 0)  # Захист від None
+                cursor.close()
+                conn.close()
+                logging.info(f"Updated cart count from database: {session.get('cart_count')}")
+            
+            session.modified = True  # Важливо для збереження змін сесії
+        else:
+            # Для неавторизованих користувачів
+            session['cart_count'] = 0
+            logging.info(f"Updated cart count for unauthorized user: 0")
+            session.modified = True
+            
+    except Exception as e:
+        logging.error(f"Error updating cart count in session: {e}", exc_info=True)
+
+
+@app.route('/set_language/<lang>')
+def set_language(lang):
+    """Встановлює мову інтерфейсу"""
+    # Якщо вибрана українська, перенаправляємо на словацьку
+    if lang == 'uk':
+        lang = 'sk'
+        
+    if lang in app.config['BABEL_SUPPORTED_LOCALES']:
+        # Зберігаємо вибір мови в сесії
+        session['language'] = lang
+        g.locale = lang
+    
+    # Перенаправляємо користувача на сторінку, з якої він прийшов
+    return redirect(request.referrer or url_for('index'))
     
     # Якщо користувач авторизований, зберігаємо його вибір в БД
     if 'user_id' in session:
@@ -2102,7 +2482,12 @@ def set_language(language):
 
 @app.before_request
 def before_request():
-    g.locale = session.get('language', 'uk')
+    # Якщо користувач раніше використовував українську мову, змінюємо на словацьку
+    if session.get('language') == 'uk':
+        session['language'] = 'sk'
+        session.modified = True
+    
+    g.locale = session.get('language', 'sk')  # Змінюємо стандартне значення на 'sk'
 
 # Додаємо фільтр для кольорів статусу замовлення
 @app.template_filter('status_color')
@@ -2206,6 +2591,13 @@ def get_markup_by_role(role_name):
         logging.error(f"Error getting markup for role {role_name}: {e}")
         return 39.0  # Стандартна націнка у випадку помилки
 
+@app.route('/favicon.ico')
+def favicon():
+    """Спеціальний маршрут для уникнення обробки favicon.ico як токена"""
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'favicon.ico', mimetype='image/vnd.microsoft.icon'
+    )
 
 # Покращена функція validate_token з детальним логуванням
 def validate_token(token):
@@ -2419,9 +2811,17 @@ def token_index(token):
 @app.route('/')
 def index():
     """Головна сторінка з товарами"""
+    # Очищаємо накопичені повідомлення про невірний токен
+    if '_flashes' in session:
+        current_flashes = session.pop('_flashes')
+        # Залишаємо тільки останнє повідомлення, якщо воно не про невірний токен
+        filtered_flashes = [(cat, msg) for cat, msg in current_flashes
+                          if 'Invalid token' not in msg]
+        if filtered_flashes:
+            session['_flashes'] = filtered_flashes
     try:
         page = request.args.get('page', 1, type=int)
-        per_page = 25  # 5x5 сітка
+        per_page = 24  # 4x5 сітка
         brand_filter = request.args.get('brand', type=int)
         
         with get_db_connection() as conn:
@@ -2498,8 +2898,6 @@ def index():
 @app.route('/public_add_to_cart', methods=['POST'])
 def public_add_to_cart():
     """Add items to the public user's shopping cart"""
-    article = None  # Оголошуємо змінну article тут для доступу в блоці finally
-    
     try:
         article = request.form.get('article')
         selected_price = request.form.get('selected_price')
@@ -2563,18 +2961,23 @@ def public_add_to_cart():
         logging.info(f"Cart after adding: {session.get('public_cart')}")
         flash(_("Item added to cart"), "success")
         
+        # Оновлюємо кількість товарів у сесії
+        update_cart_count_in_session()
+        
+        # Додаємо логування для перевірки даних
+        logging.debug(f"Form data: {request.form}")
+        logging.debug(f"Session data: {session}")
+        
     except Exception as e:
         logging.error(f"Error adding to cart: {e}", exc_info=True)
         flash(_("Error adding item to cart"), "error")
         
     finally:
         # Повертаємо користувача на сторінку товару
-        if article:
+        if 'article' in locals() and article:
             return redirect(url_for('product_details', article=article))
         else:
             return redirect(url_for('index'))
-
-
 
 
 
@@ -2592,9 +2995,7 @@ def get_public_cart_count():
             continue
     return total_count
 
-@app.context_processor
-def inject_public_cart_count():
-    return dict(get_public_cart_count=get_public_cart_count)
+
 
 # Пошук для публічних користувачів
 @app.route('/public_search', methods=['GET', 'POST'])
@@ -4188,29 +4589,190 @@ def assign_roles(token):
 
 
 
+def get_category_breadcrumbs(category_id, cursor):
+    """
+    Рекурсивно отримує всі батьківські категорії для заданого ID категорії.
+    Повертає список категорій, починаючи з кореневої.
+    """
+    breadcrumbs = []
+    
+    # Отримуємо батьківську категорію
+    cursor.execute("""
+        SELECT id, slug, name_uk, name_en, name_sk, name_pl, parent_id, image_url 
+        FROM categories 
+        WHERE id = (
+            SELECT parent_id 
+            FROM categories 
+            WHERE id = %s
+        )
+    """, (category_id,))
+    
+    parent = cursor.fetchone()
+    
+    # Якщо є батьківська категорія, отримуємо її breadcrumbs і додаємо її
+    if parent:
+        parent_breadcrumbs = get_category_breadcrumbs(parent['id'], cursor)
+        breadcrumbs = parent_breadcrumbs + [parent]
+    
+    return breadcrumbs
 
 
-
-
-@app.route('/<token>/admin/supplier-mapping', methods=['GET', 'POST'])
-@requires_token_and_roles('admin')
-def supplier_mapping(token):
-    if request.method == 'POST':
-        price_list_id = request.form.get('price_list_id')
-        supplier_id = request.form.get('supplier_id')
-
+@app.route('/category/<slug>')
+def view_category(slug):
+    try:
+        # Отримуємо поточну мову
+        lang = session.get('language', app.config['BABEL_DEFAULT_LOCALE'])
+        
         with get_db_connection() as conn:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо інформацію про категорію
             cursor.execute("""
-                UPDATE price_lists 
-                SET supplier_id = %s 
-                WHERE id = %s
-            """, (supplier_id, price_list_id))
-            conn.commit()
+                SELECT id, slug, name_uk, name_en, name_sk, name_pl, parent_id, image_url 
+                FROM categories WHERE slug = %s
+            """, (slug,))
+            category = cursor.fetchone()
+            
+            if not category:
+                flash(_("Category not found."), "error")
+                return redirect(url_for('index'))
+            
+            # Отримуємо хлібні крихти (батьківські категорії)
+            breadcrumbs = get_category_breadcrumbs(category['id'], cursor)
+            breadcrumbs.append(category)
+            
+            # Отримуємо підкатегорії
+            cursor.execute("""
+                SELECT id, slug, name_uk, name_en, name_sk, name_pl 
+                FROM categories WHERE parent_id = %s ORDER BY order_index
+            """, (category['id'],))
+            subcategories = cursor.fetchall()
+            
+            # Отримуємо список всіх ID категорій та підкатегорій
+            category_ids = [category['id']]
+            if subcategories:
+                for subcat in subcategories:
+                    category_ids.append(subcat['id'])
+            
+            # Параметри фільтрації та сортування
+            sort = request.args.get('sort', 'name_asc')
+            brand = request.args.get('brand')
+            page = request.args.get('page', 1, type=int)
+            per_page = 24  # Товарів на сторінку
+            offset = (page - 1) * per_page
+            
+            # Формуємо умови для WHERE в залежності від фільтрів
+            where_conditions = ["pc.category_id = ANY(%s)"]
+            params = [category_ids]
+            
+            if brand:
+                # Змінюємо умову з s.brand_name на b.name
+                where_conditions.append("b.name = %s")
+                params.append(brand)
+            
+            where_clause = " AND ".join(where_conditions)
+            
+            # Формуємо умови для ORDER BY в залежності від сортування
+            if sort == 'name_desc':
+                order_by = f"COALESCE(p.name_{lang}, p.name_en, p.name_uk, p.article) DESC"
+            elif sort == 'price_asc':
+                order_by = "s.price ASC"
+            elif sort == 'price_desc':
+                order_by = "s.price DESC"
+            else:  # за замовчуванням name_asc
+                order_by = f"COALESCE(p.name_{lang}, p.name_en, p.name_uk, p.article) ASC"
+            
+            # Підраховуємо загальну кількість товарів
+            count_query = f"""
+                SELECT COUNT(*) FROM product_categories pc 
+                JOIN stock s ON pc.article = s.article 
+                LEFT JOIN products p ON pc.article = p.article 
+                LEFT JOIN brands b ON s.brand_id = b.id
+                WHERE {where_clause}
+            """
+            cursor.execute(count_query, params)
+            total_products = cursor.fetchone()[0]
+            
+            # Отримуємо товари з пагінацією
+            # Отримуємо товари з пагінацією - ВИПРАВЛЕНИЙ ЗАПИТ
+            query = f"""
+                SELECT DISTINCT pc.article, 
+                    COALESCE(p.name_{lang}, p.name_en, p.name_uk, p.article) as name,
+                    s.price, 
+                    b.name as brand_name, 
+                    (
+                        SELECT image_url FROM product_images 
+                        WHERE product_article = pc.article 
+                        ORDER BY is_main DESC, id ASC LIMIT 1
+                    ) as image_url
+                FROM product_categories pc 
+                JOIN stock s ON pc.article = s.article 
+                LEFT JOIN products p ON pc.article = p.article 
+                LEFT JOIN brands b ON s.brand_id = b.id
+                WHERE {where_clause}
+                ORDER BY name {sort.endswith('desc') and 'DESC' or 'ASC'}
+                LIMIT %s OFFSET %s
+            """
+            params.extend([per_page, offset])
+            cursor.execute(query, params)
+            products = cursor.fetchall()
+            
+            
+            # Отримуємо список брендів для фільтрації - ВИПРАВЛЕНИЙ ЗАПИТ
+            cursor.execute("""
+                SELECT DISTINCT b.name as brand_name 
+                FROM product_categories pc
+                JOIN stock s ON pc.article = s.article
+                JOIN brands b ON s.brand_id = b.id
+                WHERE pc.category_id = ANY(%s)
+                AND b.name IS NOT NULL
+                AND b.name != ''
+                ORDER BY b.name
+            """, [category_ids])
+            
+            brands = cursor.fetchall()
 
-        flash("Mapping updated successfully", "success")
+            # Формуємо об'єкт пагінації
+            pagination = {
+                'page': page,
+                'per_page': per_page,
+                'total': total_products,
+                'pages': (total_products + per_page - 1) // per_page
+            }
+            
+            # Параметри для пагінації
+            pagination_args = {}
+            if brand:
+                pagination_args['brand'] = brand
+            if sort != 'name_asc':
+                pagination_args['sort'] = sort
+            
+            return render_template(
+                'public/category.html',
+                category=category,
+                subcategories=subcategories,
+                breadcrumbs=breadcrumbs,
+                products=products,
+                brands=brands,
+                total_products=total_products,
+                pagination=pagination,
+                pagination_args=pagination_args,
+                sort=sort
+            )
+    
+    except Exception as e:
+        logging.error(f"Error in view_category: {e}", exc_info=True)
+        flash(_("An error occurred while processing your request."), "error")
+        return redirect(url_for('index'))
 
-    return redirect(url_for('manage_price_lists', token=token))
+
+
+# Додайте в app.py:
+@app.route('/car-service')
+def car_service():
+    return render_template('public/car_service.html')
+
+
 
 #
 @app.route('/<token>/admin/manage-price-lists', methods=['GET'])
@@ -8530,6 +9092,71 @@ def terms():
 def privacy():
     return render_template('public/privacy.html')
 
+
+@app.route('/debug_session')
+def debug_session():
+    """For debugging only, remove in production"""
+    if not app.debug:
+        return "Debug mode is off"
+    
+    result = "<h2>Session Data</h2>"
+    result += "<ul>"
+    for key, value in session.items():
+        result += f"<li><strong>{key}</strong>: {value}</li>"
+    result += "</ul>"
+    
+    result += "<h2>Public Cart Content</h2>"
+    cart = session.get('public_cart', {})
+    if not cart:
+        result += "<p>Cart is empty</p>"
+    else:
+        result += "<ul>"
+        for article, article_items in cart.items():
+            result += f"<li><strong>Article:</strong> {article}"
+            result += "<ul>"
+            for table_name, item_data in article_items.items():
+                result += f"<li><strong>Table:</strong> {table_name}, <strong>Quantity:</strong> {item_data.get('quantity')}, <strong>Price:</strong> {item_data.get('price')}</li>"
+            result += "</ul>"
+            result += "</li>"
+        result += "</ul>"
+    
+    return result
+
+@app.route('/debug_clear_cart')
+def debug_clear_cart():
+    """For debugging only, remove in production"""
+    if not app.debug:
+        return "Debug mode is off"
+    
+    session['public_cart'] = {}
+    session['cart_count'] = 0
+    session.modified = True
+    
+    return "Cart cleared. <a href='/debug_session'>View session</a>"
+
+@app.route('/debug_add_test_item')
+def debug_add_test_item():
+    """For debugging only, remove in production"""
+    if not app.debug:
+        return "Debug mode is off"
+    
+    # Add a test item
+    if 'public_cart' not in session:
+        session['public_cart'] = {}
+    
+    session['public_cart']['TEST123'] = {
+        'stock': {
+            'price': 100.0,
+            'quantity': 1,
+            'brand_id': 1,
+            'comment': 'Test item'
+        }
+    }
+    
+    update_cart_count_in_session()
+    session.modified = True
+    
+    return "Test item added. <a href='/debug_session'>View session</a>"
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

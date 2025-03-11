@@ -1,131 +1,154 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
-{{ super() }}
-{% if is_first_view %}
-<!-- Відстеження електронної комерції через GTM dataLayer -->
-<script>
-window.dataLayer = window.dataLayer || [];
-dataLayer.push({
-  'event': 'purchase',
-  'ecommerce': {
-    'transaction_id': '{{ order.id }}',
-    'value': {{ order.total_price }},
-    'currency': 'EUR',
-    'items': [
-      {% for item in items %}
-      {
-        'item_id': '{{ item.article }}',
-        'item_name': '{{ item.product_name }}',
-        'price': {{ item.price }},
-        'quantity': {{ item.quantity }},
-        {% if item.brand_name %}
-        'item_brand': '{{ item.brand_name }}',
-        {% endif %}
-      }{% if not loop.last %},{% endif %}
-      {% endfor %}
-    ]
-  }
-});
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ _('Order confirmation at AutogroupEU. Your order has been successfully placed.') }}">
+<meta name="robots" content="noindex, nofollow">
 
-// Додати відстеження для Facebook Pixel
-if (typeof fbq !== 'undefined') {
-  fbq('track', 'Purchase', {
-    value: {{ order.total_price }},
-    currency: 'EUR',
-    content_type: 'product',
-    contents: [
-      {% for item in items %}
-      {
-        id: '{{ item.article }}',
-        quantity: {{ item.quantity }}
-      }{% if not loop.last %},{% endif %}
-      {% endfor %}
-    ]
-  });
-}
-{% endif %}
-</script>
-{% endif %}
+<!-- Додаємо розширені мета-теги для запобігання кешування та перезавантаження -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 {% endblock %}
 
 {% block title %}{{ _('Order Confirmation') }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4 mb-5">
-  <div class="row">
-    <div class="col-lg-10 mx-auto">
-      <div class="card-base fade-in mb-4">
-        <div class="d-flex align-items-center mb-3 px-4 pt-4">
-          <div class="me-3" style="width: 48px; height: 48px; background-color: rgba(40,167,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-            <i class="bi bi-check-circle text-success" style="font-size: 24px;"></i>
-          </div>
-          <h4 class="mb-0 text-success">{{ _('Order #%(id)s placed successfully!', id=order.id) }}</h4>
+    <!-- Повідомлення про успішне замовлення -->
+    <div class="order-success-box fade-in">
+        <div class="success-icon">
+            <i class="bi bi-check-circle"></i>
         </div>
-        <hr class="mx-4 my-0">
-        
-        <div class="p-4">
-          <p class="lead">{{ _('Thank you for your order. We have received your purchase request.') }}</p>
-          
-          <div class="order-summary mb-4">
-            <h5>{{ _('Order Summary') }}</h5>
-            <p>{{ _('Order date:') }} <strong>{{ order.created_at|datetime }}</strong></p>
-            <p>{{ _('Order total:') }} <strong>{{ order.total_price|currency }}</strong></p>
-            
-            <div class="order-items mt-4">
-              <h5>{{ _('Ordered Items') }}</h5>
-              <div class="table-responsive">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>{{ _('Article') }}</th>
-                      <th>{{ _('Product') }}</th>
-                      <th class="text-center">{{ _('Quantity') }}</th>
-                      <th class="text-end">{{ _('Price') }}</th>
-                      <th class="text-end">{{ _('Total') }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for item in items %}
-                    <tr>
-                      <td>{{ item.article }}</td>
-                      <td>{{ item.product_name }}</td>
-                      <td class="text-center">{{ item.quantity }}</td>
-                      <td class="text-end">{{ item.price|currency }}</td>
-                      <td class="text-end">{{ item.total_price|currency }}</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colspan="4" class="text-end"><strong>{{ _('Total:') }}</strong></td>
-                      <td class="text-end"><strong>{{ order.total_price|currency }}</strong></td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          </div>
-          
-          <hr>
-          
-          <div class="mt-4">
-            <div class="row">
-              <div class="col-md-6">
-                <a href="{{ url_for('public_view_order_details', order_id=order.id) }}" class="btn btn-outline-primary">
-                  <i class="bi bi-eye"></i> {{ _('View Order Details') }}
-                </a>
-              </div>
-              <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                <a href="{{ url_for('index') }}" class="btn btn-primary">
-                  <i class="bi bi-house"></i> {{ _('Continue Shopping') }}
-                </a>
-              </div>
-            </div>
-          </div>
+        <h2>{{ _('Thank You for Your Order!') }}</h2>
+        <p class="success-message">{{ _('Your order has been placed successfully.') }}</p>
+        <div class="order-number">
+            {{ _('Order Number') }}: <strong>#{{ order.id }}</strong>
         </div>
-      </div>
     </div>
-  </div>
+    
+    <!-- Деталі замовлення -->
+    <div class="order-summary-card mt-4 fade-in">
+        <div class="card-header">
+            <h5>{{ _('Order Summary') }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="order-date">
+                        <span class="label">{{ _('Order Date') }}:</span>
+                        <span class="value">{{ order.created_at|datetime }}</span>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="order-total">
+                        <span class="label">{{ _('Total') }}:</span>
+                        <span class="value">€{{ "%.2f"|format(order.total_price) }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Список товарів -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Article') }}</th>
+                            <th>{{ _('Product') }}</th>
+                            <th class="text-center">{{ _('Quantity') }}</th>
+                            <th class="text-end">{{ _('Price') }}</th>
+                            <th class="text-end">{{ _('Total') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order_items %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-secondary">{{ item.article }}</span>
+                            </td>
+                            <td>{{ item.product_name }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">€{{ "%.2f"|format(item.price) }}</td>
+                            <td class="text-end">€{{ "%.2f"|format(item.total_price) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" class="text-end"><strong>{{ _('Total') }}:</strong></td>
+                            <td class="text-end"><strong>€{{ "%.2f"|format(order.total_price) }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Інструкції та наступні кроки -->
+    <div class="next-steps-card mt-4 fade-in">
+        <div class="card-header">
+            <h5>{{ _('What Happens Next?') }}</h5>
+        </div>
+        <div class="card-body">
+            <ol class="next-steps-list">
+                <li>
+                    <i class="bi bi-envelope"></i>
+                    <div class="step-content">
+                        <h6>{{ _('Order Confirmation Email') }}</h6>
+                        <p>{{ _('We\'ve sent a confirmation email with your order details.') }}</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="bi bi-box-seam"></i>
+                    <div class="step-content">
+                        <h6>{{ _('Order Processing') }}</h6>
+                        <p>{{ _('We\'ll process your order and prepare it for shipping.') }}</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="bi bi-truck"></i>
+                    <div class="step-content">
+                        <h6>{{ _('Shipping') }}</h6>
+                        <p>{{ _('Once shipped, you\'ll receive tracking information via email.') }}</p>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </div>
+    
+    <!-- Кнопки дій -->
+    <div class="d-flex justify-content-center mt-4 gap-3 fade-in">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+            <i class="bi bi-house me-2"></i>{{ _('Return to Homepage') }}
+        </a>
+        <a href="{{ url_for('public_view_orders') }}" class="btn btn-primary">
+            <i class="bi bi-list-check me-2"></i>{{ _('View My Orders') }}
+        </a>
+    </div>
 </div>
+
+<!-- Додамо Google Analytics для відстеження конверсій -->
+{% if order %}
+<script>
+if (typeof dataLayer !== 'undefined') {
+    dataLayer.push({
+        'event': 'purchase',
+        'ecommerce': {
+            'transaction_id': '{{ order.id }}',
+            'value': {{ order.total_price }},
+            'currency': 'EUR',
+            'items': [
+                {% for item in order_items %}                {
+                    'item_id': '{{ item.article }}',
+                    'item_name': '{{ item.product_name|default(item.article) }}',
+                    'price': {{ item.price }},
+                    'quantity': {{ item.quantity }}
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }
+    });
+}
+</script>
+{% endif %}
 {% endblock %}

@@ -4,8 +4,6 @@
 <!-- SEO Meta Tags -->
 <meta name="description" content="{{ _('View and manage your shopping cart at AutogroupEU. Check prices, quantities, and proceed to checkout.') }}">
 <meta name="robots" content="noindex, nofollow">
-
-
 {% endblock %}
 
 {% block title %}{{ _('Shopping Cart') }}{% endblock %}
@@ -17,7 +15,7 @@
     </div>
 
     {% if cart_items %}
-    <!-- Cart Items Table -->
+    <!-- Таблиця кошика з покращеним форматуванням -->
     <div class="table-responsive mb-4 fade-in">
         <table class="cart-table">
             <thead>
@@ -37,35 +35,25 @@
                 <tr>
                     <td><span class="article-badge">{{ item.article }}</span></td>
                     <td>{{ item.name }}</td>
-                    <td>{{ item.brand_name if item.brand_name and item.brand_name != 'None' else 'AutogroupEU' }}</td>
+                    <td>{{ item.brand_name }}</td>
                     <td><span class="price-value">{{ "%.2f"|format(item.price) }} €</span></td>
                     <td>
-                        <form action="{{ url_for('update_public_cart') }}" method="POST" class="d-flex align-items-center">
+                        <!-- Форма для оновлення кількості -->
+                        <form action="{{ url_for('update_public_cart') }}" method="POST">
                             <input type="hidden" name="article" value="{{ item.article }}">
                             <input type="hidden" name="table_name" value="{{ item.table_name }}">
-                            <div class="d-flex align-items-center">
-                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control quantity-input">
-                                <button type="submit" class="btn btn-update">
-                                    <i class="bi bi-arrow-clockwise"></i>
-                                </button>
-                            </div>
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control">
+                            <button type="submit" class="btn btn-primary">{{ _('Update') }}</button>
                         </form>
                     </td>
-                    <td><span class="price-value">{{ "%.2f"|format(item.total) }} €</span></td>
+                    <td>{{ item.total|currency }}</td>
+                    <td>{{ item.in_stock }}</td>
                     <td>
-                        {% if item.in_stock %}
-                            <span class="badge bg-success">{{ _("In Stock") }}</span>
-                        {% else %}
-                            <span class="badge bg-warning text-dark">{{ item.delivery_time or _("To Order") }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <form action="{{ url_for('public_remove_from_cart') }}" method="POST" class="d-inline">
+                        <!-- Форма для видалення товару -->
+                        <form action="{{ url_for('public_remove_from_cart') }}" method="POST">
                             <input type="hidden" name="article" value="{{ item.article }}">
                             <input type="hidden" name="table_name" value="{{ item.table_name }}">
-                            <button type="submit" class="btn btn-remove">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            <button type="submit" class="btn btn-danger">{{ _('Remove') }}</button>
                         </form>
                     </td>
                 </tr>
@@ -75,13 +63,13 @@
                 <tr>
                     <td colspan="5" class="text-end"><strong>{{ _("Total:") }}</strong></td>
                     <td><span class="total-value">{{ "%.2f"|format(total_price) }} €</span></td>
-                    <td></td>
+                    <td colspan="2"></td>
                 </tr>
             </tfoot>
         </table>
     </div>
 
-    <!-- Delivery and Invoice Form -->
+    <!-- Форма доставки та інвойсу як у cart2.html з особливим стилем -->
     <div class="delivery-card fade-in">
         <div class="card-header">
             <h5 class="mb-0">{{ _('Delivery Information') }}</h5>
@@ -121,7 +109,7 @@
                         <input class="form-check-input" type="radio" 
                                name="use_new_address" 
                                id="useNewAddress"
-                               value="1">
+                               value="on">
                         <label class="form-check-label" for="useNewAddress">
                             <i class="bi bi-plus-circle me-2"></i>{{ _('Use new address') }}
                         </label>
@@ -153,6 +141,8 @@
                                 <option value="SK">Slovakia</option>
                                 <option value="CZ">Czech Republic</option>
                                 <option value="PL">Poland</option>
+                                <option value="UA">Ukraine</option>
+                                <option value="HU">Hungary</option>
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
@@ -170,7 +160,7 @@
                     </div>
                     <div class="mb-3">
                         <div class="form-check">
-                            <input type="checkbox" name="save_address" class="form-check-input" id="saveAddress">
+                            <input type="checkbox" name="save_address" class="form-check-input" id="saveAddress" value="on">
                             <label class="form-check-label" for="saveAddress">
                                 {{ _('Save address for future orders') }}
                             </label>
@@ -184,8 +174,8 @@
                 <!-- Invoice Information -->
                 <div class="mb-4">
                     <div class="form-check mb-3 invoice-toggle">
-                        <input type="checkbox" class="form-check-input" id="needsInvoice" name="needs_invoice">
-                        <label class="form-check-label" for="needsInvoice">
+                        <input type="checkbox" class="form-check-input" id="needs_invoice" name="needs_invoice" value="on">
+                        <label class="form-check-label" for="needs_invoice">
                             <i class="bi bi-receipt me-2"></i>{{ _('Need invoice with VAT number') }}
                         </label>
                     </div>
@@ -227,7 +217,7 @@
                                 <input class="form-check-input" type="radio" 
                                     name="use_new_company" 
                                     id="useNewCompany"
-                                    value="1"
+                                    value="on"
                                     {% if not saved_companies %}checked{% endif %}>
                                 <label class="form-check-label" for="useNewCompany">
                                     <i class="bi bi-plus-circle me-2"></i>{{ _('Use new company details') }}
@@ -265,7 +255,7 @@
                             </div>
                             <div class="mb-3">
                                 <div class="form-check">
-                                    <input type="checkbox" name="save_company" class="form-check-input" id="saveCompany">
+                                    <input type="checkbox" name="save_company" class="form-check-input" id="saveCompany" value="on">
                                     <label class="form-check-label" for="saveCompany">
                                         {{ _('Save company details for future orders') }}
                                     </label>
@@ -289,207 +279,33 @@
     </div>
 
     {% else %}
-<!-- Порожній кошик -->
-<div class="info-card fade-in mb-4">
-    <div class="info-card-header section-header-primary">
-        <h5>
-            <div class="header-icon">
-                <i class="bi bi-cart-x"></i>
-            </div>
-            {{ _('Your Cart is Empty') }}
-        </h5>
-    </div>
-    <div class="card-body text-center py-5">
-        <div class="empty-icon mb-4">
-            <i class="bi bi-cart-x" style="font-size: 3rem; opacity: 0.5;"></i>
+    <!-- Порожній кошик -->
+    <div class="info-card fade-in mb-4">
+        <div class="info-card-header section-header-primary">
+            <h5>
+                <div class="header-icon">
+                    <i class="bi bi-cart-x"></i>
+                </div>
+                {{ _('Your Cart is Empty') }}
+            </h5>
         </div>
-        <p class="text-muted mb-4">{{ _('Start adding items to your cart!') }}</p>
-        <a href="{{ url_for('index') }}" class="btn-action btn-action-primary">
-            <i class="bi bi-search me-2"></i>
-            {{ _('Search Articles') }}
-        </a>
+        <div class="card-body text-center py-5">
+            <div class="empty-icon mb-4">
+                <i class="bi bi-cart-x" style="font-size: 3rem; opacity: 0.5;"></i>
+            </div>
+            <p class="text-muted mb-4">{{ _('Start adding items to your cart!') }}</p>
+            <a href="{{ url_for('index') }}" class="btn-action btn-action-primary">
+                <i class="bi bi-search me-2"></i>
+                {{ _('Search Articles') }}
+            </a>
+        </div>
     </div>
-</div>
-{% endif %}
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
-<script>
-// Toggle new address form
-{% if saved_addresses %}
-document.getElementById('useNewAddress').addEventListener('change', function() {
-    document.getElementById('newAddressForm').style.display = this.checked ? 'block' : 'none';
-});
-{% endif %}
-
-// Toggle invoice details
-document.getElementById('needsInvoice').addEventListener('change', function() {
-    const invoiceDetails = document.getElementById('invoiceDetails');
-    invoiceDetails.style.display = this.checked ? 'block' : 'none';
-    
-    const inputs = invoiceDetails.querySelectorAll('input');
-    inputs.forEach(input => {
-        input.required = this.checked;
-    });
-});
-
-// Phone validation
-const phoneInput = document.querySelector('input[name="phone"]');
-phoneInput.addEventListener('blur', async function() {
-    if (!this.value) return;
-    try {
-        const response = await fetch('/validate_phone', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: this.value })
-        });
-        const result = await response.json();
-        if (!result.valid) {
-            alert(result.message);
-            this.value = '';
-            this.focus();
-        }
-    } catch (error) {
-        console.error('Error validating phone:', error);
-    }
-});
-
-// VAT number validation
-const vatInput = document.getElementById('vatNumber');
-if (vatInput) {
-    vatInput.addEventListener('blur', async function() {
-        if (!this.value || !document.getElementById('needsInvoice').checked) return;
-        try {
-            const response = await fetch('/validate-vat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ vat_number: this.value })
-            });
-            const result = await response.json();
-            if (!result.valid) {
-                alert(result.message);
-                this.value = '';
-                this.focus();
-            }
-        } catch (error) {
-            console.error('Error validating VAT:', error);
-        }
-    });
-}
-</script>
-<script>
-    // Керування формами вибору компанії
-    document.addEventListener('DOMContentLoaded', function() {
-        const needsInvoice = document.getElementById('needsInvoice');
-        const invoiceFields = document.getElementById('invoiceFields');
-        
-        {% if saved_companies %}
-        const useNewCompanyRadio = document.getElementById('useNewCompany');
-        const savedCompanyRadios = document.querySelectorAll('input[name="company_id"]');
-        const newCompanyForm = document.getElementById('newCompanyForm');
-        
-        // Функція перемикання відображення форми нової компанії
-        function toggleNewCompanyForm() {
-            if (useNewCompanyRadio && useNewCompanyRadio.checked) {
-                newCompanyForm.style.display = 'block';
-                savedCompanyRadios.forEach(radio => radio.checked = false);
-            } else if (useNewCompanyRadio) {
-                newCompanyForm.style.display = 'none';
-            }
-        }
-        
-        // Слухачі подій для радіокнопок
-        if (useNewCompanyRadio) {
-            useNewCompanyRadio.addEventListener('change', toggleNewCompanyForm);
-            savedCompanyRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if (this.checked) {
-                        useNewCompanyRadio.checked = false;
-                        newCompanyForm.style.display = 'none';
-                    }
-                });
-            });
-        }
-        {% endif %}
-        
-        // Показувати/приховувати поле для інвойсу
-        needsInvoice.addEventListener('change', function() {
-            invoiceFields.style.display = this.checked ? 'block' : 'none';
-            
-            {% if saved_companies %}
-            // Ініціалізуємо форму при відкритті
-            if (this.checked) {
-                toggleNewCompanyForm();
-            }
-            {% endif %}
-        });
-        
-        // VAT number validation
-        const vatInput = document.getElementById('vatNumber');
-        if (vatInput) {
-            vatInput.addEventListener('blur', function() {
-                const vatValue = this.value.trim();
-                if (vatValue && needsInvoice.checked) {
-                    fetch('/validate-vat', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ vat_number: vatValue })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        const messageDiv = document.getElementById('vatValidationMessage');
-                        messageDiv.className = data.valid ? 'form-text text-success' : 'form-text text-danger';
-                        messageDiv.textContent = data.message || (data.valid ? '{{ _("VAT number is valid") }}' : '{{ _("VAT number is invalid") }}');
-                    })
-                    .catch(error => {
-                        console.error('Error validating VAT:', error);
-                    });
-                }
-            });
-        }
-        
-        // Додаткова валідація форми
-        const orderForm = document.getElementById('orderForm');
-        if (orderForm) {
-            orderForm.addEventListener('submit', function(e) {
-                // Перевіряємо, чи потрібен інвойс і чи всі необхідні поля заповнені
-                if (needsInvoice.checked) {
-                    {% if saved_companies %}
-                    const isSavedCompanySelected = Array.from(savedCompanyRadios).some(radio => radio.checked);
-                    const isNewCompanySelected = useNewCompanyRadio && useNewCompanyRadio.checked;
-                    
-                    if (!isSavedCompanySelected && isNewCompanySelected) {
-                    {% else %}
-                    const isNewCompanySelected = true;
-                    
-                    if (isNewCompanySelected) {
-                    {% endif %}
-                        // Перевірка полів нової компанії
-                        const companyName = this.querySelector('input[name="company_name"]');
-                        const vatNumber = this.querySelector('input[name="vat_number"]');
-                        
-                        if (!companyName.value.trim() || !vatNumber.value.trim()) {
-                            e.preventDefault();
-                            alert('{{ _("Please provide company name and VAT number") }}');
-                            return false;
-                        }
-                    }
-                    {% if saved_companies %}
-                    else if (!isSavedCompanySelected && !isNewCompanySelected) {
-                        e.preventDefault();
-                        alert('{{ _("Please select a company or enter new company details") }}');
-                        return false;
-                    }
-                    {% endif %}
-                }
-            });
-        }
-    });
-    </script>
 <script>
 // Toggle between saved addresses and new address form
 document.addEventListener('DOMContentLoaded', function() {
@@ -498,20 +314,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const newAddressForm = document.getElementById('newAddressForm');
 
     function toggleNewAddressForm() {
-        if (useNewAddressRadio.checked) {
+        if (useNewAddressRadio && useNewAddressRadio.checked) {
             newAddressForm.style.display = 'block';
             // Clear saved address selection
             savedAddressRadios.forEach(radio => radio.checked = false);
-        } else {
+        } else if (newAddressForm) {
             newAddressForm.style.display = 'none';
         }
     }
 
     // Listen for changes on all radio buttons
-    useNewAddressRadio.addEventListener('change', toggleNewAddressForm);
+    if (useNewAddressRadio) {
+        useNewAddressRadio.addEventListener('change', toggleNewAddressForm);
+    }
+    
     savedAddressRadios.forEach(radio => {
         radio.addEventListener('change', function() {
-            if (this.checked) {
+            if (this.checked && useNewAddressRadio) {
                 useNewAddressRadio.checked = false;
                 newAddressForm.style.display = 'none';
             }
@@ -519,131 +338,208 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Initial state
-    toggleNewAddressForm();
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const orderForm = document.getElementById('orderForm');
-    const useNewAddressRadio = document.getElementById('useNewAddress');
-    const savedAddressRadios = document.querySelectorAll('input[name="delivery_address"]');
-    const newAddressForm = document.getElementById('newAddressForm');
-    const placeOrderBtn = document.getElementById('placeOrderBtn');
+    if (useNewAddressRadio) {
+        toggleNewAddressForm();
+    }
+    
+    // Toggle invoice fields
+    const needsInvoice = document.getElementById('needs_invoice'); // змінити ID тут!
+    const invoiceFields = document.getElementById('invoiceFields');
+    if (needsInvoice && invoiceFields) {
+        needsInvoice.addEventListener('change', function() {
+            invoiceFields.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+    
+    // Toggle company form
+    const useNewCompanyRadio = document.getElementById('useNewCompany');
+    const savedCompanyRadios = document.querySelectorAll('input[name="company_id"]');
+    const newCompanyForm = document.getElementById('newCompanyForm');
 
-    // Toggle form visibility
-    function toggleNewAddressForm() {
-        if (useNewAddressRadio.checked) {
-            newAddressForm.style.display = 'block';
-            savedAddressRadios.forEach(radio => radio.checked = false);
-        } else {
-            newAddressForm.style.display = 'none';
+    function toggleNewCompanyForm() {
+        if (useNewCompanyRadio && useNewCompanyRadio.checked) {
+            if (newCompanyForm) newCompanyForm.style.display = 'block';
+            // Clear saved company selection
+            savedCompanyRadios.forEach(radio => radio.checked = false);
+        } else if (newCompanyForm) {
+            newCompanyForm.style.display = 'none';
         }
     }
 
-    // Listen for changes on radio buttons
-    useNewAddressRadio.addEventListener('change', toggleNewAddressForm);
-    savedAddressRadios.forEach(radio => {
+    // Listen for changes on company radio buttons
+    if (useNewCompanyRadio) {
+        useNewCompanyRadio.addEventListener('change', toggleNewCompanyForm);
+    }
+    
+    savedCompanyRadios.forEach(radio => {
         radio.addEventListener('change', function() {
-            if (this.checked) {
-                useNewAddressRadio.checked = false;
-                newAddressForm.style.display = 'none';
+            if (this.checked && useNewCompanyRadio) {
+                useNewCompanyRadio.checked = false;
+                if (newCompanyForm) newCompanyForm.style.display = 'none';
             }
         });
     });
+    
+    // Phone validation
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('blur', async function() {
+            if (!this.value) return;
+            try {
+                const response = await fetch('/validate_phone', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: this.value })
+                });
+                const result = await response.json();
+                const messageDiv = document.getElementById('phoneValidationMessage');
+                if (messageDiv) {
+                    if (!result.valid) {
+                        messageDiv.textContent = result.message;
+                        messageDiv.classList.add('text-danger');
+                        this.focus();
+                    } else {
+                        messageDiv.textContent = '';
+                        messageDiv.classList.remove('text-danger');
+                    }
+                }
+            } catch (error) {
+                console.error('Error validating phone:', error);
+            }
+        });
+    }
 
-    // Form submission handler
-    orderForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Validate that either a saved address is selected or new address form is filled
-        const isSavedAddressSelected = Array.from(savedAddressRadios).some(radio => radio.checked);
-        const isNewAddressSelected = useNewAddressRadio.checked;
-        
-        if (!isSavedAddressSelected && !isNewAddressSelected) {
-            alert("{{ _('Please select a delivery address or enter a new one.') }}");
-            return;
-        }
-
-        // If using new address, validate required fields
-        if (isNewAddressSelected) {
-            const requiredFields = ['full_name', 'phone', 'country', 'postal_code', 'city', 'street'];
-            for (const field of requiredFields) {
-                const input = this.querySelector(`[name="${field}"]`);
-                if (!input.value.trim()) {
-                    alert(`{{ _('Please fill in all required fields.') }}`);
-                    input.focus();
-                    return;
+    // VAT validation
+    const vatInput = document.getElementById('vatNumber');
+    if (vatInput) {
+        vatInput.addEventListener('blur', async function() {
+            if (!this.value || !needsInvoice || !needsInvoice.checked) return;
+            try {
+                const response = await fetch('/validate-vat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vat_number: this.value })
+                });
+                const result = await response.json();
+                const messageDiv = document.getElementById('vatValidationMessage');
+                if (messageDiv) {
+                    messageDiv.textContent = result.message;
+                    if (result.valid) {
+                        messageDiv.className = 'form-text text-success';
+                    } else {
+                        messageDiv.className = 'form-text text-danger';
+                        this.focus();
+                    }
+                }
+            } catch (error) {
+                console.error('Error validating VAT:', error);
+            }
+        });
+    }
+    
+    // Form submission validation
+    const orderForm = document.getElementById('orderForm');
+    if (orderForm) {
+        orderForm.addEventListener('submit', function(e) {
+            // Validate delivery address
+            let isValid = true;
+            let isSavedAddressSelected = false;
+            let isNewAddressSelected = false;
+            
+            if (savedAddressRadios.length > 0) {
+                isSavedAddressSelected = Array.from(savedAddressRadios).some(radio => radio.checked);
+                if (useNewAddressRadio) {
+                    isNewAddressSelected = useNewAddressRadio.checked;
+                }
+                
+                if (!isSavedAddressSelected && !isNewAddressSelected) {
+                    alert("{{ _('Please select a delivery address or enter a new one') }}");
+                    e.preventDefault();
+                    return false;
                 }
             }
-        }
-
-        // Disable button to prevent double submission
-        placeOrderBtn.disabled = true;
-        placeOrderBtn.innerHTML = '{{ _("Processing...") }}';
-
-        // Submit the form
-        this.submit();
-    });
-
-    // Initial state
-    toggleNewAddressForm();
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const needsInvoice = document.getElementById('needsInvoice');
-    const invoiceFields = document.getElementById('invoiceFields');
-    const vatNumber = document.getElementById('vatNumber');
-
-    // Відображення/приховування полів інвойсу
-    needsInvoice.addEventListener('change', function() {
-        invoiceFields.style.display = this.checked ? 'block' : 'none';
-    });
-
-    // Валідація VAT номера
-    if (vatNumber) {
-        vatNumber.addEventListener('input', function() {
-            const vatValue = this.value.trim();
-            if (vatValue) {
-                fetch('/validate-vat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ vat_number: vatValue })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    const messageDiv = document.getElementById('vatValidationMessage');
-                    messageDiv.className = data.valid ? 'form-text text-success' : 'form-text text-danger';
-                    messageDiv.textContent = data.message;
-                });
+            
+            // If using new address, check required fields
+            if ((useNewAddressRadio && useNewAddressRadio.checked) || savedAddressRadios.length === 0) {
+                const requiredFields = ['full_name', 'phone', 'city', 'postal_code', 'street'];
+                for (const field of requiredFields) {
+                    const input = this.querySelector(`[name="${field}"]`);
+                    if (input && !input.value.trim()) {
+                        alert(`{{ _('Please fill in all required delivery address fields') }}`);
+                        input.focus();
+                        e.preventDefault();
+                        return false;
+                    }
+                }
             }
+            
+            // Check invoice if needed
+            if (needsInvoice && needsInvoice.checked) {
+                let isSavedCompanySelected = false;
+                let isNewCompanySelected = false;
+                
+                if (savedCompanyRadios.length > 0) {
+                    isSavedCompanySelected = Array.from(savedCompanyRadios).some(radio => radio.checked);
+                    if (useNewCompanyRadio) {
+                        isNewCompanySelected = useNewCompanyRadio.checked;
+                    }
+                    
+                    if (!isSavedCompanySelected && !isNewCompanySelected) {
+                        alert("{{ _('Please select a company or enter new company details') }}");
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+                
+                // If using new company, check required fields
+                if ((useNewCompanyRadio && useNewCompanyRadio.checked) || savedCompanyRadios.length === 0) {
+                    const companyName = this.querySelector('[name="company_name"]');
+                    const vatNumber = this.querySelector('[name="vat_number"]');
+                    
+                    if ((!companyName || !companyName.value.trim()) || (!vatNumber || !vatNumber.value.trim())) {
+                        alert(`{{ _('Please provide company name and VAT number') }}`);
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+            
+            // Disable button to prevent double submissions
+            const submitBtn = document.getElementById('placeOrderBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '{{ _("Processing...") }}';
+            }
+            
+            return true;
         });
     }
 });
 </script>
+
+<!-- Додайте аналітику Google -->
 <script>
 document.getElementById('orderForm').addEventListener('submit', function() {
-  window.dataLayer = window.dataLayer || [];
-  dataLayer.push({
-    'event': 'begin_checkout',
-    'ecommerce': {
-      'currency': 'EUR',
-      'value': {{ total_price }},
-      'items': [
-        {% for item in cart_items %}
-        {
-          'item_id': '{{ item.article }}',
-          'item_name': '{{ item.name }}',
-          'item_brand': '{{ item.brand_name }}',
-          'price': '{{ item.price }}',
-          'quantity': {{ item.quantity }}
-        }{% if not loop.last %},{% endif %}
-        {% endfor %}
-      ]
-    }
-  });
+  if (typeof dataLayer !== 'undefined') {
+    dataLayer.push({
+      'event': 'begin_checkout',
+      'ecommerce': {
+        'currency': 'EUR',
+        'value': {{ total_price|default(0) }},
+        'items': [
+          {% for item in cart_items %}
+          {
+            'item_id': '{{ item.article }}',
+            'item_name': '{{ item.name }}',
+            'item_brand': '{{ item.brand_name }}',
+            'price': {{ item.price|default(0) }},
+            'quantity': {{ item.quantity|default(1) }}
+          }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ]
+      }
+    });
+  }
 });
 </script>
 {% endblock %}

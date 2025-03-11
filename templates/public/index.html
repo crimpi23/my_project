@@ -79,10 +79,7 @@
                 </div>
                 <div class="card-body">
                     <p class="mb-2">{{ _('We offer professional car repair and programming services.') }}</p>
-                    <a href="#" class="btn-learn-more">
-                        <i class="bi bi-info-circle"></i>
-                        {{ _('Learn More') }}
-                    </a>
+                    <a href="{{ url_for('car_service') }}" class="btn btn-primary">{{ _("Learn More") }}</a>
                 </div>
             </div>
         </div>
@@ -129,9 +126,9 @@
         </div>
 
         <!-- Products Grid -->
-        <div class="row row-cols-1 row-cols-md-5 g-4">
+        <div class="row row-products">
             {% for product in products %}
-            <div class="col">
+            <div class="col-6 col-md-4 col-lg-3 product-column">
                 <div class="product-card">
                     <!-- Product Image -->
                     <div class="product-img-container">
@@ -145,35 +142,31 @@
 
                     <!-- Product Info -->
                     <div class="product-body">
-                        <h5 class="product-title">{{ product.name or product.article }}</h5>
-                        <div class="product-meta">
-                            <div class="product-meta-item">
-                                <span class="meta-label">{{ _('Brand') }}</span>
-                                <span class="meta-value">{{ product.brand_name }}</span>
-                            </div>
-                            <div class="product-meta-item">
-                                <span class="meta-label">{{ _('Article') }}</span>
-                                <span class="product-article">{{ product.article }}</span>
-                            </div>
-                            <div class="product-meta-item">
-                                <span class="meta-label">{{ _('Price') }}</span>
-                                <span class="meta-value product-price">{{ "%.2f"|format(product.price) }} €</span>
-                            </div>
-                        </div>
-                        {% if product.description %}
-                        <p class="product-description">
-                            {{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}
-                        </p>
-                        {% else %}
-                        <p class="product-description">{{ _('No description available.') }}</p>
-                        {% endif %}
-                        
-                        <a href="{{ url_for('product_details', article=product.article) }}" 
-                           class="btn-details">
-                            <i class="bi bi-eye-fill"></i>
-                            {{ _('View Details') }}
-                        </a>
-                    </div>
+    <h5 class="product-title">{% if product.name %}{{ product.name }}{% else %}{{ product.article }}{% endif %}</h5>
+    <div class="product-meta">
+        <div class="product-meta-item">
+            <span class="meta-label">{{ _('Brand') }}</span>
+            <span class="meta-value">{{ product.brand_name }}</span>
+        </div>
+        <div class="product-meta-item">
+            <span class="meta-label">{{ _('Article') }}</span>
+            <span class="product-article">{{ product.article }}</span>
+        </div>
+        <div class="product-meta-item">
+            <span class="meta-label">{{ _('Price') }}</span>
+            <span class="meta-value product-price">{{ "%.2f"|format(product.price) }} € <small class="text-muted">{{ _('incl. VAT') }}</small></span>
+        </div>
+    </div>
+    
+    <!-- Змінюємо блок з кнопками в product-actions -->
+    <div class="product-actions mt-3">
+        <a href="{{ url_for('product_details', article=product.article) }}" 
+           class="btn-details">
+            <i class="bi bi-eye-fill"></i>
+            {{ _('View Details') }}
+        </a>
+    </div>
+</div>
                 </div>
             </div>
             {% endfor %}
@@ -200,7 +193,8 @@ window.translations = {
     'Article': '{{ _("Article") }}',
     'Price': '{{ _("Price") }}',
     'No description available.': '{{ _("No description available.") }}',
-    'View Details': '{{ _("View Details") }}'
+    'View Details': '{{ _("View Details") }}',
+    'incl. VAT': '{{ _("incl. VAT") }}'
 };
 </script>
 
@@ -241,8 +235,8 @@ document.addEventListener('DOMContentLoaded', function() {
             buttonText.classList.add('d-none');
             this.disabled = true;
             
-            // Виконуємо AJAX-запит
-            fetch(`/api/products?page=${nextPage}&brand=${brandId}`)
+            // Виконуємо AJAX-запит з додаванням параметра мови
+            fetch(`/api/products?page=${nextPage}&brand=${brandId}&lang={{ g.locale }}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -251,13 +245,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(data => {
                     // Додаємо отримані продукти на сторінку
-                    const productsContainer = document.querySelector('.row-cols-1.row-cols-md-5');
+                    const productsContainer = document.querySelector('.row-products');
                     
                     data.products.forEach(product => {
                         const productHtml = createProductCard(product);
                         // Створюємо новий елемент div
                         const productCol = document.createElement('div');
-                        productCol.className = 'col';
+                        productCol.className = 'col-6 col-md-4 col-lg-3 product-column';
                         productCol.innerHTML = productHtml;
                         productsContainer.appendChild(productCol);
                         
@@ -326,22 +320,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <div class="product-meta-item">
                             <span class="meta-label">${t('Price')}</span>
-                            <span class="meta-value product-price">${product.price.toFixed(2)} €</span>
+                            <span class="meta-value product-price">${parseFloat(product.price).toFixed(2)} € <small class="text-muted">${t('incl. VAT')}</small></span>
                         </div>
                     </div>
-                    <p class="product-description">
-                        ${product.description 
-                            ? (product.description.length > 100 
-                                ? product.description.substring(0, 100) + '...' 
-                                : product.description)
-                            : t('No description available.')
-                        }
-                    </p>
                     
-                    <a href="/product/${product.article}" class="btn-details">
-                        <i class="bi bi-eye-fill"></i>
-                        ${t('View Details')}
-                    </a>
+                    <div class="product-actions mt-3">
+                        <a href="/product/${product.article}" class="btn-details">
+                            <i class="bi bi-eye-fill"></i>
+                            ${t('View Details')}
+                        </a>
+                    </div>
                 </div>
             </div>
         `;

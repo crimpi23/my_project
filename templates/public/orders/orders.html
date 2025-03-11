@@ -1,0 +1,106 @@
+{% extends "base/public_base.html" %}
+
+{% block head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ _('View your order history at AutogroupEU. Track your purchases and check delivery status.') }}">
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block title %}{{ _('My Orders') }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 page-orders fade-in">
+    <!-- Orders Header -->
+    <div class="section-header section-header-secondary">
+        <div class="header-icon">
+            <i class="bi bi-list-check"></i>
+        </div>
+        <h2>{{ _('My Orders') }}</h2>
+    </div>
+    
+    {% if orders %}
+    <!-- Orders Table -->
+    <div class="table-responsive">
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>{{ _('Order #') }}</th>
+                    <th>{{ _('Date') }}</th>
+                    <th>{{ _('Total') }}</th>
+                    <th>{{ _('Status') }}</th>
+                    <th>{{ _('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td data-label="{{ _('Order #') }}">
+                        <div class="order-id">
+                            <span class="order-id-prefix">#</span>{{ order.id }}
+                        </div>
+                    </td>
+                    <td data-label="{{ _('Date') }}">
+                        <div class="order-date">
+                            <span class="date-value">{{ order.created_at|datetime('%Y-%m-%d') }}</span>
+                            <span class="date-time">{{ order.created_at|datetime('%H:%M') }}</span>
+                        </div>
+                    </td>
+                    <td data-label="{{ _('Total') }}">
+                        <span class="order-total">{{ order.total_price|currency }}</span>
+                    </td>
+                    <td data-label="{{ _('Status') }}">
+                        {% set status_translation = {
+                            'new': _('New'),
+                            'processing': _('Processing'),
+                            'shipped': _('Shipped'),
+                            'delivered': _('Delivered'),
+                            'cancelled': _('Cancelled')
+                        } %}
+                        
+                        {% set status_icon = {
+                            'new': 'bi-hourglass',
+                            'processing': 'bi-gear',
+                            'shipped': 'bi-truck',
+                            'delivered': 'bi-check-circle',
+                            'cancelled': 'bi-x-circle'
+                        } %}
+                        
+                        {% set status_class = {
+                            'new': 'status-pending',
+                            'processing': 'status-processing',
+                            'shipped': 'status-shipped',
+                            'delivered': 'status-delivered',
+                            'cancelled': 'status-cancelled'
+                        } %}
+                        
+                        <span class="status-badge {{ status_class[order.status] }}">
+                            <i class="bi {{ status_icon[order.status] }}"></i>
+                            {{ status_translation[order.status] }}
+                        </span>
+                    </td>
+                    <td data-label="{{ _('Actions') }}">
+                        <a href="{{ url_for('public_view_order_details', order_id=order.id) }}" 
+                           class="btn-view">
+                            <i class="bi bi-eye"></i>
+                            {{ _('View Details') }}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <!-- Empty Orders Message -->
+    <div class="empty-orders">
+        <i class="bi bi-clipboard-x empty-orders-icon"></i>
+        <h3>{{ _('No Orders Found') }}</h3>
+        <p class="text-muted">{{ _('You have not placed any orders yet.') }}</p>
+        <a href="{{ url_for('index') }}" class="btn-shop-now">
+            <i class="bi bi-cart-plus me-2"></i>
+            {{ _('Start Shopping') }}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

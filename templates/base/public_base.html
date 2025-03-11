@@ -12,7 +12,7 @@
     function initGTM() {
         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
         new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l;'';j.async=true;j.src=
         'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
         })(window,document,'script','dataLayer','GTM-РЕАЛЬНИЙ-ID');
     }
@@ -81,6 +81,20 @@
     {% block extra_css %}{% endblock %}
 
     {% block head %}{% endblock %}
+
+    <!-- Додайте цю секцію перед закриваючим тегом </head> -->
+    <script>
+    // Допоміжна функція для перекладу в JavaScript
+    function _(text) {
+        return window.translations[text] || text;
+    }
+    </script>
+    <style>
+    /* Приховуємо українську мову в списку доступних мов */
+    .language-selector a[href*="/set_language/uk"] {
+        display: none !important;
+    }
+</style>
 </head>	
 <body class="d-flex flex-column min-vh-100">
     <!-- Google Tag Manager (noscript) -->
@@ -95,99 +109,128 @@
     <!-- End Facebook Pixel (noscript) -->
 
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <img src="https://autogroup.sk/imgbank/Image/AUtogroupEU.png" alt="AutogroupEU">
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+            <img src="https://autogroup.sk/imgbank/Image/AUtogroupEU.png" alt="AutogroupEU">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('index') }}">
+                        <i class="bi bi-house me-1"></i> {{ _('Home') }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('about') }}">
+                        <i class="bi bi-info-circle me-1"></i> {{ _('About Us') }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('shipping_payment') }}">
+                        <i class="bi bi-truck me-1"></i> {{ _('Shipping & Payment') }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('contacts') }}">
+                        <i class="bi bi-chat-dots me-1"></i> {{ _('Contact Us') }}
+                    </a>
+                </li>
+                <!-- Категорії -->
+                <!-- Макрос для виводу категорій рекурсивно -->
+{% macro render_categories(categories) %}
+    {% for category in categories %}
+        <li class="dropdown-submenu">
+            <a class="dropdown-item {% if category.subcategories %}dropdown-toggle{% endif %}" 
+               href="{{ url_for('view_category', slug=category.slug) }}">
+               {{ category.name or category.name_en }}
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">
-                            <i class="bi bi-house"></i>
-                            <span>{{ _('Home') }}</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('about') }}">
-                            <i class="bi bi-info-circle"></i>
-                            <span>{{ _('About') }}</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('api_part_search') }}">
-                            <i class="fas fa-search"></i> {{ _("Parts Search") }}
-                        </a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    {% if 'user_id' in session %}
-                        <li class="nav-item">
-                            <a class="nav-link position-relative" href="{{ url_for('public_cart') }}">
-                                <i class="bi bi-cart3"></i>
-                                <span>{{ _('Cart') }}</span>
-                                {% if get_public_cart_count() > 0 %}
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge">
-                                        {{ get_public_cart_count() }}
-                                    </span>
-                                {% endif %}
+            {% if category.subcategories %}
+            <ul class="dropdown-menu">
+                {{ render_categories(category.subcategories) }}
+            </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+{% endmacro %}
+
+<!-- Використання макросу в меню -->
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" role="button" 
+       data-bs-toggle="dropdown" aria-expanded="false">
+        {{ _('Categories') }}
+    </a>
+    <ul class="dropdown-menu">
+        {{ render_categories(get_main_categories()) }}
+    </ul>
+</li>
+
+            </ul>
+            <ul class="navbar-nav">
+                {% if 'user_id' in session %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle me-1"></i> {{ session.get('username', _('My Account')) }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('public_user_profile') }}">
+                                <i class="bi bi-person me-2"></i> {{ _('Profile') }}
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('public_user_profile') }}">
-                                <i class="bi bi-person-circle"></i>
-                                <span>{{ _('My Profile') }}</span>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('public_view_orders') }}">
+                                <i class="bi bi-list-check me-2"></i> {{ _('Orders') }}
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('public_view_orders') }}">
-                                <i class="bi bi-box"></i>
-                                <span>{{ _('Orders') }}</span>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('logout') }}">
+                                <i class="bi bi-box-arrow-right me-2"></i> {{ _('Logout') }}
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('logout') }}">
-                                <i class="bi bi-box-arrow-right"></i>
-                                <span>{{ _('Logout') }}</span>
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                                <span>{{ _('Login') }}</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('register') }}">
-                                <i class="bi bi-person-plus"></i>
-                                <span>{{ _('Register') }}</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                    <!-- Language dropdown -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-globe"></i>
-                            <span>{{ LANGUAGES[g.locale] }}</span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            {% for code, name in LANGUAGES.items() %}
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('set_language', language=code) }}">
-                                        {{ name }}
-                                    </a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                </ul>
-            </div>
+                    </ul>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('login') }}">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> {{ _('Login') }}
+                    </a>
+                </li>
+                {% endif %}
+                <!-- Кошик -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('public_cart') }}">
+                        <i class="bi bi-cart3"></i> {{ _('Cart') }}
+                        {% if session.get('cart_count', 0) > 0 %}
+                        <span class="cart-badge">{{ session.get('cart_count') }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <!-- Мовне меню -->
+                <li class="nav-item dropdown language-dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    {{ LANGUAGES.get(g.locale, 'English') }}
+  </a>
+  <ul class="dropdown-menu" aria-labelledby="languageDropdown">
+    {% for lang_code, lang_name in LANGUAGES.items() %}
+      <li>
+        <a class="dropdown-item {% if g.locale == lang_code %}active{% endif %}" 
+           href="{{ url_for('set_language', lang=lang_code) }}">
+           {{ lang_name }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</li>
+
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -221,50 +264,119 @@
 
     <!-- Footer -->
     <footer class="footer mt-auto">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <h5>{{ _('Contact Us') }}</h5>
-                    <p>
-                        <i class="bi bi-telephone me-2"></i>+421 907 539 325<br>
-                        <i class="bi bi-envelope me-2"></i>info@autogroup.eu
-                    </p>
-                </div>
-                <div class="col-md-4">
-                    <h5>{{ _('Quick Links') }}</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="{{ url_for('about') }}" class="text-decoration-none">{{ _('About Us') }}</a></li>
-                        <li><a href="{{ url_for('terms') }}" class="text-decoration-none">{{ _('Terms & Conditions') }}</a></li>
-                        <li><a href="{{ url_for('privacy') }}" class="text-decoration-none">{{ _('Privacy Policy') }}</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5>{{ _('Follow Us') }}</h5>
-                    <div class="social-links">
-                        <a href="https://www.facebook.com/autogroupeu" class="text-decoration-none me-3" target="_blank">
-                            <i class="bi bi-facebook"></i>
+    <div class="container py-4">
+        <div class="row g-4">
+            <!-- Контактна інформація -->
+            <div class="col-md-4">
+                <h5>{{ _('Contact Us') }}</h5>
+                <ul class="list-unstyled footer-contact">
+                    <li class="mb-2">
+                        <a href="tel:+421907400865" class="footer-link">
+                            <i class="bi bi-telephone me-2"></i>+421 907 400 865 (SK/CZ/PL)
                         </a>
-                        <a href="https://www.instagram.com/autogroupeu" class="text-decoration-none me-3" target="_blank">
-                            <i class="bi bi-instagram"></i>
+                    </li>
+                    <li class="mb-2">
+                        <a href="tel:+421907539325" class="footer-link">
+                            <i class="bi bi-telephone me-2"></i>+421 907 539 325 (HU/EN)
                         </a>
-                    </div>
-                </div>
+                    </li>
+                    <li class="mb-2">
+                        <a href="https://wa.me/421907400865" class="footer-link" target="_blank">
+                            <i class="bi bi-whatsapp me-2"></i>WhatsApp
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="mailto:info@autogroup.sk" class="footer-link">
+                            <i class="bi bi-envelope me-2"></i>info@autogroup.sk
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-geo-alt me-2"></i>066 01 Humenné, Mierová 99, Slovakia
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-box-seam me-2"></i>{{ _('Warehouse') }}: Tušická Nová Ves 90, Tušice 07202, Slovakia
+                    </li>
+                </ul>
             </div>
-            <hr>
-            <div class="text-center">
-                <p>&copy; {{ _('2024 AutogroupEU. All rights reserved.') }}</p>
+            
+            <!-- Навігація по сайту -->
+            <div class="col-md-4">
+                <h5>{{ _('Navigation') }}</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="{{ url_for('index') }}" class="footer-link">{{ _('Home') }}</a></li>
+                    <li class="mb-2"><a href="{{ url_for('view_category', slug='auto-parts-accessories') }}" class="footer-link">{{ _('Catalog') }}</a></li>
+                    <li class="mb-2"><a href="{{ url_for('about') }}" class="footer-link">{{ _('About Us') }}</a></li>
+                    <li class="mb-2"><a href="{{ url_for('shipping_payment') }}" class="footer-link">{{ _('Shipping & Payment') }}</a></li>
+                    <li class="mb-2"><a href="{{ url_for('returns') }}" class="footer-link">{{ _('Returns & Exchange') }}</a></li>
+                    <li class="mb-2"><a href="{{ url_for('contacts') }}" class="footer-link">{{ _('Contacts') }}</a></li>
+                </ul>
             </div>
-            <div class="footer-links">
-                <a href="{{ url_for('about') }}">{{ _('About Us') }}</a>
-                <a href="{{ url_for('terms') }}">{{ _('Terms & Conditions') }}</a>
-                <a href="{{ url_for('privacy') }}">{{ _('Privacy Policy') }}</a>
-                <a href="#" id="cookie-settings">{{ _('Cookie Settings') }}</a>
+            
+            <!-- Компанія і правова інформація -->
+            <div class="col-md-4">
+                <h5>{{ _('Company Info') }}</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">IČO: 47948311</li>
+                    <li class="mb-2">DIČ: 2120009089</li>
+                    <li class="mb-2">DIČ DPH: SK2120009089</li>
+                    <li class="mb-2">Obch. register: Okresný súd Prešov, Sro/30964/P</li>
+                    <li class="mt-3">
+                        <strong>{{ _('Bank Details') }}:</strong><br>
+                        IBAN: SK51 0900 0000 0050 6892 5563<br>
+                        BIC: GIBASKBX<br>
+                        {{ _('Account') }}: 5068925563/0900<br>
+                        {{ _('Bank') }}: Slovenská sporiteľňa, a.s.
+                    </li>
+                </ul>
             </div>
         </div>
-    </footer>
+        
+        <hr class="my-4">
+        
+        <!-- Copyright & Links -->
+        <div class="d-flex flex-wrap justify-content-between">
+            <div class="footer-links">
+                <a href="{{ url_for('privacy') }}" class="footer-link">{{ _('Privacy Policy') }}</a>
+                <a href="{{ url_for('terms') }}" class="footer-link">{{ _('Terms & Conditions') }}</a>
+                <a href="{{ url_for('returns') }}" class="footer-link">{{ _('Returns & Exchange') }}</a>
+                <a href="#" id="cookie-settings">{{ _('Cookie Settings') }}</a>
+            </div>
+            <div class="copyright">
+                © 2014-{{ today_year() }} AutogroupEU
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-12 text-center">
+                <small class="text-muted">{{ _('All prices shown include VAT unless otherwise stated. EU business customers with valid VAT ID may receive invoices without VAT.') }}</small>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Фіксована кнопка зв'язку -->
+<div class="floating-contact">
+    <button class="btn btn-primary rounded-circle contact-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#contactOptions" aria-expanded="false" aria-controls="contactOptions">
+        <i class="bi bi-headset"></i>
+    </button>
+    <div class="collapse contact-options" id="contactOptions">
+        <a href="tel:+421907400865" class="contact-option" title="{{ _('Call us (SK/CZ/PL)') }}">
+            <i class="bi bi-telephone"></i>
+        </a>
+        <a href="tel:+421907539325" class="contact-option" title="{{ _('Call us (HU/EN)') }}">
+            <i class="bi bi-telephone-fill"></i>
+        </a>
+        <a href="https://wa.me/421907400865" class="contact-option" title="WhatsApp" target="_blank">
+            <i class="bi bi-whatsapp"></i>
+        </a>
+        <a href="mailto:info@autogroup.sk" class="contact-option" title="Email">
+            <i class="bi bi-envelope"></i>
+        </a>
+    </div>
+</div>
 
     <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     {% block scripts %}{% endblock %}
 
     <!-- Cookie Consent Script -->
@@ -316,5 +428,82 @@
         });
     });
     </script>
+
+
+<!-- Фіксовані кнопки зв'язку -->
+<div class="fixed-contact-buttons">
+    <a href="https://wa.me/421907400865" class="contact-button whatsapp-button" target="_blank">
+        <i class="bi bi-whatsapp"></i>
+        <span class="contact-tooltip">{{ _('Contact us via WhatsApp') }}</span>
+    </a>
+    <a href="tel:+421907400865" class="contact-button phone-button">
+        <i class="bi bi-telephone-fill"></i>
+        <span class="contact-tooltip">
+            {{ _('Call us') }}: +421 907 400 865<br>
+            <small>{{ _('Slovak/Czech/Polish language') }}</small>
+        </span>
+    </a>
+</div>
+
+<!-- Ваші існуючі скрипти -->
+<script src="{{ url_for('static', filename='js/filters.js') }}"></script>
+<!-- Переконайтесь, що використовуєте сумісні версії jQuery і Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Скрипт для випадаючих меню -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Для підменю на мобільних
+    if(window.innerWidth < 992) {
+        document.querySelectorAll('.dropdown-submenu > a').forEach(function(element) {
+            element.addEventListener('click', function(e) {
+                let nextEl = this.nextElementSibling;
+                if(nextEl && nextEl.classList.contains('dropdown-menu')) {
+                    e.preventDefault();
+                    if(nextEl.style.display == 'block') {
+                        nextEl.style.display = 'none';
+                    } else {
+                        nextEl.style.display = 'block';
+                    }
+                }
+            });
+        });
+    }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Ініціалізуємо випадаючі меню Bootstrap
+    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+    dropdownElementList.forEach(function (dropdownToggleEl) {
+        new bootstrap.Dropdown(dropdownToggleEl);
+    });
+    
+    // Додаткова логіка для вкладених меню
+    var dropdownSubmenus = document.querySelectorAll('.dropdown-submenu');
+    dropdownSubmenus.forEach(function(element) {
+        element.addEventListener('click', function(e) {
+            var nextEl = e.target.nextElementSibling;
+            if (nextEl && nextEl.classList.contains('dropdown-menu')) {
+                // Запобігаємо закриттю всіх випадаючих меню
+                e.stopPropagation();
+            }
+        });
+        
+        // На мобільних пристроях
+        if(window.innerWidth < 992) {
+            element.querySelector('a').addEventListener('click', function(e) {
+                if(this.nextElementSibling && this.nextElementSibling.classList.contains('dropdown-menu')) {
+                    e.preventDefault();
+                    if(this.nextElementSibling.style.display == 'block') {
+                        this.nextElementSibling.style.display = 'none';
+                    } else {
+                        this.nextElementSibling.style.display = 'block';
+                    }
+                }
+            });
+        }
+    });
+});
+</script>
 </body>
 </html>

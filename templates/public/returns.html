@@ -1,0 +1,139 @@
+{% extends "base/public_base.html" %}
+
+{% block head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="{{ _('Learn about AutogroupEU\'s returns and exchanges policy for auto parts.') }}">
+<meta name="keywords" content="{{ _('returns policy, auto parts return, exchange policy, EU consumer rights') }}">
+<meta property="og:title" content="{{ _('Returns & Exchanges') }} - {{ _('AutogroupEU') }}">
+<meta property="og:description" content="{{ _('Learn about AutogroupEU\'s returns and exchanges policy for auto parts.') }}">
+<meta property="og:type" content="website">
+{% endblock %}
+
+{% block title %}{{ _('Returns & Exchanges') }} - {{ _('AutogroupEU') }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="page-header fade-in">
+        <h2>{{ _('Returns & Exchanges') }}</h2>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Загальна політика повернення -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(23,162,184,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-arrow-return-left text-info"></i>
+                    </div>
+                    <h5 class="mb-0 text-info">{{ _('Returns Policy') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <!-- Пункт 1: Право на відкликання згідно законодавства ЄС -->
+                    <h6 class="mb-3">{{ _('Right of Withdrawal') }}</h6>
+                    <p>{{ _('In accordance with EU regulations, consumers have the right to withdraw from the purchase contract without giving any reason within 14 days from the day of receiving the goods. To exercise this right, you must inform us of your decision through an unequivocal statement (e.g., email or letter).') }}</p>
+                    
+                    <!-- Пункт 2: Товари зі складу vs. під замовлення -->
+                    <h6 class="mb-3 mt-4">{{ _('Stock Items vs. Special Order Items') }}</h6>
+                    <p>{{ _('Parts that we ship from our warehouse are subject to all standard return conditions. However, electronic components and parts ordered specially for a customer are non-returnable unless there is a factory defect confirmed by our technical specialists.') }}</p>
+                    <p>{{ _('If you\'re unsure whether a part fits your vehicle, we strongly recommend providing your vehicle\'s VIN code before ordering so our specialists can verify compatibility. This helps avoid unnecessary returns and ensures you receive the correct part the first time.') }}</p>
+                    
+                    <!-- Пункт 3: Вимоги до стану повернутих товарів -->
+                    <h6 class="mb-3 mt-4">{{ _('Return Conditions') }}</h6>
+                    <p>{{ _('To be eligible for a return, your item must be:') }}</p>
+                    <ul>
+                        <li>{{ _('In the same original packaging it was shipped in') }}</li>
+                        <li>{{ _('Without any traces of installation or use') }}</li>
+                        <li>{{ _('In the same clean condition as you received it') }}</li>
+                        <li>{{ _('Complete with all accessories, manuals, and documentation included in the original package') }}</li>
+                    </ul>
+                    
+                    <!-- Пункт 4: Повернення коштів -->
+                    <h6 class="mb-3 mt-4">{{ _('Refunds') }}</h6>
+                    <p>{{ _('Once your returned item is received and inspected, we will process your refund. Refunds will be processed to the original payment method used for the purchase. Please allow 5-10 business days for the refund to appear in your account after we\'ve processed it.') }}</p>
+                    
+                    <!-- Пункт 5: Витрати на пересилання -->
+                    <h6 class="mb-3 mt-4">{{ _('Shipping Costs') }}</h6>
+                    <p>{{ _('The customer is responsible for all return shipping costs unless the return is due to our error (you received an incorrect or defective item). We recommend using a trackable shipping service and purchasing shipping insurance for items of value.') }}</p>
+                    
+                    <!-- Пункт 6: Відповідальність -->
+                    <h6 class="mb-3 mt-4">{{ _('Liability') }}</h6>
+                    <p>{{ _('After shipping parts to the customer, we are not responsible for their integrity and safety. From the moment of shipment, responsibility for their integrity and safety is transferred to the shipping carrier and ultimately to the customer upon delivery.') }}</p>
+                    
+                    <!-- Адреса повернення -->
+                    <div class="return-address mt-4 p-3 bg-light rounded">
+                        <h6 class="mb-3">{{ _('Return Address') }}:</h6>
+                        <p class="mb-1"><strong>{{ _('Office Address') }}:</strong> 066 01 Humenné, Mierová 99, Slovakia</p>
+                        <p class="mb-1"><strong>{{ _('Main warehouse') }}:</strong> Tusicka Nova Ves 90, Tusice 07202, Slovakia</p>
+                        <p class="mb-0">{{ _('You can always pick up your parts in person by prior arrangement.') }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Процес повернення -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(40,167,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-list-check text-success"></i>
+                    </div>
+                    <h5 class="mb-0 text-success">{{ _('Return Process') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <ol>
+                        <li>{{ _('Contact our customer service team at info@autogroup.sk to notify us about your return request within 14 days of receiving your order.') }}</li>
+                        <li>{{ _('Include your order number, the item(s) you wish to return, and the reason for return.') }}</li>
+                        <li>{{ _('Our team will review your request and provide you with return instructions and a return authorization if applicable.') }}</li>
+                        <li>{{ _('Package the item carefully in its original packaging with all included accessories.') }}</li>
+                        <li>{{ _('Ship the package to the provided return address using a trackable shipping method.') }}</li>
+                        <li>{{ _('Once we receive and inspect the returned item, we will process your refund within 14 days.') }}</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <!-- Винятки з політики повернення -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(220,53,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-exclamation-triangle text-danger"></i>
+                    </div>
+                    <h5 class="mb-0 text-danger">{{ _('Exceptions to Return Policy') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>{{ _('The following items cannot be returned unless they are defective:') }}</p>
+                    <ul>
+                        <li>{{ _('Electronic components (ECUs, sensors, modules, etc.)') }}</li>
+                        <li>{{ _('Items marked as "Special Order" at the time of purchase') }}</li>
+                        <li>{{ _('Custom-ordered or specially manufactured parts') }}</li>
+                        <li>{{ _('Parts that have been installed or show signs of installation attempt') }}</li>
+                        <li>{{ _('Parts with removed or damaged labels, packaging, or identification marks') }}</li>
+                    </ul>
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ _('For specific questions about returning a particular item, please contact our customer service team before initiating a return.') }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Контактна інформація для питань -->
+            <div class="card-base fade-in mb-4">
+                <div class="d-flex align-items-center mb-3 px-4 pt-4">
+                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(0,123,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-envelope text-primary"></i>
+                    </div>
+                    <h5 class="mb-0 text-primary">{{ _('Contact Us') }}</h5>
+                </div>
+                <hr class="mx-4 my-0">
+                <div class="p-4">
+                    <p>{{ _('If you have any questions about our return policy, please contact us:') }}</p>
+                    <p>
+                        <strong>{{ _('Email') }}:</strong> info@autogroup.sk<br>
+                        <strong>{{ _('Phone') }}:</strong> +421 907 400 865
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -143,28 +143,88 @@
                 <!-- Макрос для виводу категорій рекурсивно -->
 {% macro render_categories(categories) %}
     {% for category in categories %}
-        <li class="dropdown-submenu">
-            <a class="dropdown-item {% if category.subcategories %}dropdown-toggle{% endif %}" 
-               href="{{ url_for('view_category', slug=category.slug) }}">
-               {{ category.name or category.name_en }}
-            </a>
+        <li class="menu-item">
+            <div class="menu-item-header">
+                <!-- Контейнер для посилання і кнопки -->
+                <div class="category-link-container">
+                    <!-- Посилання на категорію -->
+                    <a href="{{ url_for('view_category', slug=category.slug) }}" 
+                       class="category-link">
+                        {{ category.name or category.name_en }}
+                    </a>
+                    
+                    <!-- Кнопка розгортання, якщо є підкатегорії -->
+                    {% if category.subcategories %}
+                        <button class="expand-btn" type="button" 
+                                aria-label="Toggle subcategories">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Підкатегорії -->
             {% if category.subcategories %}
-            <ul class="dropdown-menu">
-                {{ render_categories(category.subcategories) }}
-            </ul>
+                <ul class="subcategories">
+                    {{ render_categories(category.subcategories) }}
+                </ul>
             {% endif %}
         </li>
     {% endfor %}
 {% endmacro %}
 
 <!-- Використання макросу в меню -->
+<!-- Замініть існуючу структуру меню категорій -->
 <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" role="button" 
-       data-bs-toggle="dropdown" aria-expanded="false">
+    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         {{ _('Categories') }}
     </a>
-    <ul class="dropdown-menu">
-        {{ render_categories(get_main_categories()) }}
+    <ul class="dropdown-menu vertical-menu">
+        {% for category in get_main_categories() %}
+            <li class="menu-item">
+                <div class="menu-item-header">
+                    <a href="{{ url_for('view_category', slug=category.slug) }}" class="menu-link">
+                        {{ category.name or category.name_en }}
+                    </a>
+                    {% if category.subcategories %}
+                        <button class="expand-btn" aria-label="Expand">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    {% endif %}
+                </div>
+                
+                {% if category.subcategories %}
+                    <ul class="submenu">
+                        {% for subcategory in category.subcategories %}
+                            <li class="menu-item">
+                                <div class="menu-item-header">
+                                    <a href="{{ url_for('view_category', slug=subcategory.slug) }}" class="menu-link">
+                                        {{ subcategory.name or subcategory.name_en }}
+                                    </a>
+                                    {% if subcategory.subcategories %}
+                                        <button class="expand-btn" aria-label="Expand">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if subcategory.subcategories %}
+                                    <ul class="submenu">
+                                        {% for subsubcategory in subcategory.subcategories %}
+                                            <li class="menu-item">
+                                                <a href="{{ url_for('view_category', slug=subsubcategory.slug) }}" class="menu-link">
+                                                    {{ subsubcategory.name or subsubcategory.name_en }}
+                                                </a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </li>
+        {% endfor %}
     </ul>
 </li>
 
@@ -366,13 +426,18 @@
         <a href="tel:+421907539325" class="contact-option" title="{{ _('Call us (HU/EN)') }}">
             <i class="bi bi-telephone-fill"></i>
         </a>
-        <a href="https://wa.me/421907400865" class="contact-option" title="WhatsApp" target="_blank">
-            <i class="bi bi-whatsapp"></i>
-        </a>
         <a href="mailto:info@autogroup.sk" class="contact-option" title="Email">
             <i class="bi bi-envelope"></i>
         </a>
     </div>
+</div>
+
+<!-- Фіксовані кнопки зв'язку (тільки WhatsApp) -->
+<div class="fixed-contact-buttons">
+    <a href="https://wa.me/421907400865" class="contact-button whatsapp-button" target="_blank">
+        <i class="bi bi-whatsapp"></i>
+        <span class="contact-tooltip">{{ _('Contact us via WhatsApp') }}</span>
+    </a>
 </div>
 
     <!-- Bootstrap Bundle with Popper -->
@@ -430,20 +495,7 @@
     </script>
 
 
-<!-- Фіксовані кнопки зв'язку -->
-<div class="fixed-contact-buttons">
-    <a href="https://wa.me/421907400865" class="contact-button whatsapp-button" target="_blank">
-        <i class="bi bi-whatsapp"></i>
-        <span class="contact-tooltip">{{ _('Contact us via WhatsApp') }}</span>
-    </a>
-    <a href="tel:+421907400865" class="contact-button phone-button">
-        <i class="bi bi-telephone-fill"></i>
-        <span class="contact-tooltip">
-            {{ _('Call us') }}: +421 907 400 865<br>
-            <small>{{ _('Slovak/Czech/Polish language') }}</small>
-        </span>
-    </a>
-</div>
+
 
 <!-- Ваші існуючі скрипти -->
 <script src="{{ url_for('static', filename='js/filters.js') }}"></script>
@@ -452,22 +504,66 @@
 <!-- Скрипт для випадаючих меню -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Для підменю на мобільних
-    if(window.innerWidth < 992) {
-        document.querySelectorAll('.dropdown-submenu > a').forEach(function(element) {
-            element.addEventListener('click', function(e) {
-                let nextEl = this.nextElementSibling;
-                if(nextEl && nextEl.classList.contains('dropdown-menu')) {
-                    e.preventDefault();
-                    if(nextEl.style.display == 'block') {
-                        nextEl.style.display = 'none';
-                    } else {
-                        nextEl.style.display = 'block';
-                    }
-                }
-            });
+    // Функція для налаштування мобільного меню категорій
+    function setupMobileMenu() {
+        const toggleButtons = document.querySelectorAll('.mobile-toggle-btn');
+        
+        // Очищаємо існуючі обробники
+        toggleButtons.forEach(button => {
+            button.removeEventListener('click', toggleSubmenu);
+            button.addEventListener('click', toggleSubmenu);
         });
+        
+        // Функція для переключення підменю
+        function toggleSubmenu(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const button = this;
+            const submenu = button.nextElementSibling;
+            
+            // Перевіряємо, чи це підменю
+            if (submenu && submenu.classList.contains('mobile-submenu')) {
+                // Переключаємо клас для кнопки
+                button.classList.toggle('active');
+                button.querySelector('i').classList.toggle('bi-chevron-down');
+                button.querySelector('i').classList.toggle('bi-chevron-up');
+                
+                // Переключаємо клас для підменю
+                submenu.classList.toggle('show');
+                
+                // Прокрутка до відкритого підменю (якщо потрібно)
+                if (submenu.classList.contains('show')) {
+                    setTimeout(() => {
+                        const rect = button.getBoundingClientRect();
+                        if (rect.top < 0 || rect.bottom > window.innerHeight) {
+                            button.scrollIntoView({behavior: 'smooth', block: 'start'});
+                        }
+                    }, 300);
+                }
+            }
+        }
     }
+    
+    // Ініціалізуємо меню при завантаженні
+    setupMobileMenu();
+    
+    // Перезапуск при зміні розміру вікна
+    window.addEventListener('resize', setupMobileMenu);
+    
+    // Закриття підменю при кліку поза меню
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.mobile-categories-menu')) {
+            // Закриваємо всі відкриті підменю
+            document.querySelectorAll('.mobile-submenu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            document.querySelectorAll('.mobile-toggle-btn.active').forEach(btn => {
+                btn.classList.remove('active');
+                btn.querySelector('i').classList.replace('bi-chevron-up', 'bi-chevron-down');
+            });
+        }
+    });
 });
 </script>
 <script>
@@ -502,6 +598,78 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Знаходимо всі кнопки переключення
+    const toggleButtons = document.querySelectorAll('.mobile-toggle-btn');
+    
+    // Додаємо обробник подій для кожної кнопки
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Переключаємо клас active для кнопки
+            this.classList.toggle('active');
+            
+            // Знаходимо відповідне підменю (наступний елемент після кнопки)
+            const submenu = this.nextElementSibling;
+            if (submenu && submenu.classList.contains('mobile-submenu')) {
+                submenu.classList.toggle('show');
+            }
+        });
+    });
+    
+    // Закриваємо підменю, якщо клікнули поза меню
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.mobile-categories-menu')) {
+            document.querySelectorAll('.mobile-submenu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            document.querySelectorAll('.mobile-toggle-btn.active').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+    });
+    
+    // При зміні розміру вікна закриваємо всі відкриті підменю
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 992) { // Якщо перейшли на десктоп
+            document.querySelectorAll('.mobile-submenu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            document.querySelectorAll('.mobile-toggle-btn.active').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+    });
+});
+</script>
+<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+<script>
+// Додайте цей JavaScript код
+document.addEventListener('DOMContentLoaded', function() {
+    const expandButtons = document.querySelectorAll('.expand-btn');
+    
+    expandButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Знаходимо батьківський елемент li
+            const menuItem = this.closest('.menu-item');
+            // Знаходимо список підкатегорій
+            const subMenu = menuItem.querySelector('.subcategories');
+            
+            // Переключаємо класи
+            this.classList.toggle('active');
+            if (subMenu) {
+                subMenu.classList.toggle('show');
+            }
+        });
     });
 });
 </script>

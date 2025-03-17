@@ -5741,3 +5741,446 @@ tr:hover .article-badge {
     margin-left: 8px !important;
     text-align: left !important;
   }
+
+/* Стилі для мобільного порядку відображення елементів */
+@media (max-width: 767.98px) {
+    .mobile-first {
+        order: 1;
+    }
+    .mobile-second {
+        order: 2;
+    }
+    .mobile-last {
+        order: 3;
+    }
+    .row {
+        display: flex;
+        flex-direction: column;
+    }
+    .image-section {
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Фіксовані контактні кнопки */
+.floating-contact {
+    position: fixed;
+    bottom: 95px;
+    right: 20px;
+    z-index: 1030;
+}
+    
+/* Стиль для контактної кнопки розширення */
+.floating-contact {
+    position: fixed;
+    bottom: 85px; /* Розміщуємо вище WhatsApp кнопки */
+    right: 20px;
+    z-index: 1030;
+}
+
+/* При розкритті опцій, відображаємо їх вище кнопки */
+.contact-options {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Запобігаємо накладанню розкритого меню на кнопку WhatsApp */
+#contactOptions {
+    margin-bottom: 20px;
+}
+
+
+/* Фіксовані контактні кнопки */
+.floating-contact {
+    position: fixed;
+    bottom: 95px; /* Позиція над WhatsApp кнопкою */
+    right: 20px;
+    z-index: 1030;
+}
+
+/* Стилі для випадаючих опцій контактів */
+.contact-options {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Фіксована кнопка WhatsApp внизу */
+.fixed-contact-buttons {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1030; 
+}
+
+/* Стилі для кнопки WhatsApp */
+.whatsapp-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #25D366;
+    color: white;
+    text-decoration: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* Стилі для основної кнопки контактів */
+.contact-toggle {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Іконки для кнопок */
+.contact-toggle i, 
+.whatsapp-button i {
+    font-size: 24px;
+}
+/* Стилі для підменю на мобільних пристроях */
+@media (max-width: 991.98px) {
+    .dropdown-menu {
+        border: none;
+        margin-left: 1rem;
+        background-color: transparent;
+    }
+    .dropdown-submenu {
+        position: relative;
+    }
+    .dropdown-submenu .dropdown-menu {
+        position: static;
+        display: none;
+        margin-top: 0;
+        margin-left: 1rem;
+        padding-left: 0.5rem;
+        border-left: 2px solid #dee2e6;
+    }
+    .dropdown-submenu .dropdown-menu.show {
+        display: block;
+    }
+    /* Індикатор для підкатегорій */
+    .dropdown-submenu > a::after {
+        content: '\F282';
+        font-family: 'bootstrap-icons';
+        margin-left: 0.5rem;
+    }
+    .dropdown-submenu > a.show::after {
+        content: '\F286';
+    }
+}
+/* Додайте це до вашого файлу static/css/public.css */
+
+/* Стилі для мобільного меню категорій */
+@media (max-width: 991.98px) {
+    /* Базові стилі для мобільних категорій */
+    .mobile-categories-menu {
+        width: 100%;
+        padding: 0;
+        max-height: 80vh; /* Обмежена висота з прокруткою */
+        overflow-y: auto;
+    }
+
+    /* Елементи першого рівня */
+    .mobile-category-item {
+        position: relative;
+        display: block;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* Посилання категорій */
+    .mobile-category-link {
+        display: block;
+        padding: 12px 15px;
+        color: #333;
+        text-decoration: none;
+        width: calc(100% - 46px); /* Залишаємо місце для кнопки */
+    }
+
+    /* Кнопка переключення */
+    .mobile-toggle-btn {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 46px;
+        height: 46px;
+        border: none;
+        background: transparent;
+        border-left: 1px solid rgba(0, 0, 0, 0.1);
+        color: #555;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3;
+    }
+
+    .mobile-toggle-btn.active {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    /* Підменю */
+    .mobile-submenu {
+        display: none;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+        background-color: #f8f9fa;
+    }
+
+    .mobile-submenu.show {
+        display: block;
+    }
+
+    .mobile-submenu li {
+        position: relative;
+        display: block;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    /* Посилання в підменю */
+    .mobile-submenu a {
+        display: block;
+        padding: 10px 15px 10px 30px;
+        color: #333;
+        text-decoration: none;
+        width: calc(100% - 46px);
+    }
+
+    /* Стилі для вкладених підменю (третій рівень) */
+    .mobile-submenu .mobile-submenu a {
+        padding-left: 45px;
+    }
+
+    /* Вказівник для підменю другого рівня */
+    .mobile-submenu .mobile-toggle-btn {
+        height: 41px; /* Підлаштовуємо висоту кнопки під висоту рядка */
+    }
+
+    /* Анімація для плавного розкриття */
+    .mobile-submenu {
+        transition: max-height 0.3s ease;
+        max-height: 0;
+        overflow: hidden;
+    }
+
+    .mobile-submenu.show {
+        max-height: 1000px; /* Достатньо великий показник для вмісту */
+    }
+}
+
+/* Стилі для десктопної версії */
+@media (min-width: 992px) {
+    .mobile-toggle-btn {
+        display: none;
+    }
+    
+    .mobile-submenu {
+        position: absolute;
+        top: 0;
+        left: 100%;
+        width: 200px;
+        display: none;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        background-color: #fff;
+    }
+    
+    .mobile-category-item:hover > .mobile-submenu {
+        display: block;
+    }
+    
+    .mobile-submenu li:hover > .mobile-submenu {
+        display: block;
+    }
+}
+
+/* Стилі для вертикального меню категорій */
+.vertical-menu {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.menu-item {
+    border-bottom: 1px solid #eee;
+}
+
+.menu-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    background: #fff;
+}
+
+.menu-link {
+    flex-grow: 1;
+    padding: 12px 15px;
+    color: #333;
+    text-decoration: none;
+    display: block;
+}
+
+.menu-link:hover {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.expand-btn {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.expand-btn.active {
+    transform: rotate(45deg);
+}
+
+.submenu {
+    display: none;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background-color: #f8f9fa;
+}
+
+.submenu .menu-item {
+    border-bottom: none;
+    border-top: 1px solid #eee;
+}
+
+.submenu .menu-link {
+    padding-left: 30px;
+}
+
+.submenu .submenu .menu-link {
+    padding-left: 45px;
+}
+
+.submenu.show {
+    display: block;
+}
+
+/* Анімація для плавного розкриття */
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.submenu.show {
+    max-height: 1000px;
+}
+
+/* Адаптивні стилі */
+@media (min-width: 992px) {
+    .vertical-menu {
+        width: 250px;
+    }
+}
+/* Додайте ці стилі до public.css */
+.menu-item {
+    width: 100%;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.menu-item-header {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+}
+
+.category-link-container {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    min-height: 42px;
+}
+
+.category-link {
+    flex-grow: 1;
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+}
+
+.expand-btn {
+    width: 42px;
+    border: none;
+    background: transparent;
+    border-left: 1px solid rgba(0,0,0,0.1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.expand-btn i {
+    transition: transform 0.3s;
+}
+
+.expand-btn.active i {
+    transform: rotate(45deg);
+}
+
+.subcategories {
+    display: none;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: #f8f9fa;
+}
+
+.subcategories.show {
+    display: block;
+}
+
+/* Відступи для підкатегорій */
+.subcategories .menu-item {
+    padding-left: 15px;
+}
+
+.subcategories .subcategories .menu-item {
+    padding-left: 30px;
+}
+
+/* Адаптивність */
+@media (max-width: 991.98px) {
+    .menu-item-header {
+        flex-wrap: nowrap;
+    }
+    
+    .category-link {
+        white-space: normal;
+        word-break: break-word;
+    }
+}

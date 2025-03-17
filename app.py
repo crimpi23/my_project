@@ -1431,16 +1431,12 @@ def public_cart():
                 delivery_time = None
                 
                 if table_name == 'stock':
-                    # If from stock, check if really in stock
-                    cursor.execute("""
-                        SELECT quantity FROM stock WHERE article = %s
-                    """, (article,))
-                    stock_info = cursor.fetchone()
-                    if stock_info and stock_info['quantity'] > 0:
-                        in_stock = True
+                    in_stock = True
+                    delivery_time = _("In Stock")
                 else:
-                    # If from price list, get delivery time
-                    delivery_time = delivery_times.get(table_name)
+                    delivery_time_str = delivery_times.get(table_name, '7-14')
+                    in_stock = delivery_time_str == '0'
+                    delivery_time = _("In Stock") if in_stock else f"{delivery_time_str} {_('days')}"
                 
                 # Create cart item object
                 cart_item = {
@@ -1680,7 +1676,7 @@ def product_details(article):
 
         logging.info(f"=== Starting product_details for article: {article} ===")
 
-        # Get stock info first (залишаємо без змін)
+        # Get stock info first
         cursor.execute("""
             SELECT s.article, s.price, s.brand_id, b.name as brand_name
             FROM stock s
@@ -1698,7 +1694,7 @@ def product_details(article):
             'brand_name': stock_data['brand_name'] if stock_data else None,
             'brand_id': stock_data['brand_id'] if stock_data else None
         }
-         # Отримуємо категорії товару
+        # Отримуємо категорії товару
         cursor.execute("""
             SELECT c.*
             FROM product_categories pc
@@ -1747,7 +1743,7 @@ def product_details(article):
             prices.append(price_data)
             logging.info(f"Added stock price: {price_data}")
 
-        # Get prices from price_lists (залишаємо без змін)
+        # Get prices from price_lists
         cursor.execute("""
             SELECT pl.table_name, pl.brand_id, pl.delivery_time, b.name as brand_name 
             FROM price_lists pl
@@ -1758,7 +1754,6 @@ def product_details(article):
 
         price_found = False
 
-        # Вся логіка обробки цін залишається без змін...
         for table in tables:
             if table['table_name'] != 'stock':
                 table_name = table['table_name']
@@ -1803,8 +1798,12 @@ def product_details(article):
         prices.sort(key=lambda x: float(x['price']))
         logging.info(f"Final prices count: {len(prices)}")
 
-        # Додати цей рядок
+        # Відобираємо найдешевшу ціну для товару
         price = prices[0] if prices else None
+        
+        # ВИПРАВЛЕННЯ: використовуємо бренд найдешевшої ціни для відображення на сторінці
+        if price and 'brand_name' in price:
+            product_data['brand_name'] = price['brand_name']
 
         if not db_product and not stock_data and not price_found:
             return render_template(
@@ -1817,9 +1816,9 @@ def product_details(article):
             product_data=product_data,
             prices=prices,
             price=price,
-            brand_name=brand_name,
+            brand_name=product_data['brand_name'],  # Передаємо правильну назву бренду
             article=article,
-            product_categories=product_categories  # Додано кому тут
+            product_categories=product_categories
         )
 
     except Exception as e:
@@ -2648,56 +2647,115 @@ def validate_token(token):
             conn.close()
 
 
-def send_email(to_email, subject, ordered_items, missing_articles):
+def send_email(to_email, subject, ordered_items, delivery_data, lang='en'):
     """
-    Відправляє повідомлення на вказану електронну адресу з деталями замовлення.
+    Відправляє email з деталями замовлення на вказану мову
     """
     try:
-        smtp_server = "smtp.gmail.com"
-        smtp_port = 587
-        sender_email = os.getenv("SMTP_EMAIL")  # Отримання адреси з environment variables
-        sender_password = os.getenv("SMTP_PASSWORD")  # Отримання пароля з environment variables
+        smtp_server = "mail.adm.tools"
+        smtp_port = 25
+        sender_email = os.getenv("SMTP_EMAIL")
+        sender_password = os.getenv("SMTP_PASSWORD")
 
         if not sender_email or not sender_password:
-            raise ValueError("SMTP credentials are not set in environment variables.")
+            raise ValueError("SMTP credentials are not set")
 
-        # Формування тексту повідомлення
-        message_body = _("Thank you for your order!\n\nYour order details:\n")
+        # Словник перекладів для кожної мови
+        translations = {
+            'sk': {
+                'subject': 'Potvrdenie objednávky',
+                'greeting': 'Ďakujeme za Vašu objednávku!',
+                'order_details': 'Detaily objednávky:',
+                'delivery_info': 'Dodacie údaje:',
+                'name': 'Meno:',
+                'phone': 'Telefón:',
+                'address': 'Adresa:',
+                'article': 'Kód:',
+                'price': 'Cena:',
+                'quantity': 'Množstvo:',
+                'total': 'Celkom:',
+                'in_stock': 'Na sklade',
+                'delivery_time': 'Dodacia lehota:'
+            },
+            'en': {
+                'subject': 'Order Confirmation',
+                'greeting': 'Thank you for your order!',
+                'order_details': 'Order details:',
+                'delivery_info': 'Delivery information:',
+                'name': 'Name:',
+                'phone': 'Phone:',
+                'address': 'Address:',
+                'article': 'Code:',
+                'price': 'Price:',
+                'quantity': 'Quantity:',
+                'total': 'Total:',
+                'in_stock': 'In Stock',
+                'delivery_time': 'Delivery time:'
+            },
+            'pl': {
+                'subject': 'Potwierdzenie zamówienia',
+                'greeting': 'Dziękujemy za złożenie zamówienia!',
+                'order_details': 'Szczegóły zamówienia:',
+                'delivery_info': 'Informacje o dostawie:',
+                'name': 'Imię:',
+                'phone': 'Telefon:',
+                'address': 'Adres:',
+                'article': 'Kod:',
+                'price': 'Cena:',
+                'quantity': 'Ilość:',
+                'total': 'Suma:',
+                'in_stock': 'W magazynie',
+                'delivery_time': 'Czas dostawy:'
+            }
+        }
 
-        if ordered_items:
-            message_body += _("Ordered items:\n")
-            for item in ordered_items:
-                message_body += _(
-                    "- Article: {article}, "
-                    "Price: {price:.2f}, "
-                    "Quantity: {quantity}, "
-                    "Comment: {comment}\n"
-                ).format(
-                    article=item['article'],
-                    price=item['price'],
-                    quantity=item['quantity'],
-                    comment=item['comment'] or _('No comment')
-                )
+        # Використовуємо переклади для вибраної мови або англійської як запасної
+        t = translations.get(lang, translations['en'])
 
-        if missing_articles:
-            message_body += _("\nMissing articles:\n")
-            for article in missing_articles:
-                message_body += f"- {article}\n"
+        # Формування тексту листа
+        message_body = f"{t['greeting']}\n\n"
+        
+        # Додаємо інформацію про доставку
+        message_body += f"\n{t['delivery_info']}\n"
+        message_body += f"{t['name']} {delivery_data.get('full_name', '')}\n"
+        message_body += f"{t['phone']} {delivery_data.get('phone', '')}\n"
+        message_body += (f"{t['address']} {delivery_data.get('street', '')}, "
+                       f"{delivery_data.get('city', '')}, "
+                       f"{delivery_data.get('postal_code', '')}, "
+                       f"{delivery_data.get('country', '')}\n\n")
+
+        # Додаємо деталі замовлення
+        message_body += f"{t['order_details']}\n"
+        total_sum = 0
+        
+        for item in ordered_items:
+            price = float(item['price'])
+            quantity = int(item['quantity'])
+            item_total = price * quantity
+            total_sum += item_total
+            
+            message_body += f"\n{t['article']} {item['article']}\n"
+            message_body += f"{t['price']} €{price:.2f}\n"
+            message_body += f"{t['quantity']} {quantity}\n"
+            message_body += f"{t['delivery_time']} {item['delivery_time']}\n"
+            
+        message_body += f"\n{t['total']} €{total_sum:.2f}\n"
 
         # Формування повідомлення
         message = MIMEMultipart()
         message["From"] = sender_email
         message["To"] = to_email
-        message["Subject"] = subject
-        message.attach(MIMEText(message_body, "plain"))
+        message["Subject"] = t['subject']
+        message.attach(MIMEText(message_body, "plain", "utf-8"))
 
-        # Відправка через SMTP
+        # Відправка email
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
             server.login(sender_email, sender_password)
             server.send_message(message)
 
-        logging.info(f"Email sent successfully to {to_email}")
+        logging.info(f"Order confirmation email sent to {to_email} in {lang} language")
+        
     except Exception as e:
         logging.error(f"Failed to send email to {to_email}: {e}")
 

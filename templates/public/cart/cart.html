@@ -47,7 +47,13 @@
                         </form>
                     </td>
                     <td>{{ item.total|currency }}</td>
-                    <td>{{ item.in_stock }}</td>
+                    <td>
+                        {% if item.in_stock %}
+                            <span class="badge bg-success">{{ _('In Stock') }}</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">{{ item.delivery_time }}</span>
+                        {% endif %}
+                    </td>
                     <td>
                         <!-- Форма для видалення товару -->
                         <form action="{{ url_for('public_remove_from_cart') }}" method="POST">

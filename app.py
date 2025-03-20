@@ -533,7 +533,6 @@ def get_categories_for_menu():
         return []
 
 
-
 def get_subcategories(parent_id):
     """Отримує підкатегорії для вказаної батьківської категорії"""
     try:
@@ -568,8 +567,6 @@ def get_subcategories(parent_id):
     except Exception as e:
         logging.error(f"Error getting subcategories: {e}", exc_info=True)
         return []
-
-
 
 @app.context_processor
 def inject_category_function():
@@ -619,10 +616,7 @@ def inject_category_function():
     
     return {'get_main_categories': get_main_categories}
 
-
 # Розширена функція inject_template_vars з підтримкою категорій
-# Замініть весь блок inject_template_vars наступним кодом:
-
 @app.context_processor
 def inject_template_vars():
     """Інжекція змінних для всіх шаблонів"""
@@ -708,7 +702,6 @@ def inject_template_vars():
         get_main_categories=get_categories_for_menu,
         get_subcategories=get_subcategories
     )
-
 
 @app.template_filter('tojson')
 def filter_tojson(obj):
@@ -842,8 +835,6 @@ def login():
 
     return render_template('auth/login.html')
 
-
-
 def get_user_companies(user_id):
     """Get all saved companies for a user"""
     try:
@@ -868,9 +859,9 @@ def send_email(to_email, subject, ordered_items, delivery_data, lang='en'):
         logging.info(f"Sending email to {to_email} with language {lang}")
         
         # Налаштування SMTP
-        smtp_host = os.getenv("SMTP_HOST", "mail.adm.tools")
-        smtp_port = int(os.getenv("SMTP_PORT", "465"))
-        sender_email = os.getenv("SMTP_EMAIL", "info@autogroup.sk")
+        smtp_host = os.getenv("SMTP_HOST")
+        smtp_port = int(os.getenv("SMTP_PORT"))
+        sender_email = os.getenv("SMTP_EMAIL")
         sender_password = os.getenv("SMTP_PASSWORD")
         
         # Використовуємо sender_email як bcc_email для уникнення дублювання
@@ -1045,7 +1036,6 @@ def send_email(to_email, subject, ordered_items, delivery_data, lang='en'):
     except Exception as e:
         logging.error(f"Failed to send email to {to_email}: {str(e)}")
         return False
-
 
 @app.route('/public_place_order', methods=['POST'])
 def public_place_order():
@@ -9583,9 +9573,9 @@ def send_invoice_email(to_email, subject, ordered_items, delivery_data, invoice_
         logging.info(f"Відправка інвойсу на {to_email} мовою {lang}")
         
         # Налаштування SMTP
-        smtp_host = os.getenv("SMTP_HOST", "mail.adm.tools")
-        smtp_port = int(os.getenv("SMTP_PORT", "465"))
-        sender_email = os.getenv("SMTP_EMAIL", "info@autogroup.sk")
+        smtp_host = os.getenv("SMTP_HOST")
+        smtp_port = int(os.getenv("SMTP_PORT"))
+        sender_email = os.getenv("SMTP_EMAIL")
         sender_password = os.getenv("SMTP_PASSWORD")
         
         # Використовуємо sender_email як bcc_email
@@ -9740,8 +9730,9 @@ def send_invoice_email(to_email, subject, ordered_items, delivery_data, invoice_
         logging.error(f"Не вдалося надіслати інвойс до {to_email}: {str(e)}")
         return False
 
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"Starting server on port {port}...")
     app.run(host='0.0.0.0', port=port)
-

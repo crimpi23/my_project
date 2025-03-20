@@ -227,6 +227,11 @@
                             {% endif %}
                         </tbody>
                     </table>
+                    <!-- Додайте кнопку для відправки інвойсу -->
+                    <a href="{{ url_for('admin_send_invoice', token=token, order_id=order.order_id) }}" 
+                       class="btn btn-sm btn-primary mb-1">
+                       <i class="bi bi-file-earmark-pdf"></i> Send Invoice
+                    </a>
                 </div>
             </div>
         </div>

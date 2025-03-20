@@ -1,0 +1,93 @@
+<!-- templates/emails/invoice_email.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        h1 { color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background-color: #f5f5f5; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        .total-row { font-weight: bold; }
+        .footer { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; font-size: 12px; color: #777; }
+        .header { background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; border-bottom: 3px solid #007bff; }
+        .logo { max-width: 200px; margin-bottom: 10px; }
+        .company-info { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ced4da; font-size: 11px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://autogroup.sk/imgbank/Image/AUtogroupEU.png" alt="Autogroup Logo" class="logo">
+            <h1>AutogroupEU - {{ subject }}</h1>
+        </div>
+        
+        <p>{{ t.greeting }}</p>
+        
+        <p>{{ t.invoice_attached }}</p>
+        
+        <h2>{{ t.order_details }}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t.article }}</th>
+                    <th>{{ t.price }}</th>
+                    <th>{{ t.quantity }}</th>
+                    <th>{{ t.total }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in ordered_items %}
+                <tr>
+                    <td>{{ item.article }}</td>
+                    <td>€{{ "%.2f"|format(item.price) }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>€{{ "%.2f"|format(item.price * item.quantity) }}</td>
+                </tr>
+                {% endfor %}
+                <tr class="total-row">
+                    <td colspan="3" style="text-align: right;">{{ t.total }}</td>
+                    <td>€{{ "%.2f"|format(total_sum) }}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h2>{{ t.delivery_info }}</h2>
+        {% if delivery_data.is_self_pickup %}
+        <p><strong>{{ t.self_pickup }}</strong></p>
+        {% else %}
+        <p>{{ delivery_data.delivery_info|default('', true) }}</p>
+        <p><strong>{{ t.delivery_cost }}</strong> €{{ "%.2f"|format(delivery_data.delivery_cost|default(0, true)) }}</p>
+        {% endif %}
+        
+        <h3>{{ t.total_with_delivery }}</h3>
+        <p style="font-size: 18px; font-weight: bold;">€{{ "%.2f"|format(delivery_data.total_with_delivery|default(total_sum, true)) }}</p>
+        
+        <p>{{ t.payment_instruction }}</p>
+        
+        <p>{{ t.thank_you }}</p>
+        
+        <p>{{ t.contact_us }}</p>
+        
+        <div class="footer">
+            <p>{{ t.footer_text }}</p>
+            
+            <div class="company-info">
+                <p><strong>Autogroup</strong></p>
+                <p>066 01 Humenné, Mierová 99, Slovakia</p>
+                <p>Warehouse: Tušická Nová Ves 90, Tušice 07202, Slovakia</p>
+                <p>IČO: 47948311 | DIČ: 2120009089 | DIČ DPH: SK2120009089</p>
+                <p>Obch. register: Okresný súd Prešov, Sro/30964/P</p>
+                <p>Phone: +421 907 400 865 (SK/CZ/PL) | +421 907 539 325 (HU/EN)</p>
+                <p>Email: info@autogroup.sk | <a href="https://autogroup.sk">www.autogroup.sk</a></p>
+                <p>Bank: Slovenská sporiteľňa, a.s.</p>
+                <p>IBAN: SK51 0900 0000 0050 6892 5563 | BIC: GIBASKBX</p>
+            </div>
+            
+            <p>&copy; {{ current_year }} AutogroupEU</p>
+        </div>
+    </div>
+</body>
+</html>

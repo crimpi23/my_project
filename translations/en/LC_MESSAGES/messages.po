@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-03-03 22:26+0200\n"
+"POT-Creation-Date: 2025-03-20 19:43+0200\n"
 "PO-Revision-Date: 2025-03-03 22:26+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,447 +18,488 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app.py:120
+#: app.py:149
 msgid "Address saved successfully"
 msgstr ""
 
-#: app.py:125 app.py:467
+#: app.py:154
 msgid "Error saving address"
 msgstr ""
 
-#: app.py:226
+#: app.py:309
+msgid "Please enter at least one article number"
+msgstr ""
+
+#: app.py:319
+msgid ""
+"Maximum {max_articles} articles per request. Only first {max_articles} "
+"will be processed."
+msgstr ""
+
+#: app.py:328 app.py:369
+msgid "error"
+msgstr ""
+
+#: app.py:344
+msgid "An error occurred while processing your request"
+msgstr ""
+
+#: app.py:356
+msgid "No parts selected"
+msgstr ""
+
+#: app.py:416
+msgid "{count} items added to cart"
+msgstr ""
+
+#: app.py:419
+msgid "No items were added to cart"
+msgstr ""
+
+#: app.py:424
+msgid "An error occurred while adding items to cart"
+msgstr ""
+
+#: app.py:462
 msgid "Error validating phone number"
 msgstr ""
 
-#: app.py:279
+#: app.py:747
 msgid "Username, email or phone already registered."
 msgstr ""
 
-#: app.py:310
+#: app.py:778
 msgid "Registration successful! You are now logged in."
 msgstr ""
 
-#: app.py:315
+#: app.py:783
 msgid "Registration failed. Please try again."
 msgstr ""
 
-#: app.py:372
+#: app.py:840
 msgid "Invalid username or password"
 msgstr ""
 
-#: app.py:402
+#: app.py:1057
 msgid "Please log in to place an order."
 msgstr ""
 
-#: app.py:431
+#: app.py:1102
 msgid "Selected address not found"
 msgstr ""
 
-#: app.py:498
+#: app.py:1166
 msgid "Selected company not found"
 msgstr ""
 
-#: app.py:531
-msgid "Error saving company details"
-msgstr ""
-
-#: app.py:537
+#: app.py:1183
 msgid "Your cart is empty."
 msgstr ""
 
-#: app.py:598 app.py:3201
-msgid "Order placed successfully!"
-msgstr ""
-
-#: app.py:605
-msgid "Error placing order"
-msgstr ""
-
-#: app.py:618
-msgid "Cart cleared successfully"
-msgstr ""
-
-#: app.py:629
-msgid "Please log in to view your orders."
-msgstr ""
-
-#: app.py:659
-msgid "Error loading orders."
-msgstr ""
-
-#: app.py:670
-msgid "Please log in to view order details."
-msgstr ""
-
-#: app.py:688
-msgid "Order not found."
-msgstr ""
-
-#: app.py:714 app.py:3350
-msgid "Error loading order details."
-msgstr ""
-
-#: app.py:727
-msgid "You have been logged out."
-msgstr ""
-
-#: app.py:739
-msgid "Please log in to view your cart."
-msgstr ""
-
-#: app.py:842 app.py:1142 app.py:2510
-msgid "An error occurred while processing your request."
-msgstr ""
-
-#: app.py:879 app.py:1924
-msgid "Invalid token."
-msgstr ""
-
-#: app.py:884
-msgid "Please log in."
-msgstr ""
-
-#: app.py:889
-msgid "You don't have permission to access this page."
-msgstr ""
-
-#: app.py:1066 app.py:1118 templates/public/product_details.html:150
+#: app.py:1214 app.py:1222 app.py:1766 app.py:1770 app.py:2072 app.py:2123
+#: templates/public/cart/cart.html:52 templates/public/product_details
+#: templates/public/product_details.html:215 копія.html:155 –
 msgid "In Stock"
 msgstr ""
 
-#: app.py:1119
+#: app.py:1222 app.py:1770 app.py:2124
+#: templates/public/api_search_results.html:59
 msgid "days"
 msgstr ""
 
-#: app.py:1513
-msgid "Missing required information"
+#: app.py:1236
+msgid "Your cart is empty"
 msgstr ""
 
-#: app.py:1518 app.py:2044
+#: app.py:1349 app.py:4363
+msgid "Order placed successfully!"
+msgstr ""
+
+#: app.py:1358
+msgid "Error placing order"
+msgstr ""
+
+#: app.py:1380 app.py:1516
+msgid "Please log in to view order details."
+msgstr ""
+
+#: app.py:1386
+msgid "Order not found"
+msgstr ""
+
+#: app.py:1390
+msgid "Access denied"
+msgstr ""
+
+#: app.py:1410
+msgid "Error displaying order confirmation."
+msgstr ""
+
+#: app.py:1471
+msgid "Cart cleared successfully"
+msgstr ""
+
+#: app.py:1481
+msgid "Please log in to view your orders."
+msgstr ""
+
+#: app.py:1504
+msgid "Error retrieving your orders"
+msgstr ""
+
+#: app.py:1534
+msgid "Order not found."
+msgstr ""
+
+#: app.py:1560 app.py:4512
+msgid "Error loading order details."
+msgstr ""
+
+#: app.py:1579
+msgid "You have been logged out."
+msgstr ""
+
+#: app.py:1659
+msgid "Please log in to view your cart."
+msgstr ""
+
+#: app.py:1792 app.py:2157 app.py:3672 app.py:5027
+msgid "An error occurred while processing your request."
+msgstr ""
+
+#: app.py:1832 app.py:3063
+msgid "Invalid token."
+msgstr ""
+
+#: app.py:1837
+msgid "Please log in."
+msgstr ""
+
+#: app.py:1842
+msgid "You don't have permission to access this page."
+msgstr ""
+
+#: app.py:2624
+msgid "Please log in to manage your cart."
+msgstr ""
+
+#: app.py:2637
+msgid "Missing article information"
+msgstr ""
+
+#: app.py:2641 app.py:3195
 msgid "Quantity must be at least 1"
 msgstr ""
 
-#: app.py:1526 app.py:1552 app.py:1583 app.py:3000
-msgid "Item not found in cart"
-msgstr ""
-
-#: app.py:1549
+#: app.py:2660
 msgid "Cart updated successfully"
 msgstr ""
 
-#: app.py:1556
+#: app.py:2663 app.py:4162
+msgid "Item not found in cart"
+msgstr ""
+
+#: app.py:2672
 msgid "Invalid quantity"
 msgstr ""
 
-#: app.py:1559
+#: app.py:2676
 msgid "Error updating cart"
 msgstr ""
 
-#: app.py:1571 app.py:2980
-msgid "Missing required information for removal"
+#: app.py:2691
+msgid "Missing article or table name"
 msgstr ""
 
-#: app.py:1581
-msgid "Article removed successfully"
+#: app.py:2719
+msgid "Item removed from cart"
 msgstr ""
 
-#: app.py:1586 app.py:3005
+#: app.py:2722
+msgid "Item not found in your cart"
+msgstr ""
+
+#: app.py:2731 app.py:4167
 msgid "Error removing item from cart"
 msgstr ""
 
-#: app.py:1788
-msgid ""
-"Thank you for your order!\n"
-"\n"
-"Your order details:\n"
-msgstr ""
-
-#: app.py:1791
-msgid "Ordered items:\n"
-msgstr ""
-
-#: app.py:1793
-msgid ""
-"- Article: {article}, Price: {price:.2f}, Quantity: {quantity}, Comment: "
-"{comment}\n"
-msgstr ""
-
-#: app.py:1802 templates/user/cart/cart.html:42
-#: templates/user/orders/order_details.html:63
-msgid "No comment"
-msgstr ""
-
-#: app.py:1806
-msgid ""
-"\n"
-"Missing articles:\n"
-msgstr ""
-
-#: app.py:2023
+#: app.py:3170
 msgid "Missing required product information"
 msgstr ""
 
-#: app.py:2029
+#: app.py:3177
 msgid "Invalid price format"
 msgstr ""
 
-#: app.py:2063
+#: app.py:3201
+msgid "Please log in or register to add this item to your cart."
+msgstr ""
+
+#: app.py:3224
 msgid "Item added to cart"
 msgstr ""
 
-#: app.py:2067
+#: app.py:3235
 msgid "Error adding item to cart"
 msgstr ""
 
-#: app.py:2111 app.py:2127
+#: app.py:3273 app.py:3289
 msgid "Please enter an article for search."
 msgstr ""
 
-#: app.py:2154
+#: app.py:3316
 msgid "An error occurred during the search. Please try again later."
 msgstr ""
 
-#: app.py:2345
+#: app.py:3507
 msgid "Please enter at least one article."
 msgstr ""
 
-#: app.py:2456
+#: app.py:3618
 msgid "Articles not found: {articles}"
 msgstr ""
 
-#: app.py:2485
+#: app.py:3647
 msgid "Added to cart: {articles}"
 msgstr ""
 
-#: app.py:2522
+#: app.py:3684
 msgid "You need to log in to view search results."
 msgstr ""
 
-#: app.py:2584
+#: app.py:3746
 msgid "Your selection has been saved!"
 msgstr ""
 
-#: app.py:2588
+#: app.py:3750
 msgid "An error occurred while saving your selection. Please try again."
 msgstr ""
 
-#: app.py:2609
+#: app.py:3771
 msgid "No search results found. Please start a new search."
 msgstr ""
 
-#: app.py:2626
+#: app.py:3788
 msgid "An error occurred while retrieving search results."
 msgstr ""
 
-#: app.py:2646
+#: app.py:3808
 msgid "You need to log in to view your cart."
 msgstr ""
 
-#: app.py:2759
+#: app.py:3921
 msgid "Could not load your cart. Please try again."
 msgstr ""
 
-#: app.py:2779 app.py:5841
+#: app.py:3941 app.py:7342
 msgid "User not authenticated"
 msgstr ""
 
-#: app.py:2828
+#: app.py:3990
 msgid "No articles selected"
 msgstr ""
 
-#: app.py:2857
+#: app.py:4019
 msgid "Selection successfully submitted!"
 msgstr ""
 
-#: app.py:2862
+#: app.py:4024
 msgid "An error occurred during submission"
 msgstr ""
 
-#: app.py:2876
+#: app.py:4038
 msgid "Search results cleared successfully"
 msgstr ""
 
-#: app.py:2882
+#: app.py:4044
 msgid "Error clearing search results"
 msgstr ""
 
-#: app.py:2910 app.py:3105
+#: app.py:4072 app.py:4267
 msgid "User is not authenticated. Please log in."
 msgstr ""
 
-#: app.py:2943
+#: app.py:4105
 msgid "Product added to cart!"
 msgstr ""
 
-#: app.py:2946
+#: app.py:4108
 msgid "Error adding product to cart."
 msgstr ""
 
-#: app.py:2997
+#: app.py:4142
+msgid "Missing required information for removal"
+msgstr ""
+
+#: app.py:4159
 msgid "Article {article} removed successfully"
 msgstr ""
 
-#: app.py:3024
+#: app.py:4186
 msgid "Invalid input: article or quantity missing."
 msgstr ""
 
-#: app.py:3031
+#: app.py:4193
 msgid "Quantity must be at least 1."
 msgstr ""
 
-#: app.py:3048
+#: app.py:4210
 msgid "Cart updated successfully!"
 msgstr ""
 
-#: app.py:3052
+#: app.py:4214
 msgid "Error updating cart."
 msgstr ""
 
-#: app.py:3123
+#: app.py:4285
 msgid "Your cart is empty!"
 msgstr ""
 
-#: app.py:3194
+#: app.py:4356
 msgid "Order placed, but we couldn't send a confirmation email."
 msgstr ""
 
-#: app.py:3208
+#: app.py:4370
 msgid "Error placing order: {error}"
 msgstr ""
 
-#: app.py:3226
+#: app.py:4388
 msgid "User is not authenticated."
 msgstr ""
 
-#: app.py:3292
+#: app.py:4454
 msgid "Error fetching orders."
 msgstr ""
 
-#: app.py:5908
+#: app.py:4899
+msgid "Category not found."
+msgstr ""
+
+#: app.py:7409
 msgid "Some articles still need table selection."
 msgstr ""
 
-#: app.py:5910
+#: app.py:7411
 msgid "All selected articles have been added to your cart."
 msgstr ""
 
-#: app.py:5956
+#: app.py:7457
 msgid "An error occurred while processing your selection. Please try again."
 msgstr ""
 
-#: app.py:6150
+#: app.py:7651
 msgid "News created successfully!"
 msgstr ""
 
-#: app.py:6155
+#: app.py:7656
 msgid "Error creating news"
 msgstr ""
 
-#: app.py:6763
+#: app.py:8264
 msgid "Error loading news"
 msgstr ""
 
-#: app.py:6794
+#: app.py:8295
 msgid "News not found"
 msgstr ""
 
-#: app.py:7167
+#: app.py:8668
 msgid "Delivery address updated"
 msgstr ""
 
-#: app.py:7183
+#: app.py:8684
 msgid "Invoice details updated"
 msgstr ""
 
-#: app.py:7185
+#: app.py:8686
 msgid "Invalid invoice data format"
 msgstr ""
 
-#: app.py:7277
+#: app.py:8778
 msgid "Item processed successfully"
 msgstr ""
 
-#: app.py:7290
+#: app.py:8791
 msgid "Error processing orders"
 msgstr ""
 
-#: app.py:7584
+#: app.py:9085
 msgid "Please login to access your profile"
 msgstr ""
 
-#: app.py:7634
+#: app.py:9135
 msgid "Invalid email format"
 msgstr ""
 
-#: app.py:7641 app.py:7695
+#: app.py:9142 app.py:9196
 msgid "This email is already in use by another user"
 msgstr ""
 
-#: app.py:7647 app.py:7697
+#: app.py:9148 app.py:9198
 msgid "This phone number is already in use by another user"
 msgstr ""
 
-#: app.py:7658
+#: app.py:9159
 msgid "Current password is incorrect"
 msgstr ""
 
-#: app.py:7663
+#: app.py:9164
 msgid "New passwords do not match"
 msgstr ""
 
-#: app.py:7676
+#: app.py:9177
 msgid "Profile and password updated successfully"
 msgstr ""
 
-#: app.py:7689
+#: app.py:9190
 msgid "Profile updated successfully"
 msgstr ""
 
-#: app.py:7699
+#: app.py:9200
 msgid "Error updating profile: duplicate value"
 msgstr ""
 
-#: app.py:7730
+#: app.py:9231
 msgid "Address added successfully"
 msgstr ""
 
-#: app.py:7742
+#: app.py:9243
 msgid "Address deleted successfully"
 msgstr ""
 
-#: app.py:7764
+#: app.py:9265
 msgid "Default address updated"
 msgstr ""
 
-#: app.py:7791
+#: app.py:9292
 msgid "Company added successfully"
 msgstr ""
 
-#: app.py:7803
+#: app.py:9304
 msgid "Company deleted successfully"
 msgstr ""
 
-#: app.py:7825
+#: app.py:9326
 msgid "Default company updated"
 msgstr ""
 
-#: app.py:7833
+#: app.py:9334
 msgid "Ukrainian"
 msgstr ""
 
-#: app.py:7833
+#: app.py:9334
 msgid "English"
 msgstr ""
 
-#: app.py:7833
+#: app.py:9334
 msgid "Slovak"
 msgstr ""
 
-#: app.py:7833
+#: app.py:9334
 msgid "Polish"
 msgstr ""
 
-#: app.py:7839
+#: app.py:9340
 msgid "Error accessing user profile"
 msgstr ""
 
@@ -473,7 +514,7 @@ msgstr ""
 
 #: templates/admin/admin_login.html:19 templates/auth/login.html:3
 #: templates/auth/login.html:15 templates/auth/login.html:30
-#: templates/base/public_base.html:118
+#: templates/base/public_base.html:256
 msgid "Login"
 msgstr ""
 
@@ -496,7 +537,8 @@ msgstr ""
 #: templates/admin/orders/process_orders.html:16
 #: templates/public/orders/list_orders.html:28
 #: templates/public/orders/list_orders.html:43
-#: templates/user/orders/orders.html:100
+#: templates/public/orders/orders.html:28
+#: templates/public/orders/orders.html:42 templates/user/orders/orders.html:100
 msgid "Date"
 msgstr ""
 
@@ -513,12 +555,13 @@ msgid "User Information"
 msgstr ""
 
 #: templates/admin/orders/process_orders.html:38
-#: templates/auth/register.html:25 templates/public/user/profile.html:60
+#: templates/auth/register.html:25 templates/public/returns.html:131
+#: templates/public/user/profile.html:60
 msgid "Email"
 msgstr ""
 
 #: templates/admin/orders/process_orders.html:45
-#: templates/public/orders/order_details.html:71
+#: templates/public/orders/order_details.html:89
 msgid "Delivery Address"
 msgstr ""
 
@@ -557,27 +600,26 @@ msgid "Change Invoice Details"
 msgstr ""
 
 #: templates/admin/orders/process_orders.html:113
-#: templates/public/cart/cart.html:256 templates/public/user/profile.html:279
+#: templates/public/cart/cart.html:243 templates/public/user/profile.html:279
 msgid "Company Name"
 msgstr ""
 
 #: templates/admin/orders/process_orders.html:114
-#: templates/public/cart/cart.html:222 templates/public/cart/cart.html:260
-#: templates/public/orders/order_details.html:100
+#: templates/public/cart/cart.html:209 templates/public/cart/cart.html:247
+#: templates/public/orders/order_details.html:123
 #: templates/public/user/profile.html:283
 msgid "VAT Number"
 msgstr ""
 
 #: templates/admin/orders/process_orders.html:116
-#: templates/public/cart/cart.html:224 templates/public/cart/cart.html:267
-#: templates/public/orders/order_details.html:104
+#: templates/public/cart/cart.html:211 templates/public/cart/cart.html:254
+#: templates/public/orders/order_details.html:127
 #: templates/public/user/profile.html:287
 msgid "Registration Number"
 msgstr ""
 
 #: templates/admin/orders/process_orders.html:119
-#: templates/public/cart/cart.html:271
-#: templates/public/orders/order_details.html:107
+#: templates/public/cart/cart.html:258 templates/public/contacts.html:50
 #: templates/public/user/profile.html:291
 msgid "Company Address"
 msgstr ""
@@ -604,22 +646,24 @@ msgstr ""
 
 #: templates/admin/orders/process_orders.html:164
 #: templates/public/article_not_found.html:97
-#: templates/public/cart/cart.html:42 templates/public/index.html:155
-#: templates/public/orders/order_details.html:124
-#: templates/public/product_details.html:121 templates/user/cart/cart.html:14
-#: templates/user/orders/order_changes.html:13
+#: templates/public/cart/cart.html:23 templates/public/index.html:151
+#: templates/public/index.html:190 templates/public/orders/confirmation.html:56
+#: templates/public/orders/order_details.html:152
+#: templates/public/product_details templates/public/product_details.html:163
+#: templates/user/cart/cart.html:14 templates/user/orders/order_changes.html:13
 #: templates/user/orders/order_details.html:20
 #: templates/user/orders/orders.html:62
 #: templates/user/search/intermediate.html:16
 #: templates/user/search/search_results.html:15
 #: templates/user/shipments/shipments.html:23
-#: templates/user/shipments/view_shipment.html:39
+#: templates/user/shipments/view_shipment.html:39 копія.html:123 –
 msgid "Article"
 msgstr ""
 
 #: templates/admin/orders/process_orders.html:165
-#: templates/public/cart/cart.html:46
-#: templates/public/orders/order_details.html:128
+#: templates/public/cart/cart.html:27
+#: templates/public/orders/confirmation.html:58
+#: templates/public/orders/order_details.html:156
 #: templates/user/cart/cart.html:18 templates/user/orders/order_details.html:25
 #: templates/user/search/intermediate.html:18
 #: templates/user/search/search_results.html:17
@@ -629,21 +673,32 @@ msgid "Quantity"
 msgstr ""
 
 #: templates/admin/orders/process_orders.html:166
+#: templates/public/api_search_results.html:38
 #: templates/public/article_not_found.html:101
-#: templates/public/cart/cart.html:45 templates/public/index.html:159
-#: templates/public/orders/order_details.html:127
-#: templates/user/cart/cart.html:17 templates/user/orders/order_details.html:24
+#: templates/public/cart/cart.html:26 templates/public/index.html:155
+#: templates/public/index.html:191 templates/public/orders/confirmation.html:59
+#: templates/public/orders/order_details.html:155
+#: templates/public/product_details templates/public/product_details.html:205
+#: templates/public/shipping_payment.html:185 templates/user/cart/cart.html:17
+#: templates/user/orders/order_details.html:24
 #: templates/user/shipments/shipments.html:25
-#: templates/user/shipments/view_shipment.html:41
+#: templates/user/shipments/view_shipment.html:41 копія.html:146 –
 msgid "Price"
 msgstr ""
 
 #: templates/admin/orders/process_orders.html:167
-#: templates/public/cart/cart.html:47
+#: templates/public/cart/cart.html:28
+#: templates/public/orders/confirmation.html:45
+#: templates/public/orders/confirmation.html:60
+#: templates/public/orders/confirmation.html:78
 #: templates/public/orders/list_orders.html:30
 #: templates/public/orders/list_orders.html:52
-#: templates/public/orders/order_details.html:129
-#: templates/user/cart/cart.html:19 templates/user/orders/order_details.html:26
+#: templates/public/orders/order_details.html:77
+#: templates/public/orders/order_details.html:157
+#: templates/public/orders/order_details.html:176
+#: templates/public/orders/orders.html:29
+#: templates/public/orders/orders.html:48 templates/user/cart/cart.html:19
+#: templates/user/orders/order_details.html:26
 msgid "Total"
 msgstr ""
 
@@ -652,10 +707,12 @@ msgid "Type"
 msgstr ""
 
 #: templates/admin/orders/process_orders.html:169
+#: templates/public/cart/cart.html:29
 #: templates/public/orders/list_orders.html:31
 #: templates/public/orders/list_orders.html:55
-#: templates/public/orders/order_details.html:40
-#: templates/public/orders/order_details.html:130
+#: templates/public/orders/order_details.html:43
+#: templates/public/orders/orders.html:30
+#: templates/public/orders/orders.html:51
 #: templates/user/orders/order_details.html:28
 #: templates/user/orders/orders.html:66 templates/user/orders/orders.html:102
 #: templates/user/shipments/list_shipments.html:18
@@ -663,9 +720,11 @@ msgid "Status"
 msgstr ""
 
 #: templates/admin/orders/process_orders.html:170
-#: templates/public/cart/cart.html:48
+#: templates/public/cart/cart.html:30
 #: templates/public/orders/list_orders.html:32
-#: templates/public/orders/list_orders.html:77 templates/user/cart/cart.html:21
+#: templates/public/orders/list_orders.html:77
+#: templates/public/orders/orders.html:31
+#: templates/public/orders/orders.html:81 templates/user/cart/cart.html:21
 #: templates/user/orders/orders.html:103
 #: templates/user/shipments/list_shipments.html:22
 msgid "Actions"
@@ -673,7 +732,7 @@ msgstr ""
 
 #: templates/admin/orders/process_orders.html:205
 #: templates/admin/orders/process_orders.html:212
-#: templates/base/public_base.html:170
+#: templates/base/public_base.html:312
 msgid "Accept"
 msgstr ""
 
@@ -695,7 +754,7 @@ msgid "Register here"
 msgstr ""
 
 #: templates/auth/register.html:3 templates/auth/register.html:15
-#: templates/auth/register.html:48 templates/base/public_base.html:124
+#: templates/auth/register.html:48
 msgid "Register"
 msgstr ""
 
@@ -728,11 +787,11 @@ msgstr ""
 msgid "News"
 msgstr ""
 
-#: templates/base/base.html:213 templates/base/public_base.html:88
+#: templates/base/base.html:213 templates/base/public_base.html:263
 msgid "Cart"
 msgstr ""
 
-#: templates/base/base.html:222 templates/base/public_base.html:105
+#: templates/base/base.html:222 templates/base/public_base.html:242
 msgid "Orders"
 msgstr ""
 
@@ -744,111 +803,419 @@ msgstr ""
 msgid "Shipments"
 msgstr ""
 
-#: templates/base/public_base.html:73 templates/public/index.html:12
+#: templates/base/public_base.html:120 templates/base/public_base.html:362
+#: templates/public/category.html:123 templates/public/index.html:12
+#: templates/public/product_details.html:74
 msgid "Home"
 msgstr ""
 
-#: templates/base/public_base.html:79
-msgid "About"
-msgstr ""
-
-#: templates/base/public_base.html:99 templates/public/user/profile.html:6
-msgid "My Profile"
-msgstr ""
-
-#: templates/base/public_base.html:111
-msgid "Logout"
-msgstr ""
-
-#: templates/base/public_base.html:167
-msgid "This website uses cookies..."
-msgstr ""
-
-#: templates/base/public_base.html:167 templates/base/public_base.html:195
-#: templates/base/public_base.html:217 templates/public/privacy.html:7
-#: templates/public/privacy.html:12 templates/public/privacy.html:17
-msgid "Privacy Policy"
-msgstr ""
-
-#: templates/base/public_base.html:171
-msgid "Only Essential"
-msgstr ""
-
-#: templates/base/public_base.html:184 templates/public/privacy.html:269
-#: templates/public/terms.html:223
-msgid "Contact Us"
-msgstr ""
-
-#: templates/base/public_base.html:191
-msgid "Quick Links"
-msgstr ""
-
-#: templates/base/public_base.html:193 templates/base/public_base.html:215
+#: templates/base/public_base.html:125 templates/base/public_base.html:364
 #: templates/public/about.html:7 templates/public/about.html:12
+#: templates/public/about.html:17
 msgid "About Us"
 msgstr ""
 
-#: templates/base/public_base.html:194 templates/base/public_base.html:216
-#: templates/public/terms.html:7 templates/public/terms.html:12
-#: templates/public/terms.html:17
+#: templates/base/public_base.html:130 templates/base/public_base.html:365
+#: templates/public/shipping_payment.html:7
+#: templates/public/shipping_payment.html:12
+#: templates/public/shipping_payment.html:17
+msgid "Shipping & Payment"
+msgstr ""
+
+#: templates/base/public_base.html:135 templates/base/public_base.html:327
+#: templates/public/car_service.html:26 templates/public/contacts.html:3
+#: templates/public/contacts.html:8 templates/public/privacy.html:269
+#: templates/public/returns.html:125 templates/public/terms.html:223
+msgid "Contact Us"
+msgstr ""
+
+#: templates/base/public_base.html:176
+#: templates/public/product_details.html:176
+#: templates/public/product_details.html:278
+msgid "Categories"
+msgstr ""
+
+#: templates/base/public_base.html:232
+msgid "My Account"
+msgstr ""
+
+#: templates/base/public_base.html:237 templates/public/user/profile.html:15
+msgid "Profile"
+msgstr ""
+
+#: templates/base/public_base.html:248
+msgid "Logout"
+msgstr ""
+
+#: templates/base/public_base.html:309
+msgid "This website uses cookies..."
+msgstr ""
+
+#: templates/base/public_base.html:309 templates/base/public_base.html:395
+#: templates/public/privacy.html:7 templates/public/privacy.html:12
+#: templates/public/privacy.html:17
+msgid "Privacy Policy"
+msgstr ""
+
+#: templates/base/public_base.html:313
+msgid "Only Essential"
+msgstr ""
+
+#: templates/base/public_base.html:353
+msgid "Warehouse"
+msgstr ""
+
+#: templates/base/public_base.html:360
+msgid "Navigation"
+msgstr ""
+
+#: templates/base/public_base.html:363
+msgid "Catalog"
+msgstr ""
+
+#: templates/base/public_base.html:366 templates/base/public_base.html:397
+msgid "Returns & Exchange"
+msgstr ""
+
+#: templates/base/public_base.html:367
+msgid "Contacts"
+msgstr ""
+
+#: templates/base/public_base.html:373
+msgid "Company Info"
+msgstr ""
+
+#: templates/base/public_base.html:380
+msgid "Bank Details"
+msgstr ""
+
+#: templates/base/public_base.html:383
+msgid "Account"
+msgstr ""
+
+#: templates/base/public_base.html:384
+#: templates/public/shipping_payment.html:250
+msgid "Bank"
+msgstr ""
+
+#: templates/base/public_base.html:396 templates/public/terms.html:7
+#: templates/public/terms.html:12 templates/public/terms.html:17
 msgid "Terms & Conditions"
 msgstr ""
 
-#: templates/base/public_base.html:199
-msgid "Follow Us"
-msgstr ""
-
-#: templates/base/public_base.html:212
-msgid "2024 AutogroupEU. All rights reserved."
-msgstr ""
-
-#: templates/base/public_base.html:218
+#: templates/base/public_base.html:398
 msgid "Cookie Settings"
+msgstr ""
+
+#: templates/base/public_base.html:407
+msgid ""
+"All prices shown include VAT unless otherwise stated. EU business "
+"customers with valid VAT ID may receive invoices without VAT."
+msgstr ""
+
+#: templates/base/public_base.html:419
+msgid "Call us (SK/CZ/PL)"
+msgstr ""
+
+#: templates/base/public_base.html:422
+msgid "Call us (HU/EN)"
+msgstr ""
+
+#: templates/base/public_base.html:435
+msgid "Contact us via WhatsApp"
 msgstr ""
 
 #: templates/public/about.html:5 templates/public/about.html:8
 msgid ""
 "Learn more about AutogroupEU - your trusted partner in auto parts supply "
-"across Europe."
+"across Europe since 2014."
 msgstr ""
 
 #: templates/public/about.html:6
-msgid "about us, auto parts, European supplier, car parts, B2B"
+msgid "about us, auto parts, European supplier, car parts, B2B, original parts"
 msgstr ""
 
-#: templates/public/about.html:18
-msgid "About AutogroupEU"
+#: templates/public/about.html:12 templates/public/category.html:3
+#: templates/public/category.html:12 templates/public/contacts.html:3
+#: templates/public/returns.html:7 templates/public/returns.html:12
+msgid "AutogroupEU"
 msgstr ""
 
-#: templates/public/about.html:19
-msgid "Your Trusted Partner in Auto Parts"
+#: templates/public/about.html:28
+msgid "Our Company"
 msgstr ""
 
-#: templates/public/about.html:30
-msgid "Auto Parts Store"
-msgstr ""
-
-#: templates/public/about.html:35
+#: templates/public/about.html:32
 msgid ""
-"We are a specialized auto parts store serving business clients across "
-"Europe. With over 15 years of experience, we provide high-quality "
-"automotive parts and exceptional service to our B2B partners."
+"Founded on November 15, 2014, we have been supplying original auto parts "
+"for many years. We have an online store where you can order parts to be "
+"delivered or purchase items available in our stock."
+msgstr ""
+
+#: templates/public/about.html:34
+msgid ""
+"We provide original parts from European official warehouses at the lowest"
+" prices. All parts are original and new."
+msgstr ""
+
+#: templates/public/about.html:38
+msgid "Our extensive catalog includes the following categories:"
 msgstr ""
 
 #: templates/public/about.html:46
-msgid "Our Main Brands"
+msgid "Engine and Components"
 msgstr ""
 
-#: templates/public/about.html:69
-msgid "B2B Services"
+#: templates/public/about.html:49
+msgid ""
+"Cylinder blocks, Cylinder heads, Pistons, Crankshafts, Turbochargers, "
+"Fuel injectors, Gaskets and seals"
 msgstr ""
 
-#: templates/public/about.html:74
-msgid "For business clients interested in B2B access, please contact us:"
+#: templates/public/about.html:59
+msgid "Fuel and Exhaust Systems"
 msgstr ""
 
-#: templates/public/about.html:90
-msgid "Find Us"
+#: templates/public/about.html:62
+msgid ""
+"Fuel pumps, Injectors, Carburetors, Fuel filters, Catalytic converters, "
+"Mufflers, Exhaust manifolds"
+msgstr ""
+
+#: templates/public/about.html:72
+msgid "Cooling and Heating"
+msgstr ""
+
+#: templates/public/about.html:75
+msgid "Radiators, Water pumps, Thermostats, Fans, Intercoolers, Cabin heaters"
+msgstr ""
+
+#: templates/public/about.html:85
+msgid "Lubrication System"
+msgstr ""
+
+#: templates/public/about.html:88
+msgid "Oil pumps, Oil filters, Engine oil pans, Dipsticks"
+msgstr ""
+
+#: templates/public/about.html:98
+msgid "Suspension and Chassis"
+msgstr ""
+
+#: templates/public/about.html:101
+msgid ""
+"Shock absorbers, Springs, Stabilizers, Suspension arms, Engine mounts, "
+"Hub bearings"
+msgstr ""
+
+#: templates/public/about.html:111
+msgid "Brake System"
+msgstr ""
+
+#: templates/public/about.html:114
+msgid ""
+"Brake pads, Discs and drums, Brake calipers, Master cylinders, Vacuum "
+"boosters"
+msgstr ""
+
+#: templates/public/about.html:124
+msgid "Steering"
+msgstr ""
+
+#: templates/public/about.html:127
+msgid "Steering racks, Power steering pumps, Tie rod ends, Hydraulic cylinders"
+msgstr ""
+
+#: templates/public/about.html:137
+msgid "Transmission and Drivetrain"
+msgstr ""
+
+#: templates/public/about.html:140
+msgid ""
+"Manual and automatic transmissions, Clutches, Drive shafts, Transfer "
+"cases, Differentials"
+msgstr ""
+
+#: templates/public/about.html:150
+msgid "Electrical and Lighting"
+msgstr ""
+
+#: templates/public/about.html:153
+msgid ""
+"Starters, Alternators, Batteries, Lights and headlights, Spark plugs, "
+"Various sensors, Electronic control units (ECUs)"
+msgstr ""
+
+#: templates/public/about.html:163
+msgid "Body Parts and Accessories"
+msgstr ""
+
+#: templates/public/about.html:166
+msgid ""
+"Hoods, doors, fenders, bumpers, Windows (windshield, side, rear), "
+"Mirrors, Emblems and moldings"
+msgstr ""
+
+#: templates/public/about.html:176
+msgid "Interior and Comfort"
+msgstr ""
+
+#: templates/public/about.html:179
+msgid ""
+"Dashboards, Seats and armrests, Steering wheels and gear knobs, Heating "
+"and air conditioning, Audio systems"
+msgstr ""
+
+#: templates/public/about.html:189
+msgid "Wheels and Tires"
+msgstr ""
+
+#: templates/public/about.html:192
+msgid "Steel and alloy rims, Tires, Tire pressure sensors"
+msgstr ""
+
+#: templates/public/about.html:202
+msgid "Fluids and Lubricants"
+msgstr ""
+
+#: templates/public/about.html:205
+msgid ""
+"Engine and transmission oils, Antifreeze, Brake fluid, Hydraulic fluids, "
+"Windshield washer fluid"
+msgstr ""
+
+#: templates/public/about.html:212
+msgid ""
+"Our company is registered at 066 01 Humenné Mierová 99, Slovakia, and our"
+" main warehouse is located in Tusicka Nova Ves 90, Tusice 07202, "
+"Slovakia. By prior arrangement, you can always pick up your parts "
+"yourself."
+msgstr ""
+
+#: templates/public/about.html:222
+msgid "Workshop & Programming Services"
+msgstr ""
+
+#: templates/public/about.html:226
+msgid ""
+"In addition to parts supply, we have our own workshop where we specialize"
+" in car repairs and programming."
+msgstr ""
+
+#: templates/public/about.html:228
+msgid ""
+"We can help with complex engine repairs, specializing in Land Rover, BMW,"
+" Ford, and Mercedes-Benz vehicles. Our particular expertise is with 306DT"
+" engines, which we have been repairing for many years, but we also work "
+"with many other engine types."
+msgstr ""
+
+#: templates/public/about.html:230
+msgid ""
+"We have all the necessary diagnostic software. Through our partners, we "
+"can also provide chip tuning services to increase your vehicle's "
+"performance."
+msgstr ""
+
+#: templates/public/about.html:234
+msgid "We specialize in the following brands:"
+msgstr ""
+
+#: templates/public/about.html:262
+msgid "*VAG Group includes Audi, Volkswagen, Porsche"
+msgstr ""
+
+#: templates/public/about.html:274
+msgid "Available Brands"
+msgstr ""
+
+#: templates/public/about.html:278
+msgid "We can supply parts for these car brands:"
+msgstr ""
+
+#: templates/public/about.html:318
+msgid "We also supply parts for motorcycles:"
+msgstr ""
+
+#: templates/public/api_search.html:3
+msgid "Part Number Search"
+msgstr ""
+
+#: templates/public/api_search.html:11
+msgid "Search Parts by Number"
+msgstr ""
+
+#: templates/public/api_search.html:16
+msgid "Enter part numbers"
+msgstr ""
+
+#: templates/public/api_search.html:22
+msgid "Enter part numbers (one per line or separated by commas)"
+msgstr ""
+
+#: templates/public/api_search.html:25
+msgid "Example: A9472652904, SU00305159"
+msgstr ""
+
+#: templates/public/api_search.html:29
+#: templates/public/article_not_found.html:46 templates/public/index.html:40
+#: templates/public/product_details templates/public/product_details.html:99
+#: templates/user/index.html:24 копія.html:57 –
+msgid "Search"
+msgstr ""
+
+#: templates/public/api_search_results.html:3
+#: templates/public/api_search_results.html:19
+#: templates/user/search/search_results.html:3
+#: templates/user/search/search_results.html:7
+msgid "Search Results"
+msgstr ""
+
+#: templates/public/api_search_results.html:10
+msgid "Back to Search"
+msgstr ""
+
+#: templates/public/api_search_results.html:36
+#: templates/public/article_not_found.html:93
+#: templates/public/cart/cart.html:25 templates/public/index.html:147
+#: templates/public/index.html:189
+#: templates/public/orders/order_details.html:154
+#: templates/public/product_details templates/public/product_details.html:168
+#: templates/user/cart/cart.html:16 templates/user/search/intermediate.html:35
+#: копія.html:128 –
+msgid "Brand"
+msgstr ""
+
+#: templates/public/api_search_results.html:37
+msgid "Title"
+msgstr ""
+
+#: templates/public/api_search_results.html:39
+msgid "Delivery"
+msgstr ""
+
+#: templates/public/api_search_results.html:40 templates/public/product_details
+#: templates/public/product_details.html:238
+#: templates/user/search/intermediate.html:61
+#: templates/user/search/search_results.html:82 копія.html:178 –
+msgid "Add to Cart"
+msgstr ""
+
+#: templates/public/api_search_results.html:56
+msgid "Discount"
+msgstr ""
+
+#: templates/public/api_search_results.html:65
+#: templates/user/search/search_results.html:19
+msgid "Select"
+msgstr ""
+
+#: templates/public/api_search_results.html:80
+msgid "No results found for this part number"
+msgstr ""
+
+#: templates/public/api_search_results.html:88
+msgid "Add Selected to Cart"
 msgstr ""
 
 #: templates/public/article_not_found.html:5
@@ -880,13 +1247,9 @@ msgid ""
 msgstr ""
 
 #: templates/public/article_not_found.html:41 templates/public/index.html:37
-#: templates/public/product_details.html:66
+#: templates/public/product_details templates/public/product_details.html:96
+#: копія.html:54 –
 msgid "Enter article number..."
-msgstr ""
-
-#: templates/public/article_not_found.html:46 templates/public/index.html:40
-#: templates/public/product_details.html:69 templates/user/index.html:24
-msgid "Search"
 msgstr ""
 
 #: templates/public/article_not_found.html:56
@@ -901,19 +1264,162 @@ msgstr ""
 msgid "Recommended Products"
 msgstr ""
 
-#: templates/public/article_not_found.html:93
-#: templates/public/cart/cart.html:44 templates/public/index.html:151
-#: templates/public/orders/order_details.html:126
-#: templates/public/product_details.html:126 templates/user/cart/cart.html:16
-#: templates/user/search/intermediate.html:35
-msgid "Brand"
-msgstr ""
-
-#: templates/public/article_not_found.html:109 templates/public/index.html:174
-#: templates/public/orders/list_orders.html:81
-#: templates/user/news/user_news.html:44 templates/user/orders/orders.html:124
+#: templates/public/article_not_found.html:109
+#: templates/public/category.html:292 templates/public/index.html:164
+#: templates/public/index.html:193 templates/public/orders/list_orders.html:81
+#: templates/public/orders/orders.html:85 templates/user/news/user_news.html:44
+#: templates/user/orders/orders.html:124
 #: templates/user/shipments/list_shipments.html:36
 msgid "View Details"
+msgstr ""
+
+#: templates/public/car_service.html:4 templates/public/car_service.html:10
+#: templates/public/index.html:77
+msgid "Car Service & Programming"
+msgstr ""
+
+#: templates/public/car_service.html:14
+msgid "Our Services"
+msgstr ""
+
+#: templates/public/car_service.html:15
+msgid ""
+"We offer professional car diagnostic and programming services for various"
+" car models."
+msgstr ""
+
+#: templates/public/car_service.html:17
+msgid "Available Services"
+msgstr ""
+
+#: templates/public/car_service.html:19
+msgid "Full car diagnostics"
+msgstr ""
+
+#: templates/public/car_service.html:20
+msgid "ECU programming and updates"
+msgstr ""
+
+#: templates/public/car_service.html:21
+msgid "Key programming"
+msgstr ""
+
+#: templates/public/car_service.html:22
+msgid "Software updates"
+msgstr ""
+
+#: templates/public/car_service.html:23
+msgid "Dashboard repair"
+msgstr ""
+
+#: templates/public/car_service.html:27
+msgid "For more information about our car services, please contact us:"
+msgstr ""
+
+#: templates/public/category.html:8 templates/public/category.html:13
+#: templates/public/category.html:26
+msgid "Browse our collection of"
+msgstr ""
+
+#: templates/public/category.html:8 templates/public/category.html:13
+#: templates/public/category.html:26
+msgid "products at AutogroupEU"
+msgstr ""
+
+#: templates/public/category.html:9
+msgid "auto parts, automotive parts"
+msgstr ""
+
+#: templates/public/category.html:140
+msgid "products"
+msgstr ""
+
+#: templates/public/category.html:150
+msgid "Subcategories"
+msgstr ""
+
+#: templates/public/category.html:167
+msgid "Brand Filter"
+msgstr ""
+
+#: templates/public/category.html:180 templates/public/index.html:109
+msgid "All Brands"
+msgstr ""
+
+#: templates/public/category.html:195
+msgid "Apply Filter"
+msgstr ""
+
+#: templates/public/category.html:203
+msgid "Sort by"
+msgstr ""
+
+#: templates/public/category.html:215
+msgid "Name A-Z"
+msgstr ""
+
+#: templates/public/category.html:221
+msgid "Name Z-A"
+msgstr ""
+
+#: templates/public/category.html:227
+msgid "Price Low to High"
+msgstr ""
+
+#: templates/public/category.html:233
+msgid "Price High to Low"
+msgstr ""
+
+#: templates/public/category.html:238
+msgid "Apply Sorting"
+msgstr ""
+
+#: templates/public/category.html:246
+msgid "Reset All Filters"
+msgstr ""
+
+#: templates/public/category.html:277
+msgid "Article:"
+msgstr ""
+
+#: templates/public/category.html:282
+msgid "Brand:"
+msgstr ""
+
+#: templates/public/category.html:300
+msgid "No products found in this category"
+msgstr ""
+
+#: templates/public/category.html:312 templates/public/category.html:317
+msgid "Previous"
+msgstr ""
+
+#: templates/public/category.html:334 templates/public/category.html:339
+msgid "Next"
+msgstr ""
+
+#: templates/public/category.html:352
+msgid "Filters"
+msgstr ""
+
+#: templates/public/contacts.html:17
+msgid "Phone Numbers"
+msgstr ""
+
+#: templates/public/contacts.html:33
+msgid "Online Contact"
+msgstr ""
+
+#: templates/public/contacts.html:54
+msgid "Office"
+msgstr ""
+
+#: templates/public/contacts.html:55 templates/public/returns.html:67
+msgid "Main warehouse"
+msgstr ""
+
+#: templates/public/contacts.html:60 templates/public/user/profile.html:217
+msgid "Company Information"
 msgstr ""
 
 #: templates/public/index.html:5
@@ -956,40 +1462,37 @@ msgstr ""
 msgid "Mon-Fri: 9:00 - 19:00"
 msgstr ""
 
-#: templates/public/index.html:77
-msgid "Car Service & Programming"
-msgstr ""
-
 #: templates/public/index.html:81
 msgid "We offer professional car repair and programming services."
 msgstr ""
 
-#: templates/public/index.html:84
+#: templates/public/index.html:82
 msgid "Learn More"
 msgstr ""
 
-#: templates/public/index.html:99
+#: templates/public/index.html:96
 msgid "Items in Our Stock"
 msgstr ""
 
-#: templates/public/index.html:110
+#: templates/public/index.html:106
 msgid "Filter by brand:"
 msgstr ""
 
-#: templates/public/index.html:113
-msgid "All Brands"
-msgstr ""
-
-#: templates/public/index.html:122
+#: templates/public/index.html:118
 msgid "Clear"
 msgstr ""
 
-#: templates/public/index.html:168
-msgid "No description available."
+#: templates/public/index.html:156 templates/public/index.html:194
+#: templates/public/product_details.html:207
+msgid "incl. VAT"
 msgstr ""
 
-#: templates/public/index.html:188
+#: templates/public/index.html:178
 msgid "Show More Products"
+msgstr ""
+
+#: templates/public/index.html:192
+msgid "No description available."
 msgstr ""
 
 #: templates/public/privacy.html:5 templates/public/privacy.html:8
@@ -1396,31 +1899,503 @@ msgid ""
 "authority if you have concerns about how we process your personal data."
 msgstr ""
 
-#: templates/public/product_details.html:6
+#: templates/public/product_details templates/public/product_details.html:6
+#: копія.html:6 –
 msgid "auto parts"
 msgstr ""
 
-#: templates/public/product_details.html:6
+#: templates/public/product_details templates/public/product_details.html:6
+#: копія.html:6 –
 msgid "spare parts"
 msgstr ""
 
-#: templates/public/product_details.html:138
+#: templates/public/product_details templates/public/product_details.html:199
+#: копія.html:140 –
 msgid "Available Prices"
 msgstr ""
 
-#: templates/public/product_details.html:167
-#: templates/user/search/intermediate.html:61
-#: templates/user/search/search_results.html:82
-msgid "Add to Cart"
+#: templates/public/product_details templates/public/product_details.html:212
+#: копія.html:152 –
+msgid "Availability"
 msgstr ""
 
-#: templates/public/cart/cart.html:290
-#: templates/public/product_details.html:177
+#: templates/public/product_details templates/public/product_details.html:228
+#: копія.html:168 –
+msgid "Qty"
+msgstr ""
+
+#: templates/public/cart/cart.html:277 templates/public/product_details
+#: templates/public/product_details.html:250 копія.html:190 –
 msgid "Continue Shopping"
 msgstr ""
 
-#: templates/public/product_details.html:190
+#: templates/public/product_details templates/public/product_details.html:263
+#: копія.html:203 –
 msgid "Description"
+msgstr ""
+
+#: templates/public/returns.html:5 templates/public/returns.html:8
+msgid "Learn about AutogroupEU's returns and exchanges policy for auto parts."
+msgstr ""
+
+#: templates/public/returns.html:6
+msgid "returns policy, auto parts return, exchange policy, EU consumer rights"
+msgstr ""
+
+#: templates/public/returns.html:7 templates/public/returns.html:12
+#: templates/public/returns.html:17
+msgid "Returns & Exchanges"
+msgstr ""
+
+#: templates/public/returns.html:28
+msgid "Returns Policy"
+msgstr ""
+
+#: templates/public/returns.html:33
+msgid "Right of Withdrawal"
+msgstr ""
+
+#: templates/public/returns.html:34
+msgid ""
+"In accordance with EU regulations, consumers have the right to withdraw "
+"from the purchase contract without giving any reason within 14 days from "
+"the day of receiving the goods. To exercise this right, you must inform "
+"us of your decision through an unequivocal statement (e.g., email or "
+"letter)."
+msgstr ""
+
+#: templates/public/returns.html:37
+msgid "Stock Items vs. Special Order Items"
+msgstr ""
+
+#: templates/public/returns.html:38
+msgid ""
+"Parts that we ship from our warehouse are subject to all standard return "
+"conditions. However, electronic components and parts ordered specially "
+"for a customer are non-returnable unless there is a factory defect "
+"confirmed by our technical specialists."
+msgstr ""
+
+#: templates/public/returns.html:39
+msgid ""
+"If you're unsure whether a part fits your vehicle, we strongly recommend "
+"providing your vehicle's VIN code before ordering so our specialists can "
+"verify compatibility. This helps avoid unnecessary returns and ensures "
+"you receive the correct part the first time."
+msgstr ""
+
+#: templates/public/returns.html:42
+msgid "Return Conditions"
+msgstr ""
+
+#: templates/public/returns.html:43
+msgid "To be eligible for a return, your item must be:"
+msgstr ""
+
+#: templates/public/returns.html:45
+msgid "In the same original packaging it was shipped in"
+msgstr ""
+
+#: templates/public/returns.html:46
+msgid "Without any traces of installation or use"
+msgstr ""
+
+#: templates/public/returns.html:47
+msgid "In the same clean condition as you received it"
+msgstr ""
+
+#: templates/public/returns.html:48
+msgid ""
+"Complete with all accessories, manuals, and documentation included in the"
+" original package"
+msgstr ""
+
+#: templates/public/returns.html:52
+msgid "Refunds"
+msgstr ""
+
+#: templates/public/returns.html:53
+msgid ""
+"Once your returned item is received and inspected, we will process your "
+"refund. Refunds will be processed to the original payment method used for"
+" the purchase. Please allow 5-10 business days for the refund to appear "
+"in your account after we've processed it."
+msgstr ""
+
+#: templates/public/returns.html:56
+msgid "Shipping Costs"
+msgstr ""
+
+#: templates/public/returns.html:57
+msgid ""
+"The customer is responsible for all return shipping costs unless the "
+"return is due to our error (you received an incorrect or defective item)."
+" We recommend using a trackable shipping service and purchasing shipping "
+"insurance for items of value."
+msgstr ""
+
+#: templates/public/returns.html:60
+msgid "Liability"
+msgstr ""
+
+#: templates/public/returns.html:61
+msgid ""
+"After shipping parts to the customer, we are not responsible for their "
+"integrity and safety. From the moment of shipment, responsibility for "
+"their integrity and safety is transferred to the shipping carrier and "
+"ultimately to the customer upon delivery."
+msgstr ""
+
+#: templates/public/returns.html:65
+msgid "Return Address"
+msgstr ""
+
+#: templates/public/returns.html:66
+msgid "Office Address"
+msgstr ""
+
+#: templates/public/returns.html:68
+msgid "You can always pick up your parts in person by prior arrangement."
+msgstr ""
+
+#: templates/public/returns.html:79
+msgid "Return Process"
+msgstr ""
+
+#: templates/public/returns.html:84
+msgid ""
+"Contact our customer service team at info@autogroup.sk to notify us about"
+" your return request within 14 days of receiving your order."
+msgstr ""
+
+#: templates/public/returns.html:85
+msgid ""
+"Include your order number, the item(s) you wish to return, and the reason"
+" for return."
+msgstr ""
+
+#: templates/public/returns.html:86
+msgid ""
+"Our team will review your request and provide you with return "
+"instructions and a return authorization if applicable."
+msgstr ""
+
+#: templates/public/returns.html:87
+msgid ""
+"Package the item carefully in its original packaging with all included "
+"accessories."
+msgstr ""
+
+#: templates/public/returns.html:88
+msgid ""
+"Ship the package to the provided return address using a trackable "
+"shipping method."
+msgstr ""
+
+#: templates/public/returns.html:89
+msgid ""
+"Once we receive and inspect the returned item, we will process your "
+"refund within 14 days."
+msgstr ""
+
+#: templates/public/returns.html:100
+msgid "Exceptions to Return Policy"
+msgstr ""
+
+#: templates/public/returns.html:104
+msgid "The following items cannot be returned unless they are defective:"
+msgstr ""
+
+#: templates/public/returns.html:106
+msgid "Electronic components (ECUs, sensors, modules, etc.)"
+msgstr ""
+
+#: templates/public/returns.html:107
+msgid "Items marked as \"Special Order\" at the time of purchase"
+msgstr ""
+
+#: templates/public/returns.html:108
+msgid "Custom-ordered or specially manufactured parts"
+msgstr ""
+
+#: templates/public/returns.html:109
+msgid "Parts that have been installed or show signs of installation attempt"
+msgstr ""
+
+#: templates/public/returns.html:110
+msgid "Parts with removed or damaged labels, packaging, or identification marks"
+msgstr ""
+
+#: templates/public/returns.html:114
+msgid ""
+"For specific questions about returning a particular item, please contact "
+"our customer service team before initiating a return."
+msgstr ""
+
+#: templates/public/returns.html:129
+msgid "If you have any questions about our return policy, please contact us:"
+msgstr ""
+
+#: templates/public/cart/cart.html:138 templates/public/returns.html:132
+#: templates/public/user/profile.html:65 templates/public/user/profile.html:119
+#: templates/public/user/profile.html:164
+msgid "Phone"
+msgstr ""
+
+#: templates/public/shipping_payment.html:5
+#: templates/public/shipping_payment.html:8
+msgid "Information about shipping methods and payment options at AutogroupEU."
+msgstr ""
+
+#: templates/public/shipping_payment.html:6
+msgid "shipping, delivery, payment, payment options, bank transfer, GLS delivery"
+msgstr ""
+
+#: templates/public/shipping_payment.html:18
+msgid "Information about delivery and payment options"
+msgstr ""
+
+#: templates/public/cart/cart.html:81 templates/public/shipping_payment.html:29
+msgid "Delivery Information"
+msgstr ""
+
+#: templates/public/shipping_payment.html:34
+msgid ""
+"We ship all products from our warehouse within one business day after "
+"receiving your order and payment. For products that need to be ordered, "
+"we will contact you to discuss delivery details before you make a "
+"payment."
+msgstr ""
+
+#: templates/public/shipping_payment.html:37
+msgid "Delivery Methods"
+msgstr ""
+
+#: templates/public/shipping_payment.html:42
+msgid "Standard Shipping"
+msgstr ""
+
+#: templates/public/shipping_payment.html:45
+#: templates/public/shipping_payment.html:56
+msgid "Delivery time:"
+msgstr ""
+
+#: templates/public/shipping_payment.html:45
+#: templates/public/shipping_payment.html:56
+msgid "business days"
+msgstr ""
+
+#: templates/public/shipping_payment.html:46
+#: templates/public/shipping_payment.html:57
+#: templates/public/shipping_payment.html:69
+msgid "Cost:"
+msgstr ""
+
+#: templates/public/shipping_payment.html:46
+#: templates/public/shipping_payment.html:57
+msgid "Starting from"
+msgstr ""
+
+#: templates/public/shipping_payment.html:53
+msgid "Express Shipping"
+msgstr ""
+
+#: templates/public/shipping_payment.html:58
+msgid "Available for most locations in Europe. Contact us for specific pricing."
+msgstr ""
+
+#: templates/public/shipping_payment.html:65
+msgid "Pickup from Warehouse"
+msgstr ""
+
+#: templates/public/shipping_payment.html:68
+msgid "Location:"
+msgstr ""
+
+#: templates/public/shipping_payment.html:68
+#: templates/public/user/profile.html:176
+msgid "Slovakia"
+msgstr ""
+
+#: templates/public/shipping_payment.html:69
+msgid "Free"
+msgstr ""
+
+#: templates/public/shipping_payment.html:70
+msgid "Please call us in advance to arrange pickup."
+msgstr ""
+
+#: templates/public/shipping_payment.html:78
+msgid "GLS International Delivery"
+msgstr ""
+
+#: templates/public/shipping_payment.html:81
+msgid ""
+"Our main international shipping partner is GLS, offering reliable "
+"delivery service across Europe."
+msgstr ""
+
+#: templates/public/shipping_payment.html:84
+msgid "Delivery Zones & Estimated Times"
+msgstr ""
+
+#: templates/public/shipping_payment.html:89
+msgid "Eurozone"
+msgstr ""
+
+#: templates/public/shipping_payment.html:90
+msgid "Countries"
+msgstr ""
+
+#: templates/public/shipping_payment.html:91
+msgid "Delivery Time"
+msgstr ""
+
+#: templates/public/shipping_payment.html:118
+msgid ""
+"Note: Delivery times are indicative and depend on the pickup time by the "
+"courier."
+msgstr ""
+
+#: templates/public/shipping_payment.html:121
+msgid "Excluded from EU deliveries:"
+msgstr ""
+
+#: templates/public/shipping_payment.html:121
+msgid ""
+"Andorra, Büsingen am Hochrhein, Ceuta, Gibraltar, Great Britain, Greece, "
+"Livigno, Malta, Melilla, Monaco, Norway, San Marino, Switzerland and all "
+"European islands (except for the German Islands)."
+msgstr ""
+
+#: templates/public/shipping_payment.html:125
+msgid "International Shipping Rates"
+msgstr ""
+
+#: templates/public/shipping_payment.html:130
+msgid "Parcel Size"
+msgstr ""
+
+#: templates/public/shipping_payment.html:178
+msgid "Delivery within Slovakia"
+msgstr ""
+
+#: templates/public/shipping_payment.html:183
+msgid "Dimension"
+msgstr ""
+
+#: templates/public/shipping_payment.html:184
+msgid "The longest + the shortest edge max."
+msgstr ""
+
+#: templates/public/shipping_payment.html:219
+msgid "A parcel can weigh up to 31,5 kg."
+msgstr ""
+
+#: templates/public/shipping_payment.html:226
+msgid ""
+"For urgent deliveries or special shipping requests, please contact us "
+"directly."
+msgstr ""
+
+#: templates/public/shipping_payment.html:237
+msgid "Payment Methods"
+msgstr ""
+
+#: templates/public/shipping_payment.html:242
+msgid ""
+"We accept payments via bank transfer to our account. When making a "
+"payment, please include your order number in the payment description."
+msgstr ""
+
+#: templates/public/shipping_payment.html:246
+msgid "Bank Account Details"
+msgstr ""
+
+#: templates/public/shipping_payment.html:265
+msgid "Important: Always include your order number in the payment description."
+msgstr ""
+
+#: templates/public/orders/confirmation.html:104
+#: templates/public/shipping_payment.html:269
+msgid "Order Processing"
+msgstr ""
+
+#: templates/public/shipping_payment.html:271
+msgid ""
+"For items in stock, we will process and ship your order within one "
+"business day after receiving payment. For items that need to be ordered "
+"from our suppliers, we will contact you to discuss delivery times and "
+"payment details before processing."
+msgstr ""
+
+#: templates/public/shipping_payment.html:276
+msgid ""
+"If you have any questions about payment or need additional information, "
+"please contact our customer service."
+msgstr ""
+
+#: templates/public/shipping_payment.html:287
+msgid "VAT Information"
+msgstr ""
+
+#: templates/public/shipping_payment.html:292
+msgid "All prices on our website include VAT"
+msgstr ""
+
+#: templates/public/shipping_payment.html:293
+msgid ""
+"All prices shown on our website include VAT (Value Added Tax) at the "
+"applicable rate."
+msgstr ""
+
+#: templates/public/shipping_payment.html:297
+msgid "VAT policies by customer type:"
+msgstr ""
+
+#: templates/public/shipping_payment.html:300
+msgid "Slovak customers:"
+msgstr ""
+
+#: templates/public/shipping_payment.html:301
+#, python-format
+msgid "All invoices include 23%% Slovak VAT as required by law."
+msgstr ""
+
+#: templates/public/shipping_payment.html:304
+msgid "EU business customers with valid VAT ID:"
+msgstr ""
+
+#: templates/public/shipping_payment.html:305
+msgid ""
+"Invoices are issued without VAT under the reverse-charge mechanism. "
+"Please provide your valid EU VAT number during checkout."
+msgstr ""
+
+#: templates/public/shipping_payment.html:308
+msgid "EU private customers:"
+msgstr ""
+
+#: templates/public/shipping_payment.html:309
+#, python-format
+msgid "Invoices include Slovak VAT at 23%% rate."
+msgstr ""
+
+#: templates/public/shipping_payment.html:312
+msgid "Non-EU customers:"
+msgstr ""
+
+#: templates/public/shipping_payment.html:313
+msgid ""
+"Special export rules may apply. Please contact us for detailed "
+"information."
+msgstr ""
+
+#: templates/public/shipping_payment.html:320
+msgid ""
+"To receive an invoice without VAT, EU business customers must provide a "
+"valid VAT identification number during checkout. VAT ID will be verified "
+"through the VIES system."
 msgstr ""
 
 #: templates/public/terms.html:5 templates/public/terms.html:8
@@ -1642,138 +2617,196 @@ msgid ""
 "quantities, and proceed to checkout."
 msgstr ""
 
-#: templates/public/cart/cart.html:28 templates/public/cart/cart.html:33
+#: templates/public/cart/cart.html:9 templates/public/cart/cart.html:14
 #: templates/user/cart/cart.html:3 templates/user/cart/cart.html:7
 msgid "Shopping Cart"
 msgstr ""
 
-#: templates/public/cart/cart.html:43
-#: templates/public/orders/order_details.html:125
+#: templates/public/cart/cart.html:24
 msgid "Name"
 msgstr ""
 
-#: templates/public/cart/cart.html:85
-#: templates/public/orders/order_details.html:158
-#: templates/user/cart/cart.html:57
+#: templates/public/cart/cart.html:46
+msgid "Update"
+msgstr ""
+
+#: templates/public/cart/cart.html:62
+msgid "Remove"
+msgstr ""
+
+#: templates/public/cart/cart.html:70 templates/user/cart/cart.html:57
 msgid "Total:"
 msgstr ""
 
-#: templates/public/cart/cart.html:96
-msgid "Delivery Information"
-msgstr ""
-
-#: templates/public/cart/cart.html:103
+#: templates/public/cart/cart.html:88
 msgid "Select Saved Address"
 msgstr ""
 
-#: templates/public/cart/cart.html:135
+#: templates/public/cart/cart.html:120
 msgid "Use new address"
 msgstr ""
 
-#: templates/public/cart/cart.html:144
+#: templates/public/cart/cart.html:129
 msgid "New Delivery Address"
 msgstr ""
 
-#: templates/public/cart/cart.html:149 templates/public/user/profile.html:160
+#: templates/public/cart/cart.html:134 templates/public/user/profile.html:160
 msgid "Full Name"
 msgstr ""
 
-#: templates/public/cart/cart.html:153 templates/public/user/profile.html:65
-#: templates/public/user/profile.html:119
-#: templates/public/user/profile.html:164
-msgid "Phone"
-msgstr ""
-
-#: templates/public/cart/cart.html:160 templates/public/user/profile.html:173
+#: templates/public/cart/cart.html:145 templates/public/user/profile.html:173
 msgid "Country"
 msgstr ""
 
-#: templates/public/cart/cart.html:168 templates/public/user/profile.html:184
+#: templates/public/cart/cart.html:155 templates/public/user/profile.html:184
 msgid "City"
 msgstr ""
 
-#: templates/public/cart/cart.html:172 templates/public/user/profile.html:188
+#: templates/public/cart/cart.html:159 templates/public/user/profile.html:188
 msgid "Postal Code"
 msgstr ""
 
-#: templates/public/cart/cart.html:177 templates/public/user/profile.html:169
+#: templates/public/cart/cart.html:164 templates/public/user/profile.html:169
 msgid "Street Address"
 msgstr ""
 
-#: templates/public/cart/cart.html:184
+#: templates/public/cart/cart.html:171
 msgid "Save address for future orders"
 msgstr ""
 
-#: templates/public/cart/cart.html:198
+#: templates/public/cart/cart.html:185
 msgid "Need invoice with VAT number"
 msgstr ""
 
-#: templates/public/cart/cart.html:206
+#: templates/public/cart/cart.html:193
 msgid "Select Saved Company"
 msgstr ""
 
-#: templates/public/cart/cart.html:227 templates/public/user/profile.html:239
+#: templates/public/cart/cart.html:214
+#: templates/public/orders/order_details.html:132
+#: templates/public/user/profile.html:239
 msgid "Address"
 msgstr ""
 
-#: templates/public/cart/cart.html:242
+#: templates/public/cart/cart.html:229
 msgid "Use new company details"
 msgstr ""
 
-#: templates/public/cart/cart.html:251
+#: templates/public/cart/cart.html:238
 msgid "New Company Details"
 msgstr ""
 
-#: templates/public/cart/cart.html:279
+#: templates/public/cart/cart.html:266
 msgid "Save company details for future orders"
 msgstr ""
 
-#: templates/public/cart/cart.html:293 templates/user/cart/cart.html:68
+#: templates/public/cart/cart.html:280 templates/user/cart/cart.html:68
 msgid "Place Order"
 msgstr ""
 
-#: templates/public/cart/cart.html:308 templates/user/cart/cart.html:93
+#: templates/public/cart/cart.html:295 templates/user/cart/cart.html:93
 msgid "Your Cart is Empty"
 msgstr ""
 
-#: templates/public/cart/cart.html:315 templates/user/cart/cart.html:94
+#: templates/public/cart/cart.html:302 templates/user/cart/cart.html:94
 msgid "Start adding items to your cart!"
 msgstr ""
 
-#: templates/public/cart/cart.html:318 templates/user/cart/cart.html:96
+#: templates/public/cart/cart.html:305 templates/user/cart/cart.html:96
 #: templates/user/index.html:11
 msgid "Search Articles"
 msgstr ""
 
-#: templates/public/cart/cart.html:455
-msgid "VAT number is valid"
+#: templates/public/cart/cart.html:462
+msgid "Please select a delivery address or enter a new one"
 msgstr ""
 
-#: templates/public/cart/cart.html:455
-msgid "VAT number is invalid"
+#: templates/public/cart/cart.html:474
+msgid "Please fill in all required delivery address fields"
 msgstr ""
 
-#: templates/public/cart/cart.html:486
-msgid "Please provide company name and VAT number"
-msgstr ""
-
-#: templates/public/cart/cart.html:493
+#: templates/public/cart/cart.html:494
 msgid "Please select a company or enter new company details"
 msgstr ""
 
-#: templates/public/cart/cart.html:572
-msgid "Please select a delivery address or enter a new one."
+#: templates/public/cart/cart.html:506
+msgid "Please provide company name and VAT number"
 msgstr ""
 
-#: templates/public/cart/cart.html:582
-msgid "Please fill in all required fields."
-msgstr ""
-
-#: templates/public/cart/cart.html:591
+#: templates/public/cart/cart.html:517
 msgid "Processing..."
 msgstr ""
 
+#: templates/public/orders/confirmation.html:5
+msgid ""
+"Order confirmation at AutogroupEU. Your order has been successfully "
+"placed."
+msgstr ""
+
+#: templates/public/orders/confirmation.html:14
+msgid "Order Confirmation"
+msgstr ""
+
+#: templates/public/orders/confirmation.html:23
+msgid "Thank You for Your Order!"
+msgstr ""
+
+#: templates/public/orders/confirmation.html:24
+msgid "Your order has been placed successfully."
+msgstr ""
+
+#: templates/public/orders/confirmation.html:26
+msgid "Order Number"
+msgstr ""
+
+#: templates/public/orders/confirmation.html:33
+msgid "Order Summary"
+msgstr ""
+
+#: templates/public/orders/confirmation.html:39
+#: templates/public/orders/order_details.html:39
+msgid "Order Date"
+msgstr ""
+
+#: templates/public/orders/confirmation.html:57
+#: templates/public/orders/order_details.html:153
+msgid "Product"
+msgstr ""
+
+#: templates/public/orders/confirmation.html:90
+msgid "What Happens Next?"
+msgstr ""
+
+#: templates/public/orders/confirmation.html:97
+msgid "Order Confirmation Email"
+msgstr ""
+
+#: templates/public/orders/confirmation.html:98
+msgid "We've sent a confirmation email with your order details."
+msgstr ""
+
+#: templates/public/orders/confirmation.html:105
+msgid "We'll process your order and prepare it for shipping."
+msgstr ""
+
+#: templates/public/orders/confirmation.html:111
+msgid "Shipping"
+msgstr ""
+
+#: templates/public/orders/confirmation.html:112
+msgid "Once shipped, you'll receive tracking information via email."
+msgstr ""
+
+#: templates/public/orders/confirmation.html:122
+msgid "Return to Homepage"
+msgstr ""
+
+#: templates/public/orders/confirmation.html:125
+msgid "View My Orders"
+msgstr ""
+
 #: templates/public/orders/list_orders.html:5
+#: templates/public/orders/orders.html:5
 msgid ""
 "View your order history at AutogroupEU. Track your purchases and check "
 "delivery status."
@@ -1781,12 +2814,15 @@ msgstr ""
 
 #: templates/public/orders/list_orders.html:9
 #: templates/public/orders/list_orders.html:18
+#: templates/public/orders/orders.html:9 templates/public/orders/orders.html:18
 #: templates/user/orders/orders.html:55
 msgid "My Orders"
 msgstr ""
 
 #: templates/public/orders/list_orders.html:27
 #: templates/public/orders/list_orders.html:38
+#: templates/public/orders/orders.html:27
+#: templates/public/orders/orders.html:37
 msgid "Order #"
 msgstr ""
 
@@ -1797,65 +2833,102 @@ msgid "Items"
 msgstr ""
 
 #: templates/public/orders/list_orders.html:93
-#: templates/user/orders/orders.html:133
+#: templates/public/orders/orders.html:97 templates/user/orders/orders.html:133
 msgid "No Orders Found"
 msgstr ""
 
 #: templates/public/orders/list_orders.html:94
+#: templates/public/orders/orders.html:98
 msgid "You have not placed any orders yet."
 msgstr ""
 
 #: templates/public/orders/list_orders.html:97
+#: templates/public/orders/orders.html:101
 #: templates/user/orders/orders.html:136
 msgid "Start Shopping"
 msgstr ""
 
-#: templates/public/orders/order_details.html:8
-#: templates/user/orders/order_details.html:4
-#: templates/user/orders/order_details.html:9
-#: templates/user/shipments/shipments.html:19
-msgid "Order Details"
+#: templates/public/orders/order_details.html:5
+msgid ""
+"Order details at AutogroupEU. View products, prices, and delivery "
+"information."
 msgstr ""
 
-#: templates/public/orders/order_details.html:17
+#: templates/public/orders/order_details.html:9
+#: templates/public/orders/order_details.html:25
 msgid "Order"
 msgstr ""
 
-#: templates/public/orders/order_details.html:22
+#: templates/public/orders/order_details.html:9
+msgid "Details"
+msgstr ""
+
+#: templates/public/orders/order_details.html:16
+#: templates/public/orders/order_details.html:187
 #: templates/user/orders/order_details.html:11
 msgid "Back to Orders"
 msgstr ""
 
-#: templates/public/orders/order_details.html:33
-msgid "Order Date"
+#: templates/public/orders/order_details.html:34
+msgid "Order Information"
+msgstr ""
+
+#: templates/public/orders/order_details.html:46
+#: templates/public/orders/orders.html:53 templates/user/news/user_news.html:18
+#: templates/user/orders/orders.html:69
+msgid "New"
+msgstr ""
+
+#: templates/public/orders/order_details.html:47
+#: templates/public/orders/orders.html:54
+msgid "Processing"
 msgstr ""
 
 #: templates/public/orders/order_details.html:48
-msgid "Total Items"
+#: templates/public/orders/orders.html:55
+msgid "Shipped"
 msgstr ""
 
-#: templates/public/orders/order_details.html:55
-msgid "Total Amount"
+#: templates/public/orders/order_details.html:49
+#: templates/public/orders/orders.html:56
+msgid "Delivered"
 msgstr ""
 
-#: templates/public/orders/order_details.html:82
-msgid "No delivery information provided"
+#: templates/public/orders/order_details.html:50
+#: templates/public/orders/orders.html:57 templates/user/orders/orders.html:71
+msgid "Cancelled"
 msgstr ""
 
-#: templates/public/orders/order_details.html:94
+#: templates/public/orders/order_details.html:67
+msgid "Payment Status"
+msgstr ""
+
+#: templates/public/orders/order_details.html:70
+msgid "Paid"
+msgstr ""
+
+#: templates/public/orders/order_details.html:72
+msgid "Pending"
+msgstr ""
+
+#: templates/public/orders/order_details.html:106
+msgid "No delivery address information"
+msgstr ""
+
+#: templates/public/orders/order_details.html:115
 msgid "Invoice Information"
 msgstr ""
 
-#: templates/public/orders/order_details.html:110
-msgid "Invoice requested but details not provided"
+#: templates/public/orders/order_details.html:146
+msgid "Order Items"
+msgstr ""
+
+#: templates/public/user/profile.html:6
+msgid "My Profile"
 msgstr ""
 
 #: templates/public/user/profile.html:7
 msgid "Manage your personal information, addresses and company details"
-msgstr ""
-
-#: templates/public/user/profile.html:15
-msgid "Profile"
 msgstr ""
 
 #: templates/public/user/profile.html:21
@@ -1916,10 +2989,6 @@ msgstr ""
 msgid "Choose..."
 msgstr ""
 
-#: templates/public/user/profile.html:176
-msgid "Slovakia"
-msgstr ""
-
 #: templates/public/user/profile.html:177
 msgid "Ukraine"
 msgstr ""
@@ -1942,10 +3011,6 @@ msgstr ""
 
 #: templates/public/user/profile.html:201
 msgid "Add Address"
-msgstr ""
-
-#: templates/public/user/profile.html:217
-msgid "Company Information"
 msgstr ""
 
 #: templates/public/user/profile.html:222
@@ -2052,6 +3117,10 @@ msgstr ""
 msgid "Comment"
 msgstr ""
 
+#: templates/user/cart/cart.html:42 templates/user/orders/order_details.html:63
+msgid "No comment"
+msgstr ""
+
 #: templates/user/cart/cart.html:74
 msgid "Clear Cart"
 msgstr ""
@@ -2067,10 +3136,6 @@ msgstr ""
 
 #: templates/user/news/user_news.html:12
 msgid "New Messages"
-msgstr ""
-
-#: templates/user/news/user_news.html:18 templates/user/orders/orders.html:69
-msgid "New"
 msgstr ""
 
 #: templates/user/news/user_news.html:26
@@ -2117,6 +3182,12 @@ msgstr ""
 msgid "No changes found."
 msgstr ""
 
+#: templates/user/orders/order_details.html:4
+#: templates/user/orders/order_details.html:9
+#: templates/user/shipments/shipments.html:19
+msgid "Order Details"
+msgstr ""
+
 #: templates/user/orders/order_details.html:21
 msgid "Original Article"
 msgstr ""
@@ -2147,10 +3218,6 @@ msgstr ""
 
 #: templates/user/orders/orders.html:70
 msgid "Accepted"
-msgstr ""
-
-#: templates/user/orders/orders.html:71
-msgid "Cancelled"
 msgstr ""
 
 #: templates/user/orders/orders.html:75
@@ -2209,17 +3276,8 @@ msgstr ""
 msgid "The following articles were not found in any price list:"
 msgstr ""
 
-#: templates/user/search/search_results.html:3
-#: templates/user/search/search_results.html:7
-msgid "Search Results"
-msgstr ""
-
 #: templates/user/search/search_results.html:16
 msgid "Price Lists"
-msgstr ""
-
-#: templates/user/search/search_results.html:19
-msgid "Select"
 msgstr ""
 
 #: templates/user/search/search_results.html:86
@@ -2565,4 +3623,110 @@ msgid "{len_type} values are required, but {len_value} was given."
 msgid_plural "{len_type} values are required, but {len_value} were given."
 msgstr[0] ""
 msgstr[1] ""
+
+#~ msgid "Error saving company details"
+#~ msgstr ""
+
+#~ msgid "Error loading orders."
+#~ msgstr ""
+
+#~ msgid "Missing required information"
+#~ msgstr ""
+
+#~ msgid "Article removed successfully"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Thank you for your order!\n"
+#~ "\n"
+#~ "Your order details:\n"
+#~ msgstr ""
+
+#~ msgid "Ordered items:\n"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "- Article: {article}, Price: {price:.2f}, "
+#~ "Quantity: {quantity}, Comment: {comment}\n"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "\n"
+#~ "Missing articles:\n"
+#~ msgstr ""
+
+#~ msgid "About"
+#~ msgstr ""
+
+#~ msgid "Quick Links"
+#~ msgstr ""
+
+#~ msgid "Follow Us"
+#~ msgstr ""
+
+#~ msgid "2024 AutogroupEU. All rights reserved."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Learn more about AutogroupEU - your "
+#~ "trusted partner in auto parts supply "
+#~ "across Europe."
+#~ msgstr ""
+
+#~ msgid "about us, auto parts, European supplier, car parts, B2B"
+#~ msgstr ""
+
+#~ msgid "About AutogroupEU"
+#~ msgstr ""
+
+#~ msgid "Your Trusted Partner in Auto Parts"
+#~ msgstr ""
+
+#~ msgid "Auto Parts Store"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "We are a specialized auto parts "
+#~ "store serving business clients across "
+#~ "Europe. With over 15 years of "
+#~ "experience, we provide high-quality "
+#~ "automotive parts and exceptional service "
+#~ "to our B2B partners."
+#~ msgstr ""
+
+#~ msgid "Our Main Brands"
+#~ msgstr ""
+
+#~ msgid "B2B Services"
+#~ msgstr ""
+
+#~ msgid "For business clients interested in B2B access, please contact us:"
+#~ msgstr ""
+
+#~ msgid "Find Us"
+#~ msgstr ""
+
+#~ msgid "VAT number is valid"
+#~ msgstr ""
+
+#~ msgid "VAT number is invalid"
+#~ msgstr ""
+
+#~ msgid "Please select a delivery address or enter a new one."
+#~ msgstr ""
+
+#~ msgid "Please fill in all required fields."
+#~ msgstr ""
+
+#~ msgid "Total Items"
+#~ msgstr ""
+
+#~ msgid "Total Amount"
+#~ msgstr ""
+
+#~ msgid "No delivery information provided"
+#~ msgstr ""
+
+#~ msgid "Invoice requested but details not provided"
+#~ msgstr ""
 

@@ -15,15 +15,23 @@ import psycopg2
 import psycopg2.extras
 from flask import (
     Flask, render_template, request, session,
-    redirect, url_for, flash, jsonify,
+    redirect, url_for, flash, jsonify, render_template_string,
     send_file, get_flashed_messages, g, send_from_directory
 )
+import jinja2
 from flask_babel import Babel, gettext as _
 # from flask_wtf import CSRFProtect
 # from flask_wtf.csrf import generate_csrf
 import sys
 import urllib.parse
 import requests
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from werkzeug.utils import secure_filename
+from email.mime.base import MIMEBase
+from email import encoders
+import os
 
 
 # Create Flask app first
@@ -35,6 +43,14 @@ app = Flask(__name__, template_folder='templates')
 # Initialize extensions
 # csrf = CSRFProtect(app)
 babel = Babel(app)
+
+
+# налаштування для збереження файлів
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Обмеження розміру файлу до 16MB
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
 
 # Configure logging
 logging.basicConfig(
@@ -844,6 +860,193 @@ def get_user_companies(user_id):
         return []
 
 
+def send_email(to_email, subject, ordered_items, delivery_data, lang='en'):
+    """
+    Відправляє email з деталями замовлення на вказаній мові з HTML-форматуванням
+    """
+    try:
+        logging.info(f"Sending email to {to_email} with language {lang}")
+        
+        # Налаштування SMTP
+        smtp_host = os.getenv("SMTP_HOST", "mail.adm.tools")
+        smtp_port = int(os.getenv("SMTP_PORT", "465"))
+        sender_email = os.getenv("SMTP_EMAIL", "info@autogroup.sk")
+        sender_password = os.getenv("SMTP_PASSWORD")
+        
+        # Використовуємо sender_email як bcc_email для уникнення дублювання
+        bcc_email = sender_email
+        
+        if not sender_email or not sender_password:
+            logging.error("SMTP credentials are not set in environment variables")
+            return False
+
+        # Словарь переводов для каждого языка
+        translations = {
+            'sk': {
+                'subject': 'Potvrdenie objednávky',
+                'greeting': 'Ďakujeme za Vašu objednávku!',
+                'order_details': 'Detaily objednávky:',
+                'delivery_info': 'Dodacie údaje:',
+                'name': 'Meno:',
+                'phone': 'Telefón:',
+                'address': 'Adresa:',
+                'article': 'Kód:',
+                'price': 'Cena:',
+                'quantity': 'Množstvo:',
+                'total': 'Celkom:',
+                'in_stock': 'Na sklade',
+                'delivery_time': 'Dodacia lehota:',
+                'order_submitted': 'Vaše objednávka bola úspešne prijatá',
+                'thank_you': 'Ďakujeme za Váš nákup!',
+                'contact_us': 'V prípade otázok nás kontaktujte',
+                'footer_text': 'Tento e-mail bol vygenerovaný automaticky. Prosím, neodpovedajte naň.',
+                'invoice_note': 'V najbližšom čase Vám zašleme faktúru na úhradu.'
+            },
+            'en': {
+                'subject': 'Order Confirmation',
+                'greeting': 'Thank you for your order!',
+                'order_details': 'Order details:',
+                'delivery_info': 'Delivery information:',
+                'name': 'Name:',
+                'phone': 'Phone:',
+                'address': 'Address:',
+                'article': 'Code:',
+                'price': 'Price:',
+                'quantity': 'Quantity:',
+                'total': 'Total:',
+                'in_stock': 'In Stock',
+                'delivery_time': 'Delivery time:',
+                'order_submitted': 'Your order has been successfully submitted',
+                'thank_you': 'Thank you for your purchase!',
+                'contact_us': 'If you have any questions, please contact us',
+                'footer_text': 'This email was generated automatically. Please do not reply to it.',
+                'invoice_note': 'We will send you an invoice for payment in the near future.'
+            },
+            'uk': {
+                'subject': 'Підтвердження замовлення',
+                'greeting': 'Дякуємо за ваше замовлення!',
+                'order_details': 'Деталі замовлення:',
+                'delivery_info': 'Інформація про доставку:',
+                'name': 'Ім\'я:',
+                'phone': 'Телефон:',
+                'address': 'Адреса:',
+                'article': 'Код:',
+                'price': 'Ціна:',
+                'quantity': 'Кількість:',
+                'total': 'Загалом:',
+                'in_stock': 'В наявності',
+                'delivery_time': 'Час доставки:',
+                'order_submitted': 'Ваше замовлення успішно прийнято',
+                'thank_you': 'Дякуємо за покупку!',
+                'contact_us': 'Якщо у вас є питання, будь ласка, зв\'яжіться з нами',
+                'footer_text': 'Цей лист згенеровано автоматично. Будь ласка, не відповідайте на нього.',
+                'invoice_note': 'Найближчим часом ми надішлемо вам рахунок для оплати.'
+            },
+            'pl': {
+                'subject': 'Potwierdzenie zamówienia',
+                'greeting': 'Dziękujemy za złożenie zamówienia!',
+                'order_details': 'Szczegóły zamówienia:',
+                'delivery_info': 'Informacje o dostawie:',
+                'name': 'Imię:',
+                'phone': 'Telefon:',
+                'address': 'Adres:',
+                'article': 'Kod:',
+                'price': 'Cena:',
+                'quantity': 'Ilość:',
+                'total': 'Suma:',
+                'in_stock': 'W magazynie',
+                'delivery_time': 'Czas dostawy:',
+                'order_submitted': 'Twoje zamówienie zostało pomyślnie złożone',
+                'thank_you': 'Dziękujemy za zakupy!',
+                'contact_us': 'W razie pytań prosimy o kontakt',
+                'footer_text': 'Ten e-mail został wygenerowany automatycznie. Prosimy na niego nie odpowiadać.',
+                'invoice_note': 'W najbliższym czasie wyślemy Państwu fakturę do zapłaty.'
+            }
+        }
+
+        # Используем перевод для выбранного языка или английский как запасной
+        t = translations.get(lang, translations['en'])
+        
+        # Рассчитываем общую сумму для шаблона
+        total_sum = 0
+        for item in ordered_items:
+            price = float(item['price'])
+            quantity = int(item['quantity'])
+            total_sum += price * quantity
+
+        # Рендерим текстовую версию
+        text_content = render_template(
+            'emails/order_confirmation.txt',
+            t=t,
+            delivery_data=delivery_data,
+            ordered_items=ordered_items,
+            total_sum=total_sum,
+            subject=subject or t['subject']
+        )
+
+        # Рендерим HTML версию
+        html_content = render_template(
+            'emails/order_confirmation.html',
+            t=t,
+            delivery_data=delivery_data,
+            ordered_items=ordered_items,
+            total_sum=total_sum,
+            subject=subject or t['subject'],
+            current_year=datetime.now().year
+        )
+
+        # Формируем сообщение с текстовой и HTML версиями
+        message = MIMEMultipart('alternative')
+        message["From"] = sender_email
+        message["To"] = to_email
+        message["Subject"] = subject if subject else t['subject']
+        # НЕ додаємо BCC в заголовки, щоб не було видно в листі
+        
+        # Добавляем обе версии
+        message.attach(MIMEText(text_content, "plain", "utf-8"))
+        message.attach(MIMEText(html_content, "html", "utf-8"))
+
+        # Отправка email
+        try:
+            # Используем SSL для порта 465
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=30)
+            
+            # Устанавливаем уровень отладки на 0 (отключаем подробное логирование)
+            server.set_debuglevel(0)
+            
+            # Аутентификация
+            server.login(sender_email, sender_password)
+            
+            # Отправка (включаем основного получателя и BCC)
+            recipients = [to_email]
+            # Додаємо BCC тільки якщо він відрізняється від основного отримувача
+            if bcc_email and bcc_email != to_email:
+                recipients.append(bcc_email)
+                
+            server.sendmail(sender_email, recipients, message.as_string())
+            logging.info(f"Email successfully sent to {to_email}" + 
+                         (f" and BCC ({bcc_email})" if bcc_email != to_email else ""))
+            server.quit()
+            return True
+            
+        except smtplib.SMTPConnectError as e:
+            logging.error(f"SMTP Connection Error: {e}")
+            return False
+        except smtplib.SMTPAuthenticationError as e:
+            logging.error(f"SMTP Authentication Error: {e}")
+            return False
+        except smtplib.SMTPException as e:
+            logging.error(f"SMTP Error: {e}")
+            return False
+        except ConnectionError as e:
+            logging.error(f"Connection Error: {e}")
+            return False
+        
+    except Exception as e:
+        logging.error(f"Failed to send email to {to_email}: {str(e)}")
+        return False
+
+
 @app.route('/public_place_order', methods=['POST'])
 def public_place_order():
     """Creates order for public user with delivery address and invoice details"""
@@ -853,6 +1056,9 @@ def public_place_order():
         if not user_id:
             flash(_("Please log in to place an order."), "error")
             return redirect(url_for('login'))
+
+        # Додаємо детальний лог для діагностики
+        logging.info(f"Processing order for user_id: {user_id}, username: {session.get('username')}")
 
         # Функція для серіалізації datetime в JSON
         def json_serial(obj):
@@ -865,6 +1071,9 @@ def public_place_order():
 
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # Весь код для отримання даних доставки, інвойсу і обробки кошика лишається без змін
+        # ...
 
         # Get delivery data
         delivery_data = {}
@@ -902,8 +1111,37 @@ def public_place_order():
                 'city': request.form.get('city'),
                 'street': request.form.get('street')
             }
+            
+            # Зберігаємо нову адресу, якщо вибрана опція
+            if save_address:
+                logging.info(f"Saving new address for user {user_id}")
+                
+                # Перевіряємо, чи є у користувача інші адреси, щоб визначити is_default
+                cursor.execute("SELECT COUNT(*) FROM delivery_addresses WHERE user_id = %s", (user_id,))
+                address_count = cursor.fetchone()[0]
+                is_default = address_count == 0  # якщо це перша адреса, робимо її стандартною
+                
+                # Вставляємо нову адресу в базу даних
+                cursor.execute("""
+                    INSERT INTO delivery_addresses 
+                    (user_id, full_name, phone, country, postal_code, city, street, is_default, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                    RETURNING id
+                """, (
+                    user_id,
+                    delivery_data['full_name'],
+                    delivery_data['phone'],
+                    delivery_data['country'],
+                    delivery_data['postal_code'],
+                    delivery_data['city'],
+                    delivery_data['street'],
+                    is_default
+                ))
+                
+                new_address_id = cursor.fetchone()[0]
+                logging.info(f"New address saved with ID: {new_address_id}, is_default: {is_default}")
 
-        # Get invoice details - ВИПРАВЛЕНА ПРОБЛЕМА
+        # Get invoice details
         needs_invoice = request.form.get('needs_invoice') == 'on'
         invoice_details = None
         
@@ -947,6 +1185,7 @@ def public_place_order():
 
         total_price = Decimal('0')
         order_items = []
+        email_items = []  # Для відправки листа
         
         # Обробка товарів з кошика
         for article, article_items in cart.items():
@@ -968,6 +1207,25 @@ def public_place_order():
                     'total_price': item_total,
                     'brand_id': item_data.get('brand_id'),
                     'comment': item_data.get('comment', '')
+                })
+
+                # Додаємо інформацію для листа
+                if table_name == 'stock':
+                    delivery_time = _("In Stock")
+                else:
+                    cursor.execute("""
+                        SELECT delivery_time FROM price_lists 
+                        WHERE table_name = %s
+                    """, (table_name,))
+                    result = cursor.fetchone()
+                    delivery_time_str = result['delivery_time'] if result else '7-14'
+                    delivery_time = _("In Stock") if delivery_time_str == '0' else f"{delivery_time_str} {_('days')}"
+                
+                email_items.append({
+                    'article': article,
+                    'price': float(item_price),
+                    'quantity': item_quantity,
+                    'delivery_time': delivery_time
                 })
 
         logging.debug(f"Order items processed: {len(order_items)}")
@@ -1013,14 +1271,80 @@ def public_place_order():
                 item['brand_id']
             ))
         
+        # Commit database changes early so that the order is saved even if email fails
+        conn.commit()
+        
+        # Get user email for notification - додаємо username в запит
+        cursor.execute("""
+            SELECT id, username, email, preferred_language FROM users WHERE id = %s
+        """, (user_id,))
+        user_info = cursor.fetchone()
+
+        logging.info(f"Getting email for user: {user_id}, found: {user_info and user_info['email']}")
+        
+        # Send email confirmation if user has email
+        if user_info and user_info['email']:
+            # Get user's preferred language or current interface language
+            user_lang = user_info['preferred_language'] or session.get('language', 'sk')
+            if user_lang == 'uk':  # Якщо мова українська, використовуємо словацьку
+                user_lang = 'sk'
+            
+            # Перевіряємо, що email не містить поширені помилки друку
+            recipient_email = user_info['email'].strip()
+            if '@gmil.com' in recipient_email.lower():
+                logging.warning(f"Detected typo in email: {recipient_email}, correcting to @gmail.com")
+                recipient_email = recipient_email.lower().replace('@gmil.com', '@gmail.com')
+            
+            logging.info(f"Sending order confirmation email to {recipient_email} (user: {user_info['username']}) in {user_lang} language")
+            
+            # Використовуємо окремий try-except для відправки email, щоб не впливати на процес замовлення
+            try:
+                # Створення простого локального повідомлення у випадку, якщо SMTP не працює
+                try:
+                    email_sent = send_email(
+                        to_email=recipient_email,
+                        subject=f"Order #{order_id}", 
+                        ordered_items=email_items,
+                        delivery_data=delivery_data, 
+                        lang=user_lang
+                    )
+                    
+                    if email_sent:
+                        logging.info(f"Email sent successfully to {recipient_email}")
+                    else:
+                        logging.warning(f"Failed to send email to {recipient_email}, but order was placed successfully")
+                        
+                        # Додаємо замовлення до черги для відправки пізніше
+                        try:
+                            # Зберігаємо у базі дані для повторної відправки листа пізніше
+                            cursor.execute("""
+                                INSERT INTO email_queue 
+                                (recipient, subject, order_id, user_id, delivery_data, ordered_items, lang, created_at, status)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), 'pending')
+                            """, (
+                                recipient_email,
+                                f"Order #{order_id}",
+                                order_id,
+                                user_id,
+                                json.dumps(delivery_data, default=json_serial),
+                                json.dumps(email_items, default=json_serial),
+                                user_lang
+                            ))
+                            conn.commit()
+                            logging.info(f"Added email to queue for later delivery to {recipient_email}")
+                        except Exception as queue_err:
+                            logging.error(f"Failed to add email to queue: {queue_err}")
+                            
+                except Exception as email_err:
+                    logging.error(f"Failed to send order confirmation email: {email_err}", exc_info=True)
+            except Exception as outer_err:
+                logging.error(f"Unexpected error in email sending block: {outer_err}", exc_info=True)
+        
         # Clear cart
         logging.info("Clearing cart")
         session['public_cart'] = {}
         session['cart_count'] = 0
         session.modified = True
-        
-        # Commit database changes
-        conn.commit()
         
         flash(_("Order placed successfully!"), "success")
         logging.info(f"Order {order_id} placed successfully, redirecting to confirmation")
@@ -1037,6 +1361,13 @@ def public_place_order():
         if 'conn' in locals():
             conn.close()
         logging.info("=== Finished public_place_order process ===")
+
+
+
+
+
+
+
 
 # сторінка успішного оформлення замовлення
 @app.route('/order/confirmation/<order_id>')
@@ -2645,133 +2976,6 @@ def validate_token(token):
     finally:
         if 'conn' in locals():
             conn.close()
-
-
-def send_email(to_email, subject, ordered_items, delivery_data, lang='en'):
-    """
-    Відправляє email з деталями замовлення на вказану мову
-    """
-    try:
-        smtp_server = "mail.adm.tools"
-        smtp_port = 25
-        sender_email = os.getenv("SMTP_EMAIL")
-        sender_password = os.getenv("SMTP_PASSWORD")
-
-        if not sender_email or not sender_password:
-            raise ValueError("SMTP credentials are not set")
-
-        # Словник перекладів для кожної мови
-        translations = {
-            'sk': {
-                'subject': 'Potvrdenie objednávky',
-                'greeting': 'Ďakujeme za Vašu objednávku!',
-                'order_details': 'Detaily objednávky:',
-                'delivery_info': 'Dodacie údaje:',
-                'name': 'Meno:',
-                'phone': 'Telefón:',
-                'address': 'Adresa:',
-                'article': 'Kód:',
-                'price': 'Cena:',
-                'quantity': 'Množstvo:',
-                'total': 'Celkom:',
-                'in_stock': 'Na sklade',
-                'delivery_time': 'Dodacia lehota:'
-            },
-            'en': {
-                'subject': 'Order Confirmation',
-                'greeting': 'Thank you for your order!',
-                'order_details': 'Order details:',
-                'delivery_info': 'Delivery information:',
-                'name': 'Name:',
-                'phone': 'Phone:',
-                'address': 'Address:',
-                'article': 'Code:',
-                'price': 'Price:',
-                'quantity': 'Quantity:',
-                'total': 'Total:',
-                'in_stock': 'In Stock',
-                'delivery_time': 'Delivery time:'
-            },
-            'pl': {
-                'subject': 'Potwierdzenie zamówienia',
-                'greeting': 'Dziękujemy za złożenie zamówienia!',
-                'order_details': 'Szczegóły zamówienia:',
-                'delivery_info': 'Informacje o dostawie:',
-                'name': 'Imię:',
-                'phone': 'Telefon:',
-                'address': 'Adres:',
-                'article': 'Kod:',
-                'price': 'Cena:',
-                'quantity': 'Ilość:',
-                'total': 'Suma:',
-                'in_stock': 'W magazynie',
-                'delivery_time': 'Czas dostawy:'
-            }
-        }
-
-        # Використовуємо переклади для вибраної мови або англійської як запасної
-        t = translations.get(lang, translations['en'])
-
-        # Формування тексту листа
-        message_body = f"{t['greeting']}\n\n"
-        
-        # Додаємо інформацію про доставку
-        message_body += f"\n{t['delivery_info']}\n"
-        message_body += f"{t['name']} {delivery_data.get('full_name', '')}\n"
-        message_body += f"{t['phone']} {delivery_data.get('phone', '')}\n"
-        message_body += (f"{t['address']} {delivery_data.get('street', '')}, "
-                       f"{delivery_data.get('city', '')}, "
-                       f"{delivery_data.get('postal_code', '')}, "
-                       f"{delivery_data.get('country', '')}\n\n")
-
-        # Додаємо деталі замовлення
-        message_body += f"{t['order_details']}\n"
-        total_sum = 0
-        
-        for item in ordered_items:
-            price = float(item['price'])
-            quantity = int(item['quantity'])
-            item_total = price * quantity
-            total_sum += item_total
-            
-            message_body += f"\n{t['article']} {item['article']}\n"
-            message_body += f"{t['price']} €{price:.2f}\n"
-            message_body += f"{t['quantity']} {quantity}\n"
-            message_body += f"{t['delivery_time']} {item['delivery_time']}\n"
-            
-        message_body += f"\n{t['total']} €{total_sum:.2f}\n"
-
-        # Формування повідомлення
-        message = MIMEMultipart()
-        message["From"] = sender_email
-        message["To"] = to_email
-        message["Subject"] = t['subject']
-        message.attach(MIMEText(message_body, "plain", "utf-8"))
-
-        # Відправка email
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(sender_email, sender_password)
-            server.send_message(message)
-
-        logging.info(f"Order confirmation email sent to {to_email} in {lang} language")
-        
-    except Exception as e:
-        logging.error(f"Failed to send email to {to_email}: {e}")
-
-
-# Функція для визначення розділювача
-def detect_delimiter(file_content):
-    delimiters = [',', ';', '\t', ' ']
-    sample_lines = file_content.splitlines()[:5]
-    counts = {delimiter: 0 for delimiter in delimiters}
-
-    for line in sample_lines:
-        for delimiter in delimiters:
-            counts[delimiter] += line.count(delimiter)
-
-    return max(counts, key=counts.get)
-
 
 
 # Функція для визначення розділювача у рядку
@@ -9215,6 +9419,326 @@ def debug_add_test_item():
     session.modified = True
     
     return "Test item added. <a href='/debug_session'>View session</a>"
+
+
+
+
+
+# маршрут для відправки інвойсів
+@app.route('/<token>/admin/orders/<int:order_id>/send_invoice', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+def admin_send_invoice(token, order_id):
+    """Дозволяє адміністратору завантажити інвойс та відправити його клієнту"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримуємо інформацію про замовлення
+        cursor.execute("""
+            SELECT o.*, u.email, u.username, u.preferred_language
+            FROM public_orders o
+            JOIN users u ON o.user_id = u.id
+            WHERE o.id = %s
+        """, (order_id,))
+        order = cursor.fetchone()
+        
+        if not order:
+            flash("Order not found", "error")
+            return redirect(url_for('process_orders', token=token))
+        
+        # Отримуємо деталі замовлення
+        cursor.execute("""
+            SELECT d.*, b.name as brand_name
+            FROM public_order_details d
+            LEFT JOIN brands b ON d.brand_id = b.id
+            WHERE d.order_id = %s
+        """, (order_id,))
+        order_items = cursor.fetchall()
+        
+        # Якщо POST-запит - обробляємо відправку інвойсу
+        if request.method == 'POST':
+            # Отримуємо дані форми
+            delivery_cost = Decimal(request.form.get('delivery_cost', '0'))
+            delivery_info = request.form.get('delivery_info', '')
+            is_self_pickup = request.form.get('is_self_pickup') == 'on'
+            
+            # Якщо самовивіз, встановлюємо вартість доставки в 0
+            if is_self_pickup:
+                delivery_cost = Decimal('0')
+                if not delivery_info:
+                    delivery_info = "Self pickup"
+                    
+            # Отримуємо завантажений файл
+            invoice_file = request.files.get('invoice_file')
+            if not invoice_file:
+                flash("Invoice file is required", "error")
+                return redirect(request.url)
+                
+            # Перевіряємо тип файлу (дозволяємо PDF)
+            if not invoice_file.filename.lower().endswith(('.pdf')):
+                flash("Only PDF files are allowed", "error")
+                return redirect(request.url)
+                
+            # Зберігаємо файл
+            filename = secure_filename(f"invoice_order_{order_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf")
+            file_path = os.path.join(app.config.get('UPLOAD_FOLDER', 'uploads'), filename)
+            
+            # Створюємо директорію, якщо вона не існує
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            
+            invoice_file.save(file_path)
+            
+            # Обчислюємо загальну вартість з урахуванням доставки
+            order_total = Decimal(str(order['total_price']))
+            total_with_delivery = order_total + delivery_cost
+            
+            # Оновлюємо замовлення в базі даних
+            cursor.execute("""
+                UPDATE public_orders
+                SET 
+                    delivery_cost = %s,
+                    delivery_info = %s,
+                    is_self_pickup = %s,
+                    invoice_path = %s,
+                    invoice_sent_at = NOW(),
+                    status = 'invoice_sent',
+                    payment_status = 'awaiting_payment',
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (
+                delivery_cost,
+                delivery_info,
+                is_self_pickup,
+                filename,
+                order_id
+            ))
+            
+            conn.commit()
+            
+            # Отримуємо мову користувача
+            user_lang = order['preferred_language'] or 'sk'
+            if user_lang == 'uk':  # Якщо мова українська, використовуємо словацьку
+                user_lang = 'sk'
+                
+            # Відправляємо email з інвойсом
+            email_items = []
+            for item in order_items:
+                email_items.append({
+                    'article': item['article'],
+                    'price': float(item['price']),
+                    'quantity': item['quantity'],
+                    'delivery_time': "Processed"
+                })
+                
+            # Створюємо копію даних доставки
+            delivery_data = json.loads(order['delivery_address']) if order['delivery_address'] else {}
+            
+            # Додаємо інформацію про доставку
+            delivery_data['delivery_cost'] = float(delivery_cost)
+            delivery_data['delivery_info'] = delivery_info
+            delivery_data['is_self_pickup'] = is_self_pickup
+            delivery_data['total_with_delivery'] = float(total_with_delivery)
+                
+            # Відправляємо email
+            success = send_invoice_email(
+                to_email=order['email'],
+                subject=f"Invoice for Order #{order_id}",
+                ordered_items=email_items,
+                delivery_data=delivery_data,
+                invoice_path=file_path,
+                lang=user_lang
+            )
+            
+            if success:
+                flash("Invoice sent successfully!", "success")
+            else:
+                flash("Error sending invoice email", "error")
+                
+            return redirect(url_for('process_orders', token=token))
+        
+        # GET-запит - відображаємо форму
+        return render_template(
+            'admin/orders/send_invoice.html',
+            order=order,
+            order_items=order_items,
+            token=token,
+            order_id=order_id
+        )
+        
+    except Exception as e:
+        logging.error(f"Error sending invoice: {e}", exc_info=True)
+        flash(f"Error: {str(e)}", "error")
+        return redirect(url_for('process_orders', token=token))
+            
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+#відправка email з вкладенням
+def send_invoice_email(to_email, subject, ordered_items, delivery_data, invoice_path, lang='en'):
+    """
+    Відправляє email з деталями замовлення та прикріпленим інвойсом
+    """
+    try:
+        logging.info(f"Відправка інвойсу на {to_email} мовою {lang}")
+        
+        # Налаштування SMTP
+        smtp_host = os.getenv("SMTP_HOST", "mail.adm.tools")
+        smtp_port = int(os.getenv("SMTP_PORT", "465"))
+        sender_email = os.getenv("SMTP_EMAIL", "info@autogroup.sk")
+        sender_password = os.getenv("SMTP_PASSWORD")
+        
+        # Використовуємо sender_email як bcc_email
+        bcc_email = sender_email
+        
+        if not sender_email or not sender_password:
+            logging.error("Не вказані SMTP облікові дані в змінних середовища")
+            return False
+
+        # Словник перекладів для кожної мови
+        translations = {
+            'sk': {
+                'subject': 'Faktúra k objednávke',
+                'greeting': 'Vážený zákazník,',
+                'order_details': 'Detaily objednávky:',
+                'delivery_info': 'Dodacie údaje:',
+                'delivery_cost': 'Náklady na dopravu:',
+                'self_pickup': 'Osobný odber',
+                'total_with_delivery': 'Celková cena s dopravou:',
+                'payment_instruction': 'Prosím, uhraďte faktúru podľa pokynov v priloženom dokumente.',
+                'invoice_attached': 'Faktúra je priložená k tomuto e-mailu.',
+                'thank_you': 'Ďakujeme za Váš nákup!',
+                'contact_us': 'V prípade otázok nás kontaktujte',
+                'footer_text': 'Tento e-mail bol vygenerovaný automaticky. Prosím, neodpovedajte naň.'
+            },
+            'en': {
+                'subject': 'Invoice for your order',
+                'greeting': 'Dear customer,',
+                'order_details': 'Order details:',
+                'delivery_info': 'Delivery information:',
+                'delivery_cost': 'Delivery cost:',
+                'self_pickup': 'Self pickup',
+                'total_with_delivery': 'Total price with delivery:',
+                'payment_instruction': 'Please pay the invoice according to the instructions in the attached document.',
+                'invoice_attached': 'The invoice is attached to this email.',
+                'thank_you': 'Thank you for your purchase!',
+                'contact_us': 'If you have any questions, please contact us',
+                'footer_text': 'This email was generated automatically. Please do not reply to it.'
+            },
+            'pl': {
+                'subject': 'Faktura za zamówienie',
+                'greeting': 'Szanowny Kliencie,',
+                'order_details': 'Szczegóły zamówienia:',
+                'delivery_info': 'Informacje o dostawie:',
+                'delivery_cost': 'Koszt dostawy:',
+                'self_pickup': 'Odbiór osobisty',
+                'total_with_delivery': 'Łączna cena z dostawą:',
+                'payment_instruction': 'Prosimy o opłacenie faktury zgodnie z instrukcjami w załączonym dokumencie.',
+                'invoice_attached': 'Faktura jest dołączona do tego e-maila.',
+                'thank_you': 'Dziękujemy za zakupy!',
+                'contact_us': 'W razie pytań prosimy o kontakt',
+                'footer_text': 'Ten e-mail został wygenerowany automatycznie. Prosimy na niego nie odpowiadać.'
+            }
+        }
+
+        # Використовуємо переклад для вибраної мови або англійську як запасну
+        t = translations.get(lang, translations['en'])
+        
+        # Рахуємо загальну суму для шаблону
+        total_sum = 0
+        for item in ordered_items:
+            price = float(item['price'])
+            quantity = int(item['quantity'])
+            total_sum += price * quantity
+        
+        # Відображаємо текстову версію
+        text_content = render_template(
+            'emails/invoice_email.txt',
+            t=t,
+            delivery_data=delivery_data,
+            ordered_items=ordered_items,
+            total_sum=total_sum,
+            subject=subject or t['subject']
+        )
+
+        # Відображаємо HTML версію
+        html_content = render_template(
+            'emails/invoice_email.html',
+            t=t,
+            delivery_data=delivery_data,
+            ordered_items=ordered_items,
+            total_sum=total_sum,
+            subject=subject or t['subject'],
+            current_year=datetime.now().year
+        )
+
+        # Формуємо повідомлення з текстовою та HTML версіями
+        message = MIMEMultipart('alternative')
+        message["From"] = sender_email
+        message["To"] = to_email
+        message["Subject"] = subject if subject else t['subject']
+        # НЕ додаємо BCC в заголовки, щоб не було видно в листі
+        
+        # Додаємо обидві версії
+        message.attach(MIMEText(text_content, "plain", "utf-8"))
+        message.attach(MIMEText(html_content, "html", "utf-8"))
+        
+        # Прикріплюємо файл інвойсу
+        with open(invoice_path, "rb") as attachment:
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(attachment.read())
+            
+        # Кодуємо в base64
+        encoders.encode_base64(part)
+        
+        # Додаємо заголовки
+        part.add_header(
+            "Content-Disposition",
+            f"attachment; filename={os.path.basename(invoice_path)}",
+        )
+        
+        # Додаємо вкладення до повідомлення
+        message.attach(part)
+
+        # Відправка email
+        try:
+            # Використовуємо SSL для порту 465
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=30)
+            
+            # Вимикаємо детальне логування
+            server.set_debuglevel(0)
+            
+            # Аутентифікація
+            server.login(sender_email, sender_password)
+            
+            # Відправка (включаємо основного отримувача і BCC)
+            recipients = [to_email]
+            # Додаємо BCC тільки якщо він відрізняється від основного отримувача
+            if bcc_email and bcc_email != to_email:
+                recipients.append(bcc_email)
+                
+            server.sendmail(sender_email, recipients, message.as_string())
+            logging.info(f"Інвойс успішно надіслано до {to_email}" + 
+                         (f" та копію ({bcc_email})" if bcc_email != to_email else ""))
+            server.quit()
+            return True
+            
+        except smtplib.SMTPConnectError as e:
+            logging.error(f"Помилка з'єднання SMTP: {e}")
+            return False
+        except smtplib.SMTPAuthenticationError as e:
+            logging.error(f"Помилка аутентифікації SMTP: {e}")
+            return False
+        except smtplib.SMTPException as e:
+            logging.error(f"Помилка SMTP: {e}")
+            return False
+        except ConnectionError as e:
+            logging.error(f"Помилка з'єднання: {e}")
+            return False
+        
+    except Exception as e:
+        logging.error(f"Не вдалося надіслати інвойс до {to_email}: {str(e)}")
+        return False
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

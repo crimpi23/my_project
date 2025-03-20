@@ -1,0 +1,32 @@
+<!-- templates/emails/invoice_email.txt -->
+{{ subject }}
+
+{{ t.greeting }}
+
+{{ t.invoice_attached }}
+
+{{ t.order_details }}
+{% for item in ordered_items %}
+- {{ item.article }}: €{{ "%.2f"|format(item.price) }} x {{ item.quantity }} = €{{ "%.2f"|format(item.price * item.quantity) }}
+{% endfor %}
+{{ t.total }}: €{{ "%.2f"|format(total_sum) }}
+
+{{ t.delivery_info }}
+{% if delivery_data.is_self_pickup %}
+{{ t.self_pickup }}
+{% else %}
+{{ delivery_data.delivery_info|default('', true) }}
+{{ t.delivery_cost }}: €{{ "%.2f"|format(delivery_data.delivery_cost|default(0, true)) }}
+{% endif %}
+
+{{ t.total_with_delivery }}: €{{ "%.2f"|format(delivery_data.total_with_delivery|default(total_sum, true)) }}
+
+{{ t.payment_instruction }}
+
+{{ t.thank_you }}
+
+{{ t.contact_us }}
+
+--
+{{ t.footer_text }}
+© {{ current_year }} AutogroupEU

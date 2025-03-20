@@ -89,12 +89,8 @@
         return window.translations[text] || text;
     }
     </script>
-    <style>
-    /* Приховуємо українську мову в списку доступних мов */
-    .language-selector a[href*="/set_language/uk"] {
-        display: none !important;
-    }
-</style>
+        
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom-layout.css') }}">
 </head>	
 <body class="d-flex flex-column min-vh-100">
     <!-- Google Tag Manager (noscript) -->

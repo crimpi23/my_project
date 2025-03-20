@@ -1,0 +1,22 @@
+{{ t.greeting }}
+
+{{ t.order_submitted }}
+
+{{ t.delivery_info }}
+{{ t.name }} {{ delivery_data.full_name }}
+{{ t.phone }} {{ delivery_data.phone }}
+{{ t.address }} {{ delivery_data.street }}, {{ delivery_data.city }}, {{ delivery_data.postal_code }}, {{ delivery_data.country }}
+
+{{ t.order_details }}
+{% for item in ordered_items %}
+{{ t.article }} {{ item.article }}
+{{ t.price }} €{{ "%.2f"|format(item.price) }}
+{{ t.quantity }} {{ item.quantity }}
+{{ t.delivery_time }} {{ item.delivery_time }}
+{% endfor %}
+
+{{ t.total }} €{{ "%.2f"|format(total_sum) }}
+
+{{ t.thank_you }}
+
+{{ t.footer_text }}

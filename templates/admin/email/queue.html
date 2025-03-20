@@ -1,0 +1,59 @@
+{% extends "admin/layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Email Queue</h1>
+    
+    <div class="mb-3 d-flex gap-2">
+        <form action="{{ url_for('process_email_queue_new', token=token) }}" method="post">
+            <button type="submit" class="btn btn-primary">Process Queue</button>
+        </form>
+        <form action="{{ url_for('reset_error_emails', token=token) }}" method="post">
+            <button type="submit" class="btn btn-warning">Reset Error Emails</button>
+        </form>
+        <form action="{{ url_for('test_smtp_connection', token=token) }}" method="post">
+            <button type="submit" class="btn btn-info">Test SMTP Connection</button>
+        </form>
+        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr> 
+                <th>ID</th>
+                <th>Order ID</th>
+                <th>Recipient</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Attempts</th>
+                <th>Created</th>
+                <th>Last Attempt</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for email in emails %}
+            <tr>
+                <td>{{ email.id }}</td>
+                <td>{{ email.order_id }}</td>
+                <td>{{ email.recipient }}</td>
+                <td>{{ email.subject }}</td>
+                <td>
+                    {% if email.status == 'pending' %}
+                    <span class="badge bg-warning">Pending</span>
+                    {% elif email.status == 'sent' %}
+                    <span class="badge bg-success">Sent</span>
+                    {% elif email.status == 'failed' %}
+                    <span class="badge bg-danger">Failed</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ email.status }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ email.attempts }}</td>
+                <td>{{ email.created_at|datetime }}</td>
+                <td>{{ email.last_attempt|datetime if email.last_attempt else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

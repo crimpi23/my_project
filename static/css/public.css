@@ -6184,3 +6184,40 @@ tr:hover .article-badge {
         word-break: break-word;
     }
 }
+/* НАДВАЖЛИВЕ ВИПРАВЛЕННЯ ДВОКОЛОНКОВОЇ ВІТРИНИ - НЕ ВИДАЛЯТИ! */
+@media (max-width: 767px) {
+    /* Змушуємо контейнер бути на всю ширину */
+    .container {
+      max-width: 100% !important;
+      width: 100% !important;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+    }
+    
+    /* НАЙВАЖЛИВІШЕ - використовуємо CSS Grid замість flexbox */
+    .row-products {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      grid-gap: 10px !important;
+      width: 100% !important;
+      margin: 0 !important; 
+    }
+    
+    /* Скидаємо всі стандартні стилі Bootstrap для колонок */
+    .product-column,
+    div[class*="col-"].product-column,
+    .row-products > div {
+      width: auto !important;
+      max-width: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      float: none !important;
+      flex: none !important;
+    }
+    
+    /* Гарантуємо, що карточки товарів мають правильні відступи */
+    .product-card {
+      margin-bottom: 0 !important;
+      height: 100% !important;
+    }
+  }

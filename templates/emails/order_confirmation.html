@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+            border-bottom: 3px solid #007bff;
+        }
+        .logo {
+            max-width: 200px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 20px;
+            background-color: #ffffff;
+        }
+        .delivery-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        .invoice-notice {
+            background-color: #fff3cd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
+        .order-details {
+            margin-bottom: 20px;
+        }
+        .item {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .item:last-child {
+            border-bottom: none;
+        }
+        .total {
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: right;
+            font-size: 18px;
+            color: #007bff;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+            border-radius: 0 0 5px 5px;
+            border-top: 2px solid #ced4da;
+        }
+        .company-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ced4da;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        h1 {
+            color: #007bff;
+            margin: 0;
+            font-size: 24px;
+        }
+        h2 {
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            font-size: 18px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #555;
+        }
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100%;
+                padding: 10px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            th, td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://autogroup.sk/imgbank/Image/AUtogroupEU.png" alt="Autogroup Logo" class="logo">
+            <h1>AutogroupEU - {{ subject }}</h1>
+        </div>
+        <div class="content">
+            <p>{{ t.greeting }}</p>
+            <p><strong>{{ t.order_submitted }}</strong></p>
+            
+            <div class="delivery-info">
+                <h2>{{ t.delivery_info }}</h2>
+                <p><strong>{{ t.name }}</strong> {{ delivery_data.full_name }}</p>
+                <p><strong>{{ t.phone }}</strong> {{ delivery_data.phone }}</p>
+                <p><strong>{{ t.address }}</strong> {{ delivery_data.street }}, 
+                   {{ delivery_data.city }}, 
+                   {{ delivery_data.postal_code }}, 
+                   {{ delivery_data.country }}</p>
+            </div>
+            
+            <div class="invoice-notice">
+                {% if lang == 'sk' %}
+                <p><strong>Poznámka:</strong> V najbližšom čase Vám zašleme faktúru na úhradu.</p>
+                {% elif lang == 'en' %}
+                <p><strong>Note:</strong> We will send you an invoice for payment in the near future.</p>
+                {% elif lang == 'pl' %}
+                <p><strong>Uwaga:</strong> W najbliższym czasie wyślemy Państwu fakturę do zapłaty.</p>
+                {% else %}
+                <p><strong>Note:</strong> We will send you an invoice for payment in the near future.</p>
+                {% endif %}
+            </div>
+            
+            <div class="order-details">
+                <h2>{{ t.order_details }}</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{ t.article }}</th>
+                            <th>{{ t.price }}</th>
+                            <th>{{ t.quantity }}</th>
+                            <th>{{ t.delivery_time }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in ordered_items %}
+                        <tr class="item">
+                            <td>{{ item.article }}</td>
+                            <td>€{{ "%.2f"|format(item.price) }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.delivery_time }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="total">
+                    {{ t.total }} €{{ "%.2f"|format(total_sum) }}
+                </div>
+            </div>
+            
+            <p>{{ t.thank_you }}</p>
+            <p>{{ t.contact_us }}: <a href="mailto:info@autogroup.sk">info@autogroup.sk</a></p>
+        </div>
+        <div class="footer">
+            <p>{{ t.footer_text }}</p>
+            
+            <div class="company-info">
+                <p><strong>Autogroup</strong></p>
+                <p>066 01 Humenné, Mierová 99, Slovakia</p>
+                <p>Warehouse: Tušická Nová Ves 90, Tušice 07202, Slovakia</p>
+                <p>IČO: 47948311 | DIČ: 2120009089 | DIČ DPH: SK2120009089</p>
+                <p>Obch. register: Okresný súd Prešov, Sro/30964/P</p>
+                <p>Phone: +421 907 400 865 (SK/CZ/PL) | +421 907 539 325 (HU/EN)</p>
+                <p>Email: info@autogroup.sk | <a href="https://autogroup.sk">www.autogroup.sk</a></p>
+                <p>Bank: Slovenská sporiteľňa, a.s.</p>
+                <p>IBAN: SK51 0900 0000 0050 6892 5563 | BIC: GIBASKBX</p>
+            </div>
+            
+            <p>&copy; {{ current_year }} AutogroupEU</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-03-20 19:43+0200\n"
+"POT-Creation-Date: 2025-03-21 10:36+0200\n"
 "PO-Revision-Date: 2025-03-03 22:26+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: sk\n"
@@ -34,7 +34,9 @@ msgstr "Zadajte aspoň jedno číslo tovaru"
 msgid ""
 "Maximum {max_articles} articles per request. Only first {max_articles} "
 "will be processed."
-msgstr "Maximálne {max_articles} kódov na požiadavku. Iba prvých {max_articles} bude spracovaných."
+msgstr ""
+"Maximálne {max_articles} kódov na požiadavku. Iba prvých {max_articles} "
+"bude spracovaných."
 
 #: app.py:328 app.py:369
 msgid "error"
@@ -64,442 +66,444 @@ msgstr "Pri pridávaní položiek do košíka došlo k chybe"
 msgid "Error validating phone number"
 msgstr "Chyba pri overovaní telefónneho čísla"
 
-#: app.py:747
+#: app.py:740
 msgid "Username, email or phone already registered."
 msgstr "Používateľské meno, e-mail alebo telefón je už zaregistrovaný."
 
-#: app.py:778
+#: app.py:771
 msgid "Registration successful! You are now logged in."
 msgstr "Registrácia úspešná! Ste prihlásený."
 
-#: app.py:783
+#: app.py:776
 msgid "Registration failed. Please try again."
 msgstr "Registrácia zlyhala. Prosím, skúste znova."
 
-#: app.py:840
+#: app.py:833
 msgid "Invalid username or password"
 msgstr "Neplatné používateľské meno alebo heslo"
 
-#: app.py:1057
+#: app.py:1047
 msgid "Please log in to place an order."
 msgstr "Pre zadanie objednávky sa prosím prihláste."
 
-#: app.py:1102
+#: app.py:1092
 msgid "Selected address not found"
 msgstr "Vybraná adresa nebola nájdená"
 
-#: app.py:1166
+#: app.py:1156
 msgid "Selected company not found"
 msgstr "Vybraná spoločnosť nebola nájdená"
 
-#: app.py:1183
+#: app.py:1173
 msgid "Your cart is empty."
 msgstr "Váš košík je prázdny."
 
-#: app.py:1214 app.py:1222 app.py:1766 app.py:1770 app.py:2072 app.py:2123
+#: app.py:1204 app.py:1212 app.py:1756 app.py:1760 app.py:2062 app.py:2113
 #: templates/public/cart/cart.html:52 templates/public/product_details
 #: templates/public/product_details.html:215 копія.html:155 –
 msgid "In Stock"
 msgstr "Na sklade"
 
-#: app.py:1222 app.py:1770 app.py:2124
+#: app.py:1212 app.py:1760 app.py:2114
 #: templates/public/api_search_results.html:59
 msgid "days"
 msgstr "dní"
 
-#: app.py:1236
+#: app.py:1226
 msgid "Your cart is empty"
 msgstr "Váš košík je prázdny"
 
-#: app.py:1349 app.py:4363
+#: app.py:1339 app.py:4353
 msgid "Order placed successfully!"
 msgstr "Objednávka bola úspešne odoslaná!"
 
-#: app.py:1358
+#: app.py:1348
 msgid "Error placing order"
 msgstr "Chyba pri zadávaní objednávky"
 
-#: app.py:1380 app.py:1516
+#: app.py:1370 app.py:1506
 msgid "Please log in to view order details."
 msgstr "Pre zobrazenie detailov objednávky sa prosím prihláste."
 
-#: app.py:1386
+#: app.py:1376
 msgid "Order not found"
 msgstr "Objednávka nebola nájdená"
 
-#: app.py:1390
+#: app.py:1380
 msgid "Access denied"
 msgstr "Prístup odmietnutý"
 
-#: app.py:1410
+#: app.py:1400
 msgid "Error displaying order confirmation."
 msgstr "Chyba pri zobrazovaní potvrdenia objednávky."
 
-#: app.py:1471
+#: app.py:1461
 msgid "Cart cleared successfully"
 msgstr "Košík bol úspešne vymazaný"
 
-#: app.py:1481
+#: app.py:1471
 msgid "Please log in to view your orders."
 msgstr "Pre zobrazenie objednávok sa prosím prihláste."
 
-#: app.py:1504
+#: app.py:1494
 msgid "Error retrieving your orders"
 msgstr "Chyba pri získavaní vašich objednávok"
 
-#: app.py:1534
+#: app.py:1524
 msgid "Order not found."
 msgstr "Objednávka nebola nájdená."
 
-#: app.py:1560 app.py:4512
+#: app.py:1550 app.py:4502
 msgid "Error loading order details."
 msgstr "Chyba pri načítavaní detailov objednávky."
 
-#: app.py:1579
+#: app.py:1569
 msgid "You have been logged out."
 msgstr "Boli ste odhlásený."
 
-#: app.py:1659
+#: app.py:1649
 msgid "Please log in to view your cart."
 msgstr "Pre zobrazenie košíka sa prosím prihláste."
 
-#: app.py:1792 app.py:2157 app.py:3672 app.py:5027
+#: app.py:1782 app.py:2147 app.py:3662 app.py:5017
 msgid "An error occurred while processing your request."
 msgstr "Pri spracovaní vašej požiadavky došlo k chybe."
 
-#: app.py:1832 app.py:3063
+#: app.py:1822 app.py:3053
 msgid "Invalid token."
 msgstr "Neplatný token."
 
-#: app.py:1837
+#: app.py:1827
 msgid "Please log in."
 msgstr "Prosím, prihláste sa."
 
-#: app.py:1842
+#: app.py:1832
 msgid "You don't have permission to access this page."
 msgstr "Nemáte oprávnenie na prístup k tejto stránke."
 
-#: app.py:2624
+#: app.py:2614
 msgid "Please log in to manage your cart."
 msgstr "Pre správu košíka sa prosím prihláste."
 
-#: app.py:2637
+#: app.py:2627
 msgid "Missing article information"
 msgstr "Chýbajúce informácie o tovare"
 
-#: app.py:2641 app.py:3195
+#: app.py:2631 app.py:3185
 msgid "Quantity must be at least 1"
 msgstr "Množstvo musí byť aspoň 1"
 
-#: app.py:2660
+#: app.py:2650
 msgid "Cart updated successfully"
 msgstr "Košík bol úspešne aktualizovaný"
 
-#: app.py:2663 app.py:4162
+#: app.py:2653 app.py:4152
 msgid "Item not found in cart"
 msgstr "Položka nebola v košíku nájdená"
 
-#: app.py:2672
+#: app.py:2662
 msgid "Invalid quantity"
 msgstr "Neplatné množstvo"
 
-#: app.py:2676
+#: app.py:2666
 msgid "Error updating cart"
 msgstr "Chyba pri aktualizácii košíka"
 
-#: app.py:2691
+#: app.py:2681
 msgid "Missing article or table name"
 msgstr "Chýbajúci kód tovaru alebo názov tabuľky"
 
-#: app.py:2719
+#: app.py:2709
 msgid "Item removed from cart"
 msgstr "Položka bola odstránená z košíka"
 
-#: app.py:2722
+#: app.py:2712
 msgid "Item not found in your cart"
 msgstr "Položka nebola nájdená vo vašom košíku"
 
-#: app.py:2731 app.py:4167
+#: app.py:2721 app.py:4157
 msgid "Error removing item from cart"
 msgstr "Chyba pri odstraňovaní položky z košíka"
 
-#: app.py:3170
+#: app.py:3160
 msgid "Missing required product information"
 msgstr "Chýbajúce povinné informácie o produkte"
 
-#: app.py:3177
+#: app.py:3167
 msgid "Invalid price format"
 msgstr "Neplatný formát ceny"
 
-#: app.py:3201
+#: app.py:3191
 msgid "Please log in or register to add this item to your cart."
-msgstr "Pre pridanie tejto položky do košíka sa prosím prihláste alebo zaregistrujte."
+msgstr ""
+"Pre pridanie tejto položky do košíka sa prosím prihláste alebo "
+"zaregistrujte."
 
-#: app.py:3224
+#: app.py:3214
 msgid "Item added to cart"
 msgstr "Položka bola pridaná do košíka"
 
-#: app.py:3235
+#: app.py:3225
 msgid "Error adding item to cart"
 msgstr "Chyba pri pridávaní položky do košíka"
 
-#: app.py:3273 app.py:3289
+#: app.py:3263 app.py:3279
 msgid "Please enter an article for search."
 msgstr "Zadajte kód tovaru pre vyhľadávanie."
 
-#: app.py:3316
+#: app.py:3306
 msgid "An error occurred during the search. Please try again later."
 msgstr "Počas vyhľadávania došlo k chybe. Skúste to prosím neskôr."
 
-#: app.py:3507
+#: app.py:3497
 msgid "Please enter at least one article."
 msgstr "Zadajte aspoň jeden kód tovaru."
 
-#: app.py:3618
+#: app.py:3608
 msgid "Articles not found: {articles}"
 msgstr "Nenájdené položky: {articles}"
 
-#: app.py:3647
+#: app.py:3637
 msgid "Added to cart: {articles}"
 msgstr "Pridané do košíka: {articles}"
 
-#: app.py:3684
+#: app.py:3674
 msgid "You need to log in to view search results."
 msgstr "Pre zobrazenie výsledkov vyhľadávania sa musíte prihlásiť."
 
-#: app.py:3746
+#: app.py:3736
 msgid "Your selection has been saved!"
 msgstr "Váš výber bol uložený!"
 
-#: app.py:3750
+#: app.py:3740
 msgid "An error occurred while saving your selection. Please try again."
 msgstr "Pri ukladaní vášho výberu došlo k chybe. Skúste to znova."
 
-#: app.py:3771
+#: app.py:3761
 msgid "No search results found. Please start a new search."
 msgstr "Neboli nájdené žiadne výsledky. Začnite nové vyhľadávanie."
 
-#: app.py:3788
+#: app.py:3778
 msgid "An error occurred while retrieving search results."
 msgstr "Pri získavaní výsledkov vyhľadávania došlo k chybe."
 
-#: app.py:3808
+#: app.py:3798
 msgid "You need to log in to view your cart."
 msgstr "Pre zobrazenie vášho košíka sa musíte prihlásiť."
 
-#: app.py:3921
+#: app.py:3911
 msgid "Could not load your cart. Please try again."
 msgstr "Nepodarilo sa načítať váš košík. Skúste to znova."
 
-#: app.py:3941 app.py:7342
+#: app.py:3931 app.py:7332
 msgid "User not authenticated"
 msgstr "Používateľ nie je autentifikovaný"
 
-#: app.py:3990
+#: app.py:3980
 msgid "No articles selected"
 msgstr "Nie sú vybrané žiadne položky"
 
-#: app.py:4019
+#: app.py:4009
 msgid "Selection successfully submitted!"
 msgstr "Výber bol úspešne odoslaný!"
 
-#: app.py:4024
+#: app.py:4014
 msgid "An error occurred during submission"
 msgstr "Počas odosielania došlo k chybe"
 
-#: app.py:4038
+#: app.py:4028
 msgid "Search results cleared successfully"
 msgstr "Výsledky vyhľadávania boli úspešne vymazané"
 
-#: app.py:4044
+#: app.py:4034
 msgid "Error clearing search results"
 msgstr "Chyba pri mazaní výsledkov vyhľadávania"
 
-#: app.py:4072 app.py:4267
+#: app.py:4062 app.py:4257
 msgid "User is not authenticated. Please log in."
 msgstr "Používateľ nie je autentifikovaný. Prosím, prihláste sa."
 
-#: app.py:4105
+#: app.py:4095
 msgid "Product added to cart!"
 msgstr "Produkt bol pridaný do košíka!"
 
-#: app.py:4108
+#: app.py:4098
 msgid "Error adding product to cart."
 msgstr "Chyba pri pridávaní produktu do košíka."
 
-#: app.py:4142
+#: app.py:4132
 msgid "Missing required information for removal"
 msgstr "Chýbajúce informácie potrebné na odstránenie"
 
-#: app.py:4159
+#: app.py:4149
 msgid "Article {article} removed successfully"
 msgstr "Položka {article} bola úspešne odstránená"
 
-#: app.py:4186
+#: app.py:4176
 msgid "Invalid input: article or quantity missing."
 msgstr "Neplatný vstup: chýba kód tovaru alebo množstvo."
 
-#: app.py:4193
+#: app.py:4183
 msgid "Quantity must be at least 1."
 msgstr "Množstvo musí byť aspoň 1."
 
-#: app.py:4210
+#: app.py:4200
 msgid "Cart updated successfully!"
 msgstr "Košík bol úspešne aktualizovaný!"
 
-#: app.py:4214
+#: app.py:4204
 msgid "Error updating cart."
 msgstr "Chyba pri aktualizácii košíka."
 
-#: app.py:4285
+#: app.py:4275
 msgid "Your cart is empty!"
 msgstr "Váš košík je prázdny!"
 
-#: app.py:4356
+#: app.py:4346
 msgid "Order placed, but we couldn't send a confirmation email."
 msgstr "Objednávka bola zadaná, ale nemohli sme odoslať potvrdzovací e-mail."
 
-#: app.py:4370
+#: app.py:4360
 msgid "Error placing order: {error}"
 msgstr "Chyba pri zadávaní objednávky: {error}"
 
-#: app.py:4388
+#: app.py:4378
 msgid "User is not authenticated."
 msgstr "Používateľ nie je autentifikovaný."
 
-#: app.py:4454
+#: app.py:4444
 msgid "Error fetching orders."
 msgstr "Chyba pri načítavaní objednávok."
 
-#: app.py:4899
+#: app.py:4889
 msgid "Category not found."
 msgstr "Kategória nebola nájdená."
 
-#: app.py:7409
+#: app.py:7399
 msgid "Some articles still need table selection."
 msgstr "Niektoré položky ešte vyžadujú výber tabuľky."
 
-#: app.py:7411
+#: app.py:7401
 msgid "All selected articles have been added to your cart."
 msgstr "Všetky vybrané položky boli pridané do vášho košíka."
 
-#: app.py:7457
+#: app.py:7447
 msgid "An error occurred while processing your selection. Please try again."
 msgstr "Pri spracovaní vášho výberu došlo k chybe. Skúste to znova."
 
-#: app.py:7651
+#: app.py:7641
 msgid "News created successfully!"
 msgstr "Novinky boli úspešne vytvorené!"
 
-#: app.py:7656
+#: app.py:7646
 msgid "Error creating news"
 msgstr "Chyba pri vytváraní noviniek"
 
-#: app.py:8264
+#: app.py:8254
 msgid "Error loading news"
 msgstr "Chyba pri načítavaní noviniek"
 
-#: app.py:8295
+#: app.py:8285
 msgid "News not found"
 msgstr "Novinky neboli nájdené"
 
-#: app.py:8668
+#: app.py:8658
 msgid "Delivery address updated"
 msgstr "Doručovacia adresa bola aktualizovaná"
 
-#: app.py:8684
+#: app.py:8674
 msgid "Invoice details updated"
 msgstr "Fakturačné údaje boli aktualizované"
 
-#: app.py:8686
+#: app.py:8676
 msgid "Invalid invoice data format"
 msgstr "Neplatný formát fakturačných údajov"
 
-#: app.py:8778
+#: app.py:8768
 msgid "Item processed successfully"
 msgstr "Položka bola úspešne spracovaná"
 
-#: app.py:8791
+#: app.py:8781
 msgid "Error processing orders"
 msgstr "Chyba pri spracovaní objednávok"
 
-#: app.py:9085
+#: app.py:9075
 msgid "Please login to access your profile"
 msgstr "Pre prístup k profilu sa prosím prihláste"
 
-#: app.py:9135
+#: app.py:9125
 msgid "Invalid email format"
 msgstr "Neplatný formát e-mailu"
 
-#: app.py:9142 app.py:9196
+#: app.py:9132 app.py:9186
 msgid "This email is already in use by another user"
 msgstr "Tento e-mail už používa iný používateľ"
 
-#: app.py:9148 app.py:9198
+#: app.py:9138 app.py:9188
 msgid "This phone number is already in use by another user"
 msgstr "Toto telefónne číslo už používa iný používateľ"
 
-#: app.py:9159
+#: app.py:9149
 msgid "Current password is incorrect"
 msgstr "Aktuálne heslo je nesprávne"
 
-#: app.py:9164
+#: app.py:9154
 msgid "New passwords do not match"
 msgstr "Nové heslá sa nezhodujú"
 
-#: app.py:9177
+#: app.py:9167
 msgid "Profile and password updated successfully"
 msgstr "Profil a heslo boli úspešne aktualizované"
 
-#: app.py:9190
+#: app.py:9180
 msgid "Profile updated successfully"
 msgstr "Profil bol úspešne aktualizovaný"
 
-#: app.py:9200
+#: app.py:9190
 msgid "Error updating profile: duplicate value"
 msgstr "Chyba pri aktualizácii profilu: duplicitná hodnota"
 
-#: app.py:9231
+#: app.py:9221
 msgid "Address added successfully"
 msgstr "Adresa bola úspešne pridaná"
 
-#: app.py:9243
+#: app.py:9233
 msgid "Address deleted successfully"
 msgstr "Adresa bola úspešne odstránená"
 
-#: app.py:9265
+#: app.py:9255
 msgid "Default address updated"
 msgstr "Predvolená adresa bola aktualizovaná"
 
-#: app.py:9292
+#: app.py:9282
 msgid "Company added successfully"
 msgstr "Spoločnosť bola úspešne pridaná"
 
-#: app.py:9304
+#: app.py:9294
 msgid "Company deleted successfully"
 msgstr "Spoločnosť bola úspešne odstránená"
 
-#: app.py:9326
+#: app.py:9316
 msgid "Default company updated"
 msgstr "Predvolená spoločnosť bola aktualizovaná"
 
-#: app.py:9334
+#: app.py:9324
 msgid "Ukrainian"
 msgstr "Ukrajinčina"
 
-#: app.py:9334
+#: app.py:9324
 msgid "English"
 msgstr "Angličtina"
 
-#: app.py:9334
+#: app.py:9324
 msgid "Slovak"
 msgstr "Slovenčina"
 
-#: app.py:9334
+#: app.py:9324
 msgid "Polish"
 msgstr "Poľština"
 
-#: app.py:9340
+#: app.py:9330
 msgid "Error accessing user profile"
 msgstr "Chyba pri prístupe k používateľskému profilu"
 
@@ -839,6 +843,10 @@ msgstr "Kategórie"
 msgid "My Account"
 msgstr "Môj účet"
 
+#: templates/base/public_base.html:237 templates/public/user/profile.html:15
+msgid "Profile"
+msgstr "Profil"
+
 #: templates/base/public_base.html:248
 msgid "Logout"
 msgstr "Odhlásiť sa"
@@ -907,7 +915,9 @@ msgstr "Nastavenia cookies"
 msgid ""
 "All prices shown include VAT unless otherwise stated. EU business "
 "customers with valid VAT ID may receive invoices without VAT."
-msgstr "Všetky uvedené ceny zahŕňajú DPH, pokiaľ nie je uvedené inak. Podnikatelia z EÚ s platným IČ DPH môžu dostať faktúry bez DPH."
+msgstr ""
+"Všetky uvedené ceny zahŕňajú DPH, pokiaľ nie je uvedené inak. "
+"Podnikatelia z EÚ s platným IČ DPH môžu dostať faktúry bez DPH."
 
 #: templates/base/public_base.html:419
 msgid "Call us (SK/CZ/PL)"
@@ -922,12 +932,18 @@ msgid "Contact us via WhatsApp"
 msgstr "Kontaktujte nás cez WhatsApp"
 
 #: templates/public/about.html:5 templates/public/about.html:8
-msgid "Learn more about AutogroupEU - your trusted partner in auto parts supply across Europe since 2014."
-msgstr "Dozviete sa viac o spoločnosti AutogroupEU - vašom spoľahlivom partnerovi v dodávkach autodielov po celej Európe od roku 2014."
+msgid ""
+"Learn more about AutogroupEU - your trusted partner in auto parts supply "
+"across Europe since 2014."
+msgstr ""
+"Dozviete sa viac o spoločnosti AutogroupEU - vašom spoľahlivom partnerovi"
+" v dodávkach autodielov po celej Európe od roku 2014."
 
 #: templates/public/about.html:6
 msgid "about us, auto parts, European supplier, car parts, B2B, original parts"
-msgstr "o nás, autodiely, európsky dodávateľ, náhradné diely, B2B, originálne diely"
+msgstr ""
+"o nás, autodiely, európsky dodávateľ, náhradné diely, B2B, originálne "
+"diely"
 
 #: templates/public/about.html:12 templates/public/category.html:3
 #: templates/public/category.html:12 templates/public/contacts.html:3
@@ -940,12 +956,22 @@ msgid "Our Company"
 msgstr "Naša spoločnosť"
 
 #: templates/public/about.html:32
-msgid "Founded on November 15, 2014, we have been supplying original auto parts for many years. We have an online store where you can order parts to be delivered or purchase items available in our stock."
-msgstr "Založená 15. novembra 2014, dodávame originálne autodiely už mnoho rokov. Máme internetový obchod, kde si môžete objednať diely na dodanie alebo kúpiť tovary dostupné na našom sklade."
+msgid ""
+"Founded on November 15, 2014, we have been supplying original auto parts "
+"for many years. We have an online store where you can order parts to be "
+"delivered or purchase items available in our stock."
+msgstr ""
+"Založená 15. novembra 2014, dodávame originálne autodiely už mnoho rokov."
+" Máme internetový obchod, kde si môžete objednať diely na dodanie alebo "
+"kúpiť tovary dostupné na našom sklade."
 
 #: templates/public/about.html:34
-msgid "We provide original parts from European official warehouses at the lowest prices. All parts are original and new."
-msgstr "Poskytujeme originálne diely z európskych oficiálnych skladov za najnižšie ceny. Všetky diely sú originálne a nové."
+msgid ""
+"We provide original parts from European official warehouses at the lowest"
+" prices. All parts are original and new."
+msgstr ""
+"Poskytujeme originálne diely z európskych oficiálnych skladov za "
+"najnižšie ceny. Všetky diely sú originálne a nové."
 
 #: templates/public/about.html:38
 msgid "Our extensive catalog includes the following categories:"
@@ -956,16 +982,24 @@ msgid "Engine and Components"
 msgstr "Motor a komponenty"
 
 #: templates/public/about.html:49
-msgid "Cylinder blocks, Cylinder heads, Pistons, Crankshafts, Turbochargers, Fuel injectors, Gaskets and seals"
-msgstr "Bloky motorov, hlavy valcov, piesty, kľukové hriadele, turbodúchadlá, vstrekovače paliva, tesnenia"
+msgid ""
+"Cylinder blocks, Cylinder heads, Pistons, Crankshafts, Turbochargers, "
+"Fuel injectors, Gaskets and seals"
+msgstr ""
+"Bloky motorov, hlavy valcov, piesty, kľukové hriadele, turbodúchadlá, "
+"vstrekovače paliva, tesnenia"
 
 #: templates/public/about.html:59
 msgid "Fuel and Exhaust Systems"
 msgstr "Palivové a výfukové systémy"
 
 #: templates/public/about.html:62
-msgid "Fuel pumps, Injectors, Carburetors, Fuel filters, Catalytic converters, Mufflers, Exhaust manifolds"
-msgstr "Palivové čerpadlá, vstrekovače, karburátory, palivové filtre, katalyzátory, tlmiče výfuku, výfukové zvody"
+msgid ""
+"Fuel pumps, Injectors, Carburetors, Fuel filters, Catalytic converters, "
+"Mufflers, Exhaust manifolds"
+msgstr ""
+"Palivové čerpadlá, vstrekovače, karburátory, palivové filtre, "
+"katalyzátory, tlmiče výfuku, výfukové zvody"
 
 #: templates/public/about.html:72
 msgid "Cooling and Heating"
@@ -973,7 +1007,9 @@ msgstr "Chladenie a kúrenie"
 
 #: templates/public/about.html:75
 msgid "Radiators, Water pumps, Thermostats, Fans, Intercoolers, Cabin heaters"
-msgstr "Chladiče, vodné čerpadlá, termostaty, ventilátory, medzichladiče, kúrenia kabíny"
+msgstr ""
+"Chladiče, vodné čerpadlá, termostaty, ventilátory, medzichladiče, kúrenia"
+" kabíny"
 
 #: templates/public/about.html:85
 msgid "Lubrication System"
@@ -988,16 +1024,24 @@ msgid "Suspension and Chassis"
 msgstr "Zavesenie a podvozok"
 
 #: templates/public/about.html:101
-msgid "Shock absorbers, Springs, Stabilizers, Suspension arms, Engine mounts, Hub bearings"
-msgstr "Tlmiče, pružiny, stabilizátory, ramená zavesenia, silentbloky motora, ložiská nábojov"
+msgid ""
+"Shock absorbers, Springs, Stabilizers, Suspension arms, Engine mounts, "
+"Hub bearings"
+msgstr ""
+"Tlmiče, pružiny, stabilizátory, ramená zavesenia, silentbloky motora, "
+"ložiská nábojov"
 
 #: templates/public/about.html:111
 msgid "Brake System"
 msgstr "Brzdový systém"
 
 #: templates/public/about.html:114
-msgid "Brake pads, Discs and drums, Brake calipers, Master cylinders, Vacuum boosters"
-msgstr "Brzdové doštičky, kotúče a bubny, brzdové strmene, hlavné brzdové valce, podtlakové posilňovače"
+msgid ""
+"Brake pads, Discs and drums, Brake calipers, Master cylinders, Vacuum "
+"boosters"
+msgstr ""
+"Brzdové doštičky, kotúče a bubny, brzdové strmene, hlavné brzdové valce, "
+"podtlakové posilňovače"
 
 #: templates/public/about.html:124
 msgid "Steering"
@@ -1005,39 +1049,57 @@ msgstr "Riadenie"
 
 #: templates/public/about.html:127
 msgid "Steering racks, Power steering pumps, Tie rod ends, Hydraulic cylinders"
-msgstr "Tyče riadenia, čerpadlá posilňovača riadenia, čapy riadenia, hydraulické valce"
+msgstr ""
+"Tyče riadenia, čerpadlá posilňovača riadenia, čapy riadenia, hydraulické "
+"valce"
 
 #: templates/public/about.html:137
 msgid "Transmission and Drivetrain"
 msgstr "Prevodovka a pohon"
 
 #: templates/public/about.html:140
-msgid "Manual and automatic transmissions, Clutches, Drive shafts, Transfer cases, Differentials"
-msgstr "Manuálne a automatické prevodovky, spojky, hnacie hriadele, rozdeľovacie prevodovky, diferenciály"
+msgid ""
+"Manual and automatic transmissions, Clutches, Drive shafts, Transfer "
+"cases, Differentials"
+msgstr ""
+"Manuálne a automatické prevodovky, spojky, hnacie hriadele, rozdeľovacie "
+"prevodovky, diferenciály"
 
 #: templates/public/about.html:150
 msgid "Electrical and Lighting"
 msgstr "Elektronika a osvetlenie"
 
 #: templates/public/about.html:153
-msgid "Starters, Alternators, Batteries, Lights and headlights, Spark plugs, Various sensors, Electronic control units (ECUs)"
-msgstr "Štartéry, alternátory, batérie, svetlá a svetlomety, zapaľovacie sviečky, rôzne senzory, elektronické riadiace jednotky (ECU)"
+msgid ""
+"Starters, Alternators, Batteries, Lights and headlights, Spark plugs, "
+"Various sensors, Electronic control units (ECUs)"
+msgstr ""
+"Štartéry, alternátory, batérie, svetlá a svetlomety, zapaľovacie sviečky,"
+" rôzne senzory, elektronické riadiace jednotky (ECU)"
 
 #: templates/public/about.html:163
 msgid "Body Parts and Accessories"
 msgstr "Karosárske diely a príslušenstvo"
 
 #: templates/public/about.html:166
-msgid "Hoods, doors, fenders, bumpers, Windows (windshield, side, rear), Mirrors, Emblems and moldings"
-msgstr "Kapoty, dvere, blatníky, nárazníky, Okná (čelné, bočné, zadné), zrkadlá, emblémy a lišty"
+msgid ""
+"Hoods, doors, fenders, bumpers, Windows (windshield, side, rear), "
+"Mirrors, Emblems and moldings"
+msgstr ""
+"Kapoty, dvere, blatníky, nárazníky, Okná (čelné, bočné, zadné), zrkadlá, "
+"emblémy a lišty"
 
 #: templates/public/about.html:176
 msgid "Interior and Comfort"
 msgstr "Interiér a komfort"
 
 #: templates/public/about.html:179
-msgid "Dashboards, Seats and armrests, Steering wheels and gear knobs, Heating and air conditioning, Audio systems"
-msgstr "Prístrojové dosky, sedadlá a opierky, volanty a hlavice radiacej páky, kúrenie a klimatizácia, audio systémy"
+msgid ""
+"Dashboards, Seats and armrests, Steering wheels and gear knobs, Heating "
+"and air conditioning, Audio systems"
+msgstr ""
+"Prístrojové dosky, sedadlá a opierky, volanty a hlavice radiacej páky, "
+"kúrenie a klimatizácia, audio systémy"
 
 #: templates/public/about.html:189
 msgid "Wheels and Tires"
@@ -1052,28 +1114,58 @@ msgid "Fluids and Lubricants"
 msgstr "Kvapaliny a mazivá"
 
 #: templates/public/about.html:205
-msgid "Engine and transmission oils, Antifreeze, Brake fluid, Hydraulic fluids, Windshield washer fluid"
-msgstr "Motorové a prevodové oleje, nemrznúca zmes, brzdová kvapalina, hydraulické kvapaliny, kvapalina do ostrekovačov"
+msgid ""
+"Engine and transmission oils, Antifreeze, Brake fluid, Hydraulic fluids, "
+"Windshield washer fluid"
+msgstr ""
+"Motorové a prevodové oleje, nemrznúca zmes, brzdová kvapalina, "
+"hydraulické kvapaliny, kvapalina do ostrekovačov"
 
 #: templates/public/about.html:212
-msgid "Our company is registered at 066 01 Humenné Mierová 99, Slovakia, and our main warehouse is located in Tusicka Nova Ves 90, Tusice 07202, Slovakia. By prior arrangement, you can always pick up your parts yourself."
-msgstr "Naša spoločnosť je registrovaná na adrese 066 01 Humenné Mierová 99, Slovensko, a náš hlavný sklad sa nachádza v Tušickej Novej Vsi 90, Tušice 07202, Slovensko. Po predchádzajúcej dohode si vždy môžete diely vyzdvihnúť osobne."
+msgid ""
+"Our company is registered at 066 01 Humenné Mierová 99, Slovakia, and our"
+" main warehouse is located in Tusicka Nova Ves 90, Tusice 07202, "
+"Slovakia. By prior arrangement, you can always pick up your parts "
+"yourself."
+msgstr ""
+"Naša spoločnosť je registrovaná na adrese 066 01 Humenné Mierová 99, "
+"Slovensko, a náš hlavný sklad sa nachádza v Tušickej Novej Vsi 90, Tušice"
+" 07202, Slovensko. Po predchádzajúcej dohode si vždy môžete diely "
+"vyzdvihnúť osobne."
 
 #: templates/public/about.html:222
 msgid "Workshop & Programming Services"
 msgstr "Servisné a programovacie služby"
 
 #: templates/public/about.html:226
-msgid "In addition to parts supply, we have our own workshop where we specialize in car repairs and programming."
-msgstr "Okrem dodávok dielov máme vlastnú dielňu, kde sa špecializujeme na opravy a programovanie vozidiel."
+msgid ""
+"In addition to parts supply, we have our own workshop where we specialize"
+" in car repairs and programming."
+msgstr ""
+"Okrem dodávok dielov máme vlastnú dielňu, kde sa špecializujeme na opravy"
+" a programovanie vozidiel."
 
 #: templates/public/about.html:228
-msgid "We can help with complex engine repairs, specializing in Land Rover, BMW, Ford, and Mercedes-Benz vehicles. Our particular expertise is with 306DT engines, which we have been repairing for many years, but we also work with many other engine types."
-msgstr "Môžeme pomôcť s komplexnými opravami motorov, špecializujeme sa na vozidlá Land Rover, BMW, Ford a Mercedes-Benz. Naša konkrétna odbornosť je s motormi 306DT, ktoré opravujeme už mnoho rokov, ale pracujeme aj s mnohými inými typmi motorov."
+msgid ""
+"We can help with complex engine repairs, specializing in Land Rover, BMW,"
+" Ford, and Mercedes-Benz vehicles. Our particular expertise is with 306DT"
+" engines, which we have been repairing for many years, but we also work "
+"with many other engine types."
+msgstr ""
+"Môžeme pomôcť s komplexnými opravami motorov, špecializujeme sa na "
+"vozidlá Land Rover, BMW, Ford a Mercedes-Benz. Naša konkrétna odbornosť "
+"je s motormi 306DT, ktoré opravujeme už mnoho rokov, ale pracujeme aj s "
+"mnohými inými typmi motorov."
 
 #: templates/public/about.html:230
-msgid "We have all the necessary diagnostic software. Through our partners, we can also provide chip tuning services to increase your vehicle's performance."
-msgstr "Máme všetok potrebný diagnostický softvér. Prostredníctvom našich partnerov môžeme tiež poskytovať služby chiptuning na zvýšenie výkonu vášho vozidla."
+msgid ""
+"We have all the necessary diagnostic software. Through our partners, we "
+"can also provide chip tuning services to increase your vehicle's "
+"performance."
+msgstr ""
+"Máme všetok potrebný diagnostický softvér. Prostredníctvom našich "
+"partnerov môžeme tiež poskytovať služby chiptuning na zvýšenie výkonu "
+"vášho vozidla."
 
 #: templates/public/about.html:234
 msgid "We specialize in the following brands:"
@@ -1115,9 +1207,34 @@ msgstr "Zadajte čísla dielov (jedno na riadok alebo oddelené čiarkami)"
 msgid "Example: A9472652904, SU00305159"
 msgstr "Príklad: A9472652904, SU00305159"
 
+#: templates/public/api_search.html:29
+#: templates/public/article_not_found.html:46 templates/public/index.html:40
+#: templates/public/product_details templates/public/product_details.html:99
+#: templates/user/index.html:24 копія.html:57 –
+msgid "Search"
+msgstr "Hľadať"
+
+#: templates/public/api_search_results.html:3
+#: templates/public/api_search_results.html:19
+#: templates/user/search/search_results.html:3
+#: templates/user/search/search_results.html:7
+msgid "Search Results"
+msgstr "Výsledky hľadania"
+
 #: templates/public/api_search_results.html:10
 msgid "Back to Search"
 msgstr "Späť na vyhľadávanie"
+
+#: templates/public/api_search_results.html:36
+#: templates/public/article_not_found.html:93
+#: templates/public/cart/cart.html:25 templates/public/index.html:147
+#: templates/public/index.html:189
+#: templates/public/orders/order_details.html:154
+#: templates/public/product_details templates/public/product_details.html:168
+#: templates/user/cart/cart.html:16 templates/user/search/intermediate.html:35
+#: копія.html:128 –
+msgid "Brand"
+msgstr "Značka"
 
 #: templates/public/api_search_results.html:37
 msgid "Title"
@@ -1127,9 +1244,21 @@ msgstr "Názov"
 msgid "Delivery"
 msgstr "Dodanie"
 
+#: templates/public/api_search_results.html:40 templates/public/product_details
+#: templates/public/product_details.html:238
+#: templates/user/search/intermediate.html:61
+#: templates/user/search/search_results.html:82 копія.html:178 –
+msgid "Add to Cart"
+msgstr "Pridať do košíka"
+
 #: templates/public/api_search_results.html:56
 msgid "Discount"
 msgstr "Zľava"
+
+#: templates/public/api_search_results.html:65
+#: templates/user/search/search_results.html:19
+msgid "Select"
+msgstr "Vybrať"
 
 #: templates/public/api_search_results.html:80
 msgid "No results found for this part number"
@@ -1206,8 +1335,12 @@ msgid "Our Services"
 msgstr "Naše služby"
 
 #: templates/public/car_service.html:15
-msgid "We offer professional car diagnostic and programming services for various car models."
-msgstr "Ponúkame profesionálne diagnostické a programovacie služby pre rôzne modely automobilov."
+msgid ""
+"We offer professional car diagnostic and programming services for various"
+" car models."
+msgstr ""
+"Ponúkame profesionálne diagnostické a programovacie služby pre rôzne "
+"modely automobilov."
 
 #: templates/public/car_service.html:17
 msgid "Available Services"
@@ -1262,6 +1395,14 @@ msgstr "Podkategórie"
 #: templates/public/category.html:167
 msgid "Brand Filter"
 msgstr "Filter značiek"
+
+#: templates/public/category.html:180 templates/public/index.html:109
+msgid "All Brands"
+msgstr "Všetky značky"
+
+#: templates/public/category.html:195
+msgid "Apply Filter"
+msgstr "Použiť filter"
 
 #: templates/public/category.html:203
 msgid "Sort by"
@@ -1331,15 +1472,509 @@ msgstr "Kancelária"
 msgid "Main warehouse"
 msgstr "Hlavný sklad"
 
-#: templates/public/product_details templates/public/product_details.html:212
+#: templates/public/contacts.html:60 templates/public/user/profile.html:217
+msgid "Company Information"
+msgstr "Informácie o spoločnosti"
+
+#: templates/public/index.html:5
+msgid "AutogroupEU - Your reliable partner in auto parts supply across Europe."
+msgstr "AutogroupEU – Váš spoľahlivý partner v dodávke autodielov po celej Európe"
+
+#: templates/public/index.html:6
+msgid "auto parts, spare parts, car repair, programming, Slovakia"
+msgstr "autodiely, náhradné diely, oprava áut, programovanie, Slovensko"
+
+#: templates/public/index.html:7
+msgid "Auto Parts Supply"
+msgstr "Dodávka autodielov"
+
+#: templates/public/index.html:8
+msgid "Find the best auto parts for your vehicle with quick delivery across Europe"
+msgstr "Nájdite najlepšie autodiely pre vaše vozidlo s rýchlym doručením po celej Európe"
+
+#: templates/public/index.html:22
+msgid "Welcome to AutogroupEU"
+msgstr "Vitajte v AutogroupEU"
+
+#: templates/public/index.html:26
+msgid "Your reliable partner in auto parts supply across Europe. Enter the article number to check prices and availability."
+msgstr "Váš spoľahlivý partner v dodávkach autodielov po celej Európe. Zadajte číslo tovaru na kontrolu cien a dostupnosti."
+
+#: templates/public/index.html:55
+msgid "Need Help?"
+msgstr "Potrebujete pomoc?"
+
+#: templates/public/index.html:59
+msgid "If you have any questions, don't hesitate to contact us:"
+msgstr "Ak máte akékoľvek otázky, neváhajte nás kontaktovať:"
+
+#: templates/public/index.html:66
+msgid "Mon-Fri: 9:00 - 19:00"
+msgstr "Po-Pi: 9:00 - 19:00"
+
+#: templates/public/index.html:81
+msgid "We offer professional car repair and programming services."
+msgstr "Ponúkame profesionálne služby opravy a programovania áut."
+
+#: templates/public/index.html:82
+msgid "Learn More"
+msgstr "Zisti viac"
+
+#: templates/public/index.html:96
+msgid "Items in Our Stock"
+msgstr "Na sklade"
+
+#: templates/public/index.html:106
+msgid "Filter by brand:"
+msgstr ""
+
+#: templates/public/index.html:118
+msgid "Clear"
+msgstr "Vyčistiť"
+
+#: templates/public/index.html:156 templates/public/index.html:194
+#: templates/public/product_details.html:207
+msgid "incl. VAT"
+msgstr "vrátane DPH"
+
+#: templates/public/index.html:178
+msgid "Show More Products"
+msgstr "Zobraziť viac produktov"
+
+#: templates/public/index.html:192
+msgid "No description available."
+msgstr "Popis nie je k dispozícii."
+
+#: templates/public/privacy.html:5 templates/public/privacy.html:8
+msgid "Privacy Policy for AutogroupEU - how we collect, use, and protect your personal data."
+msgstr "Zásady ochrany osobných údajov pre AutogroupEU - ako zhromažďujeme, používame a chránime vaše osobné údaje."
+
+#: templates/public/privacy.html:6
+msgid "privacy policy, data protection, GDPR, personal data, cookies"
+msgstr "ochrana osobných údajov, ochrana údajov, GDPR, osobné údaje, cookies"
+
+#: templates/public/privacy.html:18
+msgid "How we collect, use, and protect your personal information"
+msgstr "Ako zhromažďujeme, používame a chránime vaše osobné údaje"
+
+#: templates/public/privacy.html:29 templates/public/terms.html:29
+msgid "Introduction"
+msgstr "Úvod"
+
+#: templates/public/privacy.html:34
+msgid ""
+"At AutogroupEU, we are committed to protecting your privacy and ensuring "
+"the security of your personal information. This Privacy Policy explains "
+"how we collect, use, and safeguard your data when you use our website or "
+"services."
+msgstr ""
+
+#: templates/public/privacy.html:37
+msgid ""
+"By using our website and services, you consent to the practices described"
+" in this policy. This policy complies with the General Data Protection "
+"Regulation (GDPR) and relevant data protection laws."
+msgstr "Používaním našej webovej stránky a služieb súhlasíte s postupmi popísanými v týchto zásadách. Tieto zásady sú v súlade s Všeobecným nariadením o ochrane údajov (GDPR) a príslušnými zákonmi o ochrane údajov."
+
+#: templates/public/privacy.html:40 templates/public/terms.html:37
+msgid "Last Updated: March 1, 2025"
+msgstr "Posledná aktualizácia: 1. marca 2025"
+
+#: templates/public/privacy.html:51
+msgid "Information We Collect"
+msgstr ""
+
+#: templates/public/privacy.html:56
+msgid "We collect personal information that you provide directly to us, such as:"
+msgstr "Zhromažďujeme osobné údaje, ktoré nám priamo poskytujete, ako napríklad:"
+
+#: templates/public/privacy.html:59
+msgid "Name, email address, phone number, and postal address"
+msgstr "Meno, e-mailová adresa, telefónne číslo a poštová adresa"
+
+#: templates/public/privacy.html:60
+msgid "Account login details, such as username and password"
+msgstr "Prihlasovacie údaje k účtu, ako sú používateľské meno a heslo"
+
+#: templates/public/privacy.html:61
+msgid "Company information, such as business name, VAT number, and registration details"
+msgstr "Informácie o spoločnosti, ako sú obchodné meno, IČ DPH a registračné údaje"
+
+#: templates/public/privacy.html:62
+msgid "Payment information (though we do not store complete credit card details)"
+msgstr "Platobné údaje (aj keď neukladáme úplné údaje o kreditných kartách)"
+
+#: templates/public/privacy.html:63
+msgid "Order history and preferences"
+msgstr "História objednávok a preferencie"
+
+#: templates/public/privacy.html:64
+msgid "Communication history with our customer service team"
+msgstr "História komunikácie s naším tímom zákazníckej podpory"
+
+#: templates/public/privacy.html:68
+msgid "When you visit our website, we automatically collect certain information about your device and usage, including:"
+msgstr "Keď navštívite našu webovú stránku, automaticky zhromažďujeme určité informácie o vašom zariadení a používaní, vrátane:"
+
+#: templates/public/privacy.html:71
+msgid "IP address and location information"
+msgstr "IP adresa a informácie o polohe"
+
+#: templates/public/privacy.html:72
+msgid "Browser and device information"
+msgstr "Informácie o prehliadači a zariadení"
+
+#: templates/public/privacy.html:73
+msgid "Pages visited and time spent on our website"
+msgstr "Navštívené stránky a čas strávený na našej webovej stránke"
+
+#: templates/public/privacy.html:74
+msgid "Referring websites or sources"
+msgstr "Odkazujúce webové stránky alebo zdroje"
+
+#: templates/public/privacy.html:75
+msgid "Cookies and similar tracking technologies"
+msgstr "Cookies a podobné sledovacie technológie"
+
+#: templates/public/privacy.html:86
+msgid "How We Use Your Information"
+msgstr "Ako používame vaše informácie"
+
+#: templates/public/privacy.html:90
+msgid "We use the information we collect for the following purposes:"
+msgstr ""
+
+#: templates/public/privacy.html:92
+msgid ""
+"To provide and maintain our services, including processing orders and "
+"managing accounts"
+msgstr ""
+
+#: templates/public/privacy.html:93
+msgid "To communicate with you about orders, account status, and customer service"
+msgstr ""
+
+#: templates/public/privacy.html:94
+msgid "To improve our website, products, and services"
+msgstr ""
+
+#: templates/public/privacy.html:95
+msgid ""
+"To send promotional materials and information about new products (only "
+"with your consent)"
+msgstr ""
+
+#: templates/public/privacy.html:96
+msgid "To detect and prevent fraudulent activities and security breaches"
+msgstr ""
+
+#: templates/public/privacy.html:97
+msgid "To comply with legal obligations and enforce our policies"
+msgstr ""
+
+#: templates/public/privacy.html:108
+msgid "Information Sharing and Disclosure"
+msgstr ""
+
+#: templates/public/privacy.html:112
+msgid "We may share your information with:"
+msgstr ""
+
+#: templates/public/privacy.html:114
+msgid ""
+"Service providers who help us operate our business (shipping companies, "
+"payment processors, etc.)"
+msgstr ""
+
+#: templates/public/privacy.html:115
+msgid ""
+"Professional advisors such as lawyers, accountants, and insurers when "
+"necessary"
+msgstr ""
+
+#: templates/public/privacy.html:116
+msgid "Government bodies or law enforcement agencies when required by law"
+msgstr ""
+
+#: templates/public/privacy.html:117
+msgid "Business partners with your explicit consent"
+msgstr ""
+
+#: templates/public/privacy.html:120
+msgid ""
+"We do not sell, rent, or trade your personal information to third parties"
+" for marketing purposes without your explicit consent."
+msgstr ""
+
+#: templates/public/privacy.html:131
+msgid "Cookies and Tracking Technologies"
+msgstr ""
+
+#: templates/public/privacy.html:136
+msgid ""
+"We use cookies and similar tracking technologies to track activity on our"
+" website and hold certain information. Cookies are files with small "
+"amount of data that may include an anonymous unique identifier."
+msgstr ""
+
+#: templates/public/privacy.html:139
+msgid "We use the following types of cookies:"
+msgstr ""
+
+#: templates/public/privacy.html:142
+msgid "Essential cookies:"
+msgstr ""
+
+#: templates/public/privacy.html:142
+msgid "Required for the operation of our website"
+msgstr ""
+
+#: templates/public/privacy.html:143
+msgid "Analytical/performance cookies:"
+msgstr ""
+
+#: templates/public/privacy.html:143
+msgid "Help us improve our website by tracking how visitors use it"
+msgstr ""
+
+#: templates/public/privacy.html:144
+msgid "Functionality cookies:"
+msgstr ""
+
+#: templates/public/privacy.html:144
+msgid "Allow us to recognize you and remember your preferences"
+msgstr ""
+
+#: templates/public/privacy.html:145
+msgid "Targeting cookies:"
+msgstr ""
+
+#: templates/public/privacy.html:145
+msgid "Record your visit, the pages you visit, and the links you follow"
+msgstr ""
+
+#: templates/public/privacy.html:148
+msgid ""
+"You can instruct your browser to refuse all cookies or to indicate when a"
+" cookie is being sent. However, if you do not accept cookies, you may not"
+" be able to use some portions of our service."
+msgstr ""
+
+#: templates/public/privacy.html:159
+msgid "Data Security"
+msgstr ""
+
+#: templates/public/privacy.html:164
+msgid ""
+"The security of your data is important to us. We implement appropriate "
+"security measures to protect your personal information from unauthorized "
+"access, alteration, disclosure, or destruction. These measures include:"
+msgstr ""
+
+#: templates/public/privacy.html:167
+msgid "Encryption of sensitive data"
+msgstr ""
+
+#: templates/public/privacy.html:168
+msgid "Regular security assessments"
+msgstr ""
+
+#: templates/public/privacy.html:169
+msgid "Access controls and authentication procedures"
+msgstr ""
+
+#: templates/public/privacy.html:170
+msgid "Secure network architecture"
+msgstr ""
+
+#: templates/public/privacy.html:171
+msgid "Regular backups and data recovery protocols"
+msgstr ""
+
+#: templates/public/privacy.html:174
+#, python-format
+msgid ""
+"However, please be aware that no method of transmission over the Internet"
+" or electronic storage is 100% secure, and we cannot guarantee absolute "
+"security."
+msgstr ""
+
+#: templates/public/privacy.html:185
+msgid "Your Data Protection Rights"
+msgstr ""
+
+#: templates/public/privacy.html:190
+msgid ""
+"Under the GDPR and other applicable data protection laws, you have the "
+"following rights:"
+msgstr ""
+
+#: templates/public/privacy.html:193
+msgid "Right to access:"
+msgstr ""
+
+#: templates/public/privacy.html:193
+msgid "You can request copies of your personal data."
+msgstr ""
+
+#: templates/public/privacy.html:194
+msgid "Right to rectification:"
+msgstr ""
+
+#: templates/public/privacy.html:194
+msgid ""
+"You can request that we correct inaccurate or complete incomplete "
+"information."
+msgstr ""
+
+#: templates/public/privacy.html:195
+msgid "Right to erasure:"
+msgstr ""
+
+#: templates/public/privacy.html:195
+msgid ""
+"You can request that we delete your personal data in certain "
+"circumstances."
+msgstr ""
+
+#: templates/public/privacy.html:196
+#, fuzzy
+msgid "Right to restrict processing:"
+msgstr "Právo na obmedzenie spracúvania:"
+
+#: templates/public/privacy.html:196
+msgid "You can request that we limit how we use your data."
+msgstr ""
+
+#: templates/public/privacy.html:197
+msgid "Right to data portability:"
+msgstr ""
+
+#: templates/public/privacy.html:197
+msgid ""
+"You can request that we transfer your data to another organization or "
+"directly to you."
+msgstr ""
+
+#: templates/public/privacy.html:198
+msgid "Right to object:"
+msgstr ""
+
+#: templates/public/privacy.html:198
+msgid "You can object to our processing of your personal data."
+msgstr ""
+
+#: templates/public/privacy.html:201
+msgid ""
+"To exercise any of these rights, please contact us using the details "
+"provided below. We will respond to your request within 30 days."
+msgstr ""
+
+#: templates/public/privacy.html:212
+msgid "Data Retention"
+msgstr ""
+
+#: templates/public/privacy.html:217
+msgid ""
+"We will retain your personal information only for as long as necessary to"
+" fulfill the purposes for which it was collected, including for "
+"satisfying legal, accounting, or reporting requirements."
+msgstr ""
+
+#: templates/public/privacy.html:220
+msgid ""
+"For business customers, we typically retain account information and order"
+" history for up to 7 years to comply with tax and business regulations."
+msgstr ""
+
+#: templates/public/privacy.html:223
+msgid ""
+"After the retention period, your personal data will be securely deleted "
+"or anonymized."
+msgstr ""
+
+#: templates/public/privacy.html:234
+msgid "Children's Privacy"
+msgstr ""
+
+#: templates/public/privacy.html:239
+msgid ""
+"Our service is not intended for use by individuals under the age of 18. "
+"We do not knowingly collect personal information from children. If you "
+"are a parent or guardian and believe that your child has provided us with"
+" personal information, please contact us so that we can take necessary "
+"actions."
+msgstr ""
+
+#: templates/public/privacy.html:250
+#, fuzzy
+msgid "Changes to This Privacy Policy"
+msgstr "Ochrana osobných údajov"
+
+#: templates/public/privacy.html:255
+msgid ""
+"We may update our Privacy Policy from time to time. We will notify you of"
+" any changes by posting the new Privacy Policy on this page and updating "
+"the \"Last Updated\" date."
+msgstr ""
+
+#: templates/public/privacy.html:258
+msgid ""
+"You are advised to review this Privacy Policy periodically for any "
+"changes. Changes to this Privacy Policy are effective when they are "
+"posted on this page."
+msgstr ""
+
+#: templates/public/privacy.html:274
+#, fuzzy
+msgid ""
+"If you have any questions about this Privacy Policy or our data "
+"practices, please contact our Data Protection Officer at:"
+msgstr ""
+"Ak máte akékoľvek otázky týkajúce sa našich pravidiel vrátenia, "
+"kontaktujte nás:"
+
+#: templates/public/privacy.html:282
+msgid ""
+"You have the right to lodge a complaint with your local data protection "
+"authority if you have concerns about how we process your personal data."
+msgstr ""
+
+#: templates/public/product_details templates/public/product_details.html:6
+#: копія.html:6 –
+msgid "auto parts"
+msgstr ""
+
+#: templates/public/product_details templates/public/product_details.html:6
+#: копія.html:6 –
+#, fuzzy
+msgid "spare parts"
+msgstr "Aktualizácie softvéru"
+
+#: templates/public/product_details templates/public.product_details.html:199
+#: копія.html:140 –
+msgid "Available Prices"
+msgstr "Dostupné ceny"
+
+#: templates/public/product_details templates/public.product_details.html:212
 #: копія.html:152 –
 msgid "Availability"
 msgstr "Dostupnosť"
 
-#: templates/public/product_details templates/public/product_details.html:228
+#: templates/public/product_details templates/public.product_details.html:228
 #: копія.html:168 –
 msgid "Qty"
-msgstr "Množstvo"
+msgstr "Počet"
+
+#: templates/public/cart/cart.html:277 templates/public.product_details
+#: templates/public.product_details.html:250 копія.html:190 –
+msgid "Continue Shopping"
+msgstr "Pokračovať v nákupe"
+
+#: templates/public.product_details templates/public.product_details.html:263
+#: копія.html:203 –
+msgid "Description"
+msgstr "Popis"
 
 #: templates/public/returns.html:5 templates/public/returns.html:8
 msgid "Learn about AutogroupEU's returns and exchanges policy for auto parts."
@@ -1347,7 +1982,9 @@ msgstr "Informácie o pravidlách vrátenia a výmeny autodielov v AutogroupEU."
 
 #: templates/public/returns.html:6
 msgid "returns policy, auto parts return, exchange policy, EU consumer rights"
-msgstr "pravidlá vrátenia, vrátenie autodielov, pravidlá výmeny, práva spotrebiteľov EÚ"
+msgstr ""
+"pravidlá vrátenia, vrátenie autodielov, pravidlá výmeny, práva "
+"spotrebiteľov EÚ"
 
 #: templates/public/returns.html:7 templates/public/returns.html:12
 #: templates/public/returns.html:17
@@ -1363,20 +2000,45 @@ msgid "Right of Withdrawal"
 msgstr "Právo na odstúpenie"
 
 #: templates/public/returns.html:34
-msgid "In accordance with EU regulations, consumers have the right to withdraw from the purchase contract without giving any reason within 14 days from the day of receiving the goods. To exercise this right, you must inform us of your decision through an unequivocal statement (e.g., email or letter)."
-msgstr "V súlade s nariadeniami EÚ majú spotrebitelia právo odstúpiť od kúpnej zmluvy bez uvedenia dôvodu do 14 dní odo dňa prevzatia tovaru. Na uplatnenie tohto práva nás musíte informovať o svojom rozhodnutí prostredníctvom jednoznačného vyhlásenia (napr. e-mailom alebo listom)."
+msgid ""
+"In accordance with EU regulations, consumers have the right to withdraw "
+"from the purchase contract without giving any reason within 14 days from "
+"the day of receiving the goods. To exercise this right, you must inform "
+"us of your decision through an unequivocal statement (e.g., email or "
+"letter)."
+msgstr ""
+"V súlade s nariadeniami EÚ majú spotrebitelia právo odstúpiť od kúpnej "
+"zmluvy bez uvedenia dôvodu do 14 dní odo dňa prevzatia tovaru. Na "
+"uplatnenie tohto práva nás musíte informovať o svojom rozhodnutí "
+"prostredníctvom jednoznačného vyhlásenia (napr. e-mailom alebo listom)."
 
 #: templates/public/returns.html:37
 msgid "Stock Items vs. Special Order Items"
 msgstr "Skladové položky vs. položky na špeciálnu objednávku"
 
 #: templates/public/returns.html:38
-msgid "Parts that we ship from our warehouse are subject to all standard return conditions. However, electronic components and parts ordered specially for a customer are non-returnable unless there is a factory defect confirmed by our technical specialists."
-msgstr "Diely, ktoré posielame z nášho skladu, podliehajú všetkým štandardným podmienkam vrátenia. Elektronické komponenty a diely špeciálne objednané pre zákazníka však nie je možné vrátiť, pokiaľ nejde o výrobnú chybu potvrdenú našimi technickými špecialistami."
+msgid ""
+"Parts that we ship from our warehouse are subject to all standard return "
+"conditions. However, electronic components and parts ordered specially "
+"for a customer are non-returnable unless there is a factory defect "
+"confirmed by our technical specialists."
+msgstr ""
+"Diely, ktoré posielame z nášho skladu, podliehajú všetkým štandardným "
+"podmienkam vrátenia. Elektronické komponenty a diely špeciálne objednané "
+"pre zákazníka však nie je možné vrátiť, pokiaľ nejde o výrobnú chybu "
+"potvrdenú našimi technickými špecialistami."
 
 #: templates/public/returns.html:39
-msgid "If you're unsure whether a part fits your vehicle, we strongly recommend providing your vehicle's VIN code before ordering so our specialists can verify compatibility. This helps avoid unnecessary returns and ensures you receive the correct part the first time."
-msgstr "Ak si nie ste istí, či diel pasuje do vášho vozidla, dôrazne odporúčame, aby ste pred objednaním uviedli VIN kód vášho vozidla, aby naši špecialisti mohli overiť kompatibilitu. Tým sa vyhnete zbytočnému vráteniu a zaistíte, že dostanete správny diel naprvýkrát."
+msgid ""
+"If you're unsure whether a part fits your vehicle, we strongly recommend "
+"providing your vehicle's VIN code before ordering so our specialists can "
+"verify compatibility. This helps avoid unnecessary returns and ensures "
+"you receive the correct part the first time."
+msgstr ""
+"Ak si nie ste istí, či diel pasuje do vášho vozidla, dôrazne odporúčame, "
+"aby ste pred objednaním uviedli VIN kód vášho vozidla, aby naši "
+"špecialisti mohli overiť kompatibilitu. Tým sa vyhnete zbytočnému "
+"vráteniu a zaistíte, že dostanete správny diel naprvýkrát."
 
 #: templates/public/returns.html:42
 msgid "Return Conditions"
@@ -1399,32 +2061,59 @@ msgid "In the same clean condition as you received it"
 msgstr "V rovnakom čistom stave, v akom ste ho prijali"
 
 #: templates/public/returns.html:48
-msgid "Complete with all accessories, manuals, and documentation included in the original package"
-msgstr "Kompletný so všetkým príslušenstvom, návodmi a dokumentáciou, ktoré boli súčasťou pôvodného balenia"
+msgid ""
+"Complete with all accessories, manuals, and documentation included in the"
+" original package"
+msgstr ""
+"Kompletný so všetkým príslušenstvom, návodmi a dokumentáciou, ktoré boli "
+"súčasťou pôvodného balenia"
 
 #: templates/public/returns.html:52
 msgid "Refunds"
 msgstr "Vrátenie peňazí"
 
 #: templates/public/returns.html:53
-msgid "Once your returned item is received and inspected, we will process your refund. Refunds will be processed to the original payment method used for the purchase. Please allow 5-10 business days for the refund to appear in your account after we've processed it."
-msgstr "Po prijatí a kontrole vráteného tovaru spracujeme vrátenie peňazí. Vrátenie peňazí bude spracované na pôvodnú platobnú metódu použitú pri nákupe. Po našom spracovaní počítajte s 5-10 pracovnými dňami, kým sa vrátenie peňazí objaví na vašom účte."
+msgid ""
+"Once your returned item is received and inspected, we will process your "
+"refund. Refunds will be processed to the original payment method used for"
+" the purchase. Please allow 5-10 business days for the refund to appear "
+"in your account after we've processed it."
+msgstr ""
+"Po prijatí a kontrole vráteného tovaru spracujeme vrátenie peňazí. "
+"Vrátenie peňazí bude spracované na pôvodnú platobnú metódu použitú pri "
+"nákupe. Po našom spracovaní počítajte s 5-10 pracovnými dňami, kým sa "
+"vrátenie peňazí objaví na vašom účte."
 
 #: templates/public/returns.html:56
 msgid "Shipping Costs"
 msgstr "Náklady na dopravu"
 
 #: templates/public/returns.html:57
-msgid "The customer is responsible for all return shipping costs unless the return is due to our error (you received an incorrect or defective item). We recommend using a trackable shipping service and purchasing shipping insurance for items of value."
-msgstr "Zákazník je zodpovedný za všetky náklady na vrátenie, pokiaľ vrátenie nie je spôsobené našou chybou (dostali ste nesprávny alebo chybný tovar). Odporúčame použiť sledovateľnú prepravnú službu a zakúpiť poistenie zásielky pre hodnotné položky."
+msgid ""
+"The customer is responsible for all return shipping costs unless the "
+"return is due to our error (you received an incorrect or defective item)."
+" We recommend using a trackable shipping service and purchasing shipping "
+"insurance for items of value."
+msgstr ""
+"Zákazník je zodpovedný za všetky náklady na vrátenie, pokiaľ vrátenie nie"
+" je spôsobené našou chybou (dostali ste nesprávny alebo chybný tovar). "
+"Odporúčame použiť sledovateľnú prepravnú službu a zakúpiť poistenie "
+"zásielky pre hodnotné položky."
 
 #: templates/public/returns.html:60
 msgid "Liability"
 msgstr "Zodpovednosť"
 
 #: templates/public/returns.html:61
-msgid "After shipping parts to the customer, we are not responsible for their integrity and safety. From the moment of shipment, responsibility for their integrity and safety is transferred to the shipping carrier and ultimately to the customer upon delivery."
-msgstr "Po odoslaní dielov zákazníkovi nezodpovedáme za ich celistvosť a bezpečnosť. Od momentu odoslania je zodpovednosť za ich celistvosť a bezpečnosť prenesená na prepravcu a nakoniec na zákazníka pri doručení."
+msgid ""
+"After shipping parts to the customer, we are not responsible for their "
+"integrity and safety. From the moment of shipment, responsibility for "
+"their integrity and safety is transferred to the shipping carrier and "
+"ultimately to the customer upon delivery."
+msgstr ""
+"Po odoslaní dielov zákazníkovi nezodpovedáme za ich celistvosť a "
+"bezpečnosť. Od momentu odoslania je zodpovednosť za ich celistvosť a "
+"bezpečnosť prenesená na prepravcu a nakoniec na zákazníka pri doručení."
 
 #: templates/public/returns.html:65
 msgid "Return Address"
@@ -1443,28 +2132,50 @@ msgid "Return Process"
 msgstr "Proces vrátenia"
 
 #: templates/public/returns.html:84
-msgid "Contact our customer service team at info@autogroup.sk to notify us about your return request within 14 days of receiving your order."
-msgstr "Kontaktujte náš zákaznícky servis na info@autogroup.sk a informujte nás o svojej žiadosti o vrátenie do 14 dní od prijatia objednávky."
+msgid ""
+"Contact our customer service team at info@autogroup.sk to notify us about"
+" your return request within 14 days of receiving your order."
+msgstr ""
+"Kontaktujte náš zákaznícky servis na info@autogroup.sk a informujte nás o"
+" svojej žiadosti o vrátenie do 14 dní od prijatia objednávky."
 
 #: templates/public/returns.html:85
-msgid "Include your order number, the item(s) you wish to return, and the reason for return."
-msgstr "Uveďte číslo objednávky, položku (položky), ktorú chcete vrátiť, a dôvod vrátenia."
+msgid ""
+"Include your order number, the item(s) you wish to return, and the reason"
+" for return."
+msgstr ""
+"Uveďte číslo objednávky, položku (položky), ktorú chcete vrátiť, a dôvod "
+"vrátenia."
 
 #: templates/public/returns.html:86
-msgid "Our team will review your request and provide you with return instructions and a return authorization if applicable."
-msgstr "Náš tím preskúma vašu žiadosť a poskytne vám pokyny na vrátenie a prípadne autorizáciu na vrátenie."
+msgid ""
+"Our team will review your request and provide you with return "
+"instructions and a return authorization if applicable."
+msgstr ""
+"Náš tím preskúma vašu žiadosť a poskytne vám pokyny na vrátenie a "
+"prípadne autorizáciu na vrátenie."
 
 #: templates/public/returns.html:87
-msgid "Package the item carefully in its original packaging with all included accessories."
+msgid ""
+"Package the item carefully in its original packaging with all included "
+"accessories."
 msgstr "Opatrne zabaľte položku do pôvodného obalu so všetkým príslušenstvom."
 
 #: templates/public/returns.html:88
-msgid "Ship the package to the provided return address using a trackable shipping method."
-msgstr "Odošlite balík na uvedenú adresu na vrátenie pomocou sledovateľnej prepravnej metódy."
+msgid ""
+"Ship the package to the provided return address using a trackable "
+"shipping method."
+msgstr ""
+"Odošlite balík na uvedenú adresu na vrátenie pomocou sledovateľnej "
+"prepravnej metódy."
 
 #: templates/public/returns.html:89
-msgid "Once we receive and inspect the returned item, we will process your refund within 14 days."
-msgstr "Po prijatí a kontrole vráteného tovaru spracujeme vrátenie peňazí do 14 dní."
+msgid ""
+"Once we receive and inspect the returned item, we will process your "
+"refund within 14 days."
+msgstr ""
+"Po prijatí a kontrole vráteného tovaru spracujeme vrátenie peňazí do 14 "
+"dní."
 
 #: templates/public/returns.html:100
 msgid "Exceptions to Return Policy"
@@ -1492,15 +2203,29 @@ msgstr "Diely, ktoré boli nainštalované alebo vykazujú známky pokusu o inš
 
 #: templates/public/returns.html:110
 msgid "Parts with removed or damaged labels, packaging, or identification marks"
-msgstr "Diely s odstránenými alebo poškodenými štítkami, obalom alebo identifikačnými značkami"
+msgstr ""
+"Diely s odstránenými alebo poškodenými štítkami, obalom alebo "
+"identifikačnými značkami"
 
 #: templates/public/returns.html:114
-msgid "For specific questions about returning a particular item, please contact our customer service team before initiating a return."
-msgstr "Pre konkrétne otázky o vrátení konkrétnej položky kontaktujte náš zákaznícky servis pred začatím vrátenia."
+msgid ""
+"For specific questions about returning a particular item, please contact "
+"our customer service team before initiating a return."
+msgstr ""
+"Pre konkrétne otázky o vrátení konkrétnej položky kontaktujte náš "
+"zákaznícky servis pred začatím vrátenia."
 
 #: templates/public/returns.html:129
 msgid "If you have any questions about our return policy, please contact us:"
-msgstr "Ak máte akékoľvek otázky týkajúce sa našich pravidiel vrátenia, kontaktujte nás:"
+msgstr ""
+"Ak máte akékoľvek otázky týkajúce sa našich pravidiel vrátenia, "
+"kontaktujte nás:"
+
+#: templates/public/cart/cart.html:138 templates/public/returns.html:132
+#: templates/public/user/profile.html:65 templates/public/user/profile.html:119
+#: templates/public/user/profile.html:164
+msgid "Phone"
+msgstr "Telefón"
 
 #: templates/public/shipping_payment.html:5
 #: templates/public/shipping_payment.html:8
@@ -1515,9 +2240,21 @@ msgstr "doprava, doručenie, platba, možnosti platby, bankový prevod, doručen
 msgid "Information about delivery and payment options"
 msgstr "Informácie o možnostiach doručenia a platby"
 
+#: templates/public/cart/cart.html:81 templates/public/shipping_payment.html:29
+msgid "Delivery Information"
+msgstr "Informácie o doručení"
+
 #: templates/public/shipping_payment.html:34
-msgid "We ship all products from our warehouse within one business day after receiving your order and payment. For products that need to be ordered, we will contact you to discuss delivery details before you make a payment."
-msgstr "Všetky produkty odosielame z nášho skladu do jedného pracovného dňa po prijatí vašej objednávky a platby. Pri produktoch, ktoré je potrebné objednať, vás budeme kontaktovať na prediskutovanie podrobností o doručení pred vykonaním platby."
+msgid ""
+"We ship all products from our warehouse within one business day after "
+"receiving your order and payment. For products that need to be ordered, "
+"we will contact you to discuss delivery details before you make a "
+"payment."
+msgstr ""
+"Všetky produkty odosielame z nášho skladu do jedného pracovného dňa po "
+"prijatí vašej objednávky a platby. Pri produktoch, ktoré je potrebné "
+"objednať, vás budeme kontaktovať na prediskutovanie podrobností o "
+"doručení pred vykonaním platby."
 
 #: templates/public/shipping_payment.html:37
 msgid "Delivery Methods"
@@ -1564,6 +2301,12 @@ msgstr "Vyzdvihnutie zo skladu"
 msgid "Location:"
 msgstr "Lokalita:"
 
+#: templates/public/shipping_payment.html:68
+#: templates/public/user/profile.html:176
+#, fuzzy
+msgid "Slovakia"
+msgstr "Slovenčina"
+
 #: templates/public/shipping_payment.html:69
 msgid "Free"
 msgstr "Zdarma"
@@ -1577,8 +2320,12 @@ msgid "GLS International Delivery"
 msgstr "Medzinárodné doručenie GLS"
 
 #: templates/public/shipping_payment.html:81
-msgid "Our main international shipping partner is GLS, offering reliable delivery service across Europe."
-msgstr "Naším hlavným medzinárodným prepravným partnerom je GLS, ktorý ponúka spoľahlivú doručovaciu službu po celej Európe."
+msgid ""
+"Our main international shipping partner is GLS, offering reliable "
+"delivery service across Europe."
+msgstr ""
+"Naším hlavným medzinárodným prepravným partnerom je GLS, ktorý ponúka "
+"spoľahlivú doručovaciu službu po celej Európe."
 
 #: templates/public/shipping_payment.html:84
 msgid "Delivery Zones & Estimated Times"
@@ -1597,16 +2344,26 @@ msgid "Delivery Time"
 msgstr "Čas doručenia"
 
 #: templates/public/shipping_payment.html:118
-msgid "Note: Delivery times are indicative and depend on the pickup time by the courier."
-msgstr "Poznámka: Časy doručenia sú orientačné a závisia od času vyzdvihnutia kuriérom."
+msgid ""
+"Note: Delivery times are indicative and depend on the pickup time by the "
+"courier."
+msgstr ""
+"Poznámka: Časy doručenia sú orientačné a závisia od času vyzdvihnutia "
+"kuriérom."
 
 #: templates/public/shipping_payment.html:121
 msgid "Excluded from EU deliveries:"
 msgstr "Vylúčené z doručení v rámci EÚ:"
 
 #: templates/public/shipping_payment.html:121
-msgid "Andorra, Büsingen am Hochrhein, Ceuta, Gibraltar, Great Britain, Greece, Livigno, Malta, Melilla, Monaco, Norway, San Marino, Switzerland and all European islands (except for the German Islands)."
-msgstr "Andorra, Büsingen am Hochrhein, Ceuta, Gibraltar, Veľká Británia, Grécko, Livigno, Malta, Melilla, Monako, Nórsko, San Marino, Švajčiarsko a všetky európske ostrovy (okrem nemeckých ostrovov)."
+msgid ""
+"Andorra, Büsingen am Hochrhein, Ceuta, Gibraltar, Great Britain, Greece, "
+"Livigno, Malta, Melilla, Monaco, Norway, San Marino, Switzerland and all "
+"European islands (except for the German Islands)."
+msgstr ""
+"Andorra, Büsingen am Hochrhein, Ceuta, Gibraltar, Veľká Británia, Grécko,"
+" Livigno, Malta, Melilla, Monako, Nórsko, San Marino, Švajčiarsko a "
+"všetky európske ostrovy (okrem nemeckých ostrovov)."
 
 #: templates/public/shipping_payment.html:125
 msgid "International Shipping Rates"
@@ -1633,16 +2390,24 @@ msgid "A parcel can weigh up to 31,5 kg."
 msgstr "Balík môže vážiť až 31,5 kg."
 
 #: templates/public/shipping_payment.html:226
-msgid "For urgent deliveries or special shipping requests, please contact us directly."
-msgstr "Pre urgentné doručenia alebo špeciálne požiadavky na dopravu nás kontaktujte priamo."
+msgid ""
+"For urgent deliveries or special shipping requests, please contact us "
+"directly."
+msgstr ""
+"Pre urgentné doručenia alebo špeciálne požiadavky na dopravu nás "
+"kontaktujte priamo."
 
 #: templates/public/shipping_payment.html:237
 msgid "Payment Methods"
 msgstr "Spôsoby platby"
 
 #: templates/public/shipping_payment.html:242
-msgid "We accept payments via bank transfer to our account. When making a payment, please include your order number in the payment description."
-msgstr "Akceptujeme platby prostredníctvom bankového prevodu na náš účet. Pri platbe uveďte číslo vašej objednávky do popisu platby."
+msgid ""
+"We accept payments via bank transfer to our account. When making a "
+"payment, please include your order number in the payment description."
+msgstr ""
+"Akceptujeme platby prostredníctvom bankového prevodu na náš účet. Pri "
+"platbe uveďte číslo vašej objednávky do popisu platby."
 
 #: templates/public/shipping_payment.html:246
 msgid "Bank Account Details"
@@ -1658,12 +2423,24 @@ msgid "Order Processing"
 msgstr "Spracovanie objednávky"
 
 #: templates/public/shipping_payment.html:271
-msgid "For items in stock, we will process and ship your order within one business day after receiving payment. For items that need to be ordered from our suppliers, we will contact you to discuss delivery times and payment details before processing."
-msgstr "Pri položkách na sklade spracujeme a odošleme vašu objednávku do jedného pracovného dňa po prijatí platby. Pri položkách, ktoré je potrebné objednať od našich dodávateľov, vás budeme kontaktovať na prediskutovanie termínov dodania a platobných údajov pred spracovaním."
+msgid ""
+"For items in stock, we will process and ship your order within one "
+"business day after receiving payment. For items that need to be ordered "
+"from our suppliers, we will contact you to discuss delivery times and "
+"payment details before processing."
+msgstr ""
+"Pri položkách na sklade spracujeme a odošleme vašu objednávku do jedného "
+"pracovného dňa po prijatí platby. Pri položkách, ktoré je potrebné "
+"objednať od našich dodávateľov, vás budeme kontaktovať na prediskutovanie"
+" termínov dodania a platobných údajov pred spracovaním."
 
 #: templates/public/shipping_payment.html:276
-msgid "If you have any questions about payment or need additional information, please contact our customer service."
-msgstr "Ak máte akékoľvek otázky týkajúce sa platby alebo potrebujete ďalšie informácie, kontaktujte náš zákaznícky servis."
+msgid ""
+"If you have any questions about payment or need additional information, "
+"please contact our customer service."
+msgstr ""
+"Ak máte akékoľvek otázky týkajúce sa platby alebo potrebujete ďalšie "
+"informácie, kontaktujte náš zákaznícky servis."
 
 #: templates/public/shipping_payment.html:287
 msgid "VAT Information"
@@ -1674,8 +2451,12 @@ msgid "All prices on our website include VAT"
 msgstr "Všetky ceny na našej webovej stránke zahŕňajú DPH"
 
 #: templates/public/shipping_payment.html:293
-msgid "All prices shown on our website include VAT (Value Added Tax) at the applicable rate."
-msgstr "Všetky ceny uvedené na našej webovej stránke zahŕňajú DPH (daň z pridanej hodnoty) v príslušnej sadzbe."
+msgid ""
+"All prices shown on our website include VAT (Value Added Tax) at the "
+"applicable rate."
+msgstr ""
+"Všetky ceny uvedené na našej webovej stránke zahŕňajú DPH (daň z pridanej"
+" hodnoty) v príslušnej sadzbe."
 
 #: templates/public/shipping_payment.html:297
 msgid "VAT policies by customer type:"
@@ -1686,6 +2467,7 @@ msgid "Slovak customers:"
 msgstr "Slovenskí zákazníci:"
 
 #: templates/public/shipping_payment.html:301
+#, python-format
 msgid "All invoices include 23%% Slovak VAT as required by law."
 msgstr "Všetky faktúry zahŕňajú 23%% slovenskú DPH, ako to vyžaduje zákon."
 
@@ -1694,14 +2476,19 @@ msgid "EU business customers with valid VAT ID:"
 msgstr "Firemní zákazníci z EÚ s platným IČ DPH:"
 
 #: templates/public/shipping_payment.html:305
-msgid "Invoices are issued without VAT under the reverse-charge mechanism. Please provide your valid EU VAT number during checkout."
-msgstr "Faktúry sú vystavené bez DPH v rámci mechanizmu prenesenia daňovej povinnosti. Prosím, uveďte vaše platné IČ DPH z EÚ počas platby."
+msgid ""
+"Invoices are issued without VAT under the reverse-charge mechanism. "
+"Please provide your valid EU VAT number during checkout."
+msgstr ""
+"Faktúry sú vystavené bez DPH v rámci mechanizmu prenesenia daňovej "
+"povinnosti. Prosím, uveďte vaše platné IČ DPH z EÚ počas platby."
 
 #: templates/public/shipping_payment.html:308
 msgid "EU private customers:"
 msgstr "Súkromní zákazníci z EÚ:"
 
 #: templates/public/shipping_payment.html:309
+#, python-format
 msgid "Invoices include Slovak VAT at 23%% rate."
 msgstr "Faktúry zahŕňajú slovenskú DPH v sadzbe 23%%."
 
@@ -1710,12 +2497,352 @@ msgid "Non-EU customers:"
 msgstr "Zákazníci mimo EÚ:"
 
 #: templates/public/shipping_payment.html:313
-msgid "Special export rules may apply. Please contact us for detailed information."
-msgstr "Môžu platiť špeciálne pravidlá pre export. Prosím, kontaktujte nás pre podrobné informácie."
+msgid ""
+"Special export rules may apply. Please contact us for detailed "
+"information."
+msgstr ""
+"Môžu platiť špeciálne pravidlá pre export. Prosím, kontaktujte nás pre "
+"podrobné informácie."
 
 #: templates/public/shipping_payment.html:320
-msgid "To receive an invoice without VAT, EU business customers must provide a valid VAT identification number during checkout. VAT ID will be verified through the VIES system."
-msgstr "Aby získali faktúru bez DPH, firemní zákazníci z EÚ musia uviesť platné identifikačné číslo DPH počas platby. IČ DPH bude overené prostredníctvom systému VIES."
+msgid ""
+"To receive an invoice without VAT, EU business customers must provide a "
+"valid VAT identification number during checkout. VAT ID will be verified "
+"through the VIES system."
+msgstr ""
+"Aby získali faktúru bez DPH, firemní zákazníci z EÚ musia uviesť platné "
+"identifikačné číslo DPH počas platby. IČ DPH bude overené prostredníctvom"
+" systému VIES."
+
+#: templates/public/terms.html:5 templates/public/terms.html:8
+msgid "Terms and Conditions for using AutogroupEU services."
+msgstr ""
+
+#: templates/public/terms.html:6
+msgid "terms, conditions, legal, agreement, policy, usage"
+msgstr ""
+
+#: templates/public/terms.html:18
+msgid "Please read these terms carefully before using our services"
+msgstr ""
+
+#: templates/public/terms.html:34
+msgid ""
+"These Terms and Conditions govern your use of the AutogroupEU website and"
+" services provided by AutogroupEU, accessible at autogroup.sk. By "
+"accessing and using our website and services, you accept these Terms and "
+"Conditions in full. If you disagree with any part of these terms, please "
+"do not use our website or services."
+msgstr ""
+
+#: templates/public/terms.html:48
+#, fuzzy
+msgid "Products and Services"
+msgstr "Naše služby"
+
+#: templates/public/terms.html:53
+msgid "1. All products displayed on our website are subject to availability."
+msgstr ""
+
+#: templates/public/terms.html:56
+msgid "2. We reserve the right to discontinue any product or service at any time."
+msgstr ""
+
+#: templates/public/terms.html:59
+msgid "3. Prices for products are subject to change without notice."
+msgstr ""
+
+#: templates/public/terms.html:62
+msgid ""
+"4. We make every effort to display the accurate colors and features of "
+"our products, but cannot guarantee that your display will accurately "
+"portray the actual color of the product."
+msgstr ""
+
+#: templates/public/terms.html:65
+msgid ""
+"5. Product specifications, prices, and availability may differ from "
+"region to region."
+msgstr ""
+
+#: templates/public/terms.html:76
+#, fuzzy
+msgid "Orders and Payment"
+msgstr "Číslo objednávky"
+
+#: templates/public/terms.html:81
+msgid ""
+"1. By placing an order, you are making an offer to purchase the products "
+"subject to these Terms and Conditions."
+msgstr ""
+
+#: templates/public/terms.html:84
+msgid ""
+"2. All orders are subject to acceptance and availability. We reserve the "
+"right to refuse any order without providing a reason."
+msgstr ""
+
+#: templates/public/terms.html:87
+msgid ""
+"3. Payment for all orders must be made in advance unless otherwise agreed"
+" upon in writing."
+msgstr ""
+
+#: templates/public/terms.html:90
+msgid ""
+"4. We accept payment via bank transfers, credit cards, and other payment "
+"methods as specified during the checkout process."
+msgstr ""
+
+#: templates/public/terms.html:93
+msgid ""
+"5. For business customers, payment terms will be as per the agreed "
+"contract conditions."
+msgstr ""
+
+#: templates/public/terms.html:104
+msgid "Shipping and Delivery"
+msgstr ""
+
+#: templates/public/terms.html:109
+msgid ""
+"1. Delivery times are estimates only and may vary based on supplier "
+"availability, location, and other factors."
+msgstr ""
+
+#: templates/public/terms.html:112
+msgid ""
+"2. We are not responsible for delays in delivery caused by circumstances "
+"beyond our control."
+msgstr ""
+
+#: templates/public/terms.html:115
+msgid "3. Risk of loss or damage to products passes to you upon delivery."
+msgstr ""
+
+#: templates/public/terms.html:118
+msgid ""
+"4. It is your responsibility to provide accurate shipping information. "
+"Additional charges may apply for redelivery if incorrect information is "
+"provided."
+msgstr ""
+
+#: templates/public/terms.html:129
+#, fuzzy
+msgid "Returns and Warranties"
+msgstr "Adresa pre vrátenie"
+
+#: templates/public/terms.html:134
+msgid ""
+"1. Returns are accepted within 14 days of receipt, subject to the product"
+" being in its original condition and packaging."
+msgstr ""
+
+#: templates/public/terms.html:137
+#, fuzzy
+msgid "2. To initiate a return, please contact our customer service team."
+msgstr ""
+"Pre konkrétne otázky o vrátení konkrétnej položky kontaktujte náš "
+"zákaznícky servis pred začatím vrátenia."
+
+#: templates/public/terms.html:140
+msgid ""
+"3. Refunds will be processed within 14 business days of receiving the "
+"returned product."
+msgstr "3. Vrátenie peňazí bude spracované do 14 pracovných dní od prijatia vráteného produktu."
+
+#: templates/public/terms.html:143
+msgid ""
+"4. Products carry the manufacturers warranty only, unless otherwise "
+"specified."
+msgstr ""
+
+#: templates/public/terms.html:146
+#, fuzzy
+msgid ""
+"5. We do not accept returns on special order items, unless they are "
+"defective."
+msgstr "Nasledujúce položky nemožno vrátiť, pokiaľ nie sú chybné:"
+
+#: templates/public/terms.html:157
+msgid "Liability and Limitations"
+msgstr ""
+
+#: templates/public/terms.html:162
+msgid ""
+"1. Our liability is limited to the purchase price of the product in "
+"question."
+msgstr ""
+
+#: templates/public/terms.html:165
+msgid ""
+"2. We are not liable for any indirect, incidental, or consequential "
+"damages."
+msgstr ""
+
+#: templates/public/terms.html:168
+msgid ""
+"3. To the extent permitted by law, we disclaim all warranties, express or"
+" implied, including but not limited to merchantability and fitness for a "
+"particular purpose."
+msgstr ""
+
+#: templates/public/terms.html:171
+msgid ""
+"4. We do not guarantee that our website will be error-free or "
+"uninterrupted."
+msgstr ""
+
+#: templates/public/terms.html:182
+msgid "Intellectual Property"
+msgstr ""
+
+#: templates/public/terms.html:187
+msgid ""
+"1. All content on this website, including but not limited to text, "
+"graphics, logos, images, and software, is the property of AutogroupEU or "
+"its content suppliers and is protected by copyright laws."
+msgstr ""
+
+#: templates/public/terms.html:190
+msgid ""
+"2. You may not reproduce, distribute, modify, or create derivative works "
+"from any content without our express written consent."
+msgstr ""
+
+#: templates/public/terms.html:201
+msgid "Modifications to Terms"
+msgstr ""
+
+#: templates/public/terms.html:206
+msgid "1. We reserve the right to modify these Terms and Conditions at any time."
+msgstr ""
+
+#: templates/public/terms.html:209
+msgid "2. Changes will be effective immediately upon posting on the website."
+msgstr ""
+
+#: templates/public/terms.html:212
+msgid ""
+"3. Your continued use of our website and services after any changes to "
+"the Terms constitutes your acceptance of the new Terms."
+msgstr ""
+
+#: templates/public/terms.html:228
+#, fuzzy
+msgid ""
+"If you have any questions about these Terms and Conditions, please "
+"contact us at:"
+msgstr ""
+"Ak máte akékoľvek otázky týkajúce sa našich pravidiel vrátenia, "
+"kontaktujte nás:"
+
+#: templates/public/cart/cart.html:5
+msgid ""
+"View and manage your shopping cart at AutogroupEU. Check prices, "
+"quantities, and proceed to checkout."
+msgstr ""
+
+#: templates/public/cart/cart.html:9 templates/public/cart/cart.html:14
+#: templates/user/cart/cart.html:3 templates/user/cart/cart.html:7
+msgid "Shopping Cart"
+msgstr "Nákupný košík"
+
+#: templates/public/cart/cart.html:24
+msgid "Name"
+msgstr "Názov"
+
+#: templates/public/cart/cart.html:46
+msgid "Update"
+msgstr "Aktualizovať"
+
+#: templates/public/cart/cart.html:62
+msgid "Remove"
+msgstr "Odstrániť"
+
+#: templates/public/cart/cart.html:70 templates/user/cart/cart.html:57
+msgid "Total:"
+msgstr "Celkom"
+
+#: templates/public/cart/cart.html:88
+msgid "Select Saved Address"
+msgstr "Vybrať uloženú adresu"
+
+#: templates/public/cart/cart.html:120
+msgid "Use new address"
+msgstr "Použiť novú adresu"
+
+#: templates/public/cart/cart.html:129
+msgid "New Delivery Address"
+msgstr "Nová dodacia adresa"
+
+#: templates/public/cart/cart.html:134 templates/public/user/profile.html:160
+msgid "Full Name"
+msgstr "Celé meno"
+
+#: templates/public/cart/cart.html:145 templates/public/user.profile.html:173
+msgid "Country"
+msgstr "Krajiny"
+
+#: templates/public/cart/cart.html:155 templates/public/user/profile.html:184
+msgid "City"
+msgstr "Mesto"
+
+#: templates/public/cart/cart.html:159 templates/public/user/profile.html:188
+msgid "Postal Code"
+msgstr "PSČ"
+
+#: templates/public/cart/cart.html:164 templates/public/user/profile.html:169
+msgid "Street Address"
+msgstr "Adresa ulice"
+
+#: templates/public/cart/cart.html:171
+msgid "Save address for future orders"
+msgstr "Uložiť adresu pre budúce objednávky"
+
+#: templates/public/cart/cart.html:185
+msgid "Need invoice with VAT number"
+msgstr "Potrebujem faktúru s DPH"
+
+#: templates/public/cart/cart.html:193
+msgid "Select Saved Company"
+msgstr "„Vybrať uloženú spoločnosť"
+
+#: templates/public/cart/cart.html:214
+#: templates/public/orders/order_details.html:132
+#: templates/public/user/profile.html:239
+#, fuzzy
+msgid "Address"
+msgstr "Adresa"
+
+#: templates/public/cart/cart.html:229
+msgid "Use new company details"
+msgstr "Použiť nové údaje spoločnosti"
+
+#: templates/public/cart/cart.html:238
+msgid "New Company Details"
+msgstr "Nové údaje spoločnosti"
+
+#: templates/public/cart/cart.html:266
+msgid "Save company details for future orders"
+msgstr "Uložiť údaje spoločnosti pre budúce objednávky"
+
+#: templates/public/cart/cart.html:280 templates/user/cart/cart.html:68
+msgid "Place Order"
+msgstr "Zadať objednávku"
+
+#: templates/public/cart/cart.html:295 templates/user/cart/cart.html:93
+msgid "Your Cart is Empty"
+msgstr "Váš košík je prázdny"
+
+#: templates/public/cart/cart.html:302 templates/user/cart/cart.html:94
+msgid "Start adding items to your cart!"
+msgstr "„Začnite pridávať položky do svojho košíka!"
+
+#: templates/public/cart/cart.html:305 templates/user/cart/cart.html:96
+#: templates/user/index.html:11
+msgid "Search Articles"
+msgstr "Hľadať číslo dielov"
 
 #: templates/public/cart/cart.html:462
 msgid "Please select a delivery address or enter a new one"
@@ -1725,9 +2852,26 @@ msgstr "Prosím, vyberte doručovaciu adresu alebo zadajte novú"
 msgid "Please fill in all required delivery address fields"
 msgstr "Prosím, vyplňte všetky povinné polia doručovacej adresy"
 
+#: templates/public/cart/cart.html:494
+
+msgid "Please select a company or enter new company details"
+msgstr "Vyberte spoločnosť alebo zadajte nové údaje o spoločnosti"
+
+#: templates/public/cart/cart.html:506
+msgid "Please provide company name and VAT number"
+msgstr "Zadajte názov spoločnosti a IČ DPH"
+
+#: templates/public/cart/cart.html:517
+msgid "Processing..."
+msgstr "Spracováva sa..."
+
 #: templates/public/orders/confirmation.html:5
-msgid "Order confirmation at AutogroupEU. Your order has been successfully placed."
-msgstr "Potvrdenie objednávky v AutogroupEU. Vaša objednávka bola úspešne odoslaná."
+msgid ""
+"Order confirmation at AutogroupEU. Your order has been successfully "
+"placed."
+msgstr ""
+"Potvrdenie objednávky v AutogroupEU. Vaša objednávka bola úspešne "
+"zadaná."
 
 #: templates/public/orders/confirmation.html:14
 msgid "Order Confirmation"
@@ -1748,6 +2892,11 @@ msgstr "Číslo objednávky"
 #: templates/public/orders/confirmation.html:33
 msgid "Order Summary"
 msgstr "Súhrn objednávky"
+
+#: templates/public/orders/confirmation.html:39
+#: templates/public/orders/order_details.html:39
+msgid "Order Date"
+msgstr "Dátum objednávky"
 
 #: templates/public/orders/confirmation.html:57
 #: templates/public/orders/order_details.html:153
@@ -1786,13 +2935,269 @@ msgstr "Návrat na domovskú stránku"
 msgid "View My Orders"
 msgstr "Zobraziť moje objednávky"
 
+#: templates/public/orders/list_orders.html:5
+#: templates/public/orders/orders.html:5
+msgid ""
+"View your order history at AutogroupEU. Track your purchases and check "
+"delivery status."
+msgstr ""
+"Zobraziť históriu vašich objednávok v AutogroupEU. Sledujte svoje nákupy a"
+"skontrolujte stav doručenia."
+
+#: templates/public/orders/list_orders.html:9
+#: templates/public/orders/list_orders.html:18
+#: templates/public/orders/orders.html:9 templates/public/orders/orders.html:18
+#: templates/user/orders/orders.html:55
+msgid "My Orders"
+msgstr "Moje objednávky"
+
+#: templates/public/orders/list_orders.html:27
+#: templates/public/orders/list_orders.html:38
+#: templates/public/orders/orders.html:27
+#: templates/public/orders/orders.html:37
+msgid "Order #"
+msgstr "Objednávka"
+
+#: templates/public/orders/list_orders.html:29
+#: templates/public/orders/list_orders.html:49
+#: templates/user/shipments/view_shipment.html:31
+msgid "Items"
+msgstr "Položky"
+
+#: templates/public/orders/list_orders.html:93
+#: templates/public/orders/orders.html:97 templates/user/orders/orders.html:133
+msgid "No Orders Found"
+msgstr "Objednávka nebola nájdená"
+
+#: templates/public/orders/list_orders.html:94
+#: templates/public/orders/orders.html:98
+#, fuzzy
+msgid "You have not placed any orders yet."
+msgstr "Zatiaľ ste nezadali žiadne objednávky."
+
+#: templates/public/orders/list_orders.html:97
+#: templates/public/orders/orders.html:101
+#: templates/user/orders/orders.html:136
+msgid "Start Shopping"
+msgstr "Začať nakupovať"
+
 #: templates/public/orders/order_details.html:5
-msgid "Order details at AutogroupEU. View products, prices, and delivery information."
-msgstr "Detaily objednávky v AutogroupEU. Zobrazte produkty, ceny a informácie o doručení."
+msgid ""
+"Order details at AutogroupEU. View products, prices, and delivery "
+"information."
+msgstr ""
+"Detaily objednávky v AutogroupEU. Zobrazte produkty, ceny a informácie o "
+"doručení."
+
+#: templates/public/orders/order_details.html:9
+#: templates/public/orders/order_details.html:25
+msgid "Order"
+msgstr "Objednávka"
 
 #: templates/public/orders/order_details.html:9
 msgid "Details"
 msgstr "Detaily"
+
+#: templates/public/orders/order_details.html:16
+#: templates/public/orders/order_details.html:187
+#: templates/user/orders/order_details.html:11
+msgid "Back to Orders"
+msgstr "Späť k objednávkam"
+
+#: templates/public/orders/order_details.html:34
+msgid "Order Information"
+msgstr "Informácie o objednávke"
+
+#: templates/public/orders/order_details.html:46
+#: templates/public/orders/orders.html:53 templates/user/news/user_news.html:18
+#: templates/user/orders/orders.html:69
+msgid "New"
+msgstr "Nový"
+
+#: templates/public/orders/order_details.html:47
+#: templates/public/orders/orders.html:54
+#, fuzzy
+msgid "Processing"
+msgstr "Spracovanie"
+
+#: templates/public/orders/order_details.html:48
+#: templates/public/orders/orders.html:55
+msgid "Shipped"
+msgstr "Odoslané"
+
+#: templates/public/orders/order_details.html:49
+#: templates/public/orders/orders.html:56
+msgid "Delivered"
+msgstr "Doručené"
+
+#: templates/public/orders/order_details.html:50
+#: templates/public/orders/orders.html:57 templates/user/orders/orders.html:71
+msgid "Cancelled"
+msgstr ""
+
+#: templates/public/orders/order_details.html:67
+msgid "Payment Status"
+msgstr "Stav platby"
+
+#: templates/public/orders/order_details.html:70
+msgid "Paid"
+msgstr "Zaplatené"
+
+#: templates/public/orders/order_details.html:72
+msgid "Pending"
+msgstr "Čaká na platbu"
+
+#: templates/public/orders/order_details.html:106
+msgid "No delivery address information"
+msgstr "Žiadne informácie o adrese doručenia"
+
+#: templates/public/orders/order_details.html:115
+#, fuzzy
+msgid "Invoice Information"
+msgstr "Informácie o faktúre"
+
+#: templates/public/orders/order_details.html:146
+msgid "Order Items"
+msgstr "Položky objednávky"
+
+#: templates/public/user/profile.html:6
+msgid "My Profile"
+msgstr "Môj profil"
+
+#: templates/public/user/profile.html:7
+msgid "Manage your personal information, addresses and company details"
+msgstr "Spravujte svoje osobné údaje, adresy a údaje o spoločnosti"
+
+#: templates/public/user/profile.html:21
+msgid "Addresses"
+msgstr "Adresy"
+
+#: templates/public/user/profile.html:27
+msgid "Companies"
+msgstr "Spoločnosti"
+
+#: templates/public/user/profile.html:46
+msgid "Personal Information"
+msgstr "Osobné údaje"
+
+#: templates/public/user/profile.html:56
+msgid "Username cannot be changed"
+msgstr "Používateľské meno nemožno zmeniť"
+
+#: templates/public/user/profile.html:72
+msgid "Preferred Language"
+msgstr "Preferovaný jazyk"
+
+#: templates/public/user/profile.html:83
+msgid "Update Profile"
+msgstr "Aktualizovať profil"
+
+#: templates/public/user/profile.html:97
+msgid "Delivery Addresses"
+msgstr "Doručovacie adresy"
+
+#: templates/public/user/profile.html:102
+msgid "Your Addresses"
+msgstr "Vaše adresy"
+
+#: templates/public/user/profile.html:129
+#: templates/public/user/profile.html:248
+msgid "Set as Default"
+msgstr "Predvolená"
+
+#: templates/public/user/profile.html:134
+msgid "Are you sure you want to delete this address?"
+msgstr ""
+
+#: templates/public/user/profile.html:138
+#: templates/public/user/profile.html:257
+msgid "Delete"
+msgstr "Vymazať"
+
+#: templates/public/user/profile.html:149
+msgid "You have no saved addresses yet."
+msgstr "Zatiaľ nemáte žiadne uložené adresy."
+
+#: templates/public/user/profile.html:154
+msgid "Add New Address"
+msgstr "Pridať novú adresu"
+
+#: templates/public/user/profile.html:175
+msgid "Choose..."
+msgstr "Vyberte..."
+
+#: templates/public/user/profile.html:177
+msgid "Ukraine"
+msgstr "Ukrajinčina"
+
+#: templates/public/user/profile.html:178
+msgid "Czech Republic"
+msgstr "Česká republika"
+
+#: templates/public/user/profile.html:179
+msgid "Hungary"
+msgstr "Maďarsko"
+
+#: templates/public/user/profile.html:180
+msgid "Poland"
+msgstr "Poľsko"
+
+#: templates/public/user/profile.html:195
+msgid "Set as default address"
+msgstr "Nastaviť ako predvolenú adresu"
+
+#: templates/public/user/profile.html:201
+msgid "Add Address"
+msgstr "Pridať adresu"
+
+#: templates/public/user/profile.html:222
+msgid "Your Companies"
+msgstr "Vaše spoločnosti"
+
+#: templates/public/user/profile.html:235
+msgid "VAT"
+msgstr "DPH"
+
+#: templates/public/user/profile.html:237
+msgid "Registration No."
+msgstr "IČO"
+
+#: templates/public/user/profile.html:253
+msgid "Are you sure you want to delete this company?"
+msgstr "Ste si istí, že chcete vymazať túto spoločnosť?"
+
+#: templates/public/user/profile.html:268
+msgid "You have no saved companies yet."
+msgstr "Zatiaľ nemáte žiadne uložené spoločnosti."
+
+#: templates/public/user/profile.html:273
+msgid "Add New Company"
+msgstr "Pridať novú spoločnosť"
+
+#: templates/public/user/profile.html:287
+msgid "(optional)"
+msgstr "(voliteľné)"
+
+#: templates/public/user/profile.html:298
+msgid "Set as default company"
+msgstr "Nastaviť ako predvolenú spoločnosť"
+
+#: templates/public/user/profile.html:304
+msgid "Add Company"
+msgstr "Pridať spoločnosť"
+
+#: templates/public/user/profile.html:320
+#: templates/public/user/profile.html:348
+msgid "Change Password"
+msgstr "Zmeniť heslo"
+
+#: templates/public/user/profile.html:331
+msgid "Current Password"
+msgstr "Aktuálne heslo"
+
+#: templates/public/user/profile.html:336
+msgid "New Password"
+msgstr "Nové heslo"
 
 #: templates/public/user/profile.html:339
 msgid "Password must be at least 8 characters long"
@@ -1801,6 +3206,343 @@ msgstr "Heslo musí mať aspoň 8 znakov"
 #: templates/public/user/profile.html:343
 msgid "Confirm New Password"
 msgstr "Potvrďte nové heslo"
+
+#: templates/user/index.html:15
+#, fuzzy
+msgid "Enter Articles and Quantities:"
+msgstr "Zadajte kód tovaru..."
+
+#: templates/user/index.html:20
+msgid "Example:"
+msgstr ""
+
+#: templates/user/index.html:35
+#, fuzzy
+msgid "Upload Articles File"
+msgstr "Nie sú vybrané žiadne položky"
+
+#: templates/user/index.html:41
+msgid "Article/Quantity/Comment"
+msgstr ""
+
+#: templates/user/index.html:45
+msgid "Article/Quantity/Brand/Comment"
+msgstr ""
+
+#: templates/user/index.html:53
+msgid "Drag and drop your file here"
+msgstr ""
+
+#: templates/user/index.html:54
+msgid "or"
+msgstr ""
+
+#: templates/user/index.html:56
+msgid "Select File"
+msgstr ""
+
+#: templates/user/index.html:73
+#, fuzzy
+msgid "Upload and Search"
+msgstr "Vyhľadávanie podľa čísla dielu"
+
+#: templates/user/cart/cart.html:15 templates/user/orders/order_details.html:22
+#, fuzzy
+msgid "Price List"
+msgstr "Položky cenníka"
+
+#: templates/user/cart/cart.html:20 templates/user/orders/order_details.html:27
+#: templates/user/search/intermediate.html:19
+#: templates/user/search/search_results.html:18
+#: templates/user/shipments/view_shipment.html:43
+#, fuzzy
+msgid "Comment"
+msgstr "Príkazy"
+
+#: templates/user/cart/cart.html:42 templates/user/orders/order_details.html:63
+msgid "No comment"
+msgstr ""
+
+#: templates/user/cart/cart.html:74
+msgid "Clear Cart"
+msgstr ""
+
+#: templates/user/cart/cart.html:81
+#: templates/user/search/search_results.html:70
+#, fuzzy
+msgid "Missing Articles:"
+msgstr "Chýbajúce informácie o tovare"
+
+#: templates/user/cart/cart.html:82
+#, fuzzy
+msgid "The following articles were not found:"
+msgstr "Tovar nebol nájdený"
+
+#: templates/user/news/user_news.html:12
+#, fuzzy
+msgid "New Messages"
+msgstr "Chyba: {message}"
+
+#: templates/user/news/user_news.html:26
+msgid "Read More"
+msgstr ""
+
+#: templates/user/news/user_news.html:36
+msgid "News Archive"
+msgstr ""
+
+#: templates/user/news/view_news.html:9
+msgid "Mark as Read"
+msgstr ""
+
+#: templates/user/news/view_news.html:16
+#, fuzzy
+msgid "Published:"
+msgstr "Poľština"
+
+#: templates/user/orders/order_changes.html:14
+#, fuzzy
+msgid "Change Type"
+msgstr "Zmeniť adresu"
+
+#: templates/user/orders/order_changes.html:15
+msgid "Old Value"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:16
+msgid "New Value"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:17
+#, fuzzy
+msgid "Change Date"
+msgstr "Zmeniť adresu"
+
+#: templates/user/orders/order_changes.html:27
+#, fuzzy
+msgid "Article Number Change"
+msgstr "Vyhľadávanie podľa čísla dielu"
+
+#: templates/user/orders/order_changes.html:29
+#, fuzzy
+msgid "Price Change"
+msgstr "Vrátenie a výmena"
+
+#: templates/user/orders/order_changes.html:42
+msgid "No changes found."
+msgstr ""
+
+#: templates/user/orders/order_details.html:4
+#: templates/user/orders/order_details.html:9
+#: templates/user/shipments/shipments.html:19
+#, fuzzy
+msgid "Order Details"
+msgstr "Zobraziť detaily"
+
+#: templates/user/orders/order_details.html:21
+#, fuzzy
+msgid "Original Article"
+msgstr "Kód tovaru"
+
+#: templates/user/orders/order_details.html:23
+#, fuzzy
+msgid "Brand ID"
+msgstr "Značka:"
+
+#: templates/user/orders/order_details.html:86
+msgid "Total Order Amount:"
+msgstr ""
+
+#: templates/user/orders/order_details.html:96
+#, fuzzy
+msgid "Order Timeline"
+msgstr "ID objednávky"
+
+#: templates/user/orders/order_details.html:115
+#, fuzzy
+msgid "No Details Available"
+msgstr "Fakturačné údaje boli aktualizované"
+
+#: templates/user/orders/order_details.html:116
+msgid "The details for this order could not be found."
+msgstr ""
+
+#: templates/user/orders/orders.html:68
+msgid "All"
+msgstr ""
+
+#: templates/user/orders/orders.html:70
+#, fuzzy
+msgid "Accepted"
+msgstr "Prijať"
+
+#: templates/user/orders/orders.html:75
+#, fuzzy
+msgid "Start Date"
+msgstr "Aktualizácie softvéru"
+
+#: templates/user/orders/orders.html:79
+#, fuzzy
+msgid "End Date"
+msgstr "Dátum"
+
+#: templates/user/orders/orders.html:84
+#, fuzzy
+msgid "Filter"
+msgstr "Filtre"
+
+#: templates/user/orders/orders.html:87
+#, fuzzy
+msgid "Clear Filters"
+msgstr "Filtre"
+
+#: templates/user/orders/orders.html:101
+#: templates/user/shipments/list_shipments.html:21
+#: templates/user/shipments/shipments.html:26
+#: templates/user/shipments/view_shipment.html:42
+#, fuzzy
+msgid "Total Price"
+msgstr "Celkom"
+
+#: templates/user/orders/orders.html:134
+msgid "You haven't placed any orders yet."
+msgstr ""
+
+#: templates/user/search/intermediate.html:3
+#, fuzzy
+msgid "Select Price Lists"
+msgstr "Položky cenníka"
+
+#: templates/user/search/intermediate.html:7
+msgid "Intermediate Results"
+msgstr ""
+
+#: templates/user/search/intermediate.html:8
+#, fuzzy
+msgid "Please select a price list for each article."
+msgstr "Zadajte aspoň jeden kód tovaru."
+
+#: templates/user/search/intermediate.html:17
+#, fuzzy
+msgid "Available Price Lists"
+msgstr "Dostupné služby"
+
+#: templates/user/search/intermediate.html:64
+msgid "Cancel"
+msgstr ""
+
+#: templates/user/search/intermediate.html:71
+#, fuzzy
+msgid "Missing Articles"
+msgstr "Chýbajúce informácie o tovare"
+
+#: templates/user/search/intermediate.html:72
+#: templates/user/search/search_results.html:71
+msgid "The following articles were not found in any price list:"
+msgstr ""
+
+#: templates/user/search/search_results.html:16
+#, fuzzy
+msgid "Price Lists"
+msgstr "Položky cenníka"
+
+#: templates/user/search/search_results.html:86
+#, fuzzy
+msgid "Clear Results"
+msgstr "Chyba pri mazaní výsledkov vyhľadávania"
+
+#: templates/user/search/search_results.html:92
+#, fuzzy
+msgid "No Results Found"
+msgstr "Neboli nájdené žiadne uložené adresy"
+
+#: templates/user/search/search_results.html:93
+msgid "Try searching with different articles or check your input format."
+msgstr ""
+
+#: templates/user/search/search_results.html:95
+#, fuzzy
+msgid "New Search"
+msgstr "Vyhľadávanie podľa čísla dielu"
+
+#: templates/user/shipments/list_shipments.html:9
+#: templates/user/shipments/shipments.html:7
+#, fuzzy
+msgid "My Shipments"
+msgstr "Zásielky"
+
+#: templates/user/shipments/list_shipments.html:17
+#, fuzzy
+msgid "Shipment Date"
+msgstr "Zásielky"
+
+#: templates/user/shipments/list_shipments.html:19
+#, fuzzy
+msgid "Tracking Number"
+msgstr "IČO"
+
+#: templates/user/shipments/list_shipments.html:20
+#, fuzzy
+msgid "Items Count"
+msgstr "Zľava"
+
+#: templates/user/shipments/list_shipments.html:30
+msgid "N/A"
+msgstr ""
+
+#: templates/user/shipments/list_shipments.html:45
+#: templates/user/shipments/shipments.html:44
+#, fuzzy
+msgid "No shipments found."
+msgstr "Zásielky"
+
+#: templates/user/shipments/shipments.html:13
+#, fuzzy
+msgid "Shipment Date:"
+msgstr "Zásielky"
+
+#: templates/user/shipments/shipments.html:13
+#: templates/user/shipments/view_shipment.html:22
+#, fuzzy
+msgid "Status:"
+msgstr "Stav"
+
+#: templates/user/shipments/shipments.html:15
+#: templates/user/shipments/view_shipment.html:23
+#, fuzzy
+msgid "Tracking Number:"
+msgstr "IČO"
+
+#: templates/user/shipments/view_shipment.html:3
+#: templates/user/shipments/view_shipment.html:8
+#, fuzzy
+msgid "Shipment Details"
+msgstr "Zásielky"
+
+#: templates/user/shipments/view_shipment.html:10
+#, fuzzy
+msgid "Back to Shipments"
+msgstr "Späť domov"
+
+#: templates/user/shipments/view_shipment.html:16
+#, fuzzy
+msgid "Shipment Information"
+msgstr "Informácie o používateľovi"
+
+#: templates/user/shipments/view_shipment.html:21
+#, fuzzy
+msgid "Date:"
+msgstr "Dátum"
+
+#: templates/user/shipments/view_shipment.html:23
+#, fuzzy
+msgid "Not specified"
+msgstr "Neboli vybrané žiadne diely"
+
+#: templates/user/shipments/view_shipment.html:60
+#, fuzzy
+msgid "No items in this shipment."
+msgstr "V tejto objednávke nie sú žiadne položky"
 
 #: venv/Lib/site-packages/click/_termui_impl.py:556
 msgid "{editor}: Editing failed"
@@ -1874,6 +3616,7 @@ msgid "required"
 msgstr "povinné"
 
 #: venv/Lib/site-packages/click/decorators.py:457
+#, python-format
 msgid "%(prog)s, version %(version)s"
 msgstr "%(prog)s, verzia %(version)s"
 
@@ -1993,8 +3736,12 @@ msgid "Press any key to continue..."
 msgstr "Stlačte ľubovoľný kláves pre pokračovanie..."
 
 #: venv/Lib/site-packages/click/types.py:267
-msgid "Choose from:\n\t{choices}"
-msgstr "Vyberte z:\n\t{choices}"
+msgid ""
+"Choose from:\n"
+"\t{choices}"
+msgstr ""
+"Vyberte z:\n"
+"\t{choices}"
 
 #: venv/Lib/site-packages/click/types.py:301
 msgid "{value!r} is not {choice}."

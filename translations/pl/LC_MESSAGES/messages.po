@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-03-20 19:43+0200\n"
+"POT-Creation-Date: 2025-03-21 10:36+0200\n"
 "PO-Revision-Date: 2025-03-03 22:26+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pl\n"
@@ -35,7 +35,9 @@ msgstr "Proszę wprowadzić co najmniej jeden numer artykułu"
 msgid ""
 "Maximum {max_articles} articles per request. Only first {max_articles} "
 "will be processed."
-msgstr "Maksymalnie {max_articles} artykułów na zapytanie. Tylko pierwsze {max_articles} zostanie przetworzone."
+msgstr ""
+"Maksymalnie {max_articles} artykułów na zapytanie. Tylko pierwsze "
+"{max_articles} zostanie przetworzone."
 
 #: app.py:328 app.py:369
 msgid "error"
@@ -65,442 +67,442 @@ msgstr "Wystąpił błąd podczas dodawania przedmiotów do koszyka"
 msgid "Error validating phone number"
 msgstr "Błąd podczas walidacji numeru telefonu"
 
-#: app.py:747
+#: app.py:740
 msgid "Username, email or phone already registered."
 msgstr "Nazwa użytkownika, email lub telefon są już zarejestrowane."
 
-#: app.py:778
+#: app.py:771
 msgid "Registration successful! You are now logged in."
 msgstr "Rejestracja zakończona pomyślnie! Jesteś teraz zalogowany."
 
-#: app.py:783
+#: app.py:776
 msgid "Registration failed. Please try again."
 msgstr "Rejestracja nie powiodła się. Spróbuj ponownie."
 
-#: app.py:840
+#: app.py:833
 msgid "Invalid username or password"
 msgstr "Nieprawidłowa nazwa użytkownika lub hasło"
 
-#: app.py:1057
+#: app.py:1047
 msgid "Please log in to place an order."
 msgstr "Zaloguj się, aby złożyć zamówienie."
 
-#: app.py:1102
+#: app.py:1092
 msgid "Selected address not found"
 msgstr "Nie znaleziono wybranego adresu"
 
-#: app.py:1166
+#: app.py:1156
 msgid "Selected company not found"
 msgstr "Nie znaleziono wybranej firmy"
 
-#: app.py:1183
+#: app.py:1173
 msgid "Your cart is empty."
 msgstr "Twój koszyk jest pusty."
 
-#: app.py:1214 app.py:1222 app.py:1766 app.py:1770 app.py:2072 app.py:2123
+#: app.py:1204 app.py:1212 app.py:1756 app.py:1760 app.py:2062 app.py:2113
 #: templates/public/cart/cart.html:52 templates/public/product_details
 #: templates/public/product_details.html:215 копія.html:155 –
 msgid "In Stock"
 msgstr "W magazynie"
 
-#: app.py:1222 app.py:1770 app.py:2124
+#: app.py:1212 app.py:1760 app.py:2114
 #: templates/public/api_search_results.html:59
 msgid "days"
 msgstr "dni"
 
-#: app.py:1236
+#: app.py:1226
 msgid "Your cart is empty"
 msgstr "Twój koszyk jest pusty"
 
-#: app.py:1349 app.py:4363
+#: app.py:1339 app.py:4353
 msgid "Order placed successfully!"
 msgstr "Zamówienie złożone pomyślnie!"
 
-#: app.py:1358
+#: app.py:1348
 msgid "Error placing order"
 msgstr "Błąd podczas składania zamówienia"
 
-#: app.py:1380 app.py:1516
+#: app.py:1370 app.py:1506
 msgid "Please log in to view order details."
 msgstr "Zaloguj się, aby zobaczyć szczegóły zamówienia."
 
-#: app.py:1386
+#: app.py:1376
 msgid "Order not found"
 msgstr "Nie znaleziono zamówienia"
 
-#: app.py:1390
+#: app.py:1380
 msgid "Access denied"
 msgstr "Odmowa dostępu"
 
-#: app.py:1410
+#: app.py:1400
 msgid "Error displaying order confirmation."
 msgstr "Błąd wyświetlania potwierdzenia zamówienia."
 
-#: app.py:1471
+#: app.py:1461
 msgid "Cart cleared successfully"
 msgstr "Koszyk wyczyszczony pomyślnie"
 
-#: app.py:1481
+#: app.py:1471
 msgid "Please log in to view your orders."
 msgstr "Zaloguj się, aby zobaczyć swoje zamówienia."
 
-#: app.py:1504
+#: app.py:1494
 msgid "Error retrieving your orders"
 msgstr "Błąd podczas pobierania zamówień"
 
-#: app.py:1534
+#: app.py:1524
 msgid "Order not found."
 msgstr "Nie znaleziono zamówienia."
 
-#: app.py:1560 app.py:4512
+#: app.py:1550 app.py:4502
 msgid "Error loading order details."
 msgstr "Błąd podczas ładowania szczegółów zamówienia."
 
-#: app.py:1579
+#: app.py:1569
 msgid "You have been logged out."
 msgstr "Zostałeś wylogowany."
 
-#: app.py:1659
+#: app.py:1649
 msgid "Please log in to view your cart."
 msgstr "Zaloguj się, aby zobaczyć swój koszyk."
 
-#: app.py:1792 app.py:2157 app.py:3672 app.py:5027
+#: app.py:1782 app.py:2147 app.py:3662 app.py:5017
 msgid "An error occurred while processing your request."
 msgstr "Wystąpił błąd podczas przetwarzania Twojego zapytania."
 
-#: app.py:1832 app.py:3063
+#: app.py:1822 app.py:3053
 msgid "Invalid token."
 msgstr "Nieprawidłowy token."
 
-#: app.py:1837
+#: app.py:1827
 msgid "Please log in."
 msgstr "Proszę się zalogować."
 
-#: app.py:1842
+#: app.py:1832
 msgid "You don't have permission to access this page."
 msgstr "Nie masz uprawnień do dostępu do tej strony."
 
-#: app.py:2624
+#: app.py:2614
 msgid "Please log in to manage your cart."
 msgstr "Zaloguj się, aby zarządzać swoim koszykiem."
 
-#: app.py:2637
+#: app.py:2627
 msgid "Missing article information"
 msgstr "Brakujące informacje o artykule"
 
-#: app.py:2641 app.py:3195
+#: app.py:2631 app.py:3185
 msgid "Quantity must be at least 1"
 msgstr "Ilość musi wynosić co najmniej 1"
 
-#: app.py:2660
+#: app.py:2650
 msgid "Cart updated successfully"
 msgstr "Koszyk zaktualizowany pomyślnie"
 
-#: app.py:2663 app.py:4162
+#: app.py:2653 app.py:4152
 msgid "Item not found in cart"
 msgstr "Przedmiot nie znaleziony w koszyku"
 
-#: app.py:2672
+#: app.py:2662
 msgid "Invalid quantity"
 msgstr "Nieprawidłowa ilość"
 
-#: app.py:2676
+#: app.py:2666
 msgid "Error updating cart"
 msgstr "Błąd podczas aktualizacji koszyka"
 
-#: app.py:2691
+#: app.py:2681
 msgid "Missing article or table name"
 msgstr "Brakujący artykuł lub nazwa tabeli"
 
-#: app.py:2719
+#: app.py:2709
 msgid "Item removed from cart"
 msgstr "Przedmiot usunięty z koszyka"
 
-#: app.py:2722
+#: app.py:2712
 msgid "Item not found in your cart"
 msgstr "Przedmiot nie znaleziony w koszyku"
 
-#: app.py:2731 app.py:4167
+#: app.py:2721 app.py:4157
 msgid "Error removing item from cart"
 msgstr "Błąd podczas usuwania przedmiotu z koszyka"
 
-#: app.py:3170
+#: app.py:3160
 msgid "Missing required product information"
 msgstr "Brakujące wymagane informacje o produkcie"
 
-#: app.py:3177
+#: app.py:3167
 msgid "Invalid price format"
 msgstr "Nieprawidłowy format ceny"
 
-#: app.py:3201
+#: app.py:3191
 msgid "Please log in or register to add this item to your cart."
 msgstr "Zaloguj się lub zarejestruj, aby dodać ten przedmiot do koszyka."
 
-#: app.py:3224
+#: app.py:3214
 msgid "Item added to cart"
 msgstr "Przedmiot dodany do koszyka"
 
-#: app.py:3235
+#: app.py:3225
 msgid "Error adding item to cart"
 msgstr "Błąd podczas dodawania przedmiotu do koszyka"
 
-#: app.py:3273 app.py:3289
+#: app.py:3263 app.py:3279
 msgid "Please enter an article for search."
 msgstr "Wprowadź artykuł do wyszukiwania."
 
-#: app.py:3316
+#: app.py:3306
 msgid "An error occurred during the search. Please try again later."
 msgstr "Wystąpił błąd podczas wyszukiwania. Spróbuj ponownie później."
 
-#: app.py:3507
+#: app.py:3497
 msgid "Please enter at least one article."
 msgstr "Wprowadź co najmniej jeden artykuł."
 
-#: app.py:3618
+#: app.py:3608
 msgid "Articles not found: {articles}"
 msgstr "Nie znaleziono artykułów: {articles}"
 
-#: app.py:3647
+#: app.py:3637
 msgid "Added to cart: {articles}"
 msgstr "Dodano do koszyka: {articles}"
 
-#: app.py:3684
+#: app.py:3674
 msgid "You need to log in to view search results."
 msgstr "Musisz się zalogować, aby zobaczyć wyniki wyszukiwania."
 
-#: app.py:3746
+#: app.py:3736
 msgid "Your selection has been saved!"
 msgstr "Twój wybór został zapisany!"
 
-#: app.py:3750
+#: app.py:3740
 msgid "An error occurred while saving your selection. Please try again."
 msgstr "Wystąpił błąd podczas zapisywania Twojego wyboru. Spróbuj ponownie."
 
-#: app.py:3771
+#: app.py:3761
 msgid "No search results found. Please start a new search."
 msgstr "Nie znaleziono wyników wyszukiwania. Rozpocznij nowe wyszukiwanie."
 
-#: app.py:3788
+#: app.py:3778
 msgid "An error occurred while retrieving search results."
 msgstr "Wystąpił błąd podczas pobierania wyników wyszukiwania."
 
-#: app.py:3808
+#: app.py:3798
 msgid "You need to log in to view your cart."
 msgstr "Musisz się zalogować, aby zobaczyć swój koszyk."
 
-#: app.py:3921
+#: app.py:3911
 msgid "Could not load your cart. Please try again."
 msgstr "Nie można załadować Twojego koszyka. Spróbuj ponownie."
 
-#: app.py:3941 app.py:7342
+#: app.py:3931 app.py:7332
 msgid "User not authenticated"
 msgstr "Użytkownik nie jest uwierzytelniony"
 
-#: app.py:3990
+#: app.py:3980
 msgid "No articles selected"
 msgstr "Nie wybrano artykułów"
 
-#: app.py:4019
+#: app.py:4009
 msgid "Selection successfully submitted!"
 msgstr "Wybór pomyślnie przesłany!"
 
-#: app.py:4024
+#: app.py:4014
 msgid "An error occurred during submission"
 msgstr "Wystąpił błąd podczas przesyłania"
 
-#: app.py:4038
+#: app.py:4028
 msgid "Search results cleared successfully"
 msgstr "Wyniki wyszukiwania wyczyszczone pomyślnie"
 
-#: app.py:4044
+#: app.py:4034
 msgid "Error clearing search results"
 msgstr "Błąd podczas czyszczenia wyników wyszukiwania"
 
-#: app.py:4072 app.py:4267
+#: app.py:4062 app.py:4257
 msgid "User is not authenticated. Please log in."
 msgstr "Użytkownik nie jest uwierzytelniony. Proszę się zalogować."
 
-#: app.py:4105
+#: app.py:4095
 msgid "Product added to cart!"
 msgstr "Produkt dodany do koszyka!"
 
-#: app.py:4108
+#: app.py:4098
 msgid "Error adding product to cart."
 msgstr "Błąd podczas dodawania produktu do koszyka."
 
-#: app.py:4142
+#: app.py:4132
 msgid "Missing required information for removal"
 msgstr "Brakujące wymagane informacje do usunięcia"
 
-#: app.py:4159
+#: app.py:4149
 msgid "Article {article} removed successfully"
 msgstr "Artykuł {article} usunięty pomyślnie"
 
-#: app.py:4186
+#: app.py:4176
 msgid "Invalid input: article or quantity missing."
 msgstr "Nieprawidłowe dane wejściowe: brakuje artykułu lub ilości."
 
-#: app.py:4193
+#: app.py:4183
 msgid "Quantity must be at least 1."
 msgstr "Ilość musi wynosić co najmniej 1."
 
-#: app.py:4210
+#: app.py:4200
 msgid "Cart updated successfully!"
 msgstr "Koszyk zaktualizowany pomyślnie!"
 
-#: app.py:4214
+#: app.py:4204
 msgid "Error updating cart."
 msgstr "Błąd podczas aktualizacji koszyka."
 
-#: app.py:4285
+#: app.py:4275
 msgid "Your cart is empty!"
 msgstr "Twój koszyk jest pusty!"
 
-#: app.py:4356
+#: app.py:4346
 msgid "Order placed, but we couldn't send a confirmation email."
 msgstr "Zamówienie złożone, ale nie udało się wysłać emaila z potwierdzeniem."
 
-#: app.py:4370
+#: app.py:4360
 msgid "Error placing order: {error}"
 msgstr "Błąd podczas składania zamówienia: {error}"
 
-#: app.py:4388
+#: app.py:4378
 msgid "User is not authenticated."
 msgstr "Użytkownik nie jest uwierzytelniony."
 
-#: app.py:4454
+#: app.py:4444
 msgid "Error fetching orders."
 msgstr "Błąd podczas pobierania zamówień."
 
-#: app.py:4899
+#: app.py:4889
 msgid "Category not found."
 msgstr "Nie znaleziono kategorii."
 
-#: app.py:7409
+#: app.py:7399
 msgid "Some articles still need table selection."
 msgstr "Niektóre artykuły nadal wymagają wyboru tabeli."
 
-#: app.py:7411
+#: app.py:7401
 msgid "All selected articles have been added to your cart."
 msgstr "Wszystkie wybrane artykuły zostały dodane do Twojego koszyka."
 
-#: app.py:7457
+#: app.py:7447
 msgid "An error occurred while processing your selection. Please try again."
 msgstr "Wystąpił błąd podczas przetwarzania Twojego wyboru. Spróbuj ponownie."
 
-#: app.py:7651
+#: app.py:7641
 msgid "News created successfully!"
 msgstr "Wiadomość utworzona pomyślnie!"
 
-#: app.py:7656
+#: app.py:7646
 msgid "Error creating news"
 msgstr "Błąd podczas tworzenia wiadomości"
 
-#: app.py:8264
+#: app.py:8254
 msgid "Error loading news"
 msgstr "Błąd podczas ładowania wiadomości"
 
-#: app.py:8295
+#: app.py:8285
 msgid "News not found"
 msgstr "Nie znaleziono wiadomości"
 
-#: app.py:8668
+#: app.py:8658
 msgid "Delivery address updated"
 msgstr "Adres dostawy zaktualizowany"
 
-#: app.py:8684
+#: app.py:8674
 msgid "Invoice details updated"
 msgstr "Szczegóły faktury zaktualizowane"
 
-#: app.py:8686
+#: app.py:8676
 msgid "Invalid invoice data format"
 msgstr "Nieprawidłowy format danych faktury"
 
-#: app.py:8778
+#: app.py:8768
 msgid "Item processed successfully"
 msgstr "Przedmiot przetworzony pomyślnie"
 
-#: app.py:8791
+#: app.py:8781
 msgid "Error processing orders"
 msgstr "Błąd podczas przetwarzania zamówień"
 
-#: app.py:9085
+#: app.py:9075
 msgid "Please login to access your profile"
 msgstr "Zaloguj się, aby uzyskać dostęp do swojego profilu"
 
-#: app.py:9135
+#: app.py:9125
 msgid "Invalid email format"
 msgstr "Nieprawidłowy format email"
 
-#: app.py:9142 app.py:9196
+#: app.py:9132 app.py:9186
 msgid "This email is already in use by another user"
 msgstr "Ten email jest już używany przez innego użytkownika"
 
-#: app.py:9148 app.py:9198
+#: app.py:9138 app.py:9188
 msgid "This phone number is already in use by another user"
 msgstr "Ten numer telefonu jest już używany przez innego użytkownika"
 
-#: app.py:9159
+#: app.py:9149
 msgid "Current password is incorrect"
 msgstr "Aktualne hasło jest nieprawidłowe"
 
-#: app.py:9164
+#: app.py:9154
 msgid "New passwords do not match"
 msgstr "Nowe hasła nie są zgodne"
 
-#: app.py:9177
+#: app.py:9167
 msgid "Profile and password updated successfully"
 msgstr "Profil i hasło zaktualizowane pomyślnie"
 
-#: app.py:9190
+#: app.py:9180
 msgid "Profile updated successfully"
 msgstr "Profil zaktualizowany pomyślnie"
 
-#: app.py:9200
+#: app.py:9190
 msgid "Error updating profile: duplicate value"
 msgstr "Błąd podczas aktualizacji profilu: duplikat wartości"
 
-#: app.py:9231
+#: app.py:9221
 msgid "Address added successfully"
 msgstr "Adres dodany pomyślnie"
 
-#: app.py:9243
+#: app.py:9233
 msgid "Address deleted successfully"
 msgstr "Adres usunięty pomyślnie"
 
-#: app.py:9265
+#: app.py:9255
 msgid "Default address updated"
 msgstr "Domyślny adres zaktualizowany"
 
-#: app.py:9292
+#: app.py:9282
 msgid "Company added successfully"
 msgstr "Firma dodana pomyślnie"
 
-#: app.py:9304
+#: app.py:9294
 msgid "Company deleted successfully"
 msgstr "Firma usunięta pomyślnie"
 
-#: app.py:9326
+#: app.py:9316
 msgid "Default company updated"
 msgstr "Domyślna firma zaktualizowana"
 
-#: app.py:9334
+#: app.py:9324
 msgid "Ukrainian"
 msgstr "Ukraiński"
 
-#: app.py:9334
+#: app.py:9324
 msgid "English"
 msgstr "Angielski"
 
-#: app.py:9334
+#: app.py:9324
 msgid "Slovak"
 msgstr "Słowacki"
 
-#: app.py:9334
+#: app.py:9324
 msgid "Polish"
 msgstr "Polski"
 
-#: app.py:9340
+#: app.py:9330
 msgid "Error accessing user profile"
 msgstr "Błąd podczas dostępu do profilu użytkownika"
 
@@ -629,6 +631,7 @@ msgstr "Adres firmy"
 msgid "Invoice requested but details missing"
 msgstr "Faktura zamówiona, ale brakuje szczegółów"
 
+#: templates/admin/orders/process_orders.html:128
 msgid "No invoice requested"
 msgstr "Nie zamówiono faktury"
 
@@ -682,8 +685,7 @@ msgstr "Ilość"
 #: templates/public/shipping_payment.html:185 templates/user/cart/cart.html:17
 #: templates/user/orders/order_details.html:24
 #: templates/user/shipments/shipments.html:25
-#: templates/user/shipments/view_shipment.html:41
-#: копія.html:146 –
+#: templates/user/shipments/view_shipment.html:41 копія.html:146 –
 msgid "Price"
 msgstr "Cena"
 
@@ -720,6 +722,14 @@ msgstr "Typ"
 msgid "Status"
 msgstr "Status"
 
+#: templates/admin/orders/process_orders.html:170
+#: templates/public/cart/cart.html:30
+#: templates/public/orders/list_orders.html:32
+#: templates/public/orders/list_orders.html:77
+#: templates/public/orders/orders.html:31
+#: templates/public/orders/orders.html:81 templates/user/cart/cart.html:21
+#: templates/user/orders/orders.html:103
+#: templates/user/shipments/list_shipments.html:22
 msgid "Actions"
 msgstr "Akcje"
 
@@ -802,6 +812,9 @@ msgstr "Przesyłki"
 msgid "Home"
 msgstr "Strona główna"
 
+#: templates/base/public_base.html:125 templates/base/public_base.html:364
+#: templates/public/about.html:7 templates/public/about.html:12
+#: templates/public/about.html:17
 msgid "About Us"
 msgstr "O nas"
 
@@ -829,6 +842,17 @@ msgstr "Kategorie"
 msgid "My Account"
 msgstr "Moje konto"
 
+#: templates/base/public_base.html:237 templates/public/user/profile.html:15
+msgid "Profile"
+msgstr "Profil"
+
+#: templates/base/public_base.html:248
+msgid "Logout"
+msgstr "Wyloguj się"
+
+#: templates/base/public_base.html:309
+msgid "This website uses cookies..."
+msgstr "Ta strona używa plików cookie..."
 
 #: templates/base/public_base.html:309 templates/base/public_base.html:395
 #: templates/public/privacy.html:7 templates/public/privacy.html:12
@@ -887,8 +911,13 @@ msgid "Cookie Settings"
 msgstr "Ustawienia plików cookie"
 
 #: templates/base/public_base.html:407
-msgid "All prices shown include VAT unless otherwise stated. EU business customers with valid VAT ID may receive invoices without VAT."
-msgstr "Wszystkie pokazane ceny zawierają VAT, chyba że zaznaczono inaczej. Klienci biznesowi z UE z ważnym numerem VAT mogą otrzymać faktury bez VAT."
+msgid ""
+"All prices shown include VAT unless otherwise stated. EU business "
+"customers with valid VAT ID may receive invoices without VAT."
+msgstr ""
+"Wszystkie pokazane ceny zawierają VAT, chyba że zaznaczono inaczej. "
+"Klienci biznesowi z UE z ważnym numerem VAT mogą otrzymać faktury bez "
+"VAT."
 
 #: templates/base/public_base.html:419
 msgid "Call us (SK/CZ/PL)"
@@ -903,12 +932,18 @@ msgid "Contact us via WhatsApp"
 msgstr "Skontaktuj się z nami przez WhatsApp"
 
 #: templates/public/about.html:5 templates/public/about.html:8
-msgid "Learn more about AutogroupEU - your trusted partner in auto parts supply across Europe since 2014."
-msgstr "Dowiedz się więcej o AutogroupEU - twoim zaufanym partnerze w dostawie części samochodowych w całej Europie od 2014 roku."
+msgid ""
+"Learn more about AutogroupEU - your trusted partner in auto parts supply "
+"across Europe since 2014."
+msgstr ""
+"Dowiedz się więcej o AutogroupEU - twoim zaufanym partnerze w dostawie "
+"części samochodowych w całej Europie od 2014 roku."
 
 #: templates/public/about.html:6
 msgid "about us, auto parts, European supplier, car parts, B2B, original parts"
-msgstr "o nas, części samochodowe, europejski dostawca, części do aut, B2B, oryginalne części"
+msgstr ""
+"o nas, części samochodowe, europejski dostawca, części do aut, B2B, "
+"oryginalne części"
 
 #: templates/public/about.html:12 templates/public/category.html:3
 #: templates/public/category.html:12 templates/public/contacts.html:3
@@ -921,12 +956,23 @@ msgid "Our Company"
 msgstr "Nasza firma"
 
 #: templates/public/about.html:32
-msgid "Founded on November 15, 2014, we have been supplying original auto parts for many years. We have an online store where you can order parts to be delivered or purchase items available in our stock."
-msgstr "Założona 15 listopada 2014 roku, dostarczamy oryginalne części samochodowe od wielu lat. Posiadamy sklep internetowy, w którym możesz zamówić części z dostawą lub zakupić przedmioty dostępne w naszym magazynie."
+msgid ""
+"Founded on November 15, 2014, we have been supplying original auto parts "
+"for many years. We have an online store where you can order parts to be "
+"delivered or purchase items available in our stock."
+msgstr ""
+"Założona 15 listopada 2014 roku, dostarczamy oryginalne części "
+"samochodowe od wielu lat. Posiadamy sklep internetowy, w którym możesz "
+"zamówić części z dostawą lub zakupić przedmioty dostępne w naszym "
+"magazynie."
 
 #: templates/public/about.html:34
-msgid "We provide original parts from European official warehouses at the lowest prices. All parts are original and new."
-msgstr "Dostarczamy oryginalne części z oficjalnych europejskich magazynów w najniższych cenach. Wszystkie części są oryginalne i nowe."
+msgid ""
+"We provide original parts from European official warehouses at the lowest"
+" prices. All parts are original and new."
+msgstr ""
+"Dostarczamy oryginalne części z oficjalnych europejskich magazynów w "
+"najniższych cenach. Wszystkie części są oryginalne i nowe."
 
 #: templates/public/about.html:38
 msgid "Our extensive catalog includes the following categories:"
@@ -937,16 +983,24 @@ msgid "Engine and Components"
 msgstr "Silnik i komponenty"
 
 #: templates/public/about.html:49
-msgid "Cylinder blocks, Cylinder heads, Pistons, Crankshafts, Turbochargers, Fuel injectors, Gaskets and seals"
-msgstr "Bloki cylindrów, głowice cylindrów, tłoki, wały korbowe, turbosprężarki, wtryskiwacze paliwa, uszczelki"
+msgid ""
+"Cylinder blocks, Cylinder heads, Pistons, Crankshafts, Turbochargers, "
+"Fuel injectors, Gaskets and seals"
+msgstr ""
+"Bloki cylindrów, głowice cylindrów, tłoki, wały korbowe, turbosprężarki, "
+"wtryskiwacze paliwa, uszczelki"
 
 #: templates/public/about.html:59
 msgid "Fuel and Exhaust Systems"
 msgstr "Układy paliwowe i wydechowe"
 
 #: templates/public/about.html:62
-msgid "Fuel pumps, Injectors, Carburetors, Fuel filters, Catalytic converters, Mufflers, Exhaust manifolds"
-msgstr "Pompy paliwa, wtryskiwacze, gaźniki, filtry paliwa, katalizatory, tłumiki, kolektory wydechowe"
+msgid ""
+"Fuel pumps, Injectors, Carburetors, Fuel filters, Catalytic converters, "
+"Mufflers, Exhaust manifolds"
+msgstr ""
+"Pompy paliwa, wtryskiwacze, gaźniki, filtry paliwa, katalizatory, "
+"tłumiki, kolektory wydechowe"
 
 #: templates/public/about.html:72
 msgid "Cooling and Heating"
@@ -954,7 +1008,9 @@ msgstr "Chłodzenie i ogrzewanie"
 
 #: templates/public/about.html:75
 msgid "Radiators, Water pumps, Thermostats, Fans, Intercoolers, Cabin heaters"
-msgstr "Chłodnice, pompy wody, termostaty, wentylatory, intercoolery, nagrzewnice kabinowe"
+msgstr ""
+"Chłodnice, pompy wody, termostaty, wentylatory, intercoolery, nagrzewnice"
+" kabinowe"
 
 #: templates/public/about.html:85
 msgid "Lubrication System"
@@ -969,16 +1025,24 @@ msgid "Suspension and Chassis"
 msgstr "Zawieszenie i podwozie"
 
 #: templates/public/about.html:101
-msgid "Shock absorbers, Springs, Stabilizers, Suspension arms, Engine mounts, Hub bearings"
-msgstr "Amortyzatory, sprężyny, stabilizatory, wahacze, mocowania silnika, łożyska piasty"
+msgid ""
+"Shock absorbers, Springs, Stabilizers, Suspension arms, Engine mounts, "
+"Hub bearings"
+msgstr ""
+"Amortyzatory, sprężyny, stabilizatory, wahacze, mocowania silnika, "
+"łożyska piasty"
 
 #: templates/public/about.html:111
 msgid "Brake System"
 msgstr "Układ hamulcowy"
 
 #: templates/public/about.html:114
-msgid "Brake pads, Discs and drums, Brake calipers, Master cylinders, Vacuum boosters"
-msgstr "Klocki hamulcowe, tarcze i bębny, zaciski hamulcowe, pompy hamulcowe, wspomaganie hamulców"
+msgid ""
+"Brake pads, Discs and drums, Brake calipers, Master cylinders, Vacuum "
+"boosters"
+msgstr ""
+"Klocki hamulcowe, tarcze i bębny, zaciski hamulcowe, pompy hamulcowe, "
+"wspomaganie hamulców"
 
 #: templates/public/about.html:124
 msgid "Steering"
@@ -986,39 +1050,57 @@ msgstr "Układ kierowniczy"
 
 #: templates/public/about.html:127
 msgid "Steering racks, Power steering pumps, Tie rod ends, Hydraulic cylinders"
-msgstr "Przekładnie kierownicze, pompy wspomagania, końcówki drążków, cylindry hydrauliczne"
+msgstr ""
+"Przekładnie kierownicze, pompy wspomagania, końcówki drążków, cylindry "
+"hydrauliczne"
 
 #: templates/public/about.html:137
 msgid "Transmission and Drivetrain"
 msgstr "Skrzynia biegów i układ napędowy"
 
 #: templates/public/about.html:140
-msgid "Manual and automatic transmissions, Clutches, Drive shafts, Transfer cases, Differentials"
-msgstr "Skrzynie manualne i automatyczne, sprzęgła, wały napędowe, skrzynie rozdzielcze, dyferencjały"
+msgid ""
+"Manual and automatic transmissions, Clutches, Drive shafts, Transfer "
+"cases, Differentials"
+msgstr ""
+"Skrzynie manualne i automatyczne, sprzęgła, wały napędowe, skrzynie "
+"rozdzielcze, dyferencjały"
 
 #: templates/public/about.html:150
 msgid "Electrical and Lighting"
 msgstr "Elektryka i oświetlenie"
 
 #: templates/public/about.html:153
-msgid "Starters, Alternators, Batteries, Lights and headlights, Spark plugs, Various sensors, Electronic control units (ECUs)"
-msgstr "Rozruszniki, alternatory, akumulatory, światła i reflektory, świece zapłonowe, różne czujniki, jednostki sterujące (ECU)"
+msgid ""
+"Starters, Alternators, Batteries, Lights and headlights, Spark plugs, "
+"Various sensors, Electronic control units (ECUs)"
+msgstr ""
+"Rozruszniki, alternatory, akumulatory, światła i reflektory, świece "
+"zapłonowe, różne czujniki, jednostki sterujące (ECU)"
 
 #: templates/public/about.html:163
 msgid "Body Parts and Accessories"
 msgstr "Części karoserii i akcesoria"
 
 #: templates/public/about.html:166
-msgid "Hoods, doors, fenders, bumpers, Windows (windshield, side, rear), Mirrors, Emblems and moldings"
-msgstr "Maski, drzwi, błotniki, zderzaki, szyby (przednie, boczne, tylne), lusterka, emblematy i listwy"
+msgid ""
+"Hoods, doors, fenders, bumpers, Windows (windshield, side, rear), "
+"Mirrors, Emblems and moldings"
+msgstr ""
+"Maski, drzwi, błotniki, zderzaki, szyby (przednie, boczne, tylne), "
+"lusterka, emblematy i listwy"
 
 #: templates/public/about.html:176
 msgid "Interior and Comfort"
 msgstr "Wnętrze i komfort"
 
 #: templates/public/about.html:179
-msgid "Dashboards, Seats and armrests, Steering wheels and gear knobs, Heating and air conditioning, Audio systems"
-msgstr "Deski rozdzielcze, fotele i podłokietniki, kierownice i gałki zmiany biegów, ogrzewanie i klimatyzacja, systemy audio"
+msgid ""
+"Dashboards, Seats and armrests, Steering wheels and gear knobs, Heating "
+"and air conditioning, Audio systems"
+msgstr ""
+"Deski rozdzielcze, fotele i podłokietniki, kierownice i gałki zmiany "
+"biegów, ogrzewanie i klimatyzacja, systemy audio"
 
 #: templates/public/about.html:189
 msgid "Wheels and Tires"
@@ -1033,28 +1115,58 @@ msgid "Fluids and Lubricants"
 msgstr "Płyny i smary"
 
 #: templates/public/about.html:205
-msgid "Engine and transmission oils, Antifreeze, Brake fluid, Hydraulic fluids, Windshield washer fluid"
-msgstr "Olej silnikowy i przekładniowy, płyn chłodniczy, płyn hamulcowy, płyny hydrauliczne, płyn do spryskiwaczy"
+msgid ""
+"Engine and transmission oils, Antifreeze, Brake fluid, Hydraulic fluids, "
+"Windshield washer fluid"
+msgstr ""
+"Olej silnikowy i przekładniowy, płyn chłodniczy, płyn hamulcowy, płyny "
+"hydrauliczne, płyn do spryskiwaczy"
 
 #: templates/public/about.html:212
-msgid "Our company is registered at 066 01 Humenné Mierová 99, Slovakia, and our main warehouse is located in Tusicka Nova Ves 90, Tusice 07202, Slovakia. By prior arrangement, you can always pick up your parts yourself."
-msgstr "Nasza firma jest zarejestrowana pod adresem 066 01 Humenné Mierová 99, Słowacja, a nasz główny magazyn znajduje się w Tusicka Nova Ves 90, Tusice 07202, Słowacja. Po wcześniejszym uzgodnieniu, zawsze możesz odebrać swoje części osobiście."
+msgid ""
+"Our company is registered at 066 01 Humenné Mierová 99, Slovakia, and our"
+" main warehouse is located in Tusicka Nova Ves 90, Tusice 07202, "
+"Slovakia. By prior arrangement, you can always pick up your parts "
+"yourself."
+msgstr ""
+"Nasza firma jest zarejestrowana pod adresem 066 01 Humenné Mierová 99, "
+"Słowacja, a nasz główny magazyn znajduje się w Tusicka Nova Ves 90, "
+"Tusice 07202, Słowacja. Po wcześniejszym uzgodnieniu, zawsze możesz "
+"odebrać swoje części osobiście."
 
 #: templates/public/about.html:222
 msgid "Workshop & Programming Services"
 msgstr "Warsztat i usługi programowania"
 
 #: templates/public/about.html:226
-msgid "In addition to parts supply, we have our own workshop where we specialize in car repairs and programming."
-msgstr "Oprócz dostarczania części, posiadamy własny warsztat, w którym specjalizujemy się w naprawach samochodów i programowaniu."
+msgid ""
+"In addition to parts supply, we have our own workshop where we specialize"
+" in car repairs and programming."
+msgstr ""
+"Oprócz dostarczania części, posiadamy własny warsztat, w którym "
+"specjalizujemy się w naprawach samochodów i programowaniu."
 
 #: templates/public/about.html:228
-msgid "We can help with complex engine repairs, specializing in Land Rover, BMW, Ford, and Mercedes-Benz vehicles. Our particular expertise is with 306DT engines, which we have been repairing for many years, but we also work with many other engine types."
-msgstr "Możemy pomóc w skomplikowanych naprawach silników, specjalizując się w pojazdach Land Rover, BMW, Ford i Mercedes-Benz. Naszą szczególną specjalnością są silniki 306DT, które naprawiamy od wielu lat, ale pracujemy również z wieloma innymi typami silników."
+msgid ""
+"We can help with complex engine repairs, specializing in Land Rover, BMW,"
+" Ford, and Mercedes-Benz vehicles. Our particular expertise is with 306DT"
+" engines, which we have been repairing for many years, but we also work "
+"with many other engine types."
+msgstr ""
+"Możemy pomóc w skomplikowanych naprawach silników, specjalizując się w "
+"pojazdach Land Rover, BMW, Ford i Mercedes-Benz. Naszą szczególną "
+"specjalnością są silniki 306DT, które naprawiamy od wielu lat, ale "
+"pracujemy również z wieloma innymi typami silników."
 
 #: templates/public/about.html:230
-msgid "We have all the necessary diagnostic software. Through our partners, we can also provide chip tuning services to increase your vehicle's performance."
-msgstr "Posiadamy wszystkie niezbędne oprogramowanie diagnostyczne. Dzięki naszym partnerom możemy również świadczyć usługi chip tuningu, aby zwiększyć wydajność Twojego pojazdu."
+msgid ""
+"We have all the necessary diagnostic software. Through our partners, we "
+"can also provide chip tuning services to increase your vehicle's "
+"performance."
+msgstr ""
+"Posiadamy wszystkie niezbędne oprogramowanie diagnostyczne. Dzięki naszym"
+" partnerom możemy również świadczyć usługi chip tuningu, aby zwiększyć "
+"wydajność Twojego pojazdu."
 
 #: templates/public/about.html:234
 msgid "We specialize in the following brands:"
@@ -1117,9 +1229,9 @@ msgstr "Powrót do wyszukiwania"
 #: templates/public/api_search_results.html:36
 #: templates/public/article_not_found.html:93
 #: templates/public/cart/cart.html:25 templates/public/index.html:147
-#: templates/public.index.html:189
+#: templates/public/index.html:189
 #: templates/public/orders/order_details.html:154
-#: templates/public/product_details templates.public.product_details.html:168
+#: templates/public/product_details templates/public/product_details.html:168
 #: templates/user/cart/cart.html:16 templates/user/search/intermediate.html:35
 #: копія.html:128 –
 msgid "Brand"
@@ -1129,11 +1241,11 @@ msgstr "Marka"
 msgid "Title"
 msgstr "Tytuł"
 
-
+#: templates/public/api_search_results.html:39
 msgid "Delivery"
 msgstr "Dostawa"
 
-#: templates/public/api_search_results.html:40 templates/public.product_details
+#: templates/public/api_search_results.html:40 templates/public/product_details
 #: templates/public/product_details.html:238
 #: templates/user/search/intermediate.html:61
 #: templates/user/search/search_results.html:82 копія.html:178 –
@@ -1144,6 +1256,8 @@ msgstr "Dodaj do koszyka"
 msgid "Discount"
 msgstr "Rabat"
 
+#: templates/public/api_search_results.html:65
+#: templates/user/search/search_results.html:19
 msgid "Select"
 msgstr "Wybierz"
 
@@ -1172,15 +1286,23 @@ msgid "The requested article was not found in our catalog"
 msgstr "Żądany artykuł nie został znaleziony w naszym katalogu"
 
 #: templates/public/article_not_found.html:32
-msgid "The article you are looking for might have been discontinued, or the number might be incorrect."
-msgstr "Artykuł, którego szukasz, mógł zostać wycofany z produkcji lub numer może być nieprawidłowy."
+msgid ""
+"The article you are looking for might have been discontinued, or the "
+"number might be incorrect."
+msgstr ""
+"Artykuł, którego szukasz, mógł zostać wycofany z produkcji lub numer może"
+" być nieprawidłowy."
 
 #: templates/public/article_not_found.html:33
-msgid "Please check the article number and try again or contact our support team for assistance."
-msgstr "Proszę sprawdzić numer artykułu i spróbować ponownie lub skontaktować się z naszym zespołem wsparcia w celu uzyskania pomocy."
+msgid ""
+"Please check the article number and try again or contact our support team"
+" for assistance."
+msgstr ""
+"Proszę sprawdzić numer artykułu i spróbować ponownie lub skontaktować się"
+" z naszym zespołem wsparcia w celu uzyskania pomocy."
 
-#: templates/public/article_not_found.html:41 templates/public.index.html:37
-#: templates/public.product_details templates.public.product_details.html:96
+#: templates/public/article_not_found.html:41 templates/public/index.html:37
+#: templates/public/product_details templates/public/product_details.html:96
 #: копія.html:54 –
 msgid "Enter article number..."
 msgstr "Wprowadź numer artykułu..."
@@ -1189,1149 +1311,2410 @@ msgstr "Wprowadź numer artykułu..."
 msgid "Back to Home"
 msgstr "Powrót do strony głównej"
 
-#: templates/public.article_not_found.html:60
+#: templates/public/article_not_found.html:60
 msgid "Contact Support"
 msgstr "Skontaktuj się z pomocą techniczną"
 
-#: templates/public.article_not_found.html:72
+#: templates/public/article_not_found.html:72
 msgid "Recommended Products"
 msgstr "Polecane produkty"
 
-#: templates/public.article_not_found.html:109
-#: templates/public.category.html:292 templates.public.index.html:164
-#: templates/public.index.html:193 templates.public.orders.list_orders.html:81
-#: templates/public.orders.orders.html:85 templates.user.news.user_news.html:44
-#: templates/user.orders.orders.html:124
-#: templates/user.shipments.list_shipments.html:36
+#: templates/public/article_not_found.html:109
+#: templates/public/category.html:292 templates/public/index.html:164
+#: templates/public/index.html:193 templates/public/orders/list_orders.html:81
+#: templates/public/orders/orders.html:85 templates/user/news/user_news.html:44
+#: templates/user/orders/orders.html:124
+#: templates/user/shipments/list_shipments.html:36
 msgid "View Details"
 msgstr "Zobacz szczegóły"
 
-#: templates/public.car_service.html:4 templates.public.car_service.html:10
-#: templates/public.index.html:77
+#: templates/public/car_service.html:4 templates/public/car_service.html:10
+#: templates/public/index.html:77
 msgid "Car Service & Programming"
 msgstr "Serwis samochodowy i programowanie"
 
-#: templates/public.car_service.html:14
+#: templates/public/car_service.html:14
 msgid "Our Services"
 msgstr "Nasze usługi"
 
-#: templates/public.car_service.html:15
-msgid "We offer professional car diagnostic and programming services for various car models."
-msgstr "Oferujemy profesjonalne usługi diagnostyki i programowania samochodów dla różnych modeli samochodów."
+#: templates/public/car_service.html:15
+msgid ""
+"We offer professional car diagnostic and programming services for various"
+" car models."
+msgstr ""
+"Oferujemy profesjonalne usługi diagnostyki i programowania samochodów dla"
+" różnych modeli samochodów."
 
-#: templates/public.car_service.html:17
+#: templates/public/car_service.html:17
 msgid "Available Services"
 msgstr "Dostępne usługi"
 
-#: templates/public.car_service.html:19
+#: templates/public/car_service.html:19
 msgid "Full car diagnostics"
 msgstr "Pełna diagnostyka samochodowa"
 
-#: templates/public.car_service.html:20
+#: templates/public/car_service.html:20
 msgid "ECU programming and updates"
 msgstr "Programowanie i aktualizacje ECU"
 
-#: templates/public.car_service.html:21
+#: templates/public/car_service.html:21
 msgid "Key programming"
 msgstr "Programowanie kluczy"
 
-#: templates/public.car_service.html:22
+#: templates/public/car_service.html:22
 msgid "Software updates"
 msgstr "Aktualizacje oprogramowania"
 
-#: templates/public.car_service.html:23
+#: templates/public/car_service.html:23
 msgid "Dashboard repair"
 msgstr "Naprawa deski rozdzielczej"
 
-#: templates/public.car_service.html:27
+#: templates/public/car_service.html:27
 msgid "For more information about our car services, please contact us:"
-msgstr "Aby uzyskać więcej informacji o naszych usługach samochodowych, prosimy o kontakt:"
+msgstr ""
+"Aby uzyskać więcej informacji o naszych usługach samochodowych, prosimy o"
+" kontakt:"
 
-#: templates/public.category.html:8 templates.public.category.html:13
-#: templates/public.category.html:26
+#: templates/public/category.html:8 templates/public/category.html:13
+#: templates/public/category.html:26
 msgid "Browse our collection of"
 msgstr "Przeglądaj naszą kolekcję"
 
-#: templates/public.category.html:8 templates.public.category.html:13
-#: templates/public.category.html:26
+#: templates/public/category.html:8 templates/public/category.html:13
+#: templates/public/category.html:26
 msgid "products at AutogroupEU"
 msgstr "produkty w AutogroupEU"
 
-#: templates/public.category.html:9
+#: templates/public/category.html:9
 msgid "auto parts, automotive parts"
 msgstr "części samochodowe, części motoryzacyjne"
 
-#: templates/public.category.html:140
+#: templates/public/category.html:140
 msgid "products"
 msgstr "produkty"
 
-#: templates/public.category.html:150
+#: templates/public/category.html:150
 msgid "Subcategories"
 msgstr "Podkategorie"
 
-#: templates/public.category.html:167
+#: templates/public/category.html:167
 msgid "Brand Filter"
 msgstr "Filtr marki"
 
-#: templates/public.category.html:180 templates.public.index.html:109
+#: templates/public/category.html:180 templates/public/index.html:109
 msgid "All Brands"
 msgstr "Wszystkie marki"
 
-#: templates/public.category.html:195
+#: templates/public/category.html:195
 msgid "Apply Filter"
 msgstr "Zastosuj filtr"
 
-#: templates/public.category.html:203
+#: templates/public/category.html:203
 msgid "Sort by"
 msgstr "Sortuj według"
 
-#: templates/public.category.html:215
+#: templates/public/category.html:215
 msgid "Name A-Z"
 msgstr "Nazwa A-Z"
 
-#: templates/public.category.html:221
+#: templates/public/category.html:221
 msgid "Name Z-A"
 msgstr "Nazwa Z-A"
 
-#: templates/public.category.html:227
+#: templates/public/category.html:227
 msgid "Price Low to High"
 msgstr "Cena od najniższej do najwyższej"
 
-#: templates/public.category.html:233
+#: templates/public/category.html:233
 msgid "Price High to Low"
 msgstr "Cena od najwyższej do najniższej"
 
-#: templates/public.category.html:238
+#: templates/public/category.html:238
 msgid "Apply Sorting"
 msgstr "Zastosuj sortowanie"
 
-#: templates/public.category.html:246
+#: templates/public/category.html:246
 msgid "Reset All Filters"
 msgstr "Resetuj wszystkie filtry"
 
-#: templates/public.category.html:277
+#: templates/public/category.html:277
 msgid "Article:"
 msgstr "Artykuł:"
 
-#: templates/public.category.html:282
+#: templates/public/category.html:282
 msgid "Brand:"
 msgstr "Marka:"
 
-#: templates/public.category.html:300
+#: templates/public/category.html:300
 msgid "No products found in this category"
 msgstr "Nie znaleziono produktów w tej kategorii"
 
-#: templates/public.category.html:312 templates.public.category.html:317
+#: templates/public/category.html:312 templates/public/category.html:317
 msgid "Previous"
 msgstr "Poprzedni"
 
-#: templates/public.category.html:334 templates.public.category.html:339
+#: templates/public/category.html:334 templates/public/category.html:339
 msgid "Next"
 msgstr "Następny"
 
-#: templates/public.category.html:352
+#: templates/public/category.html:352
 msgid "Filters"
 msgstr "Filtry"
 
-#: templates/public.contacts.html:17
+#: templates/public/contacts.html:17
 msgid "Phone Numbers"
 msgstr "Numery telefonów"
 
-#: templates/public.contacts.html:33
+#: templates/public/contacts.html:33
 msgid "Online Contact"
 msgstr "Kontakt online"
 
-#: templates/public.contacts.html:54
+#: templates/public/contacts.html:54
 msgid "Office"
 msgstr "Biuro"
 
-#: templates/public.contacts.html:55 templates.public.returns.html:67
+#: templates/public/contacts.html:55 templates/public/returns.html:67
 msgid "Main warehouse"
 msgstr "Główny magazyn"
 
+#: templates/public/contacts.html:60 templates/public/user/profile.html:217
+msgid "Company Information"
+msgstr "Informacje o firmie"
 
-#: templates/public.index.html:5
+#: templates/public/index.html:5
 msgid "AutogroupEU - Your reliable partner in auto parts supply across Europe."
-msgstr "AutogroupEU - Twój niezawodny partner w dostawie części samochodowych w całej Europie."
+msgstr ""
+"AutogroupEU - Twój niezawodny partner w dostawie części samochodowych w "
+"całej Europie."
 
-#: templates/public.index.html:6
+#: templates/public/index.html:6
 msgid "auto parts, spare parts, car repair, programming, Slovakia"
-msgstr "części samochodowe, części zamienne, naprawa samochodów, programowanie, Słowacja"
+msgstr ""
+"części samochodowe, części zamienne, naprawa samochodów, programowanie, "
+"Słowacja"
 
-#: templates/public.index.html:7
+#: templates/public/index.html:7
 msgid "Auto Parts Supply"
 msgstr "Dostawa części samochodowych"
 
-#: templates/public.index.html:8
-msgid "Find the best auto parts for your vehicle with quick delivery across Europe"
-msgstr "Znajdź najlepsze części samochodowe do swojego pojazdu z szybką dostawą w całej Europie"
+#: templates/public/index.html:8
+msgid ""
+"Find the best auto parts for your vehicle with quick delivery across "
+"Europe"
+msgstr ""
+"Znajdź najlepsze części samochodowe do swojego pojazdu z szybką dostawą w"
+" całej Europie"
 
-#: templates/public.index.html:22
+#: templates/public/index.html:22
 msgid "Welcome to AutogroupEU"
 msgstr "Witamy w AutogroupEU"
 
-#: templates/public.index.html:26
-msgid "Your reliable partner in auto parts supply across Europe. Enter the article number to check prices and availability."
-msgstr "Twój niezawodny partner w dostawie części samochodowych w całej Europie. Wprowadź numer artykułu, aby sprawdzić ceny i dostępność."
+#: templates/public/index.html:26
+msgid ""
+"Your reliable partner in auto parts supply across Europe. Enter the "
+"article number to check prices and availability."
+msgstr ""
+"Twój niezawodny partner w dostawie części samochodowych w całej Europie. "
+"Wprowadź numer artykułu, aby sprawdzić ceny i dostępność."
 
-#: templates/public.index.html:55
+#: templates/public/index.html:55
 msgid "Need Help?"
 msgstr "Potrzebujesz pomocy?"
 
-#: templates/public.index.html:59
+#: templates/public/index.html:59
 msgid "If you have any questions, don't hesitate to contact us:"
 msgstr "Jeśli masz jakiekolwiek pytania, nie wahaj się z nami skontaktować:"
 
-#: templates/public.index.html:66
+#: templates/public/index.html:66
 msgid "Mon-Fri: 9:00 - 19:00"
 msgstr "Pon-Pt: 9:00 - 19:00"
 
-#: templates/public.index.html:81
+#: templates/public/index.html:81
 msgid "We offer professional car repair and programming services."
 msgstr "Oferujemy profesjonalne usługi naprawy i programowania samochodów."
 
-#: templates/public.index.html:82
+#: templates/public/index.html:82
 msgid "Learn More"
 msgstr "Dowiedz się więcej"
 
-#: templates/public.index.html:96
+#: templates/public/index.html:96
 msgid "Items in Our Stock"
 msgstr "Przedmioty w naszym magazynie"
 
-#: templates/public.index.html:106
+#: templates/public/index.html:106
 msgid "Filter by brand:"
 msgstr "Filtruj według marki:"
 
-#: templates/public.index.html:118
+#: templates/public/index.html:118
 msgid "Clear"
 msgstr "Wyczyść"
 
-#: templates/public.index.html:156 templates.public.index.html:194
+#: templates/public/index.html:156 templates/public/index.html:194
 #: templates/public/product_details.html:207
 msgid "incl. VAT"
 msgstr "z VAT"
 
-#: templates/public.index.html:178
+#: templates/public/index.html:178
 msgid "Show More Products"
 msgstr "Pokaż więcej produktów"
 
-#: templates/public.index.html:192
+#: templates/public/index.html:192
 msgid "No description available."
 msgstr "Brak dostępnego opisu."
 
-#: templates/public.privacy.html:5 templates.public.privacy.html:8
-msgid "Privacy Policy for AutogroupEU - how we collect, use, and protect your personal data."
-msgstr "Polityka prywatności AutogroupEU - jak zbieramy, używamy i chronimy Twoje dane osobowe."
+#: templates/public/privacy.html:5 templates/public/privacy.html:8
+msgid ""
+"Privacy Policy for AutogroupEU - how we collect, use, and protect your "
+"personal data."
+msgstr ""
+"Polityka prywatności AutogroupEU - jak zbieramy, używamy i chronimy Twoje"
+" dane osobowe."
 
-#: templates/public.privacy.html:6
+#: templates/public/privacy.html:6
 msgid "privacy policy, data protection, GDPR, personal data, cookies"
 msgstr "polityka prywatności, ochrona danych, RODO, dane osobowe, pliki cookie"
 
-#: templates/public.privacy.html:18
+#: templates/public/privacy.html:18
 msgid "How we collect, use, and protect your personal information"
 msgstr "Jak zbieramy, używamy i chronimy Twoje dane osobowe"
 
-#: templates/public.privacy.html:29 templates.public.terms.html:29
+#: templates/public/privacy.html:29 templates/public/terms.html:29
 msgid "Introduction"
 msgstr "Wprowadzenie"
 
-#: templates/public.privacy.html:34
-msgid "At AutogroupEU, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our website or services."
-msgstr "W AutogroupEU zobowiązujemy się do ochrony Twojej prywatności i zapewnienia bezpieczeństwa Twoich danych osobowych. Niniejsza Polityka Prywatności wyjaśnia, jak zbieramy, używamy i chronimy Twoje dane, gdy korzystasz z naszej strony internetowej lub usług."
+#: templates/public/privacy.html:34
+msgid ""
+"At AutogroupEU, we are committed to protecting your privacy and ensuring "
+"the security of your personal information. This Privacy Policy explains "
+"how we collect, use, and safeguard your data when you use our website or "
+"services."
+msgstr ""
+"W AutogroupEU zobowiązujemy się do ochrony Twojej prywatności i "
+"zapewnienia bezpieczeństwa Twoich danych osobowych. Niniejsza Polityka "
+"Prywatności wyjaśnia, jak zbieramy, używamy i chronimy Twoje dane, gdy "
+"korzystasz z naszej strony internetowej lub usług."
 
-#: templates/public.privacy.html:37
-msgid "By using our website and services, you consent to the practices described in this policy. This policy complies with the General Data Protection Regulation (GDPR) and relevant data protection laws."
-msgstr "Korzystając z naszej strony internetowej i usług, wyrażasz zgodę na praktyki opisane w niniejszej polityce. Polityka ta jest zgodna z Ogólnym Rozporządzeniem o Ochronie Danych (RODO) i odpowiednimi przepisami o ochronie danych."
+#: templates/public/privacy.html:37
+msgid ""
+"By using our website and services, you consent to the practices described"
+" in this policy. This policy complies with the General Data Protection "
+"Regulation (GDPR) and relevant data protection laws."
+msgstr ""
+"Korzystając z naszej strony internetowej i usług, wyrażasz zgodę na "
+"praktyki opisane w niniejszej polityce. Polityka ta jest zgodna z Ogólnym"
+" Rozporządzeniem o Ochronie Danych (RODO) i odpowiednimi przepisami o "
+"ochronie danych."
 
-#: templates/public.privacy.html:40 templates.public.terms.html:37
+#: templates/public/privacy.html:40 templates/public/terms.html:37
 msgid "Last Updated: March 1, 2025"
 msgstr "Ostatnia aktualizacja: 1 marca 2025"
 
-#: templates/public.privacy.html:51
+#: templates/public/privacy.html:51
 msgid "Information We Collect"
 msgstr "Informacje, które zbieramy"
 
-#: templates/public.privacy.html:56
+#: templates/public/privacy.html:56
 msgid "Personal Information:"
 msgstr "Informacje osobiste:"
 
-#: templates/public.privacy.html:56
+#: templates/public/privacy.html:56
 msgid "We collect personal information that you provide directly to us, such as:"
-msgstr "Zbieramy informacje osobiste, które przekazujesz nam bezpośrednio, takie jak:"
+msgstr ""
+"Zbieramy informacje osobiste, które przekazujesz nam bezpośrednio, takie "
+"jak:"
 
-#: templates/public.privacy.html:59
+#: templates/public/privacy.html:59
 msgid "Name, email address, phone number, and postal address"
 msgstr "Imię, adres email, numer telefonu i adres pocztowy"
 
-#: templates/public.privacy.html:60
+#: templates/public/privacy.html:60
 msgid "Account login details, such as username and password"
 msgstr "Szczegóły logowania do konta, takie jak nazwa użytkownika i hasło"
 
-#: templates/public.privacy.html:61
-msgid "Company information, such as business name, VAT number, and registration details"
-msgstr "Informacje o firmie, takie jak nazwa firmy, numer VAT i szczegóły rejestracyjne"
+#: templates/public/privacy.html:61
+msgid ""
+"Company information, such as business name, VAT number, and registration "
+"details"
+msgstr ""
+"Informacje o firmie, takie jak nazwa firmy, numer VAT i szczegóły "
+"rejestracyjne"
 
-#: templates/public.privacy.html:62
+#: templates/public/privacy.html:62
 msgid "Payment information (though we do not store complete credit card details)"
-msgstr "Informacje o płatnościach (choć nie przechowujemy pełnych danych karty kredytowej)"
+msgstr ""
+"Informacje o płatnościach (choć nie przechowujemy pełnych danych karty "
+"kredytowej)"
 
-#: templates/public.privacy.html:63
+#: templates/public/privacy.html:63
 msgid "Order history and preferences"
 msgstr "Historia zamówień i preferencje"
 
-#: templates/public.privacy.html:64
+#: templates/public/privacy.html:64
 msgid "Communication history with our customer service team"
 msgstr "Historia komunikacji z naszym zespołem obsługi klienta"
 
-#: templates/public.privacy.html:68
+#: templates/public/privacy.html:68
 msgid "Automatically Collected Information:"
 msgstr "Informacje zbierane automatycznie:"
 
-#: templates/public.privacy.html:68
-msgid "When you visit our website, we automatically collect certain information about your device and usage, including:"
-msgstr "Gdy odwiedzasz naszą stronę internetową, automatycznie zbieramy pewne informacje o Twoim urządzeniu i użytkowaniu, w tym:"
+#: templates/public/privacy.html:68
+msgid ""
+"When you visit our website, we automatically collect certain information "
+"about your device and usage, including:"
+msgstr ""
+"Gdy odwiedzasz naszą stronę internetową, automatycznie zbieramy pewne "
+"informacje o Twoim urządzeniu i użytkowaniu, w tym:"
 
-#: templates/public.privacy.html:71
+#: templates/public/privacy.html:71
 msgid "IP address and location information"
 msgstr "Adres IP i informacje o lokalizacji"
 
-#: templates/public.privacy.html:72
+#: templates/public/privacy.html:72
 msgid "Browser and device information"
 msgstr "Informacje o przeglądarce i urządzeniu"
 
-#: templates/public.privacy.html:73
+#: templates/public/privacy.html:73
 msgid "Pages visited and time spent on our website"
 msgstr "Odwiedzone strony i czas spędzony na naszej stronie internetowej"
 
-#: templates/public.privacy.html:74
+#: templates/public/privacy.html:74
 msgid "Referring websites or sources"
 msgstr "Strony lub źródła odsyłające"
 
-#: templates/public.privacy.html:75
+#: templates/public/privacy.html:75
 msgid "Cookies and similar tracking technologies"
 msgstr "Pliki cookie i podobne technologie śledzenia"
 
-#: templates/public.privacy.html:86
+#: templates/public/privacy.html:86
 msgid "How We Use Your Information"
 msgstr "Jak używamy Twoich informacji"
 
-#: templates/public.privacy.html:90
+#: templates/public/privacy.html:90
 msgid "We use the information we collect for the following purposes:"
 msgstr "Używamy zebranych informacji do następujących celów:"
 
-#: templates/public.privacy.html:92
-msgid "To provide and maintain our services, including processing orders and managing accounts"
-msgstr "Aby świadczyć i utrzymywać nasze usługi, w tym przetwarzanie zamówień i zarządzanie kontami"
+#: templates/public/privacy.html:92
+msgid ""
+"To provide and maintain our services, including processing orders and "
+"managing accounts"
+msgstr ""
+"Aby świadczyć i utrzymywać nasze usługi, w tym przetwarzanie zamówień i "
+"zarządzanie kontami"
 
-#: templates/public.privacy.html:93
+#: templates/public/privacy.html:93
 msgid "To communicate with you about orders, account status, and customer service"
-msgstr "Aby komunikować się z Tobą w sprawie zamówień, statusu konta i obsługi klienta"
+msgstr ""
+"Aby komunikować się z Tobą w sprawie zamówień, statusu konta i obsługi "
+"klienta"
 
-#: templates/public.privacy.html:94
+#: templates/public/privacy.html:94
 msgid "To improve our website, products, and services"
 msgstr "Aby poprawić naszą stronę internetową, produkty i usługi"
 
-#: templates/public.privacy.html:95
-msgid "To send promotional materials and information about new products (only with your consent)"
-msgstr "Aby wysyłać materiały promocyjne i informacje o nowych produktach (tylko za Twoją zgodą)"
+#: templates/public/privacy.html:95
+msgid ""
+"To send promotional materials and information about new products (only "
+"with your consent)"
+msgstr ""
+"Aby wysyłać materiały promocyjne i informacje o nowych produktach (tylko "
+"za Twoją zgodą)"
 
-#: templates/public.privacy.html:96
+#: templates/public/privacy.html:96
 msgid "To detect and prevent fraudulent activities and security breaches"
 msgstr "Aby wykrywać i zapobiegać oszustwom i naruszeniom bezpieczeństwa"
 
-#: templates/public.privacy.html:97
+#: templates/public/privacy.html:97
 msgid "To comply with legal obligations and enforce our policies"
 msgstr "Aby spełniać obowiązki prawne i egzekwować nasze zasady"
 
-#: templates/public.privacy.html:108
+#: templates/public/privacy.html:108
 msgid "Information Sharing and Disclosure"
 msgstr "Udostępnianie i ujawnianie informacji"
 
-#: templates/public.privacy.html:112
+#: templates/public/privacy.html:112
 msgid "We may share your information with:"
 msgstr "Możemy udostępniać Twoje informacje:"
 
-#: templates/public.privacy.html:114
-msgid "Service providers who help us operate our business (shipping companies, payment processors, etc.)"
-msgstr "Dostawcy usług, którzy pomagają nam prowadzić naszą działalność (firmy kurierskie, przetwarzający płatności itp.)"
+#: templates/public/privacy.html:114
+msgid ""
+"Service providers who help us operate our business (shipping companies, "
+"payment processors, etc.)"
+msgstr ""
+"Dostawcy usług, którzy pomagają nam prowadzić naszą działalność (firmy "
+"kurierskie, przetwarzający płatności itp.)"
 
-#: templates/public.privacy.html:115
-msgid "Professional advisors such as lawyers, accountants, and insurers when necessary"
-msgstr "Doradcy zawodowi, tacy jak prawnicy, księgowi i ubezpieczyciele, gdy jest to konieczne"
+#: templates/public/privacy.html:115
+msgid ""
+"Professional advisors such as lawyers, accountants, and insurers when "
+"necessary"
+msgstr ""
+"Doradcy zawodowi, tacy jak prawnicy, księgowi i ubezpieczyciele, gdy jest"
+" to konieczne"
 
-#: templates/public.privacy.html:116
+#: templates/public/privacy.html:116
 msgid "Government bodies or law enforcement agencies when required by law"
 msgstr "Organy rządowe lub agencje ścigania, gdy jest to wymagane przez prawo"
 
-#: templates/public.privacy.html:117
+#: templates/public/privacy.html:117
 msgid "Business partners with your explicit consent"
 msgstr "Partnerzy biznesowi za Twoją wyraźną zgodą"
 
-#: templates/public.privacy.html:120
-msgid "We do not sell, rent, or trade your personal information to third parties for marketing purposes without your explicit consent."
-msgstr "Nie sprzedajemy, nie wynajmujemy ani nie wymieniamy Twoich danych osobowych z osobami trzecimi w celach marketingowych bez Twojej wyraźnej zgody."
+#: templates/public/privacy.html:120
+msgid ""
+"We do not sell, rent, or trade your personal information to third parties"
+" for marketing purposes without your explicit consent."
+msgstr ""
+"Nie sprzedajemy, nie wynajmujemy ani nie wymieniamy Twoich danych "
+"osobowych z osobami trzecimi w celach marketingowych bez Twojej wyraźnej "
+"zgody."
 
-#: templates/public.privacy.html:131
+#: templates/public/privacy.html:131
 msgid "Cookies and Tracking Technologies"
 msgstr "Pliki cookie i technologie śledzenia"
 
-#: templates/public.privacy.html:136
-msgid "We use cookies and similar tracking technologies to track activity on our website and hold certain information. Cookies are files with small amount of data that may include an anonymous unique identifier."
-msgstr "Używamy plików cookie i podobnych technologii śledzenia, aby śledzić aktywność na naszej stronie internetowej i przechowywać pewne informacje. Pliki cookie to pliki z niewielką ilością danych, które mogą zawierać anonimowy unikalny identyfikator."
+#: templates/public/privacy.html:136
+msgid ""
+"We use cookies and similar tracking technologies to track activity on our"
+" website and hold certain information. Cookies are files with small "
+"amount of data that may include an anonymous unique identifier."
+msgstr ""
+"Używamy plików cookie i podobnych technologii śledzenia, aby śledzić "
+"aktywność na naszej stronie internetowej i przechowywać pewne informacje."
+" Pliki cookie to pliki z niewielką ilością danych, które mogą zawierać "
+"anonimowy unikalny identyfikator."
 
-#: templates/public.privacy.html:139
+#: templates/public/privacy.html:139
 msgid "We use the following types of cookies:"
 msgstr "Używamy następujących rodzajów plików cookie:"
 
-#: templates/public.privacy.html:142
+#: templates/public/privacy.html:142
 msgid "Essential cookies:"
 msgstr "Niezbędne pliki cookie:"
 
-#: templates/public.privacy.html:142
+#: templates/public/privacy.html:142
 msgid "Required for the operation of our website"
 msgstr "Wymagane do działania naszej strony internetowej"
 
-#: templates/public.privacy.html:143
+#: templates/public/privacy.html:143
 msgid "Analytical/performance cookies:"
 msgstr "Analityczne/pliki cookie wydajności:"
 
-#: templates/public.privacy.html:143
+#: templates/public/privacy.html:143
 msgid "Help us improve our website by tracking how visitors use it"
-msgstr "Pomagają nam poprawić naszą stronę internetową, śledząc, jak odwiedzający ją używają"
+msgstr ""
+"Pomagają nam poprawić naszą stronę internetową, śledząc, jak odwiedzający"
+" ją używają"
 
-#: templates/public.privacy.html:144
+#: templates/public/privacy.html:144
 msgid "Functionality cookies:"
 msgstr "Pliki cookie funkcjonalności:"
 
-#: templates/public.privacy.html:144
+#: templates/public/privacy.html:144
 msgid "Allow us to recognize you and remember your preferences"
 msgstr "Pozwalają nam rozpoznać Cię i zapamiętać Twoje preferencje"
 
-#: templates/public.privacy.html:145
+#: templates/public/privacy.html:145
 msgid "Targeting cookies:"
 msgstr "Pliki cookie targetowania:"
 
-#: templates/public.privacy.html:145
+#: templates/public/privacy.html:145
 msgid "Record your visit, the pages you visit, and the links you follow"
 msgstr "Rejestrują Twoją wizytę, odwiedzane strony i śledzone linki"
 
-#: templates/public.privacy.html:148
-msgid "You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you do not accept cookies, you may not be able to use some portions of our service."
-msgstr "Możesz polecić swojej przeglądarce, aby odrzucała wszystkie pliki cookie lub wskazywała, kiedy plik cookie jest wysyłany. Jednakże, jeśli nie zaakceptujesz plików cookie, możesz nie być w stanie korzystać z niektórych części naszej usługi."
+#: templates/public/privacy.html:148
+msgid ""
+"You can instruct your browser to refuse all cookies or to indicate when a"
+" cookie is being sent. However, if you do not accept cookies, you may not"
+" be able to use some portions of our service."
+msgstr ""
+"Możesz polecić swojej przeglądarce, aby odrzucała wszystkie pliki cookie "
+"lub wskazywała, kiedy plik cookie jest wysyłany. Jednakże, jeśli nie "
+"zaakceptujesz plików cookie, możesz nie być w stanie korzystać z "
+"niektórych części naszej usługi."
 
-#: templates/public.privacy.html:159
+#: templates/public/privacy.html:159
 msgid "Data Security"
 msgstr "Bezpieczeństwo danych"
 
-#: templates/public.privacy.html:164
-msgid "The security of your data is important to us. We implement appropriate security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction. These measures include:"
-msgstr "Bezpieczeństwo Twoich danych jest dla nas ważne. Wdrażamy odpowiednie środki bezpieczeństwa, aby chronić Twoje dane osobowe przed nieautoryzowanym dostępem, zmianą, ujawnieniem lub zniszczeniem. Środki te obejmują:"
+#: templates/public/privacy.html:164
+msgid ""
+"The security of your data is important to us. We implement appropriate "
+"security measures to protect your personal information from unauthorized "
+"access, alteration, disclosure, or destruction. These measures include:"
+msgstr ""
+"Bezpieczeństwo Twoich danych jest dla nas ważne. Wdrażamy odpowiednie "
+"środki bezpieczeństwa, aby chronić Twoje dane osobowe przed "
+"nieautoryzowanym dostępem, zmianą, ujawnieniem lub zniszczeniem. Środki "
+"te obejmują:"
 
-#: templates/public.privacy.html:167
+#: templates/public/privacy.html:167
 msgid "Encryption of sensitive data"
 msgstr "Szyfrowanie wrażliwych danych"
 
-#: templates/public.privacy.html:168
+#: templates/public/privacy.html:168
 msgid "Regular security assessments"
 msgstr "Regularne oceny bezpieczeństwa"
 
-#: templates/public.privacy.html:169
+#: templates/public/privacy.html:169
 msgid "Access controls and authentication procedures"
 msgstr "Kontrole dostępu i procedury uwierzytelniania"
 
-#: templates/public.privacy.html:170
+#: templates/public/privacy.html:170
 msgid "Secure network architecture"
 msgstr "Bezpieczna architektura sieci"
 
-#: templates/public.privacy.html:171
+#: templates/public/privacy.html:171
 msgid "Regular backups and data recovery protocols"
 msgstr "Regularne kopie zapasowe i protokoły odzyskiwania danych"
 
-msgid "However, please be aware that no method of transmission over the Internet or electronic storage is 100% secure, and we cannot guarantee absolute security."
-msgstr "Należy jednak pamiętać, że żadna metoda transmisji przez Internet ani elektroniczne przechowywanie danych nie jest w 100% bezpieczna i nie możemy zagwarantować absolutnego bezpieczeństwa."
+#: templates/public/privacy.html:174
+#, python-format
+msgid ""
+"However, please be aware that no method of transmission over the Internet"
+" or electronic storage is 100% secure, and we cannot guarantee absolute "
+"security."
+msgstr ""
+"Należy jednak pamiętać, że żadna metoda transmisji przez Internet ani "
+"elektroniczne przechowywanie danych nie jest w 100% bezpieczna i nie "
+"możemy zagwarantować absolutnego bezpieczeństwa."
 
-#: templates/public.privacy.html:185
+#: templates/public/privacy.html:185
 msgid "Your Data Protection Rights"
 msgstr "Twoje prawa ochrony danych"
 
-#: templates/public.privacy.html:190
-msgid "Under the GDPR and other applicable data protection laws, you have the following rights:"
-msgstr "Zgodnie z RODO i innymi obowiązującymi przepisami o ochronie danych, masz następujące prawa:"
+#: templates/public/privacy.html:190
+msgid ""
+"Under the GDPR and other applicable data protection laws, you have the "
+"following rights:"
+msgstr ""
+"Zgodnie z RODO i innymi obowiązującymi przepisami o ochronie danych, masz"
+" następujące prawa:"
 
-#: templates/public.privacy.html:193
+#: templates/public/privacy.html:193
 msgid "Right to access:"
 msgstr "Prawo dostępu:"
 
-#: templates/public.privacy.html:193
+#: templates/public/privacy.html:193
 msgid "You can request copies of your personal data."
 msgstr "Możesz zażądać kopii swoich danych osobowych."
 
-#: templates/public.privacy.html:194
+#: templates/public/privacy.html:194
 msgid "Right to rectification:"
 msgstr "Prawo do sprostowania:"
 
-#: templates/public.privacy.html:194
-msgid "You can request that we correct inaccurate or complete incomplete information."
-msgstr "Możesz zażądać, abyśmy poprawili nieprawidłowe lub uzupełnili niekompletne informacje."
+#: templates/public/privacy.html:194
+msgid ""
+"You can request that we correct inaccurate or complete incomplete "
+"information."
+msgstr ""
+"Możesz zażądać, abyśmy poprawili nieprawidłowe lub uzupełnili "
+"niekompletne informacje."
 
-#: templates/public.privacy.html:195
+#: templates/public/privacy.html:195
 msgid "Right to erasure:"
 msgstr "Prawo do usunięcia:"
 
-#: templates/public.privacy.html:195
-msgid "You can request that we delete your personal data in certain circumstances."
-msgstr "Możesz zażądać, abyśmy usunęli Twoje dane osobowe w określonych okolicznościach."
+#: templates/public/privacy.html:195
+msgid ""
+"You can request that we delete your personal data in certain "
+"circumstances."
+msgstr ""
+"Możesz zażądać, abyśmy usunęli Twoje dane osobowe w określonych "
+"okolicznościach."
 
-#: templates/public.privacy.html:196
+#: templates/public/privacy.html:196
 msgid "Right to restrict processing:"
 msgstr "Prawo do ograniczenia przetwarzania:"
 
-#: templates/public.privacy.html:196
+#: templates/public/privacy.html:196
 msgid "You can request that we limit how we use your data."
 msgstr "Możesz zażądać, abyśmy ograniczyli sposób, w jaki używamy Twoich danych."
 
-#: templates/public.privacy.html:197
+#: templates/public/privacy.html:197
 msgid "Right to data portability:"
 msgstr "Prawo do przenoszenia danych:"
 
-#: templates/public.privacy.html:197
-msgid "You can request that we transfer your data to another organization or directly to you."
-msgstr "Możesz zażądać, abyśmy przenieśli Twoje dane do innej organizacji lub bezpośrednio do Ciebie."
+#: templates/public/privacy.html:197
+msgid ""
+"You can request that we transfer your data to another organization or "
+"directly to you."
+msgstr ""
+"Możesz zażądać, abyśmy przenieśli Twoje dane do innej organizacji lub "
+"bezpośrednio do Ciebie."
 
-#: templates/public.privacy.html:198
+#: templates/public/privacy.html:198
 msgid "Right to object:"
 msgstr "Prawo do sprzeciwu:"
 
-#: templates/public.privacy.html:198
+#: templates/public/privacy.html:198
 msgid "You can object to our processing of your personal data."
 msgstr "Możesz sprzeciwić się przetwarzaniu przez nas Twoich danych osobowych."
 
-#: templates/public.privacy.html:201
-msgid "To exercise any of these rights, please contact us using the details provided below. We will respond to your request within 30 days."
-msgstr "Aby skorzystać z któregokolwiek z tych praw, prosimy o kontakt z nami, korzystając z poniższych danych. Odpowiemy na Twoje żądanie w ciągu 30 dni."
+#: templates/public/privacy.html:201
+msgid ""
+"To exercise any of these rights, please contact us using the details "
+"provided below. We will respond to your request within 30 days."
+msgstr ""
+"Aby skorzystać z któregokolwiek z tych praw, prosimy o kontakt z nami, "
+"korzystając z poniższych danych. Odpowiemy na Twoje żądanie w ciągu 30 "
+"dni."
 
-#: templates/public.privacy.html:212
+#: templates/public/privacy.html:212
 msgid "Data Retention"
 msgstr "Przechowywanie danych"
 
-#: templates/public.privacy.html:217
-msgid "We will retain your personal information only for as long as necessary to fulfill the purposes for which it was collected, including for satisfying legal, accounting, or reporting requirements."
-msgstr "Będziemy przechowywać Twoje dane osobowe tylko tak długo, jak to konieczne, aby spełnić cele, dla których zostały zebrane, w tym w celu spełnienia wymogów prawnych, księgowych lub sprawozdawczych."
+#: templates/public/privacy.html:217
+msgid ""
+"We will retain your personal information only for as long as necessary to"
+" fulfill the purposes for which it was collected, including for "
+"satisfying legal, accounting, or reporting requirements."
+msgstr ""
+"Będziemy przechowywać Twoje dane osobowe tylko tak długo, jak to "
+"konieczne, aby spełnić cele, dla których zostały zebrane, w tym w celu "
+"spełnienia wymogów prawnych, księgowych lub sprawozdawczych."
 
-#: templates/public.privacy.html:220
-msgid "For business customers, we typically retain account information and order history for up to 7 years to comply with tax and business regulations."
-msgstr "Dla klientów biznesowych zazwyczaj przechowujemy informacje o koncie i historię zamówień przez okres do 7 lat, aby spełnić wymogi podatkowe i biznesowe."
+#: templates/public/privacy.html:220
+msgid ""
+"For business customers, we typically retain account information and order"
+" history for up to 7 years to comply with tax and business regulations."
+msgstr ""
+"Dla klientów biznesowych zazwyczaj przechowujemy informacje o koncie i "
+"historię zamówień przez okres do 7 lat, aby spełnić wymogi podatkowe i "
+"biznesowe."
 
-#: templates/public.privacy.html:223
-msgid "After the retention period, your personal data will be securely deleted or anonymized."
-msgstr "Po okresie przechowywania Twoje dane osobowe zostaną bezpiecznie usunięte lub zanonimizowane."
+#: templates/public/privacy.html:223
+msgid ""
+"After the retention period, your personal data will be securely deleted "
+"or anonymized."
+msgstr ""
+"Po okresie przechowywania Twoje dane osobowe zostaną bezpiecznie usunięte"
+" lub zanonimizowane."
 
-#: templates/public.privacy.html:234
+#: templates/public/privacy.html:234
 msgid "Children's Privacy"
 msgstr "Prywatność dzieci"
 
-#: templates/public.privacy.html:239
-msgid "Our service is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from children. If you are a parent or guardian and believe that your child has provided us with personal information, please contact us so that we can take necessary actions."
-msgstr "Nasza usługa nie jest przeznaczona do użytku przez osoby poniżej 18 roku życia. Nie zbieramy świadomie danych osobowych od dzieci. Jeśli jesteś rodzicem lub opiekunem i uważasz, że Twoje dziecko przekazało nam dane osobowe, prosimy o kontakt, abyśmy mogli podjąć niezbędne działania."
+#: templates/public/privacy.html:239
+msgid ""
+"Our service is not intended for use by individuals under the age of 18. "
+"We do not knowingly collect personal information from children. If you "
+"are a parent or guardian and believe that your child has provided us with"
+" personal information, please contact us so that we can take necessary "
+"actions."
+msgstr ""
+"Nasza usługa nie jest przeznaczona do użytku przez osoby poniżej 18 roku "
+"życia. Nie zbieramy świadomie danych osobowych od dzieci. Jeśli jesteś "
+"rodzicem lub opiekunem i uważasz, że Twoje dziecko przekazało nam dane "
+"osobowe, prosimy o kontakt, abyśmy mogli podjąć niezbędne działania."
 
-#: templates/public.privacy.html:250
+#: templates/public/privacy.html:250
 msgid "Changes to This Privacy Policy"
 msgstr "Zmiany w niniejszej Polityce Prywatności"
 
-#: templates/public.privacy.html:255
-msgid "We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the \"Last Updated\" date."
-msgstr "Możemy od czasu do czasu aktualizować naszą Politykę Prywatności. Powiadomimy Cię o wszelkich zmianach, publikując nową Politykę Prywatności na tej stronie i aktualizując datę \"Ostatnia aktualizacja\"."
+#: templates/public/privacy.html:255
+msgid ""
+"We may update our Privacy Policy from time to time. We will notify you of"
+" any changes by posting the new Privacy Policy on this page and updating "
+"the \"Last Updated\" date."
+msgstr ""
+"Możemy od czasu do czasu aktualizować naszą Politykę Prywatności. "
+"Powiadomimy Cię o wszelkich zmianach, publikując nową Politykę "
+"Prywatności na tej stronie i aktualizując datę \"Ostatnia aktualizacja\"."
 
-#: templates/public.privacy.html:258
-msgid "You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page."
-msgstr "Zalecamy okresowe przeglądanie niniejszej Polityki Prywatności w celu sprawdzenia wszelkich zmian. Zmiany w niniejszej Polityce Prywatności wchodzą w życie w momencie ich opublikowania na tej stronie."
+#: templates/public/privacy.html:258
+msgid ""
+"You are advised to review this Privacy Policy periodically for any "
+"changes. Changes to this Privacy Policy are effective when they are "
+"posted on this page."
+msgstr ""
+"Zalecamy okresowe przeglądanie niniejszej Polityki Prywatności w celu "
+"sprawdzenia wszelkich zmian. Zmiany w niniejszej Polityce Prywatności "
+"wchodzą w życie w momencie ich opublikowania na tej stronie."
 
-#: templates/public.privacy.html:274
-msgid "If you have any questions about this Privacy Policy or our data practices, please contact our Data Protection Officer at:"
-msgstr "Jeśli masz jakiekolwiek pytania dotyczące niniejszej Polityki Prywatności lub naszych praktyk dotyczących danych, prosimy o kontakt z naszym Inspektorem Ochrony Danych pod adresem:"
+#: templates/public/privacy.html:274
+msgid ""
+"If you have any questions about this Privacy Policy or our data "
+"practices, please contact our Data Protection Officer at:"
+msgstr ""
+"Jeśli masz jakiekolwiek pytania dotyczące niniejszej Polityki Prywatności"
+" lub naszych praktyk dotyczących danych, prosimy o kontakt z naszym "
+"Inspektorem Ochrony Danych pod adresem:"
 
-#: templates/public.privacy.html:282
-msgid "You have the right to lodge a complaint with your local data protection authority if you have concerns about how we process your personal data."
-msgstr "Masz prawo złożyć skargę do lokalnego organu ochrony danych, jeśli masz obawy dotyczące sposobu, w jaki przetwarzamy Twoje dane osobowe."
+#: templates/public/privacy.html:282
+msgid ""
+"You have the right to lodge a complaint with your local data protection "
+"authority if you have concerns about how we process your personal data."
+msgstr ""
+"Masz prawo złożyć skargę do lokalnego organu ochrony danych, jeśli masz "
+"obawy dotyczące sposobu, w jaki przetwarzamy Twoje dane osobowe."
 
-#: templates/public.product_details templates.public.product_details.html:6
+#: templates/public/product_details templates/public/product_details.html:6
 #: копія.html:6 –
 msgid "auto parts"
 msgstr "części samochodowe"
 
-#: templates/public.product_details templates.public.product_details.html:6
+#: templates/public/product_details templates/public/product_details.html:6
 #: копія.html:6 –
 msgid "spare parts"
 msgstr "części zamienne"
 
-#: templates/public.product_details templates.public.product_details.html:199
+#: templates/public/product_details templates/public/product_details.html:199
 #: копія.html:140 –
 msgid "Available Prices"
 msgstr "Dostępne ceny"
 
-#: templates/public.product_details templates.public.product_details.html:212
+#: templates/public/product_details templates/public/product_details.html:212
 #: копія.html:152 –
 msgid "Availability"
 msgstr "Dostępność"
 
-#: templates/public.product_details templates.public.product_details.html:228
+#: templates/public/product_details templates/public/product_details.html:228
 #: копія.html:168 –
 msgid "Qty"
 msgstr "Ilość"
 
-#: templates/public.product_details templates.public.product_details.html:263
+#: templates/public/cart/cart.html:277 templates/public/product_details
+#: templates/public/product_details.html:250 копія.html:190 –
+msgid "Continue Shopping"
+msgstr "Wróć do zakupów"
+
+#: templates/public/product_details templates/public/product_details.html:263
 #: копія.html:203 –
 msgid "Description"
 msgstr "Opis"
 
-#: templates/public.returns.html:5 templates.public.returns.html:8
+#: templates/public/returns.html:5 templates/public/returns.html:8
 msgid "Learn about AutogroupEU's returns and exchanges policy for auto parts."
-msgstr "Dowiedz się o polityce zwrotów i wymian AutogroupEU dotyczącej części samochodowych."
+msgstr ""
+"Dowiedz się o polityce zwrotów i wymian AutogroupEU dotyczącej części "
+"samochodowych."
 
-#: templates/public.returns.html:6
+#: templates/public/returns.html:6
 msgid "returns policy, auto parts return, exchange policy, EU consumer rights"
-msgstr "polityka zwrotów, zwrot części samochodowych, polityka wymian, prawa konsumentów w UE"
+msgstr ""
+"polityka zwrotów, zwrot części samochodowych, polityka wymian, prawa "
+"konsumentów w UE"
 
-#: templates/public.returns.html:7 templates.public.returns.html:12
-#: templates/public.returns.html:17
+#: templates/public/returns.html:7 templates/public/returns.html:12
+#: templates/public/returns.html:17
 msgid "Returns & Exchanges"
 msgstr "Zwroty i wymiany"
 
-#: templates/public.returns.html:28
+#: templates/public/returns.html:28
 msgid "Returns Policy"
 msgstr "Polityka zwrotów"
 
-#: templates/public.returns.html:33
+#: templates/public/returns.html:33
 msgid "Right of Withdrawal"
 msgstr "Prawo odstąpienia"
 
-#: templates/public.returns.html:34
-msgid "In accordance with EU regulations, consumers have the right to withdraw from the purchase contract without giving any reason within 14 days from the day of receiving the goods. To exercise this right, you must inform us of your decision through an unequivocal statement (e.g., email or letter)."
-msgstr "Zgodnie z przepisami UE, konsumenci mają prawo odstąpić od umowy zakupu bez podania przyczyny w ciągu 14 dni od dnia otrzymania towaru. Aby skorzystać z tego prawa, musisz poinformować nas o swojej decyzji poprzez jednoznaczne oświadczenie (np. e-mail lub list)."
+#: templates/public/returns.html:34
+msgid ""
+"In accordance with EU regulations, consumers have the right to withdraw "
+"from the purchase contract without giving any reason within 14 days from "
+"the day of receiving the goods. To exercise this right, you must inform "
+"us of your decision through an unequivocal statement (e.g., email or "
+"letter)."
+msgstr ""
+"Zgodnie z przepisami UE, konsumenci mają prawo odstąpić od umowy zakupu "
+"bez podania przyczyny w ciągu 14 dni od dnia otrzymania towaru. Aby "
+"skorzystać z tego prawa, musisz poinformować nas o swojej decyzji poprzez"
+" jednoznaczne oświadczenie (np. e-mail lub list)."
 
-#: templates/public.returns.html:37
+#: templates/public/returns.html:37
 msgid "Stock Items vs. Special Order Items"
 msgstr "Przedmioty magazynowe vs. przedmioty na specjalne zamówienie"
 
-#: templates/public.returns.html:38
-msgid "Parts that we ship from our warehouse are subject to all standard return conditions. However, electronic components and parts ordered specially for a customer are non-returnable unless there is a factory defect confirmed by our technical specialists."
-msgstr "Części, które wysyłamy z naszego magazynu, podlegają wszystkim standardowym warunkom zwrotu. Jednakże, komponenty elektroniczne i części zamówione specjalnie dla klienta nie podlegają zwrotowi, chyba że występuje wada fabryczna potwierdzona przez naszych specjalistów technicznych."
+#: templates/public/returns.html:38
+msgid ""
+"Parts that we ship from our warehouse are subject to all standard return "
+"conditions. However, electronic components and parts ordered specially "
+"for a customer are non-returnable unless there is a factory defect "
+"confirmed by our technical specialists."
+msgstr ""
+"Części, które wysyłamy z naszego magazynu, podlegają wszystkim "
+"standardowym warunkom zwrotu. Jednakże, komponenty elektroniczne i części"
+" zamówione specjalnie dla klienta nie podlegają zwrotowi, chyba że "
+"występuje wada fabryczna potwierdzona przez naszych specjalistów "
+"technicznych."
 
-#: templates/public.returns.html:39
-msgid "If you're unsure whether a part fits your vehicle, we strongly recommend providing your vehicle's VIN code before ordering so our specialists can verify compatibility. This helps avoid unnecessary returns and ensures you receive the correct part the first time."
-msgstr "Jeśli nie jesteś pewien, czy część pasuje do Twojego pojazdu, zdecydowanie zalecamy podanie kodu VIN pojazdu przed zamówieniem, aby nasi specjaliści mogli zweryfikować zgodność. To pomaga uniknąć niepotrzebnych zwrotów i zapewnia, że otrzymasz odpowiednią część za pierwszym razem."
+#: templates/public/returns.html:39
+msgid ""
+"If you're unsure whether a part fits your vehicle, we strongly recommend "
+"providing your vehicle's VIN code before ordering so our specialists can "
+"verify compatibility. This helps avoid unnecessary returns and ensures "
+"you receive the correct part the first time."
+msgstr ""
+"Jeśli nie jesteś pewien, czy część pasuje do Twojego pojazdu, "
+"zdecydowanie zalecamy podanie kodu VIN pojazdu przed zamówieniem, aby "
+"nasi specjaliści mogli zweryfikować zgodność. To pomaga uniknąć "
+"niepotrzebnych zwrotów i zapewnia, że otrzymasz odpowiednią część za "
+"pierwszym razem."
 
-#: templates/public.returns.html:42
+#: templates/public/returns.html:42
 msgid "Return Conditions"
 msgstr "Warunki zwrotu"
 
-#: templates/public.returns.html:43
+#: templates/public/returns.html:43
 msgid "To be eligible for a return, your item must be:"
 msgstr "Aby kwalifikować się do zwrotu, Twój przedmiot musi być:"
 
-#: templates/public.returns.html:45
+#: templates/public/returns.html:45
 msgid "In the same original packaging it was shipped in"
 msgstr "W tym samym oryginalnym opakowaniu, w którym został wysłany"
 
-#: templates/public.returns.html:46
+#: templates/public/returns.html:46
 msgid "Without any traces of installation or use"
 msgstr "Bez śladów instalacji lub użycia"
 
-#: templates/public.returns.html:47
+#: templates/public/returns.html:47
 msgid "In the same clean condition as you received it"
 msgstr "W tym samym czystym stanie, w jakim go otrzymałeś"
 
-#: templates/public.returns.html:48
-msgid "Complete with all accessories, manuals, and documentation included in the original package"
-msgstr "Kompletny ze wszystkimi akcesoriami, instrukcjami i dokumentacją zawartą w oryginalnym opakowaniu"
+#: templates/public/returns.html:48
+msgid ""
+"Complete with all accessories, manuals, and documentation included in the"
+" original package"
+msgstr ""
+"Kompletny ze wszystkimi akcesoriami, instrukcjami i dokumentacją zawartą "
+"w oryginalnym opakowaniu"
 
-#: templates/public.returns.html:52
+#: templates/public/returns.html:52
 msgid "Refunds"
 msgstr "Zwroty pieniędzy"
 
-#: templates/public.returns.html:53
-msgid "Once your returned item is received and inspected, we will process your refund. Refunds will be processed to the original payment method used for the purchase. Please allow 5-10 business days for the refund to appear in your account after we've processed it."
-msgstr "Po otrzymaniu i sprawdzeniu zwróconego przedmiotu, przetworzymy Twój zwrot pieniędzy. Zwroty będą przetwarzane na oryginalną metodę płatności używaną do zakupu. Proszę pozwolić 5-10 dni roboczych na pojawienie się zwrotu na Twoim koncie po jego przetworzeniu."
+#: templates/public/returns.html:53
+msgid ""
+"Once your returned item is received and inspected, we will process your "
+"refund. Refunds will be processed to the original payment method used for"
+" the purchase. Please allow 5-10 business days for the refund to appear "
+"in your account after we've processed it."
+msgstr ""
+"Po otrzymaniu i sprawdzeniu zwróconego przedmiotu, przetworzymy Twój "
+"zwrot pieniędzy. Zwroty będą przetwarzane na oryginalną metodę płatności "
+"używaną do zakupu. Proszę pozwolić 5-10 dni roboczych na pojawienie się "
+"zwrotu na Twoim koncie po jego przetworzeniu."
 
-#: templates/public.returns.html:56
+#: templates/public/returns.html:56
 msgid "Shipping Costs"
 msgstr "Koszty wysyłki"
 
-#: templates/public.returns.html:57
-msgid "The customer is responsible for all return shipping costs unless the return is due to our error (you received an incorrect or defective item). We recommend using a trackable shipping service and purchasing shipping insurance for items of value."
-msgstr "Klient ponosi odpowiedzialność za wszystkie koszty wysyłki zwrotnej, chyba że zwrot jest spowodowany naszym błędem (otrzymałeś nieprawidłowy lub wadliwy przedmiot). Zalecamy korzystanie z usługi wysyłki z możliwością śledzenia i zakupienie ubezpieczenia wysyłki dla wartościowych przedmiotów."
+#: templates/public/returns.html:57
+msgid ""
+"The customer is responsible for all return shipping costs unless the "
+"return is due to our error (you received an incorrect or defective item)."
+" We recommend using a trackable shipping service and purchasing shipping "
+"insurance for items of value."
+msgstr ""
+"Klient ponosi odpowiedzialność za wszystkie koszty wysyłki zwrotnej, "
+"chyba że zwrot jest spowodowany naszym błędem (otrzymałeś nieprawidłowy "
+"lub wadliwy przedmiot). Zalecamy korzystanie z usługi wysyłki z "
+"możliwością śledzenia i zakupienie ubezpieczenia wysyłki dla "
+"wartościowych przedmiotów."
 
-#: templates/public.returns.html:60
+#: templates/public/returns.html:60
 msgid "Liability"
 msgstr "Odpowiedzialność"
 
-#: templates/public.returns.html:61
-msgid "After shipping parts to the customer, we are not responsible for their integrity and safety. From the moment of shipment, responsibility for their integrity and safety is transferred to the shipping carrier and ultimately to the customer upon delivery."
-msgstr "Po wysłaniu części do klienta, nie ponosimy odpowiedzialności za ich integralność i bezpieczeństwo. Od momentu wysyłki, odpowiedzialność za ich integralność i bezpieczeństwo przechodzi na przewoźnika i ostatecznie na klienta po dostarczeniu."
+#: templates/public/returns.html:61
+msgid ""
+"After shipping parts to the customer, we are not responsible for their "
+"integrity and safety. From the moment of shipment, responsibility for "
+"their integrity and safety is transferred to the shipping carrier and "
+"ultimately to the customer upon delivery."
+msgstr ""
+"Po wysłaniu części do klienta, nie ponosimy odpowiedzialności za ich "
+"integralność i bezpieczeństwo. Od momentu wysyłki, odpowiedzialność za "
+"ich integralność i bezpieczeństwo przechodzi na przewoźnika i ostatecznie"
+" na klienta po dostarczeniu."
 
-#: templates/public.returns.html:65
+#: templates/public/returns.html:65
 msgid "Return Address"
 msgstr "Adres zwrotu"
 
-#: templates/public.returns.html:66
+#: templates/public/returns.html:66
 msgid "Office Address"
 msgstr "Adres biura"
 
-#: templates/public.returns.html:68
+#: templates/public/returns.html:68
 msgid "You can always pick up your parts in person by prior arrangement."
 msgstr "Zawsze możesz odebrać swoje części osobiście po wcześniejszym uzgodnieniu."
 
-#: templates/public.returns.html:79
+#: templates/public/returns.html:79
 msgid "Return Process"
 msgstr "Proces zwrotu"
 
-#: templates/public.returns.html:84
-msgid "Contact our customer service team at info@autogroup.sk to notify us about your return request within 14 days of receiving your order."
-msgstr "Skontaktuj się z naszym zespołem obsługi klienta pod adresem info@autogroup.sk, aby powiadomić nas o swoim żądaniu zwrotu w ciągu 14 dni od otrzymania zamówienia."
+#: templates/public/returns.html:84
+msgid ""
+"Contact our customer service team at info@autogroup.sk to notify us about"
+" your return request within 14 days of receiving your order."
+msgstr ""
+"Skontaktuj się z naszym zespołem obsługi klienta pod adresem "
+"info@autogroup.sk, aby powiadomić nas o swoim żądaniu zwrotu w ciągu 14 "
+"dni od otrzymania zamówienia."
 
-#: templates/public.returns.html:85
-msgid "Include your order number, the item(s) you wish to return, and the reason for return."
-msgstr "Podaj numer zamówienia, przedmiot(y), które chcesz zwrócić, oraz powód zwrotu."
+#: templates/public/returns.html:85
+msgid ""
+"Include your order number, the item(s) you wish to return, and the reason"
+" for return."
+msgstr ""
+"Podaj numer zamówienia, przedmiot(y), które chcesz zwrócić, oraz powód "
+"zwrotu."
 
-#: templates/public.returns.html:86
-msgid "Our team will review your request and provide you with return instructions and a return authorization if applicable."
-msgstr "Nasz zespół przeanalizuje Twoje żądanie i dostarczy Ci instrukcje dotyczące zwrotu oraz autoryzację zwrotu, jeśli dotyczy."
+#: templates/public/returns.html:86
+msgid ""
+"Our team will review your request and provide you with return "
+"instructions and a return authorization if applicable."
+msgstr ""
+"Nasz zespół przeanalizuje Twoje żądanie i dostarczy Ci instrukcje "
+"dotyczące zwrotu oraz autoryzację zwrotu, jeśli dotyczy."
 
-#: templates/public.returns.html:87
-msgid "Package the item carefully in its original packaging with all included accessories."
-msgstr "Ostrożnie zapakuj przedmiot w jego oryginalne opakowanie ze wszystkimi dołączonymi akcesoriami."
+#: templates/public/returns.html:87
+msgid ""
+"Package the item carefully in its original packaging with all included "
+"accessories."
+msgstr ""
+"Ostrożnie zapakuj przedmiot w jego oryginalne opakowanie ze wszystkimi "
+"dołączonymi akcesoriami."
 
-#: templates/public.returns.html:88
-msgid "Ship the package to the provided return address using a trackable shipping method."
-msgstr "Wyślij paczkę na podany adres zwrotu, korzystając z metody wysyłki z możliwością śledzenia."
+#: templates/public/returns.html:88
+msgid ""
+"Ship the package to the provided return address using a trackable "
+"shipping method."
+msgstr ""
+"Wyślij paczkę na podany adres zwrotu, korzystając z metody wysyłki z "
+"możliwością śledzenia."
 
-#: templates/public.returns.html:89
-msgid "Once we receive and inspect the returned item, we will process your refund within 14 days."
-msgstr "Po otrzymaniu i sprawdzeniu zwróconego przedmiotu, przetworzymy Twój zwrot pieniędzy w ciągu 14 dni."
+#: templates/public/returns.html:89
+msgid ""
+"Once we receive and inspect the returned item, we will process your "
+"refund within 14 days."
+msgstr ""
+"Po otrzymaniu i sprawdzeniu zwróconego przedmiotu, przetworzymy Twój "
+"zwrot pieniędzy w ciągu 14 dni."
 
-#: templates/public.returns.html:100
+#: templates/public/returns.html:100
 msgid "Exceptions to Return Policy"
 msgstr "Wyjątki od polityki zwrotów"
 
-#: templates/public.returns.html:104
+#: templates/public/returns.html:104
 msgid "The following items cannot be returned unless they are defective:"
 msgstr "Następujące przedmioty nie mogą być zwrócone, chyba że są wadliwe:"
 
-#: templates/public.returns.html:106
+#: templates/public/returns.html:106
 msgid "Electronic components (ECUs, sensors, modules, etc.)"
 msgstr "Komponenty elektroniczne (ECU, czujniki, moduły itp.)"
 
-#: templates/public.returns.html:107
+#: templates/public/returns.html:107
 msgid "Items marked as \"Special Order\" at the time of purchase"
 msgstr "Przedmioty oznaczone jako \"Specjalne zamówienie\" w momencie zakupu"
 
-#: templates/public.returns.html:108
+#: templates/public/returns.html:108
 msgid "Custom-ordered or specially manufactured parts"
 msgstr "Części zamówione na zamówienie lub specjalnie wyprodukowane"
 
-#: templates/public.returns.html:109
+#: templates/public/returns.html:109
 msgid "Parts that have been installed or show signs of installation attempt"
 msgstr "Części, które zostały zainstalowane lub wykazują ślady próby instalacji"
 
-#: templates/public.returns.html:110
+#: templates/public/returns.html:110
 msgid "Parts with removed or damaged labels, packaging, or identification marks"
-msgstr "Części z usuniętymi lub uszkodzonymi etykietami, opakowaniami lub znakami identyfikacyjnymi"
+msgstr ""
+"Części z usuniętymi lub uszkodzonymi etykietami, opakowaniami lub znakami"
+" identyfikacyjnymi"
 
-#: templates/public.returns.html:114
-msgid "For specific questions about returning a particular item, please contact our customer service team before initiating a return."
-msgstr "W przypadku szczegółowych pytań dotyczących zwrotu konkretnego przedmiotu, prosimy o kontakt z naszym zespołem obsługi klienta przed rozpoczęciem zwrotu."
+#: templates/public/returns.html:114
+msgid ""
+"For specific questions about returning a particular item, please contact "
+"our customer service team before initiating a return."
+msgstr ""
+"W przypadku szczegółowych pytań dotyczących zwrotu konkretnego "
+"przedmiotu, prosimy o kontakt z naszym zespołem obsługi klienta przed "
+"rozpoczęciem zwrotu."
 
-#: templates/public.returns.html:129
+#: templates/public/returns.html:129
 msgid "If you have any questions about our return policy, please contact us:"
-msgstr "Jeśli masz jakiekolwiek pytania dotyczące naszej polityki zwrotów, prosimy o kontakt:"
+msgstr ""
+"Jeśli masz jakiekolwiek pytania dotyczące naszej polityki zwrotów, "
+"prosimy o kontakt:"
 
-#: templates/public/cart/cart.html:138 templates.public.returns.html:132
-#: templates/public.user.profile.html:65 templates.public.user.profile.html:119
-#: templates/public.user.profile.html:164
+#: templates/public/cart/cart.html:138 templates/public/returns.html:132
+#: templates/public/user/profile.html:65 templates/public/user/profile.html:119
+#: templates/public/user/profile.html:164
 msgid "Phone"
 msgstr "Telefon"
 
-#: templates/public.shipping_payment.html:5
-#: templates/public.shipping_payment.html:8
+#: templates/public/shipping_payment.html:5
+#: templates/public/shipping_payment.html:8
 msgid "Information about shipping methods and payment options at AutogroupEU."
 msgstr "Informacje o metodach wysyłki i opcjach płatności w AutogroupEU."
 
-#: templates/public.shipping_payment.html:6
+#: templates/public/shipping_payment.html:6
 msgid "shipping, delivery, payment, payment options, bank transfer, GLS delivery"
 msgstr "wysyłka, dostawa, płatność, opcje płatności, przelew bankowy, dostawa GLS"
 
-#: templates/public.shipping_payment.html:18
+#: templates/public/shipping_payment.html:18
 msgid "Information about delivery and payment options"
 msgstr "Informacje o opcjach dostawy i płatności"
 
-#: templates/public.shipping_payment.html:34
-msgid "We ship all products from our warehouse within one business day after receiving your order and payment. For products that need to be ordered, we will contact you to discuss delivery details before you make a payment."
-msgstr "Wysyłamy wszystkie produkty z naszego magazynu w ciągu jednego dnia roboczego po otrzymaniu zamówienia i płatności. W przypadku produktów, które muszą być zamówione, skontaktujemy się z Tobą, aby omówić szczegóły dostawy przed dokonaniem płatności."
+#: templates/public/cart/cart.html:81 templates/public/shipping_payment.html:29
+msgid "Delivery Information"
+msgstr "Informacje o dostawie"
 
-#: templates/public.shipping_payment.html:37
+#: templates/public/shipping_payment.html:34
+msgid ""
+"We ship all products from our warehouse within one business day after "
+"receiving your order and payment. For products that need to be ordered, "
+"we will contact you to discuss delivery details before you make a "
+"payment."
+msgstr ""
+"Wysyłamy wszystkie produkty z naszego magazynu w ciągu jednego dnia "
+"roboczego po otrzymaniu zamówienia i płatności. W przypadku produktów, "
+"które muszą być zamówione, skontaktujemy się z Tobą, aby omówić szczegóły"
+" dostawy przed dokonaniem płatności."
+
+#: templates/public/shipping_payment.html:37
 msgid "Delivery Methods"
 msgstr "Metody dostawy"
 
-#: templates/public.shipping_payment.html:42
+#: templates/public/shipping_payment.html:42
 msgid "Standard Shipping"
 msgstr "Standardowa wysyłka"
 
-#: templates/public.shipping_payment.html:45
-#: templates/public.shipping_payment.html:56
+#: templates/public/shipping_payment.html:45
+#: templates/public/shipping_payment.html:56
 msgid "Delivery time:"
 msgstr "Czas dostawy:"
 
-#: templates/public.shipping_payment.html:45
-#: templates/public.shipping_payment.html:56
+#: templates/public/shipping_payment.html:45
+#: templates/public/shipping_payment.html:56
 msgid "business days"
 msgstr "dni robocze"
 
-#: templates/public.shipping_payment.html:46
-#: templates/public.shipping_payment.html:57
-#: templates/public.shipping_payment.html:69
+#: templates/public/shipping_payment.html:46
+#: templates/public/shipping_payment.html:57
+#: templates/public/shipping_payment.html:69
 msgid "Cost:"
 msgstr "Koszt:"
 
-#: templates/public.shipping_payment.html:46
-#: templates/public.shipping_payment.html:57
+#: templates/public/shipping_payment.html:46
+#: templates/public/shipping_payment.html:57
 msgid "Starting from"
 msgstr "Zaczynając od"
 
-#: templates/public.shipping_payment.html:53
+#: templates/public/shipping_payment.html:53
 msgid "Express Shipping"
 msgstr "Ekspresowa wysyłka"
 
-#: templates/public.shipping_payment.html:58
+#: templates/public/shipping_payment.html:58
 msgid "Available for most locations in Europe. Contact us for specific pricing."
-msgstr "Dostępne dla większości lokalizacji w Europie. Skontaktuj się z nami w celu uzyskania szczegółowych cen."
+msgstr ""
+"Dostępne dla większości lokalizacji w Europie. Skontaktuj się z nami w "
+"celu uzyskania szczegółowych cen."
 
-#: templates/public.shipping_payment.html:65
+#: templates/public/shipping_payment.html:65
 msgid "Pickup from Warehouse"
 msgstr "Odbiór z magazynu"
 
-#: templates/public.shipping_payment.html:68
+#: templates/public/shipping_payment.html:68
 msgid "Location:"
 msgstr "Lokalizacja:"
 
-#: templates/public.shipping_payment.html:68
-#: templates/public.user.profile.html:176
+#: templates/public/shipping_payment.html:68
+#: templates/public/user/profile.html:176
 msgid "Slovakia"
 msgstr "Słowacja"
 
-#: templates/public.shipping_payment.html:69
+#: templates/public/shipping_payment.html:69
 msgid "Free"
 msgstr "Darmowy"
 
-#: templates/public.shipping_payment.html:70
+#: templates/public/shipping_payment.html:70
 msgid "Please call us in advance to arrange pickup."
 msgstr "Proszę zadzwoń do nas wcześniej, aby umówić się na odbiór."
 
-#: templates/public.shipping_payment.html:78
+#: templates/public/shipping_payment.html:78
 msgid "GLS International Delivery"
 msgstr "Międzynarodowa dostawa GLS"
 
-#: templates/public.shipping_payment.html:81
-msgid "Our main international shipping partner is GLS, offering reliable delivery service across Europe."
-msgstr "Naszym głównym międzynarodowym partnerem wysyłkowym jest GLS, oferujący niezawodną usługę dostawy w całej Europie."
+#: templates/public/shipping_payment.html:81
+msgid ""
+"Our main international shipping partner is GLS, offering reliable "
+"delivery service across Europe."
+msgstr ""
+"Naszym głównym międzynarodowym partnerem wysyłkowym jest GLS, oferujący "
+"niezawodną usługę dostawy w całej Europie."
 
-#: templates/public.shipping_payment.html:84
+#: templates/public/shipping_payment.html:84
 msgid "Delivery Zones & Estimated Times"
 msgstr "Strefy dostawy i szacowane czasy"
 
-#: templates/public.shipping_payment.html:89
+#: templates/public/shipping_payment.html:89
 msgid "Eurozone"
 msgstr "Strefa euro"
 
-#: templates/public.shipping_payment.html:90
+#: templates/public/shipping_payment.html:90
 msgid "Countries"
 msgstr "Kraje"
 
-#: templates/public.shipping_payment.html:91
+#: templates/public/shipping_payment.html:91
 msgid "Delivery Time"
 msgstr "Czas dostawy"
 
-#: templates/public.shipping_payment.html:118
-msgid "Note: Delivery times are indicative and depend on the pickup time by the courier."
-msgstr "Uwaga: Czas dostawy jest orientacyjny i zależy od czasu odbioru przez kuriera."
+#: templates/public/shipping_payment.html:118
+msgid ""
+"Note: Delivery times are indicative and depend on the pickup time by the "
+"courier."
+msgstr ""
+"Uwaga: Czas dostawy jest orientacyjny i zależy od czasu odbioru przez "
+"kuriera."
 
-#: templates/public.shipping_payment.html:121
+#: templates/public/shipping_payment.html:121
 msgid "Excluded from EU deliveries:"
 msgstr "Wyłączone z dostaw w UE:"
 
-#: templates/public.shipping_payment.html:121
-msgid "Andorra, Büsingen am Hochrhein, Ceuta, Gibraltar, Great Britain, Greece, Livigno, Malta, Melilla, Monaco, Norway, San Marino, Switzerland and all European islands (except for the German Islands)."
-msgstr "Andora, Büsingen am Hochrhein, Ceuta, Gibraltar, Wielka Brytania, Grecja, Livigno, Malta, Melilla, Monako, Norwegia, San Marino, Szwajcaria i wszystkie wyspy europejskie (z wyjątkiem wysp niemieckich)."
+#: templates/public/shipping_payment.html:121
+msgid ""
+"Andorra, Büsingen am Hochrhein, Ceuta, Gibraltar, Great Britain, Greece, "
+"Livigno, Malta, Melilla, Monaco, Norway, San Marino, Switzerland and all "
+"European islands (except for the German Islands)."
+msgstr ""
+"Andora, Büsingen am Hochrhein, Ceuta, Gibraltar, Wielka Brytania, Grecja,"
+" Livigno, Malta, Melilla, Monako, Norwegia, San Marino, Szwajcaria i "
+"wszystkie wyspy europejskie (z wyjątkiem wysp niemieckich)."
 
-#: templates/public.shipping_payment.html:125
+#: templates/public/shipping_payment.html:125
 msgid "International Shipping Rates"
 msgstr "Międzynarodowe stawki wysyłki"
 
-#: templates/public.shipping_payment.html:130
+#: templates/public/shipping_payment.html:130
 msgid "Parcel Size"
 msgstr "Rozmiar paczki"
 
-#: templates/public.shipping_payment.html:178
+#: templates/public/shipping_payment.html:178
 msgid "Delivery within Slovakia"
 msgstr "Dostawa na terenie Słowacji"
 
-#: templates/public.shipping_payment.html:183
+#: templates/public/shipping_payment.html:183
 msgid "Dimension"
 msgstr "Wymiary"
 
-#: templates/public.shipping_payment.html:184
+#: templates/public/shipping_payment.html:184
 msgid "The longest + the shortest edge max."
 msgstr "Najdłuższa + najkrótsza krawędź max."
 
-#: templates/public.shipping_payment.html:219
+#: templates/public/shipping_payment.html:219
 msgid "A parcel can weigh up to 31,5 kg."
 msgstr "Paczka może ważyć do 31,5 kg."
 
-#: templates/public.shipping_payment.html:226
-msgid "For urgent deliveries or special shipping requests, please contact us directly."
-msgstr "W przypadku pilnych dostaw lub specjalnych próśb dotyczących wysyłki, prosimy o bezpośredni kontakt."
+#: templates/public/shipping_payment.html:226
+msgid ""
+"For urgent deliveries or special shipping requests, please contact us "
+"directly."
+msgstr ""
+"W przypadku pilnych dostaw lub specjalnych próśb dotyczących wysyłki, "
+"prosimy o bezpośredni kontakt."
 
-#: templates/public.shipping_payment.html:237
+#: templates/public/shipping_payment.html:237
 msgid "Payment Methods"
 msgstr "Metody płatności"
 
-#: templates/public.shipping_payment.html:242
-msgid "We accept payments via bank transfer to our account. When making a payment, please include your order number in the payment description."
-msgstr "Akceptujemy płatności przelewem bankowym na nasze konto. Przy dokonywaniu płatności prosimy o podanie numeru zamówienia w opisie płatności."
+#: templates/public/shipping_payment.html:242
+msgid ""
+"We accept payments via bank transfer to our account. When making a "
+"payment, please include your order number in the payment description."
+msgstr ""
+"Akceptujemy płatności przelewem bankowym na nasze konto. Przy dokonywaniu"
+" płatności prosimy o podanie numeru zamówienia w opisie płatności."
 
-#: templates/public.shipping_payment.html:246
+#: templates/public/shipping_payment.html:246
 msgid "Bank Account Details"
 msgstr "Dane konta bankowego"
 
-#: templates/public.shipping_payment.html:265
+#: templates/public/shipping_payment.html:265
 msgid "Important: Always include your order number in the payment description."
 msgstr "Ważne: Zawsze podawaj numer zamówienia w opisie płatności."
 
-#: templates/public.orders.confirmation.html:104
-#: templates/public.shipping_payment.html:269
+#: templates/public/orders/confirmation.html:104
+#: templates/public/shipping_payment.html:269
 msgid "Order Processing"
 msgstr "Przetwarzanie zamówienia"
 
-#: templates/public.shipping_payment.html:271
-msgid "For items in stock, we will process and ship your order within one business day after receiving payment. For items that need to be ordered from our suppliers, we will contact you to discuss delivery times and payment details before processing."
-msgstr "W przypadku przedmiotów dostępnych w magazynie, przetworzymy i wyślemy Twoje zamówienie w ciągu jednego dnia roboczego po otrzymaniu płatności. W przypadku przedmiotów, które muszą być zamówione od naszych dostawców, skontaktujemy się z Tobą, aby omówić czasy dostawy i szczegóły płatności przed przetworzeniem."
+#: templates/public/shipping_payment.html:271
+msgid ""
+"For items in stock, we will process and ship your order within one "
+"business day after receiving payment. For items that need to be ordered "
+"from our suppliers, we will contact you to discuss delivery times and "
+"payment details before processing."
+msgstr ""
+"W przypadku przedmiotów dostępnych w magazynie, przetworzymy i wyślemy "
+"Twoje zamówienie w ciągu jednego dnia roboczego po otrzymaniu płatności. "
+"W przypadku przedmiotów, które muszą być zamówione od naszych dostawców, "
+"skontaktujemy się z Tobą, aby omówić czasy dostawy i szczegóły płatności "
+"przed przetworzeniem."
 
-#: templates/public.shipping_payment.html:276
-msgid "If you have any questions about payment or need additional information, please contact our customer service."
-msgstr "Jeśli masz jakiekolwiek pytania dotyczące płatności lub potrzebujesz dodatkowych informacji, prosimy o kontakt z naszym działem obsługi klienta."
+#: templates/public/shipping_payment.html:276
+msgid ""
+"If you have any questions about payment or need additional information, "
+"please contact our customer service."
+msgstr ""
+"Jeśli masz jakiekolwiek pytania dotyczące płatności lub potrzebujesz "
+"dodatkowych informacji, prosimy o kontakt z naszym działem obsługi "
+"klienta."
 
-#: templates/public.shipping_payment.html:287
+#: templates/public/shipping_payment.html:287
 msgid "VAT Information"
 msgstr "Informacje o VAT"
 
-#: templates/public.shipping_payment.html:292
+#: templates/public/shipping_payment.html:292
 msgid "All prices on our website include VAT"
 msgstr "Wszystkie ceny na naszej stronie internetowej zawierają VAT"
 
-#: templates/public.shipping_payment.html:293
-msgid "All prices shown on our website include VAT (Value Added Tax) at the applicable rate."
-msgstr "Wszystkie ceny pokazane na naszej stronie internetowej zawierają VAT (podatek od wartości dodanej) według obowiązującej stawki."
+#: templates/public/shipping_payment.html:293
+msgid ""
+"All prices shown on our website include VAT (Value Added Tax) at the "
+"applicable rate."
+msgstr ""
+"Wszystkie ceny pokazane na naszej stronie internetowej zawierają VAT "
+"(podatek od wartości dodanej) według obowiązującej stawki."
 
-#: templates/public.shipping_payment.html:297
+#: templates/public/shipping_payment.html:297
 msgid "VAT policies by customer type:"
 msgstr "Polityki VAT według typu klienta:"
 
-#: templates/public.shipping_payment.html:300
+#: templates/public/shipping_payment.html:300
 msgid "Slovak customers:"
 msgstr "Klienci słowaccy:"
 
-#: templates/public.shipping_payment.html:301
+#: templates/public/shipping_payment.html:301
 #, python-format
 msgid "All invoices include 23%% Slovak VAT as required by law."
 msgstr "Wszystkie faktury zawierają 23%% słowackiego VAT zgodnie z wymogami prawa."
 
-#: templates/public.shipping_payment.html:304
+#: templates/public/shipping_payment.html:304
 msgid "EU business customers with valid VAT ID:"
 msgstr "Klienci biznesowi z UE z ważnym numerem VAT:"
 
-#: templates/public.shipping_payment.html:305
-msgid "Invoices are issued without VAT under the reverse-charge mechanism. Please provide your valid EU VAT number during checkout."
-msgstr "Faktury są wystawiane bez VAT w ramach mechanizmu odwrotnego obciążenia. Proszę podać ważny numer VAT UE podczas realizacji zamówienia."
+#: templates/public/shipping_payment.html:305
+msgid ""
+"Invoices are issued without VAT under the reverse-charge mechanism. "
+"Please provide your valid EU VAT number during checkout."
+msgstr ""
+"Faktury są wystawiane bez VAT w ramach mechanizmu odwrotnego obciążenia. "
+"Proszę podać ważny numer VAT UE podczas realizacji zamówienia."
 
-#: templates/public.shipping_payment.html:308
+#: templates/public/shipping_payment.html:308
 msgid "EU private customers:"
 msgstr "Klienci prywatni z UE:"
 
-#: templates/public.shipping_payment.html:309
+#: templates/public/shipping_payment.html:309
 #, python-format
 msgid "Invoices include Slovak VAT at 23%% rate."
 msgstr "Faktury zawierają słowacki VAT w wysokości 23%%."
 
-#: templates/public.shipping_payment.html:312
+#: templates/public/shipping_payment.html:312
 msgid "Non-EU customers:"
 msgstr "Klienci spoza UE:"
 
-#: templates/public.shipping_payment.html:313
-msgid "Special export rules may apply. Please contact us for detailed information."
-msgstr "Mogą obowiązywać specjalne zasady eksportu. Proszę skontaktować się z nami w celu uzyskania szczegółowych informacji."
+#: templates/public/shipping_payment.html:313
+msgid ""
+"Special export rules may apply. Please contact us for detailed "
+"information."
+msgstr ""
+"Mogą obowiązywać specjalne zasady eksportu. Proszę skontaktować się z "
+"nami w celu uzyskania szczegółowych informacji."
 
-#: templates/public.shipping_payment.html:320
-msgid "To receive an invoice without VAT, EU business customers must provide a valid VAT identification number during checkout. VAT ID will be verified through the VIES system."
-msgstr "Aby otrzymać fakturę bez VAT, klienci biznesowi z UE muszą podać ważny numer identyfikacyjny VAT podczas realizacji zamówienia. Numer VAT zostanie zweryfikowany przez system VIES."
+#: templates/public/shipping_payment.html:320
+msgid ""
+"To receive an invoice without VAT, EU business customers must provide a "
+"valid VAT identification number during checkout. VAT ID will be verified "
+"through the VIES system."
+msgstr ""
+"Aby otrzymać fakturę bez VAT, klienci biznesowi z UE muszą podać ważny "
+"numer identyfikacyjny VAT podczas realizacji zamówienia. Numer VAT "
+"zostanie zweryfikowany przez system VIES."
 
-#: templates/public.terms.html:5 templates.public.terms.html:8
+#: templates/public/terms.html:5 templates/public/terms.html:8
 msgid "Terms and Conditions for using AutogroupEU services."
 msgstr "Warunki korzystania z usług AutogroupEU."
 
-#: templates/public.terms.html:6
+#: templates/public/terms.html:6
 msgid "terms, conditions, legal, agreement, policy, usage"
 msgstr "warunki, zasady, prawne, umowa, polityka, użytkowanie"
 
-#: templates/public.terms.html:18
+#: templates/public/terms.html:18
 msgid "Please read these terms carefully before using our services"
 msgstr "Proszę uważnie przeczytać te warunki przed skorzystaniem z naszych usług"
 
-#: templates/public.terms.html:34
-msgid "These Terms and Conditions govern your use of the AutogroupEU website and services provided by AutogroupEU, accessible at autogroup.sk. By accessing and using our website and services, you accept these Terms and Conditions in full. If you disagree with any part of these terms, please do not use our website or services."
-msgstr "Niniejsze Warunki regulują korzystanie z witryny internetowej AutogroupEU i usług świadczonych przez AutogroupEU, dostępnych pod adresem autogroup.sk. Korzystając z naszej strony internetowej i usług, akceptujesz te Warunki w całości. Jeśli nie zgadzasz się z jakąkolwiek częścią tych warunków, prosimy nie korzystać z naszej strony internetowej ani usług."
+#: templates/public/terms.html:34
+msgid ""
+"These Terms and Conditions govern your use of the AutogroupEU website and"
+" services provided by AutogroupEU, accessible at autogroup.sk. By "
+"accessing and using our website and services, you accept these Terms and "
+"Conditions in full. If you disagree with any part of these terms, please "
+"do not use our website or services."
+msgstr ""
+"Niniejsze Warunki regulują korzystanie z witryny internetowej AutogroupEU"
+" i usług świadczonych przez AutogroupEU, dostępnych pod adresem "
+"autogroup.sk. Korzystając z naszej strony internetowej i usług, "
+"akceptujesz te Warunki w całości. Jeśli nie zgadzasz się z jakąkolwiek "
+"częścią tych warunków, prosimy nie korzystać z naszej strony internetowej"
+" ani usług."
 
-#: templates/public.terms.html:48
+#: templates/public/terms.html:48
 msgid "Products and Services"
 msgstr "Produkty i usługi"
 
-#: templates/public.terms.html:53
+#: templates/public/terms.html:53
 msgid "1. All products displayed on our website are subject to availability."
-msgstr "1. Wszystkie produkty wyświetlane na naszej stronie internetowej są dostępne w zależności od dostępności."
+msgstr ""
+"1. Wszystkie produkty wyświetlane na naszej stronie internetowej są "
+"dostępne w zależności od dostępności."
 
-#: templates/public.terms.html:56
+#: templates/public/terms.html:56
 msgid "2. We reserve the right to discontinue any product or service at any time."
-msgstr "2. Zastrzegamy sobie prawo do zaprzestania sprzedaży dowolnego produktu lub usługi w dowolnym momencie."
+msgstr ""
+"2. Zastrzegamy sobie prawo do zaprzestania sprzedaży dowolnego produktu "
+"lub usługi w dowolnym momencie."
 
-#: templates/public.terms.html:59
+#: templates/public/terms.html:59
 msgid "3. Prices for products are subject to change without notice."
 msgstr "3. Ceny produktów mogą ulec zmianie bez powiadomienia."
 
-#: templates/public.terms.html:62
-msgid "4. We make every effort to display the accurate colors and features of our products, but cannot guarantee that your display will accurately portray the actual color of the product."
-msgstr "4. Dokładamy wszelkich starań, aby wyświetlać dokładne kolory i cechy naszych produktów, ale nie możemy zagwarantować, że Twój wyświetlacz dokładnie odda rzeczywisty kolor produktu."
+#: templates/public/terms.html:62
+msgid ""
+"4. We make every effort to display the accurate colors and features of "
+"our products, but cannot guarantee that your display will accurately "
+"portray the actual color of the product."
+msgstr ""
+"4. Dokładamy wszelkich starań, aby wyświetlać dokładne kolory i cechy "
+"naszych produktów, ale nie możemy zagwarantować, że Twój wyświetlacz "
+"dokładnie odda rzeczywisty kolor produktu."
 
-#: templates/public.terms.html:65
-msgid "5. Product specifications, prices, and availability may differ from region to region."
-msgstr "5. Specyfikacje produktów, ceny i dostępność mogą się różnić w zależności od regionu."
+#: templates/public/terms.html:65
+msgid ""
+"5. Product specifications, prices, and availability may differ from "
+"region to region."
+msgstr ""
+"5. Specyfikacje produktów, ceny i dostępność mogą się różnić w zależności"
+" od regionu."
 
-#: templates/public.terms.html:76
+#: templates/public/terms.html:76
 msgid "Orders and Payment"
 msgstr "Zamówienia i płatności"
 
-#: templates/public.terms.html:81
-msgid "1. By placing an order, you are making an offer to purchase the products subject to these Terms and Conditions."
-msgstr "1. Składając zamówienie, składasz ofertę zakupu produktów zgodnie z niniejszymi Warunkami."
+#: templates/public/terms.html:81
+msgid ""
+"1. By placing an order, you are making an offer to purchase the products "
+"subject to these Terms and Conditions."
+msgstr ""
+"1. Składając zamówienie, składasz ofertę zakupu produktów zgodnie z "
+"niniejszymi Warunkami."
 
-#: templates/public.terms.html:84
-msgid "2. All orders are subject to acceptance and availability. We reserve the right to refuse any order without providing a reason."
-msgstr "2. Wszystkie zamówienia podlegają akceptacji i dostępności. Zastrzegamy sobie prawo do odmowy przyjęcia zamówienia bez podania przyczyny."
+#: templates/public/terms.html:84
+msgid ""
+"2. All orders are subject to acceptance and availability. We reserve the "
+"right to refuse any order without providing a reason."
+msgstr ""
+"2. Wszystkie zamówienia podlegają akceptacji i dostępności. Zastrzegamy "
+"sobie prawo do odmowy przyjęcia zamówienia bez podania przyczyny."
 
-#: templates/public.terms.html:87
-msgid "3. Payment for all orders must be made in advance unless otherwise agreed upon in writing."
-msgstr "3. Płatność za wszystkie zamówienia musi być dokonana z góry, chyba że uzgodniono inaczej na piśmie."
+#: templates/public/terms.html:87
+msgid ""
+"3. Payment for all orders must be made in advance unless otherwise agreed"
+" upon in writing."
+msgstr ""
+"3. Płatność za wszystkie zamówienia musi być dokonana z góry, chyba że "
+"uzgodniono inaczej na piśmie."
 
-#: templates/public.terms.html:90
-msgid "4. We accept payment via bank transfers, credit cards, and other payment methods as specified during the checkout process."
-msgstr "4. Akceptujemy płatności przelewem bankowym, kartami kredytowymi i innymi metodami płatności określonymi podczas procesu realizacji zamówienia."
+#: templates/public/terms.html:90
+msgid ""
+"4. We accept payment via bank transfers, credit cards, and other payment "
+"methods as specified during the checkout process."
+msgstr ""
+"4. Akceptujemy płatności przelewem bankowym, kartami kredytowymi i innymi"
+" metodami płatności określonymi podczas procesu realizacji zamówienia."
 
-#: templates/public.terms.html:93
-msgid "5. For business customers, payment terms will be as per the agreed contract conditions."
-msgstr "5. Dla klientów biznesowych warunki płatności będą zgodne z uzgodnionymi warunkami umowy."
+#: templates/public/terms.html:93
+msgid ""
+"5. For business customers, payment terms will be as per the agreed "
+"contract conditions."
+msgstr ""
+"5. Dla klientów biznesowych warunki płatności będą zgodne z uzgodnionymi "
+"warunkami umowy."
 
-#: templates/public.terms.html:104
+#: templates/public/terms.html:104
 msgid "Shipping and Delivery"
 msgstr "Wysyłka i dostawa"
 
-#: templates/public.terms.html:109
-msgid "1. Delivery times are estimates only and may vary based on supplier availability, location, and other factors."
-msgstr "1. Czas dostawy jest jedynie szacunkowy i może się różnić w zależności od dostępności dostawcy, lokalizacji i innych czynników."
+#: templates/public/terms.html:109
+msgid ""
+"1. Delivery times are estimates only and may vary based on supplier "
+"availability, location, and other factors."
+msgstr ""
+"1. Czas dostawy jest jedynie szacunkowy i może się różnić w zależności od"
+" dostępności dostawcy, lokalizacji i innych czynników."
 
-#: templates/public.terms.html:112
-msgid "2. We are not responsible for delays in delivery caused by circumstances beyond our control."
-msgstr "2. Nie ponosimy odpowiedzialności za opóźnienia w dostawie spowodowane okolicznościami niezależnymi od nas."
+#: templates/public/terms.html:112
+msgid ""
+"2. We are not responsible for delays in delivery caused by circumstances "
+"beyond our control."
+msgstr ""
+"2. Nie ponosimy odpowiedzialności za opóźnienia w dostawie spowodowane "
+"okolicznościami niezależnymi od nas."
 
-#: templates/public.terms.html:115
+#: templates/public/terms.html:115
 msgid "3. Risk of loss or damage to products passes to you upon delivery."
-msgstr "3. Ryzyko utraty lub uszkodzenia produktów przechodzi na Ciebie w momencie dostawy."
+msgstr ""
+"3. Ryzyko utraty lub uszkodzenia produktów przechodzi na Ciebie w "
+"momencie dostawy."
 
-#: templates/public.terms.html:118
-msgid "4. It is your responsibility to provide accurate shipping information. Additional charges may apply for redelivery if incorrect information is provided."
-msgstr "4. Twoim obowiązkiem jest podanie dokładnych informacji dotyczących wysyłki. Mogą obowiązywać dodatkowe opłaty za ponowną dostawę, jeśli podane informacje są nieprawidłowe."
+#: templates/public/terms.html:118
+msgid ""
+"4. It is your responsibility to provide accurate shipping information. "
+"Additional charges may apply for redelivery if incorrect information is "
+"provided."
+msgstr ""
+"4. Twoim obowiązkiem jest podanie dokładnych informacji dotyczących "
+"wysyłki. Mogą obowiązywać dodatkowe opłaty za ponowną dostawę, jeśli "
+"podane informacje są nieprawidłowe."
 
-#: templates/public.terms.html:129
+#: templates/public/terms.html:129
 msgid "Returns and Warranties"
 msgstr "Zwroty i gwarancje"
 
-#: templates/public.terms.html:134
-msgid "1. Returns are accepted within 14 days of receipt, subject to the product being in its original condition and packaging."
-msgstr "1. Zwroty są akceptowane w ciągu 14 dni od otrzymania, pod warunkiem, że produkt jest w oryginalnym stanie i opakowaniu."
+#: templates/public/terms.html:134
+msgid ""
+"1. Returns are accepted within 14 days of receipt, subject to the product"
+" being in its original condition and packaging."
+msgstr ""
+"1. Zwroty są akceptowane w ciągu 14 dni od otrzymania, pod warunkiem, że "
+"produkt jest w oryginalnym stanie i opakowaniu."
 
-#: templates/public.terms.html:137
+#: templates/public/terms.html:137
 msgid "2. To initiate a return, please contact our customer service team."
-msgstr "2. Aby rozpocząć zwrot, prosimy o kontakt z naszym zespołem obsługi klienta."
+msgstr ""
+"2. Aby rozpocząć zwrot, prosimy o kontakt z naszym zespołem obsługi "
+"klienta."
 
-#: templates/public.terms.html:140
-msgid "3. Refunds will be processed within 14 business days of receiving the returned product."
-msgstr "3. Zwroty pieniędzy będą przetwarzane w ciągu 14 dni roboczych od otrzymania zwróconego produktu."
+#: templates/public/terms.html:140
+msgid ""
+"3. Refunds will be processed within 14 business days of receiving the "
+"returned product."
+msgstr ""
+"3. Zwroty pieniędzy będą przetwarzane w ciągu 14 dni roboczych od "
+"otrzymania zwróconego produktu."
 
-#: templates/public.terms.html:143
-msgid "4. Products carry the manufacturers warranty only, unless otherwise specified."
-msgstr "4. Produkty objęte są wyłącznie gwarancją producenta, chyba że określono inaczej."
+#: templates/public/terms.html:143
+msgid ""
+"4. Products carry the manufacturers warranty only, unless otherwise "
+"specified."
+msgstr ""
+"4. Produkty objęte są wyłącznie gwarancją producenta, chyba że określono "
+"inaczej."
 
-#: templates/public.terms.html:146
-msgid "5. We do not accept returns on special order items, unless they are defective."
-msgstr "5. Nie akceptujemy zwrotów przedmiotów na specjalne zamówienie, chyba że są wadliwe."
+#: templates/public/terms.html:146
+msgid ""
+"5. We do not accept returns on special order items, unless they are "
+"defective."
+msgstr ""
+"5. Nie akceptujemy zwrotów przedmiotów na specjalne zamówienie, chyba że "
+"są wadliwe."
 
-#: templates/public.terms.html:157
+#: templates/public/terms.html:157
 msgid "Liability and Limitations"
 msgstr "Odpowiedzialność i ograniczenia"
 
-#: templates/public.terms.html:162
-msgid "1. Our liability is limited to the purchase price of the product in question."
+#: templates/public/terms.html:162
+msgid ""
+"1. Our liability is limited to the purchase price of the product in "
+"question."
 msgstr "1. Nasza odpowiedzialność jest ograniczona do ceny zakupu danego produktu."
 
-#: templates/public.terms.html:165
-msgid "2. We are not liable for any indirect, incidental, or consequential damages."
-msgstr "2. Nie ponosimy odpowiedzialności za jakiekolwiek szkody pośrednie, przypadkowe lub wynikowe."
+#: templates/public/terms.html:165
+msgid ""
+"2. We are not liable for any indirect, incidental, or consequential "
+"damages."
+msgstr ""
+"2. Nie ponosimy odpowiedzialności za jakiekolwiek szkody pośrednie, "
+"przypadkowe lub wynikowe."
 
-#: templates/public.terms.html:168
-msgid "3. To the extent permitted by law, we disclaim all warranties, express or implied, including but not limited to merchantability and fitness for a particular purpose."
-msgstr "3. W zakresie dozwolonym przez prawo, wyłączamy wszelkie gwarancje, wyraźne lub dorozumiane, w tym między innymi przydatność handlową i przydatność do określonego celu."
+#: templates/public/terms.html:168
+msgid ""
+"3. To the extent permitted by law, we disclaim all warranties, express or"
+" implied, including but not limited to merchantability and fitness for a "
+"particular purpose."
+msgstr ""
+"3. W zakresie dozwolonym przez prawo, wyłączamy wszelkie gwarancje, "
+"wyraźne lub dorozumiane, w tym między innymi przydatność handlową i "
+"przydatność do określonego celu."
 
-#: templates/public.terms.html:171
-msgid "4. We do not guarantee that our website will be error-free or uninterrupted."
-msgstr "4. Nie gwarantujemy, że nasza strona internetowa będzie wolna od błędów lub nieprzerwanie dostępna."
+#: templates/public/terms.html:171
+msgid ""
+"4. We do not guarantee that our website will be error-free or "
+"uninterrupted."
+msgstr ""
+"4. Nie gwarantujemy, że nasza strona internetowa będzie wolna od błędów "
+"lub nieprzerwanie dostępna."
 
-#: templates/public.terms.html:182
+#: templates/public/terms.html:182
 msgid "Intellectual Property"
 msgstr "Własność intelektualna"
 
-#: templates/public.terms.html:187
-msgid "1. All content on this website, including but not limited to text, graphics, logos, images, and software, is the property of AutogroupEU or its content suppliers and is protected by copyright laws."
-msgstr "1. Wszystkie treści na tej stronie internetowej, w tym między innymi tekst, grafika, loga, obrazy i oprogramowanie, są własnością AutogroupEU lub jej dostawców treści i są chronione prawami autorskimi."
+#: templates/public/terms.html:187
+msgid ""
+"1. All content on this website, including but not limited to text, "
+"graphics, logos, images, and software, is the property of AutogroupEU or "
+"its content suppliers and is protected by copyright laws."
+msgstr ""
+"1. Wszystkie treści na tej stronie internetowej, w tym między innymi "
+"tekst, grafika, loga, obrazy i oprogramowanie, są własnością AutogroupEU "
+"lub jej dostawców treści i są chronione prawami autorskimi."
 
-#: templates/public.terms.html:190
-msgid "2. You may not reproduce, distribute, modify, or create derivative works from any content without our express written consent."
-msgstr "2. Zabrania się reprodukowania, rozpowszechniania, modyfikowania lub tworzenia dzieł pochodnych z jakichkolwiek treści bez naszej wyraźnej pisemnej zgody."
+#: templates/public/terms.html:190
+msgid ""
+"2. You may not reproduce, distribute, modify, or create derivative works "
+"from any content without our express written consent."
+msgstr ""
+"2. Zabrania się reprodukowania, rozpowszechniania, modyfikowania lub "
+"tworzenia dzieł pochodnych z jakichkolwiek treści bez naszej wyraźnej "
+"pisemnej zgody."
 
-#: templates/public.terms.html:201
+#: templates/public/terms.html:201
 msgid "Modifications to Terms"
 msgstr "Zmiany w Warunkach"
 
-#: templates/public.terms.html:206
+#: templates/public/terms.html:206
 msgid "1. We reserve the right to modify these Terms and Conditions at any time."
-msgstr "1. Zastrzegamy sobie prawo do modyfikacji niniejszych Warunków w dowolnym momencie."
+msgstr ""
+"1. Zastrzegamy sobie prawo do modyfikacji niniejszych Warunków w dowolnym"
+" momencie."
 
-#: templates/public.terms.html:209
+#: templates/public/terms.html:209
 msgid "2. Changes will be effective immediately upon posting on the website."
-msgstr "2. Zmiany wchodzą w życie natychmiast po opublikowaniu na stronie internetowej."
+msgstr ""
+"2. Zmiany wchodzą w życie natychmiast po opublikowaniu na stronie "
+"internetowej."
 
-#: templates/public.terms.html:212
-msgid "3. Your continued use of our website and services after any changes to the Terms constitutes your acceptance of the new Terms."
-msgstr "3. Dalsze korzystanie z naszej strony internetowej i usług po wprowadzeniu jakichkolwiek zmian w Warunkach oznacza akceptację nowych Warunków."
+#: templates/public/terms.html:212
+msgid ""
+"3. Your continued use of our website and services after any changes to "
+"the Terms constitutes your acceptance of the new Terms."
+msgstr ""
+"3. Dalsze korzystanie z naszej strony internetowej i usług po "
+"wprowadzeniu jakichkolwiek zmian w Warunkach oznacza akceptację nowych "
+"Warunków."
 
-#: templates/public.terms.html:228
-msgid "If you have any questions about these Terms and Conditions, please contact us at:"
-msgstr "Jeśli masz jakiekolwiek pytania dotyczące niniejszych Warunków, prosimy o kontakt pod adresem:"
+#: templates/public/terms.html:228
+msgid ""
+"If you have any questions about these Terms and Conditions, please "
+"contact us at:"
+msgstr ""
+"Jeśli masz jakiekolwiek pytania dotyczące niniejszych Warunków, prosimy o"
+" kontakt pod adresem:"
+
+#: templates/public/cart/cart.html:5
+msgid ""
+"View and manage your shopping cart at AutogroupEU. Check prices, "
+"quantities, and proceed to checkout."
+msgstr ""
+
+#: templates/public/cart/cart.html:9 templates/public/cart/cart.html:14
+#: templates/user/cart/cart.html:3 templates/user/cart/cart.html:7
+msgid "Shopping Cart"
+msgstr "Koszyk zakupów"
+
+#: templates/public/cart/cart.html:24
+msgid "Name"
+msgstr "Nazwa"
+
+#: templates/public/cart/cart.html:46
+msgid "Update"
+msgstr "Aktualizuj"
+
+#: templates/public/cart/cart.html:62
+msgid "Remove"
+msgstr "Usuń"
+
+#: templates/public/cart/cart.html:70 templates/user/cart/cart.html:57
+msgid "Total:"
+msgstr "Razem"
+
+#: templates/public/cart/cart.html:88
+msgid "Select Saved Address"
+msgstr "Wybierz zapisany adres"
+
+#: templates/public/cart/cart.html:120
+msgid "Use new address"
+msgstr "Użyj nowego adresu"
+
+#: templates/public/cart/cart.html:129
+msgid "New Delivery Address"
+msgstr "Nowy adres dostawy"
+
+#: templates/public/cart/cart.html:134 templates/public/user/profile.html:160
+msgid "Full Name"
+msgstr "Pełne imię i nazwisko"
+
+#: templates/public/cart/cart.html:145 templates/public/user/profile.html:173
+msgid "Country"
+msgstr "Kraj"
+
+#: templates/public/cart/cart.html:155 templates/public/user/profile.html:184
+msgid "City"
+msgstr "Miasto"
+
+#: templates/public/cart/cart.html:159 templates/public/user/profile.html:188
+msgid "Postal Code"
+msgstr "Kod pocztowy"
+
+#: templates/public/cart/cart.html:164 templates/public/user/profile.html:169
+msgid "Street Address"
+msgstr "Adres ulicy"
+
+#: templates/public/cart/cart.html:171
+msgid "Save address for future orders"
+msgstr "Zapisz adres do przyszłych zamówień"
+
+#: templates/public/cart/cart.html:185
+msgid "Need invoice with VAT number"
+msgstr "Potrzebuję faktury z numerem VAT."
+
+#: templates/public/cart/cart.html:193
+msgid "Select Saved Company"
+msgstr "Wybierz zapisaną firmę"
+
+#: templates/public/cart/cart.html:214
+#: templates/public/orders/order_details.html:132
+#: templates/public/user/profile.html:239
+msgid "Address"
+msgstr "Adres"
+
+#: templates/public/cart/cart.html:229
+msgid "Use new company details"
+msgstr "Użyj nowych danych firmy"
+
+#: templates/public/cart/cart.html:238
+msgid "New Company Details"
+msgstr "Nowe dane firmy"
+
+#: templates/public/cart/cart.html:266
+msgid "Save company details for future orders"
+msgstr "Zapisz dane firmy na przyszłe zamówienia"
+
+#: templates/public/cart/cart.html:280 templates/user/cart/cart.html:68
+msgid "Place Order"
+msgstr "Złóż zamówienie"
+
+#: templates/public/cart/cart.html:295 templates/user/cart/cart.html:93
+msgid "Your Cart is Empty"
+msgstr "Twój koszyk jest pusty"
+
+#: templates/public/cart/cart.html:302 templates/user/cart/cart.html:94
+msgid "Start adding items to your cart!"
+msgstr "Rozpocznij dodawanie przedmiotów do koszyka!"
+
+#: templates/public/cart/cart.html:305 templates/user/cart/cart.html:96
+#: templates/user/index.html:11
+msgid "Search Articles"
+msgstr "Wyszukaj numery części"
+
+#: templates/public/cart/cart.html:462
+msgid "Please select a delivery address or enter a new one"
+msgstr "Proszę wybrać adres dostawy lub wprowadzić nowy"
+
+#: templates/public/cart/cart.html:474
+msgid "Please fill in all required delivery address fields"
+msgstr "Proszę wypełnić wszystkie wymagane pola adresu dostawy"
+
+#: templates/public/cart/cart.html:494
+msgid "Please select a company or enter new company details"
+msgstr "Proszę wybrać firmę lub wprowadzić nowe dane firmy"
+
+#: templates/public/cart/cart.html:506
+msgid "Please provide company name and VAT number"
+msgstr ""
+
+#: templates/public/cart/cart.html:517
+msgid "Processing..."
+msgstr "Przetwarzanie..."
+
+#: templates/public/orders/confirmation.html:5
+msgid ""
+"Order confirmation at AutogroupEU. Your order has been successfully "
+"placed."
+msgstr ""
+"Potwierdzenie zamówienia w AutogroupEU. Twoje zamówienie zostało "
+"pomyślnie złożone."
+
+#: templates/public/orders/confirmation.html:14
+msgid "Order Confirmation"
+msgstr "Potwierdzenie zamówienia"
+
+#: templates/public/orders/confirmation.html:23
+msgid "Thank You for Your Order!"
+msgstr "Dziękujemy za Twoje zamówienie!"
+
+#: templates/public/orders/confirmation.html:24
+msgid "Your order has been placed successfully."
+msgstr "Twoje zamówienie zostało pomyślnie złożone."
+
+#: templates/public/orders/confirmation.html:26
+msgid "Order Number"
+msgstr "Numer zamówienia"
+
+#: templates/public/orders/confirmation.html:33
+msgid "Order Summary"
+msgstr "Podsumowanie zamówienia"
+
+#: templates/public/orders/confirmation.html:39
+#: templates/public/orders/order_details.html:39
+
+msgid "Order Date"
+msgstr "Data zamówienia"
+
+#: templates/public/orders/confirmation.html:57
+#: templates/public/orders/order_details.html:153
+msgid "Product"
+msgstr "Produkt"
+
+#: templates/public/orders/confirmation.html:90
+msgid "What Happens Next?"
+msgstr "Co dalej?"
+
+#: templates/public/orders/confirmation.html:97
+msgid "Order Confirmation Email"
+msgstr "E-mail z potwierdzeniem zamówienia"
+
+#: templates/public/orders/confirmation.html:98
+msgid "We've sent a confirmation email with your order details."
+msgstr ""
+"Wysłaliśmy e-mail z potwierdzeniem zawierający szczegóły Twojego "
+"zamówienia."
+
+#: templates/public/orders/confirmation.html:105
+msgid "We'll process your order and prepare it for shipping."
+msgstr "Przetworzymy Twoje zamówienie i przygotujemy je do wysyłki."
+
+#: templates/public/orders/confirmation.html:111
+msgid "Shipping"
+msgstr "Wysyłka"
+
+#: templates/public/orders/confirmation.html:112
+msgid "Once shipped, you'll receive tracking information via email."
+msgstr "Po wysyłce otrzymasz informacje o śledzeniu przesyłki e-mailem."
+
+#: templates/public/orders/confirmation.html:122
+msgid "Return to Homepage"
+msgstr "Powrót do strony głównej"
+
+#: templates/public/orders/confirmation.html:125
+msgid "View My Orders"
+msgstr "Zobacz moje zamówienia"
+
+#: templates/public/orders/list_orders.html:5
+#: templates/public/orders/orders.html:5
+msgid ""
+"View your order history at AutogroupEU. Track your purchases and check "
+"delivery status."
+msgstr ""
+
+#: templates/public/orders/list_orders.html:9
+#: templates/public/orders/list_orders.html:18
+#: templates/public/orders/orders.html:9 templates/public/orders/orders.html:18
+#: templates/user/orders/orders.html:55
+msgid "My Orders"
+msgstr "Moje zamówienia"
+
+#: templates/public/orders/list_orders.html:27
+#: templates/public/orders/list_orders.html:38
+#: templates/public/orders/orders.html:27
+#: templates/public/orders/orders.html:37
+msgid "Order #"
+msgstr "Zamówienie nr"
+
+#: templates/public/orders/list_orders.html:29
+#: templates/public/orders/list_orders.html:49
+#: templates/user/shipments/view_shipment.html:31
+msgid "Items"
+msgstr "Przedmioty"
+
+#: templates/public/orders/list_orders.html:93
+#: templates/public/orders/orders.html:97 templates/user/orders/orders.html:133
+msgid "No Orders Found"
+msgstr "Nie znaleziono zamówień"
+
+#: templates/public/orders/list_orders.html:94
+#: templates/public/orders/orders.html:98
+msgid "You have not placed any orders yet."
+msgstr "Nie złożyłeś jeszcze żadnych zamówień"
+
+#: templates/public/orders/list_orders.html:97
+#: templates/public/orders/orders.html:101
+#: templates/user/orders/orders.html:136
+msgid "Start Shopping"
+msgstr "Rozpocznij zakupy"
+
+#: templates/public/orders/order_details.html:5
+msgid ""
+"Order details at AutogroupEU. View products, prices, and delivery "
+"information."
+msgstr ""
+
+#: templates/public/orders/order_details.html:9
+#: templates/public/orders/order_details.html:25
+msgid "Order"
+msgstr "Zamówienie"
+
+#: templates/public/orders/order_details.html:9
+msgid "Details"
+msgstr "Szczegóły"
+
+#: templates/public/orders/order_details.html:16
+#: templates/public/orders/order_details.html:187
+#: templates/user/orders/order_details.html:11
+msgid "Back to Orders"
+msgstr "Powrót do zamówień"
+
+#: templates/public/orders/order_details.html:34
+msgid "Order Information"
+msgstr "Informacje o zamówieniu"
+
+#: templates/public/orders/order_details.html:46
+#: templates/public/orders/orders.html:53 templates/user/news/user_news.html:18
+#: templates/user/orders/orders.html:69
+msgid "New"
+msgstr "Nowy"
+
+#: templates/public/orders/order_details.html:47
+#: templates/public/orders/orders.html:54
+msgid "Processing"
+msgstr "Przetwarzanie"
+
+#: templates/public/orders/order_details.html:48
+#: templates/public/orders/orders.html:55
+msgid "Shipped"
+msgstr "Wysłane"
+
+#: templates/public/orders/order_details.html:49
+#: templates/public/orders/orders.html:56
+msgid "Delivered"
+msgstr "Dostarczone"
+
+#: templates/public/orders/order_details.html:50
+#: templates/public/orders/orders.html:57 templates/user/orders/orders.html:71
+msgid "Cancelled"
+msgstr "Anulowane"
+
+#: templates/public/orders/order_details.html:67
+msgid "Payment Status"
+msgstr "Status płatności."
+
+#: templates/public/orders/order_details.html:70
+msgid "Paid"
+msgstr ""
+
+#: templates/public/orders/order_details.html:72
+msgid "Pending"
+msgstr "Oczekujące"
+
+#: templates/public/orders/order_details.html:106
+msgid "No delivery address information"
+msgstr "Brak informacji o adresie dostawy."
+
+#: templates/public/orders/order_details.html:115
+msgid "Invoice Information"
+msgstr "Informacje o fakturze"
+
+#: templates/public/orders/order_details.html:146
+msgid "Order Items"
+msgstr "Elementy zamówienia"
+
+#: templates/public/user/profile.html:6
+msgid "My Profile"
+msgstr "Mój profil"
+
+#: templates/public/user/profile.html:7
+msgid "Manage your personal information, addresses and company details"
+msgstr "Zarządzaj swoimi informacjami osobistymi, adresami i danymi firmy"
+
+#: templates/public/user/profile.html:21
+msgid "Addresses"
+msgstr "Adresy"
+
+#: templates/public/user/profile.html:27
+msgid "Companies"
+msgstr "Firmy"
+
+#: templates/public/user/profile.html:46
+msgid "Personal Information"
+msgstr "Informacje osobiste"
+
+#: templates/public/user/profile.html:56
+msgid "Username cannot be changed"
+msgstr "Nazwa użytkownika nie może być zmieniona"
+
+#: templates/public/user/profile.html:72
+msgid "Preferred Language"
+msgstr "Preferowany język"
+
+#: templates/public/user/profile.html:83
+msgid "Update Profile"
+msgstr "Zaktualizuj profil"
+
+#: templates/public/user/profile.html:97
+msgid "Delivery Addresses"
+msgstr "Adresy dostawy"
+
+#: templates/public/user/profile.html:102
+msgid "Your Addresses"
+msgstr "Twoje adresy"
+
+#: templates/public/user/profile.html:129
+#: templates/public/user/profile.html:248
+msgid "Set as Default"
+msgstr "Ustaw jako domyślny"
+
+#: templates/public/user/profile.html:134
+msgid "Are you sure you want to delete this address?"
+msgstr "Czy na pewno chcesz usunąć ten adres?"
+
+#: templates/public/user/profile.html:138
+#: templates/public/user/profile.html:257
+msgid "Delete"
+msgstr "Usuń"
+
+#: templates/public/user/profile.html:149
+msgid "You have no saved addresses yet."
+msgstr "„Nie masz jeszcze zapisanych adresów."
+
+#: templates/public/user/profile.html:154
+msgid "Add New Address"
+msgstr "Dodaj nowy adres"
+
+#: templates/public/user/profile.html:175
+msgid "Choose..."
+msgstr ""
+
+#: templates/public/user/profile.html:177
+msgid "Ukraine"
+msgstr "Ukraina"
+
+#: templates/public/user/profile.html:178
+msgid "Czech Republic"
+msgstr "Republika Czeska"
+
+#: templates/public/user/profile.html:179
+msgid "Hungary"
+msgstr "Węgry"
+
+#: templates/public/user/profile.html:180
+msgid "Poland"
+msgstr "Polska"
+
+#: templates/public/user/profile.html:195
+msgid "Set as default address"
+msgstr "Ustaw jako domyślny adres"
+
+#: templates/public/user/profile.html:201
+msgid "Add Address"
+msgstr "Dodaj adres"
+
+#: templates/public/user/profile.html:222
+msgid "Your Companies"
+msgstr "Twoje firmy"
+
+#: templates/public/user/profile.html:235
+msgid "VAT"
+msgstr "Podatek VAT"
+
+#: templates/public/user/profile.html:237
+msgid "Registration No."
+msgstr "Numer rejestracyjny"
+
+#: templates/public/user/profile.html:253
+msgid "Are you sure you want to delete this company?"
+msgstr ""
+
+#: templates/public/user/profile.html:268
+msgid "You have no saved companies yet."
+msgstr "Nie masz jeszcze zapisanych firm."
+
+#: templates/public/user/profile.html:273
+msgid "Add New Company"
+msgstr "Dodaj nową firmę"
+
+#: templates/public/user/profile.html:287
+msgid "(optional)"
+msgstr "(Opcjonalnie)"
+
+#: templates/public/user/profile.html:298
+msgid "Set as default company"
+msgstr "Ustaw jako domyślną firmę."
+
+#: templates/public/user/profile.html:304
+msgid "Add Company"
+msgstr "Dodaj firmę"
+
+#: templates/public/user/profile.html:320
+#: templates/public/user/profile.html:348
+msgid "Change Password"
+msgstr "Zmień hasło."
+
+#: templates/public/user/profile.html:331
+msgid "Current Password"
+msgstr "Obecne hasło"
+
+#: templates/public/user/profile.html:336
+msgid "New Password"
+msgstr "Nowe hasło"
+
+#: templates/public/user/profile.html:339
+msgid "Password must be at least 8 characters long"
+msgstr "Hasło musi mieć co najmniej 8 znaków"
+
+#: templates/public/user/profile.html:343
+msgid "Confirm New Password"
+msgstr "Potwierdź nowe hasło"
+
+#: templates/user/index.html:15
+#, fuzzy
+msgid "Enter Articles and Quantities:"
+msgstr "Wprowadź numer artykułu..."
+
+#: templates/user/index.html:20
+msgid "Example:"
+msgstr ""
+
+#: templates/user/index.html:35
+#, fuzzy
+msgid "Upload Articles File"
+msgstr "Nie wybrano artykułów"
+
+#: templates/user/index.html:41
+msgid "Article/Quantity/Comment"
+msgstr ""
+
+#: templates/user/index.html:45
+msgid "Article/Quantity/Brand/Comment"
+msgstr ""
+
+#: templates/user/index.html:53
+msgid "Drag and drop your file here"
+msgstr ""
+
+#: templates/user/index.html:54
+msgid "or"
+msgstr ""
+
+#: templates/user/index.html:56
+#, fuzzy
+msgid "Select File"
+msgstr "Wybierz"
+
+#: templates/user/index.html:73
+#, fuzzy
+msgid "Upload and Search"
+msgstr "Produkty i usługi"
+
+#: templates/user/cart/cart.html:15 templates/user/orders/order_details.html:22
+#, fuzzy
+msgid "Price List"
+msgstr "Pozycje z cennika"
+
+#: templates/user/cart/cart.html:20 templates/user/orders/order_details.html:27
+#: templates/user/search/intermediate.html:19
+#: templates/user/search/search_results.html:18
+#: templates/user/shipments/view_shipment.html:43
+msgid "Comment"
+msgstr "Komentarz"
+
+#: templates/user/cart/cart.html:42 templates/user/orders/order_details.html:63
+msgid "No comment"
+msgstr ""
+
+#: templates/user/cart/cart.html:74
+msgid "Clear Cart"
+msgstr "Wyczyść koszyk"
+
+#: templates/user/cart/cart.html:81
+#: templates/user/search/search_results.html:70
+#, fuzzy
+msgid "Missing Articles:"
+msgstr "Brakujące informacje o artykule"
+
+#: templates/user/cart/cart.html:82
+#, fuzzy
+msgid "The following articles were not found:"
+msgstr "Artykuł nie znaleziony"
+
+#: templates/user/news/user_news.html:12
+#, fuzzy
+msgid "New Messages"
+msgstr "Błąd: {message}"
+
+#: templates/user/news/user_news.html:26
+#, fuzzy
+msgid "Read More"
+msgstr "Dowiedz się więcej"
+
+#: templates/user/news/user_news.html:36
+msgid "News Archive"
+msgstr ""
+
+#: templates/user/news/view_news.html:9
+msgid "Mark as Read"
+msgstr ""
+
+#: templates/user/news/view_news.html:16
+#, fuzzy
+msgid "Published:"
+msgstr "Polski"
+
+#: templates/user/orders/order_changes.html:14
+#, fuzzy
+msgid "Change Type"
+msgstr "Zmień adres"
+
+#: templates/user/orders/order_changes.html:15
+msgid "Old Value"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:16
+msgid "New Value"
+msgstr ""
+
+#: templates/user/orders/order_changes.html:17
+#, fuzzy
+msgid "Change Date"
+msgstr "Zmień adres"
+
+#: templates/user/orders/order_changes.html:27
+#, fuzzy
+msgid "Article Number Change"
+msgstr "Wyszukiwanie numeru części"
+
+#: templates/user/orders/order_changes.html:29
+#, fuzzy
+msgid "Price Change"
+msgstr "Zwroty i wymiany"
+
+#: templates/user/orders/order_changes.html:42
+#, fuzzy
+msgid "No changes found."
+msgstr "Nie znaleziono zapisanych adresów."
+
+#: templates/user/orders/order_details.html:4
+#: templates/user/orders/order_details.html:9
+#: templates/user/shipments/shipments.html:19
+msgid "Order Details"
+msgstr "Szczegóły zamówienia"
+
+#: templates/user/orders/order_details.html:21
+#, fuzzy
+msgid "Original Article"
+msgstr "Artykuł"
+
+#: templates/user/orders/order_details.html:23
+#, fuzzy
+msgid "Brand ID"
+msgstr "Marka"
+
+#: templates/user/orders/order_details.html:86
+msgid "Total Order Amount:"
+msgstr ""
+
+#: templates/user/orders/order_details.html:96
+#, fuzzy
+msgid "Order Timeline"
+msgstr "Elementy zamówienia"
+
+#: templates/user/orders/order_details.html:115
+#, fuzzy
+msgid "No Details Available"
+msgstr "Brak dostępnego opisu."
+
+#: templates/user/orders/order_details.html:116
+msgid "The details for this order could not be found."
+msgstr ""
+
+#: templates/user/orders/orders.html:68
+msgid "All"
+msgstr ""
+
+#: templates/user/orders/orders.html:70
+#, fuzzy
+msgid "Accepted"
+msgstr "Akceptuj"
+
+#: templates/user/orders/orders.html:75
+#, fuzzy
+msgid "Start Date"
+msgstr "Aktualizacje oprogramowania"
+
+#: templates/user/orders/orders.html:79
+#, fuzzy
+msgid "End Date"
+msgstr "Data"
+
+#: templates/user/orders/orders.html:84
+#, fuzzy
+msgid "Filter"
+msgstr "Filtry"
+
+#: templates/user/orders/orders.html:87
+#, fuzzy
+msgid "Clear Filters"
+msgstr "Filtry"
+
+#: templates/user/orders/orders.html:101
+#: templates/user/shipments/list_shipments.html:21
+#: templates/user/shipments/shipments.html:26
+#: templates/user/shipments/view_shipment.html:42
+#, fuzzy
+msgid "Total Price"
+msgstr "Kod pocztowy"
+
+#: templates/user/orders/orders.html:134
+#, fuzzy
+msgid "You haven't placed any orders yet."
+msgstr "Nie masz jeszcze żadnych zamówień."
+
+#: templates/user/search/intermediate.html:3
+#, fuzzy
+msgid "Select Price Lists"
+msgstr "Pozycje z cennika"
+
+#: templates/user/search/intermediate.html:7
+msgid "Intermediate Results"
+msgstr ""
+
+#: templates/user/search/intermediate.html:8
+#, fuzzy
+msgid "Please select a price list for each article."
+msgstr "Wprowadź co najmniej jeden artykuł."
+
+#: templates/user/search/intermediate.html:17
+#, fuzzy
+msgid "Available Price Lists"
+msgstr "Dostępne ceny"
+
+#: templates/user/search/intermediate.html:64
+msgid "Cancel"
+msgstr "Anuluj"
+
+#: templates/user/search/intermediate.html:71
+#, fuzzy
+msgid "Missing Articles"
+msgstr "Brakujące informacje o artykule"
+
+#: templates/user/search/intermediate.html:72
+#: templates/user/search/search_results.html:71
+msgid "The following articles were not found in any price list:"
+msgstr ""
+
+#: templates/user/search/search_results.html:16
+#, fuzzy
+msgid "Price Lists"
+msgstr "Pozycje z cennika"
+
+#: templates/user/search/search_results.html:86
+#, fuzzy
+msgid "Clear Results"
+msgstr "Wyniki wyszukiwania"
+
+#: templates/user/search/search_results.html:92
+#, fuzzy
+msgid "No Results Found"
+msgstr "Nie znaleziono zapisanych adresów"
+
+#: templates/user/search/search_results.html:93
+msgid "Try searching with different articles or check your input format."
+msgstr ""
+
+#: templates/user/search/search_results.html:95
+#, fuzzy
+msgid "New Search"
+msgstr "Szukaj"
+
+#: templates/user/shipments/list_shipments.html:9
+#: templates/user/shipments/shipments.html:7
+#, fuzzy
+msgid "My Shipments"
+msgstr "Przesyłki"
+
+#: templates/user/shipments/list_shipments.html:17
+#, fuzzy
+msgid "Shipment Date"
+msgstr "Przesyłki"
+
+#: templates/user/shipments/list_shipments.html:19
+#, fuzzy
+msgid "Tracking Number"
+msgstr "Numer rejestracyjny"
+
+#: templates/user/shipments/list_shipments.html:20
+#, fuzzy
+msgid "Items Count"
+msgstr "Rabat"
+
+#: templates/user/shipments/list_shipments.html:30
+msgid "N/A"
+msgstr ""
+
+#: templates/user/shipments/list_shipments.html:45
+#: templates/user/shipments/shipments.html:44
+#, fuzzy
+msgid "No shipments found."
+msgstr "Przesyłki"
+
+#: templates/user/shipments/shipments.html:13
+#, fuzzy
+msgid "Shipment Date:"
+msgstr "Przesyłki"
+
+#: templates/user/shipments/shipments.html:13
+#: templates/user/shipments/view_shipment.html:22
+#, fuzzy
+msgid "Status:"
+msgstr "Status"
+
+#: templates/user/shipments/shipments.html:15
+#: templates/user/shipments/view_shipment.html:23
+#, fuzzy
+msgid "Tracking Number:"
+msgstr "Numer rejestracyjny:"
+
+#: templates/user/shipments/view_shipment.html:3
+#: templates/user/shipments/view_shipment.html:8
+#, fuzzy
+msgid "Shipment Details"
+msgstr "Przesyłki"
+
+#: templates/user/shipments/view_shipment.html:10
+#, fuzzy
+msgid "Back to Shipments"
+msgstr "Powrót do strony głównej"
+
+#: templates/user/shipments/view_shipment.html:16
+#, fuzzy
+msgid "Shipment Information"
+msgstr "Informacje o użytkowniku"
+
+#: templates/user/shipments/view_shipment.html:21
+#, fuzzy
+msgid "Date:"
+msgstr "Data"
+
+#: templates/user/shipments/view_shipment.html:23
+#, fuzzy
+msgid "Not specified"
+msgstr "Nie wybrano części"
+
+#: templates/user/shipments/view_shipment.html:60
+#, fuzzy
+msgid "No items in this shipment."
+msgstr "Brak pozycji w tym zamówieniu"
 
 #: venv/Lib/site-packages/click/_termui_impl.py:556
 msgid "{editor}: Editing failed"
@@ -2405,6 +3788,7 @@ msgid "required"
 msgstr "wymagane"
 
 #: venv/Lib/site-packages/click/decorators.py:457
+#, python-format
 msgid "%(prog)s, version %(version)s"
 msgstr "%(prog)s, wersja %(version)s"
 
@@ -2493,7 +3877,9 @@ msgstr[2] "Opcja {name!r} wymaga {nargs} argumentów."
 
 #: venv/Lib/site-packages/click/shell_completion.py:325
 msgid "Shell completion is not supported for Bash versions older than 4.4."
-msgstr "Uzupełnianie powłoki nie jest obsługiwane dla wersji Bash starszych niż 4.4."
+msgstr ""
+"Uzupełnianie powłoki nie jest obsługiwane dla wersji Bash starszych niż "
+"4.4."
 
 #: venv/Lib/site-packages/click/shell_completion.py:333
 msgid "Couldn't detect Bash version, shell completion is not supported."
@@ -2524,8 +3910,12 @@ msgid "Press any key to continue..."
 msgstr "Naciśnij dowolny klawisz, aby kontynuować..."
 
 #: venv/Lib/site-packages/click/types.py:267
-msgid "Choose from:\n\t{choices}"
-msgstr "Wybierz z:\n\t{choices}"
+msgid ""
+"Choose from:\n"
+"\t{choices}"
+msgstr ""
+"Wybierz z:\n"
+"\t{choices}"
 
 #: venv/Lib/site-packages/click/types.py:301
 msgid "{value!r} is not {choice}."
@@ -2600,494 +3990,170 @@ msgstr[0] "Wymagane są {len_type} wartości, ale podano {len_value}."
 msgstr[1] "Wymagane są {len_type} wartości, ale podano {len_value}."
 msgstr[2] "Wymaganych jest {len_type} wartości, ale podano {len_value}."
 
-#: templates/public/cart/cart.html:3
-msgid "Shopping Cart"
-msgstr "Koszyk zakupów"
-
-#: templates/public/cart/cart.html:10
-msgid "Your Shopping Cart"
-msgstr "Twój koszyk zakupów"
-
-#: templates/public/cart/cart.html:20
-msgid "Your cart is currently empty."
-msgstr "Twój koszyk jest obecnie pusty."
-
-msgid "Continue shopping"
-msgstr "Kontynuuj zakupy"
-
-#: templates/public/cart/cart.html:34
-msgid "Special instructions for your order"
-msgstr "Specjalne instrukcje dla Twojego zamówienia"
-
-#: templates/public/cart/cart.html:44
-msgid "Clear Cart"
-msgstr "Wyczyść koszyk"
-
-#: templates/public/cart/cart.html:52
-msgid "Checkout"
-msgstr "Do kasy"
-
-#: templates/public/cart/cart.html:73
-msgid "Subtotal"
-msgstr "Suma częściowa"
-
-#: templates/public/cart/cart.html:81
-msgid "Delivery Information"
-msgstr "Informacje o dostawie"
-
-#: templates/public/cart/cart.html:88
-msgid "Select delivery method:"
-msgstr "Wybierz metodę dostawy:"
-
-#: templates/public/cart/cart.html:93
-msgid "Delivery to address"
-msgstr "Dostawa na adres"
-
-#: templates/public/cart/cart.html:102
-msgid "Self-pickup from warehouse"
-msgstr "Odbiór osobisty z magazynu"
-
-#: templates/public/cart/cart.html:112
-msgid "Select delivery address:"
-msgstr "Wybierz adres dostawy:"
-
-#: templates/public/cart/cart.html:117
-msgid "Use existing address"
-msgstr "Użyj istniejącego adresu"
-
-#: templates/public/cart/cart.html:125
-msgid "Add new address"
-msgstr "Dodaj nowy adres"
-
-#: templates/public/cart/cart.html:129
-msgid "Saved addresses:"
-msgstr "Zapisane adresy:"
-
-#: templates/public/cart/cart.html:135
-msgid "Name"
-msgstr "Nazwa"
-
-#: templates/public/cart/cart.html:136
-#: templates/public/orders/order_details.html:107
-#: templates/public.user.profile.html:121 templates.public.user.profile.html:166
-msgid "Address"
-msgstr "Adres"
-
-#: templates/public/cart/cart.html:137
-msgid "City"
-msgstr "Miasto"
-
-#: templates/public/cart/cart.html:157
-msgid "No saved addresses found."
-msgstr "Nie znaleziono zapisanych adresów."
-
-#: templates/public/cart/cart.html:169
-msgid "Enter new address:"
-msgstr "Wprowadź nowy adres:"
-
-#: templates/public/cart/cart.html:174 templates.public.user.profile.html:118
-#: templates/public.user.profile.html:163
-msgid "First Name"
-msgstr "Imię"
-
-#: templates/public/cart/cart.html:179 templates.public.user.profile.html:163
-msgid "Last Name"
-msgstr "Nazwisko"
-
-#: templates/public/cart/cart.html:184
-msgid "Street Address"
-msgstr "Adres ulicy"
-
-#: templates/public/cart/cart.html:189
-msgid "City/Town"
-msgstr "Miasto"
-
-#: templates/public/cart/cart.html:194
-msgid "Postal Code"
-msgstr "Kod pocztowy"
-
-#: templates/public/cart/cart.html:199
-msgid "Country"
-msgstr "Kraj"
-
-#: templates/public/cart/cart.html:205
-msgid "Save this address for future orders"
-msgstr "Zapisz ten adres do przyszłych zamówień"
-
-#: templates/public/cart/cart.html:218
-msgid "Request invoice with company details"
-msgstr "Poproś o fakturę z danymi firmy"
-
-#: templates/public/cart/cart.html:229
-msgid "Select company:"
-msgstr "Wybierz firmę:"
-
-#: templates/public/cart/cart.html:234
-msgid "Use existing company"
-msgstr "Użyj istniejącej firmy"
-
-#: templates/public/cart/cart.html:241
-msgid "Add new company"
-msgstr "Dodaj nową firmę"
-
-#: templates/public/cart/cart.html:268
-msgid "Save this company for future orders"
-msgstr "Zapisz tę firmę do przyszłych zamówień"
-
-#: templates/public/cart/cart.html:282
-msgid "Place Order"
-msgstr "Złóż zamówienie"
-
-#: templates/public/cart/cart.html:462
-msgid "Please select a delivery address or enter a new one"
-msgstr "Proszę wybrać adres dostawy lub wprowadzić nowy"
-
-#: templates/public/cart/cart.html:474
-msgid "Please fill in all required delivery address fields"
-msgstr "Proszę wypełnić wszystkie wymagane pola adresu dostawy"
-
-#: templates/public.orders.list_orders.html:3
-#: templates/public.orders.list_orders.html:9
-#: templates/public.orders.orders.html:10
-msgid "My Orders"
-msgstr "Moje zamówienia"
-
-#: templates/public.orders.list_orders.html:16
-#: templates/public.orders.orders.html:16
-msgid "Order History"
-msgstr "Historia zamówień"
-
-#: templates/public.orders.list_orders.html:21
-#: templates/public.orders.orders.html:21
-msgid "You have no orders yet."
-msgstr "Nie masz jeszcze żadnych zamówień."
-
-#: templates/public/orders/order_details.html:3
-#: templates/public/orders/order_details.html:9
-msgid "Order Details"
-msgstr "Szczegóły zamówienia"
-
-#: templates/public/orders/order_details.html:17
-msgid "Order #{order_id}"
-msgstr "Zamówienie nr {order_id}"
-
-#: templates/public/orders/order_details.html:19
-msgid "Placed on:"
-msgstr "Złożone dnia:"
-
-#: templates/public/orders/order_details.html:27
-msgid "Order Status:"
-msgstr "Status zamówienia:"
-
-#: templates/public/orders/order_details.html:31
-#: templates/public/orders/order_details.html:51
-msgid "Pending"
-msgstr "Oczekujące"
-
-#: templates/public/orders/order_details.html:33
-#: templates/public/orders/order_details.html:53
-msgid "Processing"
-msgstr "Przetwarzanie"
-
-#: templates/public/orders/order_details.html:35
-#: templates/public/orders/order_details.html:55
-msgid "Shipped"
-msgstr "Wysłane"
-
-#: templates/public/orders/order_details.html:37
-#: templates/public/orders/order_details.html:57
-msgid "Delivered"
-msgstr "Dostarczone"
-
-#: templates/public/orders/order_details.html:39
-#: templates/public/orders/order_details.html:59
-msgid "Cancelled"
-msgstr "Anulowane"
-
-#: templates/public/orders/order_details.html:75
-msgid "Order Summary:"
-msgstr "Podsumowanie zamówienia:"
-
-#: templates/public/orders/order_details.html:82
-msgid "Delivery Method:"
-msgstr "Metoda dostawy:"
-
-#: templates/public/orders/order_details.html:84
-msgid "Self Pickup"
-msgstr "Odbiór osobisty"
-
-#: templates/public/orders/order_details.html:103
-msgid "Customer Information"
-msgstr "Informacje o kliencie"
-
-#: templates/public/orders/order_details.html:105
-msgid "Customer"
-msgstr "Klient"
-
-#: templates/public/orders/order_details.html:119
-msgid "Invoice Details:"
-msgstr "Szczegóły faktury:"
-
-#: templates/public/orders/order_details.html:121
-msgid "Company Name:"
-msgstr "Nazwa firmy:"
-
-#: templates/public/orders/order_details.html:125
-msgid "VAT Number:"
-msgstr "Numer VAT:"
-
-#: templates/public/orders/order_details.html:129
-msgid "Registration Number:"
-msgstr "Numer rejestracyjny:"
-
-#: templates/public/orders/order_details.html:133
-msgid "Company Address:"
-msgstr "Adres firmy:"
-
-
-#: templates/public/orders/order_details.html:143
-msgid "Order Items"
-msgstr "Elementy zamówienia"
-
-#: templates/public/orders/order_details.html:182
-msgid "Return to Orders"
-msgstr "Powrót do zamówień"
-
-#: templates/public.orders.confirmation.html:5
-msgid "Order confirmation at AutogroupEU. Your order has been successfully placed."
-msgstr "Potwierdzenie zamówienia w AutogroupEU. Twoje zamówienie zostało pomyślnie złożone."
-
-#: templates/public.orders.confirmation.html:14
-msgid "Order Confirmation"
-msgstr "Potwierdzenie zamówienia"
-
-#: templates/public.orders.confirmation.html:23
-msgid "Thank You for Your Order!"
-msgstr "Dziękujemy za Twoje zamówienie!"
-
-#: templates/public.orders.confirmation.html:24
-msgid "Your order has been placed successfully."
-msgstr "Twoje zamówienie zostało pomyślnie złożone."
-
-#: templates/public.orders.confirmation.html:26
-msgid "Order Number"
-msgstr "Numer zamówienia"
-
-msgid "Order Summary"
-msgstr "Podsumowanie zamówienia"
-
-#: templates/public.orders.confirmation.html:57
-#: templates/public/orders/order_details.html:153
-msgid "Product"
-msgstr "Produkt"
-
-#: templates/public.orders.confirmation.html:90
-msgid "What Happens Next?"
-msgstr "Co dalej?"
-
-#: templates/public.orders.confirmation.html:97
-msgid "Order Confirmation Email"
-msgstr "E-mail z potwierdzeniem zamówienia"
-
-#: templates/public.orders.confirmation.html:98
-msgid "We've sent a confirmation email with your order details."
-msgstr "Wysłaliśmy e-mail z potwierdzeniem zawierający szczegóły Twojego zamówienia."
-
-#: templates/public.orders.confirmation.html:105
-msgid "We'll process your order and prepare it for shipping."
-msgstr "Przetworzymy Twoje zamówienie i przygotujemy je do wysyłki."
-
-#: templates/public.orders.confirmation.html:111
-msgid "Shipping"
-msgstr "Wysyłka"
-
-#: templates/public.orders.confirmation.html:112
-msgid "Once shipped, you'll receive tracking information via email."
-msgstr "Po wysyłce otrzymasz informacje o śledzeniu przesyłki e-mailem."
-
-#: templates/public.orders.confirmation.html:122
-msgid "Return to Homepage"
-msgstr "Powrót do strony głównej"
-
-#: templates/public.orders.confirmation.html:125
-msgid "View My Orders"
-msgstr "Zobacz moje zamówienia"
-
-#: templates/emails/invoice_email.html:156
-msgid "greeting"
-msgstr "Szanowny Kliencie,"
-
-#: templates/emails/invoice_email.html:157
-msgid "invoice_attached"
-msgstr "W załączniku znajdziesz fakturę do Twojego zamówienia."
-
-#: templates/emails/invoice_email.html:158
-msgid "order_details"
-msgstr "Szczegóły zamówienia"
-
-#: templates/emails/invoice_email.html:159
-msgid "article"
-msgstr "Artykuł"
-
-#: templates/emails/invoice_email.html:160
-msgid "price"
-msgstr "Cena"
-
-#: templates/emails/invoice_email.html:161
-msgid "quantity"
-msgstr "Ilość"
-
-#: templates/emails/invoice_email.html:162
-msgid "total"
-msgstr "Suma"
-
-#: templates/emails/invoice_email.html:163
-msgid "delivery_info"
-msgstr "Informacje o dostawie"
-
-#: templates/emails/invoice_email.html:164
-msgid "self_pickup"
-msgstr "Odbiór osobisty"
-
-#: templates/emails/invoice_email.html:165
-msgid "delivery_cost"
-msgstr "Koszt dostawy:"
-
-#: templates/emails/invoice_email.html:166
-msgid "total_with_delivery"
-msgstr "Suma z dostawą"
-
-#: templates/emails/invoice_email.html:167
-msgid "payment_instruction"
-msgstr "Prosimy o dokonanie płatności przelewem bankowym na nasze konto."
-
-#: templates/emails/invoice_email.html:168
-msgid "thank_you"
-msgstr "Dziękujemy za Twoje zamówienie!"
-
-#: templates/emails/invoice_email.html:169
-msgid "contact_us"
-msgstr "W przypadku jakichkolwiek pytań, prosimy o kontakt z nami."
-
-#: templates/emails/invoice_email.html:170
-msgid "footer_text"
-msgstr "Ta wiadomość jest generowana automatycznie. Prosimy nie odpowiadać na ten email."
-
-msgid "Profile"
-msgstr "Profil"
-
-#: templates/public.user.profile.html:21
-msgid "Welcome to your profile"
-msgstr "Witaj w swoim profilu"
-
-#: templates/public.user.profile.html:28
-msgid "Personal Information"
-msgstr "Informacje osobiste"
-
-#: templates/public.user.profile.html:30
-msgid "Email (Username)"
-msgstr "Email (Nazwa użytkownika)"
-
-#: templates/public.user.profile.html:31
-msgid "Current Password"
-msgstr "Obecne hasło"
-
-#: templates/public.user.profile.html:32
-msgid "New Password"
-msgstr "Nowe hasło"
-
-#: templates/public.user.profile.html:75
-msgid "Update Profile"
-msgstr "Zaktualizuj profil"
-
-#: templates/public.user.profile.html:93
-msgid "Addresses"
-msgstr "Adresy"
-
-#: templates/public.user.profile.html:95
-msgid "Manage your delivery addresses"
-msgstr "Zarządzaj swoimi adresami dostawy"
-
-#: templates/public.user.profile.html:99
-msgid "Add Address"
-msgstr "Dodaj adres"
-
-#: templates/public.user.profile.html:120
-msgid "City/ZIP"
-msgstr "Miasto/Kod pocztowy"
-
-#: templates/public.user.profile.html:141
-msgid "Make Default"
-msgstr "Ustaw jako domyślny"
-
-#: templates/public.user.profile.html:144
-msgid "Delete"
-msgstr "Usuń"
-
-#: templates/public.user.profile.html:153
-msgid "No saved addresses"
-msgstr "Brak zapisanych adresów"
-
-#: templates/public.user.profile.html:157
-msgid "Add New Address"
-msgstr "Dodaj nowy adres"
-
-#: templates/public.user.profile.html:165
-msgid "ZIP Code"
-msgstr "Kod pocztowy"
-
-#: templates/public.user.profile.html:169
-msgid "Street"
-msgstr "Ulica"
-
-#: templates/public.user.profile.html:183
-msgid "Save Address"
-msgstr "Zapisz adres"
-
-#: templates/public.user.profile.html:192 templates.public.user.profile.html:305
-msgid "Cancel"
-msgstr "Anuluj"
-
-msgid "Company Information"
-msgstr "Informacje o firmie"
-
-#: templates/public.user.profile.html:219
-msgid "Manage your company information for invoicing"
-msgstr "Zarządzaj informacjami o firmie do fakturowania"
-
-#: templates/public.user.profile.html:223
-msgid "Add Company"
-msgstr "Dodaj firmę"
-
-#: templates/public.user.profile.html:244
-msgid "Set Default"
-msgstr "Ustaw jako domyślną"
-
-#: templates/public.user.profile.html:253
-msgid "No companies added"
-msgstr "Nie dodano firm"
-
-#: templates/public.user.profile.html:257
-msgid "Add New Company"
-msgstr "Dodaj nową firmę"
-
-#: templates/public.user.profile.html:300
-msgid "Save Company"
-msgstr "Zapisz firmę"
-
-#: templates/public.user.profile.html:339
-msgid "Password must be at least 8 characters long"
-msgstr "Hasło musi mieć co najmniej 8 znaków"
-
-#: templates/public.user.profile.html:343
-msgid "Confirm New Password"
-msgstr "Potwierdź nowe hasło"
-
-#: templates/base/public_base.html:248
-msgid "Logout"
-msgstr "Wyloguj się"
-
-#: templates/base/public_base.html:309
-msgid "This website uses cookies..."
-msgstr "Ta strona używa plików cookie..."
+#~ msgid "Your Shopping Cart"
+#~ msgstr "Twój koszyk zakupów"
+
+#~ msgid "Your cart is currently empty."
+#~ msgstr "Twój koszyk jest obecnie pusty."
+
+#~ msgid "Special instructions for your order"
+#~ msgstr "Specjalne instrukcje dla Twojego zamówienia"
+
+#~ msgid "Checkout"
+#~ msgstr "Do kasy"
+
+#~ msgid "Subtotal"
+#~ msgstr "Suma częściowa"
+
+#~ msgid "Select delivery method:"
+#~ msgstr "Wybierz metodę dostawy:"
+
+#~ msgid "Delivery to address"
+#~ msgstr "Dostawa na adres"
+
+#~ msgid "Self-pickup from warehouse"
+#~ msgstr "Odbiór osobisty z magazynu"
+
+#~ msgid "Use existing address"
+#~ msgstr "Użyj istniejącego adresu"
+
+#~ msgid "Add new address"
+#~ msgstr "Dodaj nowy adres"
+
+#~ msgid "Saved addresses:"
+#~ msgstr "Zapisane adresy:"
+
+#~ msgid "Enter new address:"
+#~ msgstr "Wprowadź nowy adres:"
+
+#~ msgid "First Name"
+#~ msgstr "Imię"
+
+#~ msgid "City/Town"
+#~ msgstr "Miasto"
+
+#~ msgid "Use existing company"
+#~ msgstr "Użyj istniejącej firmy"
+
+#~ msgid "Add new company"
+#~ msgstr "Dodaj nową firmę"
+
+#~ msgid "Order History"
+#~ msgstr "Historia zamówień"
+
+#~ msgid "Order #{order_id}"
+#~ msgstr "Zamówienie nr {order_id}"
+
+#~ msgid "Placed on:"
+#~ msgstr "Złożone dnia:"
+
+#~ msgid "Order Status:"
+#~ msgstr "Status zamówienia:"
+
+#~ msgid "Order Summary:"
+#~ msgstr "Podsumowanie zamówienia:"
+
+#~ msgid "Delivery Method:"
+#~ msgstr "Metoda dostawy:"
+
+#~ msgid "Self Pickup"
+#~ msgstr "Odbiór osobisty"
+
+#~ msgid "Customer Information"
+#~ msgstr "Informacje o kliencie"
+
+#~ msgid "Customer"
+#~ msgstr "Klient"
+
+#~ msgid "Invoice Details:"
+#~ msgstr "Szczegóły faktury:"
+
+#~ msgid "Company Name:"
+#~ msgstr "Nazwa firmy:"
+
+#~ msgid "VAT Number:"
+#~ msgstr "Numer VAT:"
+
+#~ msgid "Company Address:"
+#~ msgstr "Adres firmy:"
+
+#~ msgid "Return to Orders"
+#~ msgstr "Powrót do zamówień"
+
+#~ msgid "greeting"
+#~ msgstr "Szanowny Kliencie,"
+
+#~ msgid "invoice_attached"
+#~ msgstr "W załączniku znajdziesz fakturę do Twojego zamówienia."
+
+#~ msgid "order_details"
+#~ msgstr "Szczegóły zamówienia"
+
+#~ msgid "price"
+#~ msgstr "Cena"
+
+#~ msgid "quantity"
+#~ msgstr "Ilość"
+
+#~ msgid "delivery_info"
+#~ msgstr "Informacje o dostawie"
+
+#~ msgid "self_pickup"
+#~ msgstr "Odbiór osobisty"
+
+#~ msgid "delivery_cost"
+#~ msgstr "Koszt dostawy:"
+
+#~ msgid "total_with_delivery"
+#~ msgstr "Suma z dostawą"
+
+#~ msgid "payment_instruction"
+#~ msgstr "Prosimy o dokonanie płatności przelewem bankowym na nasze konto."
+
+#~ msgid "thank_you"
+#~ msgstr "Dziękujemy za Twoje zamówienie!"
+
+#~ msgid "contact_us"
+#~ msgstr "W przypadku jakichkolwiek pytań, prosimy o kontakt z nami."
+
+#~ msgid "footer_text"
+#~ msgstr ""
+#~ "Ta wiadomość jest generowana automatycznie."
+#~ " Prosimy nie odpowiadać na ten email."
+
+#~ msgid "Welcome to your profile"
+#~ msgstr "Witaj w swoim profilu"
+
+#~ msgid "Email (Username)"
+#~ msgstr "Email (Nazwa użytkownika)"
+
+#~ msgid "Manage your delivery addresses"
+#~ msgstr "Zarządzaj swoimi adresami dostawy"
+
+#~ msgid "City/ZIP"
+#~ msgstr "Miasto/Kod pocztowy"
+
+#~ msgid "Make Default"
+#~ msgstr "Ustaw jako domyślny"
+
+#~ msgid "No saved addresses"
+#~ msgstr "Brak zapisanych adresów"
+
+#~ msgid "ZIP Code"
+#~ msgstr "Kod pocztowy"
+
+#~ msgid "Street"
+#~ msgstr "Ulica"
+
+#~ msgid "Save Address"
+#~ msgstr "Zapisz adres"
+
+#~ msgid "Manage your company information for invoicing"
+#~ msgstr "Zarządzaj informacjami o firmie do fakturowania"
+
+#~ msgid "No companies added"
+#~ msgstr "Nie dodano firm"
+
+#~ msgid "Save Company"
+#~ msgstr "Zapisz firmę"
 

@@ -2772,32 +2772,29 @@ def update_cart_count_in_session(user_id=None):
 
 @app.route('/set_language/<lang>')
 def set_language(lang):
-    """Встановлює мову інтерфейсу"""
+    """Встановлює мову інтерфейсу та оновлює preferred_language користувача"""
     # Якщо вибрана українська, перенаправляємо на словацьку
     if lang == 'uk':
         lang = 'sk'
         
     if lang in app.config['BABEL_SUPPORTED_LOCALES']:
-        # Зберігаємо вибір мови в сесії
         session['language'] = lang
-        g.locale = lang
+        
+        # Якщо користувач авторизований, зберігаємо його вибір в БД
+        if 'user_id' in session:
+            try:
+                with get_db_connection() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        UPDATE users SET preferred_language = %s 
+                        WHERE id = %s
+                    """, (lang, session['user_id']))
+                    conn.commit()
+                    logging.info(f"Updated preferred language for user {session['user_id']} to {lang}")
+            except Exception as e:
+                logging.error(f"Error updating preferred language: {e}")
     
     # Перенаправляємо користувача на сторінку, з якої він прийшов
-    return redirect(request.referrer or url_for('index'))
-    
-    # Якщо користувач авторизований, зберігаємо його вибір в БД
-    if 'user_id' in session:
-        try:
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    "UPDATE users SET preferred_language = %s WHERE id = %s",
-                    (language, session['user_id'])
-                )
-                conn.commit()
-        except Exception as e:
-            logging.error(f"Error updating user language: {e}")
-            
     return redirect(request.referrer or url_for('index'))
 
 @app.before_request

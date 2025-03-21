@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-03-20 19:43+0200\n"
+"POT-Creation-Date: 2025-03-21 10:36+0200\n"
 "PO-Revision-Date: 2025-03-03 22:26+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -64,442 +64,442 @@ msgstr ""
 msgid "Error validating phone number"
 msgstr ""
 
-#: app.py:747
+#: app.py:740
 msgid "Username, email or phone already registered."
 msgstr ""
 
-#: app.py:778
+#: app.py:771
 msgid "Registration successful! You are now logged in."
 msgstr ""
 
-#: app.py:783
+#: app.py:776
 msgid "Registration failed. Please try again."
 msgstr ""
 
-#: app.py:840
+#: app.py:833
 msgid "Invalid username or password"
 msgstr ""
 
-#: app.py:1057
+#: app.py:1047
 msgid "Please log in to place an order."
 msgstr ""
 
-#: app.py:1102
+#: app.py:1092
 msgid "Selected address not found"
 msgstr ""
 
-#: app.py:1166
+#: app.py:1156
 msgid "Selected company not found"
 msgstr ""
 
-#: app.py:1183
+#: app.py:1173
 msgid "Your cart is empty."
 msgstr ""
 
-#: app.py:1214 app.py:1222 app.py:1766 app.py:1770 app.py:2072 app.py:2123
+#: app.py:1204 app.py:1212 app.py:1756 app.py:1760 app.py:2062 app.py:2113
 #: templates/public/cart/cart.html:52 templates/public/product_details
 #: templates/public/product_details.html:215 копія.html:155 –
 msgid "In Stock"
 msgstr ""
 
-#: app.py:1222 app.py:1770 app.py:2124
+#: app.py:1212 app.py:1760 app.py:2114
 #: templates/public/api_search_results.html:59
 msgid "days"
 msgstr ""
 
-#: app.py:1236
+#: app.py:1226
 msgid "Your cart is empty"
 msgstr ""
 
-#: app.py:1349 app.py:4363
+#: app.py:1339 app.py:4353
 msgid "Order placed successfully!"
 msgstr ""
 
-#: app.py:1358
+#: app.py:1348
 msgid "Error placing order"
 msgstr ""
 
-#: app.py:1380 app.py:1516
+#: app.py:1370 app.py:1506
 msgid "Please log in to view order details."
 msgstr ""
 
-#: app.py:1386
+#: app.py:1376
 msgid "Order not found"
 msgstr ""
 
-#: app.py:1390
+#: app.py:1380
 msgid "Access denied"
 msgstr ""
 
-#: app.py:1410
+#: app.py:1400
 msgid "Error displaying order confirmation."
 msgstr ""
 
-#: app.py:1471
+#: app.py:1461
 msgid "Cart cleared successfully"
 msgstr ""
 
-#: app.py:1481
+#: app.py:1471
 msgid "Please log in to view your orders."
 msgstr ""
 
-#: app.py:1504
+#: app.py:1494
 msgid "Error retrieving your orders"
 msgstr ""
 
-#: app.py:1534
+#: app.py:1524
 msgid "Order not found."
 msgstr ""
 
-#: app.py:1560 app.py:4512
+#: app.py:1550 app.py:4502
 msgid "Error loading order details."
 msgstr ""
 
-#: app.py:1579
+#: app.py:1569
 msgid "You have been logged out."
 msgstr ""
 
-#: app.py:1659
+#: app.py:1649
 msgid "Please log in to view your cart."
 msgstr ""
 
-#: app.py:1792 app.py:2157 app.py:3672 app.py:5027
+#: app.py:1782 app.py:2147 app.py:3662 app.py:5017
 msgid "An error occurred while processing your request."
 msgstr ""
 
-#: app.py:1832 app.py:3063
+#: app.py:1822 app.py:3053
 msgid "Invalid token."
 msgstr ""
 
-#: app.py:1837
+#: app.py:1827
 msgid "Please log in."
 msgstr ""
 
-#: app.py:1842
+#: app.py:1832
 msgid "You don't have permission to access this page."
 msgstr ""
 
-#: app.py:2624
+#: app.py:2614
 msgid "Please log in to manage your cart."
 msgstr ""
 
-#: app.py:2637
+#: app.py:2627
 msgid "Missing article information"
 msgstr ""
 
-#: app.py:2641 app.py:3195
+#: app.py:2631 app.py:3185
 msgid "Quantity must be at least 1"
 msgstr ""
 
-#: app.py:2660
+#: app.py:2650
 msgid "Cart updated successfully"
 msgstr ""
 
-#: app.py:2663 app.py:4162
+#: app.py:2653 app.py:4152
 msgid "Item not found in cart"
 msgstr ""
 
-#: app.py:2672
+#: app.py:2662
 msgid "Invalid quantity"
 msgstr ""
 
-#: app.py:2676
+#: app.py:2666
 msgid "Error updating cart"
 msgstr ""
 
-#: app.py:2691
+#: app.py:2681
 msgid "Missing article or table name"
 msgstr ""
 
-#: app.py:2719
+#: app.py:2709
 msgid "Item removed from cart"
 msgstr ""
 
-#: app.py:2722
+#: app.py:2712
 msgid "Item not found in your cart"
 msgstr ""
 
-#: app.py:2731 app.py:4167
+#: app.py:2721 app.py:4157
 msgid "Error removing item from cart"
 msgstr ""
 
-#: app.py:3170
+#: app.py:3160
 msgid "Missing required product information"
 msgstr ""
 
-#: app.py:3177
+#: app.py:3167
 msgid "Invalid price format"
 msgstr ""
 
-#: app.py:3201
+#: app.py:3191
 msgid "Please log in or register to add this item to your cart."
 msgstr ""
 
-#: app.py:3224
+#: app.py:3214
 msgid "Item added to cart"
 msgstr ""
 
-#: app.py:3235
+#: app.py:3225
 msgid "Error adding item to cart"
 msgstr ""
 
-#: app.py:3273 app.py:3289
+#: app.py:3263 app.py:3279
 msgid "Please enter an article for search."
 msgstr ""
 
-#: app.py:3316
+#: app.py:3306
 msgid "An error occurred during the search. Please try again later."
 msgstr ""
 
-#: app.py:3507
+#: app.py:3497
 msgid "Please enter at least one article."
 msgstr ""
 
-#: app.py:3618
+#: app.py:3608
 msgid "Articles not found: {articles}"
 msgstr ""
 
-#: app.py:3647
+#: app.py:3637
 msgid "Added to cart: {articles}"
 msgstr ""
 
-#: app.py:3684
+#: app.py:3674
 msgid "You need to log in to view search results."
 msgstr ""
 
-#: app.py:3746
+#: app.py:3736
 msgid "Your selection has been saved!"
 msgstr ""
 
-#: app.py:3750
+#: app.py:3740
 msgid "An error occurred while saving your selection. Please try again."
 msgstr ""
 
-#: app.py:3771
+#: app.py:3761
 msgid "No search results found. Please start a new search."
 msgstr ""
 
-#: app.py:3788
+#: app.py:3778
 msgid "An error occurred while retrieving search results."
 msgstr ""
 
-#: app.py:3808
+#: app.py:3798
 msgid "You need to log in to view your cart."
 msgstr ""
 
-#: app.py:3921
+#: app.py:3911
 msgid "Could not load your cart. Please try again."
 msgstr ""
 
-#: app.py:3941 app.py:7342
+#: app.py:3931 app.py:7332
 msgid "User not authenticated"
 msgstr ""
 
-#: app.py:3990
+#: app.py:3980
 msgid "No articles selected"
 msgstr ""
 
-#: app.py:4019
+#: app.py:4009
 msgid "Selection successfully submitted!"
 msgstr ""
 
-#: app.py:4024
+#: app.py:4014
 msgid "An error occurred during submission"
 msgstr ""
 
-#: app.py:4038
+#: app.py:4028
 msgid "Search results cleared successfully"
 msgstr ""
 
-#: app.py:4044
+#: app.py:4034
 msgid "Error clearing search results"
 msgstr ""
 
-#: app.py:4072 app.py:4267
+#: app.py:4062 app.py:4257
 msgid "User is not authenticated. Please log in."
 msgstr ""
 
-#: app.py:4105
+#: app.py:4095
 msgid "Product added to cart!"
 msgstr ""
 
-#: app.py:4108
+#: app.py:4098
 msgid "Error adding product to cart."
 msgstr ""
 
-#: app.py:4142
+#: app.py:4132
 msgid "Missing required information for removal"
 msgstr ""
 
-#: app.py:4159
+#: app.py:4149
 msgid "Article {article} removed successfully"
 msgstr ""
 
-#: app.py:4186
+#: app.py:4176
 msgid "Invalid input: article or quantity missing."
 msgstr ""
 
-#: app.py:4193
+#: app.py:4183
 msgid "Quantity must be at least 1."
 msgstr ""
 
-#: app.py:4210
+#: app.py:4200
 msgid "Cart updated successfully!"
 msgstr ""
 
-#: app.py:4214
+#: app.py:4204
 msgid "Error updating cart."
 msgstr ""
 
-#: app.py:4285
+#: app.py:4275
 msgid "Your cart is empty!"
 msgstr ""
 
-#: app.py:4356
+#: app.py:4346
 msgid "Order placed, but we couldn't send a confirmation email."
 msgstr ""
 
-#: app.py:4370
+#: app.py:4360
 msgid "Error placing order: {error}"
 msgstr ""
 
-#: app.py:4388
+#: app.py:4378
 msgid "User is not authenticated."
 msgstr ""
 
-#: app.py:4454
+#: app.py:4444
 msgid "Error fetching orders."
 msgstr ""
 
-#: app.py:4899
+#: app.py:4889
 msgid "Category not found."
 msgstr ""
 
-#: app.py:7409
+#: app.py:7399
 msgid "Some articles still need table selection."
 msgstr ""
 
-#: app.py:7411
+#: app.py:7401
 msgid "All selected articles have been added to your cart."
 msgstr ""
 
-#: app.py:7457
+#: app.py:7447
 msgid "An error occurred while processing your selection. Please try again."
 msgstr ""
 
-#: app.py:7651
+#: app.py:7641
 msgid "News created successfully!"
 msgstr ""
 
-#: app.py:7656
+#: app.py:7646
 msgid "Error creating news"
 msgstr ""
 
-#: app.py:8264
+#: app.py:8254
 msgid "Error loading news"
 msgstr ""
 
-#: app.py:8295
+#: app.py:8285
 msgid "News not found"
 msgstr ""
 
-#: app.py:8668
+#: app.py:8658
 msgid "Delivery address updated"
 msgstr ""
 
-#: app.py:8684
+#: app.py:8674
 msgid "Invoice details updated"
 msgstr ""
 
-#: app.py:8686
+#: app.py:8676
 msgid "Invalid invoice data format"
 msgstr ""
 
-#: app.py:8778
+#: app.py:8768
 msgid "Item processed successfully"
 msgstr ""
 
-#: app.py:8791
+#: app.py:8781
 msgid "Error processing orders"
 msgstr ""
 
-#: app.py:9085
+#: app.py:9075
 msgid "Please login to access your profile"
 msgstr ""
 
-#: app.py:9135
+#: app.py:9125
 msgid "Invalid email format"
 msgstr ""
 
-#: app.py:9142 app.py:9196
+#: app.py:9132 app.py:9186
 msgid "This email is already in use by another user"
 msgstr ""
 
-#: app.py:9148 app.py:9198
+#: app.py:9138 app.py:9188
 msgid "This phone number is already in use by another user"
 msgstr ""
 
-#: app.py:9159
+#: app.py:9149
 msgid "Current password is incorrect"
 msgstr ""
 
-#: app.py:9164
+#: app.py:9154
 msgid "New passwords do not match"
 msgstr ""
 
-#: app.py:9177
+#: app.py:9167
 msgid "Profile and password updated successfully"
 msgstr ""
 
-#: app.py:9190
+#: app.py:9180
 msgid "Profile updated successfully"
 msgstr ""
 
-#: app.py:9200
+#: app.py:9190
 msgid "Error updating profile: duplicate value"
 msgstr ""
 
-#: app.py:9231
+#: app.py:9221
 msgid "Address added successfully"
 msgstr ""
 
-#: app.py:9243
+#: app.py:9233
 msgid "Address deleted successfully"
 msgstr ""
 
-#: app.py:9265
+#: app.py:9255
 msgid "Default address updated"
 msgstr ""
 
-#: app.py:9292
+#: app.py:9282
 msgid "Company added successfully"
 msgstr ""
 
-#: app.py:9304
+#: app.py:9294
 msgid "Company deleted successfully"
 msgstr ""
 
-#: app.py:9326
+#: app.py:9316
 msgid "Default company updated"
 msgstr ""
 
-#: app.py:9334
+#: app.py:9324
 msgid "Ukrainian"
 msgstr ""
 
-#: app.py:9334
+#: app.py:9324
 msgid "English"
 msgstr ""
 
-#: app.py:9334
+#: app.py:9324
 msgid "Slovak"
 msgstr ""
 
-#: app.py:9334
+#: app.py:9324
 msgid "Polish"
 msgstr ""
 
-#: app.py:9340
+#: app.py:9330
 msgid "Error accessing user profile"
 msgstr ""
 

@@ -16,7 +16,8 @@ import psycopg2.extras
 from flask import (
     Flask, render_template, request, session,
     redirect, url_for, flash, jsonify, render_template_string,
-    send_file, get_flashed_messages, g, send_from_directory
+    send_file, get_flashed_messages, g, send_from_directory,
+    make_response  
 )
 import jinja2
 from flask_babel import Babel, gettext as _
@@ -32,6 +33,7 @@ from werkzeug.utils import secure_filename
 from email.mime.base import MIMEBase
 from email import encoders
 import os
+import math
 
 
 # Create Flask app first
@@ -81,7 +83,25 @@ LANGUAGES = {
 #    'sk': 'Slovenský',
 #    'pl': 'Polski'
 #}
-    
+
+
+
+
+@app.route('/robots.txt')
+def robots():
+    """Генерує файл robots.txt з посиланням на sitemap"""
+    robots_content = """User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /*/admin/
+Disallow: /*token*/
+Disallow: /debug_*
+Disallow: /user-profile
+Sitemap: https://autogroup.sk/sitemap.xml
+"""
+    response = make_response(robots_content)
+    response.headers["Content-Type"] = "text/plain"
+    return response
 
 # Додайте на початку файлу або в підходящому місці
 @app.before_request
@@ -8474,42 +8494,6 @@ def edit_news(token, news_id):
 
 
 
-@app.route('/sitemap.xml')
-def sitemap():
-    """Generate sitemap XML"""
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Отримуємо всі артикули з таблиці products
-        cursor.execute("SELECT article FROM products")
-        articles = [row['article'] for row in cursor.fetchall()]
-
-        # Створюємо XML
-        xml = """<?xml version="1.0" encoding="UTF-8"?>
-                  <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">"""
-        for article in articles:
-            xml += f"""<url>
-                           <loc>{url_for('product_details', article=article, _external=True)}</loc>
-                           <changefreq>weekly</changefreq>
-                         </url>"""
-        xml += "</urlset>"
-
-        response = make_response(xml)
-        response.headers["Content-Type"] = "application/xml"
-
-        return response
-
-    except Exception as e:
-        logging.error(f"Error generating sitemap: {e}", exc_info=True)
-        return "Error generating sitemap", 500
-
-    finally:
-        if 'conn' in locals() and conn:
-            conn.close()
-
-
-
 
 @app.route('/<token>/admin/process-orders', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
@@ -9727,6 +9711,404 @@ def send_invoice_email(to_email, subject, ordered_items, delivery_data, invoice_
         logging.error(f"Не вдалося надіслати інвойс до {to_email}: {str(e)}")
         return False
 
+
+
+@app.route('/sitemap.xml', endpoint='sitemap_xml')
+def sitemap():
+    """Redirect to sitemap index"""
+    print("DEBUG: sitemap() function called")
+    logging.info("sitemap() function redirecting to sitemap-index.xml")  
+    return redirect(url_for('sitemap_index_xml'))  # Використовуйте url_for замість прямого URL
+
+@app.route('/sitemap-index.xml', endpoint='sitemap_index_xml')
+def sitemap_index():
+    """Generate sitemap index XML"""
+    try:
+        host_base = request.host_url.rstrip('/')
+        if 'localhost' in host_base or '127.0.0.1' in host_base:
+            host_base = "https://autogroup.sk"
+        
+        sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        sitemap_xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        
+        # Додаємо статичні та категорії sitemaps
+        sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-static.xml</loc>\n    <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>\n  </sitemap>\n'
+        sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-categories.xml</loc>\n    <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>\n  </sitemap>\n'
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # 1. Товари зі складу (stock)
+        cursor.execute("SELECT COUNT(*) FROM stock WHERE quantity > 0")
+        stock_products = cursor.fetchone()[0]
+        
+        # Отримання всіх таблиць прайс-листів
+        cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
+        price_list_tables = [row[0] for row in cursor.fetchall()]
+        
+        # Формуємо динамічний SQL для запиту всіх товарів з прайс-листів
+        union_queries = []
+        for table in price_list_tables:
+            # Використовуємо прямі імена таблиць без префіксів
+            union_queries.append(f"SELECT article, '{table}' AS source_table FROM {table}")
+        
+        if union_queries:  # Перевіряємо, чи є хоч один запит
+            all_price_list_query = " UNION ALL ".join(union_queries)
+            
+            # 2. Товари з інших прайсів з описами або фото
+            enriched_query = f"""
+                SELECT COUNT(DISTINCT pl.article) 
+                FROM ({all_price_list_query}) pl
+                JOIN (
+                    SELECT p.article FROM products p
+                    UNION
+                    SELECT pi.product_article FROM product_images pi
+                ) AS enriched ON pl.article = enriched.article
+                LEFT JOIN stock s ON pl.article = s.article
+                WHERE s.article IS NULL
+            """
+            cursor.execute(enriched_query)
+            enriched_products = cursor.fetchone()[0]
+            
+            # 3. Всі інші товари з прайсів
+            other_query = f"""
+                SELECT COUNT(DISTINCT pl.article) 
+                FROM ({all_price_list_query}) pl
+                LEFT JOIN (
+                    SELECT p.article FROM products p
+                    UNION
+                    SELECT pi.product_article FROM product_images pi
+                ) AS enriched ON pl.article = enriched.article
+                LEFT JOIN stock s ON pl.article = s.article
+                WHERE s.article IS NULL AND enriched.article IS NULL
+            """
+            cursor.execute(other_query)
+            other_products = cursor.fetchone()[0]
+        else:
+            # Якщо немає прайс-листів, встановлюємо значення за замовчуванням
+            enriched_products = 0
+            other_products = 0
+        
+        # Розраховуємо кількість файлів для кожного типу товарів
+        products_per_sitemap = 40000
+        stock_sitemaps = max(1, math.ceil(stock_products / products_per_sitemap))
+        enriched_sitemaps = max(1, math.ceil(enriched_products / products_per_sitemap)) if enriched_products > 0 else 0
+        other_sitemaps = max(1, math.ceil(other_products / products_per_sitemap)) if other_products > 0 else 0
+        
+        # Додаємо файли для товарів зі складу
+        for i in range(stock_sitemaps):
+            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-stock-{i+1}.xml</loc>\n    <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>\n  </sitemap>\n'
+        
+        # Додаємо файли для товарів з описами/фото
+        for i in range(enriched_sitemaps):
+            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-enriched-{i+1}.xml</loc>\n    <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>\n  </sitemap>\n'
+        
+        # Додаємо файли для решти товарів
+        for i in range(other_sitemaps):
+            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-other-{i+1}.xml</loc>\n    <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>\n  </sitemap>\n'
+        
+        cursor.close()
+        conn.close()
+        
+        sitemap_xml += '</sitemapindex>'
+        
+        response = make_response(sitemap_xml)
+        response.headers['Content-Type'] = 'application/xml'
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error generating sitemap index: {e}", exc_info=True)
+        return f"Error generating sitemap index: {e}", 500
+
+@app.route('/sitemap-static.xml')
+def sitemap_static():
+    """Generate sitemap for static pages"""
+    try:
+        host_base = request.host_url.rstrip('/')
+        if 'localhost' in host_base or '127.0.0.1' in host_base:
+            host_base = "https://autogroup.sk"
+        
+        sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        
+        # Додаємо головну сторінку
+        sitemap_xml += f'  <url>\n    <loc>{host_base}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n'
+        
+        # Додаємо статичні сторінки
+        static_pages = [
+            '/about', 
+            '/contacts', 
+            '/shipping-payment', 
+            '/returns', 
+            '/car-service',
+            '/terms',
+            '/privacy'
+        ]
+        
+        for page in static_pages:
+            sitemap_xml += f'  <url>\n    <loc>{host_base}{page}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n'
+        
+        sitemap_xml += '</urlset>'
+        
+        response = make_response(sitemap_xml)
+        response.headers['Content-Type'] = 'application/xml'
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error generating static sitemap: {e}", exc_info=True)
+        return f"Error generating static sitemap: {e}", 500
+
+
+
+@app.route('/sitemap-categories.xml', endpoint='sitemap_categories_xml')
+def sitemap_categories():
+    """Generate sitemap for categories"""
+    try:
+        host_base = request.host_url.rstrip('/')
+        if 'localhost' in host_base or '127.0.0.1' in host_base:
+            host_base = "https://autogroup.sk"
+        
+        sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримуємо всі категорії
+        cursor.execute("SELECT slug FROM categories WHERE slug IS NOT NULL AND slug != ''")
+        categories = cursor.fetchall()
+        
+        # Додаємо URL-адреси категорій
+        for category in categories:
+            if category['slug']:
+                sitemap_xml += f'  <url>\n    <loc>{host_base}/category/{category["slug"]}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n'
+        
+        cursor.close()
+        conn.close()
+        
+        sitemap_xml += '</urlset>'
+        
+        response = make_response(sitemap_xml)
+        response.headers['Content-Type'] = 'application/xml'
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error generating categories sitemap: {e}", exc_info=True)
+        return f"Error generating categories sitemap: {e}", 500
+
+@app.route('/sitemap-stock-<int:page>.xml', endpoint='sitemap_stock_xml')
+def sitemap_stock(page):
+    """Generate sitemap for stock products with pagination"""
+    try:
+        host_base = request.host_url.rstrip('/')
+        if 'localhost' in host_base or '127.0.0.1' in host_base:
+            host_base = "https://autogroup.sk"
+        
+        sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        sitemap_xml += 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+        
+        products_per_sitemap = 40000
+        offset = (page - 1) * products_per_sitemap
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримуємо товари зі складу з їх зображеннями з пагінацією
+        cursor.execute("""
+            SELECT s.article, pi.image_url 
+            FROM stock s
+            LEFT JOIN product_images pi ON s.article = pi.product_article
+            WHERE s.quantity > 0
+            ORDER BY s.article
+            LIMIT %s OFFSET %s
+        """, (products_per_sitemap, offset))
+        
+        products = cursor.fetchall()
+        
+        product_images = {}
+        
+        # Збираємо дані про товари та їх зображення
+        for product in products:
+            article = product['article']
+            if article:
+                if article not in product_images:
+                    product_images[article] = []
+                
+                if product['image_url']:
+                    product_images[article].append(product['image_url'])
+        
+        # Додаємо URL-адреси товарів з їх зображеннями
+        for article, images in product_images.items():
+            sitemap_xml += f'  <url>\n    <loc>{host_base}/product/{article}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n'
+            
+            # Додаємо зображення для товару, якщо вони є
+            for image_url in images:
+                sitemap_xml += f'    <image:image>\n      <image:loc>{image_url}</image:loc>\n    </image:image>\n'
+            
+            sitemap_xml += '  </url>\n'
+        
+        cursor.close()
+        conn.close()
+        
+        sitemap_xml += '</urlset>'
+        
+        response = make_response(sitemap_xml)
+        response.headers['Content-Type'] = 'application/xml'
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error generating stock products sitemap page {page}: {e}", exc_info=True)
+        return f"Error generating stock products sitemap: {e}", 500
+
+
+@app.route('/sitemap-enriched-<int:page>.xml', endpoint='sitemap_enriched_xml')
+def sitemap_enriched(page):
+    """Generate sitemap for products with descriptions or images"""
+    try:
+        host_base = request.host_url.rstrip('/')
+        if 'localhost' in host_base or '127.0.0.1' in host_base:
+            host_base = "https://autogroup.sk"
+        
+        sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        sitemap_xml += 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+        
+        products_per_sitemap = 40000
+        offset = (page - 1) * products_per_sitemap
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримання всіх таблиць прайс-листів
+        cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
+        price_list_tables = [row[0] for row in cursor.fetchall()]
+        
+        # Формуємо динамічний SQL для запиту всіх товарів з прайс-листів
+        union_queries = []
+        for table in price_list_tables:
+            # Використовуємо прямі імена таблиць без префіксів
+            union_queries.append(f"SELECT article, '{table}' AS source_table FROM {table}")
+        
+        if union_queries:
+            all_price_list_query = " UNION ALL ".join(union_queries)
+            
+            # Отримуємо товари з прайсів, які мають опис або фото
+            query = f"""
+                SELECT DISTINCT pl.article, pi.image_url
+                FROM ({all_price_list_query}) pl
+                LEFT JOIN stock s ON pl.article = s.article
+                LEFT JOIN (
+                    SELECT p.article FROM products p
+                    UNION
+                    SELECT pi.product_article as article FROM product_images pi
+                ) AS enriched ON pl.article = enriched.article
+                LEFT JOIN product_images pi ON pl.article = pi.product_article
+                WHERE s.article IS NULL AND enriched.article IS NOT NULL
+                ORDER BY pl.article
+                LIMIT %s OFFSET %s
+            """
+            
+            cursor.execute(query, (products_per_sitemap, offset))
+            products = cursor.fetchall()
+            
+            product_images = {}
+            
+            # Збираємо дані про товари та їх зображення
+            for product in products:
+                article = product['article']
+                if article:
+                    if article not in product_images:
+                        product_images[article] = []
+                    
+                    if product['image_url']:
+                        product_images[article].append(product['image_url'])
+            
+            # Додаємо URL-адреси товарів з їх зображеннями
+            for article, images in product_images.items():
+                sitemap_xml += f'  <url>\n    <loc>{host_base}/product/{article}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n'
+                
+                # Додаємо зображення для товару, якщо вони є
+                for image_url in images:
+                    sitemap_xml += f'    <image:image>\n      <image:loc>{image_url}</image:loc>\n    </image:image>\n'
+                
+                sitemap_xml += '  </url>\n'
+        
+        cursor.close()
+        conn.close()
+        
+        sitemap_xml += '</urlset>'
+        
+        response = make_response(sitemap_xml)
+        response.headers['Content-Type'] = 'application/xml'
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error generating enriched products sitemap page {page}: {e}", exc_info=True)
+        return f"Error generating enriched products sitemap: {e}", 500
+
+@app.route('/sitemap-other-<int:page>.xml', endpoint='sitemap_other_xml')
+def sitemap_other(page):
+    """Generate sitemap for other products from price lists"""
+    try:
+        host_base = request.host_url.rstrip('/')
+        if 'localhost' in host_base or '127.0.0.1' in host_base:
+            host_base = "https://autogroup.sk"
+        
+        sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        
+        products_per_sitemap = 40000
+        offset = (page - 1) * products_per_sitemap
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримання всіх таблиць прайс-листів (крім stock)
+        cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
+        price_list_tables = [row[0] for row in cursor.fetchall()]
+        
+        # Формуємо динамічний SQL для запиту всіх товарів з прайс-листів
+        union_queries = []
+        for table in price_list_tables:
+            # Використовуємо безпосередньо імена таблиць, без префікса price_list_
+            union_queries.append(f"SELECT article, '{table}' AS source_table FROM {table}")
+        
+        all_price_list_query = " UNION ALL ".join(union_queries)
+        
+        # Отримуємо решту товарів з прайсів (без опису і фото)
+        query = f"""
+            SELECT DISTINCT pl.article
+            FROM ({all_price_list_query}) pl
+            LEFT JOIN stock s ON pl.article = s.article
+            LEFT JOIN products p ON pl.article = p.article
+            LEFT JOIN product_images pi ON pl.article = pi.product_article
+            WHERE s.article IS NULL AND p.article IS NULL AND pi.product_article IS NULL
+            ORDER BY pl.article
+            LIMIT %s OFFSET %s
+        """
+        
+        cursor.execute(query, (products_per_sitemap, offset))
+        products = cursor.fetchall()
+        
+        # Додаємо URL-адреси товарів
+        for product in products:
+            article = product['article']
+            if article:
+                sitemap_xml += f'  <url>\n    <loc>{host_base}/product/{article}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>\n'
+        
+        cursor.close()
+        conn.close()
+        
+        sitemap_xml += '</urlset>'
+        
+        response = make_response(sitemap_xml)
+        response.headers['Content-Type'] = 'application/xml'
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error generating other products sitemap page {page}: {e}", exc_info=True)
+        return f"Error generating other products sitemap: {e}", 500
 
 
 if __name__ == '__main__':

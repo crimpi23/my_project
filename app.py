@@ -38,6 +38,18 @@ from flask_apscheduler import APScheduler
 import os
 
 
+# Налаштування шляху для збереження sitemap файлів залежно від середовища
+if os.environ.get('RENDER'):
+    # На Render використовуємо тимчасовий каталог, який напевно є доступним
+    SITEMAP_DIR = '/tmp/sitemaps'
+else:
+    # Локально використовуємо static/sitemaps
+    SITEMAP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'sitemaps')
+
+os.makedirs(SITEMAP_DIR, exist_ok=True)
+logging.info(f"Sitemap directory set to: {SITEMAP_DIR}")
+
+
 # Create Flask app first
 app = Flask(__name__, template_folder='templates')
 
@@ -234,6 +246,9 @@ def generate_sitemap_categories_file():
 def generate_sitemap_stock_files():
     """Генерує stock sitemap файли і зберігає на диск"""
     try:
+        logging.info("Starting generation of stock sitemap files")
+        start_time = datetime.now()  # Додано визначення start_time
+        
         host_base = "https://autogroup.sk"
         
         conn = get_db_connection()
@@ -298,6 +313,9 @@ def generate_sitemap_stock_files():
         
         cursor.close()
         conn.close()
+        end_time = datetime.now()
+        duration = (end_time - start_time).total_seconds()
+        logging.info(f"Completed generation of stock sitemap files in {duration:.2f} seconds")
         return True
         
     except Exception as e:
@@ -10180,8 +10198,32 @@ def send_invoice_email(to_email, subject, ordered_items, delivery_data, invoice_
         return False
 
 
+@app.route('/generate-sitemaps/<secret_key>')
+def manual_generate_sitemaps(secret_key):
+    """Ручний запуск генерації sitemaps через URL (захищений секретним ключем)"""
+    # Секретний ключ для захисту від несанкціонованого доступу
+    if secret_key != os.getenv('SITEMAP_SECRET_KEY', 'your_default_secret_key'):
+        return "Unauthorized", 401
+        
+    logging.info("Starting manual sitemap generation process")
+    
+    # Перевіряємо доступ до каталогу
+    try:
+        os.makedirs(SITEMAP_DIR, exist_ok=True)
+        logging.info(f"SITEMAP_DIR: {SITEMAP_DIR}")
+        logging.info(f"Directory exists: {os.path.exists(SITEMAP_DIR)}")
+        logging.info(f"Directory is writable: {os.access(SITEMAP_DIR, os.W_OK)}")
+    except Exception as e:
+        logging.error(f"Directory error: {e}")
+    
+    try:
+        # Генеруємо всі файли
+        generate_all_sitemaps()
+        return "Sitemap generation completed successfully!", 200
+    except Exception as e:
+        logging.error(f"Error during manual sitemap generation: {e}", exc_info=True)
+        return f"Error: {str(e)}", 500
 
-@app.route('/sitemap.xml', endpoint='sitemap_xml')
 @app.route('/sitemap.xml', endpoint='sitemap_xml')
 def sitemap():
     """Redirect to sitemap index"""
@@ -10195,9 +10237,27 @@ def sitemap_index():
     
     # Якщо файл не існує, генеруємо його
     if not os.path.exists(sitemap_path):
-        generate_sitemap_index_file()
+        logging.info(f"sitemap-index.xml not found at {sitemap_path}, generating...")
+        
+        try:
+            # Генеруємо файл індексу
+            generate_sitemap_index_file()
+            
+            # Додаткова перевірка
+            if not os.path.exists(sitemap_path):
+                logging.error(f"Failed to generate sitemap-index.xml at {sitemap_path}")
+                return "Error generating sitemap", 500
+                
+        except Exception as e:
+            logging.error(f"Error generating sitemap index: {e}", exc_info=True)
+            return "Error generating sitemap", 500
     
-    return send_from_directory(os.path.dirname(sitemap_path), os.path.basename(sitemap_path), mimetype='application/xml')
+    try:
+        # Пробуємо подати файл зі static/sitemaps
+        return send_from_directory(os.path.dirname(sitemap_path), os.path.basename(sitemap_path), mimetype='application/xml')
+    except Exception as e:
+        logging.error(f"Error serving sitemap file: {e}", exc_info=True)
+        return "Error serving sitemap", 500
 
 @app.route('/sitemap-static.xml')
 def sitemap_static():
@@ -10221,16 +10281,33 @@ def sitemap_categories():
     
     return send_from_directory(os.path.dirname(sitemap_path), os.path.basename(sitemap_path), mimetype='application/xml')
 
+
 @app.route('/sitemap-stock-<int:page>.xml', endpoint='sitemap_stock_xml')
 def sitemap_stock(page):
     """Serve pre-generated stock sitemap XML"""
     sitemap_path = os.path.join(SITEMAP_DIR, f'sitemap-stock-{page}.xml')
     
-    # Якщо файл не існує, перенаправляємо на sitemap index
+    # Детальне логування для відлагодження
+    logging.info(f"Request for sitemap-stock-{page}.xml, checking path: {sitemap_path}")
+    
+    # Перевіряємо, чи існує файл
     if not os.path.exists(sitemap_path):
+        logging.warning(f"sitemap-stock-{page}.xml not found, redirecting to index")
+        
+        # Додайте цей код для перевірки дозволів і структури каталогу
+        try:
+            logging.info(f"SITEMAP_DIR exists: {os.path.exists(SITEMAP_DIR)}")
+            logging.info(f"SITEMAP_DIR contents: {os.listdir(SITEMAP_DIR) if os.path.exists(SITEMAP_DIR) else 'directory not found'}")
+        except Exception as e:
+            logging.error(f"Error checking SITEMAP_DIR: {e}")
+            
         return redirect(url_for('sitemap_index_xml'))
     
+    # Файл існує, повертаємо його
+    logging.info(f"sitemap-stock-{page}.xml found, serving file")
     return send_from_directory(os.path.dirname(sitemap_path), os.path.basename(sitemap_path), mimetype='application/xml')
+
+
 
 @app.route('/sitemap-enriched-<int:page>.xml', endpoint='sitemap_enriched_xml')
 def sitemap_enriched(page):

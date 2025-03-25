@@ -1,7 +1,8 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
-Disallow: /public_cart/
-Disallow: /public_orders/
-
-Sitemap: https://your-domain.com/sitemap.xml
+Disallow: /*/admin/
+Disallow: /*token*/
+Disallow: /debug_*
+Disallow: /user-profile
+Sitemap: https://autogroup.sk/sitemap-index.xml

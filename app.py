@@ -73,96 +73,43 @@ scheduler.init_app(app)
 def generate_sitemap_index_file():
     """Генерує sitemap index і зберігає на диск"""
     try:
-        host_base = "https://autogroup.sk"  # Завжди використовуємо реальну адресу
+        logging.info("Starting generation of sitemap index file")
+        
+        host_base = "https://autogroup.sk"
+        today = datetime.now().strftime("%Y-%m-%d")
         
         sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
         sitemap_xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         
-        # Додаємо статичні та категорії sitemaps
-        sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-static.xml</loc>\n    <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>\n  </sitemap>\n'
-        sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-categories.xml</loc>\n    <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>\n  </sitemap>\n'
+        # Додаємо посилання на статичні файли sitemap
+        static_files = ['sitemap-static.xml', 'sitemap-categories.xml']
+        for static_file in static_files:
+            if os.path.exists(os.path.join(SITEMAP_DIR, static_file)):
+                sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{static_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
         
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        # Додаємо файли stock
+        stock_files = [f for f in os.listdir(SITEMAP_DIR) if f.startswith('sitemap-stock-') and f.endswith('.xml')]
+        for stock_file in sorted(stock_files):
+            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{stock_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
         
-        # 1. Товари зі складу (stock)
-        cursor.execute("SELECT COUNT(*) FROM stock WHERE quantity > 0")
-        stock_products = cursor.fetchone()[0]
+        # Додаємо файли enriched
+        enriched_files = [f for f in os.listdir(SITEMAP_DIR) if f.startswith('sitemap-enriched-') and f.endswith('.xml')]
+        for enriched_file in sorted(enriched_files):
+            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{enriched_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
         
-        # Отримання всіх таблиць прайс-листів
-        cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
-        price_list_tables = [row[0] for row in cursor.fetchall()]
-        
-        # Формуємо динамічний SQL для запиту всіх товарів з прайс-листів
-        union_queries = []
-        for table in price_list_tables:
-            # Використовуємо прямі імена таблиць без префіксів
-            union_queries.append(f"SELECT article, '{table}' AS source_table FROM {table}")
-        
-        enriched_products = 0
-        other_products = 0
-        
-        if union_queries:  # Перевіряємо, чи є хоч один запит
-            all_price_list_query = " UNION ALL ".join(union_queries)
-            
-            # 2. Товари з інших прайсів з описами або фото
-            enriched_query = f"""
-                SELECT COUNT(DISTINCT pl.article) 
-                FROM ({all_price_list_query}) pl
-                JOIN (
-                    SELECT p.article FROM products p
-                    UNION
-                    SELECT pi.product_article FROM product_images pi
-                ) AS enriched ON pl.article = enriched.article
-                LEFT JOIN stock s ON pl.article = s.article
-                WHERE s.article IS NULL
-            """
-            cursor.execute(enriched_query)
-            enriched_products = cursor.fetchone()[0]
-            
-            # 3. Всі інші товари з прайсів
-            other_query = f"""
-                SELECT COUNT(DISTINCT pl.article) 
-                FROM ({all_price_list_query}) pl
-                LEFT JOIN (
-                    SELECT p.article FROM products p
-                    UNION
-                    SELECT pi.product_article FROM product_images pi
-                ) AS enriched ON pl.article = enriched.article
-                LEFT JOIN stock s ON pl.article = s.article
-                WHERE s.article IS NULL AND enriched.article IS NULL
-            """
-            cursor.execute(other_query)
-            other_products = cursor.fetchone()[0]
-        
-        # Розраховуємо кількість файлів для кожного типу товарів
-        products_per_sitemap = 40000
-        stock_sitemaps = max(1, math.ceil(stock_products / products_per_sitemap))
-        enriched_sitemaps = max(1, math.ceil(enriched_products / products_per_sitemap)) if enriched_products > 0 else 0
-        other_sitemaps = max(1, math.ceil(other_products / products_per_sitemap)) if other_products > 0 else 0
-        
-        # Додаємо файли для товарів зі складу
-        for i in range(stock_sitemaps):
-            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-stock-{i+1}.xml</loc>\n    <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>\n  </sitemap>\n'
-        
-        # Додаємо файли для товарів з описами/фото
-        for i in range(enriched_sitemaps):
-            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-enriched-{i+1}.xml</loc>\n    <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>\n  </sitemap>\n'
-        
-        # Додаємо файли для решти товарів
-        for i in range(other_sitemaps):
-            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-other-{i+1}.xml</loc>\n    <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>\n  </sitemap>\n'
-        
-        cursor.close()
-        conn.close()
+        # Додаємо файли other
+        other_files = [f for f in os.listdir(SITEMAP_DIR) if f.startswith('sitemap-other-') and f.endswith('.xml')]
+        for other_file in sorted(other_files):
+            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{other_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
         
         sitemap_xml += '</sitemapindex>'
         
         # Записуємо в файл
-        with open(os.path.join(SITEMAP_DIR, 'sitemap-index.xml'), 'w', encoding='utf-8') as f:
+        file_path = os.path.join(SITEMAP_DIR, 'sitemap-index.xml')
+        with open(file_path, 'w', encoding='utf-8') as f:
             f.write(sitemap_xml)
-            
-        logging.info(f"Sitemap index generated successfully, size: {len(sitemap_xml)} bytes")
+        
+        logging.info(f"Sitemap index generated successfully: {file_path}")
         return True
         
     except Exception as e:
@@ -325,6 +272,9 @@ def generate_sitemap_stock_files():
 def generate_sitemap_enriched_files():
     """Генерує enriched sitemap файли і зберігає на диск"""
     try:
+        logging.info("Starting generation of enriched sitemap files")
+        start_time = datetime.now()
+        
         host_base = "https://autogroup.sk"
         
         conn = get_db_connection()
@@ -333,20 +283,31 @@ def generate_sitemap_enriched_files():
         # Отримання всіх таблиць прайс-листів
         cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
         price_list_tables = [row[0] for row in cursor.fetchall()]
+        logging.info(f"Found {len(price_list_tables)} price list tables: {price_list_tables}")
+        
+        # Якщо немає прайс-листів, створюємо один пустий файл
+        if not price_list_tables:
+            logging.info("No price lists found, creating empty enriched sitemap")
+            sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+            sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            sitemap_xml += '</urlset>'
+            
+            file_path = os.path.join(SITEMAP_DIR, 'sitemap-enriched-1.xml')
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(sitemap_xml)
+            
+            logging.info(f"Created empty enriched sitemap at {file_path}")
+            return True
         
         # Формуємо динамічний SQL для запиту всіх товарів з прайс-листів
         union_queries = []
         for table in price_list_tables:
             union_queries.append(f"SELECT article, '{table}' AS source_table FROM {table}")
         
-        if not union_queries:
-            logging.info("No price lists found for enriched sitemap")
-            return True
-            
         all_price_list_query = " UNION ALL ".join(union_queries)
         
-        # Рахуємо загальну кількість товарів
-        count_query = f"""
+        # Рахуємо загальну кількість enriched товарів
+        enriched_count_query = f"""
             SELECT COUNT(DISTINCT pl.article) 
             FROM ({all_price_list_query}) pl
             JOIN (
@@ -357,71 +318,80 @@ def generate_sitemap_enriched_files():
             LEFT JOIN stock s ON pl.article = s.article
             WHERE s.article IS NULL
         """
-        cursor.execute(count_query)
-        total_products = cursor.fetchone()[0]
         
-        # Розраховуємо кількість файлів
-        products_per_sitemap = 40000
-        total_files = max(1, math.ceil(total_products / products_per_sitemap))
+        cursor.execute(enriched_count_query)
+        total_enriched = cursor.fetchone()[0]
+        logging.info(f"Found {total_enriched} enriched products")
         
+        # Розраховуємо кількість файлів (максимум 45000 URL в одному файлі)
+        products_per_sitemap = 45000
+        total_files = max(1, math.ceil(total_enriched / products_per_sitemap))
+        
+        # Для кожного файлу створюємо окремий sitemap
         for page in range(1, total_files + 1):
             offset = (page - 1) * products_per_sitemap
             
+            # Створюємо XML-заголовок
             sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
             sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
             sitemap_xml += 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
             
-            # Отримуємо товари з прайсів, які мають опис або фото
-            query = f"""
-                SELECT DISTINCT pl.article, pi.image_url
+            # Запит для отримання товарів з описами або зображеннями
+            enriched_query = f"""
+                SELECT DISTINCT pl.article, pl.source_table 
                 FROM ({all_price_list_query}) pl
-                LEFT JOIN stock s ON pl.article = s.article
-                LEFT JOIN (
+                JOIN (
                     SELECT p.article FROM products p
                     UNION
-                    SELECT pi.product_article as article FROM product_images pi
+                    SELECT pi.product_article FROM product_images pi
                 ) AS enriched ON pl.article = enriched.article
-                LEFT JOIN product_images pi ON pl.article = pi.product_article
-                WHERE s.article IS NULL AND enriched.article IS NOT NULL
+                LEFT JOIN stock s ON pl.article = s.article
+                WHERE s.article IS NULL
                 ORDER BY pl.article
-                LIMIT %s OFFSET %s
+                LIMIT {products_per_sitemap} OFFSET {offset}
             """
             
-            cursor.execute(query, (products_per_sitemap, offset))
-            products = cursor.fetchall()
+            cursor.execute(enriched_query)
+            enriched_products = cursor.fetchall()
             
-            product_images = {}
-            
-            # Збираємо дані про товари та їх зображення
-            for product in products:
+            # Додаємо URL для кожного товару
+            for product in enriched_products:
                 article = product['article']
-                if article:
-                    if article not in product_images:
-                        product_images[article] = []
-                    
-                    if product['image_url']:
-                        product_images[article].append(product['image_url'])
-            
-            # Додаємо URL-адреси товарів з їх зображеннями
-            for article, images in product_images.items():
-                sitemap_xml += f'  <url>\n    <loc>{host_base}/product/{article}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n'
+                sitemap_xml += f'  <url>\n'
+                sitemap_xml += f'    <loc>{host_base}/product/{article}</loc>\n'
+                sitemap_xml += f'    <changefreq>weekly</changefreq>\n'
+                sitemap_xml += f'    <priority>0.7</priority>\n'
                 
-                # Додаємо зображення для товару, якщо вони є
-                for image_url in images:
-                    sitemap_xml += f'    <image:image>\n      <image:loc>{image_url}</image:loc>\n    </image:image>\n'
+                # Перевіряємо, чи є зображення для товару
+                cursor.execute("""
+                    SELECT image_url FROM product_images WHERE product_article = %s LIMIT 5
+                """, (article,))
+                images = cursor.fetchall()
                 
-                sitemap_xml += '  </url>\n'
+                # Додаємо зображення, якщо вони є
+                for image in images:
+                    sitemap_xml += f'    <image:image>\n'
+                    sitemap_xml += f'      <image:loc>{image["image_url"]}</image:loc>\n'
+                    sitemap_xml += f'    </image:image>\n'
+                
+                sitemap_xml += f'  </url>\n'
             
+            # Закриваємо XML
             sitemap_xml += '</urlset>'
             
             # Записуємо в файл
-            with open(os.path.join(SITEMAP_DIR, f'sitemap-enriched-{page}.xml'), 'w', encoding='utf-8') as f:
+            file_path = os.path.join(SITEMAP_DIR, f'sitemap-enriched-{page}.xml')
+            with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(sitemap_xml)
             
-            logging.info(f"Enriched sitemap page {page} generated successfully")
+            logging.info(f"Generated sitemap-enriched-{page}.xml with {len(enriched_products)} products")
         
         cursor.close()
         conn.close()
+        
+        end_time = datetime.now()
+        duration = (end_time - start_time).total_seconds()
+        logging.info(f"Completed generation of enriched sitemap files in {duration:.2f} seconds")
         return True
         
     except Exception as e:
@@ -431,6 +401,9 @@ def generate_sitemap_enriched_files():
 def generate_sitemap_other_files():
     """Генерує other sitemap файли і зберігає на диск"""
     try:
+        logging.info("Starting generation of other sitemap files")
+        start_time = datetime.now()
+        
         host_base = "https://autogroup.sk"
         
         conn = get_db_connection()
@@ -439,71 +412,117 @@ def generate_sitemap_other_files():
         # Отримання всіх таблиць прайс-листів
         cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
         price_list_tables = [row[0] for row in cursor.fetchall()]
+        logging.info(f"Found {len(price_list_tables)} price list tables: {price_list_tables}")
+        
+        # Якщо немає прайс-листів, створюємо порожні файли
+        if not price_list_tables:
+            logging.info("No price lists found, creating empty other sitemaps")
+            
+            # Для сумісності з індексом
+            for i in range(1, 6):
+                sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+                sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                sitemap_xml += '</urlset>'
+                
+                file_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{i}.xml')
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(sitemap_xml)
+                
+            logging.info("Created 5 empty other sitemap files")
+            return True
         
         # Формуємо динамічний SQL для запиту всіх товарів з прайс-листів
         union_queries = []
         for table in price_list_tables:
             union_queries.append(f"SELECT article, '{table}' AS source_table FROM {table}")
         
-        if not union_queries:
-            logging.info("No price lists found for other sitemap")
-            return True
-            
         all_price_list_query = " UNION ALL ".join(union_queries)
         
-        # Рахуємо загальну кількість товарів
-        count_query = f"""
+        # Рахуємо загальну кількість other товарів (без описів і зображень)
+        other_count_query = f"""
             SELECT COUNT(DISTINCT pl.article) 
             FROM ({all_price_list_query}) pl
+            LEFT JOIN (
+                SELECT p.article FROM products p
+                UNION
+                SELECT pi.product_article FROM product_images pi
+            ) AS enriched ON pl.article = enriched.article
             LEFT JOIN stock s ON pl.article = s.article
-            LEFT JOIN products p ON pl.article = p.article
-            LEFT JOIN product_images pi ON pl.article = pi.product_article
-            WHERE s.article IS NULL AND p.article IS NULL AND pi.product_article IS NULL
+            WHERE s.article IS NULL AND enriched.article IS NULL
         """
-        cursor.execute(count_query)
-        total_products = cursor.fetchone()[0]
         
-        # Розраховуємо кількість файлів
-        products_per_sitemap = 40000
-        total_files = max(1, math.ceil(total_products / products_per_sitemap))
+        cursor.execute(other_count_query)
+        total_other = cursor.fetchone()[0]
+        logging.info(f"Found {total_other} other products")
         
+        # Розраховуємо кількість файлів (максимум 45000 URL в одному файлі)
+        products_per_sitemap = 45000
+        total_files = max(1, math.ceil(total_other / products_per_sitemap))
+        
+        # Для кожного файлу створюємо окремий sitemap
         for page in range(1, total_files + 1):
             offset = (page - 1) * products_per_sitemap
             
+            # Створюємо XML-заголовок
             sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
             sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
             
-            # Отримуємо решту товарів з прайсів (без опису і фото)
-            query = f"""
-                SELECT DISTINCT pl.article
+            # Запит для отримання товарів без описів і зображень
+            other_query = f"""
+                SELECT DISTINCT pl.article, pl.source_table 
                 FROM ({all_price_list_query}) pl
+                LEFT JOIN (
+                    SELECT p.article FROM products p
+                    UNION
+                    SELECT pi.product_article FROM product_images pi
+                ) AS enriched ON pl.article = enriched.article
                 LEFT JOIN stock s ON pl.article = s.article
-                LEFT JOIN products p ON pl.article = p.article
-                LEFT JOIN product_images pi ON pl.article = pi.product_article
-                WHERE s.article IS NULL AND p.article IS NULL AND pi.product_article IS NULL
+                WHERE s.article IS NULL AND enriched.article IS NULL
                 ORDER BY pl.article
-                LIMIT %s OFFSET %s
+                LIMIT {products_per_sitemap} OFFSET {offset}
             """
             
-            cursor.execute(query, (products_per_sitemap, offset))
-            products = cursor.fetchall()
+            cursor.execute(other_query)
+            other_products = cursor.fetchall()
             
-            # Додаємо URL-адреси товарів
-            for product in products:
+            # Додаємо URL для кожного товару
+            for product in other_products:
                 article = product['article']
-                if article:
-                    sitemap_xml += f'  <url>\n    <loc>{host_base}/product/{article}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>\n'
+                sitemap_xml += f'  <url>\n'
+                sitemap_xml += f'    <loc>{host_base}/product/{article}</loc>\n'
+                sitemap_xml += f'    <changefreq>monthly</changefreq>\n'
+                sitemap_xml += f'    <priority>0.5</priority>\n'
+                sitemap_xml += f'  </url>\n'
             
+            # Закриваємо XML
             sitemap_xml += '</urlset>'
             
             # Записуємо в файл
-            with open(os.path.join(SITEMAP_DIR, f'sitemap-other-{page}.xml'), 'w', encoding='utf-8') as f:
+            file_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{page}.xml')
+            with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(sitemap_xml)
             
-            logging.info(f"Other sitemap page {page} generated successfully")
+            logging.info(f"Generated sitemap-other-{page}.xml with {len(other_products)} products")
+            
+            # Створюємо порожні файли для решти очікуваних сайтмапів
+            if page == total_files and total_files < 80:
+                for i in range(total_files + 1, 81):
+                    empty_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+                    empty_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                    empty_xml += '</urlset>'
+                    
+                    empty_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{i}.xml')
+                    with open(empty_path, 'w', encoding='utf-8') as f:
+                        f.write(empty_xml)
+                
+                logging.info(f"Created empty sitemap files for sitemap-other-{total_files+1} to sitemap-other-80")
         
         cursor.close()
         conn.close()
+        
+        end_time = datetime.now()
+        duration = (end_time - start_time).total_seconds()
+        logging.info(f"Completed generation of other sitemap files in {duration:.2f} seconds")
         return True
         
     except Exception as e:
@@ -511,27 +530,38 @@ def generate_sitemap_other_files():
         return False
 
 def generate_all_sitemaps():
-    """Генерує всі sitemap файли"""
-    logging.info("Starting generation of all sitemap files")
-    
-    # Створюємо директорію для sitemap файлів, якщо вона не існує
-    os.makedirs(SITEMAP_DIR, exist_ok=True)
-    
-    # Генеруємо всі sitemap файли
-    generate_sitemap_static_file()
-    generate_sitemap_categories_file()
-    generate_sitemap_stock_files()  # Щоденно
-    
-    # Щотижнева генерація
-    weekday = datetime.now().weekday()
-    if weekday == 0:  # Понеділок
-        generate_sitemap_enriched_files()
-        generate_sitemap_other_files()
-    
-    # Завжди оновлюємо індекс останнім
-    generate_sitemap_index_file()
-    
-    logging.info("All sitemap files generated successfully")
+    """Генерує всі файли sitemaps"""
+    try:
+        logging.info("Starting generation of all sitemap files")
+        
+        # Додаємо детальне логування для кожного етапу
+        logging.info("Generating static sitemap file...")
+        generate_sitemap_static_file()
+        
+        logging.info("Generating categories sitemap file...")
+        generate_sitemap_categories_file()
+        
+        logging.info("Generating stock sitemap files...")
+        generate_sitemap_stock_files()
+        
+        logging.info("Generating enriched sitemap files...")
+        generate_sitemap_enriched_files()  # Перевіримо, що відбувається тут
+        
+        logging.info("Generating other sitemap files...")
+        generate_sitemap_other_files()  # І тут
+        
+        logging.info("Generating sitemap index file...")
+        generate_sitemap_index_file()
+        
+        logging.info("All sitemap files generated successfully")
+        return True
+    except Exception as e:
+        logging.error(f"Error generating all sitemap files: {e}", exc_info=True)
+        return False
+
+
+
+
 
 # налаштування для збереження файлів
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
@@ -10354,7 +10384,67 @@ scheduler.init_app(app)
 
 
 
-
+@app.route('/check-sitemap-data')
+def check_sitemap_data():
+    """Diagnostic route to check database data for sitemap generation"""
+    try:
+        result = "<h1>Sitemap Data Diagnostic</h1>"
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Check price_lists table
+        cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
+        price_list_tables = [row[0] for row in cursor.fetchall()]
+        
+        result += f"<h2>Price Lists Tables ({len(price_list_tables)})</h2>"
+        if price_list_tables:
+            result += "<ul>"
+            for table in price_list_tables:
+                result += f"<li>{table}</li>"
+            result += "</ul>"
+        else:
+            result += "<p>No price list tables found</p>"
+            result += "<p><strong>This explains why enriched and other sitemaps are not generated</strong></p>"
+        
+        # Check if the functions are defined
+        result += "<h2>Sitemap Functions Existence</h2>"
+        result += "<ul>"
+        for func_name in ['generate_sitemap_enriched_files', 'generate_sitemap_other_files']:
+            if func_name in globals():
+                result += f"<li>{func_name}: EXISTS</li>"
+            else:
+                result += f"<li>{func_name}: NOT FOUND</li>"
+        result += "</ul>"
+        
+        # Verify the implementation of these functions
+        result += "<h2>Function Implementation Check</h2>"
+        
+        # Intentionally create empty files for testing
+        result += "<h2>Generate Test Files</h2>"
+        try:
+            # Create test enriched file
+            enriched_file_path = os.path.join(SITEMAP_DIR, 'sitemap-enriched-1.xml')
+            with open(enriched_file_path, 'w', encoding='utf-8') as f:
+                f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>')
+            result += f"<p>Created test file: {enriched_file_path}</p>"
+            
+            # Create test other files
+            for i in range(1, 6):
+                other_file_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{i}.xml')
+                with open(other_file_path, 'w', encoding='utf-8') as f:
+                    f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>')
+                result += f"<p>Created test file: {other_file_path}</p>"
+                
+            # Regenerate index file
+            generate_sitemap_index_file()
+            result += "<p>Regenerated sitemap index file</p>"
+        except Exception as e:
+            result += f"<p>Error creating test files: {str(e)}</p>"
+        
+        return result
+    except Exception as e:
+        return f"<h1>Error</h1><p>{str(e)}</p>"
 
 
 if __name__ == '__main__':

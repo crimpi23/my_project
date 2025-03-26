@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     
-    <!-- Cookie Consent Check і ініціалізація GTM та Facebook Pixel -->
     <script>
-    // Ініціалізація dataLayer перед усіма скриптами
     window.dataLayer = window.dataLayer || [];
     
-    // Функція для GTM
     function initGTM() {
         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
         new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -17,7 +14,6 @@
         })(window,document,'script','dataLayer','GTM-РЕАЛЬНИЙ-ID');
     }
     
-    // Функція для Facebook Pixel
     function initFacebookPixel() {
         !function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -31,36 +27,30 @@
         fbq('track', 'PageView');
     }
     
-    // Перевірка згоди перед завантаженням всіх тегів
     const consentGiven = localStorage.getItem('cookieConsent') === 'full';
     if (consentGiven) {
         initGTM();
         initFacebookPixel();
     }
     </script>
-    <!-- End Cookie Consent Check -->
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AutogroupEU{% endblock %}</title>
     
-    <!-- Favicon -->
     <link rel="icon" href="https://image.autogroup.sk/static/favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="https://image.autogroup.sk/static/favicon.ico" type="image/x-icon">
     
-    <!-- SEO Meta Tags -->
     <meta name="description" content="{% block meta_description %}AutogroupEU - Your reliable partner in auto parts supply across Europe{% endblock %}">
     <meta name="keywords" content="auto parts, car parts, automotive, spare parts, Europe">
     <meta name="author" content="AutogroupEU">
     <meta name="robots" content="index, follow">
 
-    <!-- Open Graph Meta Tags -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:title" content="{% block og_title %}AutogroupEU{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Your reliable partner in auto parts supply across Europe{% endblock %}">
-    <meta property="og:image" content="{{ url_for('static', filename='AutogroupEU.png', _external=True) }}">
+    <meta property="og:image" content="{{ url_for('static', filename='images/AutogroupEU.png', _external=True) }}">
 
-    <!-- Оновити alternate links -->
     {% for lang_code in config['BABEL_SUPPORTED_LOCALES'] %}
     <link rel="alternate" 
           hreflang="{{ lang_code }}" 
@@ -70,21 +60,16 @@
           hreflang="x-default" 
           href="{{ request.host_url }}uk/product/{{ article }}" />
 
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
 
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}">
 
     {% block extra_css %}{% endblock %}
 
     {% block head %}{% endblock %}
 
-    <!-- Додайте цю секцію перед закриваючим тегом </head> -->
     <script>
-    // Допоміжна функція для перекладу в JavaScript
     function _(text) {
         return window.translations[text] || text;
     }
@@ -93,22 +78,17 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom-layout.css') }}">
 </head>	
 <body class="d-flex flex-column min-vh-100">
-    <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-РЕАЛЬНИЙ-ID"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
     
-    <!-- Facebook Pixel (noscript) -->
     <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=FACEBOOK_PIXEL_ID&ev=PageView&noscript=1"
     /></noscript>
-    <!-- End Facebook Pixel (noscript) -->
 
-    <!-- Navigation -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
         <a class="navbar-brand" href="{{ url_for('index') }}">
-            <img src="https://autogroup.sk/imgbank/Image/AUtogroupEU.png" alt="AutogroupEU">
+            <img src="{{ url_for('static', filename='images/AutogroupEU.png') }}" alt="AutogroupEU">
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
@@ -135,21 +115,16 @@
                         <i class="bi bi-chat-dots me-1"></i> {{ _('Contact Us') }}
                     </a>
                 </li>
-                <!-- Категорії -->
-                <!-- Макрос для виводу категорій рекурсивно -->
 {% macro render_categories(categories) %}
     {% for category in categories %}
         <li class="menu-item">
             <div class="menu-item-header">
-                <!-- Контейнер для посилання і кнопки -->
                 <div class="category-link-container">
-                    <!-- Посилання на категорію -->
                     <a href="{{ url_for('view_category', slug=category.slug) }}" 
                        class="category-link">
                         {{ category.name or category.name_en }}
                     </a>
                     
-                    <!-- Кнопка розгортання, якщо є підкатегорії -->
                     {% if category.subcategories %}
                         <button class="expand-btn" type="button" 
                                 aria-label="Toggle subcategories">
@@ -159,7 +134,6 @@
                 </div>
             </div>
             
-            <!-- Підкатегорії -->
             {% if category.subcategories %}
                 <ul class="subcategories">
                     {{ render_categories(category.subcategories) }}
@@ -169,8 +143,6 @@
     {% endfor %}
 {% endmacro %}
 
-<!-- Використання макросу в меню -->
-<!-- Замініть існуючу структуру меню категорій -->
 <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         {{ _('Categories') }}
@@ -257,7 +229,6 @@
                     </a>
                 </li>
                 {% endif %}
-                <!-- Кошик -->
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('public_cart') }}">
                         <i class="bi bi-cart3"></i> {{ _('Cart') }}
@@ -266,7 +237,6 @@
                         {% endif %}
                     </a>
                 </li>
-                <!-- Мовне меню -->
                 <li class="nav-item dropdown language-dropdown">
   <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     {{ LANGUAGES.get(g.locale, 'English') }}
@@ -288,7 +258,6 @@
     </div>
 </nav>
 
-    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="container mt-3">
@@ -302,7 +271,6 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Cookie Consent Banner -->
     <div id="cookie-consent-banner" class="cookie-banner" style="display: none;">
         <div class="cookie-content">
             <div class="cookie-text">
@@ -315,14 +283,11 @@
         </div>
     </div>
 
-    <!-- Main Content -->
     {% block content %}{% endblock %}
 
-    <!-- Footer -->
     <footer class="footer mt-auto">
     <div class="container py-4">
         <div class="row g-4">
-            <!-- Контактна інформація -->
             <div class="col-md-4">
                 <h5>{{ _('Contact Us') }}</h5>
                 <ul class="list-unstyled footer-contact">
@@ -355,7 +320,6 @@
                 </ul>
             </div>
             
-            <!-- Навігація по сайту -->
             <div class="col-md-4">
                 <h5>{{ _('Navigation') }}</h5>
                 <ul class="list-unstyled">
@@ -368,7 +332,6 @@
                 </ul>
             </div>
             
-            <!-- Компанія і правова інформація -->
             <div class="col-md-4">
                 <h5>{{ _('Company Info') }}</h5>
                 <ul class="list-unstyled">
@@ -389,7 +352,6 @@
         
         <hr class="my-4">
         
-        <!-- Copyright & Links -->
         <div class="d-flex flex-wrap justify-content-between">
             <div class="footer-links">
                 <a href="{{ url_for('privacy') }}" class="footer-link">{{ _('Privacy Policy') }}</a>
@@ -410,7 +372,6 @@
     </div>
 </footer>
 
-<!-- Фіксована кнопка зв'язку -->
 <div class="floating-contact">
     <button class="btn btn-primary rounded-circle contact-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#contactOptions" aria-expanded="false" aria-controls="contactOptions">
         <i class="bi bi-headset"></i>
@@ -428,7 +389,6 @@
     </div>
 </div>
 
-<!-- Фіксовані кнопки зв'язку (тільки WhatsApp) -->
 <div class="fixed-contact-buttons">
     <a href="https://wa.me/421907400865" class="contact-button whatsapp-button" target="_blank">
         <i class="bi bi-whatsapp"></i>
@@ -436,53 +396,41 @@
     </a>
 </div>
 
-    <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     {% block scripts %}{% endblock %}
 
-    <!-- Cookie Consent Script -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Знаходимо елементи банера cookie
         const cookieBanner = document.getElementById('cookie-consent-banner');
         const acceptBtn = document.getElementById('cookie-accept');
         const essentialBtn = document.getElementById('cookie-decline');
         const cookieSettings = document.getElementById('cookie-settings');
         
-        // Перевіряємо існуючу згоду
         const consentStatus = localStorage.getItem('cookieConsent');
         
-        // Функція для ініціалізації всіх скриптів відстеження
         function enableAllTrackingScripts() {
-            // GTM
             initGTM();
             
-            // Facebook Pixel
             initFacebookPixel();
         }
         
-        // Показуємо банер, якщо згоди ще немає
         if (!consentStatus) {
             cookieBanner.style.display = 'block';
         } else if (consentStatus === 'full') {
-            // Якщо користувач вже дав повну згоду, завантажуємо всі скрипти
             enableAllTrackingScripts();
         }
         
-        // Обробка натискання "Accept"
         acceptBtn.addEventListener('click', function() {
             localStorage.setItem('cookieConsent', 'full');
             cookieBanner.style.display = 'none';
             enableAllTrackingScripts();
         });
         
-        // Обробка натискання "Only Essential"
         essentialBtn.addEventListener('click', function() {
             localStorage.setItem('cookieConsent', 'essential');
             cookieBanner.style.display = 'none';
         });
         
-        // Обробка натискання "Cookie Settings"
         cookieSettings.addEventListener('click', function(e) {
             e.preventDefault();
             cookieBanner.style.display = 'block';
@@ -493,24 +441,18 @@
 
 
 
-<!-- Ваші існуючі скрипти -->
 <script src="{{ url_for('static', filename='js/filters.js') }}"></script>
-<!-- Переконайтесь, що використовуєте сумісні версії jQuery і Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Скрипт для випадаючих меню -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Функція для налаштування мобільного меню категорій
     function setupMobileMenu() {
         const toggleButtons = document.querySelectorAll('.mobile-toggle-btn');
         
-        // Очищаємо існуючі обробники
         toggleButtons.forEach(button => {
             button.removeEventListener('click', toggleSubmenu);
             button.addEventListener('click', toggleSubmenu);
         });
         
-        // Функція для переключення підменю
         function toggleSubmenu(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -518,17 +460,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const button = this;
             const submenu = button.nextElementSibling;
             
-            // Перевіряємо, чи це підменю
             if (submenu && submenu.classList.contains('mobile-submenu')) {
-                // Переключаємо клас для кнопки
                 button.classList.toggle('active');
                 button.querySelector('i').classList.toggle('bi-chevron-down');
                 button.querySelector('i').classList.toggle('bi-chevron-up');
                 
-                // Переключаємо клас для підменю
                 submenu.classList.toggle('show');
                 
-                // Прокрутка до відкритого підменю (якщо потрібно)
                 if (submenu.classList.contains('show')) {
                     setTimeout(() => {
                         const rect = button.getBoundingClientRect();
@@ -541,16 +479,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Ініціалізуємо меню при завантаженні
     setupMobileMenu();
     
-    // Перезапуск при зміні розміру вікна
     window.addEventListener('resize', setupMobileMenu);
     
-    // Закриття підменю при кліку поза меню
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.mobile-categories-menu')) {
-            // Закриваємо всі відкриті підменю
             document.querySelectorAll('.mobile-submenu.show').forEach(menu => {
                 menu.classList.remove('show');
             });
@@ -564,24 +498,20 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Ініціалізуємо випадаючі меню Bootstrap
     var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
     dropdownElementList.forEach(function (dropdownToggleEl) {
         new bootstrap.Dropdown(dropdownToggleEl);
     });
     
-    // Додаткова логіка для вкладених меню
     var dropdownSubmenus = document.querySelectorAll('.dropdown-submenu');
     dropdownSubmenus.forEach(function(element) {
         element.addEventListener('click', function(e) {
             var nextEl = e.target.nextElementSibling;
             if (nextEl && nextEl.classList.contains('dropdown-menu')) {
-                // Запобігаємо закриттю всіх випадаючих меню
                 e.stopPropagation();
             }
         });
         
-        // На мобільних пристроях
         if(window.innerWidth < 992) {
             element.querySelector('a').addEventListener('click', function(e) {
                 if(this.nextElementSibling && this.nextElementSibling.classList.contains('dropdown-menu')) {
@@ -599,19 +529,15 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Знаходимо всі кнопки переключення
     const toggleButtons = document.querySelectorAll('.mobile-toggle-btn');
     
-    // Додаємо обробник подій для кожної кнопки
     toggleButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
-            // Переключаємо клас active для кнопки
             this.classList.toggle('active');
             
-            // Знаходимо відповідне підменю (наступний елемент після кнопки)
             const submenu = this.nextElementSibling;
             if (submenu && submenu.classList.contains('mobile-submenu')) {
                 submenu.classList.toggle('show');
@@ -619,7 +545,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Закриваємо підменю, якщо клікнули поза меню
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.mobile-categories-menu')) {
             document.querySelectorAll('.mobile-submenu.show').forEach(menu => {
@@ -631,9 +556,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // При зміні розміру вікна закриваємо всі відкриті підменю
     window.addEventListener('resize', function() {
-        if (window.innerWidth >= 992) { // Якщо перейшли на десктоп
+        if (window.innerWidth >= 992) { 
             document.querySelectorAll('.mobile-submenu.show').forEach(menu => {
                 menu.classList.remove('show');
             });
@@ -646,7 +570,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 <script>
-// Додайте цей JavaScript код
 document.addEventListener('DOMContentLoaded', function() {
     const expandButtons = document.querySelectorAll('.expand-btn');
     
@@ -655,12 +578,9 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             
-            // Знаходимо батьківський елемент li
             const menuItem = this.closest('.menu-item');
-            // Знаходимо список підкатегорій
             const subMenu = menuItem.querySelector('.subcategories');
             
-            // Переключаємо класи
             this.classList.toggle('active');
             if (subMenu) {
                 subMenu.classList.toggle('show');

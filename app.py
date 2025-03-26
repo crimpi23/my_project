@@ -51,7 +51,7 @@ logging.info(f"Sitemap directory set to: {SITEMAP_DIR}")
 
 
 # Create Flask app first
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 
 # Set secret key for sessions and CSRF
 # app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
@@ -10228,6 +10228,138 @@ def send_invoice_email(to_email, subject, ordered_items, delivery_data, invoice_
         return False
 
 
+
+@app.route('/<token>/admin/sitemaps', methods=['GET'])
+@requires_token_and_roles('admin')
+def admin_sitemaps(token):
+    """Сторінка управління sitemap файлами"""
+    try:
+        # Отримуємо список всіх файлів sitemap
+        sitemap_files = []
+        if os.path.exists(SITEMAP_DIR):
+            files = os.listdir(SITEMAP_DIR)
+            for file in files:
+                file_path = os.path.join(SITEMAP_DIR, file)
+                file_size = os.path.getsize(file_path) / 1024  # KB
+                modified_date = datetime.fromtimestamp(os.path.getmtime(file_path))
+                sitemap_files.append({
+                    'name': file,
+                    'size': f"{file_size:.2f} KB",
+                    'modified': modified_date
+                })
+        
+        # Сортуємо файли за іменем
+        sitemap_files.sort(key=lambda x: x['name'])
+        
+        # Отримуємо налаштування планувальника
+        scheduler_jobs = []
+        for job in scheduler.get_jobs():
+            if job.id.startswith('generate_sitemap'):
+                scheduler_jobs.append({
+                    'id': job.id,
+                    'next_run': job.next_run_time,
+                    'trigger': str(job.trigger)
+                })
+        
+        return render_template(
+            'admin/sitemaps/manage_sitemaps.html',
+            token=token,
+            sitemap_files=sitemap_files,
+            scheduler_jobs=scheduler_jobs,
+            sitemap_dir=SITEMAP_DIR
+        )
+    except Exception as e:
+        logging.error(f"Error in admin_sitemaps: {e}", exc_info=True)
+        flash(f"Error: {str(e)}", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+@app.route('/<token>/admin/sitemaps/generate', methods=['POST'])
+@requires_token_and_roles('admin')
+def admin_generate_sitemaps(token):
+    """Ручна генерація sitemap файлів з адмін-панелі"""
+    try:
+        # Отримуємо тип генерації
+        generation_type = request.form.get('type', 'all')
+        
+        if generation_type == 'all':
+            result = generate_all_sitemaps()
+            flash("All sitemap files generated successfully", "success")
+        elif generation_type == 'static':
+            result = generate_sitemap_static_file()
+            flash("Static sitemap generated successfully", "success")
+        elif generation_type == 'categories':
+            result = generate_sitemap_categories_file()
+            flash("Categories sitemap generated successfully", "success")
+        elif generation_type == 'stock':
+            result = generate_sitemap_stock_files()
+            flash("Stock sitemap files generated successfully", "success")
+        elif generation_type == 'enriched':
+            result = generate_sitemap_enriched_files()
+            flash("Enriched sitemap files generated successfully", "success")
+        elif generation_type == 'other':
+            result = generate_sitemap_other_files()
+            flash("Other sitemap files generated successfully", "success")
+        elif generation_type == 'index':
+            result = generate_sitemap_index_file()
+            flash("Sitemap index file generated successfully", "success")
+        else:
+            flash("Invalid generation type", "error")
+            return redirect(url_for('admin_sitemaps', token=token))
+        
+        if not result:
+            flash("Error generating sitemap files", "error")
+        
+        return redirect(url_for('admin_sitemaps', token=token))
+    except Exception as e:
+        logging.error(f"Error in admin_generate_sitemaps: {e}", exc_info=True)
+        flash(f"Error: {str(e)}", "error")
+        return redirect(url_for('admin_sitemaps', token=token))
+
+@app.route('/<token>/admin/sitemaps/view/<filename>')
+@requires_token_and_roles('admin')
+def admin_view_sitemap(token, filename):
+    """Перегляд вмісту sitemap файлу"""
+    try:
+        file_path = os.path.join(SITEMAP_DIR, filename)
+        if not os.path.exists(file_path):
+            flash(f"File {filename} not found", "error")
+            return redirect(url_for('admin_sitemaps', token=token))
+        
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Додаємо підсвічування синтаксису для XML файлів
+        return render_template(
+            'admin/sitemaps/view_sitemap.html',
+            token=token,
+            filename=filename,
+            content=content,
+            file_path=file_path
+        )
+    except Exception as e:
+        logging.error(f"Error in admin_view_sitemap: {e}", exc_info=True)
+        flash(f"Error: {str(e)}", "error")
+        return redirect(url_for('admin_sitemaps', token=token))
+
+@app.route('/<token>/admin/sitemaps/delete/<filename>', methods=['POST'])
+@requires_token_and_roles('admin')
+def admin_delete_sitemap(token, filename):
+    """Видалення sitemap файлу"""
+    try:
+        file_path = os.path.join(SITEMAP_DIR, filename)
+        if not os.path.exists(file_path):
+            flash(f"File {filename} not found", "error")
+            return redirect(url_for('admin_sitemaps', token=token))
+        
+        os.remove(file_path)
+        flash(f"File {filename} deleted successfully", "success")
+        return redirect(url_for('admin_sitemaps', token=token))
+    except Exception as e:
+        logging.error(f"Error in admin_delete_sitemap: {e}", exc_info=True)
+        flash(f"Error: {str(e)}", "error")
+        return redirect(url_for('admin_sitemaps', token=token))
+
+
 @app.route('/generate-sitemaps/<secret_key>')
 def manual_generate_sitemaps(secret_key):
     """Ручний запуск генерації sitemaps через URL (захищений секретним ключем)"""
@@ -10384,16 +10516,27 @@ scheduler.init_app(app)
 
 
 
-@app.route('/check-sitemap-data')
-def check_sitemap_data():
-    """Diagnostic route to check database data for sitemap generation"""
+@app.route('/<token>/admin/check-sitemap-data')
+@requires_token_and_roles('admin')
+def admin_check_sitemap_data(token):
+    """Діагностика стану бази даних для sitemap (тільки для адміністраторів)"""
     try:
         result = "<h1>Sitemap Data Diagnostic</h1>"
         
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-        # Check price_lists table
+        # Перевірка категорій
+        cursor.execute("SELECT COUNT(*) FROM categories WHERE slug IS NOT NULL AND slug != ''")
+        categories_count = cursor.fetchone()[0]
+        result += f"<p>Categories with slug: {categories_count}</p>"
+        
+        # Перевірка товарів на складі
+        cursor.execute("SELECT COUNT(*) FROM stock WHERE quantity > 0")
+        stock_count = cursor.fetchone()[0]
+        result += f"<p>Products in stock: {stock_count}</p>"
+        
+        # Перевірка таблиць прайс-листів
         cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
         price_list_tables = [row[0] for row in cursor.fetchall()]
         
@@ -10407,45 +10550,116 @@ def check_sitemap_data():
             result += "<p>No price list tables found</p>"
             result += "<p><strong>This explains why enriched and other sitemaps are not generated</strong></p>"
         
-        # Check if the functions are defined
-        result += "<h2>Sitemap Functions Existence</h2>"
-        result += "<ul>"
-        for func_name in ['generate_sitemap_enriched_files', 'generate_sitemap_other_files']:
-            if func_name in globals():
-                result += f"<li>{func_name}: EXISTS</li>"
-            else:
-                result += f"<li>{func_name}: NOT FOUND</li>"
-        result += "</ul>"
-        
-        # Verify the implementation of these functions
-        result += "<h2>Function Implementation Check</h2>"
-        
-        # Intentionally create empty files for testing
-        result += "<h2>Generate Test Files</h2>"
-        try:
-            # Create test enriched file
-            enriched_file_path = os.path.join(SITEMAP_DIR, 'sitemap-enriched-1.xml')
-            with open(enriched_file_path, 'w', encoding='utf-8') as f:
-                f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>')
-            result += f"<p>Created test file: {enriched_file_path}</p>"
+        # Перевіряємо кількість товарів для різних типів sitemap
+        if price_list_tables:
+            # Формуємо динамічний SQL для запиту всіх товарів з прайс-листів
+            union_queries = []
+            for table in price_list_tables:
+                union_queries.append(f"SELECT article, '{table}' AS source_table FROM {table}")
             
-            # Create test other files
-            for i in range(1, 6):
-                other_file_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{i}.xml')
-                with open(other_file_path, 'w', encoding='utf-8') as f:
-                    f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>')
-                result += f"<p>Created test file: {other_file_path}</p>"
-                
-            # Regenerate index file
-            generate_sitemap_index_file()
-            result += "<p>Regenerated sitemap index file</p>"
-        except Exception as e:
-            result += f"<p>Error creating test files: {str(e)}</p>"
+            all_price_list_query = " UNION ALL ".join(union_queries)
+            
+            # Рахуємо товари для enriched
+            enriched_count_query = f"""
+                SELECT COUNT(DISTINCT pl.article) 
+                FROM ({all_price_list_query}) pl
+                JOIN (
+                    SELECT p.article FROM products p
+                    UNION
+                    SELECT pi.product_article FROM product_images pi
+                ) AS enriched ON pl.article = enriched.article
+                LEFT JOIN stock s ON pl.article = s.article
+                WHERE s.article IS NULL
+            """
+            
+            cursor.execute(enriched_count_query)
+            enriched_count = cursor.fetchone()[0]
+            result += f"<p>Enriched products: {enriched_count}</p>"
+            
+            # Рахуємо товари для other
+            other_count_query = f"""
+                SELECT COUNT(DISTINCT pl.article) 
+                FROM ({all_price_list_query}) pl
+                LEFT JOIN (
+                    SELECT p.article FROM products p
+                    UNION
+                    SELECT pi.product_article FROM product_images pi
+                ) AS enriched ON pl.article = enriched.article
+                LEFT JOIN stock s ON pl.article = s.article
+                WHERE s.article IS NULL AND enriched.article IS NULL
+            """
+            
+            cursor.execute(other_count_query)
+            other_count = cursor.fetchone()[0]
+            result += f"<p>Other products: {other_count}</p>"
+        
+        # Перевіряємо стан файлів
+        result += "<h2>Sitemap Files Status</h2>"
+        if os.path.exists(SITEMAP_DIR):
+            files = os.listdir(SITEMAP_DIR)
+            result += f"<p>Files in directory ({len(files)}):</p><ul>"
+            for file in files:
+                file_path = os.path.join(SITEMAP_DIR, file)
+                file_size = os.path.getsize(file_path) / 1024  # KB
+                result += f"<li>{file} - {file_size:.2f} KB</li>"
+            result += "</ul>"
+        else:
+            result += "<p>Directory does not exist</p>"
+            
+        cursor.close()
+        conn.close()
         
         return result
     except Exception as e:
+        logging.error(f"Error in admin_check_sitemap_data: {e}", exc_info=True)
         return f"<h1>Error</h1><p>{str(e)}</p>"
 
+# Перенаправлення публічної діагностики на адмін-версію
+@app.route('/check-sitemap-data')
+def check_sitemap_data():
+    """Публічний доступ до діагностики sitemap перенаправляється на вхід для адміністраторів"""
+    if 'user_id' in session and validate_token(request.args.get('token')):
+        # Якщо користувач авторизований і має токен, спробуємо перенаправити на адмін-версію
+        return redirect(url_for('admin_check_sitemap_data', token=request.args.get('token')))
+    else:
+        # Інакше відмовляємо в доступі
+        return "Access denied. You need to be logged in as an administrator.", 403
+
+@app.route('/<token>/admin/sitemap-utils')
+@requires_token_and_roles('admin')
+def admin_sitemap_utils(token):
+    """Утиліти для роботи з sitemap-файлами"""
+    try:
+        # Перевіряємо відповідність файлів в індексі з реальними файлами
+        index_files = []
+        missing_files = []
+        
+        if os.path.exists(os.path.join(SITEMAP_DIR, 'sitemap-index.xml')):
+            with open(os.path.join(SITEMAP_DIR, 'sitemap-index.xml'), 'r', encoding='utf-8') as f:
+                index_content = f.read()
+                
+            # Парсимо XML за допомогою регулярних виразів
+            import re
+            loc_pattern = r'<loc>(.*?)</loc>'
+            locations = re.findall(loc_pattern, index_content)
+            
+            for loc in locations:
+                file_name = loc.split('/')[-1]
+                index_files.append(file_name)
+                
+                if not os.path.exists(os.path.join(SITEMAP_DIR, file_name)):
+                    missing_files.append(file_name)
+        
+        return render_template(
+            'admin/sitemaps/sitemap_utils.html',
+            token=token,
+            index_files=index_files,
+            missing_files=missing_files
+        )
+    except Exception as e:
+        logging.error(f"Error in admin_sitemap_utils: {e}", exc_info=True)
+        flash(f"Error: {str(e)}", "error")
+        return redirect(url_for('admin_sitemaps', token=token))
 
 if __name__ == '__main__':
     # Створюємо директорію для sitemap файлів, якщо вона не існує

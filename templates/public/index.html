@@ -14,7 +14,6 @@
 {% block content %}
 <div class="container mt-4 page-sections">
     <div class="row">
-        <!-- Ліва колонка з привітанням та пошуком -->
         <div class="col-lg-8">
             <!-- Блок привітання -->
             <div class="welcome-card fade-in">
@@ -197,7 +196,6 @@ window.translations = {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Обробник для середньої кнопки миші
     const productLinks = document.querySelectorAll('.product-card a');
     productLinks.forEach(link => {
         link.addEventListener('auxclick', function(e) {
@@ -208,7 +206,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Кнопка "Show More Products"
     const loadMoreButton = document.getElementById('loadMoreButton');
     if (loadMoreButton) {
         loadMoreButton.addEventListener('click', function() {
@@ -268,7 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Функція для створення HTML-карточки продукту
     function createProductCard(product) {
         const translations = window.translations || {};
         const t = function(text) {

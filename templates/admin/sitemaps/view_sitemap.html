@@ -1,0 +1,50 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}View Sitemap - {{ filename }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">View Sitemap: {{ filename }}</h1>
+        <div>
+            <a href="{{ url_for('admin_sitemaps', token=token) }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Sitemaps
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">File Information</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Path:</strong> {{ file_path }}</p>
+            <p><strong>Size:</strong> {{ (content|length / 1024)|round(2) }} KB</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">File Content</h5>
+        </div>
+        <div class="card-body">
+            <div class="bg-light p-3 rounded">
+                <pre><code class="language-xml">{{ content }}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/xml.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+    });
+</script>
+{% endblock %}

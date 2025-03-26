@@ -132,7 +132,8 @@
                     <i class="bi bi-tools fs-1 text-primary mb-3"></i>
                     <h5 class="card-title">Utilities</h5>
                     <div class="d-grid gap-2">
-                        <a href="{{ url_for('utilities', token=token) }}" class="btn btn-admin">System Utilities</a>
+                        <a href="{{ url_for('utilities', token=token) }}" class="btn btn-admin mb-2">System Utilities</a>
+                        <a href="{{ url_for('admin_sitemaps', token=token) }}" class="btn btn-admin">Sitemap Management</a>
                     </div>
                 </div>
             </div>
@@ -175,6 +176,20 @@
                     <div class="d-grid gap-2">
                         <a href="{{ url_for('add_product_descriptions', token=token) }}" class="btn btn-admin mb-2">Add Descriptions</a>
                         <a href="{{ url_for('manage_descriptions', token=token) }}" class="btn btn-admin">Manage Descriptions</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Керування Sitemap -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-diagram-3 fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Sitemap Management</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin_sitemaps', token=token) }}" class="btn btn-admin mb-2">Manage Sitemaps</a>
+                        <a href="/sitemap.xml" target="_blank" class="btn btn-admin">View Sitemap</a>
                     </div>
                 </div>
             </div>

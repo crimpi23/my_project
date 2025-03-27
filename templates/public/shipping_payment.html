@@ -37,26 +37,16 @@
                     <div class="shipping-method mb-3">
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-box-seam me-2 text-primary"></i>
-                            <strong>{{ _('Standard Shipping') }}</strong>
-                        </div>
-                        <div class="ps-4">
-                            <p class="mb-1">{{ _('Delivery time:') }} 1-5 {{ _('business days') }}</p>
-                            <p class="mb-1">{{ _('Cost:') }} {{ _('Starting from') }} €5</p>
-                        </div>
-                    </div>
-                    
-                    <div class="shipping-method mb-3">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="bi bi-lightning me-2 text-warning"></i>
-                            <strong>{{ _('Express Shipping') }}</strong>
+                            <strong>{{ _('Standard Shipping') }} ({{ _('Slovakia only') }})</strong>
                         </div>
                         <div class="ps-4">
                             <p class="mb-1">{{ _('Delivery time:') }} 1-2 {{ _('business days') }}</p>
-                            <p class="mb-1">{{ _('Cost:') }} {{ _('Starting from') }} €15</p>
-                            <p class="text-muted small">{{ _('Available for most locations in Europe. Contact us for specific pricing.') }}</p>
+                            <p class="mb-1">{{ _('Cost:') }} {{ _('Starting from') }} €5</p>
+                            <p class="mb-1 text-muted small">{{ _('This shipping method is available only for deliveries within Slovakia.') }}</p>
                         </div>
                     </div>
                     
+                   
                     <div class="shipping-method mb-3">
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-shop me-2 text-success"></i>
@@ -72,10 +62,15 @@
                     <div class="shipping-method mb-3 mt-4">
                         <div class="d-flex align-items-center mb-3">
                             <i class="bi bi-globe me-2 text-primary"></i>
-                            <strong>{{ _('GLS International Delivery') }}</strong>
+                            <strong>{{ _('GLS International Delivery') }} ({{ _('All European countries') }})</strong>
                         </div>
                         <div class="ps-4">
-                            <p>{{ _('Our main international shipping partner is GLS, offering reliable delivery service across Europe.') }}</p>
+                            <p>{{ _('Our main international shipping partner is GLS, offering reliable delivery service across Europe. This is the primary shipping method for all countries outside Slovakia.') }}</p>
+                            
+                            <div class="alert alert-info mb-3">
+                                <i class="bi bi-info-circle me-1"></i> 
+                                {{ _('GLS International Delivery is the only available shipping method for deliveries outside Slovakia.') }}
+                            </div>
                             
                             <h6 class="mt-3 mb-2">{{ _('Delivery Zones & Estimated Times') }}</h6>
                             <div class="table-responsive mb-3">

@@ -1,7 +1,6 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
-<!-- SEO Meta Tags -->
 <meta name="description" content="{{ _('View your order history at AutogroupEU. Track your purchases and check delivery status.') }}">
 <meta name="robots" content="noindex, nofollow">
 {% endblock %}
@@ -10,7 +9,6 @@
 
 {% block content %}
 <div class="container mt-4 page-orders fade-in">
-    <!-- Orders Header -->
     <div class="section-header section-header-secondary">
         <div class="header-icon">
             <i class="bi bi-list-check"></i>
@@ -19,7 +17,6 @@
     </div>
     
     {% if orders %}
-    <!-- Orders Table -->
     <div class="table-responsive">
         <table class="orders-table">
             <thead>
@@ -91,7 +88,6 @@
         </table>
     </div>
     {% else %}
-    <!-- Empty Orders Message -->
     <div class="empty-orders">
         <i class="bi bi-clipboard-x empty-orders-icon"></i>
         <h3>{{ _('No Orders Found') }}</h3>

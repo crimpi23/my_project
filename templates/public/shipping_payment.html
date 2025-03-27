@@ -1,7 +1,6 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
-<!-- SEO Meta Tags -->
 <meta name="description" content="{{ _('Information about shipping methods and payment options at AutogroupEU.') }}">
 <meta name="keywords" content="{{ _('shipping, delivery, payment, payment options, bank transfer, GLS delivery') }}">
 <meta property="og:title" content="{{ _('Shipping & Payment') }} - AutogroupEU">
@@ -20,7 +19,6 @@
 
     <div class="row">
         <div class="col-lg-10 mx-auto">
-            <!-- Секція доставки -->
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
                     <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(0,123,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -71,7 +69,6 @@
                         </div>
                     </div>
                     
-                    <!-- НОВИЙ РОЗДІЛ: GLS Доставка -->
                     <div class="shipping-method mb-3 mt-4">
                         <div class="d-flex align-items-center mb-3">
                             <i class="bi bi-globe me-2 text-primary"></i>
@@ -80,7 +77,6 @@
                         <div class="ps-4">
                             <p>{{ _('Our main international shipping partner is GLS, offering reliable delivery service across Europe.') }}</p>
                             
-                            <!-- GLS: Зони доставки -->
                             <h6 class="mt-3 mb-2">{{ _('Delivery Zones & Estimated Times') }}</h6>
                             <div class="table-responsive mb-3">
                                 <table class="table table-sm table-bordered">
@@ -121,7 +117,6 @@
                                 <small><strong>{{ _('Excluded from EU deliveries:') }}</strong> {{ _('Andorra, Büsingen am Hochrhein, Ceuta, Gibraltar, Great Britain, Greece, Livigno, Malta, Melilla, Monaco, Norway, San Marino, Switzerland and all European islands (except for the German Islands).') }}</small>
                             </div>
                             
-                            <!-- GLS: Міжнародні тарифи -->
                             <h6 class="mt-3 mb-2">{{ _('International Shipping Rates') }}</h6>
                             <div class="table-responsive mb-3">
                                 <table class="table table-sm table-bordered">
@@ -174,7 +169,6 @@
                                 </table>
                             </div>
                             
-                            <!-- GLS: Тарифи для Словаччини -->
                             <h6 class="mt-3 mb-2">{{ _('Delivery within Slovakia') }}</h6>
                             <div class="table-responsive mb-3">
                                 <table class="table table-sm table-bordered">
@@ -228,7 +222,6 @@
                 </div>
             </div>
 
-            <!-- Секція оплати -->
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
                     <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(40,167,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -278,7 +271,6 @@
                 </div>
             </div>
 
-            <!-- Додайте цей блок до секції оплати на сторінці -->
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
                     <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(23,162,184,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">

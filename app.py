@@ -2179,76 +2179,74 @@ def api_products():
 # Перегляд кошика публічного користувача
 @app.route('/public_cart')
 def public_cart():
-    """View and manage public user's shopping cart"""
+    """View and manage shopping cart for any user (registered or anonymous)"""
     user_id = session.get('user_id')
-    if not user_id:
-        flash(_("Please log in to view your cart."), "error")
-        return redirect(url_for('login'))
-
-    cart = session.get('public_cart', {})
-    logging.debug(f"Cart data in session: {cart}")
-    total_price = Decimal('0')
+    is_authenticated = user_id is not None
+    
     cart_items = []
+    total_price = Decimal('0')
     saved_addresses = []
     saved_companies = []
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        # Get saved delivery addresses
-        cursor.execute("""
-            SELECT 
-                id, full_name, phone, country, 
-                postal_code, city, street, is_default
-            FROM delivery_addresses
-            WHERE user_id = %s
-            ORDER BY is_default DESC, created_at DESC
-        """, (user_id,))
-        saved_addresses = cursor.fetchall()
-        logging.debug(f"Found {len(saved_addresses)} saved addresses for user {user_id}")
         
-        # Get saved companies
-        cursor.execute("""
-            SELECT 
-                id, company_name, vat_number, registration_number, 
-                address, is_default, created_at
-            FROM user_companies
-            WHERE user_id = %s
-            ORDER BY is_default DESC, created_at DESC
-        """, (user_id,))
-        saved_companies = cursor.fetchall()
-        logging.debug(f"Found {len(saved_companies)} saved companies for user {user_id}")
-
         # Get current language
         lang = session.get('language', 'sk')
-
+        
         # Get price lists information for delivery time
         cursor.execute("""
             SELECT table_name, delivery_time 
             FROM price_lists
         """)
         delivery_times = {row['table_name']: row['delivery_time'] for row in cursor.fetchall()}
-
-        # Process cart items
-        for article, article_items in cart.items():
-            logging.debug(f"Processing article: {article}")
-            if not isinstance(article_items, dict):
-                logging.warning(f"Ignoring non-dictionary article_items: {article_items}")
-                continue
+        
+        if is_authenticated:
+            # Для авторизованих користувачів - отримуємо дані з БД
+            # Get saved delivery addresses
+            cursor.execute("""
+                SELECT 
+                    id, full_name, phone, country, 
+                    postal_code, city, street, is_default
+                FROM delivery_addresses
+                WHERE user_id = %s
+                ORDER BY is_default DESC, created_at DESC
+            """, (user_id,))
+            saved_addresses = cursor.fetchall()
             
-            for table_name, item_data in article_items.items():
-                logging.debug(f"Processing table: {table_name}")
-                if not isinstance(item_data, dict):
-                    logging.warning(f"Ignoring non-dictionary item_data: {item_data}")
-                    continue
-                
-                # Перевірка наявності ключа 'price'
-                if 'price' not in item_data:
-                    logging.warning(f"Missing 'price' key for article {article}, table {table_name}")
-                    continue  # Пропускаємо цей товар, якщо немає ціни
-                
-                # Get item details from DB by article
+            # Get saved companies
+            cursor.execute("""
+                SELECT 
+                    id, company_name, vat_number, registration_number, 
+                    address, is_default, created_at
+                FROM user_companies
+                WHERE user_id = %s
+                ORDER BY is_default DESC, created_at DESC
+            """, (user_id,))
+            saved_companies = cursor.fetchall()
+            
+            # Отримуємо товари з кошика в базі даних
+            cursor.execute("""
+                SELECT 
+                    c.article, 
+                    c.table_name,
+                    c.base_price,
+                    c.quantity,
+                    c.comment,
+                    c.brand_id,
+                    b.name as brand_name
+                FROM cart c
+                LEFT JOIN brands b ON c.brand_id = b.id
+                WHERE c.user_id = %s
+                ORDER BY c.added_at
+            """, (user_id,))
+            
+            db_cart_items = cursor.fetchall()
+            
+            # Обробляємо товари з бази даних
+            for item in db_cart_items:
+                # Get item details from products table if available
                 cursor.execute(f"""
                     SELECT 
                         article,
@@ -2256,30 +2254,16 @@ def public_cart():
                         description_{lang} as description
                     FROM products
                     WHERE article = %s
-                """, (article,))
+                """, (item['article'],))
                 product = cursor.fetchone()
                 
-                # Set defaults if product not found
-                name = article
-                description = ""
-                
-                if product:
-                    name = product['name'] or article
-                    description = product['description'] or ''
-                
-                # Get brand name
-                brand_id = item_data.get('brand_id')
-                brand_name = "AutogroupEU"
-                
-                if brand_id:
-                    cursor.execute("SELECT name FROM brands WHERE id = %s", (brand_id,))
-                    brand_result = cursor.fetchone()
-                    if brand_result:
-                        brand_name = brand_result['name']
+                # Set defaults
+                name = product['name'] if product and product['name'] else item['article']
+                description = product['description'] if product and product['description'] else ''
                 
                 # Calculate values
-                price = Decimal(str(item_data['price']))
-                quantity = item_data['quantity']
+                price = Decimal(str(item['base_price']))
+                quantity = item['quantity']
                 item_total = price * quantity
                 total_price += item_total
                 
@@ -2287,31 +2271,108 @@ def public_cart():
                 in_stock = False
                 delivery_time = None
                 
-                if table_name == 'stock':
+                if item['table_name'] == 'stock':
                     in_stock = True
                     delivery_time = _("In Stock")
                 else:
-                    delivery_time_str = delivery_times.get(table_name, '7-14')
+                    delivery_time_str = delivery_times.get(item['table_name'], '7-14')
                     in_stock = delivery_time_str == '0'
                     delivery_time = _("In Stock") if in_stock else f"{delivery_time_str} {_('days')}"
                 
                 # Create cart item object
                 cart_item = {
-                    'article': article,
+                    'article': item['article'],
                     'name': name,
                     'description': description,
-                    'brand_name': brand_name,
-                    'brand_id': brand_id,
+                    'brand_name': item['brand_name'],
+                    'brand_id': item['brand_id'],
                     'price': float(price),
                     'quantity': quantity,
                     'total': float(item_total),
-                    'table_name': table_name,
-                    'comment': item_data.get('comment', ''),
+                    'table_name': item['table_name'],
+                    'comment': item['comment'],
                     'in_stock': in_stock,
                     'delivery_time': delivery_time
                 }
                 
                 cart_items.append(cart_item)
+        else:
+            # Для неавторизованих користувачів - отримуємо дані з сесії
+            cart = session.get('public_cart', {})
+            
+            # Process cart items from session
+            for article, article_items in cart.items():
+                if not isinstance(article_items, dict):
+                    continue
+                
+                for table_name, item_data in article_items.items():
+                    if not isinstance(item_data, dict) or 'price' not in item_data:
+                        continue
+                    
+                    # Get item details from DB by article
+                    cursor.execute(f"""
+                        SELECT 
+                            article,
+                            name_{lang} as name,
+                            description_{lang} as description
+                        FROM products
+                        WHERE article = %s
+                    """, (article,))
+                    product = cursor.fetchone()
+                    
+                    # Set defaults if product not found
+                    name = article
+                    description = ""
+                    
+                    if product:
+                        name = product['name'] or article
+                        description = product['description'] or ''
+                    
+                    # Get brand name
+                    brand_id = item_data.get('brand_id')
+                    brand_name = "AutogroupEU"
+                    
+                    if brand_id:
+                        cursor.execute("SELECT name FROM brands WHERE id = %s", (brand_id,))
+                        brand_result = cursor.fetchone()
+                        if brand_result:
+                            brand_name = brand_result['name']
+                    
+                    # Calculate values
+                    price = Decimal(str(item_data['price']))
+                    quantity = item_data['quantity']
+                    item_total = price * quantity
+                    total_price += item_total
+                    
+                    # Determine if item is in stock and delivery time
+                    in_stock = False
+                    delivery_time = None
+                    
+                    if table_name == 'stock':
+                        in_stock = True
+                        delivery_time = _("In Stock")
+                    else:
+                        delivery_time_str = delivery_times.get(table_name, '7-14')
+                        in_stock = delivery_time_str == '0'
+                        delivery_time = _("In Stock") if in_stock else f"{delivery_time_str} {_('days')}"
+                    
+                    # Create cart item object
+                    cart_item = {
+                        'article': article,
+                        'name': name,
+                        'description': description,
+                        'brand_name': brand_name,
+                        'brand_id': brand_id,
+                        'price': float(price),
+                        'quantity': quantity,
+                        'total': float(item_total),
+                        'table_name': table_name,
+                        'comment': item_data.get('comment', ''),
+                        'in_stock': in_stock,
+                        'delivery_time': delivery_time
+                    }
+                    
+                    cart_items.append(cart_item)
 
     except Exception as e:
         logging.error(f"Error in public_cart: {e}", exc_info=True)
@@ -2330,7 +2391,253 @@ def public_cart():
         cart_items=cart_items,
         total_price=total_price,
         saved_addresses=saved_addresses,
-        saved_companies=saved_companies
+        saved_companies=saved_companies,
+        is_authenticated=is_authenticated
+    )
+
+
+
+
+@app.route('/guest_checkout', methods=['POST'])
+def guest_checkout():
+    """Process checkout for guest users without registration"""
+    try:
+        # Отримуємо дані форми
+        email = request.form.get('email')
+        full_name = request.form.get('full_name')
+        phone = request.form.get('phone')
+        country = request.form.get('country')
+        postal_code = request.form.get('postal_code')
+        city = request.form.get('city')
+        street = request.form.get('street')
+        shipping_method = request.form.get('shipping_method', 'pickup')
+        
+        # Валідація основних полів
+        if not all([email, full_name, phone, country, city, street]):
+            flash(_("All fields are required"), "error")
+            return redirect(url_for('public_cart'))
+        
+        # Валідація телефону
+        is_valid, phone_message = validate_phone(phone)
+        if not is_valid:
+            flash(_(phone_message), "error")
+            return redirect(url_for('public_cart'))
+        
+        # Валідація email
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            flash(_("Invalid email format"), "error")
+            return redirect(url_for('public_cart'))
+        
+        # Отримуємо корзину з сесії
+        cart = session.get('public_cart', {})
+        if not cart:
+            flash(_("Your cart is empty"), "error")
+            return redirect(url_for('public_cart'))
+        
+        # Підключення до бази даних
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Перевіряємо, чи існує користувач з таким email
+        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+        existing_user = cursor.fetchone()
+        
+        # Генеруємо пароль для нового користувача
+        hashed_password = hash_password(generate_token())
+        
+        if existing_user:
+            # Використовуємо існуючий акаунт
+            user_id = existing_user['id']
+            logging.info(f"Using existing user account with ID: {user_id} for guest checkout")
+        else:
+            # Створюємо тимчасовий акаунт для гостя
+            cursor.execute("""
+                INSERT INTO users (username, email, password_hash, phone)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id
+            """, (email, email, hashed_password, phone))
+            
+            user_id = cursor.fetchone()['id']
+            
+            # Призначаємо роль 'public'
+            cursor.execute("SELECT id FROM roles WHERE name = 'public'")
+            public_role_id = cursor.fetchone()['id']
+            
+            cursor.execute("""
+                INSERT INTO user_roles (user_id, role_id, assigned_at)
+                VALUES (%s, %s, NOW())
+            """, (user_id, public_role_id))
+        
+        # Функція для серіалізації datetime в JSON
+        def json_serial(obj):
+            """Конвертує нестандартні типи для JSON"""
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            if isinstance(obj, Decimal):
+                return float(obj)
+            raise TypeError(f"Type {type(obj)} not serializable")
+        
+        # Формуємо дані доставки
+        delivery_data = {
+            'full_name': full_name,
+            'phone': phone,
+            'country': country,
+            'postal_code': postal_code,
+            'city': city,
+            'street': street,
+            'shipping_method': shipping_method
+        }
+        
+        # Обробка товарів з кошика
+        total_price = Decimal('0')
+        order_items = []
+        email_items = []  # Для відправки листа
+        
+        for article, article_items in cart.items():
+            for table_name, item_data in article_items.items():
+                if 'price' not in item_data or 'quantity' not in item_data:
+                    continue
+                    
+                item_price = Decimal(str(item_data['price']))
+                item_quantity = int(item_data['quantity']) 
+                item_total = item_price * item_quantity
+                total_price += item_total
+                
+                order_items.append({
+                    'article': article,
+                    'table_name': table_name,
+                    'price': item_price,
+                    'quantity': item_quantity,
+                    'total_price': item_total,
+                    'brand_id': item_data.get('brand_id'),
+                    'comment': item_data.get('comment', '')
+                })
+
+                # Додаємо інформацію для листа
+                if table_name == 'stock':
+                    delivery_time = _("In Stock")
+                else:
+                    cursor.execute("""
+                        SELECT delivery_time FROM price_lists 
+                        WHERE table_name = %s
+                    """, (table_name,))
+                    result = cursor.fetchone()
+                    delivery_time_str = result['delivery_time'] if result else '7-14'
+                    delivery_time = _("In Stock") if delivery_time_str == '0' else f"{delivery_time_str} {_('days')}"
+                
+                email_items.append({
+                    'article': article,
+                    'price': float(item_price),
+                    'quantity': item_quantity,
+                    'delivery_time': delivery_time
+                })
+        
+        # Створюємо замовлення
+        cursor.execute("""
+            INSERT INTO public_orders 
+            (user_id, total_price, status, created_at, updated_at, delivery_address, needs_invoice, invoice_details, payment_status)
+            VALUES (%s, %s, 'new', NOW(), NOW(), %s, FALSE, NULL, 'unpaid')
+            RETURNING id
+        """, (
+            user_id,
+            total_price,
+            json.dumps(delivery_data, default=json_serial),
+            shipping_method
+        ))
+        
+        order_id = cursor.fetchone()['id']
+        
+        # Додаємо деталі замовлення
+        for item in order_items:
+            cursor.execute("""
+                INSERT INTO public_order_details 
+                (order_id, article, table_name, price, quantity, total_price, comment, brand_id, status, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'new', NOW())
+            """, (
+                order_id,
+                item['article'],
+                item['table_name'],
+                item['price'],
+                item['quantity'],
+                item['total_price'],
+                item['comment'],
+                item['brand_id']
+            ))
+        
+        # Зберігаємо зміни до бази даних
+        conn.commit()
+        
+        # Відправляємо лист з підтвердженням
+        try:
+            email_sent = send_email(
+                to_email=email,
+                subject=f"Order #{order_id}", 
+                ordered_items=email_items,
+                delivery_data=delivery_data, 
+                lang=session.get('language', 'sk')
+            )
+            
+            if not email_sent:
+                # Додаємо замовлення до черги для відправки пізніше
+                cursor.execute("""
+                    INSERT INTO email_queue 
+                    (recipient, subject, order_id, user_id, delivery_data, ordered_items, lang, created_at, status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), 'pending')
+                """, (
+                    email,
+                    f"Order #{order_id}",
+                    order_id,
+                    user_id,
+                    json.dumps(delivery_data, default=json_serial),
+                    json.dumps(email_items, default=json_serial),
+                    session.get('language', 'sk')
+                ))
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Error sending confirmation email: {e}", exc_info=True)
+        
+        # Очищаємо кошик
+        session['public_cart'] = {}
+        session['cart_count'] = 0
+        session.modified = True
+        
+        # Зберігаємо інформацію про замовлення для сторінки підтвердження
+        session['guest_order'] = {
+            'order_id': order_id,
+            'items': email_items,
+            'total_price': float(total_price),
+            'delivery_data': delivery_data,
+            'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        flash(_("Your order has been placed! Check your email for confirmation."), "success")
+        return redirect(url_for('guest_order_confirmation'))
+        
+    except Exception as e:
+        logging.error(f"Error in guest_checkout: {e}", exc_info=True)
+        if 'conn' in locals():
+            conn.rollback()
+        flash(_("Error processing your order. Please try again."), "error")
+        return redirect(url_for('public_cart'))
+    
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
+@app.route('/guest/order/confirmation')
+def guest_order_confirmation():
+    """Display confirmation page for guest orders"""
+    # Get order info from session
+    guest_order = session.get('guest_order')
+    
+    if not guest_order:
+        flash(_("Order information not found."), "error")
+        return redirect(url_for('index'))
+    
+    return render_template(
+        'public/orders/guest_confirmation.html',
+        order=guest_order,
+        items=guest_order['items']
     )
 
 # Запит про токен / Перевірка токена / Декоратор для перевірки токена
@@ -3211,46 +3518,45 @@ def public_remove_from_cart():
         article = request.form.get('article')
         table_name = request.form.get('table_name')
 
-        logging.info(f"Removing from cart for user {session.get('user_id')}: article={article}, table={table_name}")
+        logging.info(f"Removing from cart: article={article}, table={table_name}")
         
         if not article or not table_name:
             flash(_("Missing article or table name"), "error")
             return redirect(url_for('public_cart'))
         
-        # Отримуємо кошик з сесії
-        cart = session.get('public_cart', {})
+        user_id = session.get('user_id')
         
-        # Детальніше логування для відлагодження
-        logging.debug(f"Current cart before removal: {cart}")
-        logging.debug(f"Looking for article={article}, table_name={table_name}")
-        
-        if article in cart and table_name in cart[article]:
-            # Видаляємо товар
-            del cart[article][table_name]
-            logging.debug(f"Deleted table_name={table_name} from article={article}")
+        if user_id:
+            # Видаляємо товар з бази даних для авторизованого користувача
+            conn = get_db_connection()
+            cursor = conn.cursor()
             
-            # Якщо після видалення table_name для артикула не залишилось інших table_name, видаляємо і сам артикул
-            if not cart[article]:
-                del cart[article]
-                logging.debug(f"Deleted article={article} from cart as it's empty")
+            cursor.execute("""
+                DELETE FROM cart 
+                WHERE user_id = %s AND article = %s AND table_name = %s
+            """, (user_id, article, table_name))
             
-            # Зберігаємо оновлений кошик в сесії
-            session['public_cart'] = cart
-            session.modified = True
-            
-            # Оновлюємо лічильник товарів
-            update_cart_count_in_session()
-            
-            logging.info(f"Removed item from cart: article={article}, table_name={table_name}")
-            flash(_("Item removed from cart"), "success")
+            conn.commit()
+            cursor.close()
+            conn.close()
         else:
-            logging.warning(f"Item not found in cart: article={article}, table_name={table_name}")
-            flash(_("Item not found in your cart"), "warning")
+            # Видаляємо товар з сесії для неавторизованого користувача
+            cart = session.get('public_cart', {})
+            
+            if article in cart and table_name in cart[article]:
+                del cart[article][table_name]
+                
+                # Якщо для артикула не залишилось таблиць, видаляємо і сам артикул
+                if not cart[article]:
+                    del cart[article]
+                    
+                session['public_cart'] = cart
+                session.modified = True
         
-        # Додаємо логування для перевірки даних
-        logging.debug(f"Form data: {request.form}")
-        logging.debug(f"Updated cart after removal: {session.get('public_cart')}")
-        logging.debug(f"Session data: {session}")
+        # Оновлюємо лічильник товарів
+        update_cart_count_in_session()
+        
+        flash(_("Item removed from cart"), "success")
         
     except Exception as e:
         logging.error(f"Error removing from cart: {e}", exc_info=True)
@@ -3263,45 +3569,36 @@ def public_remove_from_cart():
 def update_cart_count_in_session(user_id=None):
     """Оновлює кількість товарів у кошику в сесії користувача"""
     try:
-        if not user_id:
-            user_id = session.get('user_id')
+        # Спочатку перевіряємо публічний кошик, незалежно від статусу авторизації
+        cart = session.get('public_cart', {})
         
-        if user_id:
-            # Спочатку перевірте, чи є public_cart в сесії і чи є в ньому товари
-            cart = session.get('public_cart', {})
-            if cart:
-                # Рахуємо загальну кількість товарів у public_cart
-                total_count = 0
-                for article, article_items in cart.items():
-                    if isinstance(article_items, dict):
-                        for table_name, item_data in article_items.items():
-                            if isinstance(item_data, dict) and 'quantity' in item_data:
-                                total_count += item_data['quantity']
-                
-                session['cart_count'] = total_count
-                logging.info(f"Updated cart count from public_cart: {total_count}")
-            else:
-                # Якщо public_cart порожній, перевіряємо базу даних
-                conn = get_db_connection()
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT COALESCE(SUM(quantity), 0) 
-                    FROM cart 
-                    WHERE user_id = %s
-                """, (user_id,))
-                count = cursor.fetchone()[0]
-                session['cart_count'] = int(count or 0)  # Захист від None
-                cursor.close()
-                conn.close()
-                logging.info(f"Updated cart count from database: {session.get('cart_count')}")
-            
-            session.modified = True  # Важливо для збереження змін сесії
+        if cart:
+            # Використовуємо існуючу функцію для підрахунку товарів
+            total_count = get_public_cart_count()
+            session['cart_count'] = total_count
+            logging.info(f"Updated cart count from public_cart: {total_count}")
+        elif 'user_id' in session:
+            # Якщо публічний кошик порожній, але користувач авторизований,
+            # перевіряємо базу даних
+            user_id = user_id or session.get('user_id')
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COALESCE(SUM(quantity), 0) 
+                FROM cart 
+                WHERE user_id = %s
+            """, (user_id,))
+            count = cursor.fetchone()[0]
+            session['cart_count'] = int(count or 0)  # Захист від None
+            cursor.close()
+            conn.close()
+            logging.info(f"Updated cart count from database: {session.get('cart_count')}")
         else:
-            # Для неавторизованих користувачів
+            # Порожній кошик
             session['cart_count'] = 0
-            logging.info(f"Updated cart count for unauthorized user: 0")
-            session.modified = True
-            
+            logging.info("Cart is empty, count set to 0")
+        
+        session.modified = True  # Важливо для збереження змін сесії
     except Exception as e:
         logging.error(f"Error updating cart count in session: {e}", exc_info=True)
 
@@ -3682,7 +3979,7 @@ def index():
 # Додавання товару в кошик публічного користувача
 @app.route('/public_add_to_cart', methods=['POST'])
 def public_add_to_cart():
-    """Add items to the public user's shopping cart"""
+    """Add items to the shopping cart for any user (registered or anonymous)"""
     try:
         article = request.form.get('article')
         selected_price = request.form.get('selected_price')
@@ -3710,7 +4007,8 @@ def public_add_to_cart():
         
         # Get quantity field name based on table_name
         quantity_field = f"quantity_{table_name}"
-        quantity = int(request.form.get(quantity_field, 1))
+        quantity_value = request.form.get(quantity_field) or request.form.get('quantity', 1)
+        quantity = int(quantity_value)
         
         logging.info(f"Adding to cart: article={article}, table={table_name}, price={price}, quantity={quantity}, brand_id={brand_id}")
         
@@ -3718,40 +4016,66 @@ def public_add_to_cart():
             flash(_("Quantity must be at least 1"), "error")
             return redirect(url_for('product_details', article=article))
         
-        # Перевірка авторизації    
-        if 'user_id' not in session:
-            session['next_url'] = url_for('product_details', article=article)
-            flash(_("Please log in or register to add this item to your cart."), "info")
-            return redirect(url_for('login'))
-            
-        # Initialize cart if needed
-        if 'public_cart' not in session:
-            session['public_cart'] = {}
-            
-        # Initialize article in cart if needed
-        if article not in session['public_cart']:
-            session['public_cart'][article] = {}
-            
-        # Add or update cart item
-        session['public_cart'][article][table_name] = {
-            'price': float(price),
-            'quantity': quantity,
-            'brand_id': brand_id,
-            'comment': request.form.get('comment', '')
-        }
+        # Перевірка авторизації - ВИДАЛЕНА, дозволимо додавати товари без реєстрації
+        user_id = session.get('user_id')
         
-        # Важливо - явно помітити сесію як модифіковану
-        session.modified = True
+        if user_id:
+            # Якщо користувач авторизований, додаємо товар в БД
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Перевірка, чи товар вже є в кошику
+            cursor.execute("""
+                SELECT id, quantity FROM cart
+                WHERE user_id = %s AND article = %s AND table_name = %s
+            """, (user_id, article, table_name))
+            existing_cart_item = cursor.fetchone()
+            
+            if existing_cart_item:
+                # Оновлюємо кількість товару
+                new_quantity = existing_cart_item['quantity'] + quantity
+                cursor.execute("""
+                    UPDATE cart
+                    SET quantity = %s, updated_at = NOW()
+                    WHERE id = %s
+                """, (new_quantity, existing_cart_item['id']))
+            else:
+                # Додаємо новий товар у кошик
+                cursor.execute("""
+                    INSERT INTO cart 
+                    (user_id, article, table_name, base_price, final_price, quantity, comment, brand_id, added_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                """, (user_id, article, table_name, float(price), float(price), quantity, request.form.get('comment', ''), brand_id))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+        else:
+            # Якщо користувач не авторизований, додаємо товар у сесію
+            # Initialize cart if needed
+            if 'public_cart' not in session:
+                session['public_cart'] = {}
+                
+            # Initialize article in cart if needed
+            if article not in session['public_cart']:
+                session['public_cart'][article] = {}
+                
+            # Add or update cart item
+            session['public_cart'][article][table_name] = {
+                'price': float(price),
+                'quantity': quantity,
+                'brand_id': brand_id,
+                'comment': request.form.get('comment', '')
+            }
+            
+            # Важливо - явно помітити сесію як модифіковану
+            session.modified = True
         
         logging.info(f"Cart after adding: {session.get('public_cart')}")
         flash(_("Item added to cart"), "success")
         
         # Оновлюємо кількість товарів у сесії
         update_cart_count_in_session()
-        
-        # Додаємо логування для перевірки даних
-        logging.debug(f"Form data: {request.form}")
-        logging.debug(f"Session data: {session}")
         
     except Exception as e:
         logging.error(f"Error adding to cart: {e}", exc_info=True)

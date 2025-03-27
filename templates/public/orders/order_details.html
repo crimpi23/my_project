@@ -1,7 +1,6 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
-<!-- SEO Meta Tags -->
 <meta name="description" content="{{ _('Order details at AutogroupEU. View products, prices, and delivery information.') }}">
 <meta name="robots" content="noindex, nofollow">
 {% endblock %}
@@ -10,14 +9,12 @@
 
 {% block content %}
 <div class="container mt-4 mb-5">
-    <!-- Навігація назад до списку замовлень -->
     <div class="mb-3">
         <a href="{{ url_for('public_view_orders') }}" class="back-link">
             <i class="bi bi-arrow-left"></i> {{ _('Back to Orders') }}
         </a>
     </div>
     
-    <!-- Заголовок замовлення -->
     <div class="section-header section-header-primary mb-4 fade-in">
         <div class="header-icon">
             <i class="bi bi-box-seam"></i>
@@ -25,9 +22,7 @@
         <h2>{{ _('Order') }} #{{ order.id }}</h2>
     </div>
     
-    <!-- Інформація про замовлення -->
     <div class="row fade-in">
-        <!-- Деталі замовлення -->
         <div class="col-md-6 mb-4">
             <div class="order-details-card">
                 <div class="card-header">
@@ -82,7 +77,6 @@
             </div>
         </div>
         
-        <!-- Адреса доставки -->
         <div class="col-md-6 mb-4">
             <div class="order-details-card">
                 <div class="card-header">
@@ -108,7 +102,6 @@
                 </div>
             </div>
             
-            <!-- Інформація про інвойс -->
             {% if order.needs_invoice and order.invoice_details %}
             <div class="order-details-card mt-4">
                 <div class="card-header">
@@ -140,7 +133,6 @@
         </div>
     </div>
     
-    <!-- Товари замовлення -->
     <div class="order-items-card mt-2 fade-in">
         <div class="card-header">
             <h5>{{ _('Order Items') }}</h5>
@@ -181,7 +173,6 @@
         </div>
     </div>
     
-    <!-- Кнопка для повторення замовлення -->
     <div class="d-flex justify-content-end mt-4 fade-in">
         <a href="{{ url_for('public_view_orders') }}" class="btn btn-outline-secondary me-2">
             <i class="bi bi-arrow-left"></i> {{ _('Back to Orders') }}

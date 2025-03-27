@@ -4,11 +4,9 @@
 
 {% block head %}
 {{ super() }}
-<!-- SEO Meta Tags -->
 <meta name="description" content="{{ category.description or _('Browse our collection of') }} {{ category['name_' + g.locale] or category.name_uk or category.name_en }} {{ _('products at AutogroupEU') }}">
 <meta name="keywords" content="{{ category['name_' + g.locale] or category.name_uk or category.name_en }}, {{ _('auto parts, automotive parts') }}">
 
-<!-- Open Graph Meta Tags -->
 <meta property="og:title" content="{{ category['name_' + g.locale] or category.name_uk or category.name_en }} - {{ _('AutogroupEU') }}">
 <meta property="og:description" content="{{ _('Browse our collection of') }} {{ category['name_' + g.locale] or category.name_uk or category.name_en }} {{ _('products at AutogroupEU') }}">
 <meta property="og:type" content="website">
@@ -17,7 +15,6 @@
 <meta property="og:image" content="{{ category.image_url }}">
 {% endif %}
 
-<!-- Structured Data for Category -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -43,9 +40,7 @@
 }
 </script>
 
-<!-- Додаємо спеціальні стилі для нових фільтрів -->
 <style>
-  /* Стилі для нових фільтрів */
   .new-filter-section {
     background-color: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -89,7 +84,6 @@
     margin-top: 1rem;
   }
   
-  /* Стилі для підкатегорій */
   .subcategory-list {
     list-style-type: none;
     padding: 0;
@@ -117,7 +111,6 @@
 
 {% block content %}
 <div class="container my-3">
-    <!-- Навігаційні хлібні крихти -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb small">
             <li class="breadcrumb-item"><a href="{{ url_for('index') }}">{{ _('Home') }}</a></li>
@@ -134,17 +127,13 @@
         </ol>
     </nav>
 
-    <!-- Заголовок категорії з кількістю товарів -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0">{{ category['name_' + g.locale] or category.name_uk or category.name_en }}</h1>
         <span class="text-muted small">{{ total_products }} {{ _('products') }}</span>
     </div>
 
-    <!-- Початок блоку з фільтрами та товарами -->
     <div class="row">
-        <!-- Нова бічна панель з фільтрами -->
         <div class="col-lg-3">
-            <!-- Підкатегорії -->
             {% if subcategories %}
             <div class="new-filter-section">
                 <h3 class="new-filter-title">{{ _('Subcategories') }}</h3>
@@ -161,18 +150,15 @@
             </div>
             {% endif %}
 
-            <!-- Фільтр брендів -->
             {% if brands %}
             <div class="new-filter-section">
                 <h3 class="new-filter-title">{{ _('Brand Filter') }}</h3>
                 <form action="{{ url_for('view_category', slug=category.slug) }}" method="get" id="brandFilterForm">
-                    <!-- Приховані поля для збереження інших параметрів -->
                     {% if request.args.get('sort') %}
                     <input type="hidden" name="sort" value="{{ request.args.get('sort') }}">
                     {% endif %}
                     
                     <ul class="new-filter-list">
-                        <!-- "Всі бренди" опція -->
                         <li class="new-filter-option">
                             <input type="radio" name="brand" id="all_brands" value="" 
                                    class="new-filter-radio"
@@ -180,7 +166,6 @@
                             <label for="all_brands" class="new-filter-label">{{ _('All Brands') }}</label>
                         </li>
                         
-                        <!-- Список брендів -->
                         {% for b in brands %}
                         <li class="new-filter-option">
                             <input type="radio" name="brand" id="brand_{{ b.brand_id }}" value="{{ b.brand_name }}"
@@ -198,11 +183,9 @@
             </div>
             {% endif %}
 
-            <!-- Сортування -->
             <div class="new-filter-section">
                 <h3 class="new-filter-title">{{ _('Sort by') }}</h3>
                 <form action="{{ url_for('view_category', slug=category.slug) }}" method="get" id="sortingForm">
-                    <!-- Приховані поля -->
                     {% if request.args.get('brand') %}
                     <input type="hidden" name="brand" value="{{ request.args.get('brand') }}">
                     {% endif %}
@@ -240,7 +223,6 @@
                 </form>
             </div>
             
-            <!-- Кнопка скидання фільтрів -->
             <div class="mb-4">
                 <a href="{{ url_for('view_category', slug=category.slug) }}" class="btn btn-outline-secondary w-100">
                     {{ _('Reset All Filters') }}
@@ -248,9 +230,7 @@
             </div>
         </div>
         
-        <!-- Головний контент з товарами -->
         <div class="col-lg-9">
-            <!-- Товари -->
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
                 {% for product in products %}
                 <div class="col fade-in">
@@ -302,7 +282,6 @@
                 {% endfor %}
             </div>
             
-            <!-- Пагінація -->
             {% if pagination.pages > 1 %}
             <nav aria-label="Page navigation" class="mt-4">
                 <ul class="pagination justify-content-center">
@@ -346,14 +325,12 @@
     </div>
 </div>
 
-<!-- Мобільна версія фільтрів як offcanvas -->
 <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileFilters">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title">{{ _('Filters') }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <!-- Сюди додайте спрощений варіант фільтрів для мобільних -->
     </div>
 </div>
 {% endblock %}

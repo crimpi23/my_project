@@ -9,9 +9,9 @@
     function initGTM() {
         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
         new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l;'';j.async=true;j.src=
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-РЕАЛЬНИЙ-ID');
+        })(window,document,'script','dataLayer','GTM-N4RD9ZH9');
     }
     
     function initFacebookPixel() {
@@ -78,7 +78,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom-layout.css') }}">
 </head>	
 <body class="d-flex flex-column min-vh-100">
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-РЕАЛЬНИЙ-ID"
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N4RD9ZH9"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     
     <noscript><img height="1" width="1" style="display:none"
@@ -585,6 +585,76 @@ document.addEventListener('DOMContentLoaded', function() {
             if (subMenu) {
                 subMenu.classList.toggle('show');
             }
+        });
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const consentGiven = localStorage.getItem('cookieConsent') === 'full';
+    if (!consentGiven || typeof dataLayer === 'undefined') return;
+    
+    document.querySelectorAll('a[href^="tel:"]').forEach(function(phoneLink) {
+        phoneLink.addEventListener('click', function() {
+            const phoneNumber = this.getAttribute('href').replace('tel:', '');
+            dataLayer.push({
+                'event': 'contact_interaction',
+                'interaction_type': 'phone_call',
+                'contact_value': phoneNumber
+            });
+        });
+    });
+    
+    document.querySelectorAll('a[href^="https://wa.me/"]').forEach(function(whatsappLink) {
+        whatsappLink.addEventListener('click', function() {
+            const whatsappNumber = this.getAttribute('href').replace('https://wa.me/', '');
+            dataLayer.push({
+                'event': 'contact_interaction',
+                'interaction_type': 'whatsapp',
+                'contact_value': whatsappNumber
+            });
+        });
+    });
+    
+    document.querySelectorAll('a[href^="mailto:"]').forEach(function(emailLink) {
+        emailLink.addEventListener('click', function() {
+            const emailAddress = this.getAttribute('href').replace('mailto:', '');
+            dataLayer.push({
+                'event': 'contact_interaction',
+                'interaction_type': 'email',
+                'contact_value': emailAddress
+            });
+        });
+    });
+    
+    const whatsappButton = document.querySelector('.whatsapp-button');
+    if (whatsappButton) {
+        whatsappButton.addEventListener('click', function() {
+            dataLayer.push({
+                'event': 'contact_interaction',
+                'interaction_type': 'whatsapp_button',
+                'contact_value': 'fixed_button'
+            });
+        });
+    }
+    
+    const floatingContactOptions = document.querySelectorAll('.contact-options .contact-option');
+    floatingContactOptions.forEach(function(option) {
+        option.addEventListener('click', function() {
+            let interactionType = 'contact_button';
+            const href = this.getAttribute('href');
+            
+            if (href.startsWith('tel:')) {
+                interactionType = 'floating_phone';
+            } else if (href.startsWith('mailto:')) {
+                interactionType = 'floating_email';
+            }
+            
+            dataLayer.push({
+                'event': 'contact_interaction',
+                'interaction_type': interactionType,
+                'contact_value': href.replace(/^(tel:|mailto:)/, '')
+            });
         });
     });
 });

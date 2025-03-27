@@ -1,0 +1,113 @@
+{% extends "base/public_base.html" %}
+
+{% block title %}{{ _('Order Confirmation') }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col">
+            <h1 class="mb-4">{{ _('Thank You for Your Order!') }}</h1>
+            
+            <div class="alert alert-success">
+                <h4 class="alert-heading">{{ _('Order #') }}{{ order.order_id }} {{ _('Confirmed') }}</h4>
+                <p>{{ _('A confirmation email has been sent to your email address.') }}</p>
+                <p>{{ _('Order Date') }}: {{ order.created_at }}</p>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('Delivery Information') }}</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>{{ _('Name') }}:</strong> {{ order.delivery_data.full_name }}</p>
+                    <p><strong>{{ _('Phone') }}:</strong> {{ order.delivery_data.phone }}</p>
+                    <p><strong>{{ _('Address') }}:</strong> {{ order.delivery_data.street }}, {{ order.delivery_data.city }}, {{ order.delivery_data.postal_code }}, {{ order.delivery_data.country }}</p>
+                    
+                    <p><strong>{{ _('Shipping Method') }}:</strong> 
+                        {% if order.delivery_data.shipping_method == 'pickup' %}
+                            {{ _('Pickup from Warehouse') }}
+                        {% elif order.delivery_data.shipping_method == 'standard' %}
+                            {{ _('Standard Shipping') }}
+                        {% elif order.delivery_data.shipping_method == 'gls' %}
+                            {{ _('GLS International Delivery') }}
+                        {% else %}
+                            {{ order.delivery_data.shipping_method }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('Order Summary') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{{ _('Article') }}</th>
+                                    <th>{{ _('Price') }}</th>
+                                    <th>{{ _('Quantity') }}</th>
+                                    <th>{{ _('Total') }}</th>
+                                    <th>{{ _('Delivery Time') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ item.article }}</td>
+                                    <td>{{ item.price|currency }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ (item.price * item.quantity)|currency }}</td>
+                                    <td>{{ item.delivery_time }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>{{ _('Total Amount') }}:</strong></td>
+                                    <td colspan="2"><strong>{{ order.total_price|currency }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">{{ _('Continue Shopping') }}</a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-secondary">{{ _('Create an Account') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof dataLayer !== 'undefined') {
+        dataLayer.push({
+            'event': 'purchase',
+            'ecommerce': {
+                'transaction_id': '{{ order.order_id }}',
+                'value': {{ order.total_price }},
+                'currency': 'EUR',
+                'items': [
+                    {% for item in items %}
+                    {
+                        'item_id': '{{ item.article }}',
+                        'item_name': '{{ item.article }}',
+                        'price': {{ item.price }},
+                        'quantity': {{ item.quantity }}
+                    }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

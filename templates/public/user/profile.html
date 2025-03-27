@@ -7,7 +7,6 @@
         <p class="lead text-muted">{{ _('Manage your personal information, addresses and company details') }}</p>
     </div>
 
-    <!-- Вкладки для різних секцій профілю -->
     <ul class="nav nav-tabs mb-4" id="profileTab" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" 
@@ -36,7 +35,6 @@
     </ul>
     
     <div class="tab-content" id="profileTabContent">
-        <!-- Вкладка профілю -->
         <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
@@ -87,7 +85,6 @@
             </div>
         </div>
         
-        <!-- Вкладка адрес -->
         <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
@@ -98,7 +95,6 @@
                 </div>
                 <hr class="mx-4 my-0">
                 <div class="p-4">
-                    <!-- Список існуючих адрес -->
                     <h6 class="mb-3">{{ _('Your Addresses') }}</h6>
                     
                     {% if addresses %}
@@ -150,7 +146,6 @@
                         </div>
                     {% endif %}
                     
-                    <!-- Форма для додавання нової адреси -->
                     <h6 class="mb-3 mt-4">{{ _('Add New Address') }}</h6>
                     <form method="post" action="{{ url_for('public_user_profile') }}">
                         <input type="hidden" name="action" value="add_address">
@@ -207,7 +202,6 @@
             </div>
         </div>
         
-        <!-- Вкладка компаній -->
         <div class="tab-pane fade" id="company" role="tabpanel" aria-labelledby="company-tab">
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
@@ -218,7 +212,6 @@
                 </div>
                 <hr class="mx-4 my-0">
                 <div class="p-4">
-                    <!-- Список існуючих компаній -->
                     <h6 class="mb-3">{{ _('Your Companies') }}</h6>
                     
                     {% if companies %}
@@ -269,7 +262,6 @@
                         </div>
                     {% endif %}
                     
-                    <!-- Форма для додавання нової компанії -->
                     <h6 class="mb-3 mt-4">{{ _('Add New Company') }}</h6>
                     <form method="post" action="{{ url_for('public_user_profile') }}">
                         <input type="hidden" name="action" value="add_company">
@@ -310,7 +302,6 @@
             </div>
         </div>
         
-        <!-- Вкладка пароля -->
         <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">

@@ -1,7 +1,6 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
-<!-- SEO Meta Tags -->
 <meta name="description" content="{{ product_data.description[:160]|replace('%', '%%')|replace('=', '\=') }}">
 <meta name="keywords" content="{{ product_data.name|replace('%', '%%')|replace('=', '\=') }}, {{ article }}, {{ _('auto parts') }}, {{ _('spare parts') }}">
 <meta property="og:title" content="{{ product_data.name|replace('%', '%%')|replace('=', '\=') }} - AutogroupEU">
@@ -9,7 +8,6 @@
 <meta property="og:type" content="product">
 <meta property="og:url" content="{{ request.host_url }}{{ session.get('language', 'uk') }}/product/{{ article }}">
 
-<!-- Google Structured Data -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org/",
@@ -37,7 +35,6 @@
 }
 </script>
 
-<!-- ДОДАТИ: Стилі для бейджів категорій у <head> -->
 <style>
 .category-badges {
     display: flex;
@@ -66,7 +63,6 @@
 
 {% block content %}
 <div class="container mt-4">
-    <!-- ЗМІНИТИ: Хлібні крихти тільки якщо є категорії -->
 {% if product_categories and product_categories|length > 0 %}
 <div class="breadcrumbs-container mb-3">
     <nav aria-label="breadcrumb">
@@ -85,7 +81,6 @@
 </div>
 {% endif %}
 
-    <!-- Пошукова форма переміщена вгору -->
     <div class="row mb-4 product-details-search">
         <div class="col-lg-8 mx-auto">
             <div class="search-card fade-in">
@@ -105,14 +100,11 @@
         </div>
     </div>
     
-    <!-- Видалено заголовок "Product Details" і розділювальну лінію -->
     
     <div class="product-container fade-in" itemscope itemtype="https://schema.org/Product">
         <div class="row">
-            <!-- Ліва колонка з галереєю -->
             <div class="col-md-6 mobile-second">
                 <div class="image-section">
-                    <!-- Основне зображення -->
                     <div class="image-container">
                         <img id="productImage" 
                              src="{{ product_data.photo_urls[0] }}" 
@@ -120,7 +112,6 @@
                              itemprop="image">
                     </div>
                     
-                    <!-- Кнопки навігації для перемикання фото -->
                     {% if product_data.photo_urls|length > 1 %}
                     <button type="button" class="image-nav prev">
                         <i class="bi bi-chevron-left"></i>
@@ -129,7 +120,6 @@
                         <i class="bi bi-chevron-right"></i>
                     </button>
                     
-                    <!-- Мініатюри та навігація -->
                     <div class="thumbnails-container">
                         {% for url in product_data.photo_urls %}
                         <div class="thumbnail {% if loop.first %}active{% endif %}" 
@@ -139,7 +129,6 @@
                         {% endfor %}
                     </div>
                     
-                    <!-- Точки для мобільної версії -->
                     <div class="image-dots">
                         {% for url in product_data.photo_urls %}
                         <div class="image-dot {% if loop.first %}active{% endif %}"
@@ -150,14 +139,12 @@
                 </div>
             </div>
 
-            <!-- Права колонка з інформацією -->
             <div class="col-md-6 mobile-first">
                 <div class="product-info-card">
                     <div class="product-info-header">
                         <h1 itemprop="name">{{ product_data.name }}</h1>
                     </div>
                     <div class="product-info-body">
-                        <!-- Мета-інформація та ціни -->
                         <div class="product-meta">
                             <div class="product-meta-item">
                                 <span class="meta-label">{{ _('Article') }}:</span>
@@ -170,7 +157,6 @@
                             </div>
                         </div>
 
-                        <!-- ЗАЛИШИТИ: Компактне відображення категорій під мета-інформацією -->
 {% if product_categories and product_categories|length > 0 %}
 <div class="product-categories mt-3 mb-3">
     <small class="text-muted d-block mb-1">{{ _('Categories') }}:</small>
@@ -182,7 +168,6 @@
         {% endfor %}
     </div>
     
-    <!-- Невидима розмітка для Google Merchant Center -->
     <div class="d-none">
         <span itemprop="category">
             {% for category in product_categories %}
@@ -200,14 +185,12 @@
                         {% for price in prices %}
                         <div class="price-card">
                             <div class="price-info">
-                                <!-- Ціна -->
                                 <div class="price-column">
                                     <span class="price-label">{{ _('Price') }}:</span>
                                     <span class="price-value">{{ "%.2f"|format(price.price|float) }} €</span>
                                     <small class="d-block text-muted">{{ _('incl. VAT') }}</small>
                                 </div>
                                 
-                                <!-- Доступність -->
                                 <div class="availability-column">
                                     <span class="availability-label">{{ _('Availability') }}:</span>
                                     <span class="availability-value {% if price.in_stock %}text-success{% else %}text-warning{% endif %}">
@@ -219,7 +202,6 @@
                                     </span>
                                 </div>
                                 
-                                <!-- ДОДАНО: Форма додавання в кошик -->
                                 <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-form">
                                     <input type="hidden" name="article" value="{{ article }}">
                                     <input type="hidden" name="selected_price" value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}">
@@ -255,7 +237,6 @@
             </div>
         </div>
 
-        <!-- ЗМІНИТИ: Опис товару на стиль зі старого файлу -->
 <div class="row mt-4">
     <div class="col-12 mobile-last">
         <div class="description-section">
@@ -269,11 +250,9 @@
     </div>
 </div>
 
-<!-- ДОДАТИ: діагностика категорій товару -->
 <div class="row mt-2">
     <div class="col-12">
         {% if product_categories %}
-        <!-- Знайдено {{ product_categories|length }} категорій -->
         <div class="product-categories mt-3 mb-3">
             <small class="text-muted d-block mb-1">{{ _('Categories') }}:</small>
             <div class="category-badges">
@@ -284,7 +263,6 @@
                 {% endfor %}
             </div>
             
-            <!-- Невидима розмітка для Google Merchant Center -->
             <div class="d-none">
                 <span itemprop="category">
                     {% for category in product_categories %}
@@ -297,7 +275,6 @@
             </div>
         </div>
         {% else %}
-        <!-- Категорії відсутні -->
         {% endif %}
     </div>
 </div>
@@ -323,9 +300,7 @@
             color: white;
         }
         </style>
-        <!-- ДОДАТИ: стилі для опису та категорій -->
 <style>
-/* Стилі для опису товару */
 .description-section {
     background-color: #fff;
     border-radius: 8px;
@@ -345,7 +320,6 @@
     padding: 20px;
 }
 
-/* Стилі для категорій */
 .category-badges {
     display: flex;
     flex-wrap: wrap;
@@ -371,7 +345,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Перевіряємо, чи є фотографії
     {% if product_data.photo_urls %}
     const images = {{ product_data.photo_urls | tojson | safe }};
     {% else %}
@@ -379,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
     {% endif %}
     
     if (!images || images.length <= 1) {
-        return; // Якщо фотографій немає або лише одна, завершуємо виконання скрипту
+        return; 
     }
 
     let currentImageIndex = 0;
@@ -389,18 +362,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const dots = document.querySelectorAll('.image-dot');
     const thumbnails = document.querySelectorAll('.thumbnail');
     
-    // Активуємо першу мініатюру при завантаженні
     if (thumbnails.length > 0) {
         thumbnails[0].classList.add('active');
         
-        // Прокручуємо до активної мініатюри
         const thumbnailsContainer = document.querySelector('.thumbnails-container');
         if (thumbnailsContainer) {
             thumbnailsContainer.scrollLeft = 0;
         }
     }
 
-    // Функція для оновлення зображення
     function updateImage(index) {
         if (index < 0 || index >= images.length) {
             return;
@@ -408,30 +378,25 @@ document.addEventListener('DOMContentLoaded', function() {
         
         currentImageIndex = index;
         
-        // Оновлюємо зображення з ефектом плавного переходу
         imgElement.style.opacity = '0';
         setTimeout(() => {
             imgElement.src = images[currentImageIndex];
             imgElement.style.opacity = '1';
         }, 200);
         
-        // Оновлюємо активну точку
         dots.forEach((dot, idx) => {
             dot.classList.toggle('active', idx === currentImageIndex);
         });
         
-        // Оновлюємо активну мініатюру
         thumbnails.forEach((thumb, idx) => {
             thumb.classList.toggle('active', idx === currentImageIndex);
         });
         
-        // Прокручуємо до активної мініатюри
         if (thumbnails.length > 0 && thumbnails[currentImageIndex]) {
             const activeThumb = thumbnails[currentImageIndex];
             const container = document.querySelector('.thumbnails-container');
             
             if (container) {
-                // Розраховуємо, щоб активна мініатюра була по центру
                 const containerWidth = container.clientWidth;
                 const thumbWidth = activeThumb.clientWidth;
                 const scrollLeft = activeThumb.offsetLeft - (containerWidth / 2) + (thumbWidth / 2);
@@ -444,7 +409,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Функції для перемикання зображень
     function nextImage() {
         let newIndex = (currentImageIndex + 1) % images.length;
         updateImage(newIndex);
@@ -456,7 +420,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateImage(newIndex);
     }
 
-    // Обробники подій для кнопок
     if (prevButton) {
         prevButton.addEventListener('click', prevImage);
     }
@@ -465,21 +428,18 @@ document.addEventListener('DOMContentLoaded', function() {
         nextButton.addEventListener('click', nextImage);
     }
 
-    // Обробники для точок
     dots.forEach((dot, idx) => {
         dot.addEventListener('click', () => {
             updateImage(idx);
         });
     });
     
-    // Обробники для мініатюр
     thumbnails.forEach((thumb, idx) => {
         thumb.addEventListener('click', () => {
             updateImage(idx);
         });
     });
     
-    // Додаємо клавіатурну навігацію для зображень
     document.addEventListener('keydown', function(e) {
         if (e.key === 'ArrowLeft') {
             prevImage();
@@ -488,7 +448,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Додаємо підтримку свайпу для мобільних пристроїв
     let touchStartX = 0;
     let touchEndX = 0;
     
@@ -504,17 +463,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         function handleSwipe() {
             if (touchEndX < touchStartX - 50) {
-                // Свайп вліво - наступне фото
                 nextImage();
             } else if (touchEndX > touchStartX + 50) {
-                // Свайп вправо - попереднє фото
                 prevImage();
             }
         }
     }
 });
 
-// Додати в скрипт кнопок додавання в кошик
 document.querySelectorAll('form.cart-form').forEach(form => {
     form.addEventListener('submit', function(e) {
         const articleId = this.querySelector('input[name="article"]').value;
@@ -543,7 +499,6 @@ document.querySelectorAll('form.cart-form').forEach(form => {
     });
 });
 
-// Структурована подія перегляду товару
 dataLayer.push({
   'event': 'view_item',
   'ecommerce': {

@@ -1,7 +1,6 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
-<!-- SEO Meta Tags -->
 <meta name="description" content="{{ _('AutogroupEU - Your reliable partner in auto parts supply across Europe.') }}">
 <meta name="keywords" content="{{ _('auto parts, spare parts, car repair, programming, Slovakia') }}">
 <meta property="og:title" content="AutogroupEU - {{ _('Auto Parts Supply') }}">
@@ -15,7 +14,6 @@
 <div class="container mt-4 page-sections">
     <div class="row">
         <div class="col-lg-8">
-            <!-- Блок привітання -->
             <div class="welcome-card fade-in">
                 <div class="welcome-header">
                     <h1>{{ _('Welcome to AutogroupEU') }}</h1>
@@ -27,7 +25,6 @@
                 </div>
             </div>
 
-            <!-- Блок пошуку -->
             <div class="search-card fade-in">
                 <div class="search-body">
                     <form method="POST" action="{{ url_for('public_search') }}" class="mb-0">
@@ -44,9 +41,7 @@
             </div>
         </div>
 
-        <!-- Права колонка з контактною інформацією -->
         <div class="col-lg-4">
-            <!-- Блок контактної інформації -->
             <div class="info-card fade-in">
                 <div class="card-header contact-header">
                     <h4>
@@ -68,7 +63,6 @@
                 </div>
             </div>
 
-            <!-- Блок інформації про сервіс -->
             <div class="info-card fade-in">
                 <div class="card-header service-header">
                     <h4>
@@ -84,7 +78,6 @@
         </div>
     </div>
 
-    <!-- Products Section -->
     <div class="products-section fade-in">
         <div class="row align-items-center mb-3">
             <div class="col-lg-6">
@@ -123,12 +116,10 @@
             </div>
         </div>
 
-        <!-- Products Grid -->
         <div class="row row-products">
             {% for product in products %}
             <div class="col-6 col-md-4 col-lg-3 product-column">
                 <div class="product-card">
-                    <!-- Product Image -->
                     <div class="product-img-container">
                         {% if product.image_url %}
                         <img src="{{ product.image_url }}" class="product-img" 
@@ -138,7 +129,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Product Info -->
                     <div class="product-body">
                         <h5 class="product-title">{% if product.name %}{{ product.name }}{% else %}{{ product.article }}{% endif %}</h5>
                         <div class="product-meta">
@@ -169,7 +159,6 @@
             {% endfor %}
         </div>
 
-        <!-- Кнопка "Show More Products" -->
         {% if has_more %}
         <div class="text-center mt-4 mb-4">
             <button id="loadMoreButton" class="btn-outline btn-outline-primary" data-next-page="{{ (page or 1)|int + 1 }}">
@@ -182,7 +171,6 @@
     </div>
 </div>
 
-<!-- Переклади для JavaScript -->
 <script>
 window.translations = {
     'Brand': '{{ _("Brand") }}',

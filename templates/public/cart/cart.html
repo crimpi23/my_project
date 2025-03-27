@@ -1,7 +1,6 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
-<!-- SEO Meta Tags -->
 <meta name="description" content="{{ _('View and manage your shopping cart at AutogroupEU. Check prices, quantities, and proceed to checkout.') }}">
 <meta name="robots" content="noindex, nofollow">
 {% endblock %}
@@ -15,7 +14,6 @@
     </div>
 
     {% if cart_items %}
-    <!-- Таблиця кошика з покращеним форматуванням -->
     <div class="table-responsive mb-4 fade-in">
         <table class="cart-table">
             <thead>
@@ -38,7 +36,6 @@
                     <td>{{ item.brand_name }}</td>
                     <td><span class="price-value">{{ "%.2f"|format(item.price) }} €</span></td>
                     <td>
-                        <!-- Форма для оновлення кількості -->
                         <form action="{{ url_for('update_public_cart') }}" method="POST">
                             <input type="hidden" name="article" value="{{ item.article }}">
                             <input type="hidden" name="table_name" value="{{ item.table_name }}">
@@ -55,7 +52,6 @@
                         {% endif %}
                     </td>
                     <td>
-                        <!-- Форма для видалення товару -->
                         <form action="{{ url_for('public_remove_from_cart') }}" method="POST">
                             <input type="hidden" name="article" value="{{ item.article }}">
                             <input type="hidden" name="table_name" value="{{ item.table_name }}">
@@ -75,14 +71,13 @@
         </table>
     </div>
 
-    <!-- Форма доставки та інвойсу як у cart2.html з особливим стилем -->
+    {% if is_authenticated %}
     <div class="delivery-card fade-in">
         <div class="card-header">
             <h5 class="mb-0">{{ _('Delivery Information') }}</h5>
         </div>
         <div class="card-body">
             <form method="POST" action="{{ url_for('public_place_order') }}" id="orderForm">
-                <!-- Saved Addresses Section -->
                 {% if saved_addresses %}
                 <div class="mb-4">
                     <h6 class="section-title">{{ _('Select Saved Address') }}</h6>
@@ -112,19 +107,18 @@
                     {% endfor %}
                     
                     <div class="form-check mt-3">
-                        <input class="form-check-input" type="radio" 
+                        <input class="form-check-input" type="checkbox" 
                                name="use_new_address" 
-                               id="useNewAddress"
-                               value="on">
-                        <label class="form-check-label" for="useNewAddress">
+                               id="use_new_address"
+                               value="1">
+                        <label class="form-check-label" for="use_new_address">
                             <i class="bi bi-plus-circle me-2"></i>{{ _('Use new address') }}
                         </label>
                     </div>
                 </div>
                 {% endif %}
 
-                <!-- New Address Form -->
-                <div id="newAddressForm" {% if saved_addresses %}style="display: none;"{% endif %}>
+                <div id="new_address_fields" class="{% if saved_addresses %}col-md-6{% else %}col-md-12{% endif %} mb-3" style="{% if saved_addresses %}display: none;{% endif %}">
                     {% if saved_addresses %}
                     <h6 class="section-title">{{ _('New Delivery Address') }}</h6>
                     {% endif %}
@@ -143,7 +137,7 @@
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label">{{ _('Country') }}</label>
-                            <select name="country" class="form-select">
+                            <select name="country" class="form-select" id="country">
                                 <option value="SK">Slovakia</option>
                                 <option value="CZ">Czech Republic</option>
                                 <option value="PL">Poland</option>
@@ -166,18 +160,16 @@
                     </div>
                     <div class="mb-3">
                         <div class="form-check">
-                            <input type="checkbox" name="save_address" class="form-check-input" id="saveAddress" value="on">
-                            <label class="form-check-label" for="saveAddress">
+                            <input type="checkbox" name="save_address" class="form-check-input" id="save_address" value="on">
+                            <label class="form-check-label" for="save_address">
                                 {{ _('Save address for future orders') }}
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Divider -->
                 <div class="section-divider"></div>
 
-                <!-- Invoice Information -->
                 <div class="mb-4">
                     <div class="form-check mb-3 invoice-toggle">
                         <input type="checkbox" class="form-check-input" id="needs_invoice" name="needs_invoice" value="on">
@@ -186,8 +178,7 @@
                         </label>
                     </div>
                     
-                    <div id="invoiceFields" style="display: none;">
-                        <!-- Saved Companies Section -->
+                    <div id="invoice_fields" style="display: none;">
                         {% if saved_companies %}
                         <div class="mb-3">
                             <h6 class="section-title">{{ _('Select Saved Company') }}</h6>
@@ -232,7 +223,6 @@
                         </div>
                         {% endif %}
 
-                        <!-- New Company Form -->
                         <div id="newCompanyForm" {% if saved_companies %}style="display: none;"{% endif %}>
                             {% if saved_companies %}
                             <h6 class="section-title">{{ _('New Company Details') }}</h6>
@@ -271,7 +261,6 @@
                     </div>
                 </div>
 
-                <!-- Submit Buttons -->
                 <div class="checkout-actions">
                     <a href="{{ url_for('index') }}" class="btn-continue">
                         <i class="bi bi-arrow-left me-2"></i>{{ _('Continue Shopping') }}
@@ -283,9 +272,112 @@
             </form>
         </div>
     </div>
+    {% else %}
+    <div class="delivery-card fade-in">
+        <div class="card-header">
+            <h5 class="mb-0">{{ _('Delivery Information') }}</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('guest_checkout') }}" id="guestOrderForm">
+                <h6 class="section-title">{{ _('Your Contact Information') }}</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ _('Email') }} *</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ _('Phone') }} *</label>
+                        <input type="tel" name="phone" class="form-control" id="guest_phone" required>
+                        <div id="guestPhoneValidationMessage" class="form-text text-danger"></div>
+                    </div>
+                </div>
+                
+                <h6 class="section-title mt-4">{{ _('Delivery Address') }}</h6>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">{{ _('Full Name') }} *</label>
+                        <input type="text" name="full_name" class="form-control" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ _('Country') }} *</label>
+                        <select class="form-select" name="country" id="guest_country" required>
+                            <option value="" selected disabled>{{ _('Select country') }}</option>
+                            <option value="SK">{{ _('Slovakia') }}</option>
+                            <option value="CZ">{{ _('Czech Republic') }}</option>
+                            <option value="PL">{{ _('Poland') }}</option>
+                            <option value="HU">{{ _('Hungary') }}</option>
+                            <option value="UA">{{ _('Ukraine') }}</option>
+                            <option value="DE">{{ _('Germany') }}</option>
+                            <option value="AT">{{ _('Austria') }}</option>
+                            <option value="OTHER">{{ _('Other country') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ _('City') }} *</label>
+                        <input type="text" name="city" class="form-control" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ _('Postal Code') }} *</label>
+                        <input type="text" name="postal_code" class="form-control" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">{{ _('Street Address') }} *</label>
+                    <input type="text" name="street" class="form-control" required>
+                </div>
+                
+                <div class="shipping-method-section mb-4">
+                    <h6 class="section-title">{{ _('Shipping Method') }}</h6>
+                    
+                    <div class="form-check mb-3 slovakia-only">
+                        <input class="form-check-input" type="radio" name="shipping_method" id="shipping_standard" value="standard" checked>
+                        <label class="form-check-label" for="shipping_standard">
+                            <strong>{{ _('Standard Shipping (Slovakia only)') }}</strong>
+                            <div class="text-muted small">{{ _('Delivery time') }}: 1-2 {{ _('business days') }}</div>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3 international-only" style="display: none;">
+                        <input class="form-check-input" type="radio" name="shipping_method" id="shipping_gls" value="gls" checked>
+                        <label class="form-check-label" for="shipping_gls">
+                            <strong>{{ _('GLS International Delivery') }}</strong>
+                            <div class="text-muted small">{{ _('Delivery time') }}: 2-7 {{ _('business days') }}</div>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="shipping_method" id="shipping_pickup" value="pickup">
+                        <label class="form-check-label" for="shipping_pickup">
+                            <strong>{{ _('Pickup from Warehouse') }}</strong>
+                            <div class="text-muted small">{{ _('Location') }}: Tušická Nová Ves 90, Tušice 07202, {{ _('Slovakia') }}</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="checkout-actions">
+                    <a href="{{ url_for('index') }}" class="btn-continue">
+                        <i class="bi bi-arrow-left me-2"></i>{{ _('Continue Shopping') }}
+                    </a>
+                    <button type="submit" class="btn-place-order" id="guestPlaceOrderBtn">
+                        <i class="bi bi-check-circle me-2"></i>{{ _('Place Order') }}
+                    </button>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <p class="text-muted">{{ _('Already have an account?') }} 
+                        <a href="{{ url_for('login') }}">{{ _('Login') }}</a> 
+                        {{ _('or') }} 
+                        <a href="{{ url_for('register') }}">{{ _('Register') }}</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
 
     {% else %}
-    <!-- Порожній кошик -->
     <div class="info-card fade-in mb-4">
         <div class="info-card-header section-header-primary">
             <h5>
@@ -313,51 +405,42 @@
 {% block scripts %}
 {{ super() }}
 <script>
-// Toggle between saved addresses and new address form
 document.addEventListener('DOMContentLoaded', function() {
-    const useNewAddressRadio = document.getElementById('useNewAddress');
-    const savedAddressRadios = document.querySelectorAll('input[name="delivery_address"]');
-    const newAddressForm = document.getElementById('newAddressForm');
-
-    function toggleNewAddressForm() {
-        if (useNewAddressRadio && useNewAddressRadio.checked) {
-            newAddressForm.style.display = 'block';
-            // Clear saved address selection
-            savedAddressRadios.forEach(radio => radio.checked = false);
-        } else if (newAddressForm) {
-            newAddressForm.style.display = 'none';
-        }
-    }
-
-    // Listen for changes on all radio buttons
-    if (useNewAddressRadio) {
-        useNewAddressRadio.addEventListener('change', toggleNewAddressForm);
+    const useNewAddressCheckbox = document.getElementById('use_new_address');
+    const deliveryAddressSelect = document.querySelectorAll('input[name="delivery_address"]');
+    const newAddressFields = document.getElementById('new_address_fields');
+    
+    if (useNewAddressCheckbox && newAddressFields) {
+        useNewAddressCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                newAddressFields.style.display = 'block';
+                deliveryAddressSelect.forEach(radio => {
+                    radio.checked = false;
+                });
+            } else {
+                newAddressFields.style.display = 'none';
+            }
+        });
     }
     
-    savedAddressRadios.forEach(radio => {
+    deliveryAddressSelect.forEach(radio => {
         radio.addEventListener('change', function() {
-            if (this.checked && useNewAddressRadio) {
-                useNewAddressRadio.checked = false;
-                newAddressForm.style.display = 'none';
+            if (this.checked && useNewAddressCheckbox) {
+                useNewAddressCheckbox.checked = false;
+                newAddressFields.style.display = 'none';
             }
         });
     });
-
-    // Initial state
-    if (useNewAddressRadio) {
-        toggleNewAddressForm();
-    }
     
-    // Toggle invoice fields
-    const needsInvoice = document.getElementById('needs_invoice'); // змінити ID тут!
-    const invoiceFields = document.getElementById('invoiceFields');
+    const needsInvoice = document.getElementById('needs_invoice');
+    const invoiceFields = document.getElementById('invoice_fields');
+    
     if (needsInvoice && invoiceFields) {
         needsInvoice.addEventListener('change', function() {
             invoiceFields.style.display = this.checked ? 'block' : 'none';
         });
     }
     
-    // Toggle company form
     const useNewCompanyRadio = document.getElementById('useNewCompany');
     const savedCompanyRadios = document.querySelectorAll('input[name="company_id"]');
     const newCompanyForm = document.getElementById('newCompanyForm');
@@ -365,14 +448,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function toggleNewCompanyForm() {
         if (useNewCompanyRadio && useNewCompanyRadio.checked) {
             if (newCompanyForm) newCompanyForm.style.display = 'block';
-            // Clear saved company selection
+
             savedCompanyRadios.forEach(radio => radio.checked = false);
         } else if (newCompanyForm) {
             newCompanyForm.style.display = 'none';
         }
     }
 
-    // Listen for changes on company radio buttons
     if (useNewCompanyRadio) {
         useNewCompanyRadio.addEventListener('change', toggleNewCompanyForm);
     }
@@ -386,7 +468,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Phone validation
     const phoneInput = document.getElementById('phone');
     if (phoneInput) {
         phoneInput.addEventListener('blur', async function() {
@@ -415,7 +496,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // VAT validation
     const vatInput = document.getElementById('vatNumber');
     if (vatInput) {
         vatInput.addEventListener('blur', async function() {
@@ -443,109 +523,140 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Form submission validation
-    const orderForm = document.getElementById('orderForm');
-    if (orderForm) {
-        orderForm.addEventListener('submit', function(e) {
-            // Validate delivery address
-            let isValid = true;
-            let isSavedAddressSelected = false;
-            let isNewAddressSelected = false;
-            
-            if (savedAddressRadios.length > 0) {
-                isSavedAddressSelected = Array.from(savedAddressRadios).some(radio => radio.checked);
-                if (useNewAddressRadio) {
-                    isNewAddressSelected = useNewAddressRadio.checked;
-                }
-                
-                if (!isSavedAddressSelected && !isNewAddressSelected) {
-                    alert("{{ _('Please select a delivery address or enter a new one') }}");
-                    e.preventDefault();
-                    return false;
-                }
-            }
-            
-            // If using new address, check required fields
-            if ((useNewAddressRadio && useNewAddressRadio.checked) || savedAddressRadios.length === 0) {
-                const requiredFields = ['full_name', 'phone', 'city', 'postal_code', 'street'];
-                for (const field of requiredFields) {
-                    const input = this.querySelector(`[name="${field}"]`);
-                    if (input && !input.value.trim()) {
-                        alert(`{{ _('Please fill in all required delivery address fields') }}`);
-                        input.focus();
-                        e.preventDefault();
-                        return false;
+    const guestOrderForm = document.getElementById('guestOrderForm');
+    if (guestOrderForm) {
+        const guestPhoneInput = document.getElementById('guest_phone');
+        if (guestPhoneInput) {
+            guestPhoneInput.addEventListener('blur', async function() {
+                if (!this.value) return;
+                try {
+                    const response = await fetch('/validate_phone', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone: this.value })
+                    });
+                    const result = await response.json();
+                    const messageDiv = document.getElementById('guestPhoneValidationMessage');
+                    if (messageDiv) {
+                        if (!result.valid) {
+                            messageDiv.textContent = result.message;
+                            messageDiv.classList.add('text-danger');
+                            this.focus();
+                        } else {
+                            messageDiv.textContent = '';
+                            messageDiv.classList.remove('text-danger');
+                        }
                     }
+                } catch (error) {
+                    console.error('Error validating phone:', error);
                 }
-            }
-            
-            // Check invoice if needed
-            if (needsInvoice && needsInvoice.checked) {
-                let isSavedCompanySelected = false;
-                let isNewCompanySelected = false;
-                
-                if (savedCompanyRadios.length > 0) {
-                    isSavedCompanySelected = Array.from(savedCompanyRadios).some(radio => radio.checked);
-                    if (useNewCompanyRadio) {
-                        isNewCompanySelected = useNewCompanyRadio.checked;
-                    }
-                    
-                    if (!isSavedCompanySelected && !isNewCompanySelected) {
-                        alert("{{ _('Please select a company or enter new company details') }}");
-                        e.preventDefault();
-                        return false;
-                    }
-                }
-                
-                // If using new company, check required fields
-                if ((useNewCompanyRadio && useNewCompanyRadio.checked) || savedCompanyRadios.length === 0) {
-                    const companyName = this.querySelector('[name="company_name"]');
-                    const vatNumber = this.querySelector('[name="vat_number"]');
-                    
-                    if ((!companyName || !companyName.value.trim()) || (!vatNumber || !vatNumber.value.trim())) {
-                        alert(`{{ _('Please provide company name and VAT number') }}`);
-                        e.preventDefault();
-                        return false;
-                    }
-                }
-            }
-            
-            // Disable button to prevent double submissions
-            const submitBtn = document.getElementById('placeOrderBtn');
+            });
+        }
+        
+        guestOrderForm.addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('guestPlaceOrderBtn');
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '{{ _("Processing...") }}';
             }
-            
-            return true;
         });
     }
 });
 </script>
 
-<!-- Додайте аналітику Google -->
 <script>
-document.getElementById('orderForm').addEventListener('submit', function() {
-  if (typeof dataLayer !== 'undefined') {
-    dataLayer.push({
-      'event': 'begin_checkout',
-      'ecommerce': {
-        'currency': 'EUR',
-        'value': {{ total_price|default(0) }},
-        'items': [
-          {% for item in cart_items %}
-          {
-            'item_id': '{{ item.article }}',
-            'item_name': '{{ item.name }}',
-            'item_brand': '{{ item.brand_name }}',
-            'price': {{ item.price|default(0) }},
-            'quantity': {{ item.quantity|default(1) }}
-          }{% if not loop.last %},{% endif %}
-          {% endfor %}
-        ]
+document.addEventListener('DOMContentLoaded', function() {
+    function updateShippingOptions() {
+        const countrySelect = document.getElementById('guest_country');
+        if (!countrySelect) return;
+        
+        const country = countrySelect.value;
+        const slovakiaOnly = document.querySelector('.slovakia-only');
+        const internationalOnly = document.querySelector('.international-only');
+        const pickupOption = document.getElementById('shipping_pickup');
+        const standardOption = document.getElementById('shipping_standard');
+        const glsOption = document.getElementById('shipping_gls');
+        
+        if (slovakiaOnly) slovakiaOnly.style.display = 'none';
+        if (internationalOnly) internationalOnly.style.display = 'none';
+        
+        if (country === 'SK') {
+            if (slovakiaOnly) {
+                slovakiaOnly.style.display = 'block';
+                if (standardOption) standardOption.checked = true;
+            }
+        } else if (country) {
+            if (internationalOnly) {
+                internationalOnly.style.display = 'block';
+                if (glsOption) glsOption.checked = true;
+            }
+        } else {
+            if (pickupOption) pickupOption.checked = true;
+        }
+    }
+    
+    updateShippingOptions();
+    
+    const countrySelect = document.getElementById('guest_country');
+    if (countrySelect) {
+        countrySelect.addEventListener('change', updateShippingOptions);
+    }
+});
+</script>
+
+<script>
+const orderForm = document.getElementById('orderForm');
+if (orderForm) {
+    orderForm.addEventListener('submit', function() {
+      if (typeof dataLayer !== 'undefined') {
+        dataLayer.push({
+          'event': 'begin_checkout',
+          'ecommerce': {
+            'currency': 'EUR',
+            'value': {{ total_price|default(0) }},
+            'items': [
+              {% for item in cart_items %}
+              {
+                'item_id': '{{ item.article }}',
+                'item_name': '{{ item.name }}',
+                'item_brand': '{{ item.brand_name }}',
+                'price': {{ item.price|default(0) }},
+                'quantity': {{ item.quantity|default(1) }}
+              }{% if not loop.last %},{% endif %}
+              {% endfor %}
+            ]
+          }
+        });
       }
     });
-  }
-});
+}
+</script>
+
+<script>
+const guestOrderForm = document.getElementById('guestOrderForm');
+if (guestOrderForm) {
+  guestOrderForm.addEventListener('submit', function() {
+    if (typeof dataLayer !== 'undefined') {
+      dataLayer.push({
+        'event': 'begin_checkout',
+        'ecommerce': {
+          'currency': 'EUR',
+          'value': {{ total_price|default(0) }},
+          'items': [
+            {% for item in cart_items %}
+            {
+              'item_id': '{{ item.article }}',
+              'item_name': '{{ item.name }}',
+              'item_brand': '{{ item.brand_name }}',
+              'price': {{ item.price|default(0) }},
+              'quantity': {{ item.quantity|default(1) }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ]
+        }
+      });
+    }
+  });
+}
 </script>
 {% endblock %}

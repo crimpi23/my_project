@@ -1,11 +1,9 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
-<!-- SEO Meta Tags -->
 <meta name="description" content="{{ _('Order confirmation at AutogroupEU. Your order has been successfully placed.') }}">
 <meta name="robots" content="noindex, nofollow">
 
-<!-- Додаємо розширені мета-теги для запобігання кешування та перезавантаження -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -15,7 +13,6 @@
 
 {% block content %}
 <div class="container mt-4 mb-5">
-    <!-- Повідомлення про успішне замовлення -->
     <div class="order-success-box fade-in">
         <div class="success-icon">
             <i class="bi bi-check-circle"></i>
@@ -27,7 +24,6 @@
         </div>
     </div>
     
-    <!-- Деталі замовлення -->
     <div class="order-summary-card mt-4 fade-in">
         <div class="card-header">
             <h5>{{ _('Order Summary') }}</h5>
@@ -48,7 +44,6 @@
                 </div>
             </div>
             
-            <!-- Список товарів -->
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
@@ -84,7 +79,6 @@
         </div>
     </div>
     
-    <!-- Інструкції та наступні кроки -->
     <div class="next-steps-card mt-4 fade-in">
         <div class="card-header">
             <h5>{{ _('What Happens Next?') }}</h5>
@@ -116,7 +110,6 @@
         </div>
     </div>
     
-    <!-- Кнопки дій -->
     <div class="d-flex justify-content-center mt-4 gap-3 fade-in">
         <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
             <i class="bi bi-house me-2"></i>{{ _('Return to Homepage') }}
@@ -127,7 +120,6 @@
     </div>
 </div>
 
-<!-- Додамо Google Analytics для відстеження конверсій -->
 {% if order %}
 <script>
 if (typeof dataLayer !== 'undefined') {

@@ -1,7 +1,6 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
-<!-- SEO Meta Tags -->
 <meta name="description" content="{{ _('The requested article was not found in our catalog.') }}">
 <meta name="robots" content="noindex, nofollow">
 {% endblock %}
@@ -33,7 +32,6 @@
                 {{ _('Please check the article number and try again or contact our support team for assistance.') }}
             </p>
             
-            <!-- Заміна в формі пошуку -->
 
             <form method="POST" action="{{ url_for('public_search') }}" class="search-form">
                 <div class="input-group">
@@ -48,7 +46,6 @@
                 </div>
             </form>
             
-            <!-- Виправлення для блоку action-buttons -->
 
             <div class="action-buttons">
                 <a href="{{ url_for('index') }}" class="btn-outline btn-outline-primary">
@@ -76,7 +73,6 @@
             {% for product in similar_products %}
             <div class="col">
                 <div class="card h-100 product-card">
-                    <!-- Product Image -->
                     <div class="product-img-container">
                         {% if product.image_url %}
                         <img src="{{ product.image_url }}" class="product-img" 

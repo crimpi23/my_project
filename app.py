@@ -36,6 +36,8 @@ import os
 import math
 from flask_apscheduler import APScheduler
 import os
+from functools import wraps
+from logging.handlers import RotatingFileHandler
 
 
 # Налаштування шляху для збереження sitemap файлів залежно від середовища
@@ -59,6 +61,7 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 # Initialize extensions
 # csrf = CSRFProtect(app)
 babel = Babel(app)
+
 
 
 # Створюємо директорію для зберігання sitemap файлів
@@ -560,23 +563,37 @@ def generate_all_sitemaps():
         return False
 
 
+def get_base_url():
+    """Get the base URL for the current request"""
+    host = request.host_url.rstrip('/')
+    # For production or staging, you can also hardcode the domain
+    # if host.startswith('127.0.0.1') or host.startswith('localhost'):
+    #     host = 'https://autogroup.sk'
+    return host
 
+
+@app.context_processor
+def utility_processor():
+    return {
+        'get_base_url': get_base_url,
+        # Існуючі функції
+    }
 
 
 # налаштування для збереження файлів
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Обмеження розміру файлу до 16MB
+app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024  # Обмеження розміру файлу до 64MB
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
-# Configure logging
+# Configure logging with rotation
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler('app.log', encoding='utf-8')
+        RotatingFileHandler('app.log', maxBytes=1024*1024, backupCount=5, encoding='utf-8')  # 1 MB per file, keep 5 files
     ]
 )
 
@@ -602,6 +619,35 @@ LANGUAGES = {
 
 
 
+def add_noindex_header(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        response = f(*args, **kwargs)
+        # Перевіряємо, чи є 'token' в аргументах функції
+        if 'token' in kwargs:
+            # Перевіряємо, чи response - це об'єкт Flask Response або має атрибут headers
+            if hasattr(response, 'headers'):
+                # Додаємо заголовок X-Robots-Tag
+                response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+            # Якщо це рядок або інший тип, конвертуємо його в Response
+            elif isinstance(response, str):
+                from flask import make_response
+                response = make_response(response)
+                response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+        return response
+    return decorated_function
+
+
+
+@app.after_request
+def add_noindex_headers_for_token_pages(response):
+    """Додає заголовок X-Robots-Tag до всіх сторінок з токенами в URL"""
+    # Перевіряємо чи URL містить гексадецимальний токен (32+ символи)
+    if re.search(r'/[0-9a-f]{32,}/', request.path, re.IGNORECASE):
+        response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+    return response
+
+
 
 @app.route('/robots.txt')
 def robots():
@@ -613,6 +659,22 @@ Disallow: /*/admin/
 Disallow: /*token*/
 Disallow: /debug_*
 Disallow: /user-profile
+# Блокування всіх URL з токенами (гексадецимальні рядки)
+Disallow: /*/
+# Блокування пошуку конфіденційних сторінок
+Disallow: /search*
+Disallow: /cart*
+Disallow: /order*
+Disallow: /user*
+Disallow: /profile*
+# Дозвіл на індексацію основних сторінок
+Allow: /product/
+Allow: /category/
+Allow: /about
+Allow: /contacts
+Allow: /shipping-payment
+Allow: /returns
+Allow: /car-service
 Sitemap: https://autogroup.sk/sitemap.xml
 """
     response = make_response(robots_content)
@@ -2999,6 +3061,7 @@ def product_details(article):
 # обробка фотографій товарів основне фото
 @app.route('/<token>/admin/manage-photos', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def manage_photos(token):
     try:
         with get_db_connection() as conn:
@@ -3070,6 +3133,7 @@ def manage_photos(token):
 
 @app.route('/<token>/admin/google-feed/delete/<int:setting_id>', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def delete_google_feed(token, setting_id):
     """Delete Google Feed configuration"""
     try:
@@ -3384,6 +3448,7 @@ def google_merchant_feed(language):
 # Керування Google feed
 @app.route('/<token>/admin/google-feed', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def manage_google_feed(token):
     try:
         with get_db_connection() as conn:
@@ -3452,18 +3517,12 @@ def manage_google_feed(token):
 def update_public_cart():
     """Оновлює кількість товару в публічному кошику"""
     try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash(_("Please log in to manage your cart."), "error")
-            return redirect(url_for('login'))
-        
         article = request.form.get('article')
         table_name = request.form.get('table_name')
         new_quantity = int(request.form.get('quantity', 1))
         
-        logging.info(f"Updating cart for user: {session.get('username')}")
+        logging.info(f"Updating cart for user: {session.get('username', 'guest')}")
         logging.info(f"Article: {article}, Table: {table_name}, New quantity: {new_quantity}")
-        logging.debug(f"Current cart before update: {session.get('public_cart')}")
         
         # Validate inputs
         if not article or not table_name:
@@ -3474,30 +3533,43 @@ def update_public_cart():
             flash(_("Quantity must be at least 1"), "error")
             return redirect(url_for('public_cart'))
         
-        # Отримуємо кошик з сесії
-        cart = session.get('public_cart', {})
+        user_id = session.get('user_id')
         
-        # Перевіряємо, чи є артикул в кошику
-        if article in cart and table_name in cart[article]:
-            # Оновлюємо кількість товару
-            cart[article][table_name]['quantity'] = new_quantity
+        if user_id:
+            # Оновлення для зареєстрованого користувача
+            conn = get_db_connection()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
-            # Зберігаємо оновлений кошик в сесії
-            session['public_cart'] = cart
-            session.modified = True
+            cursor.execute("""
+                UPDATE cart
+                SET quantity = %s
+                WHERE user_id = %s AND article = %s AND table_name = %s
+            """, (new_quantity, user_id, article, table_name))
             
-            # Оновлюємо лічильник товарів
-            update_cart_count_in_session()
+            rows_updated = cursor.rowcount
+            conn.commit()
+            cursor.close()
+            conn.close()
             
-            logging.info(f"Updated quantity for article {article} in table {table_name} to {new_quantity}")
-            flash(_("Cart updated successfully"), "success")
+            if rows_updated > 0:
+                flash(_("Cart updated successfully"), "success")
+            else:
+                flash(_("Item not found in cart"), "error")
         else:
-            logging.warning(f"Article {article} or table {table_name} not found in cart")
-            flash(_("Item not found in cart"), "error")
-        
-        # Додаємо логування для перевірки даних
-        logging.debug(f"Form data: {request.form}")
-        logging.debug(f"Updated cart after quantity change: {session.get('public_cart')}")
+            # Оновлення для незареєстрованого користувача (в сесії)
+            cart = session.get('public_cart', {})
+            
+            if article in cart and table_name in cart[article]:
+                cart[article][table_name]['quantity'] = new_quantity
+                session['public_cart'] = cart
+                session.modified = True
+                
+                # Оновлюємо лічильник товарів
+                update_cart_count_in_session()
+                
+                flash(_("Cart updated successfully"), "success")
+            else:
+                flash(_("Item not found in cart"), "error")
         
         return redirect(url_for('public_cart'))
         
@@ -4036,7 +4108,7 @@ def public_add_to_cart():
                 new_quantity = existing_cart_item['quantity'] + quantity
                 cursor.execute("""
                     UPDATE cart
-                    SET quantity = %s, updated_at = NOW()
+                    SET quantity = %s
                     WHERE id = %s
                 """, (new_quantity, existing_cart_item['id']))
             else:
@@ -4241,6 +4313,7 @@ def admin_panel(token):
 # Головна сторінка адмінки
 @app.route('/<token>/admin/dashboard')
 @requires_token_and_roles('admin')
+@add_noindex_header
 def admin_dashboard(token):
     try:
         logging.debug(f"Session in admin_dashboard: {dict(session)}")  # Логування стану сесії
@@ -4276,6 +4349,7 @@ def admin_dashboard(token):
 # Створення користувача в адмін панелі:
 @app.route('/<token>/admin/create_user', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def create_user(token):
     if request.method == 'POST':
         username = request.form.get('username')
@@ -5362,6 +5436,7 @@ def order_details(token, order_id):
 
 @app.route('/<token>/admin/orders/<int:order_id>/update_status', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def update_order_item_status(token, order_id):
     conn = None  # Ініціалізуємо conn тут
     try:
@@ -5533,6 +5608,7 @@ def view_order_changes(token):
 
 @app.route('/<token>/admin/orders/<int:order_id>', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def admin_order_details(token, order_id):
     try:
         with get_db_connection() as conn:
@@ -5582,6 +5658,7 @@ def admin_order_details(token, order_id):
 
 @app.route('/<token>/admin/orders', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def admin_orders(token):
     """
     Відображення всіх замовлень для адміністратора з фільтрацією по статусу.
@@ -5886,6 +5963,7 @@ def car_service():
 #
 @app.route('/<token>/admin/manage-price-lists', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def manage_price_lists(token):
     with get_db_connection() as conn:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -5918,6 +5996,7 @@ def manage_price_lists(token):
 # видалення прайслистів в manage price lists
 @app.route('/<token>/admin/delete-price-list/<int:price_list_id>', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def delete_price_list(token, price_list_id):
     """
     Видаляє прайс-лист повністю, незалежно від посилань на нього.
@@ -5984,6 +6063,7 @@ def delete_price_list(token, price_list_id):
 
 @app.route('/<token>/admin/update-price-list-supplier', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def update_price_list_supplier(token):
     try:
         price_list_id = request.form.get('price_list_id')
@@ -6015,6 +6095,7 @@ def update_price_list_supplier(token):
 # Завантаження прайсу в Адмінці
 @app.route('/<token>/admin/upload_price_list', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def upload_price_list(token):
     """
     Обробляє завантаження прайс-листу.
@@ -6314,6 +6395,7 @@ def upload_price_list(token):
 
 @app.route('/<token>/admin/add-brand', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def add_brand(token):
     """Додає новий бренд до бази даних"""
     try:
@@ -6361,6 +6443,7 @@ def add_brand(token):
 # Оновлення та керування stock
 @app.route('/<token>/admin/manage-stock', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def manage_stock(token):
     """Сторінка управління складом"""
     try:
@@ -6395,6 +6478,7 @@ def manage_stock(token):
 # Робота зі stock
 @app.route('/<token>/admin/stock/upload', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def upload_stock(token):
     """Завантаження Excel файлу зі стоком"""
     try:
@@ -6438,6 +6522,7 @@ def upload_stock(token):
 # Робота зі stock
 @app.route('/<token>/admin/stock/add', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def add_stock_item(token):
     """Додавання одного товару"""
     try:
@@ -6470,6 +6555,7 @@ def add_stock_item(token):
 # Робота зі stock
 @app.route('/<token>/admin/stock/update/<article>', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def update_stock_item(token, article):
     """Оновлення існуючого товару"""
     try:
@@ -6497,6 +6583,7 @@ def update_stock_item(token, article):
 # Робота зі stock
 @app.route('/<token>/admin/stock/delete/<article>', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def delete_stock_item(token, article):
     """Видалення товару"""
     try:
@@ -6516,6 +6603,7 @@ def delete_stock_item(token, article):
 # Робота зі stock
 @app.route('/<token>/admin/stock/clear', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def clear_stock(token):
     """Очищення всього стоку"""
     try:
@@ -6537,6 +6625,7 @@ def clear_stock(token):
 # роут для керування постачальниками
 @app.route('/<token>/admin/manage-suppliers', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def manage_suppliers(token):
     if request.method == 'POST':
         try:
@@ -6582,6 +6671,7 @@ def manage_suppliers(token):
 # створення замовлення постачальнику
 @app.route('/<token>/admin/supplier-orders/create', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def create_supplier_order(token):
     try:
         supplier_id = request.form.get('supplier_id')
@@ -6679,6 +6769,7 @@ def create_supplier_order(token):
 # Функція прийому інвойсу
 @app.route('/<token>/admin/process-invoice', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def process_invoice(token):
     """Processes uploaded invoice file and creates invoice records"""
     try:
@@ -6777,6 +6868,7 @@ def find_similar_articles(article1, article2):
 #  Функція аналізу відповідностей в обробці інвойсу від постачальника
 @app.route('/<token>/admin/analyze-invoice/<int:invoice_id>', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def analyze_invoice(token, invoice_id):
     logging.info(f"Starting analyze_invoice for invoice_id: {invoice_id}")
     try:
@@ -6946,6 +7038,7 @@ def analyze_invoice(token, invoice_id):
 # Функція обробки невідповідностей
 @app.route('/<token>/admin/process-mismatches', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def process_mismatches(token):
     """Обробляє невідповідності в інвойсі"""
     logging.info("=== Starting process_mismatches ===")
@@ -7054,6 +7147,7 @@ def process_mismatches(token):
 
 @app.route('/<token>/admin/confirm-invoice/<int:invoice_id>', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def confirm_invoice(token, invoice_id):
     try:
         with get_db_connection() as conn:
@@ -7452,6 +7546,7 @@ def handle_wrong_article(invoice_detail_id, correct_article, update_price, conn,
 # перегляд складу
 @app.route('/<token>/admin/warehouse', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def warehouse_items(token):
     try:
         with get_db_connection() as conn:
@@ -7492,6 +7587,7 @@ def warehouse_items(token):
 # сторінка для завантаження інвойсу:
 @app.route('/<token>/admin/invoice/upload', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def upload_invoice(token):
     if request.method == 'GET':
         try:
@@ -7587,6 +7683,7 @@ def upload_invoice(token):
 # маршрут для списку інвойсів в адмін-панелі
 @app.route('/<token>/admin/invoices', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def list_invoices(token):
     try:
         with get_db_connection() as conn:
@@ -7624,6 +7721,7 @@ def list_invoices(token):
 # функція для перегляду деталей інвойсу
 @app.route('/<token>/admin/invoice/<int:invoice_id>/details', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def invoice_details(token, invoice_id):
     try:
         with get_db_connection() as conn:
@@ -7690,6 +7788,7 @@ def invoice_details(token, invoice_id):
 
 @app.route('/<token>/admin/compare_prices', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def compare_prices(token):
     if request.method == 'GET':
         try:
@@ -7792,6 +7891,7 @@ def compare_prices(token):
 # Маршрут для відображення форми (new_supplier_order):
 @app.route('/<token>/admin/supplier-orders/new', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def new_supplier_order(token):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -7809,6 +7909,7 @@ def new_supplier_order(token):
 
 @app.route('/<token>/api/price-lists/<supplier_id>')
 @requires_token_and_roles('admin')
+@add_noindex_header
 def get_supplier_price_lists(token, supplier_id):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -7829,6 +7930,7 @@ def get_supplier_price_lists(token, supplier_id):
 # сторінка перегляду замовлень постачальників
 @app.route('/<token>/admin/supplier-orders', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def list_supplier_orders(token):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -7862,6 +7964,7 @@ def list_supplier_orders(token):
 # маршрут для перегляду деталей замовлення постачальнику
 @app.route('/<token>/admin/supplier-orders/<order_id>', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def view_supplier_order(token, order_id):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -8307,6 +8410,7 @@ def intermediate_results(token):
 # Кнопка підтвердження співпадінь аналізу інвойсу
 @app.route('/<token>/admin/accept-matches/<int:invoice_id>', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def accept_matches(token, invoice_id):
     try:
         with get_db_connection() as conn:
@@ -8410,12 +8514,14 @@ def get_markup_percentage(user_id):
 
 @app.route('/<token>/admin/utilities')
 @requires_token_and_roles('admin')
+@add_noindex_header
 def utilities(token):
     return render_template('admin/utilities.html', token=token)
 
 
 @app.route('/<token>/admin/news', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def admin_news(token):
     """
     Відображення списку всіх новин в адмін-панелі
@@ -8456,6 +8562,7 @@ def admin_news(token):
 
 @app.route('/<token>/admin/news/create', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def create_news(token):
     if request.method == 'POST':
         try:
@@ -8514,6 +8621,7 @@ def create_news(token):
 # Прийняти всі артикулі в замовленні користувача
 @app.route('/<token>/admin/orders/<int:order_id>/accept-all', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def accept_all_items(token, order_id):
     try:
         with get_db_connection() as conn:
@@ -8568,6 +8676,7 @@ def accept_all_items(token, order_id):
 # Маршрут для відображення форми вибору користувача для створення відвантаження
 @app.route('/<token>/admin/shipments/create', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def create_shipment_select_user(token):
     try:
         with get_db_connection() as conn:
@@ -8594,6 +8703,7 @@ def create_shipment_select_user(token):
 # Маршрут для відображення форми створення відвантаження
 @app.route('/<token>/admin/shipments/create/<int:user_id>', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def create_shipment_form(token, user_id):
     try:
         with get_db_connection() as conn:
@@ -8729,6 +8839,7 @@ def view_user_shipment(token, shipment_id):
 # Маршрут для обробки створення відвантаження
 @app.route('/<token>/admin/shipments/create', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def create_shipment(token):
     try:
         user_id = request.form.get('user_id')
@@ -8771,6 +8882,7 @@ def create_shipment(token):
 # Маршрут для перегляду деталей відвантаження
 @app.route('/<token>/admin/shipments/<int:shipment_id>', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def view_shipment(token, shipment_id):
     try:
         with get_db_connection() as conn:
@@ -8824,6 +8936,7 @@ def view_shipment(token, shipment_id):
 # Маршрут для відображення списку відвантажень
 @app.route('/<token>/admin/shipments', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def list_shipments(token):
     try:
         with get_db_connection() as conn:
@@ -8861,6 +8974,7 @@ def list_shipments(token):
 
 @app.route('/<token>/admin/export-orders', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def export_orders(token):
     try:
         wb = Workbook()
@@ -8926,6 +9040,7 @@ def export_orders(token):
 
 @app.route('/api/update-supplier-statuses', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def update_supplier_statuses():
     try:
         if 'file' not in request.files:
@@ -8957,6 +9072,7 @@ def update_supplier_statuses():
 
 @app.route('/api/process-supplier-invoice', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def process_supplier_invoice():
     try:
         if 'file' not in request.files:
@@ -9005,6 +9121,7 @@ def process_supplier_invoice():
 # endpoint accept-match для підтвердження в інвойсах постачальника
 @app.route('/<token>/api/accept-match', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def accept_match():
     try:
         data = request.json
@@ -9031,6 +9148,7 @@ def accept_match():
 # експорт результату аналізу інвойса
 @app.route('/<token>/admin/invoice/<int:invoice_id>/export', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def export_invoice_analysis(token, invoice_id):
     try:
         wb = Workbook()
@@ -9265,6 +9383,7 @@ def set_news_as_read(token, news_id):
 
 @app.route('/<token>/admin/news/<int:news_id>/edit', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def edit_news(token, news_id):
     """
     Редагування багатомовної новини
@@ -9337,6 +9456,7 @@ def edit_news(token, news_id):
 
 @app.route('/<token>/admin/process-orders', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def process_orders(token):
     try:
         logging.info("Starting process_orders function")
@@ -9614,6 +9734,7 @@ def process_orders(token):
 # додавання фото
 @app.route('/<token>/admin/add_product_images', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def add_product_images(token):
     if request.method == 'POST':
         conn = None
@@ -9720,6 +9841,7 @@ def add_product_images(token):
 
 @app.route('/<token>/admin/manage-descriptions', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def manage_descriptions(token):
     """
     Відображає сторінку керування описами товарів
@@ -9763,6 +9885,7 @@ def manage_descriptions(token):
 
 @app.route('/<token>/admin/update-description', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def update_description(token):
     try:
         article = request.form.get('article')
@@ -9806,6 +9929,7 @@ def update_description(token):
 
 @app.route('/<token>/admin/add_product_descriptions', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def add_product_descriptions(token):
     if request.method == 'POST':
         try:
@@ -10238,6 +10362,7 @@ def debug_add_test_item():
 # маршрут для відправки інвойсів
 @app.route('/<token>/admin/orders/<int:order_id>/send_invoice', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def admin_send_invoice(token, order_id):
     """Дозволяє адміністратору завантажити інвойс та відправити його клієнту"""
     try:
@@ -10555,6 +10680,7 @@ def send_invoice_email(to_email, subject, ordered_items, delivery_data, invoice_
 
 @app.route('/<token>/admin/sitemaps', methods=['GET'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def admin_sitemaps(token):
     """Сторінка управління sitemap файлами"""
     try:
@@ -10599,6 +10725,7 @@ def admin_sitemaps(token):
 
 @app.route('/<token>/admin/sitemaps/generate', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def admin_generate_sitemaps(token):
     """Ручна генерація sitemap файлів з адмін-панелі"""
     try:
@@ -10641,6 +10768,7 @@ def admin_generate_sitemaps(token):
 
 @app.route('/<token>/admin/sitemaps/view/<filename>')
 @requires_token_and_roles('admin')
+@add_noindex_header
 def admin_view_sitemap(token, filename):
     """Перегляд вмісту sitemap файлу"""
     try:
@@ -10667,6 +10795,7 @@ def admin_view_sitemap(token, filename):
 
 @app.route('/<token>/admin/sitemaps/delete/<filename>', methods=['POST'])
 @requires_token_and_roles('admin')
+@add_noindex_header
 def admin_delete_sitemap(token, filename):
     """Видалення sitemap файлу"""
     try:
@@ -10842,6 +10971,7 @@ scheduler.init_app(app)
 
 @app.route('/<token>/admin/check-sitemap-data')
 @requires_token_and_roles('admin')
+@add_noindex_header
 def admin_check_sitemap_data(token):
     """Діагностика стану бази даних для sitemap (тільки для адміністраторів)"""
     try:
@@ -10951,6 +11081,7 @@ def check_sitemap_data():
 
 @app.route('/<token>/admin/sitemap-utils')
 @requires_token_and_roles('admin')
+@add_noindex_header
 def admin_sitemap_utils(token):
     """Утиліти для роботи з sitemap-файлами"""
     try:

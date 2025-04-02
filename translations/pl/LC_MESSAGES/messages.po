@@ -594,6 +594,9 @@ msgstr "Zaktualizuj adres"
 msgid "No saved addresses found"
 msgstr "Nie znaleziono zapisanych adresów"
 
+msgid "Orders placed before 12:00 (noon) will be processed and shipped on the same business day. Orders placed after 12:00 will be processed and shipped on the next business day. Average order processing time on a business day: from 15 minutes to 1 hour."
+msgstr "Zamówienia złożone przed godziną 12:00 (południe) zostaną przetworzone i wysłane tego samego dnia roboczego. Zamówienia złożone po godzinie 12:00 zostaną przetworzone i wysłane następnego dnia roboczego. Średni czas przetwarzania zamówienia w dzień roboczy: od 15 minut do 1 godziny."
+
 #: templates/admin/orders/process_orders.html:100
 msgid "Invoice Details"
 msgstr "Szczegóły faktury"

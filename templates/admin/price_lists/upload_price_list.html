@@ -38,16 +38,14 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="brand_id">Select Brand</label>
-                                    <div class="d-flex">
-                                        <select class="form-control" id="brand_id" name="brand_id">
-                                            {% for brand in brands %}
-                                                <option value="{{ brand[0] }}">{{ brand[1] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#addBrandModal">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-                                    </div>
+                                    <select class="form-control mb-2" id="brand_id" name="brand_id">
+                                        {% for brand in brands %}
+                                            <option value="{{ brand[0] }}">{{ brand[1] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#addBrandModal">
+                                        <i class="bi bi-plus-circle"></i> Add New Brand
+                                    </button>
                                 </div>
                             </div>
                             

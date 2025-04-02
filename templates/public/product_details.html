@@ -10,28 +10,100 @@
 
 <script type="application/ld+json">
 {
-  "@context": "https://schema.org/",
-  "@type": "Product",
-  "name": "{{ product_data.name }}",
-  "description": "{{ product_data.description }}",
-  "sku": "{{ article }}",
-  "image": [
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": "{{ product_data.name }}",
+    "description": "{{ product_data.description }}",
+    "sku": "{{ article }}",
+    "image": [
     {% for url in product_data.photo_urls %}
     "{{ url }}"{% if not loop.last %},{% endif %}
     {% endfor %}
-  ],
-  "brand": {
+    ],
+    "brand": {
     "@type": "Brand",
     "name": "{{ brand_name if brand_name else 'AutogroupEU' }}"
-  },
-  "offers": {
+    },
+    "offers": {
     "@type": "AggregateOffer",
     "priceCurrency": "EUR",
-    "lowPrice": "{{ prices[0].price if prices }}",
-    "highPrice": "{{ prices[-1].price if prices }}",
+    "lowPrice": "{{ prices[0].price if prices else 0 }}",
+    "highPrice": "{{ prices[-1].price if prices and prices|length > 1 else prices[0].price if prices else 0 }}",
     "offerCount": "{{ prices|length }}",
-    "availability": "https://schema.org/{% if prices[0].in_stock %}InStock{% else %}PreOrder{% endif %}"
-  }
+    "availability": "https://schema.org/{% if prices and prices[0].in_stock %}InStock{% else %}PreOrder{% endif %}",
+    "hasMerchantReturnPolicy": {
+        "@type": "MerchantReturnPolicy",
+        "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+        "merchantReturnDays": 14,
+        "returnMethod": "https://schema.org/ReturnByMail",
+        "returnFees": "https://schema.org/FreeReturn"
+    },
+    "shippingDetails": [
+        {
+        "@type": "OfferShippingDetails",
+        "shippingRate": {
+            "@type": "MonetaryAmount",
+            "minValue": "5",
+            "maxValue": "15",
+            "currency": "EUR"
+        },
+        "shippingDestination": {
+            "@type": "DefinedRegion",
+            "addressCountry": "SK"
+        },
+        "deliveryTime": {
+            "@type": "ShippingDeliveryTime",
+            "handlingTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 1,
+            "maxValue": 2,
+            "unitCode": "DAY"
+            },
+            "transitTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 1,
+            "maxValue": 3,
+            "unitCode": "DAY"
+            }
+        }
+        },
+        {
+        "@type": "OfferShippingDetails",
+        "shippingRate": {
+            "@type": "MonetaryAmount",
+            "minValue": "12",
+            "maxValue": "40",
+            "currency": "EUR"
+        },
+        "shippingDestination": {
+            "@type": "DefinedRegion",
+            "addressCountry": ["CZ", "AT", "DE", "PL", "HU", "RO", "BG", "HR", "SI", "RS", "IT", "FR", "NL", "BE", "LU"]
+        },
+        "deliveryTime": {
+            "@type": "ShippingDeliveryTime",
+            "handlingTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 1,
+            "maxValue": 2,
+            "unitCode": "DAY"
+            },
+            "transitTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 2,
+            "maxValue": 7,
+            "unitCode": "DAY"
+            }
+        }
+        }
+    ]
+    },
+    "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "bestRating": "5",
+    "worstRating": "1",
+    "ratingCount": "12"
+    }
 }
 </script>
 

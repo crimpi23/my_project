@@ -327,6 +327,9 @@ msgstr "Používateľ nie je autentifikovaný. Prosím, prihláste sa."
 msgid "Product added to cart!"
 msgstr "Produkt bol pridaný do košíka!"
 
+msgid "Orders placed before 12:00 (noon) will be processed and shipped on the same business day. Orders placed after 12:00 will be processed and shipped on the next business day. Average order processing time on a business day: from 15 minutes to 1 hour."
+msgstr "Objednávky zadané do 12:00 (poludnie) budú spracované a odoslané v ten istý pracovný deň. Objednávky zadané po 12:00 budú spracované a odoslané nasledujúci pracovný deň. Priemerná doba spracovania objednávky v pracovný deň: od 15 minút do 1 hodiny."
+
 #: app.py:4098
 msgid "Error adding product to cart."
 msgstr "Chyba pri pridávaní produktu do košíka."

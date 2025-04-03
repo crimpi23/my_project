@@ -109,17 +109,17 @@
 }
 </script>
 
-<link rel="canonical" href="{{ get_base_url() }}/{{ session.get('language', 'sk') }}/product/{{ article }}">
+<link rel="canonical" href="{{ get_base_url() }}/product/{{ article }}{% if session.get('language') != 'sk' %}?lang_code={{ session.get('language') }}{% endif %}">
 
-{% for lang_code in supported_languages %}
+{% for lang_code in ['sk', 'en', 'pl'] %}
 <link rel="alternate" 
       hreflang="{{ lang_code }}" 
-      href="{{ get_base_url() }}/{{ lang_code }}/product/{{ article }}" />
+      href="{{ get_base_url() }}/product/{{ article }}?lang_code={{ lang_code }}" />
 {% endfor %}
 
 <link rel="alternate" 
       hreflang="x-default" 
-      href="{{ get_base_url() }}/{{ default_lang }}/product/{{ article }}" />
+      href="{{ get_base_url() }}/product/{{ article }}" />
 
 <style>
 .category-badges {

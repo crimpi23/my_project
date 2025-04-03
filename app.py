@@ -651,16 +651,22 @@ def add_noindex_headers_for_token_pages(response):
 
 @app.route('/robots.txt')
 def robots():
-    """Генерує файл robots.txt з посиланням на sitemap"""
     robots_content = """# Global rules
 User-agent: *
 Allow: /
+Allow: /sk/product/
+Allow: /pl/product/
+Allow: /en/product/
+Allow: /uk/product/
+Allow: /sk/category/
+Allow: /pl/category/
+Allow: /en/category/
+Allow: /uk/category/
 Disallow: /admin/
 Disallow: /*/admin/
 Disallow: /*token*/
 Disallow: /debug_*
 Disallow: /user-profile
-Disallow: /*/
 Disallow: /search*
 Disallow: /cart*
 Disallow: /order*
@@ -679,6 +685,14 @@ User-agent: Googlebot
 Allow: /
 Allow: /product/
 Allow: /category/
+Allow: /sk/product/
+Allow: /pl/product/
+Allow: /en/product/
+Allow: /uk/product/
+Allow: /sk/category/
+Allow: /pl/category/
+Allow: /en/category/
+Allow: /uk/category/
 Disallow: /admin/
 Disallow: /*/admin/
 Disallow: /*token*/
@@ -692,6 +706,14 @@ User-agent: Googlebot-Image
 Allow: /
 Allow: /product/
 Allow: /category/
+Allow: /sk/product/
+Allow: /pl/product/
+Allow: /en/product/
+Allow: /uk/product/
+Allow: /sk/category/
+Allow: /pl/category/
+Allow: /en/category/
+Allow: /uk/category/
 Allow: /static/product_images/
 Allow: /static/images/
 Disallow: /admin/

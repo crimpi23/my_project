@@ -650,36 +650,38 @@ def add_noindex_headers_for_token_pages(response):
 
 @app.route('/robots.txt')
 def robots():
-    robots_content = """# Global rules
+    robots_content = """# Global rules - FINAL UNIFIED VERSION
+# Google bot rules
 User-agent: Googlebot
-User-agent: Googlebot-Image
-User-agent: Googlebot-Mobile
-Disallow:
-Allow: /
-
-User-agent: *
+Allow: /sk/product/
+Allow: /pl/product/
+Allow: /en/product/
+Allow: /uk/product/
+Allow: /sk/category/
+Allow: /pl/category/
+Allow: /en/category/
+Allow: /uk/category/
 Allow: /product/
+Allow: /category/
 Allow: /
 Disallow: /admin/
 Disallow: /*token*/
 Disallow: /debug_*
-Disallow: /cart/
-Disallow: /user/
-Disallow: /profile/
-Disallow: /order/
-Disallow: /search/
 
-Sitemap: https://autogroup.sk/sitemap-index.xml
-"""
-    response = make_response(robots_content)
-    response.headers["Content-Type"] = "text/plain"
-    return response
-
-@app.route('/robots-google.txt')
-def robots_google():
-    robots_content = """# Google-specific robots.txt
-User-agent: Googlebot
+# Google Image bot
 User-agent: Googlebot-Image
+Allow: /sk/product/
+Allow: /pl/product/
+Allow: /en/product/
+Allow: /uk/product/
+Allow: /product/
+Allow: /category/
+Allow: /static/product_images/
+Allow: /static/images/
+Allow: /
+Disallow: /admin/
+
+# Google Mobile bot
 User-agent: Googlebot-Mobile
 Allow: /sk/product/
 Allow: /pl/product/
@@ -689,7 +691,24 @@ Allow: /product/
 Allow: /category/
 Allow: /
 Disallow: /admin/
+
+# All other bots
+User-agent: *
+Allow: /sk/product/
+Allow: /pl/product/
+Allow: /en/product/
+Allow: /uk/product/
+Allow: /product/
+Allow: /category/
+Allow: /
+Disallow: /admin/
 Disallow: /*token*/
+Disallow: /debug_*
+Disallow: /cart/
+Disallow: /user/
+Disallow: /profile/
+Disallow: /order/
+Disallow: /search/
 
 Sitemap: https://autogroup.sk/sitemap-index.xml
 """
@@ -3068,11 +3087,11 @@ def localized_product_details(lang, article):
 
 @app.after_request
 def add_headers(response):
-    # Додаємо заголовок для сторінок продуктів
-    if '/product/' in request.path:
+    # Додаємо заголовок для URL-адрес з мовними префіксами
+    if any(f'/{lang}/product/' in request.path for lang in ['sk', 'en', 'pl', 'uk']):
         response.headers['X-Robots-Tag'] = 'index, follow'
     
-    # Додаємо заголовок для URL з токенами
+    # Блокуємо індексацію для URL з токенами
     if re.search(r'/[0-9a-f]{32,}/', request.path, re.IGNORECASE):
         response.headers['X-Robots-Tag'] = 'noindex, nofollow'
     

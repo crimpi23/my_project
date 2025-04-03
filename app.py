@@ -651,87 +651,29 @@ def add_noindex_headers_for_token_pages(response):
 
 @app.route('/robots.txt')
 def robots():
-    robots_content = """# Global rules
+    robots_content = """# Simple rules for testing
 User-agent: *
+Allow: /
 Allow: /sk/product/
 Allow: /pl/product/
 Allow: /en/product/
 Allow: /uk/product/
-Allow: /sk/category/
-Allow: /pl/category/
-Allow: /en/category/
-Allow: /uk/category/
-Allow: /
 Allow: /product/
 Allow: /category/
-Allow: /about
-Allow: /contacts
-Allow: /shipping-payment
-Allow: /returns
-Allow: /car-service
 Disallow: /admin/
-Disallow: /*/admin/
 Disallow: /*token*/
-Disallow: /debug_*
-Disallow: /user-profile
-Disallow: /search*
-Disallow: /cart*
-Disallow: /order*
-Disallow: /user*
-Disallow: /profile*
 
 # Google bot rules
 User-agent: Googlebot
+Allow: /
 Allow: /sk/product/
 Allow: /pl/product/
 Allow: /en/product/
 Allow: /uk/product/
-Allow: /sk/category/
-Allow: /pl/category/
-Allow: /en/category/
-Allow: /uk/category/
-Allow: /
-Allow: /sk/
-Allow: /en/
-Allow: /pl/
-Allow: /uk/
 Allow: /product/
 Allow: /category/
 Disallow: /admin/
-Disallow: /*/admin/
 Disallow: /*token*/
-
-# Mobile googlebot
-User-agent: Googlebot-Mobile
-Allow: /sk/product/
-Allow: /pl/product/
-Allow: /en/product/
-Allow: /uk/product/
-Allow: /
-Allow: /sk/
-Allow: /pl/
-Allow: /en/
-Allow: /uk/
-Allow: /product/
-Allow: /category/
-
-# Google image bot - allow product images
-User-agent: Googlebot-Image
-Allow: /sk/product/
-Allow: /pl/product/
-Allow: /en/product/
-Allow: /uk/product/
-Allow: /sk/category/
-Allow: /pl/category/
-Allow: /en/category/
-Allow: /uk/category/
-Allow: /
-Allow: /product/
-Allow: /category/
-Allow: /static/product_images/
-Allow: /static/images/
-Disallow: /admin/
-Disallow: /*/admin/
 
 Sitemap: https://autogroup.sk/sitemap-index.xml
 """
@@ -2943,10 +2885,23 @@ def localized_product_details(lang, article):
     session['language'] = lang
     g.locale = lang
     
-    # Перенаправляємо на основну функцію product_details
-    return product_details(article)
+    # Замість перенаправлення, викликаємо product_details і працюємо з його результатом
+    result = product_details(article)
+    
+    # Якщо це об'єкт Response, додаємо необхідні заголовки
+    if hasattr(result, 'headers'):
+        result.headers['X-Robots-Tag'] = 'index, follow'
+    
+    return result
 
 
+
+@app.after_request
+def add_indexing_header(response):
+    """Додає заголовок X-Robots-Tag для дозволу індексації продуктових сторінок"""
+    if request.path.endswith('/product/') or '/product/' in request.path:
+        response.headers['X-Robots-Tag'] = 'index, follow'
+    return response
 
 
 

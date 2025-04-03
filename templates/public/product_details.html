@@ -103,9 +103,12 @@
     "bestRating": "5",
     "worstRating": "1",
     "ratingCount": "12"
-    }
+    },
+    "url": "{{ get_base_url() }}/{{ session.get('language', 'sk') }}/product/{{ article }}"
 }
 </script>
+
+<link rel="canonical" href="{{ get_base_url() }}/{{ session.get('language', 'sk') }}/product/{{ article }}">
 
 <style>
 .category-badges {

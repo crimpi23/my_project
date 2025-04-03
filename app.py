@@ -651,19 +651,15 @@ def add_noindex_headers_for_token_pages(response):
 @app.route('/robots.txt')
 def robots():
     robots_content = """# Global rules
-User-agent: *
-# Explicitly allow product pages with language prefixes
-Allow: /sk/product/
-Allow: /pl/product/
-Allow: /en/product/
-Allow: /uk/product/
-# Allow regular product pages
-Allow: /product/
-# Other allowed paths
-Allow: /category/
+User-agent: Googlebot
+User-agent: Googlebot-Image
+User-agent: Googlebot-Mobile
+Disallow:
 Allow: /
-Allow: /static/
-# Restricted paths
+
+User-agent: *
+Allow: /product/
+Allow: /
 Disallow: /admin/
 Disallow: /*token*/
 Disallow: /debug_*
@@ -673,8 +669,18 @@ Disallow: /profile/
 Disallow: /order/
 Disallow: /search/
 
-# Google bot - explicit permissions
+Sitemap: https://autogroup.sk/sitemap-index.xml
+"""
+    response = make_response(robots_content)
+    response.headers["Content-Type"] = "text/plain"
+    return response
+
+@app.route('/robots-google.txt')
+def robots_google():
+    robots_content = """# Google-specific robots.txt
 User-agent: Googlebot
+User-agent: Googlebot-Image
+User-agent: Googlebot-Mobile
 Allow: /sk/product/
 Allow: /pl/product/
 Allow: /en/product/
@@ -685,32 +691,14 @@ Allow: /
 Disallow: /admin/
 Disallow: /*token*/
 
-# Mobile Google bot
-User-agent: Googlebot-Mobile
-Allow: /sk/product/
-Allow: /pl/product/
-Allow: /en/product/
-Allow: /uk/product/
-Allow: /product/
-Allow: /category/
-Allow: /
-
-# Image Google bot
-User-agent: Googlebot-Image
-Allow: /sk/product/
-Allow: /pl/product/
-Allow: /en/product/
-Allow: /uk/product/
-Allow: /product/
-Allow: /category/
-Allow: /static/product_images/
-Allow: /static/images/
-
 Sitemap: https://autogroup.sk/sitemap-index.xml
 """
     response = make_response(robots_content)
     response.headers["Content-Type"] = "text/plain"
     return response
+
+
+
 
 # Додайте на початку файлу або в підходящому місці
 @app.before_request
@@ -2916,14 +2904,166 @@ def localized_product_details(lang, article):
     session['language'] = lang
     g.locale = lang
     
-    # Отримуємо результат від функції product_details
-    result = product_details(article)
-    
-    # Додаємо заголовок X-Robots-Tag, якщо результат - це об'єкт Response
-    if hasattr(result, 'headers'):
-        result.headers['X-Robots-Tag'] = 'index, follow'
-    
-    return result
+    try:
+        # Отримуємо поточну мову
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # Get stock info first
+        cursor.execute("""
+            SELECT s.article, s.price, s.brand_id, b.name as brand_name
+            FROM stock s
+            LEFT JOIN brands b ON s.brand_id = b.id
+            WHERE s.article = %s
+        """, (article,))
+        stock_data = cursor.fetchone()
+
+        # Initialize product_data with stock info
+        product_data = {
+            'name': article,
+            'description': '',
+            'photo_urls': [],
+            'brand_name': stock_data['brand_name'] if stock_data else None,
+            'brand_id': stock_data['brand_id'] if stock_data else None
+        }
+        
+        # Отримуємо категорії товару
+        cursor.execute("""
+            SELECT c.*
+            FROM product_categories pc
+            JOIN categories c ON pc.category_id = c.id
+            WHERE pc.article = %s
+            ORDER BY c.parent_id NULLS FIRST, c.order_index
+        """, (article,))
+        product_categories = cursor.fetchall()
+
+        # Get product info with language-specific fields
+        cursor.execute(f"""
+            SELECT 
+                article,
+                name_{lang} as name,
+                description_{lang} as description
+            FROM products
+            WHERE article = %s
+        """, (article,))
+        
+        db_product = cursor.fetchone()
+        if db_product:
+            product_data['name'] = db_product['name'] or article
+            product_data['description'] = db_product['description'] or ''
+
+        # Оновлений запит для отримання фотографій з правильним сортуванням
+        cursor.execute("""
+            SELECT image_url 
+            FROM product_images 
+            WHERE product_article = %s 
+            ORDER BY is_main DESC, id ASC
+        """, (article,))
+        product_data['photo_urls'] = [row['image_url'] for row in cursor.fetchall()]
+
+        prices = []
+
+        if stock_data:
+            price_data = {
+                'table_name': 'stock',
+                'brand_name': stock_data['brand_name'],
+                'brand_id': stock_data['brand_id'],
+                'price': stock_data['price'],
+                'base_price': stock_data['price'],
+                'in_stock': True,
+                'delivery_time': _("In Stock")
+            }
+            prices.append(price_data)
+
+        # Get prices from price_lists
+        cursor.execute("""
+            SELECT pl.table_name, pl.brand_id, pl.delivery_time, b.name as brand_name 
+            FROM price_lists pl
+            LEFT JOIN brands b ON pl.brand_id = b.id
+            WHERE pl.table_name != 'stock'
+        """)
+        tables = cursor.fetchall()
+
+        price_found = False
+
+        for table in tables:
+            if table['table_name'] != 'stock':
+                table_name = table['table_name']
+                brand_id = table['brand_id']
+                brand_name = table['brand_name']
+                
+                cursor.execute(f"""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = %s
+                    )
+                """, (table_name,))
+                
+                if cursor.fetchone()[0]:
+                    query = f"""
+                        SELECT article, price
+                        FROM {table_name}
+                        WHERE article = %s
+                    """
+                    cursor.execute(query, (article,))
+                    result = cursor.fetchone()
+                    
+                    if result:
+                        price_found = True
+                        markup_percentage = get_markup_by_role('public')
+                        base_price = result['price']
+                        final_price = calculate_price(base_price, markup_percentage)
+
+                        price_data = {
+                            'table_name': table_name,
+                            'brand_name': brand_name,
+                            'brand_id': brand_id,
+                            'price': final_price,
+                            'base_price': base_price,
+                            'in_stock': table['delivery_time'] == '0',
+                            'delivery_time': (_("In Stock") if table['delivery_time'] == '0' 
+                                            else f"{table['delivery_time']} {_('days')}")
+                        }
+                        prices.append(price_data)
+
+        prices.sort(key=lambda x: float(x['price']))
+
+        # Відобираємо найдешевшу ціну для товару
+        price = prices[0] if prices else None
+        
+        # ВИПРАВЛЕННЯ: використовуємо бренд найдешевшої ціни для відображення на сторінці
+        if price and 'brand_name' in price:
+            product_data['brand_name'] = price['brand_name']
+
+        if not db_product and not stock_data and not price_found:
+            response = make_response(render_template(
+                'public/article_not_found.html',
+                article=article
+            ))
+        else:
+            # Створюємо власну відповідь
+            response = make_response(render_template(
+                'public/product_details.html',
+                product_data=product_data,
+                prices=prices,
+                price=price,
+                brand_name=product_data['brand_name'],
+                article=article,
+                product_categories=product_categories
+            ))
+        
+        # Явно встановлюємо заголовок X-Robots-Tag
+        response.headers['X-Robots-Tag'] = 'index, follow'
+        return response
+
+    except Exception as e:
+        logging.error(f"Error in localized_product_details: {e}", exc_info=True)
+        flash(_("An error occurred while processing your request."), "error")
+        return redirect(url_for('index'))
+
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
 
 
 @app.after_request

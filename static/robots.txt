@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /*/admin/
-Disallow: /*token*/
-Disallow: /debug_*
-Disallow: /user-profile
-Sitemap: https://autogroup.sk/sitemap-index.xml

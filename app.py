@@ -652,22 +652,20 @@ def add_noindex_headers_for_token_pages(response):
 @app.route('/robots.txt')
 def robots():
     """Генерує файл robots.txt з посиланням на sitemap"""
-    robots_content = """User-agent: *
+    robots_content = """# Global rules
+User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /*/admin/
 Disallow: /*token*/
 Disallow: /debug_*
 Disallow: /user-profile
-# Блокування всіх URL з токенами (гексадецимальні рядки)
 Disallow: /*/
-# Блокування пошуку конфіденційних сторінок
 Disallow: /search*
 Disallow: /cart*
 Disallow: /order*
 Disallow: /user*
 Disallow: /profile*
-# Дозвіл на індексацію основних сторінок
 Allow: /product/
 Allow: /category/
 Allow: /about
@@ -675,7 +673,31 @@ Allow: /contacts
 Allow: /shipping-payment
 Allow: /returns
 Allow: /car-service
-Sitemap: https://autogroup.sk/sitemap.xml
+
+# Google bot - allow product pages
+User-agent: Googlebot
+Allow: /
+Allow: /product/
+Allow: /category/
+Disallow: /admin/
+Disallow: /*/admin/
+Disallow: /*token*/
+Disallow: /debug_*
+Disallow: /user-profile
+Disallow: /cart*
+Disallow: /order*
+
+# Google image bot - allow product images
+User-agent: Googlebot-Image
+Allow: /
+Allow: /product/
+Allow: /category/
+Allow: /static/product_images/
+Allow: /static/images/
+Disallow: /admin/
+Disallow: /*/admin/
+
+Sitemap: https://autogroup.sk/sitemap-index.xml
 """
     response = make_response(robots_content)
     response.headers["Content-Type"] = "text/plain"

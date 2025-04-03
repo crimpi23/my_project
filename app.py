@@ -662,6 +662,13 @@ Allow: /sk/category/
 Allow: /pl/category/
 Allow: /en/category/
 Allow: /uk/category/
+Allow: /product/
+Allow: /category/
+Allow: /about
+Allow: /contacts
+Allow: /shipping-payment
+Allow: /returns
+Allow: /car-service
 Disallow: /admin/
 Disallow: /*/admin/
 Disallow: /*token*/
@@ -672,17 +679,14 @@ Disallow: /cart*
 Disallow: /order*
 Disallow: /user*
 Disallow: /profile*
-Allow: /product/
-Allow: /category/
-Allow: /about
-Allow: /contacts
-Allow: /shipping-payment
-Allow: /returns
-Allow: /car-service
 
-# Google bot - allow product pages
+# Google bot rules
 User-agent: Googlebot
 Allow: /
+Allow: /sk/
+Allow: /en/
+Allow: /pl/
+Allow: /uk/
 Allow: /product/
 Allow: /category/
 Allow: /sk/product/
@@ -696,10 +700,20 @@ Allow: /uk/category/
 Disallow: /admin/
 Disallow: /*/admin/
 Disallow: /*token*/
-Disallow: /debug_*
-Disallow: /user-profile
-Disallow: /cart*
-Disallow: /order*
+
+# Mobile googlebot
+User-agent: Googlebot-Mobile
+Allow: /
+Allow: /sk/
+Allow: /pl/
+Allow: /en/
+Allow: /uk/
+Allow: /product/
+Allow: /category/
+Allow: /sk/product/
+Allow: /pl/product/
+Allow: /en/product/
+Allow: /uk/product/
 
 # Google image bot - allow product images
 User-agent: Googlebot-Image

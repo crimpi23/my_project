@@ -640,37 +640,9 @@ def add_noindex_header(f):
 
 @app.route('/robots.txt')
 def robots():
-    robots_content = """# COMPLETELY REVISED FOR MOBILE AND DESKTOP INDEXING
-# Google smartphone crawler (critical fix)
-User-agent: Googlebot-Mobile
-Allow: /sk/product/
-Allow: /pl/product/
-Allow: /en/product/
-Allow: /uk/product/
-Allow: /product/
-Allow: /
-Disallow: /admin/
-
-# Standard Googlebot
-User-agent: Googlebot
-Allow: /sk/product/
-Allow: /pl/product/
-Allow: /en/product/
-Allow: /uk/product/
-Allow: /product/
-Allow: /
-Disallow: /admin/
-
-# For all other crawlers
+    robots_content = """# MAXIMUM PERMISSIVE VERSION
 User-agent: *
-Allow: /sk/product/
-Allow: /pl/product/
-Allow: /en/product/
-Allow: /uk/product/
-Allow: /product/
 Allow: /
-Disallow: /admin/
-Disallow: /*token*/
 
 Sitemap: https://autogroup.sk/sitemap-index.xml
 """
@@ -3048,18 +3020,14 @@ def localized_product_details(lang, article):
 
 
 @app.after_request
-def add_robots_headers(response):
-    """Єдина функція для встановлення заголовків X-Robots-Tag"""
+def add_all_headers(response):
+    """Єдина функція для всіх заголовків"""
     
-    # Специфічний підхід для URL з мовними префіксами
-    if any(f'/{lang}/product/' in request.path for lang in ['sk', 'en', 'pl', 'uk']):
+    # Для продуктових сторінок з мовними префіксами
+    if '/product/' in request.path:
         response.headers['X-Robots-Tag'] = 'index, follow'
     
-    # Загальний підхід для всіх URL продуктів
-    elif '/product/' in request.path:
-        response.headers['X-Robots-Tag'] = 'index, follow'
-    
-    # Блокуємо індексацію для URL з токенами
+    # Для сторінок з токенами
     elif re.search(r'/[0-9a-f]{32,}/', request.path, re.IGNORECASE):
         response.headers['X-Robots-Tag'] = 'noindex, nofollow'
     

@@ -638,16 +638,37 @@ def add_noindex_header(f):
     return decorated_function
 
 
-
 @app.route('/robots.txt')
 def robots():
-    robots_content = """# SIMPLIFIED VERSION FOR TESTING
-User-agent: *
-Allow: /
+    robots_content = """# COMPLETELY REVISED FOR MOBILE AND DESKTOP INDEXING
+# Google smartphone crawler (critical fix)
+User-agent: Googlebot-Mobile
 Allow: /sk/product/
 Allow: /pl/product/
 Allow: /en/product/
 Allow: /uk/product/
+Allow: /product/
+Allow: /
+Disallow: /admin/
+
+# Standard Googlebot
+User-agent: Googlebot
+Allow: /sk/product/
+Allow: /pl/product/
+Allow: /en/product/
+Allow: /uk/product/
+Allow: /product/
+Allow: /
+Disallow: /admin/
+
+# For all other crawlers
+User-agent: *
+Allow: /sk/product/
+Allow: /pl/product/
+Allow: /en/product/
+Allow: /uk/product/
+Allow: /product/
+Allow: /
 Disallow: /admin/
 Disallow: /*token*/
 

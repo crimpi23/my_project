@@ -648,19 +648,22 @@ def add_noindex_headers_for_token_pages(response):
     return response
 
 
-
 @app.route('/robots.txt')
 def robots():
     robots_content = """# Global rules
 User-agent: *
+# Explicitly allow product pages with language prefixes
 Allow: /sk/product/
 Allow: /pl/product/
 Allow: /en/product/
 Allow: /uk/product/
+# Allow regular product pages
 Allow: /product/
+# Other allowed paths
 Allow: /category/
 Allow: /
 Allow: /static/
+# Restricted paths
 Disallow: /admin/
 Disallow: /*token*/
 Disallow: /debug_*
@@ -670,7 +673,7 @@ Disallow: /profile/
 Disallow: /order/
 Disallow: /search/
 
-# Google bot rules - explicit permissions
+# Google bot - explicit permissions
 User-agent: Googlebot
 Allow: /sk/product/
 Allow: /pl/product/
@@ -2913,29 +2916,37 @@ def localized_product_details(lang, article):
     session['language'] = lang
     g.locale = lang
     
-    # Замість перенаправлення, викликаємо product_details і працюємо з його результатом
+    # Отримуємо результат від функції product_details
     result = product_details(article)
     
-    # Якщо це об'єкт Response, додаємо необхідні заголовки
+    # Додаємо заголовок X-Robots-Tag, якщо результат - це об'єкт Response
     if hasattr(result, 'headers'):
         result.headers['X-Robots-Tag'] = 'index, follow'
     
     return result
 
 
+@app.after_request
+def add_headers(response):
+    # Додаємо заголовок для сторінок продуктів
+    if '/product/' in request.path:
+        response.headers['X-Robots-Tag'] = 'index, follow'
+    
+    # Додаємо заголовок для URL з токенами
+    if re.search(r'/[0-9a-f]{32,}/', request.path, re.IGNORECASE):
+        response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+    
+    return response
+
 
 @app.after_request
 def add_indexing_header(response):
-    """Додає заголовок X-Robots-Tag для дозволу індексації продуктових сторінок"""
     if request.path.endswith('/product/') or '/product/' in request.path:
         response.headers['X-Robots-Tag'] = 'index, follow'
     return response
 
-
-
 @app.after_request
 def add_x_robots_tag(response):
-    """Додає заголовок X-Robots-Tag для сторінок продуктів"""
     if '/product/' in request.path:
         response.headers['X-Robots-Tag'] = 'index, follow'
     return response

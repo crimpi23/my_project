@@ -651,29 +651,57 @@ def add_noindex_headers_for_token_pages(response):
 
 @app.route('/robots.txt')
 def robots():
-    robots_content = """# Simple rules for testing
+    robots_content = """# Global rules
 User-agent: *
-Allow: /
 Allow: /sk/product/
 Allow: /pl/product/
 Allow: /en/product/
 Allow: /uk/product/
 Allow: /product/
 Allow: /category/
+Allow: /
+Allow: /static/
+Disallow: /admin/
+Disallow: /*token*/
+Disallow: /debug_*
+Disallow: /cart/
+Disallow: /user/
+Disallow: /profile/
+Disallow: /order/
+Disallow: /search/
+
+# Google bot rules - explicit permissions
+User-agent: Googlebot
+Allow: /sk/product/
+Allow: /pl/product/
+Allow: /en/product/
+Allow: /uk/product/
+Allow: /product/
+Allow: /category/
+Allow: /
 Disallow: /admin/
 Disallow: /*token*/
 
-# Google bot rules
-User-agent: Googlebot
-Allow: /
+# Mobile Google bot
+User-agent: Googlebot-Mobile
 Allow: /sk/product/
 Allow: /pl/product/
 Allow: /en/product/
 Allow: /uk/product/
 Allow: /product/
 Allow: /category/
-Disallow: /admin/
-Disallow: /*token*/
+Allow: /
+
+# Image Google bot
+User-agent: Googlebot-Image
+Allow: /sk/product/
+Allow: /pl/product/
+Allow: /en/product/
+Allow: /uk/product/
+Allow: /product/
+Allow: /category/
+Allow: /static/product_images/
+Allow: /static/images/
 
 Sitemap: https://autogroup.sk/sitemap-index.xml
 """
@@ -2904,6 +2932,13 @@ def add_indexing_header(response):
     return response
 
 
+
+@app.after_request
+def add_x_robots_tag(response):
+    """Додає заголовок X-Robots-Tag для сторінок продуктів"""
+    if '/product/' in request.path:
+        response.headers['X-Robots-Tag'] = 'index, follow'
+    return response
 
 @app.route('/product/<article>')
 def product_details(article):

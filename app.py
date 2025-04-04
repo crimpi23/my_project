@@ -72,19 +72,19 @@ scheduler.start()
 
 
 # Створення пулу з'єднань (додайте після всіх імпортів)
-try:
-    db_pool = ThreadedConnectionPool(
-        minconn=1,       # Зменшуємо мінімум до 3 (було 5)
-        maxconn=15,      # Зменшуємо максимум до 25 (було 30)
-        dsn=os.environ.get('DATABASE_URL'),
-        sslmode="require",
-        connect_timeout=5,  # 5 секунд на з'єднання
-        options="-c statement_timeout=5000"  # Глобальний таймаут 5 секунд
-    )
-    logging.info("Database connection pool initialized successfully")
-except Exception as e:
-    logging.error(f"Error initializing connection pool: {e}")
-    db_pool = None
+# try:
+#     db_pool = ThreadedConnectionPool(
+#         minconn=1,       # Зменшуємо мінімум до 3 (було 5)
+#         maxconn=15,      # Зменшуємо максимум до 25 (було 30)
+#         dsn=os.environ.get('DATABASE_URL'),
+#         sslmode="require",
+#         connect_timeout=5,  # 5 секунд на з'єднання
+#         options="-c statement_timeout=5000"  # Глобальний таймаут 5 секунд
+#     )
+#     logging.info("Database connection pool initialized successfully")
+# except Exception as e:
+#     logging.error(f"Error initializing connection pool: {e}")
+#     db_pool = None
 
 # Реєстрація функції закриття пулу при завершенні роботи
 def close_db_pool():
@@ -109,21 +109,21 @@ logging.info(f"Sitemap directory set to: {SITEMAP_DIR}")
 
 
 
-@scheduler.task('interval', id='monitor_db_connections', minutes=2)
-def monitor_db_connections():
-    """Моніторинг та очистка простоюючих з'єднань"""
-    try:
-        if 'db_pool' in globals() and db_pool:
-            if hasattr(db_pool, '_pool'):
-                active_count = len(db_pool._pool)
-                logging.info(f"Active DB connections: {active_count}")
+# @scheduler.task('interval', id='monitor_db_connections', minutes=2)
+# def monitor_db_connections():
+#     """Моніторинг та очистка простоюючих з'єднань"""
+#     try:
+#         if 'db_pool' in globals() and db_pool:
+#             if hasattr(db_pool, '_pool'):
+#                 active_count = len(db_pool._pool)
+#                 logging.info(f"Active DB connections: {active_count}")
                 
-                # Якщо відкрито більше 10 з'єднань, спробуємо очистити
-                if active_count > 10:
-                    db_pool._pool.clear()
-                    logging.info("Pool connections cleared due to high count")
-    except Exception as e:
-        logging.error(f"Error monitoring connections: {e}")
+#                 # Якщо відкрито більше 10 з'єднань, спробуємо очистити
+#                 if active_count > 10:
+#                     db_pool._pool.clear()
+#                     logging.info("Pool connections cleared due to high count")
+#     except Exception as e:
+#         logging.error(f"Error monitoring connections: {e}")
 
 
 @contextmanager
@@ -2893,25 +2893,28 @@ def generate_tracking_code():
 
 # генерація tracking_code в момент створення нового замовлення постачальнику
 def create_supplier_order_details(order_id, article, quantity, order_detail_id):  # Додаємо параметр
-    conn = get_db_connection()
-    cur = conn.cursor()
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-    tracking_code = generate_tracking_code()
+        tracking_code = generate_tracking_code()
 
-    cur.execute("""
-        INSERT INTO supplier_order_details 
-        (supplier_order_id, article, quantity, tracking_code, created_at, order_details_id)  # Додаємо поле
-        VALUES (%s, %s, %s, %s, NOW(), %s)  # Додаємо значення
-        RETURNING id
-    """, (order_id, article, quantity, tracking_code, order_detail_id))  # Додаємо параметр
+        cur.execute("""
+            INSERT INTO supplier_order_details 
+            (supplier_order_id, article, quantity, tracking_code, created_at, order_details_id)  # Додаємо поле
+            VALUES (%s, %s, %s, %s, NOW(), %s)  # Додаємо значення
+            RETURNING id
+        """, (order_id, article, quantity, tracking_code, order_detail_id))  # Додаємо параметр
 
-    detail_id = cur.fetchone()[0]
+        detail_id = cur.fetchone()[0]
 
-    conn.commit()
-    cur.close()
-    conn.close()
-
-    return detail_id
+        conn.commit()
+        return detail_id
+    finally:
+        if 'cur' in locals() and cur:
+            cur.close()
+        if 'conn' in locals() and conn:
+            conn.close()
 
 
 # # Кількість товару в кошику користувача
@@ -3031,166 +3034,161 @@ def product_details(article):
         with safe_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Отримуємо поточну мову
-        lang = session.get('language', 'sk')
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            # Отримуємо поточну мову
+            lang = session.get('language', 'sk')
 
-        logging.info(f"=== Starting product_details for article: {article} ===")
+            logging.info(f"=== Starting product_details for article: {article} ===")
 
-        # Get stock info first
-        cursor.execute("""
-            SELECT s.article, s.price, s.brand_id, b.name as brand_name
-            FROM stock s
-            LEFT JOIN brands b ON s.brand_id = b.id
-            WHERE s.article = %s
-        """, (article,))
-        stock_data = cursor.fetchone()
-        logging.info(f"Stock data: {dict(stock_data) if stock_data else 'Not found'}")
+            # Get stock info first
+            cursor.execute("""
+                SELECT s.article, s.price, s.brand_id, b.name as brand_name
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                WHERE s.article = %s
+            """, (article,))
+            stock_data = cursor.fetchone()
+            logging.info(f"Stock data: {dict(stock_data) if stock_data else 'Not found'}")
 
-        # Initialize product_data with stock info
-        product_data = {
-            'name': article,
-            'description': '',
-            'photo_urls': [],
-            'brand_name': stock_data['brand_name'] if stock_data else None,
-            'brand_id': stock_data['brand_id'] if stock_data else None
-        }
-        # Отримуємо категорії товару
-        cursor.execute("""
-            SELECT c.*
-            FROM product_categories pc
-            JOIN categories c ON pc.category_id = c.id
-            WHERE pc.article = %s
-            ORDER BY c.parent_id NULLS FIRST, c.order_index
-        """, (article,))
-        product_categories = cursor.fetchall()
-
-        # Get product info with language-specific fields
-        cursor.execute(f"""
-            SELECT 
-                article,
-                name_{lang} as name,
-                description_{lang} as description
-            FROM products
-            WHERE article = %s
-        """, (article,))
-        
-        db_product = cursor.fetchone()
-        if db_product:
-            product_data['name'] = db_product['name'] or article
-            product_data['description'] = db_product['description'] or ''
-
-        # Оновлений запит для отримання фотографій з правильним сортуванням
-        cursor.execute("""
-            SELECT image_url 
-            FROM product_images 
-            WHERE product_article = %s 
-            ORDER BY is_main DESC, id ASC
-        """, (article,))
-        product_data['photo_urls'] = [row['image_url'] for row in cursor.fetchall()]
-
-        prices = []
-
-        if stock_data:
-            price_data = {
-                'table_name': 'stock',
-                'brand_name': stock_data['brand_name'],
-                'brand_id': stock_data['brand_id'],
-                'price': stock_data['price'],
-                'base_price': stock_data['price'],
-                'in_stock': True,
-                'delivery_time': _("In Stock")
+            # Initialize product_data with stock info
+            product_data = {
+                'name': article,
+                'description': '',
+                'photo_urls': [],
+                'brand_name': stock_data['brand_name'] if stock_data else None,
+                'brand_id': stock_data['brand_id'] if stock_data else None
             }
-            prices.append(price_data)
-            logging.info(f"Added stock price: {price_data}")
+            
+            # Отримуємо категорії товару
+            cursor.execute("""
+                SELECT c.*
+                FROM product_categories pc
+                JOIN categories c ON pc.category_id = c.id
+                WHERE pc.article = %s
+                ORDER BY c.parent_id NULLS FIRST, c.order_index
+            """, (article,))
+            product_categories = cursor.fetchall()
 
-        # Get prices from price_lists
-        cursor.execute("""
-            SELECT pl.table_name, pl.brand_id, pl.delivery_time, b.name as brand_name 
-            FROM price_lists pl
-            LEFT JOIN brands b ON pl.brand_id = b.id
-            WHERE pl.table_name != 'stock'
-        """)
-        tables = cursor.fetchall()
+            # Get product info with language-specific fields
+            cursor.execute(f"""
+                SELECT 
+                    article,
+                    name_{lang} as name,
+                    description_{lang} as description
+                FROM products
+                WHERE article = %s
+            """, (article,))
+            
+            db_product = cursor.fetchone()
+            if db_product:
+                product_data['name'] = db_product['name'] or article
+                product_data['description'] = db_product['description'] or ''
 
-        price_found = False
+            # Оновлений запит для отримання фотографій з правильним сортуванням
+            cursor.execute("""
+                SELECT image_url 
+                FROM product_images 
+                WHERE product_article = %s 
+                ORDER BY is_main DESC, id ASC
+            """, (article,))
+            product_data['photo_urls'] = [row['image_url'] for row in cursor.fetchall()]
 
-        for table in tables:
-            if table['table_name'] != 'stock':
-                table_name = table['table_name']
-                brand_id = table['brand_id']
-                brand_name = table['brand_name']
-                
-                cursor.execute(f"""
-                    SELECT EXISTS (
-                        SELECT FROM information_schema.tables 
-                        WHERE table_name = %s
-                    )
-                """, (table_name,))
-                
-                if cursor.fetchone()[0]:
-                    query = f"""
-                        SELECT article, price
-                        FROM {table_name}
-                        WHERE article = %s
-                    """
-                    cursor.execute(query, (article,))
-                    result = cursor.fetchone()
+            prices = []
+
+            if stock_data:
+                price_data = {
+                    'table_name': 'stock',
+                    'brand_name': stock_data['brand_name'],
+                    'brand_id': stock_data['brand_id'],
+                    'price': stock_data['price'],
+                    'base_price': stock_data['price'],
+                    'in_stock': True,
+                    'delivery_time': _("In Stock")
+                }
+                prices.append(price_data)
+                logging.info(f"Added stock price: {price_data}")
+
+            # Get prices from price_lists
+            cursor.execute("""
+                SELECT pl.table_name, pl.brand_id, pl.delivery_time, b.name as brand_name 
+                FROM price_lists pl
+                LEFT JOIN brands b ON pl.brand_id = b.id
+                WHERE pl.table_name != 'stock'
+            """)
+            tables = cursor.fetchall()
+
+            price_found = False
+
+            for table in tables:
+                if table['table_name'] != 'stock':
+                    table_name = table['table_name']
+                    brand_id = table['brand_id']
+                    brand_name = table['brand_name']
                     
-                    if result:
-                        price_found = True
-                        markup_percentage = get_markup_by_role('public')
-                        base_price = result['price']
-                        final_price = calculate_price(base_price, markup_percentage)
+                    cursor.execute(f"""
+                        SELECT EXISTS (
+                            SELECT FROM information_schema.tables 
+                            WHERE table_name = %s
+                        )
+                    """, (table_name,))
+                    
+                    if cursor.fetchone()[0]:
+                        query = f"""
+                            SELECT article, price
+                            FROM {table_name}
+                            WHERE article = %s
+                        """
+                        cursor.execute(query, (article,))
+                        result = cursor.fetchone()
+                        
+                        if result:
+                            price_found = True
+                            markup_percentage = get_markup_by_role('public')
+                            base_price = result['price']
+                            final_price = calculate_price(base_price, markup_percentage)
 
-                        price_data = {
-                            'table_name': table_name,
-                            'brand_name': brand_name,
-                            'brand_id': brand_id,
-                            'price': final_price,
-                            'base_price': base_price,
-                            'in_stock': table['delivery_time'] == '0',
-                            'delivery_time': (_("In Stock") if table['delivery_time'] == '0' 
-                                            else f"{table['delivery_time']} {_('days')}")
-                        }
-                        prices.append(price_data)
-                        logging.info(f"Added price from {table_name}: {price_data}")
+                            price_data = {
+                                'table_name': table_name,
+                                'brand_name': brand_name,
+                                'brand_id': brand_id,
+                                'price': final_price,
+                                'base_price': base_price,
+                                'in_stock': table['delivery_time'] == '0',
+                                'delivery_time': (_("In Stock") if table['delivery_time'] == '0' 
+                                                else f"{table['delivery_time']} {_('days')}")
+                            }
+                            prices.append(price_data)
+                            logging.info(f"Added price from {table_name}: {price_data}")
 
-        prices.sort(key=lambda x: float(x['price']))
-        logging.info(f"Final prices count: {len(prices)}")
+            prices.sort(key=lambda x: float(x['price']))
+            logging.info(f"Final prices count: {len(prices)}")
 
-        # Відобираємо найдешевшу ціну для товару
-        price = prices[0] if prices else None
-        
-        # ВИПРАВЛЕННЯ: використовуємо бренд найдешевшої ціни для відображення на сторінці
-        if price and 'brand_name' in price:
-            product_data['brand_name'] = price['brand_name']
+            # Відобираємо найдешевшу ціну для товару
+            price = prices[0] if prices else None
+            
+            # ВИПРАВЛЕННЯ: використовуємо бренд найдешевшої ціни для відображення на сторінці
+            if price and 'brand_name' in price:
+                product_data['brand_name'] = price['brand_name']
 
-        if not db_product and not stock_data and not price_found:
+            if not db_product and not stock_data and not price_found:
+                return render_template(
+                    'public/article_not_found.html',
+                    article=article
+                )
+
             return render_template(
-                'public/article_not_found.html',
-                article=article
+                'public/product_details.html',
+                product_data=product_data,
+                prices=prices,
+                price=price,
+                brand_name=product_data['brand_name'],
+                article=article,
+                product_categories=product_categories
             )
-
-        return render_template(
-            'public/product_details.html',
-            product_data=product_data,
-            prices=prices,
-            price=price,
-            brand_name=product_data['brand_name'],  # Передаємо правильну назву бренду
-            article=article,
-            product_categories=product_categories
-        )
 
     except Exception as e:
         logging.error(f"Error in product_details: {e}", exc_info=True)
         flash(_("An error occurred while processing your request."), "error")
         return redirect(url_for('index'))
-
-    finally:
-        if 'conn' in locals() and conn:
-            conn.close()
 
 
 
@@ -3903,121 +3901,49 @@ def get_all_price_list_tables():
 # Функція для підключення до бази даних
 # Оновлена функція отримання з'єднання з повторними спробами
 def get_db_connection():
-    max_retries = 3
-    
-    for attempt in range(max_retries):
-        try:
-            if db_pool:
-                # Спроба отримати з'єднання з пулу
-                conn = db_pool.getconn()
-                
-                # Встановлюємо таймаут через SQL (тільки для поточного сеансу)
-                try:
-                    with conn.cursor() as c:
-                        c.execute("SET LOCAL statement_timeout = '5000'")  # 5 секунд на запит
-                        conn.commit()
-                except Exception as e:
-                    logging.warning(f"Cannot set statement_timeout: {e}")
-                
-                return conn
-                
-        except psycopg2.pool.PoolError:
-            # При вичерпанні пулу спробуємо очистити невикористані з'єднання
-            logging.error(f"Connection pool exhausted (attempt {attempt+1})")
-            try:
-                if hasattr(db_pool, '_pool'):
-                    db_pool._pool.clear()
-                    logging.info("Pool connections cleared")
-            except Exception as clear_error:
-                logging.error(f"Error clearing pool: {clear_error}")
-                
-            if attempt == max_retries - 1:
-                # Остання спроба - пряме з'єднання
-                conn = psycopg2.connect(
-                    dsn=os.environ.get('DATABASE_URL'),
-                    sslmode="require",
-                    cursor_factory=psycopg2.extras.DictCursor
-                )
-                return conn
-                
-            time.sleep(0.5)  # Невелика затримка перед наступною спробою
+    """Створює пряме з'єднання з базою даних (без пулу)"""
+    try:
+        conn = psycopg2.connect(
+            dsn=os.environ.get('DATABASE_URL'),
+            sslmode="require",
+            cursor_factory=psycopg2.extras.DictCursor
+        )
+        
+        # Встановлюємо таймаут для запитів, щоб уникнути зависання
+        with conn.cursor() as cursor:
+            cursor.execute("SET statement_timeout = 10000")  # 10 секунд
+            conn.commit()
             
-        except Exception as e:
-            logging.error(f"Database connection error (attempt {attempt+1}/{max_retries}): {e}")
-            if attempt == max_retries - 1:
-                raise
-            time.sleep(0.5)
-    
-    # Якщо всі спроби невдалі і не було виключення
-    return psycopg2.connect(
-        dsn=os.environ.get('DATABASE_URL'),
-        sslmode="require",
-        cursor_factory=psycopg2.extras.DictCursor
-    )
-
+        return conn
+    except Exception as e:
+        logging.error(f"Error connecting to database: {e}")
+        raise
 
 # Додайте цю функцію для роботи з контекстним менеджером
+# Змініть клас DatabaseConnection
 class DatabaseConnection:
     def __enter__(self):
         self.conn = get_db_connection()
         return self.conn
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        try:
-            # Відкат транзакції у випадку помилки
-            if exc_type is not None and not self.conn.closed:
-                self.conn.rollback()
-                
-            # Закриття курсорів
-            if hasattr(self.conn, '_cursor_cache'):
-                for cursor in self.conn._cursor_cache:
-                    if not cursor.closed:
-                        cursor.close()
-                        
-            # Повернення з'єднання в пул
-            if 'db_pool' in globals() and db_pool and not self.conn.closed:
-                try:
-                    db_pool.putconn(self.conn)
-                except Exception as e:
-                    logging.warning(f"Error returning connection to pool: {e}")
-                    try:
-                        self.conn.close()
-                    except:
-                        pass
-            else:
-                try:
-                    if not self.conn.closed:
-                        self.conn.close()
-                except:
-                    pass
-        except Exception as e:
-            logging.error(f"Error in connection cleanup: {e}")
+        if hasattr(self, 'conn') and self.conn:
+            try:
+                if not self.conn.closed:
+                    self.conn.close()
+            except:
+                pass  # Ігноруємо помилки при закритті
 
-# І використовуйте так у модулях:
-with DatabaseConnection() as conn:
-    cursor = conn.cursor()
-    # ваші SQL запити...
+
 
 # Функція для повернення з'єднання в пул
 def release_db_connection(conn):
-    """Повертає з'єднання в пул з обробкою помилок"""
+    """Закриває з'єднання з базою даних"""
     try:
         if conn and hasattr(conn, 'closed') and not conn.closed:
-            if 'db_pool' in globals() and db_pool:
-                try:
-                    db_pool.putconn(conn)
-                except:
-                    try:
-                        conn.close()
-                    except:
-                        pass
-            else:
-                try:
-                    conn.close()
-                except:
-                    pass
+            conn.close()
     except Exception as e:
-        logging.error(f"Error returning connection to pool: {e}")
+        logging.error(f"Error closing connection: {e}")
 
 #  отримання даних з selection_buffer 
 def get_selection_buffer(user_id):

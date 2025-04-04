@@ -55,8 +55,10 @@ app.config['BABEL_SUPPORTED_LOCALES'] = ['sk', 'en', 'pl']
 # Initialize extensions
 # csrf = CSRFProtect(app)
 babel = Babel(app)
-cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
-
+cache = Cache(app, config={
+    'CACHE_TYPE': 'SimpleCache',  # Кеш в пам'яті
+    'CACHE_DEFAULT_TIMEOUT': 600
+})
 
 # Створення пулу з'єднань (додайте після всіх імпортів)
 try:
@@ -680,6 +682,11 @@ def add_noindex_headers_for_token_pages(response):
         response.headers['X-Robots-Tag'] = 'noindex, nofollow'
     return response
 
+@app.after_request
+def add_cache_headers(response):
+    if request.path.startswith('/product/') and not request.args.get('refresh'):
+        response.headers['Cache-Control'] = 'public, max-age=3600'  # 1 година
+    return response
 
 @app.route('/robots.txt')
 def robots():
@@ -2923,6 +2930,7 @@ def debug_cart():
 
 # Маршрут з префіксом мови
 @app.route('/<lang>/product/<article>')
+@cache.cached(timeout=1800, query_string=True)  # 30 хвилин
 def localized_product_details(lang, article):
     """Перенаправляє з мовного префіксу на параметр запиту"""
     if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
@@ -2958,6 +2966,7 @@ def add_x_robots_tag(response):
     return response
 
 @app.route('/product/<article>')
+@cache.cached(timeout=3600, query_string=True)  # 1 година
 def product_details(article):
     try:
         # Отримуємо поточну мову
@@ -5948,6 +5957,7 @@ def get_category_breadcrumbs(category_id, cursor):
 
 
 @app.route('/category/<slug>')
+@cache.cached(timeout=1800, query_string=True)  # 30 хвилин
 def view_category(slug):
     try:
         # Отримуємо поточну мову

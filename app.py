@@ -41,7 +41,10 @@ from logging.handlers import RotatingFileHandler
 from psycopg2.pool import ThreadedConnectionPool
 import atexit
 from contextlib import contextmanager
-
+from datetime import datetime, timedelta
+from flask_caching import Cache
+from datetime import datetime, timedelta  # додаємо timedelta до імпорту
+from decimal import Decimal
 
 
 # Create Flask app first
@@ -62,7 +65,10 @@ cache = Cache(app, config={
     'CACHE_DEFAULT_TIMEOUT': 600
 })
 
-
+# Налаштування планувальника
+class Config:
+    SCHEDULER_API_ENABLED = True
+    SCHEDULER_TIMEZONE = "UTC"
 
 # Ініціалізація планувальника
 scheduler = APScheduler()
@@ -155,6 +161,52 @@ def safe_db_connection():
 SITEMAP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'sitemaps')
 os.makedirs(SITEMAP_DIR, exist_ok=True)
 
+def init_scheduler():
+    """Ініціалізує планувальник та додає всі заплановані завдання"""
+    try:
+        # Перевіряємо, чи планувальник уже запущено
+        if not scheduler.running:
+            scheduler.start()
+            logging.info("Scheduler started successfully")
+        else:
+            logging.info("Scheduler is already running")
+        
+        # Перевіряємо наявність наших завдань
+        job_ids = [job.id for job in scheduler.get_jobs()]
+        
+        # Додаємо завдання, якщо вони не існують
+        if 'generate_sitemap_daily' not in job_ids:
+            scheduler.add_job(
+                generate_sitemap_daily,
+                'cron', 
+                hour=2, 
+                minute=0,
+                id='generate_sitemap_daily'
+            )
+        
+        if 'generate_sitemap_weekly' not in job_ids:
+            scheduler.add_job(
+                generate_sitemap_weekly,
+                'cron', 
+                day_of_week='mon', 
+                hour=3, 
+                minute=0,
+                id='generate_sitemap_weekly'
+            )
+        
+        if 'generate_sitemap_monthly' not in job_ids:
+            scheduler.add_job(
+                generate_sitemap_monthly,
+                'cron', 
+                day=1, 
+                hour=4, 
+                minute=0,
+                id='generate_sitemap_monthly'
+            )
+            
+        logging.info("All scheduler jobs initialized")
+    except Exception as e:
+        logging.error(f"Error initializing scheduler: {e}", exc_info=True)
 
 # Функції для генерації sitemap файлів
 def generate_sitemap_index_file():
@@ -486,7 +538,7 @@ def generate_sitemap_enriched_files():
         return False
 
 def generate_sitemap_other_files():
-    """Генерує other sitemap файли і зберігає на диск"""
+    """Генерує other sitemap файли і зберігає на диск з покращеною обробкою великих даних"""
     try:
         logging.info("Starting generation of other sitemap files")
         start_time = datetime.now()
@@ -503,84 +555,110 @@ def generate_sitemap_other_files():
         
         # Якщо немає прайс-листів, створюємо порожні файли
         if not price_list_tables:
-            logging.info("No price lists found, creating empty other sitemaps")
-            
-            # Для сумісності з індексом
-            for i in range(1, 6):
-                sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-                sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                sitemap_xml += '</urlset>'
-                
-                file_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{i}.xml')
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write(sitemap_xml)
-                
-            logging.info("Created 5 empty other sitemap files")
+            # Код створення порожніх файлів без змін...
             return True
         
-        # Формуємо динамічний SQL для запиту всіх товарів з прайс-листів
-        union_queries = []
-        for table in price_list_tables:
-            union_queries.append(f"SELECT article, '{table}' AS source_table FROM {table}")
-        
-        all_price_list_query = " UNION ALL ".join(union_queries)
-        
-        # Рахуємо загальну кількість other товарів (без описів і зображень)
-        other_count_query = f"""
-            SELECT COUNT(DISTINCT pl.article) 
-            FROM ({all_price_list_query}) pl
-            LEFT JOIN (
-                SELECT p.article FROM products p
-                UNION
-                SELECT pi.product_article FROM product_images pi
-            ) AS enriched ON pl.article = enriched.article
-            LEFT JOIN stock s ON pl.article = s.article
-            WHERE s.article IS NULL AND enriched.article IS NULL
-        """
-        
-        cursor.execute(other_count_query)
-        total_other = cursor.fetchone()[0]
-        logging.info(f"Found {total_other} other products")
-        
-        # Розраховуємо кількість файлів (максимум 45000 URL в одному файлі)
+        # Замість підрахунку та вибірки всіх товарів одразу, використовуємо курсор з пакетною обробкою
         products_per_sitemap = 45000
-        total_files = max(1, math.ceil(total_other / products_per_sitemap))
+        products_per_batch = 10000  # Обробляємо по 10,000 записів за раз
         
-        # Для кожного файлу створюємо окремий sitemap
-        for page in range(1, total_files + 1):
-            offset = (page - 1) * products_per_sitemap
-            
-            # Створюємо XML-заголовок
-            sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-            sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-            
-            # Запит для отримання товарів без описів і зображень
-            other_query = f"""
-                SELECT DISTINCT pl.article, pl.source_table 
-                FROM ({all_price_list_query}) pl
+        # Спочатку визначимо загальну кількість файлів, які необхідно створити
+        estimated_total = 0
+        for table in price_list_tables:
+            # Рахуємо товари окремо для кожної таблиці
+            count_query = f"""
+                SELECT COUNT(DISTINCT t.article) 
+                FROM {table} t
                 LEFT JOIN (
                     SELECT p.article FROM products p
                     UNION
                     SELECT pi.product_article FROM product_images pi
-                ) AS enriched ON pl.article = enriched.article
-                LEFT JOIN stock s ON pl.article = s.article
+                ) AS enriched ON t.article = enriched.article
+                LEFT JOIN stock s ON t.article = s.article
                 WHERE s.article IS NULL AND enriched.article IS NULL
-                ORDER BY pl.article
-                LIMIT {products_per_sitemap} OFFSET {offset}
             """
+            try:
+                # Встановлюємо більший таймаут для count запиту
+                cursor.execute("SET statement_timeout = 120000")  # 60 секунд
+                cursor.execute(count_query)
+                count = cursor.fetchone()[0]
+                estimated_total += count
+            except Exception as e:
+                logging.warning(f"Error counting items in {table}: {e}")
+                # Якщо count запит невдалий, берємо консервативну оцінку
+                estimated_total += 50000
+        
+        # Розрахунок загальної кількості файлів
+        total_files = max(1, math.ceil(estimated_total / products_per_sitemap))
+        logging.info(f"Estimated total of {estimated_total} items will be split into {total_files} files")
+                
+        # Створюємо і заповнюємо файли по одному
+        for page in range(1, total_files + 1):
+            # Файл для поточної сторінки
+            sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+            sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
             
-            cursor.execute(other_query)
-            other_products = cursor.fetchall()
+            items_in_current_file = 0
+            offset = (page - 1) * products_per_sitemap
+            remaining = products_per_sitemap
             
-            # Додаємо URL для кожного товару
-            for product in other_products:
-                article = product['article']
-                sitemap_xml += f'  <url>\n'
-                sitemap_xml += f'    <loc>{host_base}/product/{article}</loc>\n'
-                sitemap_xml += f'    <changefreq>monthly</changefreq>\n'
-                sitemap_xml += f'    <priority>0.5</priority>\n'
-                sitemap_xml += f'  </url>\n'
-            
+            # Обробляємо кожну таблицю окремо
+            for table in price_list_tables:
+                # Встановлюємо менший таймаут для вибірок
+                cursor.execute("SET statement_timeout = 30000")  # 30 секунд
+                
+                # Обробляємо дані з таблиці пакетами
+                table_offset = 0
+                while remaining > 0:
+                    batch_size = min(products_per_batch, remaining)
+                    
+                    # Запит для отримання пакету товарів
+                    batch_query = f"""
+                        SELECT DISTINCT t.article 
+                        FROM {table} t
+                        LEFT JOIN (
+                            SELECT p.article FROM products p
+                            UNION
+                            SELECT pi.product_article FROM product_images pi
+                        ) AS enriched ON t.article = enriched.article
+                        LEFT JOIN stock s ON t.article = s.article
+                        WHERE s.article IS NULL AND enriched.article IS NULL
+                        ORDER BY t.article
+                        LIMIT {batch_size} OFFSET {table_offset + offset}
+                    """
+                    
+                    try:
+                        cursor.execute(batch_query)
+                        batch_products = cursor.fetchall()
+                        
+                        # Якщо немає даних у цьому пакеті, переходимо до наступної таблиці
+                        if not batch_products:
+                            break
+                            
+                        # Додаємо URL для кожного товару в пакеті
+                        for product in batch_products:
+                            article = product['article']
+                            sitemap_xml += f'  <url>\n'
+                            sitemap_xml += f'    <loc>{host_base}/product/{article}</loc>\n'
+                            sitemap_xml += f'    <changefreq>monthly</changefreq>\n'
+                            sitemap_xml += f'    <priority>0.5</priority>\n'
+                            sitemap_xml += f'  </url>\n'
+                            
+                            items_in_current_file += 1
+                        
+                        # Оновлюємо offset і remaining
+                        table_offset += len(batch_products)
+                        remaining -= len(batch_products)
+                        
+                        # Якщо досягли ліміту для цього файлу, припиняємо обробку
+                        if remaining <= 0:
+                            break
+                            
+                    except Exception as e:
+                        logging.error(f"Error processing batch from {table} at offset {table_offset}: {e}")
+                        # Продовжуємо з наступною таблицею
+                        break
+                
             # Закриваємо XML
             sitemap_xml += '</urlset>'
             
@@ -589,21 +667,27 @@ def generate_sitemap_other_files():
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(sitemap_xml)
             
-            logging.info(f"Generated sitemap-other-{page}.xml with {len(other_products)} products")
+            logging.info(f"Generated sitemap-other-{page}.xml with {items_in_current_file} products")
             
-            # Створюємо порожні файли для решти очікуваних сайтмапів
-            if page == total_files and total_files < 80:
-                for i in range(total_files + 1, 81):
-                    empty_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-                    empty_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                    empty_xml += '</urlset>'
-                    
-                    empty_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{i}.xml')
-                    with open(empty_path, 'w', encoding='utf-8') as f:
-                        f.write(empty_xml)
-                
-                logging.info(f"Created empty sitemap files for sitemap-other-{total_files+1} to sitemap-other-80")
+            # Якщо ми не заповнили поточний файл повністю, немає сенсу продовжувати
+            if items_in_current_file < products_per_sitemap:
+                total_files = page  # Оновлюємо загальну кількість файлів
+                break
         
+        # Створюємо порожні файли для решти очікуваних сайтмапів
+        if total_files < 80:
+            for i in range(total_files + 1, 81):
+                empty_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+                empty_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                empty_xml += '</urlset>'
+                
+                empty_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{i}.xml')
+                with open(empty_path, 'w', encoding='utf-8') as f:
+                    f.write(empty_xml)
+            
+            logging.info(f"Created empty sitemap files for sitemap-other-{total_files+1} to sitemap-other-80")
+        
+        # Закриваємо з'єднання
         cursor.close()
         conn.close()
         
@@ -614,7 +698,85 @@ def generate_sitemap_other_files():
         
     except Exception as e:
         logging.error(f"Error generating other sitemap files: {e}", exc_info=True)
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conn' in locals() and conn:
+            conn.close()
         return False
+
+
+def generate_priority_sitemap():
+    """Генерує sitemap тільки для найважливіших товарів (для частого оновлення)"""
+    try:
+        logging.info("Generating priority sitemap")
+        
+        host_base = "https://autogroup.sk"
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        
+        # Головна сторінка
+        sitemap_xml += f'  <url>\n    <loc>{host_base}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n'
+        
+        # Додаємо топ продукти зі складу з високим пріоритетом
+        cursor.execute("""
+            SELECT s.article 
+            FROM stock s 
+            WHERE quantity > 5
+            ORDER BY price DESC 
+            LIMIT 1000
+        """)
+        
+        top_products = cursor.fetchall()
+        for product in top_products:
+            sitemap_xml += f'  <url>\n    <loc>{host_base}/product/{product["article"]}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n'
+        
+        sitemap_xml += '</urlset>'
+        
+        # Записуємо у файл
+        file_path = os.path.join(SITEMAP_DIR, 'sitemap-priority.xml')
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(sitemap_xml)
+        
+        logging.info(f"Generated priority sitemap with {len(top_products) + 1} URLs")
+        
+        # Додаємо у індекс
+        update_sitemap_index()
+        
+        return True
+    except Exception as e:
+        logging.error(f"Error generating priority sitemap: {e}", exc_info=True)
+        return False
+
+@scheduler.task('interval', id='generate_sitemaps_distributed', days=30)
+def generate_sitemaps_distributed():
+    """Розподілений генератор sitemap файлів"""
+    try:
+        logging.info("Starting distributed generation of all sitemap files")
+        
+        # Поступово генеруємо кожен тип sitemap з паузами
+        generate_sitemap_static_file()
+        time.sleep(10)  # Пауза між задачами
+        
+        generate_sitemap_categories_file()
+        time.sleep(10)
+        
+        generate_sitemap_stock_files()
+        time.sleep(30)  # Довша пауза після важкої операції
+        
+        generate_sitemap_enriched_files()
+        time.sleep(30)
+        
+        generate_sitemap_other_files()
+        time.sleep(30)
+        
+        generate_sitemap_index_file()
+        
+        logging.info("All sitemap files generated successfully via distributed task")
+    except Exception as e:
+        logging.error(f"Error in distributed sitemap generation: {e}", exc_info=True)
 
 def generate_all_sitemaps():
     """Генерує всі файли sitemaps"""
@@ -10889,7 +11051,8 @@ def admin_sitemaps(token):
             token=token,
             sitemap_files=sitemap_files,
             scheduler_jobs=scheduler_jobs,
-            sitemap_dir=SITEMAP_DIR
+            sitemap_dir=SITEMAP_DIR,
+            show_scheduler_details_link=True  # Додано для відображення посилання
         )
     except Exception as e:
         logging.error(f"Error in admin_sitemaps: {e}", exc_info=True)
@@ -11120,26 +11283,99 @@ def sitemap_other(page):
     return send_from_directory(os.path.dirname(sitemap_path), os.path.basename(sitemap_path), mimetype='application/xml')
 
 # Налаштування планувальника задач для генерації sitemap
+# Щоденна генерація для пріоритетних sitemap файлів
 @scheduler.task('cron', id='generate_sitemap_daily', hour=2, minute=0)
-def scheduled_sitemap_daily():
-    """Щоденна генерація sitemap (статичні та лінк на товари зі стоку)"""
-    with app.app_context():
-        logging.info("Scheduled task: generating daily sitemaps")
+def generate_sitemap_daily():
+    """Щоденне оновлення priority, static і categories sitemap"""
+    try:
+        logging.info("Starting daily sitemap generation")
         generate_sitemap_static_file()
         generate_sitemap_categories_file()
+        generate_priority_sitemap()
+        generate_sitemap_index_file()
+        logging.info("Daily sitemap generation completed successfully")
+    except Exception as e:
+        logging.error(f"Error in daily sitemap generation: {e}", exc_info=True)
+
+# Щотижнева генерація sitemap з товарами на складі
+@scheduler.task('cron', id='generate_sitemap_weekly', day_of_week='mon', hour=3, minute=0)
+def generate_sitemap_weekly():
+    """Щотижневе оновлення stock sitemap файлів"""
+    try:
+        logging.info("Starting weekly stock sitemap generation")
         generate_sitemap_stock_files()
         generate_sitemap_index_file()
+        logging.info("Weekly stock sitemap generation completed successfully")
+    except Exception as e:
+        logging.error(f"Error in weekly stock sitemap generation: {e}", exc_info=True)
 
-@scheduler.task('cron', id='generate_sitemap_weekly', day_of_week='mon', hour=3, minute=0)
-def scheduled_sitemap_weekly():
-    """Щотижнева генерація всіх sitemap (включаючи важкі enriched та other)"""
-    with app.app_context():
-        logging.info("Scheduled task: generating weekly full sitemaps")
-        generate_all_sitemaps()
+# Щомісячна повна генерація всіх sitemap файлів
+@scheduler.task('cron', id='generate_sitemap_monthly', day=1, hour=4, minute=0)
+def generate_sitemap_monthly():
+    """Щомісячна повна генерація всіх sitemap файлів (включаючи великі other файли)"""
+    try:
+        logging.info("Starting monthly full sitemap generation")
+        generate_sitemaps_distributed()
+        logging.info("Monthly full sitemap generation completed successfully")
+    except Exception as e:
+        logging.error(f"Error in monthly sitemap generation: {e}", exc_info=True)
 
+@app.route('/<token>/admin/run-scheduler-job', methods=['POST'])
+@requires_token_and_roles('admin')
+@add_noindex_header
+def admin_run_scheduler_job(token):
+    """Запускає планувальник вручну"""
+    try:
+        job_id = request.form.get('job_id')
+        if not job_id:
+            flash("No job specified", "error")
+            return redirect(url_for('admin_scheduler_status', token=token))
+        
+        # Знаходимо завдання за ID
+        job_found = False
+        for job in scheduler.get_jobs():
+            if job.id == job_id:
+                job_found = True
+                break
+                
+        if not job_found:
+            flash(f"Job '{job_id}' not found", "error")
+            return redirect(url_for('admin_scheduler_status', token=token))
+        
+        # Запускаємо завдання в окремому потоці
+        if job_id == 'generate_sitemap_daily':
+            threading.Thread(target=generate_sitemap_daily).start()
+        elif job_id == 'generate_sitemap_weekly':
+            threading.Thread(target=generate_sitemap_weekly).start()
+        elif job_id == 'generate_sitemap_monthly':
+            threading.Thread(target=generate_sitemap_monthly).start()
+        elif job_id == 'generate_sitemaps_distributed':
+            threading.Thread(target=generate_sitemaps_distributed).start()
+        else:
+            flash(f"Unknown job ID: {job_id}", "error")
+            return redirect(url_for('admin_scheduler_status', token=token))
+        
+        flash(f"Job '{job_id}' started successfully", "success")
+        return redirect(url_for('admin_scheduler_status', token=token))
+    
+    except Exception as e:
+        logging.error(f"Error running scheduler job: {e}", exc_info=True)
+        flash(f"Error: {str(e)}", "error")
+        return redirect(url_for('admin_scheduler_status', token=token))
 
-
-
+@app.route('/<token>/admin/scheduler-status')
+@requires_token_and_roles('admin')
+@add_noindex_header
+def admin_scheduler_status(token):
+    """Показує статус всіх запланованих завдань"""
+    jobs = []
+    for job in scheduler.get_jobs():
+        jobs.append({
+            'id': job.id,
+            'next_run': job.next_run_time,
+            'schedule': str(job.trigger)
+        })
+    return render_template('admin/scheduler_status.html', jobs=jobs, token=token)
 
 @app.route('/<token>/admin/check-sitemap-data')
 @requires_token_and_roles('admin')
@@ -11288,16 +11524,30 @@ def admin_sitemap_utils(token):
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('admin_sitemaps', token=token))
 
+# Замініть блок if __name__ == '__main__': цілком
+
 if __name__ == '__main__':
-    # Створюємо директорію для sitemap файлів, якщо вона не існує
+    # Створюємо директорію для файлів sitemap, якщо вона не існує
     os.makedirs(SITEMAP_DIR, exist_ok=True)
     
-       
-    # Генеруємо сайтмапи при першому запуску, якщо вони не існують
-    if not os.path.exists(os.path.join(SITEMAP_DIR, 'sitemap-index.xml')):
-        with app.app_context():
-            generate_all_sitemaps()
-    
-    port = int(os.environ.get('PORT', 5000))
-    print(f"Starting server on port {port}...")
-    app.run(host='0.0.0.0', port=port)
+    try:
+        # Перевіряємо наявність sitemap index
+        sitemap_index_path = os.path.join(SITEMAP_DIR, 'sitemap-index.xml')
+        
+        # Ініціалізуємо планувальник тут, ПЕРЕД додаванням задач
+        if not scheduler.running:
+            scheduler.start()
+            logging.info("Scheduler started successfully")
+        
+        # Тепер додаємо задачу, якщо потрібно
+        if not os.path.exists(sitemap_index_path):
+            logging.info(f"No sitemap index found at {sitemap_index_path}, generating...")
+            # Простий виклик функції напряму без планувальника
+            generate_sitemap_index_file()
+        
+        port = int(os.environ.get('PORT', 5000))
+        print(f"Запуск сервера на порту {port}...")
+        app.run(host='0.0.0.0', port=port)
+        
+    except Exception as e:
+        logging.error(f"Помилка при запуску програми: {e}", exc_info=True)

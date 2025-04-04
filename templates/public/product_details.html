@@ -25,12 +25,27 @@
     "name": "{{ brand_name if brand_name else 'AutogroupEU' }}"
   },
   "offers": {
-    "@type": "AggregateOffer",
+    "@type": "Offer",
     "priceCurrency": "EUR",
-    "lowPrice": "{{ prices[0].price if prices }}",
-    "highPrice": "{{ prices[-1].price if prices }}",
-    "offerCount": "{{ prices|length }}",
-    "availability": "https://schema.org/{% if prices[0].in_stock %}InStock{% else %}PreOrder{% endif %}"
+    "lowPrice": "{{ prices[0].price if prices else '0' }}",
+    "highPrice": "{{ prices[-1].price if prices else '0' }}",
+    "offerCount": "{{ prices|length if prices else '0' }}",
+    "availability": "https://schema.org/{% if prices and prices[0].in_stock %}InStock{% else %}OutOfStock{% endif %}",
+    "url": "{{ request.url }}",
+    "seller": {
+      "@type": "Organization",
+      "name": "AutoGroup"
+    },
+    "offers": [
+      {% for price in prices %}
+      {
+        "@type": "Offer",
+        "price": "{{ price.price }}",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/{% if price.in_stock %}InStock{% else %}PreOrder{% endif %}"
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
   }
 }
 </script>

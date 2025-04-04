@@ -3840,24 +3840,40 @@ def get_db_connection():
             if db_pool:
                 # Спроба отримати з'єднання з пулу
                 conn = db_pool.getconn()
-                conn.set_session(statement_timeout=5000)  # 5 сек таймаут
+                
+                # Встановлення таймауту через звичайний SQL
+                with conn.cursor() as c:
+                    c.execute("SET statement_timeout = 5000;")
+                    conn.commit()
+                
                 return conn
         except psycopg2.pool.PoolError:
             # При вичерпанні пулу - створюємо нове пряме з'єднання
             logging.error(f"Connection pool exhausted (attempt {attempt+1})")
             if attempt == max_retries - 1:
                 # Остання спроба - пряме з'єднання
-                return psycopg2.connect(
+                conn = psycopg2.connect(
                     dsn=os.environ.get('DATABASE_URL'),
                     sslmode="require",
                     cursor_factory=psycopg2.extras.DictCursor
                 )
+                with conn.cursor() as c:
+                    c.execute("SET statement_timeout = 5000;")
+                    conn.commit()
+                return conn
             time.sleep(0.5)  # Невелика затримка перед наступною спробою
         except Exception as e:
             logging.error(f"Database connection error (attempt {attempt+1}/{max_retries}): {e}")
             if attempt == max_retries - 1:
                 raise
             time.sleep(0.5)
+    
+    # Якщо всі спроби невдалі і не було виключення
+    return psycopg2.connect(
+        dsn=os.environ.get('DATABASE_URL'),
+        sslmode="require",
+        cursor_factory=psycopg2.extras.DictCursor
+    )
 
 
 # Додайте цю функцію для роботи з контекстним менеджером

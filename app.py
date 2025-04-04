@@ -61,8 +61,8 @@ cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT':
 # Створення пулу з'єднань (додайте після всіх імпортів)
 try:
     db_pool = ThreadedConnectionPool(
-        minconn=1,
-        maxconn=10,
+        minconn=5,
+        maxconn=30,
         dsn=os.environ.get('DATABASE_URL'),
         sslmode="require"
     )
@@ -684,14 +684,18 @@ def add_noindex_headers_for_token_pages(response):
 @app.route('/robots.txt')
 def robots():
     robots_content = """# Global rules
-User-agent: Googlebot
-Crawl-delay: 10
-
 User-agent: *
+Crawl-delay: 20  # Суттєво обмежуємо частоту сканування
+
+# Блокуємо тимчасово всі мовні префікси
+Disallow: /sk/product/
+Disallow: /pl/product/ 
+Disallow: /en/product/
+Disallow: /uk/product/
+
+# Дозволяємо основний формат URL
 Allow: /product/
 Allow: /
-Disallow: /admin/
-Disallow: /*token*/
 
 Sitemap: https://autogroup.sk/sitemap-index.xml
 """
@@ -3312,6 +3316,7 @@ def generate_feed_item(item, lang, settings):
 
 # Google feed
 @app.route('/google-merchant-feed-legacy/<language>.xml') 
+@cache.cached(timeout=3600)
 def language_merchant_feed(language): 
     """Generate Google Merchant feed for specific language"""
     try:
@@ -3829,30 +3834,52 @@ def get_all_price_list_tables():
 # Оновлена функція отримання з'єднання з повторними спробами
 def get_db_connection():
     max_retries = 3
-    retry_delay = 0.5  # секунди
     
     for attempt in range(max_retries):
         try:
-            if 'db_pool' in globals() and db_pool:
+            if db_pool:
+                # Спроба отримати з'єднання з пулу
                 conn = db_pool.getconn()
-
-                conn.set_session(statement_timeout=3000)
-
-                if hasattr(conn, 'cursor_factory'):
-                    conn.cursor_factory = psycopg2.extras.DictCursor
+                conn.set_session(statement_timeout=5000)  # 5 сек таймаут
                 return conn
-            else:
-                # Резервний варіант - пряме з'єднання
+        except psycopg2.pool.PoolError:
+            # При вичерпанні пулу - створюємо нове пряме з'єднання
+            logging.error(f"Connection pool exhausted (attempt {attempt+1})")
+            if attempt == max_retries - 1:
+                # Остання спроба - пряме з'єднання
                 return psycopg2.connect(
                     dsn=os.environ.get('DATABASE_URL'),
                     sslmode="require",
                     cursor_factory=psycopg2.extras.DictCursor
                 )
+            time.sleep(0.5)  # Невелика затримка перед наступною спробою
         except Exception as e:
             logging.error(f"Database connection error (attempt {attempt+1}/{max_retries}): {e}")
             if attempt == max_retries - 1:
                 raise
-            time.sleep(retry_delay)
+            time.sleep(0.5)
+
+
+# Додайте цю функцію для роботи з контекстним менеджером
+class DatabaseConnection:
+    def __enter__(self):
+        self.conn = get_db_connection()
+        return self.conn
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if hasattr(self, 'conn'):
+            if 'db_pool' in globals() and db_pool:
+                try:
+                    db_pool.putconn(self.conn)
+                except:
+                    self.conn.close()
+            else:
+                self.conn.close()
+
+# І використовуйте так у модулях:
+with DatabaseConnection() as conn:
+    cursor = conn.cursor()
+    # ваші SQL запити...
 
 # Функція для повернення з'єднання в пул
 def release_db_connection(conn):

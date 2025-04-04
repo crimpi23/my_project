@@ -40,6 +40,10 @@ from functools import wraps
 from logging.handlers import RotatingFileHandler
 from psycopg2.pool import ThreadedConnectionPool
 import atexit
+from flask_caching import Cache
+
+
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
 
 
 # Створення пулу з'єднань (додайте після всіх імпортів)
@@ -675,6 +679,7 @@ def add_noindex_headers_for_token_pages(response):
 def robots():
     robots_content = """# Global rules
 User-agent: Googlebot
+Crawl-delay: 5
 User-agent: Googlebot-Image
 User-agent: Googlebot-Mobile
 Disallow:
@@ -2920,18 +2925,12 @@ def debug_cart():
 @app.route('/<lang>/product/<article>')
 def localized_product_details(lang, article):
     """
-    Оптимізована функція для обробки URL з мовними префіксами
-    з кешуванням базових даних
+    Перенаправлення зі старого формату URL на новий з параметрами запиту
     """
-    # Перевіряємо, чи підтримується мова
     if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
         return redirect(url_for('product_details', article=article))
     
-    # Встановлюємо мову для поточного запиту
-    session['language'] = lang
-    g.locale = lang
-    
-    # 301 редірект на URL з параметром мови для уникнення проблем індексації
+    # 301 редірект на URL з параметром мови
     return redirect(url_for('product_details', article=article, lang_code=lang), code=301)
 
 
@@ -2961,6 +2960,7 @@ def add_x_robots_tag(response):
     return response
 
 @app.route('/product/<article>')
+@cache.cached(timeout=300, query_string=True)  # Кешування на 5 хвилин з урахуванням параметрів запиту
 def product_details(article):
     try:
         # Отримуємо поточну мову
@@ -3269,7 +3269,7 @@ def generate_feed_item(item, lang, settings):
             feed_item.append(f"<description>{html.escape(item['name'] or item['article'])}</description>")
         
         # Додаємо посилання на товар
-        product_url = f"{settings['domain_url']}/product/{item['article']}"
+        product_url = f"{settings['domain_url']}/product/{item['article']}?lang_code={lang}"
         feed_item.append(f"<link>{product_url}</link>")
         
         # Додаємо зображення
@@ -3841,6 +3841,9 @@ def get_db_connection():
         try:
             if 'db_pool' in globals() and db_pool:
                 conn = db_pool.getconn()
+
+                conn.set_session(statement_timeout=3000)
+
                 if hasattr(conn, 'cursor_factory'):
                     conn.cursor_factory = psycopg2.extras.DictCursor
                 return conn

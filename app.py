@@ -40,6 +40,8 @@ from functools import wraps
 from logging.handlers import RotatingFileHandler
 from psycopg2.pool import ThreadedConnectionPool
 import atexit
+from contextlib import contextmanager
+
 
 
 # Create Flask app first
@@ -60,13 +62,24 @@ cache = Cache(app, config={
     'CACHE_DEFAULT_TIMEOUT': 600
 })
 
+
+
+# Ініціалізація планувальника
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start()
+
+
+
 # Створення пулу з'єднань (додайте після всіх імпортів)
 try:
     db_pool = ThreadedConnectionPool(
-        minconn=5,
-        maxconn=30,
+        minconn=1,       # Зменшуємо мінімум до 3 (було 5)
+        maxconn=15,      # Зменшуємо максимум до 25 (було 30)
         dsn=os.environ.get('DATABASE_URL'),
-        sslmode="require"
+        sslmode="require",
+        connect_timeout=5,  # 5 секунд на з'єднання
+        options="-c statement_timeout=5000"  # Глобальний таймаут 5 секунд
     )
     logging.info("Database connection pool initialized successfully")
 except Exception as e:
@@ -96,18 +109,52 @@ logging.info(f"Sitemap directory set to: {SITEMAP_DIR}")
 
 
 
+@scheduler.task('interval', id='monitor_db_connections', minutes=2)
+def monitor_db_connections():
+    """Моніторинг та очистка простоюючих з'єднань"""
+    try:
+        if 'db_pool' in globals() and db_pool:
+            if hasattr(db_pool, '_pool'):
+                active_count = len(db_pool._pool)
+                logging.info(f"Active DB connections: {active_count}")
+                
+                # Якщо відкрито більше 10 з'єднань, спробуємо очистити
+                if active_count > 10:
+                    db_pool._pool.clear()
+                    logging.info("Pool connections cleared due to high count")
+    except Exception as e:
+        logging.error(f"Error monitoring connections: {e}")
 
 
-
-
+@contextmanager
+def safe_db_connection():
+    """Безпечний контекстний менеджер для роботи з БД"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        yield conn
+    finally:
+        if conn:
+            try:
+                if not conn.closed:
+                    if 'db_pool' in globals() and db_pool:
+                        try:
+                            db_pool.putconn(conn)
+                        except Exception as e:
+                            logging.warning(f"Error returning connection to pool: {e}")
+                            try:
+                                conn.close()
+                            except:
+                                pass
+                    else:
+                        conn.close()
+            except Exception as e:
+                logging.error(f"Error closing connection: {e}")
 
 # Створюємо директорію для зберігання sitemap файлів
 SITEMAP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'sitemaps')
 os.makedirs(SITEMAP_DIR, exist_ok=True)
 
-# Ініціалізація планувальника
-scheduler = APScheduler()
-scheduler.init_app(app)
 
 # Функції для генерації sitemap файлів
 def generate_sitemap_index_file():
@@ -600,6 +647,20 @@ def generate_all_sitemaps():
         return False
 
 
+
+# Додавання дампера для закриття невикористаних з'єднань
+@scheduler.task('interval', id='check_pool_connections', minutes=5)
+def check_pool_connections():
+    """Періодична перевірка та закриття незайнятих з'єднань"""
+    try:
+        if 'db_pool' in globals() and db_pool:
+            # Закриття всіх незайнятих з'єднань
+            db_pool._pool.clear()
+            logging.info("Cleared idle connections from pool")
+    except Exception as e:
+        logging.error(f"Error cleaning connection pool: {e}")
+
+
 def get_base_url():
     """Get the base URL for the current request"""
     host = request.host_url.rstrip('/')
@@ -688,49 +749,47 @@ def add_cache_headers(response):
         response.headers['Cache-Control'] = 'public, max-age=3600'  # 1 година
     return response
 
+@app.after_request
+def add_more_cache_headers(response):
+    if (request.path.startswith('/product/') or 
+        request.path.startswith('/category/')) and not request.args.get('refresh'):
+        response.headers['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=600'
+    return response
+
+
 @app.route('/robots.txt')
 def robots():
-    robots_content = """# Global rules
+    robots_content = """# Global robots.txt for all crawlers
 User-agent: *
-Crawl-delay: 5 
+Crawl-delay: 5
 
+# Allow primary URLs with language parameters
 Allow: /
 Allow: /product/
+Allow: /category/
+
+# Allow language-prefixed URLs (for backward compatibility)
 Allow: /sk/product/
 Allow: /pl/product/ 
 Allow: /en/product/
-Allow: /category/
 
+# Block admin pages and token-based URLs
 Disallow: /admin/
 Disallow: /*token*/
 
-Sitemap: https://autogroup.sk/sitemap-index.xml
-"""
-    response = make_response(robots_content)
-    response.headers["Content-Type"] = "text/plain"
-    return response
-
-@app.route('/robots-google.txt')
-def robots_google():
-    robots_content = """# Google-specific robots.txt
+# Googlebot-specific rules
 User-agent: Googlebot
 User-agent: Googlebot-Image
 User-agent: Googlebot-Mobile
-Allow: /sk/product/
-Allow: /pl/product/
-Allow: /en/product/
-Allow: /uk/product/
-Allow: /product/
-Allow: /category/
-Allow: /
-Disallow: /admin/
-Disallow: /*token*/
+Crawl-delay: 3
 
+# Sitemap location
 Sitemap: https://autogroup.sk/sitemap-index.xml
 """
     response = make_response(robots_content)
     response.headers["Content-Type"] = "text/plain"
     return response
+
 
 
 
@@ -2966,9 +3025,12 @@ def add_x_robots_tag(response):
     return response
 
 @app.route('/product/<article>')
-@cache.cached(timeout=3600, query_string=True)  # 1 година
+@cache.cached(timeout=3600, query_string=True)
 def product_details(article):
     try:
+        with safe_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
         # Отримуємо поточну мову
         lang = session.get('language', 'sk')
         conn = get_db_connection()
@@ -3849,15 +3911,26 @@ def get_db_connection():
                 # Спроба отримати з'єднання з пулу
                 conn = db_pool.getconn()
                 
-                # Встановлення таймауту через звичайний SQL
-                with conn.cursor() as c:
-                    c.execute("SET statement_timeout = 5000;")
-                    conn.commit()
+                # Встановлюємо таймаут через SQL (тільки для поточного сеансу)
+                try:
+                    with conn.cursor() as c:
+                        c.execute("SET LOCAL statement_timeout = '5000'")  # 5 секунд на запит
+                        conn.commit()
+                except Exception as e:
+                    logging.warning(f"Cannot set statement_timeout: {e}")
                 
                 return conn
+                
         except psycopg2.pool.PoolError:
-            # При вичерпанні пулу - створюємо нове пряме з'єднання
+            # При вичерпанні пулу спробуємо очистити невикористані з'єднання
             logging.error(f"Connection pool exhausted (attempt {attempt+1})")
+            try:
+                if hasattr(db_pool, '_pool'):
+                    db_pool._pool.clear()
+                    logging.info("Pool connections cleared")
+            except Exception as clear_error:
+                logging.error(f"Error clearing pool: {clear_error}")
+                
             if attempt == max_retries - 1:
                 # Остання спроба - пряме з'єднання
                 conn = psycopg2.connect(
@@ -3865,11 +3938,10 @@ def get_db_connection():
                     sslmode="require",
                     cursor_factory=psycopg2.extras.DictCursor
                 )
-                with conn.cursor() as c:
-                    c.execute("SET statement_timeout = 5000;")
-                    conn.commit()
                 return conn
+                
             time.sleep(0.5)  # Невелика затримка перед наступною спробою
+            
         except Exception as e:
             logging.error(f"Database connection error (attempt {attempt+1}/{max_retries}): {e}")
             if attempt == max_retries - 1:
@@ -3891,14 +3963,35 @@ class DatabaseConnection:
         return self.conn
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if hasattr(self, 'conn'):
-            if 'db_pool' in globals() and db_pool:
+        try:
+            # Відкат транзакції у випадку помилки
+            if exc_type is not None and not self.conn.closed:
+                self.conn.rollback()
+                
+            # Закриття курсорів
+            if hasattr(self.conn, '_cursor_cache'):
+                for cursor in self.conn._cursor_cache:
+                    if not cursor.closed:
+                        cursor.close()
+                        
+            # Повернення з'єднання в пул
+            if 'db_pool' in globals() and db_pool and not self.conn.closed:
                 try:
                     db_pool.putconn(self.conn)
-                except:
-                    self.conn.close()
+                except Exception as e:
+                    logging.warning(f"Error returning connection to pool: {e}")
+                    try:
+                        self.conn.close()
+                    except:
+                        pass
             else:
-                self.conn.close()
+                try:
+                    if not self.conn.closed:
+                        self.conn.close()
+                except:
+                    pass
+        except Exception as e:
+            logging.error(f"Error in connection cleanup: {e}")
 
 # І використовуйте так у модулях:
 with DatabaseConnection() as conn:
@@ -11118,8 +11211,7 @@ def scheduled_sitemap_weekly():
         logging.info("Scheduled task: generating weekly full sitemaps")
         generate_all_sitemaps()
 
-# Ініціалізуємо планувальник
-scheduler.init_app(app)
+
 
 
 
@@ -11274,9 +11366,7 @@ if __name__ == '__main__':
     # Створюємо директорію для sitemap файлів, якщо вона не існує
     os.makedirs(SITEMAP_DIR, exist_ok=True)
     
-    # Запускаємо планувальник
-    scheduler.start()
-    
+       
     # Генеруємо сайтмапи при першому запуску, якщо вони не існують
     if not os.path.exists(os.path.join(SITEMAP_DIR, 'sitemap-index.xml')):
         with app.app_context():

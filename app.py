@@ -640,9 +640,19 @@ def add_noindex_header(f):
 
 @app.route('/robots.txt')
 def robots():
-    robots_content = """# MAXIMUM PERMISSIVE VERSION
+    robots_content = """# Updated robots.txt for query parameter-based URLs
 User-agent: *
+Allow: /product/
+Allow: /category/
 Allow: /
+Disallow: /admin/
+Disallow: /*token*/
+Disallow: /debug_*
+Disallow: /cart/
+Disallow: /user/
+Disallow: /profile/
+Disallow: /order/
+Disallow: /search/
 
 Sitemap: https://autogroup.sk/sitemap-index.xml
 """
@@ -2849,17 +2859,16 @@ def debug_cart():
 # Маршрут з префіксом мови
 @app.route('/<lang>/product/<article>')
 def localized_product_details(lang, article):
+    """
+    301 перенаправлення з URL формату /sk/product/LR062102 
+    на /product/LR062102?lang_code=sk
+    """
     # Перевіряємо, чи підтримується мова
     if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
         return redirect(url_for('product_details', article=article))
     
-    # Встановлюємо мову для поточного запиту
-    session['language'] = lang
-    g.locale = lang
-    
-    # КРИТИЧНА ЗМІНА: перенаправляємо на URL з параметром lang_code
-    # замість виконання власної логіки
-    return redirect(url_for('product_details', article=article, lang_code=lang))
+    # Важливо: створюємо 301 перенаправлення на формат з параметрами запиту
+    return redirect(url_for('product_details', article=article, lang_code=lang), code=301)
 
 
 @app.after_request

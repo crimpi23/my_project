@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
     <title>{% block title %}Admin Panel{% endblock %}</title>
     
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
@@ -144,15 +143,45 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'process_orders' %}active{% endif %}" 
-                       href="{{ url_for('process_orders', token=token) }}">
-                        <i class="bi bi-cart-check"></i> Process Orders
+                    <a class="nav-link {% if request.endpoint == 'admin_news' %}active{% endif %}" 
+                       href="{{ url_for('admin_news', token=token) }}">
+                        <i class="bi bi-newspaper"></i> News
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'create_user' %}active{% endif %}" 
                        href="{{ url_for('create_user', token=token) }}">
                         <i class="bi bi-people"></i> Users
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_orders' %}active{% endif %}" 
+                       href="{{ url_for('admin_orders', token=token) }}">
+                        <i class="bi bi-cart3"></i> Orders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'list_supplier_orders' %}active{% endif %}" 
+                       href="{{ url_for('list_supplier_orders', token=token) }}">
+                        <i class="bi bi-truck"></i> Supplier Orders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'warehouse_items' %}active{% endif %}" 
+                       href="{{ url_for('warehouse_items', token=token) }}">
+                        <i class="bi bi-box-seam"></i> Warehouse
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'list_invoices' %}active{% endif %}" 
+                       href="{{ url_for('list_invoices', token=token) }}">
+                        <i class="bi bi-file-text"></i> Invoices
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'upload_price_list' %}active{% endif %}" 
+                       href="{{ url_for('upload_price_list', token=token) }}">
+                        <i class="bi bi-upload"></i> Price Lists
                     </a>
                 </li>
             </ul>

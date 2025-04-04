@@ -15,8 +15,16 @@
     }
     
     function initFacebookPixel() {
-        // Facebook Pixel disabled
-        console.log('Facebook Pixel is disabled');
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', 'FACEBOOK_PIXEL_ID');
+        fbq('track', 'PageView');
     }
     
     const consentGiven = localStorage.getItem('cookieConsent') === 'full';
@@ -43,39 +51,14 @@
     <meta property="og:description" content="{% block og_description %}Your reliable partner in auto parts supply across Europe{% endblock %}">
     <meta property="og:image" content="{{ url_for('static', filename='images/AutogroupEU.png', _external=True) }}">
 
-    {% if article is defined %}
     {% for lang_code in config['BABEL_SUPPORTED_LOCALES'] %}
     <link rel="alternate" 
-        hreflang="{{ lang_code }}" 
-        href="{{ url_for('product_details', article=article, lang_code=lang_code, _external=True) }}" />
+          hreflang="{{ lang_code }}" 
+          href="{{ request.host_url }}{{ lang_code }}/product/{{ article }}" />
     {% endfor %}
     <link rel="alternate" 
-    hreflang="x-default" 
-    href="{{ url_for('product_details', article=article, _external=True) }}" />
-    {% else %}
-    {% for lang_code in config['BABEL_SUPPORTED_LOCALES'] %}
-        {% if request.endpoint %}
-            {% set endpoint_args = request.view_args.copy() if request.view_args else {} %}
-            {% if 'lang_code' in endpoint_args %}
-                {% set _dumm = endpoint_args.pop('lang_code') %}
-            {% endif %}
-            {% set _dummy = endpoint_args.update({'lang_code': lang_code}) %}
-            <link rel="alternate" 
-                hreflang="{{ lang_code }}" 
-                href="{{ request.host_url }}{{ lang_code }}{{ request.path.replace('/' + g.locale, '') }}" />
-        {% endif %}
-    {% endfor %}
-    {% if request.endpoint %}
-        {% set endpoint_args = request.view_args.copy() if request.view_args else {} %}
-        {% if 'lang_code' in endpoint_args %}
-            {% set _dummy = endpoint_args.pop('lang_code') %}
-        {% endif %}
-        {% set _dummy = endpoint_args.update({'lang_code': 'uk'}) %}
-        <link rel="alternate" 
-            hreflang="x-default" 
-            href="{{ request.host_url }}uk{{ request.path.replace('/' + g.locale, '') }}" />
-    {% endif %}
-    {% endif %}
+          hreflang="x-default" 
+          href="{{ request.host_url }}uk/product/{{ article }}" />
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
@@ -98,10 +81,9 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N4RD9ZH9"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     
-    <!-- Facebook Pixel disabled -->
-    <!-- <noscript><img height="1" width="1" style="display:none"
+    <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=FACEBOOK_PIXEL_ID&ev=PageView&noscript=1"
-    /></noscript> -->
+    /></noscript>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">

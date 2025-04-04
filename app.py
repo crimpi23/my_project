@@ -685,17 +685,17 @@ def add_noindex_headers_for_token_pages(response):
 def robots():
     robots_content = """# Global rules
 User-agent: *
-Crawl-delay: 20  # Суттєво обмежуємо частоту сканування
+Crawl-delay: 5 
 
-# Блокуємо тимчасово всі мовні префікси
-Disallow: /sk/product/
-Disallow: /pl/product/ 
-Disallow: /en/product/
-Disallow: /uk/product/
-
-# Дозволяємо основний формат URL
-Allow: /product/
 Allow: /
+Allow: /product/
+Allow: /sk/product/
+Allow: /pl/product/ 
+Allow: /en/product/
+Allow: /category/
+
+Disallow: /admin/
+Disallow: /*token*/
 
 Sitemap: https://autogroup.sk/sitemap-index.xml
 """
@@ -2958,7 +2958,6 @@ def add_x_robots_tag(response):
     return response
 
 @app.route('/product/<article>')
-@cache.cached(timeout=300, query_string=True)  # Кешування на 5 хвилин з урахуванням параметрів запиту
 def product_details(article):
     try:
         # Отримуємо поточну мову
@@ -3899,17 +3898,24 @@ with DatabaseConnection() as conn:
 
 # Функція для повернення з'єднання в пул
 def release_db_connection(conn):
+    """Повертає з'єднання в пул з обробкою помилок"""
     try:
-        if 'db_pool' in globals() and db_pool and conn:
-            db_pool.putconn(conn)
-        else:
-            conn.close()
+        if conn and hasattr(conn, 'closed') and not conn.closed:
+            if 'db_pool' in globals() and db_pool:
+                try:
+                    db_pool.putconn(conn)
+                except:
+                    try:
+                        conn.close()
+                    except:
+                        pass
+            else:
+                try:
+                    conn.close()
+                except:
+                    pass
     except Exception as e:
         logging.error(f"Error returning connection to pool: {e}")
-        try:
-            conn.close()
-        except:
-            pass
 
 #  отримання даних з selection_buffer 
 def get_selection_buffer(user_id):

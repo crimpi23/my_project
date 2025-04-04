@@ -40,9 +40,21 @@ from functools import wraps
 from logging.handlers import RotatingFileHandler
 from psycopg2.pool import ThreadedConnectionPool
 import atexit
-from flask_caching import Cache
 
 
+# Create Flask app first
+app = Flask(__name__, static_folder='static', static_url_path='/static')
+
+
+# Configure Babel
+app.config['BABEL_DEFAULT_LOCALE'] = 'sk'
+app.config['BABEL_SUPPORTED_LOCALES'] = ['sk', 'en', 'pl']
+# Set secret key for sessions and CSRF
+# app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
+
+# Initialize extensions
+# csrf = CSRFProtect(app)
+babel = Babel(app)
 cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
 
 
@@ -79,15 +91,11 @@ os.makedirs(SITEMAP_DIR, exist_ok=True)
 logging.info(f"Sitemap directory set to: {SITEMAP_DIR}")
 
 
-# Create Flask app first
-app = Flask(__name__, static_folder='static', static_url_path='/static')
 
-# Set secret key for sessions and CSRF
-# app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
-# Initialize extensions
-# csrf = CSRFProtect(app)
-babel = Babel(app)
+
+
+
 
 
 
@@ -624,9 +632,7 @@ logging.basicConfig(
     ]
 )
 
-# Configure Babel
-app.config['BABEL_DEFAULT_LOCALE'] = 'sk'
-app.config['BABEL_SUPPORTED_LOCALES'] = ['sk', 'en', 'pl']
+
 
 
 # Configure languages
@@ -679,23 +685,13 @@ def add_noindex_headers_for_token_pages(response):
 def robots():
     robots_content = """# Global rules
 User-agent: Googlebot
-Crawl-delay: 5
-User-agent: Googlebot-Image
-User-agent: Googlebot-Mobile
-Disallow:
-Allow: /
+Crawl-delay: 10
 
 User-agent: *
 Allow: /product/
 Allow: /
 Disallow: /admin/
 Disallow: /*token*/
-Disallow: /debug_*
-Disallow: /cart/
-Disallow: /user/
-Disallow: /profile/
-Disallow: /order/
-Disallow: /search/
 
 Sitemap: https://autogroup.sk/sitemap-index.xml
 """
@@ -2924,9 +2920,7 @@ def debug_cart():
 # Маршрут з префіксом мови
 @app.route('/<lang>/product/<article>')
 def localized_product_details(lang, article):
-    """
-    Перенаправлення зі старого формату URL на новий з параметрами запиту
-    """
+    """Перенаправляє з мовного префіксу на параметр запиту"""
     if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
         return redirect(url_for('product_details', article=article))
     

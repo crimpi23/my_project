@@ -50,6 +50,7 @@
     <meta property="og:title" content="{% block og_title %}AutogroupEU{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Your reliable partner in auto parts supply across Europe{% endblock %}">
     <meta property="og:image" content="{{ url_for('static', filename='images/AutogroupEU.png', _external=True) }}">
+    <meta property="og:site_name" content="AutogroupEU">
 
     {% for lang_code in config['BABEL_SUPPORTED_LOCALES'] %}
     <link rel="alternate" 
@@ -658,6 +659,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "AutogroupEU",
+  "legalName": "AutogroupEU s.r.o.",
+  "url": "https://autogroup.sk",
+  "logo": "https://autogroup.sk/static/images/logo.png",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Mierová 99",
+    "addressLocality": "Humenné",
+    "postalCode": "066 01",
+    "addressCountry": "SK"
+  },
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+421907400865",
+    "contactType": "customer service"
+  }
+}
 </script>
 </body>
 </html>

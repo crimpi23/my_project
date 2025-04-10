@@ -32,10 +32,8 @@ from email.mime.multipart import MIMEMultipart
 from werkzeug.utils import secure_filename
 from email.mime.base import MIMEBase
 from email import encoders
-import os
 import math
 from flask_apscheduler import APScheduler
-import os
 from functools import wraps
 from logging.handlers import RotatingFileHandler
 from psycopg2.pool import ThreadedConnectionPool
@@ -45,8 +43,17 @@ from datetime import datetime, timedelta
 from flask_caching import Cache
 from datetime import datetime, timedelta  # додаємо timedelta до імпорту
 from decimal import Decimal
+import secrets
+import ftplib
+from werkzeug.utils import secure_filename
+import uuid
+import socket
+import uuid
+from dotenv import load_dotenv
 
 
+
+load_dotenv()
 # Create Flask app first
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 
@@ -543,77 +550,90 @@ def generate_sitemap_other_files():
         logging.info("Starting generation of other sitemap files")
         start_time = datetime.now()
         
-        host_base = "https://autogroup.sk"
+        host_base = get_base_url() or "https://autogroup.sk"
+        conn = None
         
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        
-        # Отримання всіх таблиць прайс-листів
-        cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
-        price_list_tables = [row[0] for row in cursor.fetchall()]
-        logging.info(f"Found {len(price_list_tables)} price list tables: {price_list_tables}")
-        
-        # Якщо немає прайс-листів, створюємо порожні файли
-        if not price_list_tables:
-            # Код створення порожніх файлів без змін...
-            return True
-        
-        # Замість підрахунку та вибірки всіх товарів одразу, використовуємо курсор з пакетною обробкою
-        products_per_sitemap = 45000
-        products_per_batch = 10000  # Обробляємо по 10,000 записів за раз
-        
-        # Спочатку визначимо загальну кількість файлів, які необхідно створити
-        estimated_total = 0
-        for table in price_list_tables:
-            # Рахуємо товари окремо для кожної таблиці
-            count_query = f"""
-                SELECT COUNT(DISTINCT t.article) 
-                FROM {table} t
-                LEFT JOIN (
-                    SELECT p.article FROM products p
-                    UNION
-                    SELECT pi.product_article FROM product_images pi
-                ) AS enriched ON t.article = enriched.article
-                LEFT JOIN stock s ON t.article = s.article
-                WHERE s.article IS NULL AND enriched.article IS NULL
-            """
-            try:
-                # Встановлюємо більший таймаут для count запиту
-                cursor.execute("SET statement_timeout = 120000")  # 60 секунд
-                cursor.execute(count_query)
-                count = cursor.fetchone()[0]
-                estimated_total += count
-            except Exception as e:
-                logging.warning(f"Error counting items in {table}: {e}")
-                # Якщо count запит невдалий, берємо консервативну оцінку
-                estimated_total += 50000
-        
-        # Розрахунок загальної кількості файлів
-        total_files = max(1, math.ceil(estimated_total / products_per_sitemap))
-        logging.info(f"Estimated total of {estimated_total} items will be split into {total_files} files")
-                
-        # Створюємо і заповнюємо файли по одному
-        for page in range(1, total_files + 1):
-            # Файл для поточної сторінки
-            sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-            sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        try:
+            # Створюємо окреме з'єднання для початкового аналізу
+            conn = get_db_connection()
+            cursor = conn.cursor()
             
-            items_in_current_file = 0
-            offset = (page - 1) * products_per_sitemap
-            remaining = products_per_sitemap
+            # Отримання всіх таблиць прайс-листів
+            cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
+            price_list_tables = [row[0] for row in cursor.fetchall()]
+            logging.info(f"Found {len(price_list_tables)} price list tables: {price_list_tables}")
             
-            # Обробляємо кожну таблицю окремо
-            for table in price_list_tables:
-                # Встановлюємо менший таймаут для вибірок
-                cursor.execute("SET statement_timeout = 30000")  # 30 секунд
+            # Якщо немає прайс-листів, створюємо один пустий файл
+            if not price_list_tables:
+                logging.info("No price lists found, creating empty other sitemap")
+                sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+                sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                sitemap_xml += '</urlset>'
                 
-                # Обробляємо дані з таблиці пакетами
-                table_offset = 0
-                while remaining > 0:
-                    batch_size = min(products_per_batch, remaining)
+                file_path = os.path.join(SITEMAP_DIR, 'sitemap-other-1.xml')
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(sitemap_xml)
+                
+                logging.info(f"Created empty other sitemap at {file_path}")
+                cursor.close()
+                conn.close()
+                return True
+                
+            # Тепер реалізуємо покращену логіку обробки даних
+            # Максимальна кількість URL в одному файлі
+            MAX_URLS_PER_FILE = 45000
+            
+            # Лічильники для відстеження прогресу
+            total_processed = 0
+            file_num = 1
+            
+            # Буфер для накопичення URL перед записом у файл
+            url_buffer = []
+            
+            # Для кожної таблиці
+            for table_idx, table in enumerate(price_list_tables):
+                table_start_time = datetime.now()
+                logging.info(f"Processing table {table_idx+1}/{len(price_list_tables)}: {table}")
+                
+                # Створюємо новий курсор для кожної таблиці
+                table_conn = get_db_connection()
+                table_cursor = table_conn.cursor()
+                
+                # Рахуємо кількість товарів в таблиці для логування
+                try:
+                    table_cursor.execute(f"""
+                        SELECT COUNT(*) FROM {table} t
+                        LEFT JOIN (
+                            SELECT p.article FROM products p
+                            UNION
+                            SELECT pi.product_article FROM product_images pi
+                        ) AS enriched ON t.article = enriched.article
+                        LEFT JOIN stock s ON t.article = s.article
+                        WHERE s.article IS NULL AND enriched.article IS NULL
+                    """)
+                    table_count = table_cursor.fetchone()[0]
+                    logging.info(f"Table {table} has {table_count} eligible products")
+                except Exception as count_error:
+                    logging.warning(f"Couldn't count records in {table}: {count_error}")
+                    table_count = "unknown"
+                finally:
+                    table_cursor.close()
+                    table_conn.close()
+                
+                # Будемо обробляти по BATCH_SIZE записів за раз
+                BATCH_SIZE = 10000
+                offset = 0
+                
+                while True:
+                    # Нове з'єднання для кожного пакету даних
+                    batch_conn = get_db_connection()
+                    batch_cursor = batch_conn.cursor()
+                    
+                    # Встановлюємо timeout для запиту
+                    batch_cursor.execute("SET statement_timeout = 60000") # 60 секунд
                     
                     # Запит для отримання пакету товарів
-                    batch_query = f"""
+                    query = f"""
                         SELECT DISTINCT t.article 
                         FROM {table} t
                         LEFT JOIN (
@@ -624,84 +644,106 @@ def generate_sitemap_other_files():
                         LEFT JOIN stock s ON t.article = s.article
                         WHERE s.article IS NULL AND enriched.article IS NULL
                         ORDER BY t.article
-                        LIMIT {batch_size} OFFSET {table_offset + offset}
+                        LIMIT {BATCH_SIZE} OFFSET {offset}
                     """
                     
                     try:
-                        cursor.execute(batch_query)
-                        batch_products = cursor.fetchall()
+                        batch_cursor.execute(query)
+                        batch_products = batch_cursor.fetchall()
                         
                         # Якщо немає даних у цьому пакеті, переходимо до наступної таблиці
                         if not batch_products:
+                            batch_cursor.close()
+                            batch_conn.close()
+                            logging.info(f"Finished processing table {table}, processed {offset} records")
                             break
                             
-                        # Додаємо URL для кожного товару в пакеті
+                        # Додаємо URL для кожного товару в пакеті до буфера
                         for product in batch_products:
-                            article = product['article']
-                            sitemap_xml += f'  <url>\n'
-                            sitemap_xml += f'    <loc>{host_base}/product/{article}</loc>\n'
-                            sitemap_xml += f'    <changefreq>monthly</changefreq>\n'
-                            sitemap_xml += f'    <priority>0.5</priority>\n'
-                            sitemap_xml += f'  </url>\n'
+                            article = product[0]
+                            url_buffer.append(f"""  <url>
+    <loc>{host_base}/product/{article}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>""")
                             
-                            items_in_current_file += 1
-                        
-                        # Оновлюємо offset і remaining
-                        table_offset += len(batch_products)
-                        remaining -= len(batch_products)
-                        
-                        # Якщо досягли ліміту для цього файлу, припиняємо обробку
-                        if remaining <= 0:
-                            break
+                        # Якщо буфер досяг або перевищив ліміт, записуємо файл
+                        while len(url_buffer) >= MAX_URLS_PER_FILE:
+                            # Вилучаємо перші MAX_URLS_PER_FILE елементів з буфера
+                            current_urls = url_buffer[:MAX_URLS_PER_FILE]
+                            url_buffer = url_buffer[MAX_URLS_PER_FILE:]
                             
-                    except Exception as e:
-                        logging.error(f"Error processing batch from {table} at offset {table_offset}: {e}")
-                        # Продовжуємо з наступною таблицею
-                        break
+                            # Створюємо і записуємо файл
+                            sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+                            sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                            sitemap_xml += '\n'.join(current_urls)
+                            sitemap_xml += '\n</urlset>'
+                            
+                            file_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{file_num}.xml')
+                            with open(file_path, 'w', encoding='utf-8') as f:
+                                f.write(sitemap_xml)
+                            
+                            total_processed += len(current_urls)
+                            logging.info(f"Generated sitemap-other-{file_num}.xml with {len(current_urls)} URLs. Total: {total_processed}")
+                            file_num += 1
+                        
+                        offset += len(batch_products)
+                        
+                    except Exception as batch_error:
+                        logging.error(f"Error processing batch from {table} at offset {offset}: {batch_error}")
+                        # Продовжуємо з наступним пакетом
+                    finally:
+                        batch_cursor.close()
+                        batch_conn.close()
+            
+            # Після обробки всіх таблиць, записуємо залишок буфера
+            if url_buffer:
+                sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+                sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                sitemap_xml += '\n'.join(url_buffer)
+                sitemap_xml += '\n</urlset>'
                 
-            # Закриваємо XML
-            sitemap_xml += '</urlset>'
+                file_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{file_num}.xml')
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(sitemap_xml)
+                
+                total_processed += len(url_buffer)
+                logging.info(f"Generated sitemap-other-{file_num}.xml with {len(url_buffer)} URLs. Total: {total_processed}")
+                file_num += 1
             
-            # Записуємо в файл
-            file_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{page}.xml')
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(sitemap_xml)
+            # Загальна кількість згенерованих файлів
+            total_files = file_num - 1
             
-            logging.info(f"Generated sitemap-other-{page}.xml with {items_in_current_file} products")
-            
-            # Якщо ми не заповнили поточний файл повністю, немає сенсу продовжувати
-            if items_in_current_file < products_per_sitemap:
-                total_files = page  # Оновлюємо загальну кількість файлів
-                break
-        
-        # Створюємо порожні файли для решти очікуваних сайтмапів
-        if total_files < 80:
+            # Видаляємо старі порожні файли, якщо вони існують
             for i in range(total_files + 1, 81):
-                empty_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-                empty_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                empty_xml += '</urlset>'
-                
                 empty_path = os.path.join(SITEMAP_DIR, f'sitemap-other-{i}.xml')
-                with open(empty_path, 'w', encoding='utf-8') as f:
-                    f.write(empty_xml)
+                if os.path.exists(empty_path):
+                    try:
+                        os.remove(empty_path)
+                        logging.info(f"Removed old empty file: sitemap-other-{i}.xml")
+                    except Exception as e:
+                        logging.warning(f"Could not remove file sitemap-other-{i}.xml: {e}")
             
-            logging.info(f"Created empty sitemap files for sitemap-other-{total_files+1} to sitemap-other-80")
-        
-        # Закриваємо з'єднання
-        cursor.close()
-        conn.close()
-        
-        end_time = datetime.now()
-        duration = (end_time - start_time).total_seconds()
-        logging.info(f"Completed generation of other sitemap files in {duration:.2f} seconds")
-        return True
-        
+            # Оновлюємо індексний файл
+            generate_sitemap_index_file()
+            
+            end_time = datetime.now()
+            duration = (end_time - start_time).total_seconds()
+            logging.info(f"Completed generation of {total_files} other sitemap files with {total_processed} URLs in {duration:.2f} seconds")
+            return True
+            
+        finally:
+            # Закриваємо з'єднання, якщо воно досі відкрите
+            if conn:
+                try:
+                    if 'cursor' in locals() and cursor:
+                        cursor.close()
+                    conn.close()
+                except:
+                    pass
+            
     except Exception as e:
         logging.error(f"Error generating other sitemap files: {e}", exc_info=True)
-        if 'cursor' in locals() and cursor:
-            cursor.close()
-        if 'conn' in locals() and conn:
-            conn.close()
         return False
 
 
@@ -943,7 +985,7 @@ Disallow: /*token*/
 User-agent: Googlebot
 User-agent: Googlebot-Image
 User-agent: Googlebot-Mobile
-Crawl-delay: 3
+# Googlebot ignores Crawl-delay
 
 # Sitemap location
 Sitemap: https://autogroup.sk/sitemap-index.xml
@@ -2103,15 +2145,14 @@ def public_place_order():
         logging.debug("Creating order in database")
         cursor.execute("""
             INSERT INTO public_orders 
-            (user_id, total_price, status, created_at, updated_at, delivery_address, needs_invoice, invoice_details, payment_status)
-            VALUES (%s, %s, 'new', NOW(), NOW(), %s, %s, %s, 'unpaid')
+            (user_id, total_price, status, created_at, updated_at, delivery_address, needs_invoice, invoice_details, payment_status, shipping_method)
+            VALUES (%s, %s, 'new', NOW(), NOW(), %s, FALSE, NULL, 'unpaid', %s)
             RETURNING id
         """, (
             user_id,
             total_price,
             json.dumps(delivery_data, default=json_serial),
-            needs_invoice,
-            json.dumps(invoice_details, default=json_serial) if invoice_details else None
+            shipping_method  # Тепер цей параметр має відповідний %s у запиті
         ))
         
         order_id = cursor.fetchone()['id']
@@ -2869,11 +2910,11 @@ def guest_checkout():
                     'delivery_time': delivery_time
                 })
         
-        # Створюємо замовлення
+        # Створюємо замовлення - ВИПРАВЛЕНО: додано shipping_method як окремий стовпець
         cursor.execute("""
             INSERT INTO public_orders 
-            (user_id, total_price, status, created_at, updated_at, delivery_address, needs_invoice, invoice_details, payment_status)
-            VALUES (%s, %s, 'new', NOW(), NOW(), %s, FALSE, NULL, 'unpaid')
+            (user_id, total_price, status, created_at, updated_at, delivery_address, needs_invoice, invoice_details, payment_status, shipping_method)
+            VALUES (%s, %s, 'new', NOW(), NOW(), %s, FALSE, NULL, 'unpaid', %s)
             RETURNING id
         """, (
             user_id,
@@ -3354,6 +3395,512 @@ def product_details(article):
 
 
 
+# Управління фотографіями товарів
+@app.route('/<token>/admin/photos/manage')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_manage_photos(token):
+    """Сторінка управління фотографіями товарів"""
+    conn = None
+    cursor = None
+    
+    try:
+        # Параметри фільтру
+        article_filter = request.args.get('article', '')
+        source_filter = request.args.get('source', 'all')  # 'all', 'stock', 'enriched'
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Базовий запит для отримання товарів (виправлений)
+        products_query = """
+            SELECT DISTINCT pi.product_article as article, 
+                           null as name, 
+                           b.name as brand_name
+            FROM product_images pi
+            LEFT JOIN brands b ON 
+                CASE 
+                    WHEN LEFT(pi.product_article, 2) ~ '^[0-9]+$' 
+                    THEN CAST(LEFT(pi.product_article, 2) AS INTEGER) = b.id
+                    ELSE false
+                END
+        """
+        
+        # Додаємо умови фільтрації
+        params = []
+        where_conditions = []
+        
+        if article_filter:
+            where_conditions.append("pi.product_article ILIKE %s")
+            params.append(f"%{article_filter}%")
+        
+        # Додаємо умову для source_filter
+        if source_filter == 'stock':
+            where_conditions.append("pi.product_article IN (SELECT article FROM stock)")
+        elif source_filter == 'enriched':
+            where_conditions.append("""
+                pi.product_article IN (
+                    SELECT p.article FROM products p
+                    UNION
+                    SELECT pi2.product_article FROM product_images pi2
+                )
+                AND pi.product_article NOT IN (SELECT article FROM stock)
+            """)
+        
+        # Додаємо WHERE якщо є умови
+        if where_conditions:
+            products_query += " WHERE " + " AND ".join(where_conditions)
+        
+        # Додаємо сортування
+        products_query += " ORDER BY pi.product_article LIMIT 100"
+        
+        # Виконуємо запит для отримання товарів
+        cursor.execute(products_query, params)
+        products_data = cursor.fetchall()
+        
+        # Отримуємо фотографії для кожного товару
+        products = []
+        for product in products_data:
+            article = product['article']
+            
+            try:
+                # Запит на фото з сортуванням: спочатку головне, потім за sort_order
+                cursor.execute("""
+                    SELECT image_url, is_main, sort_order
+                    FROM product_images
+                    WHERE product_article = %s
+                    ORDER BY is_main DESC, sort_order, image_url
+                """, (article,))
+                
+                photos = [row['image_url'] for row in cursor.fetchall()]
+                
+                # Додаємо товар з фото до списку
+                products.append({
+                    'article': article,
+                    'name': product['name'] if product['name'] else article,
+                    'brand_name': product['brand_name'] if product['brand_name'] else 'Unknown',
+                    'photos': photos
+                })
+            except Exception as inner_e:
+                logging.error(f"Error fetching photos for article {article}: {inner_e}")
+                # Пропускаємо цей товар, але не перериваємо всю операцію
+                continue
+        
+        return render_template('admin/photos/manage_photos.html', 
+                              products=products, 
+                              article_filter=article_filter,
+                              source_filter=source_filter,
+                              token=token)
+                              
+    except Exception as e:
+        logging.error(f"Error managing photos: {e}", exc_info=True)
+        if conn:
+            try:
+                conn.rollback()  # Відкат транзакції у разі помилки
+            except:
+                pass
+        flash(f"Помилка: {str(e)}", "danger")
+        return redirect(url_for('admin_dashboard', token=token))
+    finally:
+        # Гарантуємо закриття з'єднань
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
+
+
+# Завантаження нових фотографій
+@app.route('/<token>/admin/photos/upload', methods=['GET', 'POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_upload_photos(token):
+    """Сторінка завантаження фотографій товарів"""
+    if request.method == 'POST':
+        # Від самого початку ініціалізуємо змінні для обробки помилок
+        error_messages = []
+        success_count = 0
+        conn = None
+        cursor = None
+        
+        try:
+            # Отримуємо артикул, для якого додаємо фото
+            article = request.form.get('article', '').strip()
+            
+            if not article:
+                flash("Необхідно вказати артикул", "danger")
+                return redirect(url_for('admin_upload_photos', token=token))
+            
+            # Конвертуємо в верхній регістр для стабільного пошуку
+            article = article.upper()
+            
+            # Перевіряємо наявність артикулу в базі
+            conn = get_db_connection()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Починаємо транзакцію
+            conn.autocommit = False
+            
+            # Перевіряємо чи існує товар в будь-якій з таблиць
+            cursor.execute("SELECT table_name FROM price_lists")
+            tables = cursor.fetchall()
+            
+            product_exists = False
+            
+            # Для кожної таблиці прайс-листів
+            for table_row in tables:
+                table = table_row[0]
+                try:
+                    cursor.execute(f"SELECT 1 FROM \"{table}\" WHERE UPPER(article) = %s", (article,))
+                    if cursor.fetchone():
+                        product_exists = True
+                        break
+                except Exception as e:
+                    logging.warning(f"Error checking article in table {table}: {e}")
+            
+            # Якщо товар не знайдено
+            if not product_exists:
+                conn.rollback()
+                cursor.close()
+                conn.close()
+                flash(f"Товар з артикулом {article} не знайдено в жодній з таблиць", "danger")
+                return redirect(url_for('admin_upload_photos', token=token))
+            
+            # Перевіряємо чи є в базі фото для цього товару
+            cursor.execute("SELECT COUNT(*) FROM product_images WHERE UPPER(product_article) = %s", (article,))
+            has_existing_photos = cursor.fetchone()[0] > 0
+            
+            # 1. Завантаження з URL
+            if 'photo_urls' in request.form and request.form['photo_urls'].strip():
+                urls = [url.strip() for url in request.form['photo_urls'].split('\n') if url.strip()]
+                
+                if not urls:
+                    conn.rollback()
+                    cursor.close()
+                    conn.close()
+                    flash("Не надано жодного URL фото", "danger")
+                    return redirect(url_for('admin_upload_photos', token=token, article=article))
+                
+                for i, url in enumerate(urls):
+                    try:
+                        # Додаємо фото в БД
+                        is_main = not has_existing_photos and i == 0  # Перше фото буде головним, якщо немає інших
+                        sort_order = 0 if is_main else (i + 1)  # Головне фото має порядок 0, інші - по порядку
+                        
+                        # Перевіряємо, чи цього фото ще немає
+                        cursor.execute(
+                            "SELECT id FROM product_images WHERE UPPER(product_article) = %s AND image_url = %s", 
+                            (article, url)
+                        )
+                        if cursor.fetchone():
+                            error_messages.append(f"Фото вже існує: {url}")
+                            continue
+                        
+                        # Додаємо нове фото
+                        cursor.execute("""
+                            INSERT INTO product_images (product_article, image_url, is_main, sort_order)
+                            VALUES (%s, %s, %s, %s)
+                        """, (article, url, is_main, sort_order))
+                        
+                        success_count += 1
+                    except Exception as e:
+                        error_messages.append(f"Помилка для URL {url}: {str(e)}")
+            
+            # 2. Завантаження файлів
+            if 'photos' in request.files:
+                uploaded_files = request.files.getlist('photos')
+                valid_files = [f for f in uploaded_files if f and f.filename]
+                
+                if valid_files:
+                    upload_temp_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'temp_photos')
+                    os.makedirs(upload_temp_dir, exist_ok=True)
+                    
+                    for i, file in enumerate(valid_files):
+                        try:
+                            if not allowed_file(file.filename):
+                                error_messages.append(f"Недопустимий тип файлу: {file.filename}")
+                                continue
+                            
+                            # Генеруємо безпечне ім'я файлу з артикулом на початку
+                            filename = article + "_" + str(uuid.uuid4()) + "." + file.filename.rsplit('.', 1)[1].lower()
+                            file_path = os.path.join(upload_temp_dir, filename)
+                            file.save(file_path)
+                            
+                            # Завантажуємо на FTP
+                            try:
+                                image_url = upload_to_ftp(file_path, filename)
+                                os.remove(file_path)  # Видаляємо тимчасовий файл
+                                
+                                # Додаємо в базу даних
+                                is_main = not has_existing_photos and i == 0 and success_count == 0
+                                sort_order = 0 if is_main else (success_count + i + 1)
+                                
+                                cursor.execute("""
+                                    INSERT INTO product_images (product_article, image_url, is_main, sort_order)
+                                    VALUES (%s, %s, %s, %s)
+                                """, (article, image_url, is_main, sort_order))
+                                
+                                success_count += 1
+                                
+                            except Exception as upload_error:
+                                if os.path.exists(file_path):
+                                    os.remove(file_path)
+                                error_messages.append(f"Помилка завантаження {file.filename}: {str(upload_error)}")
+                                
+                        except Exception as file_error:
+                            error_messages.append(f"Помилка обробки {file.filename}: {str(file_error)}")
+            
+            # Завершуємо транзакцію
+            if success_count > 0:
+                conn.commit()
+                flash(f"Успішно завантажено {success_count} фото", "success")
+            else:
+                conn.rollback()
+                flash("Жодне фото не було завантажено", "warning")
+            
+            for error in error_messages:
+                flash(error, "danger")
+                
+            return redirect(url_for('admin_upload_photos', token=token, article=article))
+                
+        except Exception as e:
+            logging.error(f"Error uploading photos: {e}", exc_info=True)
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+            flash(f"Помилка: {str(e)}", "danger")
+            return redirect(url_for('admin_upload_photos', token=token))
+        finally:
+            # Гарантуємо закриття з'єднання
+            if cursor:
+                try:
+                    cursor.close()
+                except:
+                    pass
+            if conn:
+                try:
+                    conn.close()
+                except:
+                    pass
+    
+    return render_template('admin/photos/upload_photos.html', token=token)
+
+
+# Встановлення головного фото
+@app.route('/<token>/admin/photos/set-main', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_set_main_photo(token):
+    """Встановлює головне фото для товару"""
+    try:
+        data = request.json
+        article = data.get('article')
+        image_url = data.get('image_url')
+        
+        if not article or not image_url:
+            return jsonify({'success': False, 'message': 'Article and image URL are required'})
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Починаємо транзакцію
+        conn.autocommit = False
+        
+        try:
+            # Скидаємо всі фото як не головні
+            cursor.execute("""
+                UPDATE product_images
+                SET is_main = FALSE, sort_order = 
+                    CASE 
+                        WHEN sort_order = 0 THEN 999
+                        ELSE sort_order
+                    END
+                WHERE product_article = %s
+            """, (article,))
+            
+            # Встановлюємо нове головне фото
+            cursor.execute("""
+                UPDATE product_images
+                SET is_main = TRUE, sort_order = 0
+                WHERE product_article = %s AND image_url = %s
+            """, (article, image_url))
+            
+            conn.commit()
+            return jsonify({'success': True})
+        except Exception as inner_e:
+            conn.rollback()
+            logging.error(f"Error setting main photo: {inner_e}", exc_info=True)
+            return jsonify({'success': False, 'message': str(inner_e)})
+        finally:
+            cursor.close()
+            conn.close()
+        
+    except Exception as e:
+        logging.error(f"Error in set main photo: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)})
+
+# Видалення фото
+@app.route('/<token>/admin/photos/delete', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_delete_photo(token):
+    """Видаляє фото товару"""
+    try:
+        data = request.json
+        article = data.get('article')
+        image_url = data.get('image_url')
+        
+        if not article or not image_url:
+            return jsonify({'success': False, 'message': 'Відсутні необхідні параметри'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Отримуємо інформацію про фото перед видаленням
+        cursor.execute("""
+            SELECT is_main FROM product_images 
+            WHERE product_article = %s AND image_url = %s
+        """, (article, image_url))
+        
+        photo_info = cursor.fetchone()
+        was_main = photo_info and photo_info[0]
+        
+        # Видаляємо фото з БД
+        cursor.execute("""
+            DELETE FROM product_images 
+            WHERE product_article = %s AND image_url = %s
+        """, (article, image_url))
+        
+        # Якщо видалили головне фото, встановлюємо нове
+        if was_main:
+            cursor.execute("""
+                UPDATE product_images 
+                SET is_main = true, sort_order = 0
+                WHERE product_article = %s
+                ORDER BY sort_order, image_url
+                LIMIT 1
+            """, (article,))
+        
+        conn.commit()
+        
+        # Спробуємо видалити з FTP, але не зупиняємо процес при помилці
+        try:
+            # Отримуємо ім'я файлу з URL
+            filename = os.path.basename(image_url)
+            delete_from_ftp(filename)
+        except Exception as ftp_error:
+            logging.warning(f"Could not delete file from FTP: {ftp_error}")
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        logging.error(f"Error deleting photo: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+def delete_from_ftp(filename):
+    """Видаляє файл з FTP сервера"""
+    try:
+        # FTP налаштування
+        FTP_HOST = os.environ.get('FTP_HOST')
+        FTP_USER = os.environ.get('FTP_USER')
+        FTP_PASS = os.environ.get('FTP_PASS')
+        
+        # Розділяємо хост і порт, якщо вони вказані разом
+        match = re.match(r'^([^:]+)(?::(\d+))?$', FTP_HOST) if FTP_HOST else None
+        if match:
+            FTP_HOST = match.group(1)
+            FTP_PORT = int(match.group(2)) if match.group(2) else 21
+        else:
+            FTP_PORT = 21
+        
+        # Перевіряємо наявність налаштувань
+        if not FTP_HOST or not FTP_USER or not FTP_PASS:
+            logging.error("FTP облікові дані не встановлені в змінних середовища")
+            raise ValueError("FTP облікові дані не встановлені в змінних середовища")
+        
+        # Оновлений шлях до директорії на FTP сервері
+        FTP_DIR = "sub/image/products/"
+        
+        logging.info(f"Підключення до FTP сервера: {FTP_HOST}:{FTP_PORT}")
+        ftp = ftplib.FTP()
+        ftp.connect(host=FTP_HOST, port=FTP_PORT, timeout=30)
+        
+        # Включаємо пасивний режим
+        ftp.set_pasv(True)
+        
+        ftp.login(FTP_USER, FTP_PASS)
+        logging.info("Успішний вхід на FTP сервер")
+        
+        # Видаляємо файл
+        file_path = f"{FTP_DIR}{filename}"
+        logging.info(f"Видалення файлу: {file_path}")
+        ftp.delete(file_path)
+        
+        ftp.quit()
+        logging.info(f"Файл успішно видалено з FTP: {file_path}")
+        return True
+    except ftplib.error_perm as e:
+        if str(e).startswith('550'):  # Файл не знайдено
+            logging.warning(f"Файл не знайдено на FTP: {FTP_DIR}{filename}")
+            return True
+        logging.error(f"FTP помилка доступу: {e}")
+        raise
+    except (socket.gaierror, ConnectionRefusedError) as e:
+        logging.error(f"FTP помилка з'єднання: {e}")
+        raise
+    except Exception as e:
+        logging.error(f"Помилка видалення файлу з FTP: {e}", exc_info=True)
+        raise
+
+# Зміна порядку фото
+@app.route('/<token>/admin/photos/reorder', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_reorder_photos(token):
+    """Змінює порядок фото товару"""
+    try:
+        data = request.json
+        article = data.get('article')
+        photo_order = data.get('photo_order', [])  # Список URL в потрібному порядку
+        
+        if not article or not photo_order:
+            return jsonify({'success': False, 'message': 'Відсутні необхідні параметри'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Оновлюємо порядок для кожного фото
+        for index, image_url in enumerate(photo_order):
+            # Головне фото завжди має sort_order = 0
+            sort_order = index if index > 0 else 0
+            
+            cursor.execute("""
+                UPDATE product_images 
+                SET sort_order = %s, is_main = %s
+                WHERE product_article = %s AND image_url = %s
+            """, (sort_order, index == 0, article, image_url))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        logging.error(f"Error reordering photos: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 # обробка фотографій товарів основне фото
 @app.route('/<token>/admin/manage-photos', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
@@ -3628,6 +4175,82 @@ def language_merchant_feed(language):
     except Exception as e:
         logging.error(f"Error generating feed: {e}")
         return "Error generating feed", 500
+
+
+def upload_to_ftp(file_path, filename):
+    """Завантажує файл на FTP сервер і повертає URL"""
+    try:
+        # FTP налаштування
+        FTP_HOST = os.environ.get('FTP_HOST', '')
+        FTP_USER = os.environ.get('FTP_USER', '')
+        FTP_PASS = os.environ.get('FTP_PASS', '')
+        FTP_DIR = "sub/image/products/"
+        FTP_URL = os.environ.get('FTP_URL', 'https://image.autogroup.sk/products/')
+        
+        # Перевіряємо наявність обов'язкових налаштувань
+        if not FTP_HOST or not FTP_USER or not FTP_PASS:
+            raise ValueError("Відсутні обов'язкові налаштування FTP. Перевірте змінні середовища.")
+        
+        # Розділяємо хост і порт, якщо вони вказані разом
+        if ':' in FTP_HOST:
+            host_parts = FTP_HOST.split(':')
+            FTP_HOST = host_parts[0]
+            FTP_PORT = int(host_parts[1])
+        else:
+            FTP_PORT = 21
+        
+        # Підключення до FTP з кількома спробами
+        max_attempts = 3
+        for attempt in range(max_attempts):
+            try:
+                logging.info(f"FTP підключення, спроба {attempt+1}/{max_attempts}")
+                ftp = ftplib.FTP(timeout=30)
+                ftp.connect(FTP_HOST, FTP_PORT, timeout=30)
+                ftp.login(FTP_USER, FTP_PASS)
+                
+                # Переходимо в директорію
+                try:
+                    ftp.cwd(FTP_DIR)
+                except ftplib.error_perm:
+                    # Якщо директорії немає, створюємо її
+                    ftp.mkd(FTP_DIR)
+                    ftp.cwd(FTP_DIR)
+                
+                # Завантажуємо файл
+                with open(file_path, 'rb') as file:
+                    ftp.storbinary(f'STOR {filename}', file)
+                
+                # Закриваємо з'єднання
+                ftp.quit()
+                
+                # Повертаємо URL
+                return f"{FTP_URL}{filename}"
+            
+            except (socket.error, ftplib.error_temp) as e:
+                logging.warning(f"Спроба підключення до FTP {attempt+1} не вдалася: {e}")
+                if attempt == max_attempts - 1:
+                    logging.error(f"Всі спроби підключення до FTP не вдалися.")
+                    raise Exception(f"Не вдалося підключитися до FTP після {max_attempts} спроб: {e}")
+                time.sleep(1)  # Чекаємо секунду перед повторною спробою
+    
+    except socket.error as e:
+        logging.error(f"FTP помилка socket: {e}")
+        raise Exception(f"FTP помилка socket: {e}")
+    except ftplib.error_perm as e:
+        logging.error(f"FTP помилка доступу: {e}")
+        raise Exception(f"FTP помилка доступу: {e}")
+    except Exception as e:
+        logging.error(f"Помилка завантаження на FTP: {e}", exc_info=True)
+        raise Exception(f"Помилка завантаження на FTP: {e}")
+
+
+def allowed_file(filename):
+    """Перевіряє, чи допустимий тип файлу"""
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 
 @app.route('/google-merchant-feed/<language>.xml')
 def google_merchant_feed(language):
@@ -11524,7 +12147,113 @@ def admin_sitemap_utils(token):
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('admin_sitemaps', token=token))
 
-# Замініть блок if __name__ == '__main__': цілком
+def test_ftp_connection():
+    """
+    Перевіряє FTP-з'єднання та налаштування.
+    Повертає кортеж (успіх, повідомлення) про статус з'єднання
+    """
+    import ftplib
+    import socket
+    import os
+    import time
+    import re
+    
+    # Отримуємо FTP налаштування з змінних середовища
+    FTP_HOST = os.environ.get('FTP_HOST')
+    FTP_USER = os.environ.get('FTP_USER')
+    FTP_PASS = os.environ.get('FTP_PASS')
+    
+    logging.info(f"Початкові FTP налаштування: хост='{FTP_HOST}'")
+    
+    # Розділяємо хост і порт, якщо вони вказані разом
+    # Використовуємо регулярний вираз для безпечного виділення порту
+    match = re.match(r'^([^:]+)(?::(\d+))?$', FTP_HOST) if FTP_HOST else None
+    
+    if match:
+        FTP_HOST = match.group(1)
+        FTP_PORT = int(match.group(2)) if match.group(2) else 21
+    else:
+        FTP_PORT = 21
+    
+    logging.info(f"Розібрано налаштування: хост='{FTP_HOST}', порт={FTP_PORT}")
+    
+    # Перевіряємо, чи встановлені облікові дані
+    if not FTP_HOST or not FTP_USER or not FTP_PASS:
+        logging.error("FTP облікові дані не встановлені в змінних середовища")
+        return False, "FTP облікові дані не встановлені в змінних середовища"
+    
+    logging.info(f"Тестування FTP підключення до {FTP_HOST}:{FTP_PORT}")
+    
+    # Спробуємо підключитися з таймаутом
+    try:
+        start_time = time.time()
+        logging.info(f"Підключення до FTP серверу: {FTP_HOST}:{FTP_PORT}")
+        
+        ftp = ftplib.FTP()
+        ftp.connect(host=FTP_HOST, port=FTP_PORT, timeout=10)
+        
+        # Важливо: включаємо пасивний режим перед входом
+        logging.info("Переключення на пасивний режим")
+        ftp.set_pasv(True)
+        
+        connect_time = time.time() - start_time
+        logging.info(f"З'єднання встановлено за {connect_time:.2f}с")
+        
+        # Пробуємо увійти
+        try:
+            logging.info("Вхід на FTP сервер...")
+            ftp.login(FTP_USER, FTP_PASS)
+            login_time = time.time() - start_time - connect_time
+            logging.info(f"Вхід виконано за {login_time:.2f}с")
+            
+            # Перевіряємо, чи можемо перейти у потрібну директорію
+            try:
+                logging.info("Перехід до директорії 'sub/image/products/'")
+                ftp.cwd("sub/image/products/")
+                dirs = ftp.nlst()
+                logging.info(f"Знайдено {len(dirs)} файлів/директорій")
+                ftp.quit()
+                return True, f"Підключення успішне. Час підключення: {connect_time:.2f}с, Час входу: {login_time:.2f}с, Знайдено файлів: {len(dirs)}"
+            except ftplib.error_perm as e:
+                logging.error(f"Помилка доступу до директорії: {e}")
+                return False, f"Підключено і увійшов, але не вдалося перейти у директорію: {str(e)}"
+                
+        except ftplib.error_perm as e:
+            logging.error(f"Помилка входу на FTP: {e}")
+            return False, f"Підключення успішне, але вхід невдалий: {str(e)}"
+            
+    except socket.gaierror:
+        logging.error(f"Не вдалося знайти хост: {FTP_HOST}")
+        return False, f"Не вдалося знайти хост: {FTP_HOST}"
+    except socket.timeout:
+        logging.error("Час підключення вичерпано (10 секунд)")
+        return False, f"Час підключення вичерпано (10 секунд)"
+    except ConnectionRefusedError:
+        logging.error(f"Підключення відхилено до {FTP_HOST}:{FTP_PORT}")
+        return False, f"Підключення відхилено. FTP-сервер може бути вимкнений або заблокований фаєрволом."
+    except Exception as e:
+        logging.error(f"Помилка підключення: {e}", exc_info=True)
+        return False, f"Помилка підключення: {str(e)}"
+
+
+@app.route('/<token>/admin/test-ftp')
+@requires_token_and_roles('admin')
+@add_noindex_header
+def test_ftp_admin(token):
+    """Admin endpoint to test FTP connection"""
+    try:
+        success, message = test_ftp_connection()
+        if success:
+            flash(f"FTP connection successful: {message}", "success")
+        else:
+            flash(f"FTP connection failed: {message}", "danger")
+    except Exception as e:
+        flash(f"Error testing FTP connection: {str(e)}", "danger")
+    
+    return redirect(url_for('admin_dashboard', token=token))
+
+
+
 
 if __name__ == '__main__':
     # Створюємо директорію для файлів sitemap, якщо вона не існує

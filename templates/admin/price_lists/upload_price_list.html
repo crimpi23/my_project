@@ -7,8 +7,11 @@
     <div class="row">
         <div class="col-12">
             <div class="card mb-4">
-                <div class="card-header pb-0">
-                    <h6>Upload Price List</h6>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Upload Price List</h6>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBrandModal">
+                        <i class="bi bi-plus-circle me-1"></i> Add New Brand
+                    </button>
                 </div>
                 <div class="card-body">
                     <form action="{{ url_for('upload_price_list', token=token) }}" method="post" enctype="multipart/form-data" class="mb-4">
@@ -38,16 +41,11 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="brand_id">Select Brand</label>
-                                    <div class="d-flex">
-                                        <select class="form-control" id="brand_id" name="brand_id">
-                                            {% for brand in brands %}
-                                                <option value="{{ brand[0] }}">{{ brand[1] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#addBrandModal">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-                                    </div>
+                                    <select class="form-control" id="brand_id" name="brand_id">
+                                        {% for brand in brands %}
+                                            <option value="{{ brand[0] }}">{{ brand[1] }}</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
                             </div>
                             
@@ -108,11 +106,7 @@
                                     </td>
                                     <td>
                                         <span class="text-xs font-weight-bold mb-0">
-                                            {% if pl.last_updated %}
-                                                {{ pl.last_updated.strftime('%Y-%m-%d %H:%M') }}
-                                            {% else %}
-                                                -
-                                            {% endif %}
+                                            {{ pl.updated_at.strftime('%Y-%m-%d %H:%M') if pl.updated_at else '-' }}
                                         </span>
                                     </td>
                                     <td>

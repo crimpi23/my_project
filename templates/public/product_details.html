@@ -1,10 +1,17 @@
 {% extends "base/public_base.html" %}
 
 {% block head %}
+{% if product_data.description %}
 <meta name="description" content="{{ product_data.description[:160]|replace('%', '%%')|replace('=', '\=') }}">
-<meta name="keywords" content="{{ product_data.name|replace('%', '%%')|replace('=', '\=') }}, {{ article }}, {{ _('auto parts') }}, {{ _('spare parts') }}">
-<meta property="og:title" content="{{ product_data.name|replace('%', '%%')|replace('=', '\=') }} - AutogroupEU">
-<meta property="og:description" content="{{ product_data.description[:160]|replace('%', '%%')|replace('=', '\=') }}">
+{% else %}
+<meta name="description" content="{{ _('Find part number') }} {{ article }} {{ _('for your vehicle. Fast delivery, competitive prices. Order online or call us now!') }}">
+{% endif %}
+
+<meta name="keywords" content="{% if product_data.name %}{{ product_data.name|replace('%', '%%')|replace('=', '\=') }}, {% endif %}{{ article }}, {{ _('auto parts') }}, {{ _('spare parts') }}, {{ brand_name }}">
+
+<meta property="og:title" content="{% if product_data.name %}{{ product_data.name|replace('%', '%%')|replace('=', '\=') }}{% else %}{{ _('Auto part') }} {{ article }}{% endif %} - AutogroupEU">
+
+<meta property="og:description" content="{% if product_data.description %}{{ product_data.description[:160]|replace('%', '%%')|replace('=', '\=') }}{% else %}{{ _('Looking for part') }} {{ article }}? {{ _('Find it now at the best price with AutogroupEU. Fast shipping across Europe!') }}{% endif %}">
 <meta property="og:type" content="product">
 <meta property="og:url" content="{{ request.host_url }}{{ session.get('language', 'uk') }}/product/{{ article }}">
 
@@ -12,13 +19,17 @@
 {
   "@context": "https://schema.org/",
   "@type": "Product",
-  "name": "{{ product_data.name }}",
-  "description": "{{ product_data.description }}",
+  "name": "{% if product_data.name %}{{ product_data.name }}{% else %}{{ _('Auto Part') }} {{ article }}{% endif %}",
+  "description": "{% if product_data.description %}{{ product_data.description }}{% else %}{{ _('Quality auto part with article number') }} {{ article }}. {{ _('Available for order at AutogroupEU. Fast delivery across Europe.') }}{% endif %}",
   "sku": "{{ article }}",
   "image": [
+    {% if product_data.photo_urls and product_data.photo_urls|length > 0 %}
     {% for url in product_data.photo_urls %}
     "{{ url }}"{% if not loop.last %},{% endif %}
     {% endfor %}
+    {% else %}
+    "{{ url_for('static', filename='img/placeholder.jpg', _external=True) }}"
+    {% endif %}
   ],
   "brand": {
     "@type": "Brand",
@@ -49,32 +60,11 @@
   }
 }
 </script>
-
-<style>
-.category-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-}
-.category-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    background-color: rgba(13, 110, 253, 0.1);
-    color: var(--primary-color);
-    font-size: 12px;
-    border-radius: 4px;
-    text-decoration: none;
-    transition: all 0.2s;
-}
-.category-badge:hover {
-    background-color: var(--primary-color);
-    color: white;
-}
-</style>
-
 {% endblock %}
 
-{% block title %}{{ product_data.name }}{% endblock %}
+{% block title %}
+{% if product_data.name %}{{ product_data.name }} - {{ brand_name }}{% else %}{{ _('Auto Part') }} {{ article }} - {{ _('Find it at AutogroupEU') }}{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -196,6 +186,19 @@
 </div>
 {% endif %}
 
+{% if not product_categories or product_categories|length == 0 %}
+<div class="product-categories mt-3 mb-3">
+    <small class="text-muted d-block mb-1">{{ _('Popular Categories') }}:</small>
+    <div class="category-badges">
+        <a href="/category/engine-parts" class="category-badge">{{ _('Engine Parts') }}</a>
+        <a href="/category/brake-system" class="category-badge">{{ _('Brake System') }}</a>
+        <a href="/category/filters" class="category-badge">{{ _('Filters') }}</a>
+        <a href="/category/suspension" class="category-badge">{{ _('Suspension') }}</a>
+        <a href="/category/electrical" class="category-badge">{{ _('Electrical') }}</a>
+    </div>
+</div>
+{% endif %}
+
                         <h4 class="mb-3"><i class="bi bi-tag-fill me-2 text-primary"></i>{{ _('Available Prices') }}</h4>
                         {% for price in prices %}
                         <div class="price-card">
@@ -259,9 +262,71 @@
                 <h2><i class="bi bi-info-circle me-2"></i>{{ _('Description') }}</h2>
             </div>
             <div class="description-body">
+                {% if product_data.description %}
                 <p itemprop="description">{{ product_data.description }}</p>
+                {% else %}
+                <div class="no-description-alert">
+                    <h4>{{ _('Looking for part') }} <strong>{{ article }}</strong>?</h4>
+                    <p>{{ _('This auto part is available for order. Contact us for more details about specifications, compatibility, and delivery times.') }}</p>
+                    <ul class="part-benefits">
+                        <li><i class="bi bi-check-circle text-success"></i> {{ _('Original or high-quality alternative') }}</li>
+                        <li><i class="bi bi-check-circle text-success"></i> {{ _('Fast delivery across Europe') }}</li>
+                        <li><i class="bi bi-check-circle text-success"></i> {{ _('Professional support') }}</li>
+                        <li><i class="bi bi-check-circle text-success"></i> {{ _('Warranty on all parts') }}</li>
+                    </ul>
+                    <div class="call-to-action mt-3">
+                        <a href="{{ url_for('contacts') }}" class="btn btn-primary">
+                            <i class="bi bi-headset me-2"></i> {{ _('Contact Us') }}
+                        </a>
+                        <a href="tel:+421XXXXXXXX" class="btn btn-outline-primary ms-2">
+                            <i class="bi bi-telephone me-2"></i> {{ _('Call Now') }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
+        {% if not product_data.description %}
+        <div class="related-searches mt-4">
+            <h5>{{ _('Related Searches') }}:</h5>
+            <div class="related-search-tags">
+                <a href="{{ url_for('public_search', article=article) }}">{{ article }}</a>
+                {% if brand_name %}<a href="{{ url_for('public_search', article=brand_name) }}">{{ brand_name }}</a>{% endif %}
+                <a href="{{ url_for('public_search', article=article ~ ' compatible') }}">{{ article }} {{ _('compatible') }}</a>
+                <a href="{{ url_for('public_search', article=article ~ ' alternative') }}">{{ article }} {{ _('alternative') }}</a>
+                <a href="{{ url_for('public_search', article=article ~ ' original') }}">{{ article }} {{ _('original') }}</a>
+            </div>
+        </div>
+
+        <style>
+        .related-searches {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .related-search-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .related-search-tags a {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #e9ecef;
+            color: #495057;
+            border-radius: 20px;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .related-search-tags a:hover {
+            background: #0d6efd;
+            color: white;
+        }
+        </style>
+        {% endif %}
     </div>
 </div>
 
@@ -353,6 +418,23 @@
 .category-badge:hover {
     background-color: var(--primary-color, #0d6efd);
     color: white;
+}
+.no-description-alert {
+    background-color: #f8f9fa;
+    border-left: 5px solid #0d6efd;
+    padding: 20px;
+    border-radius: 4px;
+}
+.part-benefits {
+    list-style: none;
+    padding-left: 0;
+    margin: 15px 0;
+}
+.part-benefits li {
+    padding: 5px 0;
+}
+.call-to-action {
+    margin-top: 20px;
 }
 </style>
     </div>

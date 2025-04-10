@@ -7,6 +7,12 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h2">Sitemap Management</h1>
         <div>
+            <a href="{{ url_for('admin_check_sitemap_data', token=token) }}" class="btn btn-info me-2">
+                <i class="bi bi-database-check"></i> Check Sitemap Data
+            </a>
+            <a href="{{ url_for('admin_sitemap_utils', token=token) }}" class="btn btn-info me-2">
+                <i class="bi bi-tools"></i> Sitemap Utils
+            </a>
             <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> Back to Dashboard
             </a>
@@ -49,6 +55,16 @@
                 <div class="card-body">
                     <p><strong>Sitemap Directory:</strong> {{ sitemap_dir }}</p>
                     <p><strong>Files Count:</strong> {{ sitemap_files|length }}</p>
+                    
+                    <h6 class="mt-3">Sitemap Tools</h6>
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="{{ url_for('admin_check_sitemap_data', token=token) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-database-check"></i> Check Sitemap Data
+                        </a>
+                        <a href="{{ url_for('admin_sitemap_utils', token=token) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-tools"></i> Sitemap Utils
+                        </a>
+                    </div>
                     
                     <h6 class="mt-3">Scheduled Jobs</h6>
                     {% if scheduler_jobs %}

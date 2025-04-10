@@ -1,56 +1,148 @@
 {% extends "base/admin_base.html" %}
 
+{% block title %}Управління фотографіями товарів{% endblock %}
+
+{% block extra_css %}
+<style>
+    .photo-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .photo-item {
+        position: relative;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+        width: 120px;
+        height: 120px;
+    }
+    .photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .photo-actions {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        display: flex;
+        gap: 3px;
+    }
+    .photo-actions button {
+        background: rgba(255,255,255,0.7);
+        border: none;
+        border-radius: 3px;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .main-photo {
+        border: 3px solid #ffc107;
+    }
+    .no-photos {
+        padding: 30px;
+        text-align: center;
+        background: #f8f9fa;
+        color: #6c757d;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>Manage Product Photos</h2>
-    
-    <!-- Фільтр по артикулу -->
-    <div class="row mb-4">
-        <div class="col">
-            <input type="text" id="articleFilter" class="form-control" 
-                   placeholder="Filter by article...">
+<div class="container-fluid my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Управління фотографіями товарів</h2>
+        
+        <div>
+            <a href="{{ url_for('admin_upload_photos', token=token) }}" class="btn btn-success">
+                <i class="bi bi-upload"></i> Завантажити фото
+            </a>
         </div>
     </div>
     
-    <!-- Список товарів -->
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Фільтр</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="article">Артикул</label>
+                    <input type="text" id="article" name="article" class="form-control" 
+                           value="{{ article_filter }}" placeholder="Введіть артикул">
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label for="source">Джерело</label>
+                    <select id="source" name="source" class="form-select">
+                        <option value="all" {% if source_filter == 'all' %}selected{% endif %}>Всі товари</option>
+                        <option value="stock" {% if source_filter == 'stock' %}selected{% endif %}>Тільки Stock</option>
+                        <option value="enriched" {% if source_filter == 'enriched' %}selected{% endif %}>Тільки Enriched</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2 d-flex align-items-end mb-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        Фільтрувати
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if products %}
+    <div class="row">
         {% for product in products %}
-        <div class="col product-card" data-article="{{ product.article }}">
+        <div class="col-md-6 col-xl-4 mb-4">
             <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">{{ product.article }}</h5>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ product.article }}</h5>
+                    <span class="badge bg-secondary">{{ product.brand_name }}</span>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">
-                        <strong>Name:</strong> {{ product.name or 'N/A' }}<br>
-                        <strong>Brand:</strong> {{ product.brand_name }}
-                    </p>
+                    {% if product.name %}
+                    <p class="card-text text-muted mb-3">{{ product.name }}</p>
+                    {% endif %}
                     
-                    <!-- Галерея фотографій -->
-                    <div class="row g-2">
-                        {% if product.photos[0] != None %}
-                            {% for photo in product.photos %}
-                            <div class="col-4">
-                                <div class="position-relative">
-                                    <img src="{{ photo }}" 
-                                         class="img-thumbnail w-100" 
-                                         style="height: 100px; object-fit: contain;"
-                                         alt="{{ product.article }}">
-                                    
-                                    <button type="button" 
-                                            class="btn btn-sm btn-light position-absolute top-0 end-0 m-1 main-photo-btn"
-                                            onclick="setMainPhoto(this, '{{ product.article }}', '{{ photo }}')"
-                                            {% if loop.first %}disabled{% endif %}
-                                            title="Set as main photo">
-                                        <i class="bi bi-star{% if loop.first %}-fill{% endif %}"></i>
-                                    </button>
-                                </div>
+                    {% if product.photos %}
+                    <div class="photo-container" id="photos-{{ product.article }}">
+                        {% for photo in product.photos %}
+                        <div class="photo-item {% if loop.index0 == 0 %}main-photo{% endif %}" data-url="{{ photo }}">
+                            <img src="{{ photo }}" alt="{{ product.article }}" class="img-fluid">
+                            <div class="photo-actions">
+                                {% if loop.index0 > 0 %}
+                                <button type="button" class="set-main-btn" title="Зробити головним">
+                                    <i class="bi bi-star"></i>
+                                </button>
+                                {% endif %}
+                                <button type="button" class="delete-photo-btn" title="Видалити">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="col-12">
-                                <p class="text-muted">No photos available</p>
-                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="no-photos">
+                        <i class="bi bi-image" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Немає фотографій</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin_upload_photos', token=token, article=product.article) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus"></i> Додати фото
+                        </a>
+                        {% if product.photos and product.photos|length > 1 %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary reorder-btn">
+                            <i class="bi bi-sort"></i> Змінити порядок
+                        </button>
                         {% endif %}
                     </div>
                 </div>
@@ -58,62 +150,326 @@
         </div>
         {% endfor %}
     </div>
+    {% else %}
+    <div class="alert alert-info">
+        <p>Товари не знайдено. Змініть фільтри або переконайтеся, що додані фото до товарів.</p>
+    </div>
+    {% endif %}
 </div>
 
+<!-- Modal для перетягування і сортування фото -->
+<div class="modal fade" id="reorderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Змінити порядок фотографій</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Перетягніть фото для зміни порядку. Перша фотографія буде головною.</p>
+                
+                <div id="sortable-photos" class="photo-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                <button type="button" class="btn btn-primary" id="saveOrderBtn">Зберегти порядок</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
-function setMainPhoto(button, article, imageUrl) {
-    // Disable the button during the request
-    button.disabled = true;
+document.addEventListener('DOMContentLoaded', function() {
+    const token = "{{ token }}";
+    let reorderModal;
+    let currentArticle;
+    let sortable;
     
-    fetch('{{ url_for("manage_photos", token=token) }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            article: article,
-            image_url: imageUrl
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update UI
-            const productCard = button.closest('.product-card');
-            const allButtons = productCard.querySelectorAll('.main-photo-btn');
+    // Ініціалізація модального вікна
+    document.addEventListener('DOMContentLoaded', function() {
+        reorderModal = new bootstrap.Modal(document.getElementById('reorderModal'));
+    });
+    
+    // Обробники подій для кнопок встановлення головного фото
+    document.querySelectorAll('.set-main-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const photoItem = this.closest('.photo-item');
+            const photoContainer = photoItem.parentElement;
+            const article = photoContainer.id.replace('photos-', '');
+            const imageUrl = photoItem.dataset.url;
             
-            // Reset all buttons
-            allButtons.forEach(btn => {
-                btn.innerHTML = '<i class="bi bi-star"></i>';
-                btn.disabled = false;
+            setMainPhoto(article, imageUrl, photoContainer);
+        });
+    });
+    
+    // Обробники подій для кнопок видалення фото
+    document.querySelectorAll('.delete-photo-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!confirm('Ви впевнені, що хочете видалити це фото?')) {
+                return;
+            }
+            
+            const photoItem = this.closest('.photo-item');
+            const photoContainer = photoItem.parentElement;
+            const article = photoContainer.id.replace('photos-', '');
+            const imageUrl = photoItem.dataset.url;
+            
+            deletePhoto(article, imageUrl, photoItem);
+        });
+    });
+    
+    // Обробники для кнопок зміни порядку
+    document.querySelectorAll('.reorder-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const card = this.closest('.card');
+            const photoContainer = card.querySelector('.photo-container');
+            currentArticle = photoContainer.id.replace('photos-', '');
+            
+            // Клонуємо всі фото в модальне вікно
+            const sortablePhotos = document.getElementById('sortable-photos');
+            sortablePhotos.innerHTML = '';
+            
+            const photos = photoContainer.querySelectorAll('.photo-item');
+            photos.forEach(photo => {
+                const clone = photo.cloneNode(true);
+                sortablePhotos.appendChild(clone);
             });
             
-            // Update clicked button
-            button.innerHTML = '<i class="bi bi-star-fill"></i>';
-            button.disabled = true;
+            // Ініціалізація Sortable
+            if (sortable) {
+                sortable.destroy();
+            }
             
-            // Move the selected photo card to first position
-            const photoContainer = button.closest('.row');
-            const photoCard = button.closest('.col-4');
-            photoContainer.prepend(photoCard);
-        } else {
-            alert('Error updating main photo');
-            button.disabled = false;
+            sortable = new Sortable(sortablePhotos, {
+                animation: 150,
+                ghostClass: 'sortable-ghost'
+            });
+            
+            // Відкриваємо модальне вікно
+            reorderModal.show();
+        });
+    });
+    
+    // Зберегти порядок фото
+    document.getElementById('saveOrderBtn').addEventListener('click', function() {
+        const sortablePhotos = document.getElementById('sortable-photos');
+        const photoItems = sortablePhotos.querySelectorAll('.photo-item');
+        
+        // Збираємо URL в новому порядку
+        const photoOrder = Array.from(photoItems).map(item => item.dataset.url);
+        
+        // Відправляємо запит на зміну порядку
+        fetch(`/${token}/admin/photos/reorder`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                article: currentArticle,
+                photo_order: photoOrder
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                reorderModal.hide();
+                
+                // Оновлюємо відображення фотографій на сторінці
+                const photoContainer = document.getElementById(`photos-${currentArticle}`);
+                photoContainer.innerHTML = '';
+                
+                photoOrder.forEach((url, index) => {
+                    const div = document.createElement('div');
+                    div.className = `photo-item ${index === 0 ? 'main-photo' : ''}`;
+                    div.dataset.url = url;
+                    
+                    div.innerHTML = `
+                        <img src="${url}" alt="${currentArticle}" class="img-fluid">
+                        <div class="photo-actions">
+                            ${index > 0 ? `
+                            <button type="button" class="set-main-btn" title="Зробити головним">
+                                <i class="bi bi-star"></i>
+                            </button>
+                            ` : ''}
+                            <button type="button" class="delete-photo-btn" title="Видалити">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    photoContainer.appendChild(div);
+                });
+                
+                // Оновлюємо обробники подій
+                attachEventHandlers(photoContainer);
+                
+                alert('Порядок фотографій оновлено');
+            } else {
+                alert('Помилка при оновленні порядку фотографій');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Помилка при оновленні порядку фотографій');
+        });
+    });
+    
+    // Функції для роботи з фото
+    function setMainPhoto(article, imageUrl, photoContainer) {
+        fetch(`/${token}/admin/photos/set-main`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                article: article,
+                image_url: imageUrl
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Знаходимо всі фото в контейнері
+                const photos = photoContainer.querySelectorAll('.photo-item');
+                
+                // Знімаємо клас main-photo з усіх
+                photos.forEach(photo => {
+                    photo.classList.remove('main-photo');
+                });
+                
+                // Знаходимо вибране фото і додаємо клас
+                const selectedPhoto = Array.from(photos).find(photo => photo.dataset.url === imageUrl);
+                if (selectedPhoto) {
+                    selectedPhoto.classList.add('main-photo');
+                    
+                    // Переміщаємо на першу позицію
+                    photoContainer.prepend(selectedPhoto);
+                    
+                    // Оновлюємо кнопки
+                    updateMainButtons(photoContainer);
+                }
+            } else {
+                alert('Помилка при встановленні головного фото');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Помилка при встановленні головного фото');
+        });
+    }
+    
+    function deletePhoto(article, imageUrl, photoItem) {
+        fetch(`/${token}/admin/photos/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                article: article,
+                image_url: imageUrl
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const photoContainer = photoItem.parentElement;
+                
+                // Видаляємо фото з інтерфейсу
+                photoItem.remove();
+                
+                // Якщо це було останнє фото, показуємо повідомлення
+                if (photoContainer.children.length === 0) {
+                    const card = photoContainer.closest('.card-body');
+                    card.innerHTML = `
+                        <div class="no-photos">
+                            <i class="bi bi-image" style="font-size: 2rem;"></i>
+                            <p class="mt-2">Немає фотографій</p>
+                        </div>
+                    `;
+                } else {
+                    // Інакше оновлюємо кнопки для встановлення головного фото
+                    updateMainButtons(photoContainer);
+                }
+            } else {
+                alert('Помилка при видаленні фото');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Помилка при видаленні фото');
+        });
+    }
+    
+    function updateMainButtons(container) {
+        // Знаходимо всі фото
+        const photos = container.querySelectorAll('.photo-item');
+        
+        // Для першого фото (головного) - прибираємо кнопку встановлення головного фото
+        if (photos.length > 0) {
+            const firstPhoto = photos[0];
+            let firstPhotoActions = firstPhoto.querySelector('.photo-actions');
+            let mainButton = firstPhotoActions.querySelector('.set-main-btn');
+            if (mainButton) {
+                mainButton.remove();
+            }
+            
+            // Для всіх інших - додаємо кнопку, якщо її немає
+            for (let i = 1; i < photos.length; i++) {
+                let actions = photos[i].querySelector('.photo-actions');
+                if (!actions.querySelector('.set-main-btn')) {
+                    const button = document.createElement('button');
+                    button.className = 'set-main-btn';
+                    button.title = 'Зробити головним';
+                    button.innerHTML = '<i class="bi bi-star"></i>';
+                    
+                    // Додаємо обробник події
+                    button.addEventListener('click', function() {
+                        const photoItem = this.closest('.photo-item');
+                        const photoContainer = photoItem.parentElement;
+                        const article = photoContainer.id.replace('photos-', '');
+                        const imageUrl = photoItem.dataset.url;
+                        
+                        setMainPhoto(article, imageUrl, photoContainer);
+                    });
+                    
+                    actions.prepend(button);
+                }
+            }
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error updating main photo');
-        button.disabled = false;
-    });
-}
-
-document.getElementById('articleFilter').addEventListener('keyup', function() {
-    let filter = this.value.toUpperCase();
-    document.querySelectorAll('.product-card').forEach(card => {
-        let article = card.getAttribute('data-article').toUpperCase();
-        card.style.display = article.includes(filter) ? '' : 'none';
-    });
+    }
+    
+    function attachEventHandlers(container) {
+        // Додаємо обробники для кнопок встановлення головного фото
+        container.querySelectorAll('.set-main-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const photoItem = this.closest('.photo-item');
+                const photoContainer = photoItem.parentElement;
+                const article = photoContainer.id.replace('photos-', '');
+                const imageUrl = photoItem.dataset.url;
+                
+                setMainPhoto(article, imageUrl, photoContainer);
+            });
+        });
+        
+        // Додаємо обробники для кнопок видалення фото
+        container.querySelectorAll('.delete-photo-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!confirm('Ви впевнені, що хочете видалити це фото?')) {
+                    return;
+                }
+                
+                const photoItem = this.closest('.photo-item');
+                const photoContainer = photoItem.parentElement;
+                const article = photoContainer.id.replace('photos-', '');
+                const imageUrl = photoItem.dataset.url;
+                
+                deletePhoto(article, imageUrl, photoItem);
+            });
+        });
+    }
 });
 </script>
 {% endblock %}

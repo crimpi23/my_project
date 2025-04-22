@@ -155,6 +155,38 @@
                                 </a>
                             </div>
                         </div>
+                        <div class="col-md-12">
+                            <hr>
+                            <h6 class="mb-3">Blog</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-grid">
+                                <a href="{{ url_for('admin_blog_posts', token=token) }}" class="btn btn-outline-success">
+                                    <i class="bi bi-file-richtext me-2"></i>Manage Blog Posts
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-grid">
+                                <a href="{{ url_for('admin_blog_categories', token=token) }}" class="btn btn-outline-success">
+                                    <i class="bi bi-folder-plus me-2"></i>Blog Categories
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mt-2">
+                            <div class="d-grid">
+                                <a href="{{ url_for('admin_blog_new_post', token=token) }}" class="btn btn-outline-success">
+                                    <i class="bi bi-pencil-square me-2"></i>Create New Post
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mt-2">
+                            <div class="d-grid">
+                                <a href="{{ url_for('admin_blog_statistics', token=token) }}" class="btn btn-outline-success">
+                                    <i class="bi bi-graph-up me-2"></i>Blog Statistics
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -216,6 +248,32 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Навігаційна панель блогу для включення в усі admin/blog/*.html шаблони -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Blog Management</h5>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('admin_blog_posts', token=token) }}" class="btn btn-sm {% if request.endpoint == 'admin_blog_posts' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    <i class="bi bi-list-ul me-1"></i> All Posts
+                </a>
+                <a href="{{ url_for('admin_blog_new_post', token=token) }}" class="btn btn-sm {% if request.endpoint == 'admin_blog_new_post' %}btn-success{% else %}btn-outline-success{% endif %}">
+                    <i class="bi bi-plus-circle me-1"></i> New Post
+                </a>
+                <a href="{{ url_for('admin_blog_categories', token=token) }}" class="btn btn-sm {% if request.endpoint == 'admin_blog_categories' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    <i class="bi bi-folder me-1"></i> Categories
+                </a>
+                <a href="{{ url_for('admin_blog_statistics', token=token) }}" class="btn btn-sm {% if request.endpoint == 'admin_blog_statistics' %}btn-info{% else %}btn-outline-info{% endif %}">
+                    <i class="bi bi-bar-chart me-1"></i> Statistics
+                </a>
+                <a href="{{ url_for('blog_index') }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> View Blog
+                </a>
             </div>
         </div>
     </div>

@@ -1,0 +1,288 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}{% if mode == 'edit' %}Редагування публікації{% else %}Створення публікації{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% if mode == 'edit' %}Редагування публікації{% else %}Створення нової публікації{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="blogPostForm">
+                        <!-- Верхня панель з загальними елементами -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text">Slug</span>
+                                    <input type="text" name="slug" id="slug" class="form-control" 
+                                           value="{{ post.slug if post else '' }}">
+                                    <button type="button" class="btn btn-outline-secondary" id="generateSlug">
+                                        Генерувати
+                                    </button>
+                                </div>
+                                <small class="text-muted mb-3 d-block">URL-дружня назва (буде згенерована автоматично, якщо пусто)</small>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="published" id="published" 
+                                           {% if post and post.published %}checked{% endif %}>
+                                    <label class="form-check-label" for="published">
+                                        Опубліковано
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Вкладки для мов з бічними параметрами -->
+                        <div class="row">
+                            <!-- Ліва колонка з параметрами -->
+                            <div class="col-md-3">
+                                <div class="card shadow-sm mb-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Параметри публікації</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">URL зображення</label>
+                                            <input type="text" name="featured_image" class="form-control" 
+                                                   value="{{ post.featured_image if post else '' }}">
+                                            <small class="form-text text-muted">Повний URL до головного зображення</small>
+                                        </div>
+                                        
+                                        <div class="mb-4">
+                                            <label class="form-label">Категорії</label>
+                                            <select name="categories" class="form-select" multiple style="min-height: 150px;">
+                                                {% for category in categories %}
+                                                <option value="{{ category.id }}" 
+                                                        {% if selected_categories and category.id in selected_categories %}selected{% endif %}>
+                                                    {{ category.name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                            <small class="form-text text-muted">Для вибору кількох категорій використовуйте Ctrl/Cmd</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Теги</label>
+                                            <input type="text" name="tags" class="form-control" value="{{ tags if tags else '' }}">
+                                            <small class="form-text text-muted">Теги, розділені комами</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Права колонка з вкладками контенту -->
+                            <div class="col-md-9">
+                                <div class="card shadow-sm">
+                                    <div class="card-header p-0 border-bottom-0">
+                                        <!-- Вкладки мов -->
+                                        <ul class="nav nav-tabs" id="languageTabs" role="tablist">
+                                            {% for lang_code, lang_name in supported_languages.items() %}
+                                            <li class="nav-item" role="presentation">
+                                                <a class="nav-link {% if loop.first %}active{% endif %}" 
+                                                   id="tab-{{ lang_code }}" 
+                                                   data-bs-toggle="tab" 
+                                                   href="#content-{{ lang_code }}" 
+                                                   role="tab" 
+                                                   aria-controls="content-{{ lang_code }}" 
+                                                   aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                                                    {{ lang_name }}
+                                                </a>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="card-body">
+                                        <!-- Вміст вкладок для кожної мови -->
+                                        <div class="tab-content">
+                                            {% for lang_code, lang_name in supported_languages.items() %}
+                                            <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                                                 id="content-{{ lang_code }}" role="tabpanel">
+                                                
+                                                <div class="mb-4">
+                                                    <label class="form-label">Заголовок ({{ lang_name }})</label>
+                                                    <input type="text" name="title_{{ lang_code }}" id="title_{{ lang_code }}" 
+                                                           class="form-control form-control-lg" 
+                                                           value="{{ post_translations[lang_code].title if post_translations and lang_code in post_translations else '' }}">
+                                                </div>
+                                                
+                                                <div class="mb-4">
+                                                    <label class="form-label">Короткий опис ({{ lang_name }})</label>
+                                                    <textarea name="excerpt_{{ lang_code }}" id="excerpt_{{ lang_code }}" 
+                                                              class="form-control" rows="3" style="min-height: 80px;">{{ post_translations[lang_code].excerpt if post_translations and lang_code in post_translations else '' }}</textarea>
+                                                    <small class="form-text text-muted">Короткий опис для списку публікацій та шерінга в соціальні мережі</small>
+                                                </div>
+                                                
+                                                <div class="mb-4">
+                                                    <label class="form-label">Контент ({{ lang_name }})</label>
+                                                    <textarea name="content_{{ lang_code }}" id="content_{{ lang_code }}" 
+                                                              class="wysiwyg-editor">{{ post_translations[lang_code].content if post_translations and lang_code in post_translations else '' }}</textarea>
+                                                </div>
+                                                
+                                                <hr class="my-4">
+                                                
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Meta Title ({{ lang_name }})</label>
+                                                            <input type="text" name="meta_title_{{ lang_code }}" class="form-control" 
+                                                                  value="{{ post_translations[lang_code].meta_title if post_translations and lang_code in post_translations else '' }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Meta Description ({{ lang_name }})</label>
+                                                            <textarea name="meta_description_{{ lang_code }}" class="form-control" rows="2">{{ post_translations[lang_code].meta_description if post_translations and lang_code in post_translations else '' }}</textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="text-end mt-3">
+                                                    <button type="button" class="btn btn-secondary preview-btn" data-lang="{{ lang_code }}">
+                                                        Попередній перегляд [{{ lang_name }}]
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Кнопки дій внизу форми -->
+                        <div class="row mt-4">
+                            <div class="col-12 text-end">
+                                <a href="{{ url_for('admin_blog_posts', token=token) }}" class="btn btn-outline-secondary me-2">Скасувати</a>
+                                <button type="submit" class="btn btn-primary">
+                                    {% if mode == 'edit' %}Зберегти зміни{% else %}Створити публікацію{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно для попереднього перегляду -->
+<div class="modal fade" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">Попередній перегляд</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent" class="preview-container">
+                    <!-- Тут буде контент попереднього перегляду -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Перевіряємо, чи завантажився CKEditor
+        setTimeout(function() {
+            // Функціональність попереднього перегляду
+            const previewButtons = document.querySelectorAll('.preview-btn');
+            const previewModal = document.getElementById('previewModal');
+            const previewContent = document.getElementById('previewContent');
+            
+            previewButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const lang = this.getAttribute('data-lang');
+                    let title = document.getElementById(`title_${lang}`).value || 'Без заголовка';
+                    let excerpt = document.getElementById(`excerpt_${lang}`).value || '';
+                    
+                    // Отримуємо вміст з CKEditor (він зберігає значення в оригінальному textarea)
+                    let content = document.getElementById(`content_${lang}`).value;
+                    
+                    // Формуємо HTML для попереднього перегляду
+                    let previewHTML = `
+                        <div class="preview-header">
+                            <h1>${title}</h1>
+                        </div>`;
+                    
+                    if (excerpt) {
+                        previewHTML += `
+                        <div class="preview-excerpt mb-4">
+                            <em>${excerpt}</em>
+                        </div>
+                        <hr>`;
+                    }
+                    
+                    previewHTML += `
+                        <div class="preview-body">
+                            ${content}
+                        </div>`;
+                    
+                    // Встановлюємо контент у модальне вікно
+                    previewContent.innerHTML = previewHTML;
+                    
+                    // Показуємо модальне вікно
+                    const modal = new bootstrap.Modal(previewModal);
+                    modal.show();
+                });
+            });
+        }, 1000); // Даємо час для ініціалізації CKEditor
+        
+        // Генерація slug з заголовка
+        document.getElementById('generateSlug').addEventListener('click', function() {
+            // Знаходимо активну вкладку
+            const activeTabId = document.querySelector('.tab-pane.active').id;
+            const langCode = activeTabId.replace('content-', '');
+            const titleInput = document.getElementById(`title_${langCode}`);
+            
+            if (titleInput && titleInput.value) {
+                // Виклик API для генерації slug
+                fetch(`/{{ token }}/admin/generate-slug`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: titleInput.value,
+                        lang: langCode
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.slug) {
+                        document.getElementById('slug').value = data.slug;
+                    } else {
+                        alert('Не вдалося згенерувати slug');
+                    }
+                })
+                .catch(error => {
+                    console.error('Помилка генерації slug:', error);
+                });
+            } else {
+                alert('Будь ласка, спочатку введіть заголовок');
+            }
+        });
+        
+        // Активація вкладок Bootstrap
+        const triggerTabList = [].slice.call(document.querySelectorAll('#languageTabs a'))
+        triggerTabList.forEach(function (triggerEl) {
+            const tabTrigger = new bootstrap.Tab(triggerEl)
+            triggerEl.addEventListener('click', function (event) {
+                event.preventDefault()
+                tabTrigger.show()
+            })
+        });
+    });
+</script>
+{% endblock %}

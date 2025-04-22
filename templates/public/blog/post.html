@@ -1,0 +1,137 @@
+{% extends "base/public_base.html" %}
+
+{% block title %}{{ post.title }} - AutogroupEU{% endblock %}
+
+{% block meta %}
+<meta name="description" content="{{ post.meta_description }}">
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ post.meta_description }}">
+{% if post.featured_image %}
+<meta property="og:image" content="{{ post.featured_image }}">
+{% endif %}
+<meta property="og:url" content="{{ url_for('blog_post', slug=post.slug, _external=True) }}">
+<meta property="og:type" content="article">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Хлібні крихти -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">{{ _('Home') }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('blog_index') }}">{{ _('Blog') }}</a></li>
+            {% if category %}
+            <li class="breadcrumb-item"><a href="{{ url_for('blog_category', slug=category.slug) }}">{{ category.name }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active" aria-current="page">{{ post.title }}</li>
+        </ol>
+    </nav>
+    
+    <article class="blog-post">
+        <!-- Адаптивний заголовок статті -->
+        <header class="mb-4">
+            <h1 class="display-4 fs-2 fs-md-4 fs-lg-display-4"> <!-- Адаптивний розмір заголовка -->
+                {{ post.title }}
+            </h1>
+            
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                {% if categories %}
+                {% for category in categories %}
+                <a href="{{ url_for('blog_category', slug=category.slug) }}" class="badge bg-primary text-decoration-none">
+                    {{ category.name }}
+                </a>
+                {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="mb-4 text-muted small"> <!-- Зменшено розмір тексту -->
+                <span class="me-3"><i class="bi bi-calendar"></i> {{ post.published_at|datetime }}</span>
+                {% if post.reading_time %}
+                <span><i class="bi bi-clock"></i> {{ post.reading_time }} {{ _('min read') }}</span>
+                {% endif %}
+            </div>
+            
+            {% if post.featured_image %}
+            <div class="post-featured-image mb-4">
+                <img src="{{ post.featured_image }}" alt="{{ post.title }}" 
+                     class="img-fluid rounded" style="width:100%; height:auto;"> <!-- Гарантуємо адаптивність -->
+            </div>
+            {% endif %}
+        </header>
+        
+        <!-- Адаптивний контент статті -->
+        <div class="blog-content">
+            <style>
+                /* Стилі для вбудованого контенту */
+                .blog-content img { max-width: 100%; height: auto; } 
+                .blog-content table { overflow-x: auto; display: block; width: 100%; }
+                .blog-content pre { overflow-x: auto; }
+                @media (max-width: 768px) {
+                    .blog-content h2 { font-size: 1.5rem; }
+                    .blog-content h3 { font-size: 1.3rem; }
+                }
+            </style>
+            {{ post.content|safe }}
+        </div>
+        
+        <footer class="mt-5 pt-3 border-top">
+            <!-- Теги статті -->
+            {% if tags %}
+            <div class="mb-3">
+                <h5>{{ _('Tags') }}:</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for tag in tags %}
+                    <a href="{{ url_for('blog_tag', slug=tag.slug) }}" class="badge bg-secondary text-decoration-none">
+                        {{ tag.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Кнопки шарингу -->
+            <div class="share-buttons mt-3">
+                <h5>{{ _('Share') }}:</h5>
+                <div class="d-flex gap-2">
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ url_for('blog_post', slug=post.slug, _external=True) }}" 
+                       target="_blank" class="btn btn-sm btn-primary">
+                        <i class="bi bi-facebook"></i> Facebook
+                    </a>
+                    <a href="https://twitter.com/intent/tweet?url={{ url_for('blog_post', slug=post.slug, _external=True) }}&text={{ post.title }}" 
+                       target="_blank" class="btn btn-sm btn-info">
+                        <i class="bi bi-twitter"></i> Twitter
+                    </a>
+                    <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ url_for('blog_post', slug=post.slug, _external=True) }}" 
+                       target="_blank" class="btn btn-sm btn-secondary">
+                        <i class="bi bi-linkedin"></i> LinkedIn
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </article>
+    
+    <!-- Пов'язані статті -->
+    {% if related_posts %}
+    <section class="related-posts mt-5 pt-3 border-top">
+        <h2 class="h3 mb-4">{{ _('You might also like') }}</h2>
+        <div class="row">
+            {% for related in related_posts %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    {% if related.featured_image %}
+                    <img src="{{ related.featured_image }}" class="card-img-top" alt="{{ related.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ related.title }}</h5>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
+                        <a href="{{ url_for('blog_post', slug=related.slug) }}" class="btn btn-sm btn-primary">{{ _('Read more') }}</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

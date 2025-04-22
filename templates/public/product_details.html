@@ -14,6 +14,7 @@
 <meta property="og:description" content="{% if product_data.description %}{{ product_data.description[:160]|replace('%', '%%')|replace('=', '\=') }}{% else %}{{ _('Looking for part') }} {{ article }}? {{ _('Find it now at the best price with AutogroupEU. Fast shipping across Europe!') }}{% endif %}">
 <meta property="og:type" content="product">
 <meta property="og:url" content="{{ request.host_url }}{{ session.get('language', 'uk') }}/product/{{ article }}">
+<meta property="og:site_name" content="AutogroupEU" />
 
 <script type="application/ld+json">
 {
@@ -45,7 +46,7 @@
     "url": "{{ request.url }}",
     "seller": {
       "@type": "Organization",
-      "name": "AutoGroup"
+      "name": "AutogroupEU"
     },
     "offers": [
       {% for price in prices %}
@@ -58,6 +59,16 @@
       {% endfor %}
     ]
   }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "AutogroupEU",
+  "url": "https://autogroup.sk",
+  "logo": "{{ url_for('static', filename='images/AutogroupEU.png', _external=True) }}"
 }
 </script>
 {% endblock %}
@@ -267,7 +278,7 @@
                 {% else %}
                 <div class="no-description-alert">
                     <h4>{{ _('Looking for part') }} <strong>{{ article }}</strong>?</h4>
-                    <p>{{ _('This auto part is available for order. Contact us for more details about specifications, compatibility, and delivery times.') }}</p>
+                    <p>{{ _('This auto part is available for order from AutogroupEU. Contact us for more details about specifications, compatibility, and delivery times.') }}</p>
                     <ul class="part-benefits">
                         <li><i class="bi bi-check-circle text-success"></i> {{ _('Original or high-quality alternative') }}</li>
                         <li><i class="bi bi-check-circle text-success"></i> {{ _('Fast delivery across Europe') }}</li>

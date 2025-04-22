@@ -1,0 +1,199 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Статистика блогу{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0">Статистика блогу</h1>
+        <a href="{{ url_for('admin_blog_posts', token=token) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Назад до статей
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Загальна статистика -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Всього статей</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_posts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-text fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Опубліковано</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ published_posts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Нові за місяць</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recent_posts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Всього переглядів</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_views }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-eye fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Популярні пости -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Популярні статті</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Заголовок</th>
+                                    <th>Переглядів</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for post in popular_posts %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('admin_edit_blog_post', token=token, post_id=post.id) }}">
+                                            {{ post.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ post.views }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-center">Немає даних</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика за категоріями -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Статистика за категоріями</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Категорія</th>
+                                    <th>Кількість статей</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in category_stats %}
+                                <tr>
+                                    <td>{{ category.name }}</td>
+                                    <td>{{ category.post_count }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-center">Немає даних</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Статистика за мовами -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Статистика за мовами</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Мова</th>
+                                    <th>Кількість статей</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lang in language_stats %}
+                                <tr>
+                                    <td>
+                                        {% if lang.language == 'sk' %}Словацька
+                                        {% elif lang.language == 'en' %}Англійська
+                                        {% elif lang.language == 'pl' %}Польська
+                                        {% elif lang.language == 'hu' %}Угорська
+                                        {% else %}{{ lang.language }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ lang.post_count }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-center">Немає даних</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

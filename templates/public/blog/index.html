@@ -1,0 +1,179 @@
+<!-- templates/public/blog/index.html -->
+{% extends "base/public_base.html" %}
+
+{% block title %}
+    {% if selected_category %}
+        {{ selected_category.name }} - 
+    {% endif %}
+    {{ _('Blog') }} - AutogroupEU
+{% endblock %}
+
+{% block meta %}
+    <meta name="description" content="{{ _('Latest articles about automotive parts and repairs') }}">
+    <link rel="canonical" href="{{ full_uri|replace('?page=1', '') }}">
+    
+    {% if page > 1 %}
+        <link rel="prev" href="{{ url_for('blog_index', page=page-1, category=request.args.get('category'), tag=request.args.get('tag'), sort=request.args.get('sort'), _external=True) }}">
+    {% endif %}
+    
+    {% if page < total_pages %}
+        <link rel="next" href="{{ url_for('blog_index', page=page+1, category=request.args.get('category'), tag=request.args.get('tag'), sort=request.args.get('sort'), _external=True) }}">
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8 mb-3 mb-md-0"> <!-- Додано відступ для мобільних -->
+            <h1 class="display-5 fs-2 fs-md-5"> <!-- Зменшений розмір на мобільних -->
+                {% if selected_category %}
+                    {{ selected_category.name }}
+                {% else %}
+                    {{ _('Blog') }}
+                {% endif %}
+            </h1>
+            <p class="lead fs-6 fs-md-5">{{ _('Latest articles and news from the automotive world') }}</p>
+        </div>
+        
+        <div class="col-md-4">
+            <form class="d-flex" action="{{ url_for('blog_index') }}" method="GET">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="{{ _('Search') }}..." 
+                           value="{{ request.args.get('search', '') }}">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Фільтр категорій -->
+    {% if categories %}
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex flex-wrap gap-1 gap-md-2"> <!-- Зменшений відступ між кнопками на мобільних -->
+                <a href="{{ url_for('blog_index') }}" class="btn btn-sm {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %} mb-1">
+                    {{ _('All') }}
+                </a>
+                {% for category in categories %}
+                <a href="{{ url_for('blog_category', slug=category.slug) }}" 
+                   class="btn btn-sm {% if selected_category and selected_category.slug == category.slug %}btn-primary{% else %}btn-outline-primary{% endif %} mb-1">
+                    {{ category.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Сортування -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center"> <!-- Стеки на мобільних -->
+                <div class="btn-group mb-2 mb-sm-0" role="group">
+                    <a href="{{ url_for('blog_index', category=request.args.get('category'), tag=request.args.get('tag'), sort='newest') }}" 
+                       class="btn btn-sm {% if sort == 'newest' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+                        {{ _('Newest') }}
+                    </a>
+                    <a href="{{ url_for('blog_index', category=request.args.get('category'), tag=request.args.get('tag'), sort='oldest') }}"
+                       class="btn btn-sm {% if sort == 'oldest' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+                        {{ _('Oldest') }}
+                    </a>
+                    <a href="{{ url_for('blog_index', category=request.args.get('category'), tag=request.args.get('tag'), sort='popular') }}"
+                       class="btn btn-sm {% if sort == 'popular' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+                        {{ _('Popular') }}
+                    </a>
+                </div>
+                
+                <div class="small text-muted">
+                    {{ _('Found {0} posts').format(total_posts) }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        {% for post in posts %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm"> 
+                <a href="{{ url_for('blog_post', slug=post.slug) }}" class="text-decoration-none">
+                    {% if post.featured_image %}
+                    <div class="position-relative bg-light"> 
+                        <img src="{{ post.featured_image }}" class="card-img-top" 
+                             style="aspect-ratio: 16/9; object-fit: cover;" <!-- Фіксоване співвідношення -->
+                             alt="{{ post.title }}" loading="lazy">
+                    </div>
+                    {% else %}
+                    <div class="card-img-top bg-light text-center py-4" style="aspect-ratio: 16/9;"> 
+                        <i class="bi bi-file-text display-4 text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ post.title }}</h5>
+                        {% if post.excerpt %}
+                        <div class="card-text small">
+                            {{ post.excerpt|safe }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </a>
+                <div class="card-footer bg-transparent border-top-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted d-none d-sm-block">
+                            <i class="bi bi-calendar-event me-1"></i> {{ post.published_at|datetime }}
+                        </small>
+                        <a href="{{ url_for('blog_post', slug=post.slug) }}" class="btn btn-sm btn-primary">
+                            {{ _('Read more') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Пагінація -->
+    {% if total_pages > 1 %}
+    <div class="row mt-4">
+        <div class="col">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for(request.endpoint, page=page-1, category=request.args.get('category'), tag=request.args.get('tag'), sort=request.args.get('sort')) }}">
+                            {{ _('Previous') }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">{{ _('Previous') }}</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for p in range(1, total_pages + 1) %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for(request.endpoint, page=p, category=request.args.get('category'), tag=request.args.get('tag'), sort=request.args.get('sort')) }}">
+                            {{ p }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if page < total_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for(request.endpoint, page=page+1, category=request.args.get('category'), tag=request.args.get('tag'), sort=request.args.get('sort')) }}">
+                            {{ _('Next') }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">{{ _('Next') }}</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

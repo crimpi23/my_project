@@ -1,0 +1,210 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Управління категоріями блогу{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0">Управління категоріями блогу</h1>
+        <a href="{{ url_for('admin_blog_posts', token=token) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Назад до статей
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Форма створення/редагування категорії -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0" id="form-title">Створити нову категорію</h5>
+                </div>
+                <div class="card-body">
+                    <form id="category-form" method="POST">
+                        <input type="hidden" name="action" id="form-action" value="create">
+                        <input type="hidden" name="category_id" id="category-id" value="">
+
+                        <div class="mb-3">
+                            <label for="slug" class="form-label">Slug</label>
+                            <input type="text" class="form-control" id="slug" name="slug" placeholder="category-slug">
+                            <small class="text-muted">Унікальний ідентифікатор для URL</small>
+                        </div>
+
+                        <!-- Вкладки для мов -->
+                        <ul class="nav nav-tabs mb-3" id="langTabs" role="tablist">
+                            {% for code, name in supported_languages.items() %}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if loop.first %}active{% endif %}" 
+                                        id="tab-{{ code }}" 
+                                        data-bs-toggle="tab" 
+                                        data-bs-target="#content-{{ code }}" 
+                                        type="button" 
+                                        role="tab" 
+                                        aria-controls="content-{{ code }}" 
+                                        aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                                    {{ name }}
+                                </button>
+                            </li>
+                            {% endfor %}
+                        </ul>
+
+                        <!-- Вміст вкладок для різних мов -->
+                        <div class="tab-content" id="langTabsContent">
+                            {% for code, name in supported_languages.items() %}
+                            <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                                 id="content-{{ code }}" 
+                                 role="tabpanel" 
+                                 aria-labelledby="tab-{{ code }}">
+                                <div class="mb-3">
+                                    <label for="name_{{ code }}" class="form-label">Назва ({{ code }})</label>
+                                    <input type="text" class="form-control" id="name_{{ code }}" name="name_{{ code }}" placeholder="Назва категорії">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="description_{{ code }}" class="form-label">Опис ({{ code }})</label>
+                                    <textarea class="form-control" id="description_{{ code }}" name="description_{{ code }}" rows="3" placeholder="Опис категорії"></textarea>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary" id="submit-btn">Створити категорію</button>
+                            <button type="button" class="btn btn-secondary" id="reset-btn" onclick="resetForm()">Очистити</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Список категорій -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Список категорій</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Slug</th>
+                                    <th>Назва (SK)</th>
+                                    <th>Статей</th>
+                                    <th>Мови</th>
+                                    <th>Дії</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td>{{ category.id }}</td>
+                                    <td>{{ category.slug }}</td>
+                                    <td>{{ category.name_sk }}</td>
+                                    <td><span class="badge bg-info">{{ category.post_count }}</span></td>
+                                    <td>
+                                        {% if category.name_sk %}
+                                        <span class="badge bg-success">SK</span>
+                                        {% endif %}
+                                        {% if category.name_en %}
+                                        <span class="badge bg-success">EN</span>
+                                        {% endif %}
+                                        {% if category.name_pl %}
+                                        <span class="badge bg-success">PL</span>
+                                        {% endif %}
+                                        {% if category.name_hu %}
+                                        <span class="badge bg-success">HU</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-warning" onclick="editCategory({{ category|tojson }})">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        
+                                        {% if category.post_count == 0 %}
+                                        <button class="btn btn-sm btn-danger" onclick="deleteCategory({{ category.id }}, '{{ category.name_sk }}')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        {% else %}
+                                        <button class="btn btn-sm btn-danger" disabled title="Не можна видалити категорію з публікаціями">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно для підтвердження видалення -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Підтвердження видалення</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Ви дійсно хочете видалити категорію <strong id="delete-category-name"></strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                <form method="POST">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="category_id" id="delete-category-id">
+                    <button type="submit" class="btn btn-danger">Видалити</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Функція для ініціалізації форми редагування категорії
+    function editCategory(category) {
+        document.getElementById('form-title').textContent = 'Редагувати категорію';
+        document.getElementById('form-action').value = 'update';
+        document.getElementById('category-id').value = category.id;
+        document.getElementById('slug').value = category.slug;
+        
+        // Заповнюємо поля для всіх мов
+        document.getElementById('name_sk').value = category.name_sk || '';
+        document.getElementById('name_en').value = category.name_en || '';
+        document.getElementById('name_pl').value = category.name_pl || '';
+        document.getElementById('name_hu').value = category.name_hu || '';
+        
+        // Примітка: опис категорії отримуватимемо через AJAX запит для економії даних
+        // або можна передати всі описи в об'єкті category та встановити їх тут
+        
+        document.getElementById('submit-btn').textContent = 'Оновити категорію';
+        
+        // Прокручуємо до форми
+        document.getElementById('category-form').scrollIntoView({behavior: 'smooth'});
+    }
+    
+    // Функція для скидання форми
+    function resetForm() {
+        document.getElementById('form-title').textContent = 'Створити нову категорію';
+        document.getElementById('form-action').value = 'create';
+        document.getElementById('category-id').value = '';
+        document.getElementById('category-form').reset();
+        document.getElementById('submit-btn').textContent = 'Створити категорію';
+    }
+    
+    // Функція для відкриття модального вікна підтвердження видалення
+    function deleteCategory(id, name) {
+        document.getElementById('delete-category-id').value = id;
+        document.getElementById('delete-category-name').textContent = name;
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+</script>
+{% endblock %}

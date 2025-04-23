@@ -36,42 +36,19 @@
         "@type": "Brand", 
         "name": "{{ brand_name if brand_name else 'AutogroupEU' }}"
       },
-      {% if prices|length > 1 %}
-      "offers": {
-        "@type": "AggregateOffer",
-        "priceCurrency": "EUR",
-        "lowPrice": "{{ prices[0].price }}",
-        "highPrice": "{{ prices[-1].price }}",
-        "offerCount": {{ prices|length }},
-        "offers": [
-          {% for p in prices %}
-          {
-            "@type": "Offer",
-            "price": "{{ p.price }}",
-            "priceCurrency": "EUR",
-            "availability": "https://schema.org/{% if p.in_stock %}InStock{% else %}PreOrder{% endif %}",
-            "url": "{{ request.url }}"
-          }{% if not loop.last %},{% endif %}
-          {% endfor %}
-        ]
-      }
-      {% elif prices|length == 1 %}
       "offers": {
         "@type": "Offer",
-        "price": "{{ prices[0].price }}",
-        "priceCurrency": "EUR",
-        "availability": "https://schema.org/{% if prices[0].in_stock %}InStock{% else %}PreOrder{% endif %}",
         "url": "{{ request.url }}",
-        "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}"
-      }
-      {% else %}
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
         "priceCurrency": "EUR",
-        "availability": "https://schema.org/OutOfStock",
-        "url": "{{ request.url }}"
+        "price": "{% if prices and prices|length > 0 %}{{ prices[0].price }}{% else %}0.00{% endif %}",
+        "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}",
+        "availability": "{% if prices and prices|length > 0 %}https://schema.org/{% if prices[0].in_stock %}InStock{% else %}PreOrder{% endif %}{% else %}https://schema.org/OutOfStock{% endif %}"
       }
+      {% if product_categories and product_categories|length > 0 %}
+      ,"category": "{% for category in product_categories %}{{ category[('name_' + g.locale)] or category.name_sk or category.name_en or category.name_uk }}{% if not loop.last %} > {% endif %}{% endfor %}"
+      {% if product_categories[0].google_category_id %}
+      ,"googleProductCategory": "{{ product_categories[0].google_category_id }}"
+      {% endif %}
       {% endif %}
     }
     </script>

@@ -104,15 +104,14 @@
     </div>
     
     
-    <div class="product-container fade-in" itemscope itemtype="https://schema.org/Product">
+    <div class="product-container fade-in">
         <div class="row">
             <div class="col-md-6 mobile-second">
                 <div class="image-section">
                     <div class="image-container">
                         <img id="productImage" 
-                             src="{{ product_data.photo_urls[0] }}" 
-                             alt="{{ product_data.name }}"
-                             itemprop="image">
+                            src="{{ product_data.photo_urls[0] }}" 
+                            alt="{{ product_data.name }}">
                     </div>
                     
                     {% if product_data.photo_urls|length > 1 %}
@@ -145,18 +144,18 @@
             <div class="col-md-6 mobile-first">
                 <div class="product-info-card">
                     <div class="product-info-header">
-                        <h1 itemprop="name">{{ product_data.name }}</h1>
+                        <h1>{{ product_data.name }}</h1>
                     </div>
                     <div class="product-info-body">
                         <div class="product-meta">
                             <div class="product-meta-item">
                                 <span class="meta-label">{{ _('Article') }}:</span>
-                                <span class="article-badge" itemprop="sku">{{ article }}</span>
+                                <span class="article-badge">{{ article }}</span>
                             </div>
                             
                             <div class="product-meta-item">
                                 <span class="meta-label">{{ _('Brand') }}:</span>
-                                <span class="meta-value" itemprop="brand">{{ brand_name }}</span>
+                                <span class="meta-value">{{ brand_name }}</span>
                             </div>
                         </div>
 
@@ -172,13 +171,13 @@
     </div>
     
     <div class="d-none">
-        <span itemprop="category">
+        <span>
             {% for category in product_categories %}
                 {{ category[('name_' + g.locale)] or category.name_sk or category.name_en or category.name_uk }}{% if not loop.last %} > {% endif %}
             {% endfor %}
         </span>
         {% if product_categories and product_categories[0].google_category_id %}
-        <span itemprop="googleProductCategory">{{ product_categories[0].google_category_id }}</span>
+        <span>{{ product_categories[0].google_category_id }}</span>
         {% endif %}
     </div>
 </div>
@@ -261,7 +260,7 @@
             </div>
             <div class="description-body">
                 {% if product_data.description %}
-                <p itemprop="description">{{ product_data.description }}</p>
+                <p>{{ product_data.description }}</p>
                 {% else %}
                 <div class="no-description-alert">
                     <h4>{{ _('Looking for part') }} <strong>{{ article }}</strong>?</h4>
@@ -342,13 +341,13 @@
             </div>
             
             <div class="d-none">
-                <span itemprop="category">
+                <span>
                     {% for category in product_categories %}
                         {{ category[('name_' + g.locale)] or category.name_sk or category.name_en or category.name_uk }}{% if not loop.last %} > {% endif %}
                     {% endfor %}
                 </span>
                 {% if product_categories and product_categories[0].google_category_id %}
-                <span itemprop="googleProductCategory">{{ product_categories[0].google_category_id }}</span>
+                <span>{{ product_categories[0].google_category_id }}</span>
                 {% endif %}
             </div>
         </div>

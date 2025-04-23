@@ -40,18 +40,14 @@
         "@type": "Offer",
         "url": "{{ request.url }}",
         "priceCurrency": "EUR",
-        "price": "{% if prices and prices|length > 0 %}{{ prices[0].price }}{% else %}0.00{% endif %}",
+        "price": "{% if price %}{{ price.price }}{% elif prices and prices|length > 0 %}{{ prices[0].price }}{% else %}0.00{% endif %}",
         "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}",
-        "availability": "{% if prices and prices|length > 0 %}https://schema.org/{% if prices[0].in_stock %}InStock{% else %}PreOrder{% endif %}{% else %}https://schema.org/OutOfStock{% endif %}"
-      }
-      {% if product_categories and product_categories|length > 0 %}
-      ,"category": "{% for category in product_categories %}{{ category[('name_' + g.locale)] or category.name_sk or category.name_en or category.name_uk }}{% if not loop.last %} > {% endif %}{% endfor %}"
-      {% if product_categories[0].google_category_id %}
-      ,"googleProductCategory": "{{ product_categories[0].google_category_id }}"
-      {% endif %}
+        "availability": "{% if price and price.in_stock %}https://schema.org/InStock{% elif prices and prices|length > 0 and prices[0].in_stock %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
+      }{% if product_categories and product_categories|length > 0 %},
+      "category": "{% for category in product_categories %}{{ category.name_sk or category.name_en or category.name_uk }}{% if not loop.last %} > {% endif %}{% endfor %}"
       {% endif %}
     }
-    </script>
+</script>
 
 <script type="application/ld+json">
 {

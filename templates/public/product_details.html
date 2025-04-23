@@ -17,54 +17,72 @@
 <meta property="og:site_name" content="AutogroupEU" />
 
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org/",
-  "@type": "Product",
-  "name": "{% if product_data.name %}{{ product_data.name }}{% else %}{{ _('Auto Part') }} {{ article }}{% endif %}",
-  "description": "{% if product_data.description %}{{ product_data.description }}{% else %}{{ _('Quality auto part with article number') }} {{ article }}. {{ _('Available for order at AutogroupEU. Fast delivery across Europe.') }}{% endif %}",
-  "sku": "{{ article }}",
-  "image": [
-    {% if product_data.photo_urls and product_data.photo_urls|length > 0 %}
-    {% for url in product_data.photo_urls %}
-    "{{ url }}"{% if not loop.last %},{% endif %}
-    {% endfor %}
-    {% else %}
-    "{{ url_for('static', filename='img/placeholder.jpg', _external=True) }}"
-    {% endif %}
-  ],
-  "brand": {
-    "@type": "Brand", 
-    "name": "{{ brand_name if brand_name else 'AutogroupEU' }}"
-  },
-  {% if prices|length > 0 %}
-  "offers": {
-    "@type": "Offer",
-    "price": "{{ prices[0].price }}",
-    "priceCurrency": "EUR",
-    "availability": "https://schema.org/{% if prices[0].in_stock %}InStock{% else %}PreOrder{% endif %}",
-    "url": "{{ request.url }}",
-    "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}",
-    "seller": {
-      "@type": "Organization",
-      "name": "AutogroupEU"
+    {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": "{% if product_data.name %}{{ product_data.name }}{% else %}{{ _('Auto Part') }} {{ article }}{% endif %}",
+      "description": "{% if product_data.description %}{{ product_data.description }}{% else %}{{ _('Quality auto part with article number') }} {{ article }}. {{ _('Available for order at AutogroupEU. Fast delivery across Europe.') }}{% endif %}",
+      "sku": "{{ article }}",
+      "image": [
+        {% if product_data.photo_urls and product_data.photo_urls|length > 0 %}
+        {% for url in product_data.photo_urls %}
+        "{{ url }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+        {% else %}
+        "{{ url_for('static', filename='img/placeholder.jpg', _external=True) }}"
+        {% endif %}
+      ],
+      "brand": {
+        "@type": "Brand", 
+        "name": "{{ brand_name if brand_name else 'AutogroupEU' }}"
+      },
+      {% if prices|length > 1 %}
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "EUR",
+        "lowPrice": "{{ prices[0].price }}",
+        "highPrice": "{{ prices[-1].price }}",
+        "offerCount": {{ prices|length }},
+        "offers": [
+          {% for p in prices %}
+          {
+            "@type": "Offer",
+            "price": "{{ p.price }}",
+            "priceCurrency": "EUR",
+            "availability": "https://schema.org/{% if p.in_stock %}InStock{% else %}PreOrder{% endif %}",
+            "url": "{{ request.url }}"
+          }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ]
+      }
+      {% elif prices|length == 1 %}
+      "offers": {
+        "@type": "Offer",
+        "price": "{{ prices[0].price }}",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/{% if prices[0].in_stock %}InStock{% else %}PreOrder{% endif %}",
+        "url": "{{ request.url }}",
+        "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}",
+        "seller": {
+          "@type": "Organization",
+          "name": "AutogroupEU"
+        }
+      }
+      {% else %}
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/OutOfStock",
+        "url": "{{ request.url }}",
+        "seller": {
+          "@type": "Organization",
+          "name": "AutogroupEU"
+        }
+      }
+      {% endif %}
     }
-  }
-  {% else %}
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "EUR",
-    "availability": "https://schema.org/OutOfStock",
-    "url": "{{ request.url }}",
-    "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}",
-    "seller": {
-      "@type": "Organization",
-      "name": "AutogroupEU"
-    }
-  }
-  {% endif %}
-}
-</script>
+    </script>
 
 <script type="application/ld+json">
 {

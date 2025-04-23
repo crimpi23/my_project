@@ -33,32 +33,36 @@
     {% endif %}
   ],
   "brand": {
-    "@type": "Brand",
+    "@type": "Brand", 
     "name": "{{ brand_name if brand_name else 'AutogroupEU' }}"
   },
+  {% if prices|length > 0 %}
   "offers": {
     "@type": "Offer",
+    "price": "{{ prices[0].price }}",
     "priceCurrency": "EUR",
-    "lowPrice": "{{ prices[0].price if prices else '0' }}",
-    "highPrice": "{{ prices[-1].price if prices else '0' }}",
-    "offerCount": "{{ prices|length if prices else '0' }}",
-    "availability": "https://schema.org/{% if prices and prices[0].in_stock %}InStock{% else %}OutOfStock{% endif %}",
+    "availability": "https://schema.org/{% if prices[0].in_stock %}InStock{% else %}PreOrder{% endif %}",
     "url": "{{ request.url }}",
+    "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}",
     "seller": {
       "@type": "Organization",
       "name": "AutogroupEU"
-    },
-    "offers": [
-      {% for price in prices %}
-      {
-        "@type": "Offer",
-        "price": "{{ price.price }}",
-        "priceCurrency": "EUR",
-        "availability": "https://schema.org/{% if price.in_stock %}InStock{% else %}PreOrder{% endif %}"
-      }{% if not loop.last %},{% endif %}
-      {% endfor %}
-    ]
+    }
   }
+  {% else %}
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR",
+    "availability": "https://schema.org/OutOfStock",
+    "url": "{{ request.url }}",
+    "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}",
+    "seller": {
+      "@type": "Organization",
+      "name": "AutogroupEU"
+    }
+  }
+  {% endif %}
 }
 </script>
 

@@ -892,13 +892,19 @@ def get_base_url():
     return host
 
 
+
+
 @app.context_processor
 def utility_processor():
+    def now():
+        return datetime.now()
+    
     return {
-        'get_base_url': get_base_url,
-        # Існуючі функції
+        'now': now,
+        'timedelta': timedelta,  # Додаємо timedelta до контексту
+        'get_base_url': get_base_url
+        # Інші функції за потреби
     }
-
 
 # налаштування для збереження файлів
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')

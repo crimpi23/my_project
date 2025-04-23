@@ -62,11 +62,7 @@
         "priceCurrency": "EUR",
         "availability": "https://schema.org/{% if prices[0].in_stock %}InStock{% else %}PreOrder{% endif %}",
         "url": "{{ request.url }}",
-        "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}",
-        "seller": {
-          "@type": "Organization",
-          "name": "AutogroupEU"
-        }
+        "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}"
       }
       {% else %}
       "offers": {
@@ -74,11 +70,7 @@
         "price": "0",
         "priceCurrency": "EUR",
         "availability": "https://schema.org/OutOfStock",
-        "url": "{{ request.url }}",
-        "seller": {
-          "@type": "Organization",
-          "name": "AutogroupEU"
-        }
+        "url": "{{ request.url }}"
       }
       {% endif %}
     }

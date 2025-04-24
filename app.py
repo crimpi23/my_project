@@ -1986,6 +1986,9 @@ def public_place_order():
             flash(_("Please log in to place an order."), "error")
             return redirect(url_for('login'))
 
+        # Отримуємо метод доставки з форми
+        shipping_method = request.form.get('shipping_method', 'standard')
+            
         # Додаємо детальний лог для діагностики
         logging.info(f"Processing order for user_id: {user_id}, username: {session.get('username')}")
 
@@ -2000,9 +2003,6 @@ def public_place_order():
 
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        # Весь код для отримання даних доставки, інвойсу і обробки кошика лишається без змін
-        # ...
 
         # Get delivery data
         delivery_data = {}
@@ -2103,20 +2103,62 @@ def public_place_order():
                     'address': request.form.get('company_address')
                 }
 
-        # Process cart items
-        cart = session.get('public_cart', {})
-        logging.debug(f"Cart data in session: {cart}")
-        
-        if not cart:
-            logging.warning("Cart is empty in session")
-            flash(_("Your cart is empty."), "error")
-            return redirect(url_for('public_cart'))
-
         total_price = Decimal('0')
         order_items = []
         email_items = []  # Для відправки листа
         
-        # Обробка товарів з кошика
+        # Спочатку шукаємо товари у базі даних для авторизованих користувачів
+        cursor.execute("""
+            SELECT article, table_name, base_price, final_price as price, 
+                   quantity, brand_id, comment
+            FROM cart 
+            WHERE user_id = %s
+        """, (user_id,))
+        
+        db_cart_items = cursor.fetchall()
+        logging.info(f"Found {len(db_cart_items)} items in database cart for user {user_id}")
+        
+        # Обробляємо товари з бази даних
+        for item in db_cart_items:
+            item_price = Decimal(str(item['price']))
+            item_quantity = int(item['quantity'])
+            item_total = item_price * item_quantity
+            total_price += item_total
+            
+            order_items.append({
+                'article': item['article'],
+                'table_name': item['table_name'],
+                'price': item_price,
+                'quantity': item_quantity,
+                'total_price': item_total,
+                'brand_id': item['brand_id'],
+                'comment': item['comment'] or ''
+            })
+            
+            # Додаємо інформацію для листа
+            if item['table_name'] == 'stock':
+                delivery_time = _("In Stock")
+            else:
+                cursor.execute("""
+                    SELECT delivery_time FROM price_lists 
+                    WHERE table_name = %s
+                """, (item['table_name'],))
+                result = cursor.fetchone()
+                delivery_time_str = result['delivery_time'] if result else '7-14'
+                delivery_time = _("In Stock") if delivery_time_str == '0' else f"{delivery_time_str} {_('days')}"
+            
+            email_items.append({
+                'article': item['article'],
+                'price': float(item_price),
+                'quantity': item_quantity,
+                'delivery_time': delivery_time
+            })
+
+        # Тепер перевіряємо сесію - для зворотної сумісності
+        cart = session.get('public_cart', {})
+        logging.debug(f"Cart data in session: {cart}")
+        
+        # Обробка товарів з кошика в сесії
         for article, article_items in cart.items():
             for table_name, item_data in article_items.items():
                 if 'price' not in item_data or 'quantity' not in item_data:
@@ -2161,7 +2203,7 @@ def public_place_order():
         logging.debug(f"Total price calculated: {total_price}")
         
         if not order_items:
-            logging.warning("No items to process in cart")
+            logging.warning("No items to process in cart (neither in session nor database)")
             flash(_("Your cart is empty"), "error")
             return redirect(url_for('public_cart'))
 
@@ -2170,13 +2212,15 @@ def public_place_order():
         cursor.execute("""
             INSERT INTO public_orders 
             (user_id, total_price, status, created_at, updated_at, delivery_address, needs_invoice, invoice_details, payment_status, shipping_method)
-            VALUES (%s, %s, 'new', NOW(), NOW(), %s, FALSE, NULL, 'unpaid', %s)
+            VALUES (%s, %s, 'new', NOW(), NOW(), %s, %s, %s, 'unpaid', %s)
             RETURNING id
         """, (
             user_id,
             total_price,
             json.dumps(delivery_data, default=json_serial),
-            shipping_method  # Тепер цей параметр має відповідний %s у запиті
+            needs_invoice,
+            json.dumps(invoice_details, default=json_serial) if invoice_details else None,
+            shipping_method
         ))
         
         order_id = cursor.fetchone()['id']
@@ -2268,11 +2312,15 @@ def public_place_order():
             except Exception as outer_err:
                 logging.error(f"Unexpected error in email sending block: {outer_err}", exc_info=True)
         
-        # Clear cart
+        # Clear cart in both session and database
         logging.info("Clearing cart")
         session['public_cart'] = {}
         session['cart_count'] = 0
         session.modified = True
+        
+        # Очищаємо корзину в базі даних
+        cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
+        conn.commit()
         
         flash(_("Order placed successfully!"), "success")
         logging.info(f"Order {order_id} placed successfully, redirecting to confirmation")

@@ -34,7 +34,7 @@
     }
     </script>
     
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="viewport" content="width=device-width, initial-scale=5.0">
     <meta name="theme-color" content="#007bff">
     <title>{% block title %}AutogroupEU{% endblock %}</title>
     
@@ -83,6 +83,46 @@
     </script>
         
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom-layout.css') }}">
+    <style>
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .social-link {
+        color: #6c757d;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+    }
+
+    .social-link:hover {
+        color: #ffffff;
+        transform: translateY(-3px);
+    }
+
+    .social-link:hover .bi-facebook {
+        background-color: #1877F2;
+    }
+
+    .social-link:hover .bi-instagram {
+        background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+    }
+
+    .social-link:hover .bi-shop {
+        background-color: #e53238; /* eBay червоний колір */
+    }
+
+    .social-link:hover .bi-basket {
+        background-color: #ff5a00; /* Allegro помаранчевий колір */
+    }
+    </style>
 </head>	
 <body class="d-flex flex-column min-vh-100">
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N4RD9ZH9"
@@ -380,6 +420,44 @@
                 <small class="text-muted">{{ _('All prices shown include VAT unless otherwise stated. EU business customers with valid VAT ID may receive invoices without VAT.') }}</small>
             </div>
         </div>
+        
+        <div class="row mt-4">
+    <div class="col-12 text-center">
+        <h5>{{ _('Follow Us') }}</h5>
+        <div class="social-links mt-3">
+            <a href="https://facebook.com/autogroup.sk/" target="_blank" class="social-link me-3" aria-label="Facebook">
+                <i class="bi bi-facebook fs-4"></i>
+            </a>
+            <a href="https://www.instagram.com/autogroupeu" target="_blank" class="social-link me-3" aria-label="Instagram">
+                <i class="bi bi-instagram fs-4"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <h5>{{ _('Find Us Also On') }}</h5>
+        <div class="mt-2">
+            <a href="https://www.ebay.com/usr/autogroup-eu" target="_blank" class="me-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="90" height="36" viewBox="0 0 122 48.592">
+                    <g>
+                        <path fill="#F02D2D" d="M24.355 22.759c-.269-5.738-4.412-7.838-8.826-7.813-4.756.026-8.544 2.459-9.183 7.915zM6.234 26.93c.364 5.553 4.208 8.814 9.476 8.785 3.648-.021 6.885-1.524 7.952-4.763l6.306-.035c-1.187 6.568-8.151 8.834-14.145 8.866C4.911 39.844.043 33.865-.002 25.759c-.05-8.927 4.917-14.822 15.765-14.884 8.628-.048 14.978 4.433 15.033 14.291l.01 1.625z"></path>
+                        <path fill="#0968F6" d="M46.544 35.429c5.688-.032 9.543-4.148 9.508-10.32s-3.947-10.246-9.622-10.214-9.543 4.148-9.509 10.32 3.974 10.245 9.623 10.214zM30.652.029l6.116-.034.085 15.369c2.978-3.588 7.1-4.65 11.167-4.674 6.817-.037 14.412 4.518 14.468 14.454.045 8.29-5.941 14.407-14.422 14.454-4.463.026-8.624-1.545-11.218-4.681a33.237 33.237 0 01-.19 3.731l-5.994.034c.09-1.915.185-4.364.174-6.322z"></path>
+                        <path fill="#FFBD14" d="M77.282 25.724c-5.548.216-8.985 1.229-8.965 4.883.013 2.365 1.94 4.919 6.7 4.891 6.415-.035 9.826-3.556 9.794-9.289v-.637c-2.252.02-5.039.054-7.529.152zm13.683 7.506c.01 1.778.071 3.538.232 5.1l-5.688.032a33.381 33.381 0 01-.225-3.825c-3.052 3.8-6.708 4.909-11.783 4.938-7.532.042-11.585-3.915-11.611-8.518-.037-6.665 5.434-9.049 14.954-9.318 2.6-.072 5.529-.1 7.945-.116v-.637c-.026-4.463-2.9-6.285-7.854-6.257-3.68.021-6.368 1.561-6.653 4.2l-6.434.035c.645-6.566 7.53-8.269 13.595-8.3 7.263-.04 13.406 2.508 13.448 10.192z"></path>
+                        <path fill="#92C821" d="M91.939 19.852l-4.5-8.362 7.154-.04 10.589 20.922 10.328-21.02 6.486-.048-18.707 37.251-6.85.039 5.382-10.348-9.887-18.393"></path>
+                    </g>
+                </svg>
+            </a>
+            <a href="https://allegro.sk/pouzivatel/Autogroup-EU" target="_blank" class="me-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="90" height="36" viewBox="0 0 145 50" fill="#ff5a00">
+                    <title>Allegro</title>
+                    <path d="M141.72 16.69a13.1 13.1 0 0 0-20.7 0 13.59 13.59 0 0 0-2.46 8 13.59 13.59 0 0 0 2.46 8 13.1 13.1 0 0 0 20.7 0 13.6 13.6 0 0 0 2.46-8 13.6 13.6 0 0 0-2.46-8zm-4.1 11c-.94 2.81-3.17 5-6.26 5.07s-5.32-2.26-6.25-5.07a9.27 9.27 0 0 1 0-6c.94-2.81 3.17-5-6.25-5.07s5.32 2.26 6.26 5.07a9.28 9.28 0 0 1 0 5.99zm-94.25 9.4a.74.74 0 0 1-.74.74h-4.3a.74.74 0 0 1-.74-.74V1.74a.74.74 0 0 1 .74-.74h4.3a.74.74 0 0 1 .74.74v35.35zm-10.1 0a.74.74 0 0 1-.74.74h-4.3a.74.74 0 0 1-.74-.74V1.74a.74.74 0 0 1 .73-.74h4.3a.74.74 0 0 1 .74.74v35.35zm84.32-24v3a.78.78 0 0 1-1 .85c-4.86-1-7.85 1.16-7.85 5.65v14.5a.74.74 0 0 1-.74.74h-4.3a.74.74 0 0 1-.74-.74V22.28a10 10 0 0 1 3.17-7.49 11.16 11.16 0 0 1 7.87-3.18 16.69 16.69 0 0 1 3 .28c.51.17.59.47.59 1.24zM99.18 24.68a13.41 13.41 0 0 0-2.46-8 13.1 13.1 0 0 0-20.7 0 14.07 14.07 0 0 0 0 16 12.73 12.73 0 0 0 10.35 5.07 13.2 13.2 0 0 0 7.37-2.22v3.16c0 4.29-3.75 5.07-6.15 5.22a28.26 28.26 0 0 1-4.94-.27c-.66-.1-1.12 0-1.12.71v3.8a.65.65 0 0 0 .68.62c5.57.48 9.32.38 12.14-1.23a9.18 9.18 0 0 0 4.11-5.23 17.49 17.49 0 0 0 .71-5.22V24.68zm-12.81 8.06c-3.09 0-5.32-2.26-6.26-5.07a9.27 9.27 0 0 1 0-6c.94-2.81 3.17-5.07 6.26-5.07 6.91 0 7.14 7.05 7.14 8.07s-.23 8.07-7.14 8.07zM23.55 22.09c0-3.41-.76-6-2.4-7.79s-4.94-2.68-8-2.68a17.34 17.34 0 0 0-8.75 2.33.55.55 0 0 0-.27.48l.23 3.76a.67.67 0 0 0 1.1.39C9.21 16.27 13.71 15.84 16 17a4 4 0 0 1 2 3.61v.55h-6.25c-2.69 0-10.93 1-10.93 8.57v.08a7.34 7.34 0 0 0 2.67 6.08 10.56 10.56 0 0 0 6.68 1.91h12.65a.74.74 0 0 0 .74-.74v-15zM18 33.18h-7.47a4.62 4.62 0 0 1-2.65-.93 2.94 2.94 0 0 1-1.25-2.46c0-1.35.91-4.05 5.46-4.05H18v7.44zm41.2-21.56c-7.65 0-11 5.13-12.07 9.47a14.58 14.58 0 0 0-.44 3.58 13.6 13.6 0 0 0 2.46 8 13.13 13.13 0 0 0 10.35 5.07c4.13.15 6.89-.55 9-1.75a1.17 1.17 0 0 0 .5-1.27v-3.33c0-.68-.41-1-1-.59a13.05 13.05 0 0 1-8.32 2A6.81 6.81 0 0 1 53 26.73h17a.7.7 0 0 0 .7-.69c.3-4.65-1.05-14.42-11.5-14.42zm-6.11 10.51a5.78 5.78 0 0 1 6.12-5.51 5.14 5.14 0 0 1 5.44 5.51H53.09z"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</div>
     </div>
 </footer>
 
@@ -671,26 +749,33 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "AutogroupEU",
-  "legalName": "AutogroupEU s.r.o.",
-  "url": "https://autogroup.sk",
-  "logo": "https://autogroup.sk/static/images/logo.png",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "Mierová 99",
-    "addressLocality": "Humenné",
-    "postalCode": "066 01",
-    "addressCountry": "SK"
-  },
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "telephone": "+421907400865",
-    "contactType": "customer service"
-  }
-}
-</script>
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "AutogroupEU",
+      "legalName": "AutogroupEU s.r.o.",
+      "url": "https://autogroup.sk",
+      "logo": "https://autogroup.sk/static/images/logo.png",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Mierová 99",
+        "addressLocality": "Humenné",
+        "postalCode": "066 01",
+        "addressCountry": "SK"  
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+421907400865",
+        "contactType": "customer service"
+      },
+      "sameAs": [
+        "https://facebook.com/autogroup.sk/",
+        "https://www.instagram.com/autogroupeu",
+        "https://www.ebay.com/usr/autogroup-eu",
+        "https://allegro.sk/pouzivatel/Autogroup-EU",
+        "https://allegro.pl/uzytkownik/Autogroup-EU"
+      ]
+    }
+    </script>
 </body>
 </html>

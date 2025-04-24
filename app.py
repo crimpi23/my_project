@@ -3998,6 +3998,88 @@ def manage_photos(token):
         flash("Error loading photos", "error")
         return redirect(url_for('admin_dashboard', token=token))
 
+
+@app.route('/<token>/admin/google-feed/refresh/<int:setting_id>', methods=['GET'])
+@requires_token_and_roles('admin')
+@add_noindex_header
+def refresh_google_feed(token, setting_id):
+    """Manually refresh Google Feed"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Get the feed settings
+            cursor.execute("""
+                SELECT * FROM google_feed_settings WHERE id = %s
+            """, (setting_id,))
+            
+            settings = cursor.fetchone()
+            
+            if not settings:
+                flash("Feed configuration not found", "error")
+                return redirect(url_for('manage_google_feed', token=token))
+            
+            # Force regenerate the feed
+            language = settings['language']
+            
+            # Очистити кеш для цього feed
+            cache_key = f'view//google-merchant-feed/{language}.xml'
+            cache.delete(cache_key)
+            
+            flash(f"Feed for {language.upper()} has been refreshed", "success")
+            
+            # Redirect back to the feed settings page
+            return redirect(url_for('manage_google_feed', token=token))
+            
+    except Exception as e:
+        logging.error(f"Error refreshing Google feed: {e}")
+        flash("Error refreshing feed", "error")
+        return redirect(url_for('manage_google_feed', token=token))
+
+
+@app.route('/<token>/admin/google-feed/refresh-all', methods=['GET'])
+@requires_token_and_roles('admin')
+@add_noindex_header
+def refresh_all_feeds(token):
+    """Manually refresh all Google Feeds"""
+    try:
+        invalidate_merchant_feeds()  # Використовуємо функцію, яку ми визначили вище
+        flash("All feeds have been refreshed", "success")
+    except Exception as e:
+        logging.error(f"Error refreshing all feeds: {e}")
+        flash("Error refreshing all feeds", "error")
+    
+    return redirect(url_for('manage_google_feed', token=token))
+
+@scheduler.task('interval', id='refresh_google_feeds', minutes=360)
+def scheduled_refresh_google_feeds():
+    """Automatically refresh all Google Merchant Feeds every 360 minutes"""
+    try:
+        logging.info("Starting scheduled Google Merchant Feed refresh")
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Get all active feed configurations
+            cursor.execute("""
+                SELECT id, language FROM google_feed_settings 
+                WHERE enabled = TRUE
+            """)
+            
+            feeds = cursor.fetchall()
+            
+            # Clear cache for each feed to force regeneration
+            for feed in feeds:
+                language = feed['language']
+                cache_key = f'view//google-merchant-feed/{language}.xml'
+                cache.delete(cache_key)
+                logging.info(f"Cleared cache for {language} feed")
+        
+        logging.info("Completed scheduled Google Merchant Feed refresh")
+    except Exception as e:
+        logging.error(f"Error in scheduled Google feed refresh: {e}", exc_info=True)
+
+
 @app.route('/<token>/admin/google-feed/delete/<int:setting_id>', methods=['POST'])
 @requires_token_and_roles('admin')
 @add_noindex_header

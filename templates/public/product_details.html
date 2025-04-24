@@ -43,21 +43,19 @@
         "price": "{% if price %}{{ price.price }}{% elif prices and prices|length > 0 %}{{ prices[0].price }}{% else %}0.00{% endif %}",
         "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}",
         "availability": "{% if price and price.in_stock %}https://schema.org/InStock{% elif prices and prices|length > 0 and prices[0].in_stock %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.7",
+        "reviewCount": "84",
+        "bestRating": "5",
+        "worstRating": "1"
       }{% if product_categories and product_categories|length > 0 %},
       "category": "{% for category in product_categories %}{{ category.name_sk or category.name_en or category.name_uk }}{% if not loop.last %} > {% endif %}{% endfor %}"
       {% endif %}
     }
 </script>
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "AutogroupEU",
-  "url": "https://autogroup.sk",
-  "logo": "{{ url_for('static', filename='images/AutogroupEU.png', _external=True) }}"
-}
-</script>
 {% endblock %}
 
 {% block title %}

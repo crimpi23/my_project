@@ -225,69 +225,126 @@ def init_scheduler():
     except Exception as e:
         logging.error(f"Error initializing scheduler: {e}", exc_info=True)
 
-# Функції для генерації sitemap файлів
-def generate_sitemap_index_file():
-    """Генерує sitemap index і зберігає на диск"""
+
+def generate_sitemap_images_file():
+    """Генерує sitemap для зображень і зберігає на диск"""
     try:
-        logging.info("Starting generation of sitemap index file")
+        logging.info("Starting generation of images sitemap file")
         
-        host_base = "https://autogroup.sk"
-        today = datetime.now().strftime("%Y-%m-%d")
+        host_base = get_base_url() or "https://autogroup.sk"
         
-        sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        sitemap_xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        
-        # Відстежуємо кількість доданих sitemap файлів
-        total_sitemaps = 0
-        
-        # Додаємо посилання на статичні файли sitemap
-        static_files = ['sitemap-static.xml', 'sitemap-categories.xml', 'sitemap-blog.xml']
-        for static_file in static_files:
-            if os.path.exists(os.path.join(SITEMAP_DIR, static_file)):
-                sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{static_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
-                total_sitemaps += 1
-        
-        # Додаємо файли stock
-        stock_files = [f for f in os.listdir(SITEMAP_DIR) if f.startswith('sitemap-stock-') and f.endswith('.xml')]
-        for stock_file in sorted(stock_files):
-            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{stock_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
-            total_sitemaps += 1
-        
-        # Додаємо файли enriched
-        enriched_files = [f for f in os.listdir(SITEMAP_DIR) if f.startswith('sitemap-enriched-') and f.endswith('.xml')]
-        for enriched_file in sorted(enriched_files):
-            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{enriched_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
-            total_sitemaps += 1
-        
-        # Додаємо файли other
-        other_files = [f for f in os.listdir(SITEMAP_DIR) if f.startswith('sitemap-other-') and f.endswith('.xml')]
-        for other_file in sorted(other_files):
-            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{other_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
-            total_sitemaps += 1
-        
-        # Перевіряємо, чи є хоча б один sitemap, щоб уникнути порожнього індексу
-        if total_sitemaps == 0:
-            logging.warning("No sitemap files found, adding a dummy sitemap entry")
-            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-static.xml</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
-        
-        sitemap_xml += '</sitemapindex>'
-        
-        # Записуємо в файл sitemap-index.xml
-        file_path = os.path.join(SITEMAP_DIR, 'sitemap-index.xml')
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(sitemap_xml)
-        
-        # Також зберігаємо копію як sitemap.xml для сумісності
-        file_path2 = os.path.join(SITEMAP_DIR, 'sitemap.xml')
-        with open(file_path2, 'w', encoding='utf-8') as f:
-            f.write(sitemap_xml)
-        
-        logging.info(f"Sitemap index generated successfully: {file_path} with {total_sitemaps} sitemaps")
+        with safe_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо поточну мову для назв товарів
+            lang = 'sk'  # За замовчуванням використовуємо словацьку
+            
+            # Створюємо XML для карти сайту зображень
+            sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+            sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+            sitemap_xml += 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+            
+            # Отримуємо всі унікальні артикули з зображеннями
+            cursor.execute("""
+                SELECT DISTINCT product_article 
+                FROM product_images
+                ORDER BY product_article
+            """)
+            
+            articles = cursor.fetchall()
+            logging.info(f"Found {len(articles)} unique articles with images")
+            
+            # Для кожного артикула додаємо URL та зображення
+            for article_row in articles:
+                article = article_row['product_article']
+                
+                # Отримуємо інформацію про товар
+                cursor.execute(f"""
+                    SELECT 
+                        article,
+                        name_{lang} as name,
+                        description_{lang} as description
+                    FROM products
+                    WHERE article = %s
+                """, (article,))
+                
+                product = cursor.fetchone()
+                
+                # Генеруємо URL товару
+                product_url = f"{host_base}/product/{article}"
+                
+                # Додаємо URL товару
+                sitemap_xml += f'  <url>\n'
+                sitemap_xml += f'    <loc>{product_url}</loc>\n'
+                
+                # Отримуємо всі зображення для цього артикула
+                cursor.execute("""
+                    SELECT image_url, is_main
+                    FROM product_images
+                    WHERE product_article = %s
+                    ORDER BY is_main DESC, id ASC
+                """, (article,))
+                
+                images = cursor.fetchall()
+                
+                # Додаємо всі зображення для цього URL
+                for image in images:
+                    image_url = image['image_url']
+                    
+                    # Перевіряємо, чи URL не порожній
+                    if not image_url:
+                        continue
+                    
+                    # Генеруємо заголовок та опис для зображення
+                    image_title = ""
+                    image_caption = ""
+                    
+                    if product:
+                        image_title = product['name'] or article
+                        image_caption = product['description'] or ""
+                    else:
+                        image_title = article
+                    
+                    # Обмежуємо довжину заголовка та опису
+                    image_title = image_title[:100]
+                    image_caption = image_caption[:200] if image_caption else ""
+                    
+                    # Кодуємо спеціальні символи
+                    image_title = image_title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&apos;").replace('"', "&quot;")
+                    image_caption = image_caption.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&apos;").replace('"', "&quot;")
+                    
+                    # Додаємо інформацію про зображення
+                    sitemap_xml += f'    <image:image>\n'
+                    sitemap_xml += f'      <image:loc>{image_url}</image:loc>\n'
+                    
+                    if image_title:
+                        sitemap_xml += f'      <image:title>{image_title}</image:title>\n'
+                        
+                    if image_caption:
+                        sitemap_xml += f'      <image:caption>{image_caption}</image:caption>\n'
+                        
+                    sitemap_xml += f'    </image:image>\n'
+                
+                sitemap_xml += f'  </url>\n'
+            
+            sitemap_xml += '</urlset>'
+            
+            # Записуємо у файл
+            file_path = os.path.join(SITEMAP_DIR, 'sitemap-images.xml')
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(sitemap_xml)  # Додайте цей рядок
+                
+            logging.info(f"Images sitemap generated successfully: {file_path}")
+            
+            # Також оновлюємо індексний файл, щоб включити новий sitemap файл
+            generate_sitemap_index_file()
+            
         return True
         
     except Exception as e:
-        logging.error(f"Error generating sitemap index file: {e}", exc_info=True)
+        logging.error(f"Error generating images sitemap file: {e}", exc_info=True)
         return False
+
 
 
 def generate_sitemap_static_file():
@@ -865,13 +922,19 @@ def generate_all_sitemaps():
         generate_sitemap_stock_files()
         
         logging.info("Generating enriched sitemap files...")
-        generate_sitemap_enriched_files()  # Перевіримо, що відбувається тут
+        generate_sitemap_enriched_files()
         
         logging.info("Generating other sitemap files...")
-        generate_sitemap_other_files()  # І тут
+        generate_sitemap_other_files()
+        
+        # Додаємо генерацію sitemap для зображень
+        logging.info("Generating images sitemap file...")
+        generate_sitemap_images_file()
         
         logging.info("Generating sitemap index file...")
         generate_sitemap_index_file()
+        
+        # Видаляємо дублюючий виклик генерації sitemap для зображень
         
         logging.info("All sitemap files generated successfully")
         return True
@@ -879,7 +942,21 @@ def generate_all_sitemaps():
         logging.error(f"Error generating all sitemap files: {e}", exc_info=True)
         return False
 
-
+@app.route('/<token>/admin/generate-image-sitemap', methods=['GET'])
+@requires_token_and_roles('admin')
+@add_noindex_header
+def admin_generate_image_sitemap(token):
+    try:
+        if generate_sitemap_images_file():
+            flash("Image sitemap generated successfully", "success")
+        else:
+            flash("Error generating image sitemap", "error")
+            
+        return redirect(url_for('admin_dashboard', token=token))
+    except Exception as e:
+        logging.error(f"Error in admin_generate_image_sitemap: {e}", exc_info=True)
+        flash("Error generating image sitemap", "error")
+        return redirect(url_for('admin_dashboard', token=token))
 
 # Додавання дампера для закриття невикористаних з'єднань
 @scheduler.task('interval', id='check_pool_connections', minutes=5)
@@ -11900,6 +11977,10 @@ def admin_generate_sitemaps(token):
         elif generation_type == 'index':
             result = generate_sitemap_index_file()
             flash("Sitemap index file generated successfully", "success")
+        # Додаємо обробку для типу 'images'
+        elif generation_type == 'images':
+            result = generate_sitemap_images_file()
+            flash("Images sitemap file generated successfully", "success")
         else:
             flash("Invalid generation type", "error")
             return redirect(url_for('admin_sitemaps', token=token))

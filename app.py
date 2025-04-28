@@ -50,6 +50,7 @@ import uuid
 import socket
 import uuid
 from dotenv import load_dotenv
+from urllib.parse import urlencode
 
 
 
@@ -168,6 +169,15 @@ def safe_db_connection():
 SITEMAP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'sitemaps')
 os.makedirs(SITEMAP_DIR, exist_ok=True)
 
+@app.before_request
+def store_utm_params():
+    """Зберігає UTM-параметри в сесії"""
+    utm_params = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+    for param in utm_params:
+        if param in request.args:
+            session[param] = request.args.get(param)
+
+
 def init_scheduler():
     """Ініціалізує планувальник та додає всі заплановані завдання"""
     try:
@@ -278,6 +288,7 @@ def generate_sitemap_index_file():
     except Exception as e:
         logging.error(f"Error generating sitemap index file: {e}", exc_info=True)
         return False
+
 
 def generate_sitemap_static_file():
     """Генерує static sitemap і зберігає на диск"""
@@ -2323,16 +2334,32 @@ def public_place_order():
         conn.commit()
         
         flash(_("Order placed successfully!"), "success")
-        logging.info(f"Order {order_id} placed successfully, redirecting to confirmation")
+        logging.info(f"Order {order_id} placed successfully, rendering confirmation")
         logging.info("=== Finished public_place_order process ===")
-        return redirect(url_for('order_confirmation', order_id=order_id))
 
-    except Exception as e:
-        logging.error(f"Error in public_place_order: {e}", exc_info=True)
-        if 'conn' in locals():
-            conn.rollback()
-        flash(_("Error placing order"), "error")
-        return redirect(url_for('public_cart'))
+        # Рендеримо шаблон напряму замість редіректу
+        try:
+            order = get_order_by_id(order_id)
+            if not order:
+                flash(_("Order not found"), "error")
+                return redirect(url_for('public_view_orders'))
+            
+            # Конвертуємо DictRow в звичайний словник
+            order_dict = dict(order)
+            
+            # Отримуємо товари замовлення
+            order_items = get_order_items(order_id)
+            
+            # Рендеримо шаблон напряму
+            return render_template(
+                'public/orders/confirmation.html',
+                order=order_dict,
+                order_items=order_items
+            )
+        except Exception as e:
+            logging.error(f"Error displaying order confirmation: {e}", exc_info=True)
+            flash(_("Error displaying order confirmation."), "error")
+            return redirect(url_for('public_view_orders'))
     finally:
         if 'conn' in locals():
             conn.close()
@@ -3061,7 +3088,12 @@ def guest_checkout():
         }
         
         flash(_("Your order has been placed! Check your email for confirmation."), "success")
-        return redirect(url_for('guest_order_confirmation'))
+        # Рендеримо шаблон напряму замість редіректу
+        return render_template(
+            'public/orders/guest_confirmation.html',
+            order=session['guest_order'],
+            items=session['guest_order']['items']
+        )
         
     except Exception as e:
         logging.error(f"Error in guest_checkout: {e}", exc_info=True)
@@ -3267,14 +3299,17 @@ def debug_cart():
 
 # Маршрут з префіксом мови
 @app.route('/<lang>/product/<article>')
-@cache.cached(timeout=1800, query_string=True)  # 30 хвилин
+@cache.cached(timeout=1800, query_string=True)
 def localized_product_details(lang, article):
     """Перенаправляє з мовного префіксу на параметр запиту"""
     if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
         return redirect(url_for('product_details', article=article))
     
-    # 301 редірект на URL з параметром мови
-    return redirect(url_for('product_details', article=article, lang_code=lang), code=301)
+    # Зберігаємо мову в сесії
+    session['language'] = lang
+    
+    # Замість редіректу просто перенаправляємо до основної функції
+    return product_details(article)
 
 
 @app.after_request
@@ -5292,7 +5327,7 @@ def get_public_cart_count():
 # Пошук для публічних користувачів
 @app.route('/public_search', methods=['GET', 'POST'])
 def public_search():
-    """Простий пошук товару за артикулом з перенаправленням на сторінку товару"""
+    """Простий пошук товару за артикулом без перенаправлення"""
     if request.method == 'POST':
         # Конвертуємо артикул у верхній регістр
         article = request.form.get('article', '').strip().upper()
@@ -5303,9 +5338,8 @@ def public_search():
             flash(_("Please enter an article for search."), "warning")
             return redirect(url_for('index'))
 
-        # Пряме перенаправлення на сторінку товару
-        logging.info(f"Redirecting to product details for article: {article}")
-        return redirect(url_for('product_details', article=article))
+        # Замість перенаправлення, безпосередньо викликаємо функцію
+        return product_details(article)
 
     # GET запити перенаправляємо на головну
     return redirect(url_for('index'))

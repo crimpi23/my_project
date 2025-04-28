@@ -34,8 +34,7 @@
     }
     </script>
     
-    <meta name="viewport" content="width=device-width, initial-scale=5.0">
-    <meta name="theme-color" content="#007bff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">    <meta name="theme-color" content="#007bff">
     <title>{% block title %}AutogroupEU{% endblock %}</title>
     
     <link rel="icon" href="https://image.autogroup.sk/static/favicon.ico" type="image/x-icon">
@@ -121,6 +120,14 @@
 
     .social-link:hover .bi-basket {
         background-color: #ff5a00; /* Allegro помаранчевий колір */
+    }
+
+    @media (max-width: 768px) {
+        /* Оптимізації для мобільних пристроїв */
+        .some-class {
+            padding: 10px;
+            font-size: 14px;
+        }
     }
     </style>
 </head>	

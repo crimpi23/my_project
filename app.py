@@ -12136,7 +12136,7 @@ def sitemap_images_route():
         logging.info(f"sitemap-images.xml not found at {sitemap_path}, generating...")
         
         try:
-            # Генеруємо файл індексу
+            # Генеруємо файл
             generate_sitemap_images_file()
             
             # Додаткова перевірка
@@ -12149,8 +12149,10 @@ def sitemap_images_route():
             return "Error generating sitemap", 500
     
     try:
-        # Пробуємо подати файл зі static/sitemaps
-        return send_from_directory(os.path.dirname(sitemap_path), os.path.basename(sitemap_path), mimetype='application/xml')
+        # Подаємо файл з каталогу static/sitemaps
+        return send_from_directory(os.path.dirname(sitemap_path), 
+                                  os.path.basename(sitemap_path), 
+                                  mimetype='application/xml')
     except Exception as e:
         logging.error(f"Error serving sitemap file: {e}", exc_info=True)
         return "Error serving sitemap", 500

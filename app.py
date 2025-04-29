@@ -12126,6 +12126,36 @@ def sitemap():
     logging.info("sitemap() function redirecting to sitemap-index.xml")  
     return redirect(url_for('sitemap_index_xml'))
 
+@app.route('/sitemap-images.xml', endpoint='sitemap_images_xml')
+def sitemap_images_route():
+    """Serve pre-generated sitemap images XML"""
+    sitemap_path = os.path.join(SITEMAP_DIR, 'sitemap-images.xml')
+    
+    # Якщо файл не існує, генеруємо його
+    if not os.path.exists(sitemap_path):
+        logging.info(f"sitemap-images.xml not found at {sitemap_path}, generating...")
+        
+        try:
+            # Генеруємо файл індексу
+            generate_sitemap_images_file()
+            
+            # Додаткова перевірка
+            if not os.path.exists(sitemap_path):
+                logging.error(f"Failed to generate sitemap-images.xml at {sitemap_path}")
+                return "Error generating sitemap", 500
+                
+        except Exception as e:
+            logging.error(f"Error generating sitemap images: {e}", exc_info=True)
+            return "Error generating sitemap", 500
+    
+    try:
+        # Пробуємо подати файл зі static/sitemaps
+        return send_from_directory(os.path.dirname(sitemap_path), os.path.basename(sitemap_path), mimetype='application/xml')
+    except Exception as e:
+        logging.error(f"Error serving sitemap file: {e}", exc_info=True)
+        return "Error serving sitemap", 500
+
+
 @app.route('/sitemap-index.xml', endpoint='sitemap_index_xml')
 def sitemap_index():
     """Serve pre-generated sitemap index XML"""

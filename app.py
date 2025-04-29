@@ -178,6 +178,47 @@ def store_utm_params():
             session[param] = request.args.get(param)
 
 
+
+# Запит про токен / Перевірка токена / Декоратор для перевірки токена
+def requires_token_and_roles(*allowed_roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # Для статических файлов не проверяем токен
+            if request.path.startswith('/static/'):
+                return f(*args, **kwargs)
+                
+            token = request.view_args.get('token')
+            # Перевіряємо, чи це публічний маршрут
+            is_public_route = 'public' in request.path or not any(segment in request.path for segment in ['admin', 'dashboard'])
+            
+            if not token:
+                return redirect(url_for('index'))
+
+            if not validate_token(token):
+                # Для публічних маршрутів тихе перенаправлення без повідомлення
+                if is_public_route:
+                    return redirect(url_for('index'))
+                else:
+                    # Для адмін-маршрутів показуємо помилку
+                    flash(_("Invalid token."), "error")
+                    return redirect(url_for('index'))
+
+            session_role = session.get('role')
+            if not session_role:
+                flash(_("Please log in."), "error")
+                return redirect(url_for('login'))
+
+            role_name = session_role
+            if allowed_roles and role_name not in allowed_roles:
+                flash(_("You don't have permission to access this page."), "error")
+                return redirect(url_for('index'))
+
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
 def init_scheduler():
     """Ініціалізує планувальник та додає всі заплановані завдання"""
     try:
@@ -225,6 +266,69 @@ def init_scheduler():
     except Exception as e:
         logging.error(f"Error initializing scheduler: {e}", exc_info=True)
 
+
+def generate_sitemap_index_file():
+    """Генерує sitemap index і зберігає на диск"""
+    try:
+        logging.info("Starting generation of sitemap index file")
+        
+        host_base = "https://autogroup.sk"
+        today = datetime.now().strftime("%Y-%m-%d")
+
+        sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        sitemap_xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        
+        # Відстежуємо кількість доданих sitemap файлів
+        total_sitemaps = 0
+        
+        # Додаємо посилання на статичні файли sitemap
+        static_files = ['sitemap-static.xml', 'sitemap-categories.xml', 'sitemap-blog.xml', 'sitemap-images.xml']
+        for static_file in static_files:
+            if os.path.exists(os.path.join(SITEMAP_DIR, static_file)):
+                sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{static_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
+                total_sitemaps += 1
+        
+        # Додаємо файли stock
+        stock_files = [f for f in os.listdir(SITEMAP_DIR) if f.startswith('sitemap-stock-') and f.endswith('.xml')]
+        for stock_file in sorted(stock_files):
+            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{stock_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
+            total_sitemaps += 1
+        
+        # Додаємо файли enriched
+        enriched_files = [f for f in os.listdir(SITEMAP_DIR) if f.startswith('sitemap-enriched-') and f.endswith('.xml')]
+        for enriched_file in sorted(enriched_files):
+            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{enriched_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
+            total_sitemaps += 1
+        
+        # Додаємо файли other
+        other_files = [f for f in os.listdir(SITEMAP_DIR) if f.startswith('sitemap-other-') and f.endswith('.xml')]
+        for other_file in sorted(other_files):
+            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{other_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
+            total_sitemaps += 1
+        
+        # Перевіряємо, чи є хоча б один sitemap, щоб уникнути порожнього індексу
+        if total_sitemaps == 0:
+            logging.warning("No sitemap files found, adding a dummy sitemap entry")
+            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/sitemap-static.xml</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
+        
+        sitemap_xml += '</sitemapindex>'
+        
+        # Записуємо в файл sitemap-index.xml
+        file_path = os.path.join(SITEMAP_DIR, 'sitemap-index.xml')
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(sitemap_xml)
+        
+        # Також зберігаємо копію як sitemap.xml для сумісності
+        file_path2 = os.path.join(SITEMAP_DIR, 'sitemap.xml')
+        with open(file_path2, 'w', encoding='utf-8') as f:
+            f.write(sitemap_xml)
+            
+        logging.info(f"Sitemap index generated successfully: {file_path} with {total_sitemaps} sitemaps")
+        return True
+        
+    except Exception as e:
+        logging.error(f"Error generating sitemap index file: {e}", exc_info=True)
+        return False
 
 def generate_sitemap_images_file():
     """Генерує sitemap для зображень і зберігає на диск"""
@@ -942,21 +1046,7 @@ def generate_all_sitemaps():
         logging.error(f"Error generating all sitemap files: {e}", exc_info=True)
         return False
 
-@app.route('/<token>/admin/generate-image-sitemap', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def admin_generate_image_sitemap(token):
-    try:
-        if generate_sitemap_images_file():
-            flash("Image sitemap generated successfully", "success")
-        else:
-            flash("Error generating image sitemap", "error")
-            
-        return redirect(url_for('admin_dashboard', token=token))
-    except Exception as e:
-        logging.error(f"Error in admin_generate_image_sitemap: {e}", exc_info=True)
-        flash("Error generating image sitemap", "error")
-        return redirect(url_for('admin_dashboard', token=token))
+
 
 # Додавання дампера для закриття невикористаних з'єднань
 @scheduler.task('interval', id='check_pool_connections', minutes=5)
@@ -3199,44 +3289,7 @@ def guest_order_confirmation():
         items=guest_order['items']
     )
 
-# Запит про токен / Перевірка токена / Декоратор для перевірки токена
-def requires_token_and_roles(*allowed_roles):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            # Для статических файлов не проверяем токен
-            if request.path.startswith('/static/'):
-                return f(*args, **kwargs)
-                
-            token = request.view_args.get('token')
-            # Перевіряємо, чи це публічний маршрут
-            is_public_route = 'public' in request.path or not any(segment in request.path for segment in ['admin', 'dashboard'])
-            
-            if not token:
-                return redirect(url_for('index'))
 
-            if not validate_token(token):
-                # Для публічних маршрутів тихе перенаправлення без повідомлення
-                if is_public_route:
-                    return redirect(url_for('index'))
-                else:
-                    # Для адмін-маршрутів показуємо помилку
-                    flash(_("Invalid token."), "error")
-                    return redirect(url_for('index'))
-
-            session_role = session.get('role')
-            if not session_role:
-                flash(_("Please log in."), "error")
-                return redirect(url_for('login'))
-
-            role_name = session_role
-            if allowed_roles and role_name not in allowed_roles:
-                flash(_("You don't have permission to access this page."), "error")
-                return redirect(url_for('index'))
-
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
 
 def get_locale():
     if 'user_id' in session:
@@ -14038,6 +14091,22 @@ def admin_toggle_blog_post(token, post_id):
         return redirect(url_for('admin_blog_posts', token=token))
 
 
+
+@app.route('/<token>/admin/generate-image-sitemap', methods=['GET'])
+@requires_token_and_roles('admin')
+@add_noindex_header
+def admin_generate_image_sitemap(token):
+    try:
+        if generate_sitemap_images_file():
+            flash("Image sitemap generated successfully", "success")
+        else:
+            flash("Error generating image sitemap", "error")
+            
+        return redirect(url_for('admin_dashboard', token=token))
+    except Exception as e:
+        logging.error(f"Error in admin_generate_image_sitemap: {e}", exc_info=True)
+        flash("Error generating image sitemap", "error")
+        return redirect(url_for('admin_dashboard', token=token))
 
 
 if __name__ == '__main__':

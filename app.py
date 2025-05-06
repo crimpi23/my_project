@@ -272,7 +272,7 @@ def generate_sitemap_index_file():
     try:
         logging.info("Starting generation of sitemap index file")
         
-        host_base = "https://autogroup.sk"
+        host_base = get_base_url() or "https://autogroup.sk"
         today = datetime.now().strftime("%Y-%m-%d")
 
         sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -5455,24 +5455,59 @@ def get_public_cart_count():
 
 
 # Пошук для публічних користувачів
-@app.route('/public_search', methods=['GET', 'POST'])
+@app.route('/public_search', methods=['POST'])
 def public_search():
-    """Простий пошук товару за артикулом без перенаправлення"""
-    if request.method == 'POST':
-        # Конвертуємо артикул у верхній регістр
-        article = request.form.get('article', '').strip().upper()
-        logging.info(f"Search query received and converted to uppercase: {article}")
+    """Process search requests and redirect to appropriate product pages"""
+    try:
+        # Get the search query from the form
+        article = request.form.get('article', '').strip()
         
         if not article:
-            logging.warning("Empty search query")
-            flash(_("Please enter an article for search."), "warning")
+            flash(_("Please enter an article number"), "warning")
             return redirect(url_for('index'))
-
-        # Замість перенаправлення, безпосередньо викликаємо функцію
-        return product_details(article)
-
-    # GET запити перенаправляємо на головну
-    return redirect(url_for('index'))
+        
+        # Log the search query for debugging
+        logging.info(f"Searching for article: {article}")
+        
+        # First, check if article exists in database
+        with safe_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Check in stock table first
+            cursor.execute("SELECT 1 FROM stock WHERE UPPER(article) = UPPER(%s)", (article,))
+            exists_in_stock = cursor.fetchone()
+            
+            # If not in stock, check in price lists
+            if not exists_in_stock:
+                cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
+                tables = cursor.fetchall()
+                
+                exists_in_pricelists = False
+                for table in tables:
+                    table_name = table[0]
+                    cursor.execute(f"SELECT 1 FROM {table_name} WHERE UPPER(article) = UPPER(%s)", (article,))
+                    if cursor.fetchone():
+                        exists_in_pricelists = True
+                        break
+                        
+                exists = exists_in_pricelists
+            else:
+                exists = True
+            
+            if exists:
+                # Redirect to product details page if article exists
+                logging.info(f"Article {article} found, redirecting to product details")
+                return redirect(url_for('product_details', article=article))
+            else:
+                # If article not found, show an appropriate message
+                logging.warning(f"Article {article} not found in any table")
+                flash(_("Article not found"), "warning")
+                return redirect(url_for('index'))
+        
+    except Exception as e:
+        logging.error(f"Error in public_search: {e}", exc_info=True)
+        flash(_("An error occurred while processing your search"), "error")
+        return redirect(url_for('index'))
 
 # Пошук для користувачів без токену
 @app.route('/simple_search', methods=['GET', 'POST'])

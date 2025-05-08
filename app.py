@@ -5455,59 +5455,25 @@ def get_public_cart_count():
 
 
 # Пошук для публічних користувачів
-@app.route('/public_search', methods=['POST'])
+@app.route('/public_search', methods=['GET', 'POST'])
 def public_search():
-    """Process search requests and redirect to appropriate product pages"""
-    try:
-        # Get the search query from the form
-        article = request.form.get('article', '').strip()
+    """Простий пошук товару за артикулом з перенаправленням на сторінку товару"""
+    if request.method == 'POST':
+        # Конвертуємо артикул у верхній регістр
+        article = request.form.get('article', '').strip().upper()
+        logging.info(f"Search query received and converted to uppercase: {article}")
         
         if not article:
-            flash(_("Please enter an article number"), "warning")
+            logging.warning("Empty search query")
+            flash(_("Please enter an article for search."), "warning")
             return redirect(url_for('index'))
-        
-        # Log the search query for debugging
-        logging.info(f"Searching for article: {article}")
-        
-        # First, check if article exists in database
-        with safe_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Check in stock table first
-            cursor.execute("SELECT 1 FROM stock WHERE UPPER(article) = UPPER(%s)", (article,))
-            exists_in_stock = cursor.fetchone()
-            
-            # If not in stock, check in price lists
-            if not exists_in_stock:
-                cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
-                tables = cursor.fetchall()
-                
-                exists_in_pricelists = False
-                for table in tables:
-                    table_name = table[0]
-                    cursor.execute(f"SELECT 1 FROM {table_name} WHERE UPPER(article) = UPPER(%s)", (article,))
-                    if cursor.fetchone():
-                        exists_in_pricelists = True
-                        break
-                        
-                exists = exists_in_pricelists
-            else:
-                exists = True
-            
-            if exists:
-                # Redirect to product details page if article exists
-                logging.info(f"Article {article} found, redirecting to product details")
-                return redirect(url_for('product_details', article=article))
-            else:
-                # If article not found, show an appropriate message
-                logging.warning(f"Article {article} not found in any table")
-                flash(_("Article not found"), "warning")
-                return redirect(url_for('index'))
-        
-    except Exception as e:
-        logging.error(f"Error in public_search: {e}", exc_info=True)
-        flash(_("An error occurred while processing your search"), "error")
-        return redirect(url_for('index'))
+
+        # Пряме перенаправлення на сторінку товару
+        logging.info(f"Redirecting to product details for article: {article}")
+        return redirect(url_for('product_details', article=article))
+
+    # GET запити перенаправляємо на головну
+    return redirect(url_for('index'))
 
 # Пошук для користувачів без токену
 @app.route('/simple_search', methods=['GET', 'POST'])

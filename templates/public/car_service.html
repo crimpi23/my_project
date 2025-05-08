@@ -1,28 +1,219 @@
 {% extends "base/public_base.html" %}
 
-{% block title %}{{ _("Car Service & Programming") }}{% endblock %}
+{% block title %}{{ _("Land Rover & Jaguar Specialist Car Service") }}{% endblock %}
 
 {% block content %}
 <div class="container mt-5 mb-5">
     <div class="row">
         <div class="col-12">
-            <h1 class="mb-4">{{ _("Car Service & Programming") }}</h1>
+            <h1 class="mb-4">{{ _("Land Rover & Jaguar Specialist Car Service") }}</h1>
+            
+            <p class="lead">{{ _("Professional repair and maintenance of all Land Rover and Jaguar models. From Discovery and Defender to Range Rover and Jaguar F-PACE — trust your premium vehicle to real professionals with extensive experience.") }}</p>
             
             <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h3 mb-0">{{ _("Land Rover 3.0 TDV6 / SDV6 (306DT) Engine Overhaul") }}</h2>
+                </div>
                 <div class="card-body">
-                    <h3>{{ _("Our Services") }}</h3>
-                    <p>{{ _("We offer professional car diagnostic and programming services for various car models.") }}</p>
+                    <p>{{ _("We are recognized experts in the repair of Land Rover 3.0 TDV6 and SDV6 (code name 306DT) diesel engines. For complete engine rebuilds, we use exclusively new genuine Land Rover parts, ensuring the highest quality and reliability.") }}</p>
                     
-                    <h4 class="mt-4">{{ _("Available Services") }}:</h4>
+                    <h3 class="mt-4">{{ _("Expertise with Both Engine Generations") }}</h3>
+                    <p>{{ _("Our mechanics thoroughly understand the features of both generations of Land Rover 3.0 TDV6 / SDV6 (306DT) engines:") }}</p>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <strong>🔹 {{ _("GEN1") }}</strong>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ _("Found in Discovery 4 and Range Rover Sport until 2013") }}</p>
+                                    <ul>
+                                        <li>{{ _("Base design with classic cooling systems") }}</li>
+                                        <li>{{ _("Standard type oil pump") }}</li>
+                                        <li>{{ _("Original turbocharging system components") }}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <strong>🔹 {{ _("GEN2") }}</strong>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ _("Found in Range Rover L405 and newer models") }}</p>
+                                    <ul>
+                                        <li>{{ _("Revolutionary engineering solutions with improved reliability") }}</li>
+                                        <li>{{ _("Innovative oil pump with electromagnetic solenoid") }}</li>
+                                        <li>{{ _("Electronically controlled water pump") }}</li>
+                                        <li>{{ _("High-tech water-cooled intercooler") }}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="mt-4">{{ _("Common Issues with Land Rover 3.0 TDV6 / SDV6 (306DT) Engines and Our Solutions") }}</h3>
+                    
+                    <div class="accordion mt-3" id="engineIssuesAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading1">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
+                                    {{ _("Crankshaft Failure") }}
+                                </button>
+                            </h2>
+                            <div id="collapse1" class="accordion-collapse collapse show" aria-labelledby="heading1" data-bs-parent="#engineIssuesAccordion">
+                                <div class="accordion-body">
+                                    <p>{{ _("One of the most known issues with this engine. The crankshaft has structural weak points between the connecting rod journals and counterweights, particularly vulnerable with insufficient maintenance.") }}</p>
+                                    <p><strong>{{ _("Our solution:") }}</strong> {{ _("Instead of repairing or grinding the crankshaft, we install exclusively new genuine Land Rover crankshafts, ensuring maximum engine durability.") }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading2">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                                    {{ _("Turbocharger Wear and Failure") }}
+                                </button>
+                            </h2>
+                            <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="heading2" data-bs-parent="#engineIssuesAccordion">
+                                <div class="accordion-body">
+                                    <p>{{ _("Turbines on 306DT engines often fail due to wear or as a result of other engine problems, particularly due to insufficient lubrication.") }}</p>
+                                    <p><strong>{{ _("Our solution:") }}</strong> {{ _("During complete overhaul, we thoroughly check the turbines and replace them with original Land Rover parts.") }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading3">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                                    {{ _("Oil Pump Issues") }}
+                                </button>
+                            </h2>
+                            <div id="collapse3" class="accordion-collapse collapse" aria-labelledby="heading3" data-bs-parent="#engineIssuesAccordion">
+                                <div class="accordion-body">
+                                    <p>{{ _("Reduced efficiency of the oil pump leads to insufficient lubrication of engine components in the 3.0 TDV6 / SDV6.") }}</p>
+                                    <p><strong>{{ _("Our solution:") }}</strong> {{ _("During repairs, we install a new oil pump, with special attention to GEN2 models equipped with electromagnetic solenoid pumps.") }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading4">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
+                                    {{ _("Fuel Injector Problems") }}
+                                </button>
+                            </h2>
+                            <div id="collapse4" class="accordion-collapse collapse" aria-labelledby="heading4" data-bs-parent="#engineIssuesAccordion">
+                                <div class="accordion-body">
+                                    <p>{{ _("Some injectors in 306DT engines can deliver excessive fuel, leading to overheating and piston damage.") }}</p>
+                                    <p><strong>{{ _("Our solution:") }}</strong> {{ _("We diagnose, adjust, and if necessary, replace injectors with new genuine Land Rover components.") }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="mt-4">{{ _("Technical Specifications of the Land Rover 306DT (3.0 TDV6/SDV6) Engine") }}</h3>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered table-striped">
+                            <tbody>
+                                <tr>
+                                    <th>{{ _("Engine Type") }}</th>
+                                    <td>{{ _("V6 diesel") }}</td>
+                                </tr>
+                                <tr>
+                                    <th>{{ _("Displacement") }}</th>
+                                    <td>2993 cm³</td>
+                                </tr>
+                                <tr>
+                                    <th>{{ _("Power Output") }}</th>
+                                    <td>{{ _("211 to 306 hp (depending on configuration)") }}</td>
+                                </tr>
+                                <tr>
+                                    <th>{{ _("Torque") }}</th>
+                                    <td>{{ _("520 to 700 Nm") }}</td>
+                                </tr>
+                                <tr>
+                                    <th>{{ _("Injection System") }}</th>
+                                    <td>Common Rail</td>
+                                </tr>
+                                <tr>
+                                    <th>{{ _("Turbocharging") }}</th>
+                                    <td>{{ _("Single or twin Garrett turbines") }}</td>
+                                </tr>
+                                <tr>
+                                    <th>{{ _("Cylinder Block") }}</th>
+                                    <td>{{ _("Cast iron") }}</td>
+                                </tr>
+                                <tr>
+                                    <th>{{ _("Cylinder Head") }}</th>
+                                    <td>{{ _("Aluminum, 24 valves") }}</td>
+                                </tr>
+                                <tr>
+                                    <th>{{ _("Compression Ratio") }}</th>
+                                    <td>16.1:1</td>
+                                </tr>
+                                <tr>
+                                    <th>{{ _("Timing System") }}</th>
+                                    <td>{{ _("Chain and belt") }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h3 class="mt-4">{{ _("Our Competitive Advantages in Land Rover 306DT Engine Repairs") }}</h3>
+                    <div class="row mt-3">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h4 class="card-title"><i class="fas fa-check-circle text-success"></i> {{ _("Genuine Parts Only") }}</h4>
+                                    <p class="card-text">{{ _("We use exclusively original Land Rover parts — no compromises in quality") }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h4 class="card-title"><i class="fas fa-tools text-success"></i> {{ _("Professional Diagnostics") }}</h4>
+                                    <p class="card-text">{{ _("With deep understanding of engine design, we identify problems before they lead to serious damage") }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h4 class="card-title"><i class="fas fa-certificate text-success"></i> {{ _("Experience with All Generations") }}</h4>
+                                    <p class="card-text">{{ _("We have experience repairing both GEN1 and GEN2 engine versions, considering their unique requirements") }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h4 class="card-title"><i class="fas fa-shield-alt text-success"></i> {{ _("Quality Guarantee") }}</h4>
+                                    <p class="card-text">{{ _("We provide warranty for all completed work and installed parts, demonstrating our confidence in service quality") }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="mt-4">{{ _("Additional Services for Land Rover and Jaguar") }}</h3>
                     <ul>
-                        <li>{{ _("Full car diagnostics") }}</li>
-                        <li>{{ _("ECU programming and updates") }}</li>
-                        <li>{{ _("Key programming") }}</li>
-                        <li>{{ _("Software updates") }}</li>
-                        <li>{{ _("Dashboard repair") }}</li>
+                        <li>{{ _("Diagnostics and repair of engines of all modifications") }}</li>
+                        <li>{{ _("Transmission repair and service") }}</li>
+                        <li>{{ _("Suspension repair") }}</li>
+                        <li>{{ _("Diagnostics and programming of electronic systems") }}</li>
+                        <li>{{ _("Comprehensive technical service") }}</li>
                     </ul>
                     
-                    <h4 class="mt-4">{{ _("Contact Us") }}</h4>
+                    <div class="alert alert-success mt-4">
+                        <h4 class="alert-heading">{{ _("Need a reliable repair for your Land Rover or Jaguar?") }}</h4>
+                        <p>{{ _("Contact our service — we guarantee professional approach, original parts, and the highest quality of work.") }}</p>
+                    </div>
+                    
+                    <h3 class="mt-4">{{ _("Contact Us") }}</h3>
                     <p>{{ _("For more information about our car services, please contact us:") }}</p>
                     <p>
                         <i class="fas fa-phone"></i> <a href="tel:+421907400865">+421 907 400 865</a><br>

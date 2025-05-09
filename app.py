@@ -337,6 +337,10 @@ def generate_sitemap_images_file():
         
         host_base = get_base_url() or "https://autogroup.sk"
         
+        # Переконуємося, що базовий URL не закінчується слешем
+        if host_base.endswith('/'):
+            host_base = host_base[:-1]
+        
         with safe_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
@@ -362,18 +366,6 @@ def generate_sitemap_images_file():
             for article_row in articles:
                 article = article_row['product_article']
                 
-                # Отримуємо інформацію про товар
-                cursor.execute(f"""
-                    SELECT 
-                        article,
-                        name_{lang} as name,
-                        description_{lang} as description
-                    FROM products
-                    WHERE article = %s
-                """, (article,))
-                
-                product = cursor.fetchone()
-                
                 # Генеруємо URL товару
                 product_url = f"{host_base}/product/{article}"
                 
@@ -390,14 +382,38 @@ def generate_sitemap_images_file():
                 """, (article,))
                 
                 images = cursor.fetchall()
+                has_valid_images = False
                 
                 # Додаємо всі зображення для цього URL
                 for image in images:
                     image_url = image['image_url']
                     
-                    # Перевіряємо, чи URL не порожній
+                    # Перевіряємо, чи URL не порожній і є коректним
                     if not image_url:
                         continue
+                        
+                    # Перевіряємо, чи URL починається з http:// або https://
+                    if not image_url.startswith(('http://', 'https://')):
+                        # Якщо URL відносний, додаємо базову адресу
+                        image_url = f"{host_base}/{image_url.lstrip('/')}"
+                    
+                    # Додаткова перевірка на заглушки типу "new_image_url"
+                    if image_url == "new_image_url" or not '.' in image_url:
+                        continue
+                        
+                    has_valid_images = True
+                    
+                    # Отримуємо інформацію про товар
+                    if not 'product' in locals() or product is None:
+                        cursor.execute(f"""
+                            SELECT 
+                                article,
+                                name_{lang} as name,
+                                description_{lang} as description
+                            FROM products
+                            WHERE article = %s
+                        """, (article,))
+                        product = cursor.fetchone()
                     
                     # Генеруємо заголовок та опис для зображення
                     image_title = ""
@@ -413,9 +429,10 @@ def generate_sitemap_images_file():
                     image_title = image_title[:100]
                     image_caption = image_caption[:200] if image_caption else ""
                     
-                    # Кодуємо спеціальні символи
-                    image_title = image_title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&apos;").replace('"', "&quot;")
-                    image_caption = image_caption.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&apos;").replace('"', "&quot;")
+                    # Кодуємо спеціальні символи з використанням xml.sax.saxutils.escape
+                    import xml.sax.saxutils as saxutils
+                    image_title = saxutils.escape(image_title)
+                    image_caption = saxutils.escape(image_caption)
                     
                     # Додаємо інформацію про зображення
                     sitemap_xml += f'    <image:image>\n'
@@ -429,14 +446,20 @@ def generate_sitemap_images_file():
                         
                     sitemap_xml += f'    </image:image>\n'
                 
-                sitemap_xml += f'  </url>\n'
+                # Закриваємо тег URL тільки якщо є дійсні зображення
+                if has_valid_images:
+                    sitemap_xml += f'  </url>\n'
+                else:
+                    # Якщо нема дійсних зображень, видаляємо початок URL
+                    sitemap_xml = sitemap_xml.rsplit(f'  <url>\n', 1)[0]
+                    sitemap_xml = sitemap_xml.rsplit(f'    <loc>{product_url}</loc>\n', 1)[0]
             
             sitemap_xml += '</urlset>'
             
             # Записуємо у файл
             file_path = os.path.join(SITEMAP_DIR, 'sitemap-images.xml')
             with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(sitemap_xml)  # Додайте цей рядок
+                f.write(sitemap_xml)  
                 
             logging.info(f"Images sitemap generated successfully: {file_path}")
             
@@ -448,7 +471,6 @@ def generate_sitemap_images_file():
     except Exception as e:
         logging.error(f"Error generating images sitemap file: {e}", exc_info=True)
         return False
-
 
 
 def generate_sitemap_static_file():

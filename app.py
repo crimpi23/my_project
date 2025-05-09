@@ -272,7 +272,7 @@ def generate_sitemap_index_file():
     try:
         logging.info("Starting generation of sitemap index file")
         
-        host_base = get_base_url() or "https://autogroup.sk"
+        host_base = "https://autogroup.sk"
         today = datetime.now().strftime("%Y-%m-%d")
 
         sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -1086,9 +1086,12 @@ def check_pool_connections():
 def get_base_url():
     """Get the base URL for the current request"""
     host = request.host_url.rstrip('/')
-    # For production or staging, you can also hardcode the domain
-    # if host.startswith('127.0.0.1') or host.startswith('localhost'):
-    #     host = 'https://autogroup.sk'
+    
+    # Завжди використовувати HTTPS для autogroup.sk
+    if 'autogroup.sk' in host:
+        return 'https://autogroup.sk'
+    
+    # Для локальної розробки використовуємо поточний URL
     return host
 
 

@@ -326,85 +326,22 @@
                         </label>
                     </div>
                     
-                    <div id="invoice_fields" style="display: none;">
-                        {% if saved_companies %}
-                        <div class="mb-3">
-                            <h6 class="section-title">{{ _('Select Saved Company') }}</h6>
-                            
-                            {% for company in saved_companies %}
-                            <div class="address-card {% if company.is_default %}selected{% endif %}">
-                                <div class="card-body">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" 
-                                            name="company_id" 
-                                            value="{{ company.id }}" 
-                                            id="company_{{ company.id }}"
-                                            {% if company.is_default %}checked{% endif %}>
-                                        <label class="form-check-label" for="company_{{ company.id }}">
-                                            <span class="address-name">{{ company.company_name }}</span>
-                                        </label>
-                                        
-                                        <div class="address-info">
-                                            <span class="vat-badge">{{ _('VAT Number') }}: {{ company.vat_number }}</span><br>
-                                            {% if company.registration_number %}
-                                            {{ _('Registration Number') }}: {{ company.registration_number }}<br>
-                                            {% endif %}
-                                            {% if company.address %}
-                                            {{ _('Address') }}: {{ company.address }}
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                            
-                            <div class="form-check mt-3">
-                                <input class="form-check-input" type="radio" 
-                                    name="use_new_company" 
-                                    id="useNewCompany"
-                                    value="on"
-                                    {% if not saved_companies %}checked{% endif %}>
-                                <label class="form-check-label" for="useNewCompany">
-                                    <i class="bi bi-plus-circle me-2"></i>{{ _('Use new company details') }}
-                                </label>
-                            </div>
+                    <div id="invoice_fields" class="border rounded p-3 mb-3" style="display:none;">
+                        <div class="mb-2">
+                            <label class="form-label">{{ _('Company name') }}</label>
+                            <input type="text" class="form-control" name="company_name" autocomplete="organization">
                         </div>
-                        {% endif %}
-
-                        <div id="newCompanyForm" {% if saved_companies %}style="display: none;"{% endif %}>
-                            {% if saved_companies %}
-                            <h6 class="section-title">{{ _('New Company Details') }}</h6>
-                            {% endif %}
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">{{ _('Company Name') }}</label>
-                                    <input type="text" name="company_name" class="form-control">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">{{ _('VAT Number') }}</label>
-                                    <input type="text" name="vat_number" class="form-control" id="vatNumber">
-                                    <div id="vatValidationMessage" class="form-text"></div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">{{ _('Registration Number') }}</label>
-                                    <input type="text" name="registration_number" class="form-control">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">{{ _('Company Address') }}</label>
-                                    <textarea name="company_address" class="form-control" rows="2"></textarea>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input type="checkbox" name="save_company" class="form-check-input" id="saveCompany" value="on">
-                                    <label class="form-check-label" for="saveCompany">
-                                        {{ _('Save company details for future orders') }}
-                                    </label>
-                                </div>
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label">{{ _('VAT number') }}</label>
+                            <input type="text" class="form-control" name="vat_number" placeholder="SK1234567890">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">{{ _('Registration number') }}</label>
+                            <input type="text" class="form-control" name="registration_number">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">{{ _('Company address') }}</label>
+                            <input type="text" class="form-control" name="company_address">
                         </div>
                     </div>
                 </div>
@@ -426,7 +363,7 @@
             <h5 class="mb-0">{{ _('Delivery Information') }}</h5>
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ url_for('guest_checkout') }}" id="guestOrderForm">
+            <form method="POST" action="{{ url_for('guest_checkout') }}">
                 <h6 class="section-title">{{ _('Your Contact Information') }}</h6>
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -501,6 +438,33 @@
                             <strong>{{ _('Pickup from Warehouse') }}</strong>
                             <div class="text-muted small">{{ _('Location') }}: Tušická Nová Ves 90, Tušice 07202, {{ _('Slovakia') }}</div>
                         </label>
+                    </div>
+                </div>
+
+                <hr>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="needs_invoice" name="needs_invoice">
+                    <label class="form-check-label" for="needs_invoice">
+                      {{ _('I need an invoice (company details)') }}
+                    </label>
+                </div>
+
+                <div id="invoice_fields" class="border rounded p-3 mb-3" style="display:none;">
+                    <div class="mb-2">
+                        <label class="form-label">{{ _('Company name') }}</label>
+                        <input type="text" class="form-control" name="company_name" autocomplete="organization">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">{{ _('VAT number') }}</label>
+                        <input type="text" class="form-control" name="vat_number" placeholder="SK1234567890">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">{{ _('Registration number') }}</label>
+                        <input type="text" class="form-control" name="registration_number">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">{{ _('Company address') }}</label>
+                        <input type="text" class="form-control" name="company_address">
                     </div>
                 </div>
 

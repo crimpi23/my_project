@@ -130,8 +130,10 @@
         }
     }
     </style>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>	
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100" style="font-family: 'Inter', system-ui, -apple-system, sans-serif;">
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N4RD9ZH9"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     
@@ -287,12 +289,13 @@
                 </li>
                 {% endif %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('public_cart') }}">
-                        <i class="bi bi-cart3"></i> {{ _('Cart') }}
-                        {% if session.get('cart_count', 0) > 0 %}
-                        <span class="cart-badge">{{ session.get('cart_count') }}</span>
-                        {% endif %}
-                    </a>
+                    <a class="nav-link" href="{{ url_for('public_cart') }}"
+     aria-label="{{ _('Cart') }}{% if session.get('cart_count', 0) > 0 %} ({{ session.get('cart_count') }}){% endif %}">
+    <i class="bi bi-cart3"></i> {{ _('Cart') }}
+    {% if session.get('cart_count', 0) > 0 %}
+    <span class="cart-badge" aria-live="polite">{{ session.get('cart_count') }}</span>
+    {% endif %}
+  </a>
                 </li>
                 <li class="nav-item dropdown language-dropdown">
   <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

@@ -81,11 +81,12 @@
                         <table class="table align-items-center mb-0">
                             <thead>
                                 <tr>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Brand</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Created At</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Last Updated</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Table Name</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Supplier</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Delivery Time</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Created</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Last Updated</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -99,18 +100,21 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <p class="text-xs font-weight-bold mb-0">{{ pl.brand_name }}</p>
+                                        <p class="text-xs font-weight-bold mb-0">{{ pl.supplier_name or '-' }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs text-secondary mb-0">{{ pl.delivery_time or '-' }}</p>
                                     </td>
                                     <td>
                                         <p class="text-xs text-secondary mb-0">{{ pl.created_at.strftime('%Y-%m-%d %H:%M') if pl.created_at else '-' }}</p>
                                     </td>
                                     <td>
-                                        <span class="text-xs font-weight-bold mb-0">
-                                            {{ pl.updated_at.strftime('%Y-%m-%d %H:%M') if pl.updated_at else '-' }}
-                                        </span>
+                                        <p class="text-xs text-secondary mb-0">
+                                            {{ pl.last_updated.strftime('%Y-%m-%d %H:%M') if pl.last_updated else '-' }}
+                                        </p>
                                     </td>
                                     <td>
-                                        <span class="text-xs font-weight-bold mb-0">{{ pl.delivery_time or '-' }}</span>
+                                        <a href="{{ url_for('manage_price_lists', token=token) }}" class="btn btn-sm btn-info">Manage</a>
                                     </td>
                                 </tr>
                                 {% endfor %}

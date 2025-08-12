@@ -1,0 +1,62 @@
+/* Глобальні зменшення розмірів для мобільних пристроїв */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px !important;
+    }
+    
+    /* Зменшення великих кнопок і навігаційних елементів */
+    .btn, .nav-link, .navbar-brand {
+        font-size: 14px !important;
+        padding: 0.25rem 0.5rem !important;
+        height: auto !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* Зменшення заголовків */
+    h1 {
+        font-size: 1.75rem !important;
+    }
+    h2 {
+        font-size: 1.5rem !important;
+    }
+    h3 {
+        font-size: 1.25rem !important;
+    }
+    
+    /* Зменшення іконок */
+    .bi::before, .icon {
+        font-size: 1rem !important;
+    }
+    
+    /* Спеціальне правило для елементів з 20px шрифтом */
+    [style*="font-size: 20px"], [style*="font-size:20px"] {
+        font-size: 14px !important;
+        height: auto !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* Правильний розмір елементів форм */
+    input, select, textarea {
+        font-size: 14px !important;
+        height: auto !important;
+        padding: 0.375rem 0.75rem !important;
+    }
+    
+    /* Виправлення для кнопок з фіксованою висотою */
+    .btn {
+        height: auto !important;
+        min-height: 30px;
+    }
+}
+
+/* Додаткові правила для дуже малих екранів */
+@media (max-width: 480px) {
+    body {
+        font-size: 13px !important;
+    }
+    
+    .btn, .nav-link, .navbar-brand {
+        font-size: 13px !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+}

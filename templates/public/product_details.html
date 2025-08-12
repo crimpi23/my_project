@@ -107,9 +107,10 @@
             <div class="col-md-6 mobile-second">
                 <div class="image-section">
                     <div class="image-container">
-                        <img id="productImage" 
-                            src="{{ product_data.photo_urls[0] }}" 
-                            alt="{{ product_data.name }}">
+                        <img id="productImage"
+                             src="{{ product_data.photo_urls[0] }}"
+                             alt="{{ product_data.name }}"
+                             loading="lazy" decoding="async" width="800" height="600">
                     </div>
                     
                     {% if product_data.photo_urls|length > 1 %}
@@ -122,9 +123,9 @@
                     
                     <div class="thumbnails-container">
                         {% for url in product_data.photo_urls %}
-                        <div class="thumbnail {% if loop.first %}active{% endif %}" 
-                             data-index="{{ loop.index0 }}">
-                            <img src="{{ url }}" alt="{{ product_data.name }} - Image {{ loop.index }}">
+                        <div class="thumbnail {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}">
+                            <img src="{{ url }}" alt="{{ product_data.name }} - Image {{ loop.index }}"
+                                 loading="lazy" decoding="async" width="120" height="90">
                         </div>
                         {% endfor %}
                     </div>

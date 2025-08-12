@@ -59,15 +59,53 @@ load_dotenv()
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 
 
+
+
+def get_locale():
+    if 'user_id' in session:
+        # Якщо користувач авторизований, беремо його мову з БД
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT preferred_language FROM users WHERE id = %s",
+                    (session['user_id'],)
+                )
+                result = cursor.fetchone()
+                if result and result[0]:
+                    # Якщо мова користувача українська, змінюємо на словацьку
+                    if result[0] == 'uk':
+                        return 'sk'
+                    return result[0]
+        except Exception as e:
+            logging.error(f"Error getting user language: {e}")
+    
+    # Якщо користувач не авторизований або виникла помилка,
+    # використовуємо мову з сесії або стандартну
+    language = session.get('language', app.config['BABEL_DEFAULT_LOCALE'])
+    # Якщо мова українська, змінюємо на словацьку
+    if language == 'uk':
+        return 'sk'
+    return language
+
+
+
+
 # Configure Babel
 app.config['BABEL_DEFAULT_LOCALE'] = 'sk'
 app.config['BABEL_SUPPORTED_LOCALES'] = ['sk', 'en', 'pl']
 # Set secret key for sessions and CSRF
 # app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
+
+
+
+
+
 # Initialize extensions
 # csrf = CSRFProtect(app)
 babel = Babel(app)
+babel.init_app(app, locale_selector=get_locale)
 cache = Cache(app, config={
     'CACHE_TYPE': 'SimpleCache',  # Кеш в пам'яті
     'CACHE_DEFAULT_TIMEOUT': 600
@@ -83,22 +121,41 @@ scheduler = APScheduler()
 scheduler.init_app(app)
 scheduler.start()
 
+try:
+    if not scheduler.running:
+        scheduler.start()
+        logging.info("Scheduler started during app initialization")
+except Exception as e:
+    logging.error(f"Error starting scheduler: {e}")
+
+def make_lang_cache_key():
+    """Cache key that isolates per-language AND per-user cart state"""
+    lang = session.get('language', app.config.get('BABEL_DEFAULT_LOCALE', 'sk'))
+    user = session.get('user_id', 'guest')
+    cart_count = session.get('cart_count', 0)
+    q = request.query_string.decode(errors='ignore')
+    return f"{lang}:{user}:{cart_count}:{request.path}?{q}"
 
 
-# Створення пулу з'єднань (додайте після всіх імпортів)
-# try:
-#     db_pool = ThreadedConnectionPool(
-#         minconn=1,       # Зменшуємо мінімум до 3 (було 5)
-#         maxconn=15,      # Зменшуємо максимум до 25 (було 30)
-#         dsn=os.environ.get('DATABASE_URL'),
-#         sslmode="require",
-#         connect_timeout=5,  # 5 секунд на з'єднання
-#         options="-c statement_timeout=5000"  # Глобальний таймаут 5 секунд
-#     )
-#     logging.info("Database connection pool initialized successfully")
-# except Exception as e:
-#     logging.error(f"Error initializing connection pool: {e}")
-#     db_pool = None
+
+# Додай цю функцію після функції make_lang_cache_key()
+
+def clear_page_cache_for_user():
+    """Очищає кеш поточної сторінки для користувача"""
+    try:
+        # Створюємо ключі кешу для всіх можливих мов поточної сторінки
+        languages = app.config['BABEL_SUPPORTED_LOCALES']
+        user = session.get('user_id', 'guest')
+        cart_count = session.get('cart_count', 0)
+        
+        for lang in languages:
+            cache_key = f"{lang}:{user}:{cart_count}:{request.path}"
+            cache.delete(cache_key)
+            
+        logging.info(f"Cleared page cache for {request.path}")
+    except Exception as e:
+        logging.error(f"Error clearing page cache: {e}")
+
 
 # Реєстрація функції закриття пулу при завершенні роботи
 def close_db_pool():
@@ -121,23 +178,6 @@ logging.info(f"Sitemap directory set to: {SITEMAP_DIR}")
 
 
 
-
-
-# @scheduler.task('interval', id='monitor_db_connections', minutes=2)
-# def monitor_db_connections():
-#     """Моніторинг та очистка простоюючих з'єднань"""
-#     try:
-#         if 'db_pool' in globals() and db_pool:
-#             if hasattr(db_pool, '_pool'):
-#                 active_count = len(db_pool._pool)
-#                 logging.info(f"Active DB connections: {active_count}")
-                
-#                 # Якщо відкрито більше 10 з'єднань, спробуємо очистити
-#                 if active_count > 10:
-#                     db_pool._pool.clear()
-#                     logging.info("Pool connections cleared due to high count")
-#     except Exception as e:
-#         logging.error(f"Error monitoring connections: {e}")
 
 
 @contextmanager
@@ -218,6 +258,72 @@ def requires_token_and_roles(*allowed_roles):
         return decorated_function
     return decorator
 
+
+def initialize_scheduler():
+    """Ініціалізує планувальник для продакшн"""
+    try:
+        # Перевіряємо чи планувальник вже запущений
+        if not scheduler.running:
+            scheduler.start()
+            logging.info("Scheduler started in production")
+            
+            # Перевіряємо і додаємо завдання
+            job_ids = [job.id for job in scheduler.get_jobs()]
+            
+            if 'generate_sitemap_daily' not in job_ids:
+                scheduler.add_job(
+                    generate_sitemap_daily,
+                    'cron', 
+                    hour=2, 
+                    minute=0,
+                    id='generate_sitemap_daily'
+                )
+                logging.info("Added daily sitemap job")
+                
+            if 'generate_sitemap_weekly' not in job_ids:
+                scheduler.add_job(
+                    generate_sitemap_weekly,
+                    'cron', 
+                    day_of_week='mon', 
+                    hour=3, 
+                    minute=0,
+                    id='generate_sitemap_weekly'
+                )
+                logging.info("Added weekly sitemap job")
+                
+            if 'generate_sitemap_monthly' not in job_ids:
+                scheduler.add_job(
+                    generate_sitemap_monthly,
+                    'cron', 
+                    day=1, 
+                    hour=4, 
+                    minute=0,
+                    id='generate_sitemap_monthly'
+                )
+                logging.info("Added monthly sitemap job")
+                
+            if 'generate_sitemaps_distributed' not in job_ids:
+                scheduler.add_job(
+                    generate_sitemaps_distributed,
+                    'interval',
+                    days=30,
+                    id='generate_sitemaps_distributed'
+                )
+                logging.info("Added distributed sitemap job")
+                
+        else:
+            logging.info("Scheduler is already running")
+                
+        return True
+    except Exception as e:
+        logging.error(f"Error initializing scheduler: {e}")
+        return False
+
+try:
+    initialize_scheduler()
+    logging.info("Scheduler initialized during app startup")
+except Exception as e:
+    logging.error(f"Error initializing scheduler during startup: {e}")
 
 def init_scheduler():
     """Ініціалізує планувальник та додає всі заплановані завдання"""
@@ -474,18 +580,18 @@ def generate_sitemap_images_file():
 
 
 def generate_sitemap_static_file():
-    """Генерує static sitemap і зберігає на диск"""
+    """Генерує static sitemap з мовними префіксами"""
     try:
         host_base = "https://autogroup.sk"
+        languages = ['sk', 'en', 'pl']
         
         sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        sitemap_xml += 'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
         
-        # Додаємо головну сторінку
-        sitemap_xml += f'  <url>\n    <loc>{host_base}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n'
-        
-        # Додаємо статичні сторінки
+        # Статичні сторінки
         static_pages = [
+            '/',                    # Головна сторінка
             '/about', 
             '/contacts', 
             '/shipping-payment', 
@@ -495,8 +601,35 @@ def generate_sitemap_static_file():
             '/privacy'
         ]
         
+        # Додаємо кожну сторінку для кожної мови
         for page in static_pages:
-            sitemap_xml += f'  <url>\n    <loc>{host_base}{page}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n'
+            for lang in languages:
+                # Формуємо URL з мовним префіксом
+                if page == '/':
+                    url = f"{host_base}/{lang}/"
+                else:
+                    url = f"{host_base}/{lang}{page}"
+                
+                sitemap_xml += f'  <url>\n'
+                sitemap_xml += f'    <loc>{url}</loc>\n'
+                
+                # Додаємо hreflang посилання
+                for alt_lang in languages:
+                    if page == '/':
+                        alt_url = f"{host_base}/{alt_lang}/"
+                    else:
+                        alt_url = f"{host_base}/{alt_lang}{page}"
+                    sitemap_xml += f'    <xhtml:link rel="alternate" hreflang="{alt_lang}" href="{alt_url}" />\n'
+                
+                # Пріоритет та частота оновлення
+                if page == '/':
+                    sitemap_xml += f'    <changefreq>daily</changefreq>\n'
+                    sitemap_xml += f'    <priority>1.0</priority>\n'
+                else:
+                    sitemap_xml += f'    <changefreq>monthly</changefreq>\n'
+                    sitemap_xml += f'    <priority>0.8</priority>\n'
+                
+                sitemap_xml += '  </url>\n'
         
         sitemap_xml += '</urlset>'
         
@@ -504,32 +637,64 @@ def generate_sitemap_static_file():
         with open(os.path.join(SITEMAP_DIR, 'sitemap-static.xml'), 'w', encoding='utf-8') as f:
             f.write(sitemap_xml)
             
-        logging.info("Static sitemap generated successfully")
+        logging.info("Multilingual static sitemap generated successfully")
         return True
         
     except Exception as e:
-        logging.error(f"Error generating static sitemap file: {e}", exc_info=True)
+        logging.error(f"Error generating multilingual static sitemap: {e}", exc_info=True)
         return False
 
 def generate_sitemap_categories_file():
-    """Генерує categories sitemap і зберігає на диск"""
+    """Генерує categories sitemap з мовними префіксами"""
     try:
         host_base = "https://autogroup.sk"
+        languages = ['sk', 'en', 'pl']
         
         sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        sitemap_xml += 'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
         
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-        # Отримуємо всі категорії
-        cursor.execute("SELECT slug FROM categories WHERE slug IS NOT NULL AND slug != ''")
+        # Отримуємо всі категорії з перекладами
+        cursor.execute("""
+            SELECT 
+                c.slug,
+                c.name_sk IS NOT NULL as has_sk,
+                c.name_en IS NOT NULL as has_en,
+                c.name_pl IS NOT NULL as has_pl
+            FROM categories c 
+            WHERE c.slug IS NOT NULL AND c.slug != ''
+        """)
         categories = cursor.fetchall()
         
-        # Додаємо URL-адреси категорій
+        # Додаємо URL-адреси категорій для кожної мови
         for category in categories:
-            if category['slug']:
-                sitemap_xml += f'  <url>\n    <loc>{host_base}/category/{category["slug"]}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n'
+            slug = category['slug']
+            
+            # Визначаємо для яких мов є переклади
+            available_languages = []
+            for lang in languages:
+                if category[f'has_{lang}']:
+                    available_languages.append(lang)
+            
+            # Якщо немає жодного перекладу, використовуємо словацьку за замовчуванням
+            if not available_languages:
+                available_languages = ['sk']
+            
+            # Додаємо URL для кожної доступної мови
+            for lang in available_languages:
+                sitemap_xml += f'  <url>\n'
+                sitemap_xml += f'    <loc>{host_base}/{lang}/category/{slug}</loc>\n'
+                
+                # Додаємо hreflang посилання
+                for alt_lang in available_languages:
+                    sitemap_xml += f'    <xhtml:link rel="alternate" hreflang="{alt_lang}" href="{host_base}/{alt_lang}/category/{slug}" />\n'
+                
+                sitemap_xml += f'    <changefreq>weekly</changefreq>\n'
+                sitemap_xml += f'    <priority>0.8</priority>\n'
+                sitemap_xml += '  </url>\n'
         
         cursor.close()
         conn.close()
@@ -540,96 +705,17 @@ def generate_sitemap_categories_file():
         with open(os.path.join(SITEMAP_DIR, 'sitemap-categories.xml'), 'w', encoding='utf-8') as f:
             f.write(sitemap_xml)
             
-        logging.info("Categories sitemap generated successfully")
+        logging.info("Multilingual categories sitemap generated successfully")
         return True
         
     except Exception as e:
-        logging.error(f"Error generating categories sitemap file: {e}", exc_info=True)
+        logging.error(f"Error generating multilingual categories sitemap: {e}", exc_info=True)
         return False
 
 def generate_sitemap_stock_files():
-    """Генерує stock sitemap файли і зберігає на диск"""
+    """Генерує stock sitemap файли з багатомовними URL"""
     try:
-        logging.info("Starting generation of stock sitemap files")
-        start_time = datetime.now()  # Додано визначення start_time
-        
-        host_base = "https://autogroup.sk"
-        
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        
-        # Рахуємо загальну кількість товарів
-        cursor.execute("SELECT COUNT(*) FROM stock WHERE quantity > 0")
-        total_products = cursor.fetchone()[0]
-        
-        # Розраховуємо кількість файлів
-        products_per_sitemap = 40000
-        total_files = max(1, math.ceil(total_products / products_per_sitemap))
-        
-        for page in range(1, total_files + 1):
-            offset = (page - 1) * products_per_sitemap
-            
-            sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-            sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
-            sitemap_xml += 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
-            
-            # Отримуємо товари зі складу з їх зображеннями з пагінацією
-            cursor.execute("""
-                SELECT s.article, pi.image_url 
-                FROM stock s
-                LEFT JOIN product_images pi ON s.article = pi.product_article
-                WHERE s.quantity > 0
-                ORDER BY s.article
-                LIMIT %s OFFSET %s
-            """, (products_per_sitemap, offset))
-            
-            products = cursor.fetchall()
-            
-            product_images = {}
-            
-            # Збираємо дані про товари та їх зображення
-            for product in products:
-                article = product['article']
-                if article:
-                    if article not in product_images:
-                        product_images[article] = []
-                    
-                    if product['image_url']:
-                        product_images[article].append(product['image_url'])
-            
-            # Додаємо URL-адреси товарів з їх зображеннями
-            for article, images in product_images.items():
-                sitemap_xml += f'  <url>\n    <loc>{host_base}/product/{article}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n'
-                
-                # Додаємо зображення для товару, якщо вони є
-                for image_url in images:
-                    sitemap_xml += f'    <image:image>\n      <image:loc>{image_url}</image:loc>\n    </image:image>\n'
-                
-                sitemap_xml += '  </url>\n'
-            
-            sitemap_xml += '</urlset>'
-            
-            # Записуємо в файл
-            with open(os.path.join(SITEMAP_DIR, f'sitemap-stock-{page}.xml'), 'w', encoding='utf-8') as f:
-                f.write(sitemap_xml)
-                
-            logging.info(f"Stock sitemap page {page} generated successfully")
-        
-        cursor.close()
-        conn.close()
-        end_time = datetime.now()
-        duration = (end_time - start_time).total_seconds()
-        logging.info(f"Completed generation of stock sitemap files in {duration:.2f} seconds")
-        return True
-        
-    except Exception as e:
-        logging.error(f"Error generating stock sitemap files: {e}", exc_info=True)
-        return False
-
-def generate_sitemap_enriched_files():
-    """Генерує enriched sitemap файли і зберігає на диск"""
-    try:
-        logging.info("Starting generation of enriched sitemap files")
+        logging.info("Starting generation of multilingual stock sitemap files")
         start_time = datetime.now()
         
         host_base = "https://autogroup.sk"
@@ -637,8 +723,139 @@ def generate_sitemap_enriched_files():
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-        # Отримання всіх таблиць прайс-листів
-        cursor.execute("SELECT table_name FROM price_lists WHERE table_name != 'stock'")
+        # Підтримувані мови
+        languages = ['sk', 'en', 'pl']
+        
+        # Рахуємо загальну кількість товарів
+        cursor.execute("SELECT COUNT(*) FROM stock WHERE quantity > 0")
+        total_products = cursor.fetchone()[0]
+        
+        # Розраховуємо кількість файлів (з урахуванням мультимовності)
+        products_per_sitemap = 3500  # Зменшуємо, бо тепер у 3 рази більше URL
+        total_files = max(1, math.ceil(total_products / products_per_sitemap))
+        
+        for page in range(1, total_files + 1):
+            offset = (page - 1) * products_per_sitemap
+            
+            sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+            sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+            sitemap_xml += 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" '
+            sitemap_xml += 'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
+            
+            # Отримуємо товари зі стоку з назвами для всіх мов
+            cursor.execute(f"""
+                SELECT 
+                    s.article, 
+                    s.quantity,
+                    s.price,
+                    b.name as brand_name,
+                    b.id as brand_id,
+                    p.name_sk as name_sk,
+                    p.name_en as name_en,
+                    p.name_pl as name_pl,
+                    p.description_sk as description_sk,
+                    p.description_en as description_en,
+                    p.description_pl as description_pl,
+                    array_agg(
+                        pi.image_url 
+                        ORDER BY pi.is_main DESC, pi.id ASC
+                    ) FILTER (WHERE pi.image_url IS NOT NULL) as images
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                LEFT JOIN products p ON s.article = p.article
+                LEFT JOIN product_images pi ON s.article = pi.product_article
+                WHERE s.quantity > 0
+                GROUP BY s.article, s.quantity, s.price, b.name, b.id, 
+                         p.name_sk, p.name_en, p.name_pl,
+                         p.description_sk, p.description_en, p.description_pl
+                ORDER BY s.article
+                LIMIT %s OFFSET %s
+            """, (products_per_sitemap, offset))
+            
+            products = cursor.fetchall()
+            
+            # Додаємо URL-адреси товарів для кожної мови
+            for product in products:
+                article = product['article']
+                brand_name = product['brand_name'] or "AutogroupEU"
+                images = product['images'] or []
+                
+                # Створюємо URL для кожної мови
+                for lang in languages:
+                    # Отримуємо назву та опис для поточної мови
+                    product_name = (product[f'name_{lang}'] or 
+                                   product['name_sk'] or 
+                                   product['name_en'] or 
+                                   article)
+                    product_description = (product[f'description_{lang}'] or 
+                                         product['description_sk'] or 
+                                         product['description_en'] or 
+                                         f"Buy {product_name} at AutogroupEU")
+                    
+                    # Початок URL запису
+                    sitemap_xml += f'  <url>\n'
+                    # НОВИЙ ФОРМАТ URL з мовним префіксом
+                    sitemap_xml += f'    <loc>{host_base}/{lang}/product/{article}</loc>\n'
+                    
+                    # Додаємо hreflang посилання на інші мовні версії
+                    for alt_lang in languages:
+                        sitemap_xml += f'    <xhtml:link rel="alternate" hreflang="{alt_lang}" href="{host_base}/{alt_lang}/product/{article}" />\n'
+                    
+                    sitemap_xml += f'    <changefreq>weekly</changefreq>\n'
+                    sitemap_xml += f'    <priority>0.8</priority>\n'
+                    
+                    # Додаємо зображення (до 3 зображень на товар для кожної мови)
+                    for image_url in images[:3]:
+                        if image_url:
+                            import html
+                            image_title = html.escape(f"{product_name} - {brand_name}")
+                            
+                            sitemap_xml += f'    <image:image>\n'
+                            sitemap_xml += f'      <image:loc>{image_url}</image:loc>\n'
+                            sitemap_xml += f'      <image:title>{image_title}</image:title>\n'
+                            if product_description:
+                                image_caption = html.escape(product_description[:200])
+                                sitemap_xml += f'      <image:caption>{image_caption}</image:caption>\n'
+                            sitemap_xml += f'    </image:image>\n'
+                    
+                    sitemap_xml += '  </url>\n'
+            
+            sitemap_xml += '</urlset>'
+            
+            # Записуємо в файл
+            file_path = os.path.join(SITEMAP_DIR, f'sitemap-stock-{page}.xml')
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(sitemap_xml)
+                
+            logging.info(f"Multilingual stock sitemap page {page} generated with {len(products) * len(languages)} URLs")
+        
+        cursor.close()
+        conn.close()
+        end_time = datetime.now()
+        duration = (end_time - start_time).total_seconds()
+        logging.info(f"Completed generation of multilingual stock sitemap files in {duration:.2f} seconds")
+        return True
+        
+    except Exception as e:
+        logging.error(f"Error generating multilingual stock sitemap files: {e}", exc_info=True)
+        return False
+
+def generate_sitemap_enriched_files():
+    """Генерує enriched sitemap файли з багатомовними URL"""
+    try:
+        logging.info("Starting generation of multilingual enriched sitemap files")
+        start_time = datetime.now()
+        
+        host_base = "https://autogroup.sk"
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Підтримувані мови
+        languages = ['sk', 'en', 'pl']
+        
+        # ВИКЛЮЧАЄМО aftermarket і juaguar + обмежуємо ціновий діапазон
+        cursor.execute("SELECT table_name FROM price_lists WHERE table_name NOT IN ('stock', 'aftermarket', 'juaguar')")
         price_list_tables = [row[0] for row in cursor.fetchall()]
         logging.info(f"Found {len(price_list_tables)} price list tables: {price_list_tables}")
         
@@ -656,10 +873,10 @@ def generate_sitemap_enriched_files():
             logging.info(f"Created empty enriched sitemap at {file_path}")
             return True
         
-        # Формуємо динамічний SQL для запиту всіх товарів з прайс-листів
+        # Формуємо динамічний SQL для запиту всіх товарів з прайс-листів з ЦІНОВИМ ФІЛЬТРОМ
         union_queries = []
         for table in price_list_tables:
-            union_queries.append(f"SELECT article, '{table}' AS source_table FROM {table}")
+            union_queries.append(f"SELECT article, '{table}' AS source_table FROM {table} WHERE price BETWEEN 100 AND 800")
         
         all_price_list_query = " UNION ALL ".join(union_queries)
         
@@ -678,24 +895,31 @@ def generate_sitemap_enriched_files():
         
         cursor.execute(enriched_count_query)
         total_enriched = cursor.fetchone()[0]
-        logging.info(f"Found {total_enriched} enriched products")
-        
-        # Розраховуємо кількість файлів (максимум 45000 URL в одному файлі)
-        products_per_sitemap = 45000
+        logging.info(f"Found {total_enriched} enriched products in price range 100-800€")
+
+        # Розраховуємо кількість файлів (з урахуванням мультимовності)
+        products_per_sitemap = 3500  # Зменшуємо, бо тепер у 3 рази більше URL
         total_files = max(1, math.ceil(total_enriched / products_per_sitemap))
         
         # Для кожного файлу створюємо окремий sitemap
         for page in range(1, total_files + 1):
             offset = (page - 1) * products_per_sitemap
             
-            # Створюємо XML-заголовок
+            # Створюємо XML-заголовок з hreflang підтримкою
             sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
             sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
-            sitemap_xml += 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+            sitemap_xml += 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" '
+            sitemap_xml += 'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
             
-            # Запит для отримання товарів з описами або зображеннями
+            # Запит для отримання товарів з описами або зображеннями + назвами мовами
             enriched_query = f"""
-                SELECT DISTINCT pl.article, pl.source_table 
+                SELECT DISTINCT 
+                    pl.article, 
+                    pl.source_table,
+                    p.name_sk,
+                    p.name_en, 
+                    p.name_pl,
+                    array_agg(DISTINCT pi.image_url) FILTER (WHERE pi.image_url IS NOT NULL) as images
                 FROM ({all_price_list_query}) pl
                 JOIN (
                     SELECT p.article FROM products p
@@ -703,7 +927,10 @@ def generate_sitemap_enriched_files():
                     SELECT pi.product_article FROM product_images pi
                 ) AS enriched ON pl.article = enriched.article
                 LEFT JOIN stock s ON pl.article = s.article
+                LEFT JOIN products p ON pl.article = p.article
+                LEFT JOIN product_images pi ON pl.article = pi.product_article
                 WHERE s.article IS NULL
+                GROUP BY pl.article, pl.source_table, p.name_sk, p.name_en, p.name_pl
                 ORDER BY pl.article
                 LIMIT {products_per_sitemap} OFFSET {offset}
             """
@@ -711,27 +938,42 @@ def generate_sitemap_enriched_files():
             cursor.execute(enriched_query)
             enriched_products = cursor.fetchall()
             
-            # Додаємо URL для кожного товару
+            # Додаємо URL для кожної мови для кожного товару
             for product in enriched_products:
                 article = product['article']
-                sitemap_xml += f'  <url>\n'
-                sitemap_xml += f'    <loc>{host_base}/product/{article}</loc>\n'
-                sitemap_xml += f'    <changefreq>weekly</changefreq>\n'
-                sitemap_xml += f'    <priority>0.7</priority>\n'
+                images = product['images'] or []
                 
-                # Перевіряємо, чи є зображення для товару
-                cursor.execute("""
-                    SELECT image_url FROM product_images WHERE product_article = %s LIMIT 5
-                """, (article,))
-                images = cursor.fetchall()
-                
-                # Додаємо зображення, якщо вони є
-                for image in images:
-                    sitemap_xml += f'    <image:image>\n'
-                    sitemap_xml += f'      <image:loc>{image["image_url"]}</image:loc>\n'
-                    sitemap_xml += f'    </image:image>\n'
-                
-                sitemap_xml += f'  </url>\n'
+                # Створюємо URL для кожної мови
+                for lang in languages:
+                    # Отримуємо назву для поточної мови
+                    product_name = (product[f'name_{lang}'] or 
+                                   product['name_sk'] or 
+                                   product['name_en'] or 
+                                   article)
+                    
+                    sitemap_xml += f'  <url>\n'
+                    # НОВИЙ ФОРМАТ URL з мовним префіксом
+                    sitemap_xml += f'    <loc>{host_base}/{lang}/product/{article}</loc>\n'
+                    
+                    # Додаємо hreflang посилання на інші мовні версії
+                    for alt_lang in languages:
+                        sitemap_xml += f'    <xhtml:link rel="alternate" hreflang="{alt_lang}" href="{host_base}/{alt_lang}/product/{article}" />\n'
+                    
+                    sitemap_xml += f'    <changefreq>weekly</changefreq>\n'
+                    sitemap_xml += f'    <priority>0.7</priority>\n'
+                    
+                    # Додаємо зображення, якщо вони є
+                    for image_url in images[:3]:
+                        if image_url:
+                            import html
+                            image_title = html.escape(f"{product_name}")
+                            
+                            sitemap_xml += f'    <image:image>\n'
+                            sitemap_xml += f'      <image:loc>{image_url}</image:loc>\n'
+                            sitemap_xml += f'      <image:title>{image_title}</image:title>\n'
+                            sitemap_xml += f'    </image:image>\n'
+                    
+                    sitemap_xml += f'  </url>\n'
             
             # Закриваємо XML
             sitemap_xml += '</urlset>'
@@ -741,18 +983,18 @@ def generate_sitemap_enriched_files():
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(sitemap_xml)
             
-            logging.info(f"Generated sitemap-enriched-{page}.xml with {len(enriched_products)} products")
+            logging.info(f"Generated multilingual sitemap-enriched-{page}.xml with {len(enriched_products) * len(languages)} URLs")
         
         cursor.close()
         conn.close()
         
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
-        logging.info(f"Completed generation of enriched sitemap files in {duration:.2f} seconds")
+        logging.info(f"Completed generation of multilingual enriched sitemap files in {duration:.2f} seconds")
         return True
         
     except Exception as e:
-        logging.error(f"Error generating enriched sitemap files: {e}", exc_info=True)
+        logging.error(f"Error generating multilingual enriched sitemap files: {e}", exc_info=True)
         return False
 
 def generate_sitemap_other_files():
@@ -792,7 +1034,7 @@ def generate_sitemap_other_files():
                 
             # Тепер реалізуємо покращену логіку обробки даних
             # Максимальна кількість URL в одному файлі
-            MAX_URLS_PER_FILE = 45000
+            MAX_URLS_PER_FILE = 10000
             
             # Лічильники для відстеження прогресу
             total_processed = 0
@@ -1004,6 +1246,18 @@ def generate_priority_sitemap():
         logging.error(f"Error generating priority sitemap: {e}", exc_info=True)
         return False
 
+#функція нормалізації артикула при пошуку
+def normalize_article(article):
+    """
+    Нормалізує артикул, видаляючи пробіли, дефіси та крапки
+    """
+    if not article:
+        return ""
+    
+    # Видаляємо пробіли, дефіси та крапки і переводимо у верхній регістр
+    normalized = article.replace(" ", "").replace("-", "").replace(".", "")
+    return normalized.upper()
+
 @scheduler.task('interval', id='generate_sitemaps_distributed', days=30)
 def generate_sitemaps_distributed():
     """Розподілений генератор sitemap файлів"""
@@ -1033,41 +1287,24 @@ def generate_sitemaps_distributed():
         logging.error(f"Error in distributed sitemap generation: {e}", exc_info=True)
 
 def generate_all_sitemaps():
-    """Генерує всі файли sitemaps"""
+    """Генерує всі файли sitemaps (БЕЗ other)"""
     try:
-        logging.info("Starting generation of all sitemap files")
+        logging.info("Starting generation of sitemap files (without other)")
         
-        # Додаємо детальне логування для кожного етапу
-        logging.info("Generating static sitemap file...")
         generate_sitemap_static_file()
-        
-        logging.info("Generating categories sitemap file...")
         generate_sitemap_categories_file()
-        
-        logging.info("Generating stock sitemap files...")
         generate_sitemap_stock_files()
-        
-        logging.info("Generating enriched sitemap files...")
-        generate_sitemap_enriched_files()
-        
-        logging.info("Generating other sitemap files...")
-        generate_sitemap_other_files()
-        
-        # Додаємо генерацію sitemap для зображень
-        logging.info("Generating images sitemap file...")
+        generate_sitemap_enriched_files()  # Тільки з описами/фото
+        # generate_sitemap_other_files()  # ПОВНІСТЮ ВИКЛЮЧЕНО
         generate_sitemap_images_file()
-        
-        logging.info("Generating sitemap index file...")
+        generate_sitemap_blog_file()  # Якщо є блог
         generate_sitemap_index_file()
         
-        # Видаляємо дублюючий виклик генерації sitemap для зображень
-        
-        logging.info("All sitemap files generated successfully")
+        logging.info("Sitemap files generated successfully (without other)")
         return True
     except Exception as e:
-        logging.error(f"Error generating all sitemap files: {e}", exc_info=True)
+        logging.error(f"Error generating sitemap files: {e}", exc_info=True)
         return False
-
 
 
 # Додавання дампера для закриття невикористаних з'єднань
@@ -1117,14 +1354,23 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
 # Configure logging with rotation
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        RotatingFileHandler('app.log', maxBytes=1024*1024, backupCount=5, encoding='utf-8')  # 1 MB per file, keep 5 files
-    ]
-)
+if os.environ.get('FLASK_ENV') == 'production':
+    # Продакшн - менше логів
+    logging.basicConfig(
+        level=logging.WARNING,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[logging.StreamHandler(sys.stdout)]
+    )
+else:
+    # Розробка - детальні логи
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(sys.stdout),
+            RotatingFileHandler('app.log', maxBytes=1024*1024, backupCount=5, encoding='utf-8')
+        ]
+    )
 
 
 
@@ -1185,43 +1431,43 @@ def add_more_cache_headers(response):
     if (request.path.startswith('/product/') or 
         request.path.startswith('/category/')) and not request.args.get('refresh'):
         response.headers['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=600'
+        response.headers['Vary'] = 'Cookie, Accept-Language'
     return response
-
 
 @app.route('/robots.txt')
 def robots():
-    robots_content = """# Global robots.txt for all crawlers
-User-agent: *
-Crawl-delay: 5
+    robots_content = """User-agent: *
+Crawl-delay: 10
 
-# Allow primary URLs with language parameters
+# Дозволяємо основні сторінки
 Allow: /
 Allow: /product/
 Allow: /category/
+Allow: /blog/
 
-# Allow language-prefixed URLs (for backward compatibility)
-Allow: /sk/product/
-Allow: /pl/product/ 
-Allow: /en/product/
+# Дозволяємо тільки якісні sitemap
+Allow: /sitemap-static.xml
+Allow: /sitemap-categories.xml
+Allow: /sitemap-stock-*
+Allow: /sitemap-enriched-*
+Allow: /sitemap-images.xml
+Allow: /sitemap-blog.xml
 
-# Block admin pages and token-based URLs
+# Блокуємо прайс-листи без описів
+Disallow: /sitemap-other-*
+
+# Блокуємо адмінку
 Disallow: /admin/
 Disallow: /*token*/
+Disallow: /debug_*
+Disallow: /api/
 
-# Googlebot-specific rules
-User-agent: Googlebot
-User-agent: Googlebot-Image
-User-agent: Googlebot-Mobile
-# Googlebot ignores Crawl-delay
-
-# Sitemap location
+# Основний sitemap
 Sitemap: https://autogroup.sk/sitemap-index.xml
 """
     response = make_response(robots_content)
     response.headers["Content-Type"] = "text/plain"
     return response
-
-
 
 
 
@@ -1781,10 +2027,13 @@ def inject_template_vars():
                     WHERE user_id = %s
                 """, (user_id,))
                 count = cursor.fetchone()[0]
+                # Оновлюємо cart_count в сесії
+                session['cart_count'] = int(count)
+                session.modified = True
                 return int(count)
             except Exception as e:
                 logging.error(f"Error getting cart count: {e}")
-                return 0
+                return session.get('cart_count', 0)
             finally:
                 if 'cursor' in locals():
                     cursor.close()
@@ -1793,10 +2042,22 @@ def inject_template_vars():
         else:
             # Для неавторизованих користувачів, рахуємо з сесії
             cart = session.get('public_cart', {})
+            if not cart:
+                session['cart_count'] = 0
+                session.modified = True
+                return 0
+                
             total_count = 0
+            # ВИПРАВЛЕНО: правильно рахуємо загальну кількість товарів
             for article_data in cart.values():
-                for item_data in article_data.values():
-                    total_count += item_data.get('quantity', 0)
+                if isinstance(article_data, dict):
+                    for item_data in article_data.values():
+                        if isinstance(item_data, dict):
+                            total_count += item_data.get('quantity', 0)
+            
+            # Оновлюємо cart_count в сесії
+            session['cart_count'] = total_count
+            session.modified = True
             return total_count
     
     # Функція для отримання підкатегорій
@@ -1807,7 +2068,7 @@ def inject_template_vars():
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
             # Отримуємо поточну мову
-            lang = session.get('language', 'uk')
+            lang = session.get('language', 'sk')
             
             # Запит для отримання підкатегорій
             cursor.execute(f"""
@@ -1834,7 +2095,6 @@ def inject_template_vars():
         except Exception as e:
             logging.error(f"Error getting subcategories: {e}", exc_info=True)
             return []
-  
     
     # Повертаємо всі необхідні змінні в єдиному словнику
     return dict(
@@ -2766,14 +3026,14 @@ def logout():
     session.pop('username', None)
     session.pop('role', None)
     
-    # Очищаємо кошик
-    if 'public_cart' in session:
-        session.pop('public_cart', None)
+    # Очищаємо кошик повністю
+    session.pop('public_cart', None)
+    session['cart_count'] = 0  # ДОДАНО: скидаємо лічильник
+    session.modified = True    # ДОДАНО: позначаємо сесію як змінену
     
     logging.info("User logged out, cart cleared")
     flash(_("You have been logged out."), "info")
     return redirect(url_for('index'))
-
 
 
 
@@ -3065,8 +3325,6 @@ def public_cart():
     )
 
 
-
-
 @app.route('/guest_checkout', methods=['POST'])
 def guest_checkout():
     """Process checkout for guest users without registration"""
@@ -3080,7 +3338,24 @@ def guest_checkout():
         city = request.form.get('city')
         street = request.form.get('street')
         shipping_method = request.form.get('shipping_method', 'pickup')
-        
+
+        # ДОДАНО: прапор і реквізити для фактури (для гостей)
+        needs_invoice = request.form.get('needs_invoice') == 'on'
+        invoice_details = None
+        if needs_invoice:
+            invoice_details = {
+                'company_name': (request.form.get('company_name') or '').strip(),
+                'vat_number': (request.form.get('vat_number') or '').strip(),
+                'registration_number': (request.form.get('registration_number') or '').strip(),
+                'address': (request.form.get('company_address') or '').strip()
+            }
+            # Необов'язкова базова перевірка формату VAT (лише якщо користувач ввів значення)
+            if invoice_details['vat_number']:
+                vat_check = validate_eu_vat(invoice_details['vat_number'])
+                if not vat_check.get('valid'):
+                    flash(_("Invalid VAT number format"), "error")
+                    return redirect(url_for('public_cart'))
+
         # Валідація основних полів
         if not all([email, full_name, phone, country, city, street]):
             flash(_("All fields are required"), "error")
@@ -3154,7 +3429,9 @@ def guest_checkout():
             'postal_code': postal_code,
             'city': city,
             'street': street,
-            'shipping_method': shipping_method
+            'shipping_method': shipping_method,
+            # ДОДАНО: щоб відобразити на підтвердженні
+            'needs_invoice': needs_invoice
         }
         
         # Обробка товарів з кошика
@@ -3201,16 +3478,18 @@ def guest_checkout():
                     'delivery_time': delivery_time
                 })
         
-        # Створюємо замовлення - ВИПРАВЛЕНО: додано shipping_method як окремий стовпець
+        # Створюємо замовлення - ОНОВЛЕНО: пишемо needs_invoice та invoice_details
         cursor.execute("""
             INSERT INTO public_orders 
             (user_id, total_price, status, created_at, updated_at, delivery_address, needs_invoice, invoice_details, payment_status, shipping_method)
-            VALUES (%s, %s, 'new', NOW(), NOW(), %s, FALSE, NULL, 'unpaid', %s)
+            VALUES (%s, %s, 'new', NOW(), NOW(), %s, %s, %s, 'unpaid', %s)
             RETURNING id
         """, (
             user_id,
             total_price,
             json.dumps(delivery_data, default=json_serial),
+            needs_invoice,
+            json.dumps(invoice_details, default=json_serial) if invoice_details else None,
             shipping_method
         ))
         
@@ -3276,6 +3555,8 @@ def guest_checkout():
             'items': email_items,
             'total_price': float(total_price),
             'delivery_data': delivery_data,
+            'needs_invoice': needs_invoice,                # ДОДАНО
+            'invoice_details': invoice_details,            # ДОДАНО
             'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         
@@ -3298,6 +3579,10 @@ def guest_checkout():
         if 'conn' in locals():
             conn.close()
 
+
+
+
+
 @app.route('/guest/order/confirmation')
 def guest_order_confirmation():
     """Display confirmation page for guest orders"""
@@ -3315,68 +3600,6 @@ def guest_order_confirmation():
     )
 
 
-
-def get_locale():
-    if 'user_id' in session:
-        # Якщо користувач авторизований, беремо його мову з БД
-        try:
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT preferred_language FROM users WHERE id = %s",
-                    (session['user_id'],)
-                )
-                result = cursor.fetchone()
-                if result and result[0]:
-                    # Якщо мова користувача українська, змінюємо на словацьку
-                    if result[0] == 'uk':
-                        return 'sk'
-                    return result[0]
-        except Exception as e:
-            logging.error(f"Error getting user language: {e}")
-    
-    # Якщо користувач не авторизований або виникла помилка,
-    # використовуємо мову з сесії або стандартну
-    language = session.get('language', app.config['BABEL_DEFAULT_LOCALE'])
-    # Якщо мова українська, змінюємо на словацьку
-    if language == 'uk':
-        return 'sk'
-    return language
-
-babel.init_app(app, locale_selector=get_locale)
-
-# генерація коду для відстеження артикулів в документах
-def generate_tracking_code():
-    # Використовуємо великі літери та цифри
-    chars = string.ascii_uppercase + string.digits
-    # Генеруємо 8-значний код
-    tracking_code = ''.join(random.choices(chars, k=8))
-    return tracking_code
-
-# генерація tracking_code в момент створення нового замовлення постачальнику
-def create_supplier_order_details(order_id, article, quantity, order_detail_id):  # Додаємо параметр
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        tracking_code = generate_tracking_code()
-
-        cur.execute("""
-            INSERT INTO supplier_order_details 
-            (supplier_order_id, article, quantity, tracking_code, created_at, order_details_id)  # Додаємо поле
-            VALUES (%s, %s, %s, %s, NOW(), %s)  # Додаємо значення
-            RETURNING id
-        """, (order_id, article, quantity, tracking_code, order_detail_id))  # Додаємо параметр
-
-        detail_id = cur.fetchone()[0]
-
-        conn.commit()
-        return detail_id
-    finally:
-        if 'cur' in locals() and cur:
-            cur.close()
-        if 'conn' in locals() and conn:
-            conn.close()
 
 
 # # Кількість товару в кошику користувача
@@ -3403,69 +3626,49 @@ def get_cart_count(user_id):
 
 
 
-@app.route('/debug_cart')
-def debug_cart():
-    """Тимчасовий маршрут для відлагодження кошика (видалити після завершення розробки)"""
-    if not app.debug:
-        return "Debug mode is off"
-        
-    user_id = session.get('user_id')
-    if not user_id:
-        return "Not logged in"
-        
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        
-        cursor.execute("""
-            SELECT * FROM cart WHERE user_id = %s
-        """, (user_id,))
-        
-        cart_items = cursor.fetchall()
-        result = "<h2>Cart Items in Database</h2>"
-        
-        if not cart_items:
-            result += "<p>No items found in database</p>"
-        else:
-            result += "<table border='1'><tr><th>ID</th><th>Article</th><th>Quantity</th><th>Price</th><th>Table</th></tr>"
-            for item in cart_items:
-                result += f"<tr><td>{item['id']}</td><td>{item['article']}</td><td>{item['quantity']}</td><td>{item['base_price']}</td><td>{item['table_name']}</td></tr>"
-            result += "</table>"
-            
-        # Також перевірте таблицю cart на наявність колонки updated_at
-        cursor.execute("""
-            SELECT column_name FROM information_schema.columns 
-            WHERE table_name = 'cart'
-        """)
-        
-        columns = [row['column_name'] for row in cursor.fetchall()]
-        result += "<h2>Cart Table Columns</h2>"
-        result += "<ul>"
-        for col in columns:
-            result += f"<li>{col}</li>"
-        result += "</ul>"
-            
-        return result
-    except Exception as e:
-        return f"Error: {str(e)}"
-    finally:
-        if 'conn' in locals():
-            conn.close()
 
 # Маршрут з префіксом мови
 @app.route('/<lang>/product/<article>')
-@cache.cached(timeout=1800, query_string=True)
 def localized_product_details(lang, article):
-    """Перенаправляє з мовного префіксу на параметр запиту"""
+    """Сторінка товару з мовним префіксом"""
+    # Перевіряємо, чи підтримується мова
     if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
+        # Якщо мова не підтримується, перенаправляємо на стандартну версію
         return redirect(url_for('product_details', article=article))
     
     # Зберігаємо мову в сесії
     session['language'] = lang
+    session.modified = True
     
-    # Замість редіректу просто перенаправляємо до основної функції
+    # Очищаємо кеш сторінки товару для правильного відображення мови
+    clear_page_cache_for_user()
+    
+    # Викликаємо стандартну функцію показу товару
     return product_details(article)
 
+@app.route('/<lang>/')
+def localized_index(lang):
+    """Головна сторінка з мовним префіксом"""
+    if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
+        return redirect(url_for('index'))
+    
+    session['language'] = lang
+    session.modified = True
+    clear_page_cache_for_user()
+    
+    return index()
+
+@app.route('/<lang>/category/<slug>')
+def localized_category(lang, slug):
+    """Категорія з мовним префіксом"""
+    if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
+        return redirect(url_for('view_category', slug=slug))
+    
+    session['language'] = lang
+    session.modified = True
+    clear_page_cache_for_user()
+    
+    return view_category(slug)
 
 @app.after_request
 def add_headers(response):
@@ -3492,48 +3695,61 @@ def add_x_robots_tag(response):
         response.headers['X-Robots-Tag'] = 'index, follow'
     return response
 
+
+#Карточка товару
 @app.route('/product/<article>')
-@cache.cached(timeout=3600, query_string=True)
+@cache.cached(timeout=3600, key_prefix=make_lang_cache_key)
 def product_details(article):
     try:
+        # Нормалізуємо артикул для пошуку в базі
+        normalized_article = normalize_article(article)
+        
+        
+        # ДОДАЄМО ДЕТАЛЬНЕ ЛОГУВАННЯ
+        logging.info(f"=== ARTICLE NORMALIZATION ===")
+        logging.info(f"Original article: '{article}'")
+        logging.info(f"Normalized article: '{normalized_article}'")
+        logging.info(f"Original length: {len(article)}")
+        logging.info(f"Normalized length: {len(normalized_article)}")
+                
         with safe_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
             # Отримуємо поточну мову
             lang = session.get('language', 'sk')
 
-            logging.info(f"=== Starting product_details for article: {article} ===")
+            logging.info(f"=== Starting product_details for original article: {article}, normalized: {normalized_article} ===")
 
-            # Get stock info first
+            # Get stock info first - використовуємо нормалізований артикул
             cursor.execute("""
                 SELECT s.article, s.price, s.brand_id, b.name as brand_name
                 FROM stock s
                 LEFT JOIN brands b ON s.brand_id = b.id
                 WHERE s.article = %s
-            """, (article,))
+            """, (normalized_article,))
             stock_data = cursor.fetchone()
             logging.info(f"Stock data: {dict(stock_data) if stock_data else 'Not found'}")
 
-            # Initialize product_data with stock info
+            # Initialize product_data
             product_data = {
-                'name': article,
+                'name': article,  # Показуємо оригінальний артикул
                 'description': '',
                 'photo_urls': [],
                 'brand_name': stock_data['brand_name'] if stock_data else None,
                 'brand_id': stock_data['brand_id'] if stock_data else None
             }
             
-            # Отримуємо категорії товару
+            # Отримуємо категорії товару - використовуємо нормалізований артикул
             cursor.execute("""
                 SELECT c.*
                 FROM product_categories pc
                 JOIN categories c ON pc.category_id = c.id
                 WHERE pc.article = %s
                 ORDER BY c.parent_id NULLS FIRST, c.order_index
-            """, (article,))
+            """, (normalized_article,))
             product_categories = cursor.fetchall()
 
-            # Get product info with language-specific fields
+            # Get product info with language-specific fields - використовуємо нормалізований артикул
             cursor.execute(f"""
                 SELECT 
                     article,
@@ -3541,20 +3757,20 @@ def product_details(article):
                     description_{lang} as description
                 FROM products
                 WHERE article = %s
-            """, (article,))
+            """, (normalized_article,))
             
             db_product = cursor.fetchone()
             if db_product:
-                product_data['name'] = db_product['name'] or article
+                product_data['name'] = db_product['name'] or article  # Показуємо оригінальний
                 product_data['description'] = db_product['description'] or ''
 
-            # Оновлений запит для отримання фотографій з правильним сортуванням
+            # Отримуємо фотографії - використовуємо нормалізований артикул
             cursor.execute("""
                 SELECT image_url 
                 FROM product_images 
                 WHERE product_article = %s 
                 ORDER BY is_main DESC, id ASC
-            """, (article,))
+            """, (normalized_article,))
             product_data['photo_urls'] = [row['image_url'] for row in cursor.fetchall()]
 
             prices = []
@@ -3572,7 +3788,7 @@ def product_details(article):
                 prices.append(price_data)
                 logging.info(f"Added stock price: {price_data}")
 
-            # Get prices from price_lists
+            # Get prices from price_lists - використовуємо нормалізований артикул
             cursor.execute("""
                 SELECT pl.table_name, pl.brand_id, pl.delivery_time, b.name as brand_name 
                 FROM price_lists pl
@@ -3597,12 +3813,29 @@ def product_details(article):
                     """, (table_name,))
                     
                     if cursor.fetchone()[0]:
-                        query = f"""
-                            SELECT article, price
-                            FROM {table_name}
-                            WHERE article = %s
-                        """
-                        cursor.execute(query, (article,))
+                        cursor.execute(f"""
+                            SELECT EXISTS (
+                                SELECT FROM information_schema.columns 
+                                WHERE table_name = %s AND column_name = 'brand_id'
+                            )
+                        """, (table_name,))
+                        has_brand_id = cursor.fetchone()[0]
+                        
+                        if has_brand_id:
+                            query = f"""
+                                SELECT t.article, t.price, t.brand_id, b.name as brand_name
+                                FROM {table_name} t
+                                LEFT JOIN brands b ON t.brand_id = b.id
+                                WHERE t.article = %s
+                            """
+                        else:
+                            query = f"""
+                                SELECT article, price
+                                FROM {table_name}
+                                WHERE article = %s
+                            """
+                        
+                        cursor.execute(query, (normalized_article,))
                         result = cursor.fetchone()
                         
                         if result:
@@ -3611,10 +3844,17 @@ def product_details(article):
                             base_price = result['price']
                             final_price = calculate_price(base_price, markup_percentage)
 
+                            if has_brand_id and result.get('brand_name'):
+                                actual_brand_name = result['brand_name']
+                                actual_brand_id = result['brand_id']
+                            else:
+                                actual_brand_name = brand_name
+                                actual_brand_id = brand_id
+
                             price_data = {
                                 'table_name': table_name,
-                                'brand_name': brand_name,
-                                'brand_id': brand_id,
+                                'brand_name': actual_brand_name,
+                                'brand_id': actual_brand_id,
                                 'price': final_price,
                                 'base_price': base_price,
                                 'in_stock': table['delivery_time'] == '0',
@@ -3627,17 +3867,15 @@ def product_details(article):
             prices.sort(key=lambda x: float(x['price']))
             logging.info(f"Final prices count: {len(prices)}")
 
-            # Відобираємо найдешевшу ціну для товару
             price = prices[0] if prices else None
             
-            # ВИПРАВЛЕННЯ: використовуємо бренд найдешевшої ціни для відображення на сторінці
             if price and 'brand_name' in price:
                 product_data['brand_name'] = price['brand_name']
 
             if not db_product and not stock_data and not price_found:
                 return render_template(
                     'public/article_not_found.html',
-                    article=article
+                    article=article  # Показуємо оригінальний артикул
                 )
 
             return render_template(
@@ -3646,7 +3884,7 @@ def product_details(article):
                 prices=prices,
                 price=price,
                 brand_name=product_data['brand_name'],
-                article=article,
+                article=article,  # Показуємо оригінальний артикул
                 product_categories=product_categories
             )
 
@@ -4435,91 +4673,6 @@ def generate_feed_item(item, lang, settings):
         return ""
 
 
-# Google feed
-@app.route('/google-merchant-feed-legacy/<language>.xml') 
-@cache.cached(timeout=3600)
-def language_merchant_feed(language): 
-    """Generate Google Merchant feed for specific language"""
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Get active feed settings for specific language
-            cursor.execute("""
-                SELECT gs.*, b.name as brand_name 
-                FROM google_feed_settings gs
-                LEFT JOIN brands b ON gs.brand_id = b.id
-                WHERE gs.enabled = TRUE AND gs.language = %s
-                ORDER BY gs.created_at DESC
-                LIMIT 1
-            """, (language,))
-            settings = cursor.fetchone()
-            
-            if not settings:
-                return f"No active feed configuration found for language: {language}", 404
-
-            # Get products from configured price list
-            price_list = settings['price_list_id']
-            query = f"""
-                SELECT 
-                    p.article,
-                    p.name_{language} as name,
-                    p.description_{language} as description,
-                    pi.image_url,
-                    pl.price * (1 + %s/100) as price,
-                    b.name as brand_name,
-                    %s as google_category,
-                    s.quantity
-                FROM {price_list} pl
-                JOIN products p ON pl.article = p.article
-                LEFT JOIN stock s ON pl.article = s.article
-                LEFT JOIN (
-                    SELECT DISTINCT ON (product_article) 
-                        product_article, image_url
-                    FROM product_images
-                    ORDER BY product_article, id
-                ) pi ON p.article = pi.product_article
-                LEFT JOIN brands b ON s.brand_id = b.id
-                WHERE p.name_{language} IS NOT NULL
-            """
-            
-            if settings['brand_id']:
-                query += " AND s.brand_id = %s"
-                cursor.execute(query, (
-                    settings['markup_percentage'],
-                    settings['category'],
-                    settings['brand_id']
-                ))
-            else:
-                cursor.execute(query, (
-                    settings['markup_percentage'],
-                    settings['category']
-                ))
-            
-            products = cursor.fetchall()
-
-            # Generate XML
-            xml_content = render_template(
-                'feeds/google_merchant.xml',
-                products=products,
-                domain=request.host_url.rstrip('/'),
-                language=language
-            )
-
-            # Set response headers
-            download = request.args.get('download', False)
-            if download:
-                response = make_response(xml_content)
-                response.headers['Content-Type'] = 'application/xml'
-                response.headers['Content-Disposition'] = f'attachment; filename=google-merchant-feed-{language}.xml'
-                return response
-            
-            return xml_content, 200, {'Content-Type': 'application/xml'}
-
-    except Exception as e:
-        logging.error(f"Error generating feed: {e}")
-        return "Error generating feed", 500
-
 
 def upload_to_ftp(file_path, filename):
     """Завантажує файл на FTP сервер і повертає URL"""
@@ -4816,6 +4969,8 @@ def update_public_cart():
             conn.close()
             
             if rows_updated > 0:
+                # ВИПРАВЛЕНО: Оновлюємо лічильник в сесії після оновлення в БД
+                update_cart_count_in_session(user_id)
                 flash(_("Cart updated successfully"), "success")
             else:
                 flash(_("Item not found in cart"), "error")
@@ -4905,18 +5060,10 @@ def public_remove_from_cart():
 def update_cart_count_in_session(user_id=None):
     """Оновлює кількість товарів у кошику в сесії користувача"""
     try:
-        # Спочатку перевіряємо публічний кошик, незалежно від статусу авторизації
-        cart = session.get('public_cart', {})
+        user_id = user_id or session.get('user_id')
         
-        if cart:
-            # Використовуємо існуючу функцію для підрахунку товарів
-            total_count = get_public_cart_count()
-            session['cart_count'] = total_count
-            logging.info(f"Updated cart count from public_cart: {total_count}")
-        elif 'user_id' in session:
-            # Якщо публічний кошик порожній, але користувач авторизований,
-            # перевіряємо базу даних
-            user_id = user_id or session.get('user_id')
+        if user_id:
+            # Для авторизованих користувачів рахуємо з бази даних
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
@@ -4925,16 +5072,29 @@ def update_cart_count_in_session(user_id=None):
                 WHERE user_id = %s
             """, (user_id,))
             count = cursor.fetchone()[0]
-            session['cart_count'] = int(count or 0)  # Захист від None
+            session['cart_count'] = int(count or 0)
             cursor.close()
             conn.close()
-            logging.info(f"Updated cart count from database: {session.get('cart_count')}")
+            logging.info(f"Updated cart count from database for user {user_id}: {session.get('cart_count')}")
         else:
-            # Порожній кошик
-            session['cart_count'] = 0
-            logging.info("Cart is empty, count set to 0")
+            # Для неавторизованих користувачів, рахуємо з сесії
+            cart = session.get('public_cart', {})
+            if not cart:
+                session['cart_count'] = 0
+                session.modified = True
+                return 0
+                
+            total_count = 0
+            for article_data in cart.values():
+                if isinstance(article_data, dict):
+                    for item_data in article_data.values():
+                        if isinstance(item_data, dict):
+                            total_count += item_data.get('quantity', 0)
+            
+            session['cart_count'] = total_count
+            logging.info(f"Updated cart count from session: {total_count}")
         
-        session.modified = True  # Важливо для збереження змін сесії
+        session.modified = True
     except Exception as e:
         logging.error(f"Error updating cart count in session: {e}", exc_info=True)
 
@@ -4962,6 +5122,9 @@ def set_language(lang):
                     logging.info(f"Updated preferred language for user {session['user_id']} to {lang}")
             except Exception as e:
                 logging.error(f"Error updating preferred language: {e}")
+        
+        # ДОДАНО: Очищаємо кеш поточної сторінки для всіх мов
+        clear_page_cache_for_user()
     
     # Перенаправляємо користувача на сторінку, з якої він прийшов
     return redirect(request.referrer or url_for('index'))
@@ -4994,7 +5157,11 @@ def status_color(status):
 
 
 # Секретний ключ для сесій
-app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
+secret_key = os.environ.get('SECRET_KEY')
+if not secret_key:
+    raise ValueError("SECRET_KEY environment variable must be set in production!")
+app.secret_key = secret_key
+
 
 # Генерує унікальний токен для користувача
 def generate_token():
@@ -5010,21 +5177,6 @@ def hash_password(password):
 def verify_password(password, stored_hash):
     logging.debug("Verifying password")
     return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
-
-def get_all_price_list_tables():
-    """
-    Отримує список усіх таблиць із таблиці price_lists.
-    """
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT table_name FROM price_lists;")
-            tables = [row[0] for row in cursor.fetchall()]
-            logging.debug(f"Fetched tables from price_lists: {tables}")
-            return tables
-    except Exception as e:
-        logging.error(f"Error fetching price list tables: {e}", exc_info=True)
-        return []
 
 
 # Функція для підключення до бази даних
@@ -5074,17 +5226,7 @@ def release_db_connection(conn):
     except Exception as e:
         logging.error(f"Error closing connection: {e}")
 
-#  отримання даних з selection_buffer 
-def get_selection_buffer(user_id):
-    with get_db_connection() as conn:
-        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
-            cursor.execute("""
-                SELECT article, price, table_name, quantity
-                FROM selection_buffer
-                WHERE user_id = %s
-                ORDER BY article, price;
-            """, (user_id,))
-            return cursor.fetchall()
+
 
 # функція націнки для користувачів
 def calculate_price(base_price, markup_percentage):
@@ -5171,81 +5313,6 @@ def validate_token(token):
             conn.close()
 
 
-# Функція для визначення розділювача у рядку
-def detect_delimiter(line):
-    delimiters = ['\t', ' ', ';', ',']
-    for delimiter in delimiters:
-        if delimiter in line:
-            return delimiter
-    return '\t'
-
-
-# Функція для розбору рядка з артикулом
-def parse_article_line(line, available_tables):
-    delimiter = detect_delimiter(line)
-    parts = line.strip().split(delimiter)
-
-    # Базові параметри
-    article = parts[0].strip().upper()
-    quantity = int(parts[1]) if len(parts) > 1 and parts[1].strip().isdigit() else 1
-
-    # Перевірка третього параметра
-    if len(parts) > 2:
-        if parts[2].strip().lower() in available_tables:
-            specified_table = parts[2].strip().lower()
-            comment = parts[3].strip() if len(parts) > 3 else None
-        else:
-            specified_table = None
-            comment = parts[2].strip()
-    else:
-        specified_table = None
-        comment = None
-
-    return {
-        'article': article,
-        'quantity': quantity,
-        'specified_table': specified_table,
-        'comment': comment
-    }
-
-def send_order_confirmation_email(to_email, order_id, total_price, cart_items):
-    try:
-        smtp_server = current_app.config['SMTP_SERVER']
-        smtp_port = current_app.config['SMTP_PORT']
-        smtp_username = current_app.config['SMTP_USERNAME']
-        smtp_password = current_app.config['SMTP_PASSWORD']
-
-        # Формування листа
-        msg = MIMEMultipart()
-        msg['From'] = smtp_username
-        msg['To'] = to_email
-        msg['Subject'] = f"Order Confirmation #{order_id}"
-
-        # Тіло листа
-        items_list = "".join([f"- {item['quantity']}x {item['product_id']} at ${item['price']}\n" for item in cart_items])
-        body = f"""
-        Dear Customer,
-
-        Thank you for your order #{order_id}!
-
-        Order Summary:
-        {items_list}
-        Total Price: ${total_price}
-
-        Best regards,
-        MySite Team
-        """
-        msg.attach(MIMEText(body, 'plain'))
-
-        # Підключення до SMTP і надсилання
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_username, smtp_password)
-            server.send_message(msg)
-
-        logging.info(f"Order confirmation email sent to {to_email} for order #{order_id}")
-    except Exception as e:
-        logging.error(f"Failed to send email to {to_email}: {e}", exc_info=True)
 
 
 # Головна сторінка за токеном
@@ -5354,10 +5421,11 @@ def index():
 def public_add_to_cart():
     """Add items to the shopping cart for any user (registered or anonymous)"""
     try:
-        article = request.form.get('article')
+        original_article = request.form.get('article')
+        article = normalize_article(original_article)  # Нормалізуємо артикул
         selected_price = request.form.get('selected_price')
         
-        logging.debug(f"Adding to cart - Article: {article}, Selected price: {selected_price}")
+        logging.debug(f"Adding to cart - Original: {original_article}, Normalized: {article}, Selected price: {selected_price}")
 
         if not article or not selected_price:
             flash(_("Missing required product information"), "error")
@@ -5387,9 +5455,8 @@ def public_add_to_cart():
         
         if quantity < 1:
             flash(_("Quantity must be at least 1"), "error")
-            return redirect(url_for('product_details', article=article))
+            return redirect(url_for('product_details', article=original_article))
         
-        # Перевірка авторизації - ВИДАЛЕНА, дозволимо додавати товари без реєстрації
         user_id = session.get('user_id')
         
         if user_id:
@@ -5425,15 +5492,12 @@ def public_add_to_cart():
             conn.close()
         else:
             # Якщо користувач не авторизований, додаємо товар у сесію
-            # Initialize cart if needed
             if 'public_cart' not in session:
                 session['public_cart'] = {}
                 
-            # Initialize article in cart if needed
             if article not in session['public_cart']:
                 session['public_cart'][article] = {}
                 
-            # Add or update cart item
             session['public_cart'][article][table_name] = {
                 'price': float(price),
                 'quantity': quantity,
@@ -5441,13 +5505,11 @@ def public_add_to_cart():
                 'comment': request.form.get('comment', '')
             }
             
-            # Важливо - явно помітити сесію як модифіковану
             session.modified = True
         
         logging.info(f"Cart after adding: {session.get('public_cart')}")
         flash(_("Item added to cart"), "success")
         
-        # Оновлюємо кількість товарів у сесії
         update_cart_count_in_session()
         
     except Exception as e:
@@ -5455,9 +5517,9 @@ def public_add_to_cart():
         flash(_("Error adding item to cart"), "error")
         
     finally:
-        # Повертаємо користувача на сторінку товару
-        if 'article' in locals() and article:
-            return redirect(url_for('product_details', article=article))
+        # Повертаємо користувача на сторінку товару з оригінальним артикулом
+        if 'original_article' in locals() and original_article:
+            return redirect(url_for('product_details', article=original_article))
         else:
             return redirect(url_for('index'))
 
@@ -5484,17 +5546,19 @@ def get_public_cart_count():
 def public_search():
     """Простий пошук товару за артикулом з перенаправленням на сторінку товару"""
     if request.method == 'POST':
-        # Конвертуємо артикул у верхній регістр
-        article = request.form.get('article', '').strip().upper()
-        logging.info(f"Search query received and converted to uppercase: {article}")
+        # Отримуємо оригінальний артикул і нормалізуємо його
+        original_article = request.form.get('article', '').strip()
+        article = normalize_article(original_article)
+        
+        logging.info(f"Search query: '{original_article}' normalized to: '{article}'")
         
         if not article:
             logging.warning("Empty search query")
             flash(_("Please enter an article for search."), "warning")
             return redirect(url_for('index'))
 
-        # Пряме перенаправлення на сторінку товару
-        logging.info(f"Redirecting to product details for article: {article}")
+        # Пряме перенаправлення на сторінку товару з нормалізованим артикулом
+        logging.info(f"Redirecting to product details for normalized article: {article}")
         return redirect(url_for('product_details', article=article))
 
     # GET запити перенаправляємо на головну
@@ -5714,1026 +5778,6 @@ def create_user(token):
     return render_template('admin/users/create_user.html', roles=roles, token=token)
 
 
-@app.route('/<token>/search', methods=['GET', 'POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def search_articles(token):
-    try:
-        user_id = session.get('user_id')
-        logging.debug(f"Search initiated by user_id={user_id}")
-
-        articles_input = request.form.get('articles', '').strip()
-        logging.debug(f"Raw input: {articles_input}")
-
-        if not articles_input:
-            logging.warning("Empty articles input")
-            flash(_("Please enter at least one article."), "error")
-            return redirect(url_for('index'))
-
-        requested_articles = set()
-        articles_data = []
-        quantities = {}
-        comments = {}
-
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT pl.table_name, pl.brand_id, b.name as brand_name 
-                FROM price_lists pl 
-                JOIN brands b ON pl.brand_id = b.id
-            """)
-            available_tables = cursor.fetchall()
-            logging.debug(f"Available tables: {available_tables}")
-
-            for line in articles_input.splitlines():
-                delimiter = detect_delimiter(line)
-                parts = line.strip().split(delimiter)
-                logging.debug(f"Processing line: {line}, delimiter: {delimiter}, parts: {parts}")
-
-                if len(parts) == 0:
-                    continue
-
-                article = parts[0].strip().upper()
-                requested_articles.add(article)
-                quantity = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
-
-                if len(parts) > 2:
-                    if parts[2].strip().lower() in [table[0] for table in available_tables]:
-                        specified_table = parts[2].strip().lower()
-                        comment = parts[3].strip() if len(parts) > 3 else None
-                    else:
-                        specified_table = None
-                        comment = parts[2].strip()
-                else:
-                    specified_table = None
-                    comment = None
-
-                quantities[article] = quantity
-                comments[article] = comment
-                articles_data.append({
-                    'article': article,
-                    'quantity': quantity,
-                    'specified_table': specified_table,
-                    'comment': comment
-                })
-
-            to_add_to_cart = []
-            multiple_prices = {}
-            found_articles = set()
-
-            user_markup = Decimal(get_markup_percentage(session['user_id']))
-            logging.debug(f"User markup: {user_markup}%")
-
-            for item in articles_data:
-                article = item['article']
-                specified_table = item['specified_table']
-
-                if specified_table:
-                    # Логіка для вказаної таблиці
-                    if specified_table not in [table[0] for table in available_tables]:
-                        logging.warning(f"Specified table {specified_table} not found in available tables")
-                        continue
-
-                    cursor.execute(f"SELECT price, brand_id FROM {specified_table} WHERE article = %s", (article,))
-                    result = cursor.fetchone()
-
-                    if result:
-                        found_articles.add(article)
-                        base_price = Decimal(result['price'])
-                        final_price = round(base_price * (1 + user_markup / 100), 2)
-                        logging.debug(f"Found price for {article} in {specified_table}: base={base_price}, final={final_price}")
-                        to_add_to_cart.append({
-                            'article': article,
-                            'table': specified_table,
-                            'price': base_price,
-                            'final_price': final_price,
-                            'quantity': item['quantity'],
-                            'comment': item['comment'],
-                            'brand_id': result['brand_id']
-                        })
-                else:
-                    prices_found = []
-                    for table, brand_id, brand_name in available_tables:
-                        cursor.execute(f"SELECT price FROM {table} WHERE article = %s", (article,))
-                        result = cursor.fetchone()
-                        if result:
-                            found_articles.add(article)
-                            base_price = Decimal(result[0])
-                            final_price = round(base_price * (1 + user_markup / 100), 2)
-                            logging.debug(f"Found price for {article} in {table}: base={base_price}, final={final_price}")
-                            prices_found.append({
-                                'table_name': table,
-                                'base_price': base_price,
-                                'price': final_price,
-                                'quantity': item['quantity'],
-                                'comment': item['comment'],
-                                'brand_id': brand_id,
-                                'brand_name': brand_name  # Додаємо назву бренду
-                            })
-                    if prices_found:
-                        multiple_prices[article] = prices_found
-
-            # Визначаємо відсутні артикули
-            missing_articles = list(requested_articles - found_articles)
-            logging.info(f"Missing articles: {missing_articles}")
-
-            if missing_articles:
-                flash(_("Articles not found: {articles}").format(
-                    articles=', '.join(missing_articles)), "warning")
-
-            # Додаємо в кошик артикули з однією таблицею
-            if to_add_to_cart:
-                logging.info(f"Adding {len(to_add_to_cart)} items to cart")
-                for item in to_add_to_cart:
-                    logging.debug(f"Adding to cart: {item}")
-                    cursor.execute("""
-                        INSERT INTO cart 
-                        (user_id, article, table_name, quantity, base_price, final_price, comment, brand_id, added_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                        ON CONFLICT (user_id, article, table_name) 
-                        DO UPDATE SET 
-                            quantity = cart.quantity + EXCLUDED.quantity,
-                            final_price = EXCLUDED.final_price,
-                            comment = EXCLUDED.comment,
-                            brand_id = EXCLUDED.brand_id
-                    """, (
-                        session['user_id'],
-                        item['article'],
-                        item['table'],
-                        item['quantity'],
-                        item['price'],
-                        item['final_price'],
-                        item['comment'],
-                        item['brand_id']
-                    ))
-                conn.commit()
-                flash(_("Added to cart: {articles}").format(articles=', '.join(item['article'] for item in to_add_to_cart)), "success")
-
-            # Зберігаємо дані в сесії для артикулів з multiple_prices
-            session['grouped_results'] = multiple_prices
-            session['missing_articles'] = missing_articles
-            logging.debug(f"Saved to session - grouped_results: {len(multiple_prices)} items, missing_articles: {len(missing_articles)} items")
-
-            # Якщо є артикули для вибору таблиць
-            if multiple_prices:
-                logging.info(f"Rendering search results with {len(multiple_prices)} articles having multiple prices")
-                return render_template(
-                    'user/search/search_results.html',
-                    grouped_results=multiple_prices,
-                    missing_articles=missing_articles,
-                    quantities=quantities,
-                    comments=comments,
-                    token=token
-                )
-
-            # Якщо всі артикули оброблені - перенаправляємо в кошик
-            logging.info("All articles processed, redirecting to cart")
-            return redirect(url_for('cart', token=token))
-
-    except Exception as e:
-        logging.error(f"Error in search_articles: {e}", exc_info=True)
-        flash(_("An error occurred while processing your request."), "error")
-        return redirect(url_for('index'))
-
-
-@app.route('/<token>/search_results', methods=['GET', 'POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def search_results(token):
-    user_id = session.get('user_id')
-    logging.debug(f"Доступ до результатів пошуку для user_id={user_id}")
-    
-    if not user_id:
-        logging.warning("Спроба доступу без автентифікації")
-        flash(_("You need to log in to view search results."), "error")
-        return redirect(url_for('index'))
-
-    # Якщо це POST-запит, обробляємо вибір користувача
-    if request.method == 'POST':
-        logging.debug(f"Обробка POST-запиту для user_id={user_id}")
-        logging.debug(f"Дані форми: {request.form}")
-        
-        selected_prices = {}
-        grouped_results = session.get('grouped_results', {})
-        
-        for key, value in request.form.items():
-            if key.startswith('selected_price_'):
-                article = key.replace('selected_price_', '')
-                table_name, price = value.split(':')
-                logging.debug(f"Обробка артикула: {article}, таблиця: {table_name}, ціна: {price}")
-                
-                # Отримуємо базову ціну з grouped_results
-                base_price = None
-                for option in grouped_results.get(article, []):
-                    if option['table_name'] == table_name:
-                        base_price = option['base_price']
-                        break
-                
-                logging.debug(f"Знайдена базова ціна: {base_price} для артикула {article}")
-                
-                try:
-                    decimal_price = Decimal(price)
-                    logging.debug(f"Конвертовано ціну в Decimal: {decimal_price}")
-                    selected_prices[article] = {
-                        'table_name': table_name,
-                        'base_price': base_price,
-                        'price': decimal_price,
-                    }
-                except Exception as e:
-                    logging.error(f"Помилка конвертації ціни для артикула {article}: {e}")
-                    continue
-
-        logging.info(f"Оброблено {len(selected_prices)} обраних позицій")
-        logging.debug(f"Обрані ціни: {selected_prices}")
-
-        # Зберегти вибір у `selection_buffer`
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
-            # Очистити буфер для поточного користувача
-            logging.debug(f"Очищення буфера вибору для user_id={user_id}")
-            cursor.execute("DELETE FROM selection_buffer WHERE user_id = %s", (user_id,))
-
-            # Додати нові записи
-            for article, data in selected_prices.items():
-                logging.debug(f"Додавання в selection_buffer: артикул={article}, "
-                            f"таблиця={data['table_name']}, базова_ціна={data['base_price']}, "
-                            f"фінальна_ціна={data['price']}")
-                cursor.execute("""
-                    INSERT INTO selection_buffer 
-                    (user_id, article, table_name, base_price, price, quantity, added_at)
-                    VALUES (%s, %s, %s, %s, %s, 1, NOW())
-                """, (user_id, article, data['table_name'], data['base_price'], data['price']))
-
-            conn.commit()
-            logging.info(f"Успішно збережено {len(selected_prices)} позицій в буфер")
-            flash(_("Your selection has been saved!"), "success")
-        except Exception as e:
-            conn.rollback()
-            logging.error(f"Помилка оновлення буфера вибору: {str(e)}", exc_info=True)
-            flash(_("An error occurred while saving your selection. Please try again."), "error")
-        finally:
-            cursor.close()
-            conn.close()
-            logging.debug("З'єднання з базою даних закрито")
-
-        return redirect(url_for('search_results', token=token))
-
-    # Якщо це GET-запит, відображаємо результати
-    logging.debug(f"Обробка GET-запиту для user_id={user_id}")
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        # Отримати список прайс-листів
-        cursor.execute("SELECT table_name FROM price_lists")
-        price_list_tables = [row[0] for row in cursor.fetchall()]
-
-        # Отримати артикул із сесії
-        grouped_results = session.get('grouped_results', {})
-        if not grouped_results:
-            flash(_("No search results found. Please start a new search."), "info")
-            return redirect(url_for('index'))
-
-        # Групувати результати по артикулах
-        results = {}
-        for article, options in grouped_results.items():
-            for option in options:
-                results.setdefault(article, []).append(option)
-
-        return render_template(
-            'user/search/search_results.html',
-            grouped_results=results,
-            token=token
-        )
-
-    except Exception as e:
-        logging.error(f"Помилка отримання результатів пошуку: {str(e)}", exc_info=True)
-        flash(_("An error occurred while retrieving search results."), "error")
-        return redirect(url_for('index'))
-    finally:
-        cursor.close()
-        conn.close()
- 
- 
-@app.route('/<token>/cart', methods=['GET', 'POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def cart(token):
-    """
-    Функція для обробки кошика користувача:
-    - Відображає товари у кошику.
-    - Відображає відсутні артикули.
-    - Дозволяє оновлювати кількість або видаляти товари.
-    """
-    try:
-        # Отримуємо ID користувача з сесії
-        user_id = session.get('user_id')
-        if not user_id:
-            flash(_("You need to log in to view your cart."), "error")
-            logging.warning("Attempt to access cart without user ID.")
-            return redirect(url_for('index'))
-
-        logging.debug(f"User ID: {user_id} accessed the cart.")
-
-        # Підключення до бази даних
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        # Якщо це POST-запит, обробляємо дії з кошиком (видалення, оновлення кількості)
-        if request.method == 'POST':
-            action = request.form.get('action')
-            article = request.form.get('article')
-            table_name = request.form.get('table_name')
-            logging.debug(f"POST action received: {action}, article: {article}, table_name: {table_name}")
-
-            if action == 'remove' and article and table_name:
-                # Видалення товару з кошика
-                cursor.execute(
-                    """
-                    DELETE FROM cart
-                    WHERE user_id = %s AND article = %s AND table_name = %s
-                    """,
-                    (user_id, article, table_name)
-                )
-                conn.commit()
-                flash("Item removed from cart.", "success")
-                logging.info(f"Article {article} removed from cart for user_id {user_id}.")
-
-            elif action == 'update_quantity' and article and table_name:
-                # Оновлення кількості товару
-                try:
-                    new_quantity = int(request.form.get('quantity', 1))
-                    if new_quantity > 0:
-                        cursor.execute(
-                            """
-                            UPDATE cart
-                            SET quantity = %s
-                            WHERE user_id = %s AND article = %s AND table_name = %s
-                            """,
-                            (new_quantity, user_id, article, table_name)
-                        )
-                        conn.commit()
-                        flash("Item quantity updated.", "success")
-                        logging.info(f"Article {article} quantity updated to {new_quantity} for user_id {user_id}.")
-                    else:
-                        flash("Quantity must be greater than zero.", "error")
-                        logging.warning(f"Invalid quantity {new_quantity} provided for article {article}.")
-                except ValueError:
-                    flash("Invalid quantity provided.", "error")
-                    logging.error(f"Non-integer quantity provided for article {article}.")
-
-        # Отримуємо товари з кошика
-        cursor.execute("""
-            SELECT 
-                c.article, 
-                c.table_name,
-                COALESCE(c.base_price, 0) AS base_price,
-                COALESCE(c.final_price, 0) AS final_price,
-                c.quantity,
-                ROUND(COALESCE(c.final_price, 0) * quantity, 2) AS total_price,
-                c.comment,
-                b.name AS brand_name  -- Отримуємо назву бренду
-            FROM cart c
-            JOIN price_lists pl ON c.table_name = pl.table_name
-            JOIN brands b ON pl.brand_id = b.id
-            WHERE c.user_id = %s
-            ORDER BY c.added_at ASC, c.article ASC, c.table_name ASC
-        """, (user_id,))
-
-        cart_items = []
-        for row in cursor.fetchall():
-            cart_items.append({
-                'article': row['article'],
-                'table_name': row['table_name'],
-                'base_price': float(row['base_price']),
-                'final_price': float(row['final_price']),
-                'quantity': row['quantity'],
-                'total_price': float(row['total_price']),
-                'comment': row['comment'],
-                'brand_name': row['brand_name']  # Передаємо назву бренду
-            })
-        logging.debug(f"Cart items fetched: {cart_items}")
-
-        # Отримання відсутніх артикулів із сесії
-        missing_articles = session.get('missing_articles', [])
-        logging.debug(f"Missing articles from session before processing: {missing_articles}")
-        if missing_articles:
-            missing_articles = list(set(missing_articles))  # Уникнення повторень
-        logging.debug(f"Unique missing articles after processing: {missing_articles}")
-
-        # Підрахунок загальної суми
-        total_price = sum(item['total_price'] for item in cart_items)
-        logging.debug(f"Total price calculated: {total_price}. Preparing to render cart page.")
-
-        # Логування для рендерингу
-        logging.info(f"Rendering cart for user_id={user_id}. Cart items count: {len(cart_items)}, Missing articles count: {len(missing_articles)}")
-        
-        # Додаємо логування для brand_name та table_name
-        for item in cart_items:
-            logging.debug(f"Item in cart: article={item['article']}, table_name={item['table_name']}, brand_name={item['brand_name']}")
-
-        return render_template(
-            'user/cart/cart.html',
-            cart_items=cart_items,
-            total_price=total_price,
-            missing_articles=missing_articles,
-            token=token
-        )
-
-    except Exception as e:
-        logging.error(f"Error in cart for user_id={user_id}: {str(e)}", exc_info=True)
-        flash(_("Could not load your cart. Please try again."), "error")
-        return redirect(url_for('index'))
-
-    finally:
-        # Закриваємо курсор і підключення
-        if 'cursor' in locals() and cursor:
-            cursor.close()
-        if 'conn' in locals() and conn:
-            conn.close()
-        logging.debug("Database connection closed.")
-
-
-
-#проміжковий єтап перед search, який минує search_results до cart
-@app.route('/<token>/submit_selection', methods=['POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def submit_selection(token):
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash(_("User not authenticated"), "error")
-            return redirect(url_for('index', token=token))
-
-        grouped_results = session.get('grouped_results', {})
-        logging.debug(f"Form data: {request.form}")
-        logging.debug(f"Grouped results from session: {grouped_results}")
-
-        selected_articles = []
-        for article in grouped_results:
-            if request.form.get(f"include_{article}") == "on":
-                selected_value = request.form.get(f"selected_{article}")
-                if not selected_value:
-                    continue
-
-                # Split the selected value into table_name and price|brand_id
-                table_name, price_brand = selected_value.split(':')
-                price, brand_id = price_brand.split('|')
-                
-                # Find article data in grouped_results
-                article_data = None
-                for option in grouped_results[article]:
-                    if option['table_name'] == table_name:
-                        article_data = option
-                        base_price = Decimal(str(option['base_price']))  # Convert to string first
-                        break
-
-                if article_data is None:
-                    continue
-
-                quantity = int(request.form.get(f"quantity_{article}", 1))
-                comment = request.form.get(f"comment_{article}", "").strip() or None
-                if comment == "None":  # Fix for "None" string
-                    comment = None
-
-                # Convert price to Decimal after removing any potential whitespace
-                final_price = Decimal(str(price).strip())
-
-                selected_articles.append({
-                    'article': article,
-                    'table_name': table_name,
-                    'base_price': base_price,
-                    'final_price': final_price,
-                    'quantity': quantity,
-                    'comment': comment,
-                    'brand_id': brand_id
-                })
-                logging.debug(f"Added to selection: {selected_articles[-1]}")
-
-        if not selected_articles:
-            flash(_("No articles selected"), "warning")
-            return redirect(url_for('index', token=token))
-
-        # Add to cart
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            for item in selected_articles:
-                cursor.execute("""
-                    INSERT INTO cart 
-                    (user_id, article, table_name, quantity, base_price, final_price, comment, brand_id, added_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                    ON CONFLICT (user_id, article, table_name) DO UPDATE SET
-                    quantity = cart.quantity + EXCLUDED.quantity,
-                    base_price = EXCLUDED.base_price,
-                    final_price = EXCLUDED.final_price,
-                    comment = EXCLUDED.comment,
-                    brand_id = EXCLUDED.brand_id
-                """, (
-                    user_id,
-                    item['article'],
-                    item['table_name'],
-                    item['quantity'],
-                    item['base_price'],
-                    item['final_price'],
-                    item['comment'],
-                    item['brand_id']
-                ))
-            conn.commit()
-
-        flash(_("Selection successfully submitted!"), "success")
-        return redirect(url_for('cart', token=token))
-
-    except Exception as e:
-        logging.error(f"Error in submit_selection: {e}", exc_info=True)
-        flash(_("An error occurred during submission"), "error")
-        return redirect(url_for('index', token=token))
-        
-# очищення результату пошуку
-@app.route('/<token>/clear_search', methods=['GET'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def clear_search(token):
-    """Очищає результати пошуку з сесії"""
-    try:
-        # Очищаємо дані пошуку з сесії
-        session.pop('grouped_results', None)
-        session.pop('missing_articles', None)
-        logging.debug("Search results cleared from session")
-        
-        flash(_("Search results cleared successfully"), "success")
-        # Перенаправляємо на головну сторінку з токеном
-        return redirect(url_for('token_index', token=token))
-        
-    except Exception as e:
-        logging.error(f"Error clearing search results: {e}", exc_info=True)
-        flash(_("Error clearing search results"), "error")
-        return redirect(url_for('token_index', token=token))
-
-
-
-
-
-
-# Додавання в кошик користувачем
-@app.route('/<token>/add_to_cart', methods=['POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def add_to_cart(token):
-    """
-    Додає товар до кошика користувача.
-    """
-    conn = None
-    cursor = None
-    try:
-        # Отримання даних з форми
-        article = request.form.get('article')
-        price = Decimal(request.form.get('price'))  # Ціна на момент додавання
-        quantity = int(request.form.get('quantity'))  # Кількість товару
-        table_name = request.form.get('table_name')
-        comment = request.form.get('comment', None)  # Коментар користувача
-        brand_id = request.form.get('brand_id') # Отримуємо brand_id
-        user_id = session.get('user_id')  # ID користувача
-
-        if not user_id:
-            flash(_("User is not authenticated. Please log in."), "error")
-            return redirect(url_for('index'))
-
-        logging.debug(f"Adding to cart: Article={article}, Price={price}, Quantity={quantity}, Table={table_name}, User={user_id}")
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Перевірка, чи товар вже є в кошику
-        cursor.execute("""
-            SELECT id, quantity FROM cart
-            WHERE user_id = %s AND article = %s AND table_name = %s
-        """, (user_id, article, table_name))
-        existing_cart_item = cursor.fetchone()
-
-        if existing_cart_item:
-            # Оновлення кількості товару в кошику
-            new_quantity = existing_cart_item['quantity'] + quantity
-            cursor.execute("""
-                UPDATE cart
-                SET quantity = %s, brand_id = %s
-                WHERE id = %s
-            """, (new_quantity, brand_id, existing_cart_item['id']))
-            logging.info(f"Cart updated: Article={article}, New Quantity={new_quantity}, User ID={user_id}")
-        else:
-            # Додавання нового товару в кошик
-            cursor.execute("""
-                INSERT INTO cart (user_id, article, table_name, price, quantity, comment, brand_id, added_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
-            """, (user_id, article, table_name, price, quantity, comment, brand_id))
-            logging.info(f"Product added to cart: Article={article}, Quantity={quantity}, User ID={user_id}")
-
-        conn.commit()
-        flash(_("Product added to cart!"), "success")
-    except Exception as e:
-        logging.error(f"Error in add_to_cart: {e}", exc_info=True)
-        flash(_("Error adding product to cart."), "error")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-            logging.debug("Database connection closed after adding to cart.")
-
-    # Перенаправлення на сторінку результатів пошуку
-    return render_template(
-        'user/search/search_results.html',
-        grouped_results=session.get('grouped_results', {}),
-        quantities=session.get('quantities', {}),
-        missing_articles=session.get('missing_articles', []),
-    )
-
-
-
-
-
-
-
-# Видалення товару з кошика
-@app.route('/<token>/remove_from_cart', methods=['POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def remove_from_cart(token):
-    try:
-        user_id = session.get('user_id')
-        article = request.form.get('article')
-        table_name = request.form.get('table_name')
-
-        logging.debug(f"Removing from cart: Article={article}, Table={table_name}, User={user_id}")
-
-        if not all([user_id, article, table_name]):
-            flash(_("Missing required information for removal"), "error")
-            return redirect(url_for('cart', token=token))
-
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                DELETE FROM cart 
-                WHERE user_id = %s 
-                AND article = %s 
-                AND table_name = %s
-                RETURNING id
-            """, (user_id, article, table_name))
-
-            deleted = cursor.fetchone()
-            conn.commit()
-
-            if deleted:
-                flash(_("Article {article} removed successfully").format(article=article), "success")
-                logging.info(f"Article {article} removed from cart for user_id={user_id}")
-            else:
-                flash(_("Item not found in cart"), "warning")
-                logging.warning(f"Failed to remove article {article} for user_id={user_id}")
-
-    except Exception as e:
-        logging.error(f"Error removing from cart: {e}", exc_info=True)
-        flash(_("Error removing item from cart"), "error")
-
-    return redirect(url_for('cart', token=token))
-
-
-# Оновлення товару в кошику
-@app.route('/<token>/update_cart', methods=['POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def update_cart(token):
-    """
-    Оновлює кількість товарів у кошику.
-    """
-    try:
-        # Отримуємо дані з форми
-        article = request.form.get('article')
-        quantity = request.form.get('quantity')
-        user_id = session['user_id']
-
-        if not article or not quantity:
-            flash(_("Invalid input: article or quantity missing."), "error")
-            logging.error("Missing article or quantity in update_cart form.")
-            return redirect(url_for('cart', token=token))
-
-        quantity = int(quantity)
-
-        if quantity < 1:
-            flash(_("Quantity must be at least 1."), "error")
-            logging.error(f"Invalid quantity: {quantity}")
-            return redirect(url_for('cart', token=token))
-
-        logging.debug(f"Updating cart: Article={article}, Quantity={quantity}, User={user_id}")
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Оновлення кількості у кошику
-        cursor.execute("""
-            UPDATE cart
-            SET quantity = %s
-            WHERE user_id = %s AND article = %s
-        """, (quantity, user_id, article))
-
-        conn.commit()
-        flash(_("Cart updated successfully!"), "success")
-
-    except Exception as e:
-        logging.error(f"Error updating cart: {e}", exc_info=True)
-        flash(_("Error updating cart."), "error")
-    finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'conn' in locals():
-            conn.close()
-        logging.debug("Database connection closed after updating cart.")
-
-    return redirect(url_for('cart', token=token))
-
-
-# Очищення кошика користувача
-@app.route('/<token>/cart/clear', methods=['POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def clear_cart(token):
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            flash("User not authenticated", "error")
-            return redirect(url_for('token_index', token=token))
-
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
-            conn.commit()
-            flash("Cart cleared successfully", "success")
-
-    except Exception as e:
-        logging.error(f"Error clearing cart: {e}", exc_info=True)
-        flash("Error clearing cart", "error")
-
-    return redirect(url_for('cart', token=token))
-
-
-# з кошика в замовлення
-@app.route('/<token>/place_order', methods=['POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def place_order(token):
-    """
-    Функція для обробки замовлення:
-    - Створює замовлення в таблиці `orders`.
-    - Додає деталі замовлення до `order_details`.
-    - Очищає кошик користувача.
-    - Відправляє підтвердження електронною поштою.
-    """
-    try:
-        user_id = session.get('user_id')
-        # Отримуємо відсутні артикули з сесії
-        missing_articles = session.get('missing_articles', [])
-        
-        logging.debug(f"Placing order for user_id={user_id}")
-
-        if not user_id:
-            flash(_("User is not authenticated. Please log in."), "error")
-            logging.error("Attempt to place order by unauthenticated user.")
-            return redirect(url_for('index'))
-
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        # Отримання товарів з кошика
-        logging.debug("Fetching cart items...")
-        cursor.execute("""
-            SELECT article, table_name, base_price, final_price as price,
-                   quantity, (final_price * quantity) as total_price, comment, brand_id
-            FROM cart
-            WHERE user_id = %s
-        """, (user_id,))
-        cart_items = cursor.fetchall()
-
-        if not cart_items:
-            flash(_("Your cart is empty!"), "error")
-            logging.warning(f"Cart is empty for user_id={user_id}.")
-            return redirect(request.referrer or url_for('cart'))
-
-        # Підрахунок загальної суми
-        total_price = sum(item['price'] * item['quantity'] for item in cart_items)
-        logging.debug(f"Calculated total price for order: {total_price}")
-
-        # Створення запису замовлення
-        cursor.execute("""
-            INSERT INTO orders (user_id, total_price, order_date, status)
-            VALUES (%s, %s, NOW(), %s)
-            RETURNING id
-        """, (user_id, total_price, "pending"))
-        order_id = cursor.fetchone()['id']
-        logging.info(f"Order created with id={order_id} for user_id={user_id}")
-
-        # Додавання деталей замовлення
-        ordered_items = []
-        for cart_item in cart_items:
-            # Додаємо запис в таблицю order_details
-            cursor.execute("""
-                INSERT INTO order_details
-                (order_id, article, table_name, base_price, price, quantity, total_price, comment, brand_id)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                order_id,
-                cart_item['article'],
-                cart_item['table_name'],
-                cart_item['base_price'],
-                cart_item['price'],
-                cart_item['quantity'],
-                cart_item['total_price'],
-                cart_item['comment'],
-                cart_item['brand_id']
-            ))
-
-            # Логуємо успішне додавання
-            logging.info(f"Inserted order detail: order_id={order_id}, article={cart_item['article']}")
-            
-            # Зберігаємо інформацію про замовлений товар
-            ordered_items.append({
-                "article": cart_item['article'],
-                "price": cart_item['price'],
-                "quantity": cart_item['quantity'],
-                "comment": cart_item['comment'] or "No comment",
-                "table_name": cart_item['table_name']
-            })
-
-        # Очищення кошика
-        logging.debug(f"Clearing cart for user_id={user_id}...")
-        cursor.execute("DELETE FROM cart WHERE user_id = %s", (user_id,))
-
-        # Підтвердження замовлення
-        conn.commit()
-
-        # Надсилання підтвердження на email
-        cursor.execute("SELECT email FROM users WHERE id = %s", (user_id,))
-        user_email = cursor.fetchone()
-
-        if user_email and 'email' in user_email and user_email['email']:
-            try:
-                # send_email(
-                #     to_email=user_email['email'],
-                #     subject=f"Order Confirmation - Order #{order_id}",
-                #     ordered_items=ordered_items,
-                #     missing_articles=session.get('missing_articles', [])
-                # )
-                logging.info(f"Email sent successfully to {user_email['email']}")
-            except Exception as email_error:
-                logging.error(f"Failed to send email: {email_error}")
-                flash(_("Order placed, but we couldn't send a confirmation email."), "warning")
-
-        # Очищаємо список відсутніх позицій
-        session['missing_articles'] = []
-        session.modified = True
-
-        logging.info(f"Cart cleared and order placed successfully for user_id={user_id}")
-        flash(_("Order placed successfully!"), "success")
-        return redirect(request.referrer or url_for('cart'))
-
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        logging.error(f"Error placing order for user_id={user_id}: {str(e)}", exc_info=True)
-        flash(_("Error placing order: {error}").format(error=str(e)), "error")
-        return redirect(request.referrer or url_for('cart'))
-    finally:
-        if 'cursor' in locals() and cursor:
-            cursor.close()
-        if 'conn' in locals() and conn:
-            conn.close()
-        logging.debug("Database connection closed.")
-
-
-
-
-# Замовлення користувача
-@app.route('/<token>/orders', methods=['GET'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def orders(token):
-    user_id = session.get('user_id')
-    if not user_id:
-        flash(_("User is not authenticated."), "error")
-        return redirect(url_for('index'))
-
-    # Отримуємо фільтри з запиту
-    article_filter = request.args.get('article', '').strip()
-    status_filter = request.args.get('status', '').strip()
-    start_date = request.args.get('start_date', '').strip()
-    end_date = request.args.get('end_date', '').strip()
-
-    # Логування отриманих фільтрів
-    logging.debug(f"Received filters: Article: {article_filter}, Status: {status_filter}, Start Date: {start_date}, End Date: {end_date}")
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Початковий запит до таблиці orders
-        query = """
-        SELECT * FROM orders
-        WHERE user_id = %s
-        """
-        params = [user_id]
-
-        # Якщо фільтр по артикулу
-        if article_filter:
-            query += """
-            AND EXISTS (
-                SELECT 1 
-                FROM order_details 
-                WHERE order_id = orders.id 
-                AND article LIKE %s
-            )
-            """
-            params.append(f"%{article_filter}%")
-
-        # Якщо фільтр по статусу
-        if status_filter:
-            query += " AND status = %s"
-            params.append(status_filter)
-
-        # Якщо фільтр по даті початку
-        if start_date:
-            query += " AND order_date >= %s"
-            params.append(start_date)
-
-        # Якщо фільтр по даті кінця
-        if end_date:
-            query += " AND order_date <= %s"
-            params.append(end_date)
-
-        # Додаємо сортування
-        query += " ORDER BY order_date DESC"
-
-        # Логування сформованого запиту
-        logging.debug(f"Executing query: {query} with params: {params}")
-
-        # Виконання запиту
-        cursor.execute(query, params)
-        orders = cursor.fetchall()
-
-        logging.debug(f"Orders retrieved for user_id={user_id} with filters: {article_filter}, {status_filter}, {start_date}, {end_date}")
-
-        return render_template('user/orders/orders.html', orders=orders)
-
-    except Exception as e:
-        logging.error(f"Error fetching orders: {e}", exc_info=True)
-        flash(_("Error fetching orders."), "error")
-        return redirect(url_for('orders', token=token))
-
-    finally:
-        if 'cursor' in locals() and cursor:
-            cursor.close()
-        if 'conn' in locals() and conn:
-            conn.close()
-        logging.debug("Database connection closed.")
-
-
-
-# Окреме замовлення користувача по id
-@app.route('/<token>/order_details/<int:order_id>')
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def order_details(token, order_id):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT 
-                order_id, 
-                article,
-                original_article, 
-                table_name, 
-                COALESCE(price, 0) as price,
-                quantity, 
-                COALESCE(total_price, 0) as total_price, 
-                COALESCE(comment, '') as comment,
-                status
-            FROM order_details 
-            WHERE order_id = %s
-        """, (order_id,))
-        
-        details = cursor.fetchall()
-        formatted_details = [
-            {
-                'article': row[1],
-                'original_article': row[2],
-                'table_name': row[3],
-                'price': float(row[4]),
-                'quantity': row[5],
-                'total_price': float(row[6]),
-                'comment': row[7],
-                'status': row[8] or 'new'
-            }
-            for row in details
-        ]
-
-        return render_template('user/orders/order_details.html',
-                            token=token,
-                            order_id=order_id,
-                            details=formatted_details,
-                            total_price=sum(item['total_price'] for item in formatted_details))
-
-    except Exception as e:
-        logging.error(f"Помилка завантаження деталей замовлення для order_id={order_id}: {e}", exc_info=True)
-        flash(_("Error loading order details."), "error")
-        return redirect(url_for('orders', token=token))
-
 
 @app.route('/<token>/admin/orders/<int:order_id>/update_status', methods=['POST'])
 @requires_token_and_roles('admin')
@@ -6853,166 +5897,6 @@ def update_order_item_status(token, order_id):
             conn.close()
             logging.info(f"Database connection closed for order {order_id}.")
 
-@app.route('/<token>/order-changes', methods=['GET'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def view_order_changes(token):
-    """Показує історію змін артикулів та цін в замовленнях користувача."""
-    try:
-        user_id = session.get('user_id')
-        logging.info(f"Viewing order changes for user_id: {user_id}")
-
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Отримуємо тільки зміни артикулів та цін
-            cursor.execute("""
-                SELECT 
-                    oc.order_id,
-                    oc.order_detail_id,
-                    oc.field_changed,
-                    oc.old_value,
-                    oc.new_value,
-                    oc.change_date,
-                    oc.comment,
-                    od.article,
-                    od.status
-                FROM order_changes oc
-                JOIN order_details od ON oc.order_detail_id = od.id
-                JOIN orders o ON oc.order_id = o.id
-                WHERE o.user_id = %s
-                AND oc.field_changed IN ('article', 'price')
-                ORDER BY oc.change_date DESC
-            """, (user_id,))
-            
-            changes = cursor.fetchall()
-            
-            # Форматування значень для відображення
-            formatted_changes = []
-            for change in changes:
-                formatted_change = dict(change)
-                if change['field_changed'] == 'price':
-                    # Форматуємо ціни до 2 знаків після коми
-                    formatted_change['old_value'] = f"{float(change['old_value']):.2f}"
-                    formatted_change['new_value'] = f"{float(change['new_value']):.2f}"
-                formatted_changes.append(formatted_change)
-            
-            return render_template(
-                'user/orders/order_changes.html',
-                changes=formatted_changes,
-                token=token
-            )
-            
-    except Exception as e:
-        logging.error(f"Error viewing order changes: {e}", exc_info=True)
-        flash("Error loading order changes", "error")
-        return redirect(url_for('orders', token=token))
-
-@app.route('/<token>/admin/orders/<int:order_id>', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def admin_order_details(token, order_id):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            # Отримуємо інформацію про замовлення та користувача
-            cursor.execute("""
-                SELECT o.*, u.username, u.email,
-                       EXISTS (
-                           SELECT 1 FROM order_details 
-                           WHERE order_id = o.id 
-                           AND (status IS NULL OR status = 'new')
-                       ) as has_unprocessed_items
-                FROM orders o
-                JOIN users u ON o.user_id = u.id
-                WHERE o.id = %s
-            """, (order_id,))
-            
-            order = cursor.fetchone()
-            if not order:
-                flash("Order not found", "error")
-                return redirect(url_for('admin_orders', token=token))
-
-            # Отримуємо деталі замовлення
-            cursor.execute("""
-                SELECT id, article, table_name, price, quantity, 
-                       total_price, COALESCE(status, 'new') as status, comment
-                FROM order_details
-                WHERE order_id = %s
-                ORDER BY id
-            """, (order_id,))
-            
-            order_items = cursor.fetchall()
-
-            return render_template(
-                'admin/orders/admin_order_details.html',
-                order=order,
-                order_items=order_items,
-                token=token
-            )
-
-    except Exception as e:
-        logging.error(f"Error fetching order details: {e}", exc_info=True)
-        flash("Failed to load order details", "error")
-        return redirect(url_for('admin_orders', token=token))
-    
-
-@app.route('/<token>/admin/orders', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def admin_orders(token):
-    """
-    Відображення всіх замовлень для адміністратора з фільтрацією по статусу.
-    """
-    logging.info(f"Starting admin_orders route with token: {token}")
-    status_filter = request.args.get('status', '')
-    logging.debug(f"Status filter: {status_filter}")
-
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    try:
-        base_query = """
-            SELECT 
-                o.id, 
-                o.order_date, 
-                o.total_price, 
-                o.status,
-                u.username
-            FROM orders o
-            JOIN users u ON o.user_id = u.id
-        """
-
-        params = []
-        if status_filter:
-            base_query += " WHERE o.status = %s"
-            params.append(status_filter)
-
-        base_query += " ORDER BY o.order_date DESC"
-
-        logging.debug(f"Executing query: {base_query} with params: {params}")
-        cursor.execute(base_query, params)
-        orders = cursor.fetchall()
-
-        logging.info(f"Successfully fetched {len(orders)} orders")
-        logging.debug(f"First order sample: {orders[0] if orders else 'No orders'}")
-
-        return render_template(
-            'admin/orders/admin_orders.html',
-            orders=orders,
-            token=token,
-            current_status=status_filter
-        )
-
-    except Exception as e:
-        logging.error(f"Error in admin_orders: {str(e)}", exc_info=True)
-        flash("Failed to load orders.", "error")
-        return redirect(url_for('admin_dashboard', token=token))
-
-    finally:
-        cursor.close()
-        conn.close()
-        logging.info("Database connection closed in admin_orders")
-
 # Ролі користувачеві
 @app.route('/<token>/admin/assign_roles', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')  # Вкажіть 'admin' або іншу роль
@@ -7105,7 +5989,7 @@ def get_category_breadcrumbs(category_id, cursor):
 
 
 @app.route('/category/<slug>')
-@cache.cached(timeout=1800, query_string=True)  # 30 хвилин
+@cache.cached(timeout=1800, key_prefix=make_lang_cache_key)  # 30 хвилин
 def view_category(slug):
     try:
         # Отримуємо поточну мову
@@ -7275,8 +6159,9 @@ def manage_price_lists(token):
                 pl.id,
                 pl.table_name,
                 s.name as supplier_name,
-                pl.delivery_time,  -- Явно додаємо поле delivery_time з price_lists
+                pl.delivery_time,
                 pl.created_at,
+                pl.last_updated,  
                 pl.supplier_id
             FROM price_lists pl
             LEFT JOIN suppliers s ON pl.supplier_id = s.id
@@ -7421,17 +6306,16 @@ def upload_price_list(token):
             # Отримуємо розширену інформацію про прайс-листи для відображення в таблиці
             cursor.execute("""
                 SELECT 
-                    pl.id, 
-                    pl.table_name, 
-                    pl.created_at, 
-                    pl.supplier_id,
-                    pl.brand_id, 
+                    pl.id,
+                    pl.table_name,
+                    s.name as supplier_name,
                     pl.delivery_time,
+                    pl.created_at,
                     pl.last_updated,
-                    b.name as brand_name
+                    pl.supplier_id
                 FROM price_lists pl
-                LEFT JOIN brands b ON pl.brand_id = b.id
-                ORDER BY pl.created_at DESC;
+                LEFT JOIN suppliers s ON pl.supplier_id = s.id
+                ORDER BY pl.created_at DESC
             """)
             price_lists_info = cursor.fetchall()
 
@@ -7451,6 +6335,7 @@ def upload_price_list(token):
             return redirect(url_for('admin_dashboard', token=token))
 
     if request.method == 'POST':
+        
         conn = None
         cursor = None
         # Зберігаємо поточний рівень логування
@@ -7638,7 +6523,7 @@ def upload_price_list(token):
                 start_idx = batch_num * batch_size
                 end_idx = min(start_idx + batch_size, len(data))
                 batch = data[start_idx:end_idx]
-                batch_size = len(batch)
+                current_batch_size = len(batch)
                 
                 # Використовуємо execute_values для пакетного додавання (швидше ніж COPY)
                 psycopg2.extras.execute_values(
@@ -7649,7 +6534,7 @@ def upload_price_list(token):
                     page_size=1000
                 )
                 conn.commit()
-                logging.info(f"Batch {batch_num+1}/{total_batches}: Inserted {batch_size} rows")
+                logging.info(f"Batch {batch_num+1}/{total_batches}: Inserted {current_batch_size} rows")
             
             # Оновлюємо brand_id та last_updated в price_lists
             try:
@@ -7693,6 +6578,21 @@ def upload_price_list(token):
             if conn:
                 conn.close()
                 logging.info("Database connection closed")
+
+
+
+def invalidate_merchant_feeds():
+    """Очищає кеш для всіх Google Merchant feeds"""
+    try:
+        languages = ['sk', 'en', 'pl']
+        for lang in languages:
+            cache_key = f'view//google-merchant-feed/{lang}.xml'
+            cache.delete(cache_key)
+            logging.info(f"Cleared cache for {lang} merchant feed")
+        return True
+    except Exception as e:
+        logging.error(f"Error invalidating merchant feeds cache: {e}")
+        return False
 
 
 @app.route('/<token>/admin/add-brand', methods=['POST'])
@@ -7923,581 +6823,6 @@ def clear_stock(token):
     return redirect(url_for('manage_stock', token=token))
 
 
-
-# роут для керування постачальниками
-@app.route('/<token>/admin/manage-suppliers', methods=['GET', 'POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def manage_suppliers(token):
-    if request.method == 'POST':
-        try:
-            name = request.form.get('name')
-            delivery_time = request.form.get('delivery_time')
-
-            logging.info(f"Creating new supplier: {name}, delivery time: {delivery_time} days")
-
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT INTO suppliers (name, delivery_time)
-                    VALUES (%s, %s)
-                    RETURNING id
-                """, (name, delivery_time))
-                supplier_id = cursor.fetchone()[0]
-                conn.commit()
-
-                logging.info(f"Created supplier with ID: {supplier_id}")
-                flash(f"Постачальника {name} успішно створено", "success")
-                return redirect(url_for('manage_suppliers', token=token))
-
-        except Exception as e:
-            logging.error(f"Error creating supplier: {e}")
-            flash("Помилка при створенні постачальника", "error")
-
-    with get_db_connection() as conn:
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("""
-            SELECT id, name, delivery_time, created_at
-            FROM suppliers 
-            ORDER BY name
-        """)
-        suppliers = cursor.fetchall()
-
-    return render_template('admin/suppliers/manage_suppliers.html',
-                           suppliers=suppliers,
-                           token=token)
-
-
-
-
-# створення замовлення постачальнику
-@app.route('/<token>/admin/supplier-orders/create', methods=['POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def create_supplier_order(token):
-    try:
-        supplier_id = request.form.get('supplier_id')
-        order_number = f"SO-{supplier_id}-{datetime.now().strftime('%Y%m%d%H%M')}"
-        
-        logging.info(f"Creating supplier order. Supplier ID: {supplier_id}, Order number: {order_number}")
-
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        # Створюємо нове замовлення постачальнику
-        cur.execute("""
-            INSERT INTO supplier_orders (supplier_id, order_number, status)
-            VALUES (%s, %s, 'new')
-            RETURNING id
-        """, (supplier_id, order_number))
-
-        supplier_order_id = cur.fetchone()[0]
-        logging.info(f"Created supplier order with ID: {supplier_order_id}")
-
-        # Отримуємо деталі замовлення з order_details
-        cur.execute("""
-            SELECT id, article, quantity 
-            FROM order_details 
-            WHERE status = 'accepted' AND table_name IN (
-                SELECT table_name 
-                FROM price_lists 
-                WHERE supplier_id = %s
-            )
-        """, (supplier_id,))
-
-        details = cur.fetchall()
-        logging.info(f"Found {len(details)} order details to process")
-
-        # Додаємо деталі до замовлення постачальнику
-        for detail in details:
-            detail_id, article, quantity = detail
-            tracking_code = generate_tracking_code()
-            
-            logging.info(f"Processing detail - ID: {detail_id}, Article: {article}, Quantity: {quantity}, Tracking: {tracking_code}")
-
-            try:
-                # Додаємо в supplier_order_details з order_details_id
-                cur.execute("""
-                    INSERT INTO supplier_order_details 
-                    (supplier_order_id, article, quantity, tracking_code, order_details_id)
-                    VALUES (%s, %s, %s, %s, %s)
-                    RETURNING id
-                """, (supplier_order_id, article, quantity, tracking_code, detail_id))
-                
-                inserted_id = cur.fetchone()[0]
-                logging.info(f"Inserted supplier_order_detail with ID: {inserted_id}")
-
-                # Оновлюємо статус в order_details
-                cur.execute("""
-                    UPDATE order_details 
-                    SET status = 'ordered_supplier'
-                    WHERE id = %s
-                """, (detail_id,))
-                
-                logging.info(f"Updated order_details status for ID: {detail_id}")
-
-            except Exception as detail_error:
-                logging.error(f"Error processing detail {detail_id}: {detail_error}")
-                continue
-
-        # Оновлюємо статус замовлення
-        cur.execute("""
-            UPDATE orders 
-            SET status = 'ordered_supplier' 
-            WHERE id IN (
-                SELECT DISTINCT order_id 
-                FROM order_details 
-                WHERE status = 'ordered'
-            )
-        """)
-
-        conn.commit()
-        logging.info("Supplier order creation completed successfully")
-        flash('Supplier order created successfully', 'success')
-
-    except Exception as e:
-        conn.rollback()
-        logging.error(f"Error creating supplier order: {str(e)}", exc_info=True)
-        flash('Error creating supplier order', 'error')
-
-    finally:
-        cur.close()
-        conn.close()
-        logging.info("Database connection closed")
-
-    return redirect(url_for('list_supplier_orders', token=token))
-
-
-# Функція прийому інвойсу
-@app.route('/<token>/admin/process-invoice', methods=['POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def process_invoice(token):
-    """Processes uploaded invoice file and creates invoice records"""
-    try:
-        if 'file' not in request.files:
-            flash("No file uploaded", "error")
-            return redirect(url_for('upload_invoice', token=token))
-            
-        file = request.files['file']
-        supplier_id = request.form.get('supplier_id')
-        invoice_number = request.form.get('invoice_number')
-        
-        # Validate required fields
-        if not all([file, supplier_id, invoice_number]):
-            flash("All fields are required", "error")
-            return redirect(url_for('upload_invoice', token=token))
-
-        # Read Excel file
-        df = pd.read_excel(file)
-        
-        # Validate and standardize column names
-        required_columns = ['Article', 'Quantity', 'Tracking_Code', 'Price']
-        if not all(col in df.columns for col in required_columns):
-            # Try to find columns by content if headers are missing
-            if len(df.columns) >= 4:
-                df.columns = required_columns + [f'Column_{i+4}' for i in range(len(df.columns)-4)]
-            else:
-                flash("Invalid file format - missing required columns", "error")
-                return redirect(url_for('upload_invoice', token=token))
-
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            # Create invoice record
-            cursor.execute("""
-                INSERT INTO supplier_invoices 
-                (invoice_number, supplier_id, status, created_at)
-                VALUES (%s, %s, 'new', NOW())
-                RETURNING id
-            """, (invoice_number, supplier_id))
-            
-            invoice_id = cursor.fetchone()[0]
-            
-            # Process each row
-            for _, row in df.iterrows():
-                try:
-                    article = str(row['Article']).strip().upper()
-                    quantity = int(row['Quantity'])
-                    tracking_code = str(row['Tracking_Code']).strip() if pd.notna(row['Tracking_Code']) else None
-                    
-                    # Додаємо логування для перевірки ціни
-                    price = row['Price']
-                    logging.info(f"Article: {article}, Price from Excel: {price}")
-                    
-                    price = float(price)
-                    total_price = price * quantity
-                    
-                    cursor.execute("""
-                        INSERT INTO invoice_details 
-                        (invoice_id, article, quantity, tracking_code, price, total_price)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                    """, (invoice_id, article, quantity, tracking_code, price, total_price))
-                except Exception as row_err:
-                    logging.error(f"Error processing row: {row.to_dict()}", exc_info=True)
-                    flash(f"Error processing row for article {row['Article']}: {row_err}", "error")
-                    conn.rollback()
-                    return redirect(url_for('upload_invoice', token=token))
-            
-            conn.commit()
-            flash("Invoice uploaded successfully", "success")
-            return redirect(url_for('analyze_invoice', token=token, invoice_id=invoice_id))
-            
-    except Exception as e:
-        logging.error(f"Error processing invoice: {e}", exc_info=True)
-        flash("Error processing invoice file", "error")
-        return redirect(url_for('upload_invoice', token=token))
-
-
-
-
-# функція перевірки схожості артикулів для приймання інвойсу
-def find_similar_articles(article1, article2):
-    """Перевіряє схожість артикулів"""
-    prefixes = ['K', 'V', 'G', 'J', 'WHT', 'VAG']
-    clean_article1 = article1
-    clean_article2 = article2
-    
-    for prefix in prefixes:
-        if article1.startswith(prefix):
-            clean_article1 = article1[len(prefix):]
-        if article2.startswith(prefix):
-            clean_article2 = article2[len(prefix):]
-    
-    return clean_article1 == clean_article2
-
-
-#  Функція аналізу відповідностей в обробці інвойсу від постачальника
-@app.route('/<token>/admin/analyze-invoice/<int:invoice_id>', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def analyze_invoice(token, invoice_id):
-    logging.info(f"Starting analyze_invoice for invoice_id: {invoice_id}")
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Get invoice details
-            logging.info(f"Fetching invoice details for invoice_id: {invoice_id}")
-            cursor.execute("""
-                SELECT 
-                    id.*,
-                    si.invoice_number,
-                    si.supplier_id,
-                    si.status as invoice_status,
-                    id.price
-                FROM invoice_details id
-                JOIN supplier_invoices si ON id.invoice_id = si.id
-                WHERE id.invoice_id = %s
-                AND (id.status IS NULL OR id.status != 'processed')
-            """, (invoice_id,))
-            
-            invoice_items = cursor.fetchall()
-            logging.info(f"Found {len(invoice_items)} unprocessed items in invoice")
-            for item in invoice_items:
-                logging.debug(f"Invoice item: {dict(item)}")
-
-            full_matches = []
-            wrong_articles = []
-            excess_quantities = []
-            missing_quantities = []
-            price_highers = []
-            price_lowers = []
-            no_tracking_codes = []
-            different_names = []
-            
-            for item in invoice_items:
-                logging.info(f"Processing invoice item ID: {item['id']}")
-                try:
-                    if item['tracking_code']:
-                        logging.debug(f"Found tracking code: {item['tracking_code']}")
-                        cursor.execute("""
-                            SELECT 
-                                od.id as order_detail_id,
-                                od.article,
-                                od.original_article,
-                                od.quantity as order_quantity,
-                                od.status as order_status,
-                                od.order_id,
-                                sod.tracking_code,
-                                od.base_price,
-                                od.price,
-                                od.total_price,
-                                od.comment,
-                                od.table_name
-                            FROM supplier_order_details sod
-                            JOIN order_details od ON sod.order_details_id = od.id
-                            WHERE sod.tracking_code = %s
-                            AND od.status = 'ordered_supplier'
-                        """, (item['tracking_code'],))
-                        
-                        order_item = cursor.fetchone()
-                        if order_item:
-                            logging.debug(f"Found matching order item: {dict(order_item)}")
-                            
-                            invoice_qty = item['quantity']
-                            order_qty = order_item['order_quantity']
-                            invoice_price = item['price']
-                            order_price = order_item['price']
-                            base_price = order_item['base_price']
-                            
-                            logging.info(f"Comparing quantities - Invoice: {invoice_qty}, Order: {order_qty}")
-                            logging.info(f"Comparing prices - Invoice: {invoice_price}, Base: {base_price}")
-                            
-                            if order_item['article'] == item['article']:
-                                if invoice_qty == order_qty and invoice_price == base_price:
-                                    logging.info(f"Found full match for article {item['article']}")
-                                    full_matches.append({
-                                        'invoice_item': item,
-                                        'order_item': order_item
-                                    })
-                                else:
-                                    if invoice_qty > order_qty:
-                                        logging.info(f"Found excess quantity for article {item['article']}")
-                                        excess_quantities.append({
-                                            'invoice_item': item,
-                                            'order_item': order_item,
-                                            'excess_qty': invoice_qty - order_qty
-                                        })
-                                    elif invoice_qty < order_qty:
-                                        logging.info(f"Found missing quantity for article {item['article']}")
-                                        missing_quantities.append({
-                                            'invoice_item': item,
-                                            'order_item': order_item,
-                                            'missing_qty': order_qty - invoice_qty
-                                        })
-                                    
-                                    if invoice_price > base_price:
-                                        logging.info(f"Found higher price for article {item['article']}")
-                                        price_highers.append({
-                                            'invoice_item': item,
-                                            'order_item': order_item,
-                                            'price_diff': invoice_price - base_price
-                                        })
-                                    elif invoice_price < base_price:
-                                        logging.info(f"Found lower price for article {item['article']}")
-                                        price_lowers.append({
-                                            'invoice_item': item,
-                                            'order_item': order_item,
-                                            'price_diff': base_price - invoice_price
-                                        })
-                            else:
-                                logging.info(f"Article mismatch - Invoice: {item['article']}, Order: {order_item['article']}")
-                                if find_similar_articles(item['article'], order_item['article']):
-                                    logging.info(f"Found similar article names")
-                                    different_names.append({
-                                        'invoice_item': item,
-                                        'order_item': order_item
-                                    })
-                                else:
-                                    logging.info(f"Found wrong article")
-                                    wrong_articles.append({
-                                        'invoice_item': item,
-                                        'order_item': order_item
-                                    })
-                        else:
-                            logging.warning(f"No matching order found for tracking code: {item['tracking_code']}")
-                    else:
-                        logging.warning(f"No tracking code for article: {item['article']}")
-                        no_tracking_codes.append({
-                            'invoice_item': item
-                        })
-                except Exception as item_err:
-                    logging.error(f"Error processing item {item['id']}: {item_err}", exc_info=True)
-                    continue
-
-            # Логування результатів аналізу
-            logging.info(f"Analysis results for invoice {invoice_id}:")
-            logging.info(f"Full matches: {len(full_matches)}")
-            logging.info(f"Wrong articles: {len(wrong_articles)}")
-            logging.info(f"Excess quantities: {len(excess_quantities)}")
-            logging.info(f"Missing quantities: {len(missing_quantities)}")
-            logging.info(f"Price highers: {len(price_highers)}")
-            logging.info(f"Price lowers: {len(price_lowers)}")
-            logging.info(f"No tracking codes: {len(no_tracking_codes)}")
-            logging.info(f"Different names: {len(different_names)}")
-
-            return render_template(
-                'admin/invoices/analyze.html',
-                token=token,
-                invoice_id=invoice_id,
-                full_matches=full_matches,
-                wrong_articles=wrong_articles,
-                excess_quantities=excess_quantities,
-                missing_quantities=missing_quantities,
-                price_highers=price_highers,
-                price_lowers=price_lowers,
-                no_tracking_codes=no_tracking_codes,
-                different_names=different_names
-            )
-            
-    except Exception as e:
-        logging.error(f"Critical error in analyze_invoice: {e}", exc_info=True)
-        flash("Error analyzing invoice", "error")
-        return redirect(url_for('admin_dashboard', token=token))
-    
-
-# Функція обробки невідповідностей
-@app.route('/<token>/admin/process-mismatches', methods=['POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def process_mismatches(token):
-    """Обробляє невідповідності в інвойсі"""
-    logging.info("=== Starting process_mismatches ===")
-    try:
-        invoice_id = request.form.get('invoice_id')
-        logging.info(f"Processing invoice_id: {invoice_id}")
-
-        if not invoice_id:
-            logging.error("No invoice_id provided in form data")
-            flash("Invoice ID is missing", "error")
-            return redirect(url_for('admin_dashboard', token=token))
-
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            # Отримуємо дані інвойсу
-            cursor.execute("""
-                SELECT invoice_number, supplier_id, status
-                FROM supplier_invoices 
-                WHERE id = %s
-            """, (invoice_id,))
-            invoice_data = cursor.fetchone()
-            logging.info(f"Invoice data: {dict(invoice_data) if invoice_data else None}")
-
-            if not invoice_data:
-                logging.error(f"Invoice not found for id: {invoice_id}")
-                flash("Invoice not found", "error")
-                return redirect(url_for('admin_dashboard', token=token))
-
-            # Логуємо всі вхідні дані форми
-            form_data = dict(request.form)
-            logging.info(f"Received form data: {form_data}")
-
-            # Обробка кожної дії з форми
-            for key, value in request.form.items():
-                logging.debug(f"Processing form field - Key: {key}, Value: {value}")
-
-                try:
-                    if key.startswith('action_'):
-                        invoice_detail_id = key.replace('action_', '')
-                        action = value
-                        logging.info(f"Processing action '{action}' for invoice_detail_id: {invoice_detail_id}")
-
-                        # Логуємо поточний стан деталі інвойсу перед обробкою
-                        cursor.execute("""
-                            SELECT id.*, sod.order_details_id
-                            FROM invoice_details id
-                            LEFT JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
-                            WHERE id.id = %s
-                        """, (invoice_detail_id,))
-                        detail_before = cursor.fetchone()
-                        logging.info(f"Detail before processing: {dict(detail_before) if detail_before else None}")
-
-                        if action == 'update_article':
-                            correct_article = request.form.get('correct_article')
-                            update_price = request.form.get('update_price') == 'on'
-                            logging.info(f"Update article - New article: {correct_article}, Update price: {update_price}")
-                            
-                            if not handle_wrong_article(invoice_detail_id, correct_article, update_price, conn, cursor):
-                                logging.error(f"Failed to handle wrong article for item {invoice_detail_id}")
-                                flash(f"Error handling wrong article for item {invoice_detail_id}", "error")
-
-                        elif action == 'accept_name_change':
-                            logging.info(f"Accepting name change for invoice_detail_id: {invoice_detail_id}")
-                            if not handle_accept_name_change(invoice_detail_id, conn, cursor):
-                                logging.error(f"Failed to handle name change for item {invoice_detail_id}")
-                                flash(f"Error handling name change for item {invoice_detail_id}", "error")
-
-                        elif action == 'reduce_order':
-                            logging.info(f"Reducing order for invoice_detail_id: {invoice_detail_id}")
-                            if not handle_missing_quantity(invoice_detail_id, conn, cursor):
-                                logging.error(f"Failed to handle missing quantity for item {invoice_detail_id}")
-                                flash(f"Error handling missing quantity for item {invoice_detail_id}", "error")
-
-                        elif action == 'update_price':
-                            logging.info(f"Updating price for invoice_detail_id: {invoice_detail_id}")
-                            if not handle_price_mismatch(invoice_detail_id, action, conn, cursor):
-                                logging.error(f"Failed to handle price mismatch for item {invoice_detail_id}")
-                                flash(f"Error handling price mismatch for item {invoice_detail_id}", "error")
-
-                        # Логуємо оновлений стан деталі інвойсу
-                        cursor.execute("""
-                            SELECT id.*, sod.order_details_id
-                            FROM invoice_details id
-                            LEFT JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
-                            WHERE id.id = %s
-                        """, (invoice_detail_id,))
-                        detail_after = cursor.fetchone()
-                        logging.info(f"Detail after processing: {dict(detail_after) if detail_after else None}")
-
-                except Exception as action_err:
-                    logging.error(f"Error processing action for invoice_detail_id {invoice_detail_id}: {action_err}", exc_info=True)
-                    flash(f"Error handling action for item {invoice_detail_id}: {str(action_err)}", "error")
-                    continue
-
-            conn.commit()
-            logging.info("Successfully processed all mismatches")
-            flash("Невідповідності успішно оброблено", "success")
-
-    except Exception as e:
-        logging.error(f"Critical error in process_mismatches: {e}", exc_info=True)
-        flash("Помилка обробки невідповідностей", "error")
-
-    logging.info("=== Finished process_mismatches ===")
-    return redirect(url_for('analyze_invoice', token=token, invoice_id=invoice_id))
-
-@app.route('/<token>/admin/confirm-invoice/<int:invoice_id>', methods=['POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def confirm_invoice(token, invoice_id):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            # Оновлюємо статус замовлення
-            cursor.execute("""
-                UPDATE order_details
-                SET status = 'invoice_received'
-                WHERE id IN (
-                    SELECT sod.order_details_id
-                    FROM invoice_details id
-                    JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
-                    WHERE id.invoice_id = %s
-                )
-                AND status = 'ordered_supplier'
-            """, (invoice_id,))
-            updated_count = cursor.rowcount
-            conn.commit()
-            logging.info(f"Updated {updated_count} order details status to 'invoice_received'")
-
-            # Оновлюємо статус деталі інвойсу
-            cursor.execute("""
-                UPDATE invoice_details 
-                SET status = 'processed',
-                    processed_at = NOW()
-                WHERE invoice_id = %s
-            """, (invoice_id,))
-            updated_count = cursor.rowcount
-            logging.info(f"Updated {updated_count} invoice_detail status for invoice_id: {invoice_id}")
-
-            # Оновлюємо статус інвойсу
-            cursor.execute("""
-                UPDATE supplier_invoices
-                SET status = 'accepted'
-                WHERE id = %s
-            """, (invoice_id,))
-            updated_count = cursor.rowcount
-            logging.info(f"Updated {updated_count} supplier_invoices status for id: {invoice_id}")
-
-            conn.commit()
-            flash("Інвойс успішно підтверджено", "success")
-
-    except Exception as e:
-        logging.error(f"Error confirming invoice: {e}", exc_info=True)
-        flash("Помилка підтвердження інвойсу", "error")
-
-    return redirect(url_for('list_invoices', token=token))
 
 
 def handle_accept_name_change(invoice_detail_id, conn, cursor):
@@ -8845,942 +7170,8 @@ def handle_wrong_article(invoice_detail_id, correct_article, update_price, conn,
         logging.error(f"Error handling wrong article: {e}", exc_info=True)
         return False
 
-# перегляд складу
-@app.route('/<token>/admin/warehouse', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def warehouse_items(token):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            cursor.execute("""
-                SELECT 
-                    w.id,
-                    w.article,
-                    w.quantity,
-                    COALESCE(w.base_price, 0) as base_price,
-                    COALESCE(w.price, 0) as price,
-                    w.table_name,
-                    w.added_at,
-                    w.invoice_number,
-                    si.supplier_id,
-                    s.name as supplier_name
-                FROM warehouse w
-                LEFT JOIN supplier_invoices si ON w.invoice_id = si.id
-                LEFT JOIN suppliers s ON si.supplier_id = s.id
-                ORDER BY w.added_at DESC
-            """)
-            
-            items = cursor.fetchall()
-            
-            return render_template(
-                'admin/warehouse/list_items.html',
-                items=items,
-                token=token
-            )
-            
-    except Exception as e:
-        logging.error(f"Error fetching warehouse items: {e}")
-        flash("Error loading warehouse items", "error")
-        return redirect(url_for('admin_dashboard', token=token))
 
 
-# сторінка для завантаження інвойсу:
-@app.route('/<token>/admin/invoice/upload', methods=['GET', 'POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def upload_invoice(token):
-    if request.method == 'GET':
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            
-            # Get suppliers list
-            cursor.execute("SELECT id, name FROM suppliers")
-            suppliers = cursor.fetchall()
-            
-            return render_template('admin/invoices/upload.html', 
-                                 suppliers=suppliers,
-                                 token=token)
-        except Exception as e:
-            logging.error(f"Error in GET: {e}")
-            flash("Error loading suppliers", "error")
-            return redirect(url_for('admin_dashboard', token=token))
-                             
-    elif request.method == 'POST':
-        try:
-            file = request.files.get('invoice_file')
-            supplier_id = request.form.get('supplier_id')
-            invoice_number = request.form.get('invoice_number')
-            
-            logging.debug(f"Received file: {file.filename if file else None}")
-            logging.debug(f"Supplier ID: {supplier_id}")
-            logging.debug(f"Invoice number: {invoice_number}")
-            
-            if not all([file, supplier_id, invoice_number]):
-                flash("All fields are required", "error") 
-                return redirect(url_for('upload_invoice', token=token))
-                
-            # Read Excel file
-            df = pd.read_excel(file, dtype={'Price': str})  # Явне вказання типу даних
-            logging.debug(f"Excel data shape: {df.shape}")
-            logging.debug(f"Columns: {df.columns.tolist()}")
-            
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                
-                # Create invoice record
-                cursor.execute("""
-                    INSERT INTO supplier_invoices 
-                    (invoice_number, supplier_id, status, created_at)
-                    VALUES (%s, %s, 'new', NOW())
-                    RETURNING id
-                """, (invoice_number, supplier_id))
-                
-                invoice_id = cursor.fetchone()[0]
-                
-                # Save invoice details
-                for _, row in df.iterrows():
-                    # Отримуємо значення ціни з файлу Excel
-                    logging.info(f"Row data: {row}")  # Логування всього рядка
-                    price = row.get('Price')
-                    logging.info(f"Article: {row['Article']}, Raw Price from Excel: {price}")
-
-                    # Перевіряємо, чи ціна не є порожньою
-                    if price is None:
-                        logging.warning(f"Price is empty for Article: {row['Article']}")
-                        price_value = 0.0  # або можна вказати інше значення за замовчуванням
-                    else:
-                        try:
-                            price_str = str(price).replace(',', '.')  # Заміна коми на крапку
-                            price_value = float(price_str)
-                        except Exception as err:
-                            logging.error(f"Failed to convert price to float for Article: {row['Article']}, price: {price}", exc_info=True)
-                            price_value = 0.0
-
-                    # Логування значення та типу ціни перед виконанням SQL-запиту
-                    logging.info(f"Inserting row for Article: {row['Article']} with Price: {price_value} (type: {type(price_value)})")
-
-                    cursor.execute("""
-                        INSERT INTO invoice_details 
-                        (invoice_id, article, quantity, tracking_code, price)
-                        VALUES (%s, %s, %s, %s, %s)
-                    """, (invoice_id, row['Article'], 
-                          row['Quantity'], row.get('Tracking_Code'), price_value))
-                          
-                conn.commit()
-                
-            flash("Invoice uploaded successfully", "success")
-            return redirect(url_for('analyze_invoice', 
-                                  token=token,
-                                  invoice_id=invoice_id))
-                                  
-        except Exception as e:
-            logging.error(f"Error uploading invoice: {e}")
-            flash("Error uploading invoice", "error")
-            return redirect(url_for('upload_invoice', token=token))
-
-
-# маршрут для списку інвойсів в адмін-панелі
-@app.route('/<token>/admin/invoices', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def list_invoices(token):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Отримуємо всі інвойси з інформацією про постачальника
-            cursor.execute("""
-                SELECT 
-                    si.id,
-                    si.invoice_number,
-                    si.created_at,
-                    si.status,
-                    s.name as supplier_name,
-                    COUNT(id.id) as items_count,
-                    COUNT(CASE WHEN id.status = 'processed' THEN 1 END) as processed_count
-                FROM supplier_invoices si
-                JOIN suppliers s ON si.supplier_id = s.id
-                LEFT JOIN invoice_details id ON si.id = id.invoice_id
-                GROUP BY si.id, si.invoice_number, si.created_at, si.status, s.name
-                ORDER BY si.created_at DESC
-            """)
-            invoices = cursor.fetchall()
-            
-            return render_template(
-                'admin/invoices/list_invoices.html',
-                invoices=invoices,
-                token=token
-            )
-            
-    except Exception as e:
-        logging.error(f"Error fetching invoices: {e}", exc_info=True)
-        flash("Error loading invoices", "error")
-        return redirect(url_for('admin_dashboard', token=token))
-
-# функція для перегляду деталей інвойсу
-@app.route('/<token>/admin/invoice/<int:invoice_id>/details', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def invoice_details(token, invoice_id):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Отримуємо інформацію про інвойс
-            cursor.execute("""
-                SELECT 
-                    si.*,
-                    s.name as supplier_name
-                FROM supplier_invoices si
-                JOIN suppliers s ON si.supplier_id = s.id
-                WHERE si.id = %s
-            """, (invoice_id,))
-            
-            invoice = cursor.fetchone()
-            if not invoice:
-                flash("Invoice not found", "error")
-                return redirect(url_for('list_invoices', token=token))
-
-            # Отримуємо деталі інвойсу
-            cursor.execute("""
-                SELECT 
-                    id.*,
-                    CASE 
-                        WHEN sod.order_details_id IS NOT NULL THEN od.article 
-                        ELSE NULL 
-                    END as original_article,
-                    CASE 
-                        WHEN sod.order_details_id IS NOT NULL THEN od.quantity 
-                        ELSE NULL 
-                    END as ordered_quantity,
-                    CASE
-                        WHEN w.id IS NOT NULL THEN TRUE
-                        ELSE FALSE
-                    END as in_warehouse,
-                    od.base_price,
-                    od.price AS customer_price,
-                    u.username AS customer_username,
-                    u.email AS customer_email
-                FROM invoice_details id
-                LEFT JOIN supplier_order_details sod ON id.tracking_code = sod.tracking_code
-                LEFT JOIN order_details od ON sod.order_details_id = od.id
-                LEFT JOIN warehouse w ON id.article = w.article AND id.invoice_id = w.invoice_id
-                LEFT JOIN orders o ON od.order_id = o.id
-                LEFT JOIN users u ON o.user_id = u.id
-                WHERE id.invoice_id = %s
-                ORDER BY id.id
-            """, (invoice_id,))
-            
-            invoice_items = cursor.fetchall()
-
-            return render_template(
-                'admin/invoices/invoice_details.html',
-                invoice=invoice,
-                items=invoice_items,
-                token=token
-            )
-            
-    except Exception as e:
-        logging.error(f"Error fetching invoice details: {e}", exc_info=True)
-        flash("Error loading invoice details", "error")
-        return redirect(url_for('list_invoices', token=token))
-
-@app.route('/<token>/admin/compare_prices', methods=['GET', 'POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def compare_prices(token):
-    if request.method == 'GET':
-        try:
-            # Отримуємо список таблиць із прайсами
-            conn = get_db_connection()
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            cursor.execute("SELECT table_name FROM price_lists;")
-            price_lists = cursor.fetchall()
-            conn.close()
-            logging.info("Fetched price list tables successfully.")
-            return render_template('user/search/compare_prices.html', price_lists=price_lists)
-        except Exception as e:
-            logging.error(f"Error during GET request: {str(e)}", exc_info=True)
-            flash("Failed to load price list tables.", "error")
-            return redirect(request.referrer or url_for('admin_panel'))
-
-    if request.method == 'POST':
-        try:
-            form_data = request.form.to_dict()
-            logging.info(f"Form data: {form_data}")
-
-            # Якщо запит на експорт
-            if 'export_excel' in request.form:
-                logging.info("Export to Excel initiated.")
-                data = session.get('comparison_results')
-                if not data:
-                    logging.error("No data to export!")
-                    flash("No data to export!", "error")
-                    return redirect(request.referrer or url_for('compare_prices'))
-                return export_to_excel(
-                    data['better_in_first'],
-                    data['better_in_second'],
-                    data['same_prices']
-                )
-
-            # Обробка даних для порівняння
-            articles_input = request.form.get('articles', '').strip()
-            selected_prices = request.form.getlist('price_tables')
-
-            if not articles_input or not selected_prices:
-                flash("Please enter articles and select price tables.", "error")
-                return redirect(request.referrer or url_for('compare_prices'))
-
-            # Розбиваємо артикулі
-            articles = [line.strip() for line in articles_input.splitlines() if line.strip()]
-            logging.info(f"Articles to compare: {articles}")
-
-            conn = get_db_connection()
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            # Отримуємо ціни з вибраних таблиць
-            results = {}
-            for table in selected_prices:
-                query = f"SELECT article, price FROM {table} WHERE article = ANY(%s);"
-                cursor.execute(query, (articles,))
-                for row in cursor.fetchall():
-                    article = row['article']
-                    price = row['price']
-                    if article not in results:
-                        results[article] = []
-                    results[article].append({'price': price, 'table': table})
-
-            conn.close()
-
-            # Порівняння цін
-            better_in_first, better_in_second, same_prices = [], [], []
-            for article, prices in results.items():
-                min_price = min(prices, key=lambda x: x['price'])
-                if len([p for p in prices if p['price'] == min_price['price']]) > 1:
-                    same_prices.append({
-                        'article': article,
-                        'price': min_price['price'],
-                        'tables': ', '.join(p['table'] for p in prices if p['price'] == min_price['price'])
-                    })
-                elif min_price['table'] == selected_prices[0]:
-                    better_in_first.append({'article': article, **min_price})
-                elif min_price['table'] == selected_prices[1]:
-                    better_in_second.append({'article': article, **min_price})
-
-            # Зберігаємо результати у сесії
-            session['comparison_results'] = {
-                'better_in_first': better_in_first,
-                'better_in_second': better_in_second,
-                'same_prices': same_prices
-            }
-
-            logging.info("Comparison completed successfully.")
-            return render_template(
-                'user/search/compare_prices_results.html',
-                better_in_first=better_in_first,
-                better_in_second=better_in_second,
-                same_prices=same_prices
-            )
-
-        except Exception as e:
-            logging.error(f"Error during POST request: {str(e)}", exc_info=True)
-            flash("An error occurred during comparison.", "error")
-            return redirect(request.referrer or url_for('compare_prices'))
-
-# Маршрут для відображення форми (new_supplier_order):
-@app.route('/<token>/admin/supplier-orders/new', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def new_supplier_order(token):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    cur.execute("SELECT id, name FROM suppliers ORDER BY name")
-    suppliers = cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    return render_template('admin/supplier_orders_create.html',
-                           token=token,
-                           suppliers=suppliers)
-
-
-@app.route('/<token>/api/price-lists/<supplier_id>')
-@requires_token_and_roles('admin')
-@add_noindex_header
-def get_supplier_price_lists(token, supplier_id):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    cur.execute("""
-        SELECT id, table_name 
-        FROM price_lists 
-        WHERE supplier_id = %s
-    """, (supplier_id,))
-
-    price_lists = cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    return jsonify({'price_lists': price_lists})
-
-# сторінка перегляду замовлень постачальників
-@app.route('/<token>/admin/supplier-orders', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def list_supplier_orders(token):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    # Отримуємо всі замовлення з деталями
-    cur.execute("""
-        SELECT 
-            so.id,
-            so.order_number,
-            so.created_at,
-            so.status,
-            s.name as supplier_name,
-            COUNT(sod.id) as items_count,
-            SUM(sod.quantity) as total_quantity
-        FROM supplier_orders so
-        JOIN suppliers s ON so.supplier_id = s.id
-        LEFT JOIN supplier_order_details sod ON so.id = sod.supplier_order_id
-        GROUP BY so.id, s.name
-        ORDER BY so.created_at DESC
-    """)
-
-    orders = cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    return render_template('admin/supplier_orders_list.html',
-                           token=token,
-                           orders=orders)
-
-# маршрут для перегляду деталей замовлення постачальнику
-@app.route('/<token>/admin/supplier-orders/<order_id>', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def view_supplier_order(token, order_id):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    # Отримуємо основну інформацію про замовлення
-    cur.execute("""
-        SELECT 
-            so.*,
-            s.name as supplier_name
-        FROM supplier_orders so
-        JOIN suppliers s ON so.supplier_id = s.id
-        WHERE so.id = %s
-    """, (order_id,))
-
-    order = cur.fetchone()
-
-    # Отримуємо деталі замовлення
-    cur.execute("""
-        SELECT *
-        FROM supplier_order_details
-        WHERE supplier_order_id = %s
-        ORDER BY created_at
-    """, (order_id,))
-
-    details = cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    return render_template('admin/supplier_order_details.html',
-                           token=token,
-                           order=order,
-                           details=details)
-
-# Функція експорту в Excel замовлень постачальнику
-@app.route('/<token>/admin/supplier-orders/<int:order_id>/export')
-def export_supplier_order(token, order_id):
-    """Export supplier order details to Excel file"""
-    logging.info(f"Starting export for supplier order {order_id}")
-
-    if validate_token(token):
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-
-            # Get order info
-            cur.execute("""
-                SELECT 
-                    so.id,
-                    so.created_at,
-                    so.status,
-                    so.order_number,
-                    s.name as supplier_name
-                FROM supplier_orders so
-                JOIN suppliers s ON so.supplier_id = s.id
-                WHERE so.id = %s
-            """, [order_id])
-            order = cur.fetchone()
-
-            if order:
-                # Get order details
-                cur.execute("""
-                    SELECT article, quantity, tracking_code, created_at
-                    FROM supplier_order_details
-                    WHERE supplier_order_id = %s
-                """, [order_id])
-                items = cur.fetchall()
-
-                # Create Excel workbook
-                workbook = Workbook()
-                sheet = workbook.active
-
-                # Add headers
-                sheet['A1'] = f'Supplier Order #{order["order_number"]}'
-                sheet['A2'] = f'Supplier: {order["supplier_name"]}'
-                sheet['A3'] = f'Status: {order["status"]}'
-                sheet['A4'] = f'Created: {order["created_at"]}'
-
-                # Add column headers
-                sheet['A6'] = 'Article'
-                sheet['B6'] = 'Quantity'
-                sheet['C6'] = 'Tracking Code' 
-                sheet['D6'] = 'Created At'
-
-                # Add order items
-                row = 7
-                for item in items:
-                    sheet[f'A{row}'] = item['article']
-                    sheet[f'B{row}'] = item['quantity']
-                    sheet[f'C{row}'] = item['tracking_code']
-                    sheet[f'D{row}'] = item['created_at']
-                    row += 1
-
-                # Save to BytesIO buffer
-                output = BytesIO()
-                workbook.save(output)
-                output.seek(0)
-
-                # Return Excel file
-                filename = f'supplier_order_{order["order_number"]}.xlsx'
-                return send_file(
-                    output,
-                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    as_attachment=True,
-                    download_name=filename
-                )
-
-        except Exception as e:
-            logging.error(f"Export failed: {str(e)}")
-            flash("Export failed. Please try again.", "error")
-
-        finally:
-            cur.close()
-            conn.close()
-
-    return redirect(url_for('list_supplier_orders', token=token))
-
-
-@app.route('/<token>/upload_file', methods=['POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def upload_file(token):
-    try:
-        logging.debug(f"Upload File Called with token: {token}")
-        # Очищення сесійних даних
-        session['missing_articles'] = []
-        session['items_without_table'] = []
-        merged_articles = {}  # Словник для відстеження об'єднаних артикулів
-
-        user_id = session.get('user_id')
-        if not user_id:
-            logging.error("User not authenticated.")
-            flash("User not authenticated.", "error")
-            return redirect(f'/{token}/')
-
-        logging.info(f"User ID: {user_id} started file upload.")
-
-        # Перевірка наявності файлу
-        if 'file' not in request.files:
-            logging.error("No file uploaded.")
-            flash("No file uploaded.", "error")
-            return redirect(f'/{token}/')
-
-        file = request.files['file']
-        logging.info(f"Uploaded file: {file.filename}")
-
-        # Перевірка формату файлу
-        if not file.filename.endswith('.xlsx'):
-            logging.error("Invalid file format. Only .xlsx files are allowed.")
-            flash("Invalid file format. Please upload an Excel file.", "error")
-            return redirect(f'/{token}/')
-
-        # Зчитування файлу
-        try:
-            df = pd.read_excel(file, header=None)
-            logging.info(f"File read successfully. Shape: {df.shape}")
-        except Exception as e:
-            logging.error(f"Error reading Excel file: {e}", exc_info=True)
-            flash("Error reading the file. Please check the format.", "error")
-            return redirect(f'/{token}/')
-
-        if df.shape[1] < 2:
-            logging.error("Invalid file structure. Less than two columns found.")
-            flash("Invalid file structure. Ensure the file has at least two columns.", "error")
-            return redirect(f'/{token}/')
-
-        # Заповнення відсутніх колонок
-        for col in range(2, 4):
-            if col >= df.shape[1]:
-                df[col] = None
-
-        logging.debug(f"Dataframe after preprocessing: {df.head()}")
-
-        items_with_table = []
-        items_without_table = []
-        missing_articles = set()
-
-        # Обробка даних з файлу
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("""
-                SELECT pl.table_name, pl.brand_id, b.name as brand_name 
-                FROM price_lists pl 
-                JOIN brands b ON pl.brand_id = b.id
-            """)
-            all_tables = [(row[0], row[1], row[2]) for row in cursor.fetchall()]
-            logging.info(f"Fetched tables from price_lists with brands: {all_tables}")
-
-            for index, row in df.iterrows():
-                try:
-                    article = str(row[0]).strip() if pd.notna(row[0]) else None
-                    quantity = int(row[1]) if pd.notna(row[1]) and str(row[1]).isdigit() else None
-                    table_name = str(row[2]).strip() if pd.notna(row[2]) else None
-                    comment = str(row[3]).strip() if pd.notna(row[3]) else None
-
-                    if not article or not quantity:
-                        logging.warning(f"Skipped invalid row at index {index}: {row.tolist()}")
-                        continue
-
-                    logging.debug(
-                        f"Processing article: {article}, quantity: {quantity}, table: {table_name}, comment: {comment}")
-
-                    if table_name:
-                        table_info = next((t for t in all_tables if t[0] == table_name), None)
-                        if not table_info:
-                            logging.warning(f"Invalid table name '{table_name}' for article {article}.")
-                            missing_articles.add(article)
-                            continue
-                        table_name, brand_id, brand_name = table_info
-
-                        cursor.execute(f"SELECT price FROM {table_name} WHERE article = %s", (article,))
-                        result = cursor.fetchone()
-
-                        if result:
-                            price = result[0]
-                            items_with_table.append((article, price, table_name, quantity, comment, brand_id))
-                            logging.info(f"Article {article} found in {table_name} with price {price}.")
-                        else:
-                            missing_articles.add(article)
-                            logging.warning(f"Article {article} not found in {table_name}. Skipping.")
-                    else:
-                        matching_tables = []
-                        for table, brand_id, brand_name in all_tables:
-                            cursor.execute(f"SELECT price FROM {table} WHERE article = %s", (article,))
-                            if cursor.fetchone():
-                                matching_tables.append((table, brand_id, brand_name))
-
-                        if matching_tables:
-                            if len(matching_tables) == 1:
-                                table, brand_id, brand_name = matching_tables[0]
-                                cursor.execute(f"SELECT price FROM {table} WHERE article = %s", (article,))
-                                price = cursor.fetchone()[0]
-                                items_with_table.append((article, price, table, quantity, comment, brand_id))
-                                logging.info(
-                                    f"Article {article} automatically added from single table {table}")
-                            else:
-                                logging.info(f"Article {article} found in multiple tables: {matching_tables}")
-                                items_without_table.append((article, quantity, matching_tables, comment))
-                        else:
-                            missing_articles.add(article)
-                            logging.warning(f"Article {article} not found in any table.")
-                except Exception as e:
-                    logging.error(f"Error processing row at index {index}: {row.tolist()} - {e}", exc_info=True)
-                    continue
-
-            logging.debug(f"Items with table: {items_with_table}")
-            logging.debug(f"Items without table: {items_without_table}")
-            logging.debug(f"Missing articles: {missing_articles}")
-
-            # Додавання товарів з визначеними таблицями до кошика
-            if items_with_table:
-                for article, base_price, table_name, quantity, comment, brand_id in items_with_table:
-                    # Перевіряємо наявність в корзині перед додаванням
-                    cursor.execute("""
-                        SELECT quantity FROM cart 
-                        WHERE user_id = %s AND article = %s AND table_name = %s
-                    """, (user_id, article, table_name))
-                    old_quantity = cursor.fetchone()
-
-                    if old_quantity:
-                        old_qty = old_quantity[0]
-                        new_qty = old_qty + quantity
-                        merged_articles[article] = [old_qty, new_qty]
-
-                    role = session.get('role')
-                    markup_percentage = get_markup_by_role(role)
-                    final_price = calculate_price(base_price, markup_percentage)
-
-                    cursor.execute("""
-                        INSERT INTO cart (user_id, article, table_name, quantity, base_price, final_price, comment, brand_id, added_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                        ON CONFLICT (user_id, article, table_name) 
-                        DO UPDATE SET 
-                            quantity = cart.quantity + EXCLUDED.quantity,
-                            final_price = EXCLUDED.final_price,
-                            comment = EXCLUDED.comment,
-                            brand_id = EXCLUDED.brand_id
-                    """, (user_id, article, table_name, quantity, base_price, final_price, comment, brand_id))
-                    logging.info(f"Article {article} added/updated in cart")
-
-            conn.commit()
-
-            # Збереження даних в сесії та обробка результатів
-            session['items_without_table'] = items_without_table
-            session['missing_articles'] = list(missing_articles)
-
-            # Додаємо повідомлення про об'єднані артикули
-            if merged_articles:
-                merge_msg = "Merged articles: " + ", ".join(
-                    f"{art} ({old} + {new-old} = {new})"
-                    for art, (old, new) in merged_articles.items()
-                )
-                flash(merge_msg, "info")
-
-            if items_without_table:
-                flash(f"{len(items_without_table)} articles need table selection.", "warning")
-                return redirect(url_for('intermediate_results', token=token))
-
-            if missing_articles:
-                flash(f"The following articles were not found: {', '.join(missing_articles)}", "warning")
-
-            flash(f"File processed successfully. {len(items_with_table)} items added to cart.", "success")
-            return redirect(url_for('cart', token=token))
-
-    except Exception as e:
-        logging.error(f"Error in upload_file: {e}", exc_info=True)
-        flash("An error occurred during file upload. Please try again.", "error")
-        return redirect(f'/{token}/')
-
-
-
-@app.route('/<token>/intermediate_results', methods=['GET', 'POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def intermediate_results(token):
-    """
-    Обробляє статті без таблиці, надає можливість вибрати таблиці із підтримкою brand_id,
-    а потім додає вибрані статті до кошика.
-    """
-    logging.debug(f"Intermediate Results Called with token: {token}")
-    try:
-        # Отримання ідентифікатора користувача
-        user_id = session.get('user_id')
-        if not user_id:
-            logging.error("Користувач не автентифікований.")
-            flash(_("User not authenticated"), "error")
-            return redirect(f'/{token}/')
-
-        # Отримання націнки користувача
-        user_markup = get_markup_percentage(user_id)
-        logging.debug(f"Markup percentage for user_id={user_id}: {user_markup}%")
-
-        if request.method == 'POST':
-            logging.info("Обробка вибору таблиці для статей користувача.")
-            # Отримання виборів користувача з форми
-            # Очікується формат: "final_price|table_name|brand_id"
-            user_selections = {}
-            for key, value in request.form.items():
-                if key.startswith('table_'):
-                    article = key.split('_', 1)[1]
-                    parts = value.split('|')
-                    if len(parts) == 3:
-                        try:
-                            final_price = Decimal(parts[0])
-                        except Exception:
-                            final_price = Decimal('0')
-                        table_name = parts[1]
-                        brand_id = parts[2]
-                        user_selections[article] = {
-                            'final_price': final_price,
-                            'table_name': table_name,
-                            'brand_id': brand_id
-                        }
-            logging.debug(f"Вибір користувача: {user_selections}")
-
-            items_without_table = session.get('items_without_table', [])
-            missing_articles = session.get('missing_articles', [])
-            added_to_cart = []
-
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                for item in items_without_table:
-                    # Припускаємо, що item – кортеж з елементів: (article, quantity, available_tables, comment)
-                    article = item[0]
-                    if article in user_selections:
-                        selection = user_selections[article]
-                        final_price = selection['final_price']
-                        table_name = selection['table_name']
-                        brand_id = selection['brand_id']
-                        quantity = item[1]
-                        comment = item[3] if len(item) > 3 else None
-                        # Вставка або оновлення статті в кошик з урахуванням brand_id
-                        cursor.execute("""
-                            INSERT INTO cart (user_id, article, table_name, quantity, base_price, final_price, comment, brand_id, added_at)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                            ON CONFLICT (user_id, article, table_name)
-                            DO UPDATE SET 
-                                quantity = cart.quantity + EXCLUDED.quantity,
-                                final_price = EXCLUDED.final_price,
-                                comment = EXCLUDED.comment,
-                                brand_id = EXCLUDED.brand_id
-                        """, (user_id, article, table_name, quantity, 0, final_price, comment, brand_id))
-                        added_to_cart.append(article)
-                        logging.info(f"Додано статтю {article} до кошика з таблицею {table_name} і brand_id {brand_id}.")
-                conn.commit()
-
-            # Оновлення сесії: видалення оброблених статей
-            session['items_without_table'] = [item for item in items_without_table if item[0] not in added_to_cart]
-            session['missing_articles'] = list(set(missing_articles))
-            logging.debug(f"Оновлено сесію. Відсутні статті: {session['missing_articles']}")
-
-            if session['items_without_table']:
-                flash(_("Some articles still need table selection."), "warning")
-            else:
-                flash(_("All selected articles have been added to your cart."), "success")
-            return redirect(url_for('cart', token=token))
-
-        else:
-            # GET: Відображення проміжних результатів
-            items_without_table = session.get('items_without_table', [])
-            missing_articles = session.get('missing_articles', [])
-            logging.debug(f"Відображення проміжних результатів: items_without_table={len(items_without_table)}, missing_articles={len(missing_articles)}")
-
-            enriched_items = []
-            with get_db_connection() as conn:
-                cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-                # Формування доповнених даних для відображення вибору таблиці з підтримкою brand_id
-                for article, quantity, valid_tables, comment in items_without_table:
-                    item_prices = []
-                    for table, brand_id, brand_name in valid_tables:
-                        cursor.execute(
-                            f"SELECT price FROM {table} WHERE article = %s",
-                            (article,)
-                        )
-                        result = cursor.fetchone()
-                        if result:
-                            final_price = round(Decimal(result[0]) * (1 + user_markup / 100), 2)
-
-                            item_prices.append({
-                                'table': table,
-                                'final_price': final_price,
-                                'brand_id': brand_id,
-                                'brand_name': brand_name  # Додаємо назву бренду
-                            })
-                    enriched_items.append({
-                        'article': article,
-                        'quantity': quantity,
-                        'prices': item_prices,
-                        'comment': comment
-                    })
-                cursor.close()
-            return render_template(
-                'user/search/intermediate.html',
-                token=token,
-                items_without_table=enriched_items,
-                missing_articles=missing_articles
-            )
-
-    except Exception as e:
-        logging.error(f"Помилка в intermediate_results: {e}", exc_info=True)
-        flash(_("An error occurred while processing your selection. Please try again."), "error")
-        return redirect(f'/{token}/')
-
-# Кнопка підтвердження співпадінь аналізу інвойсу
-@app.route('/<token>/admin/accept-matches/<int:invoice_id>', methods=['POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def accept_matches(token, invoice_id):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            # 1. Оновлення повних співпадінь
-            cursor.execute("""
-                UPDATE order_details od
-                SET status = 'invoice_received'
-                FROM supplier_order_details sod
-                JOIN invoice_details id ON sod.tracking_code = id.tracking_code
-                WHERE sod.order_details_id = od.id
-                AND id.invoice_id = %s
-                AND od.status = 'ordered_supplier'
-                AND id.quantity = od.quantity
-            """, (invoice_id,))
-
-            # 2. Обробка часткових співпадінь без створення нових замовлень
-            cursor.execute("""
-                WITH partial_matches AS (
-                    SELECT 
-                        od.id as order_detail_id,
-                        od.order_id,
-                        od.article,
-                        od.quantity as order_quantity,
-                        id.quantity as invoice_quantity,
-                        od.base_price,
-                        od.price,
-                        od.comment,
-                        od.table_name
-                    FROM order_details od
-                    JOIN supplier_order_details sod ON sod.order_details_id = od.id
-                    JOIN invoice_details id ON sod.tracking_code = id.tracking_code
-                    WHERE id.invoice_id = %s
-                    AND od.status = 'ordered_supplier'
-                    AND id.quantity < od.quantity
-                )
-                UPDATE order_details od
-                SET 
-                    quantity = pm.invoice_quantity,
-                    status = 'invoice_received',
-                    total_price = pm.price * pm.invoice_quantity
-                FROM partial_matches pm
-                WHERE od.id = pm.order_detail_id
-            """, (invoice_id,))
-            
-            # 3. Оновлення статусу деталей інвойсу на 'processed'
-            cursor.execute("""
-                UPDATE invoice_details
-                SET status = 'processed'
-                WHERE invoice_id = %s
-            """, (invoice_id,))
-            
-            # 4. Оновлення статусу інвойсу на 'accepted'
-            cursor.execute("""
-                UPDATE supplier_invoices
-                SET status = 'accepted'
-                WHERE id = %s
-            """, (invoice_id,))
-            
-            conn.commit()
-            flash("Matches accepted successfully", "success")
-            
-    except Exception as e:
-        logging.error(f"Error accepting matches: {e}")
-        flash("Error processing matches", "error")
-        
-    return redirect(url_for('list_invoices', token=token))
 
 
 def get_markup_percentage(user_id):
@@ -9812,111 +7203,6 @@ def get_markup_percentage(user_id):
             cursor.close()
         if 'conn' in locals():
             conn.close()
-
-
-@app.route('/<token>/admin/utilities')
-@requires_token_and_roles('admin')
-@add_noindex_header
-def utilities(token):
-    return render_template('admin/utilities.html', token=token)
-
-
-@app.route('/<token>/admin/news', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def admin_news(token):
-    """
-    Відображення списку всіх новин в адмін-панелі
-    """
-    logging.info(f"Доступ до адмін-новин з токеном: {token}")
-
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    try:
-        # Оновлений запит з вибіркою всіх мовних версій
-        cursor.execute("""
-            SELECT 
-                id, 
-                COALESCE(title_uk, title) as title_uk,
-                COALESCE(title_en, title) as title_en,
-                COALESCE(title_sk, title) as title_sk,
-                created_at, 
-                updated_at, 
-                is_published
-            FROM news
-            ORDER BY created_at DESC
-        """)
-        news_list = cursor.fetchall()
-        logging.info(f"Отримано {len(news_list)} новин")
-
-        return render_template('admin/news/admin_news.html', news_list=news_list, token=token)
-
-    except Exception as e:
-        logging.error(f"Помилка отримання новин: {e}")
-        flash("Помилка завантаження новин", "error")
-        return redirect(url_for('admin_dashboard', token=token))
-
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@app.route('/<token>/admin/news/create', methods=['GET', 'POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def create_news(token):
-    if request.method == 'POST':
-        try:
-            title_uk = request.form['title_uk']
-            content_uk = request.form['content_uk']
-            html_content_uk = request.form['html_content_uk']
-
-            title_en = request.form['title_en']
-            content_en = request.form['content_en']
-            html_content_en = request.form['html_content_en']
-
-            title_sk = request.form['title_sk']
-            content_sk = request.form['content_sk']
-            html_content_sk = request.form['html_content_sk']
-
-            is_published = bool(request.form.get('is_published'))
-
-            conn = get_db_connection()
-            cursor = conn.cursor()
-
-            cursor.execute("""
-                INSERT INTO news (
-                    title_uk, content_uk, html_content_uk,
-                    title_en, content_en, html_content_en,
-                    title_sk, content_sk, html_content_sk,
-                    is_published
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING id
-            """, (
-                title_uk, content_uk, html_content_uk,
-                title_en, content_en, html_content_en,
-                title_sk, content_sk, html_content_sk,
-                is_published
-            ))
-
-            news_id = cursor.fetchone()[0]
-            conn.commit()
-
-            flash(_("News created successfully!"), "success")
-            return redirect(url_for('admin_news', token=token))
-
-        except Exception as e:
-            logging.error(f"Error creating news: {e}")
-            flash(_("Error creating news"), "error")
-            return redirect(url_for('create_news', token=token))
-        finally:
-            if 'conn' in locals():
-                cursor.close()
-                conn.close()
-
-    return render_template('admin/news/create_news.html', token=token)
 
 
 
@@ -9975,782 +7261,6 @@ def accept_all_items(token, order_id):
     return redirect(url_for('admin_order_details', token=token, order_id=order_id))
 
 
-# Маршрут для відображення форми вибору користувача для створення відвантаження
-@app.route('/<token>/admin/shipments/create', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def create_shipment_select_user(token):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            # Отримуємо список всіх користувачів
-            cursor.execute("""
-                SELECT id, username FROM users
-            """)
-            users = cursor.fetchall()
-
-            return render_template(
-                'admin/shipments/select_user.html',
-                token=token,
-                users=users
-            )
-
-    except Exception as e:
-        logging.error(f"Error fetching users for shipment creation: {e}", exc_info=True)
-        flash("Error loading users for shipment creation", "error")
-        return redirect(url_for('admin_dashboard', token=token))
-
-
-# Маршрут для відображення форми створення відвантаження
-@app.route('/<token>/admin/shipments/create/<int:user_id>', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def create_shipment_form(token, user_id):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            # Отримуємо інформацію про замовлення та деталі замовлення для вибраного користувача
-            cursor.execute("""
-                SELECT * FROM orders WHERE user_id = %s
-            """, (user_id,))
-            orders = cursor.fetchall()
-
-            available_items = []
-            for order in orders:
-                cursor.execute("""
-                    SELECT 
-                        od.id,
-                        od.article,
-                        od.quantity,
-                        od.price,
-                        od.total_price,
-                        od.order_id
-                    FROM order_details od
-                    WHERE od.order_id = %s AND od.shipment_id IS NULL AND od.status = 'invoice_received'
-                """, (order['id'],))
-                order_details = cursor.fetchall()
-                available_items.extend(order_details)
-
-            return render_template(
-                'admin/shipments/create_shipment.html',
-                token=token,
-                user_id=user_id,
-                available_items=available_items,
-                orders=orders  # Передаємо список замовлень у шаблон
-            )
-
-    except Exception as e:
-        logging.error(f"Error fetching data for shipment creation: {e}", exc_info=True)
-        flash("Error loading data for shipment creation", "error")
-        return redirect(url_for('admin_dashboard', token=token))
-
-
-# Маршрут для відображення списку відвантажень для користувачів
-@app.route('/<token>/shipments', methods=['GET'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def user_shipments(token):
-    try:
-        user_id = session.get('user_id')
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            cursor.execute("""
-                SELECT 
-                    s.id,
-                    s.shipment_date,
-                    s.status,
-                    s.tracking_number,
-                    o.id as order_id,
-                    COUNT(od.id) as items_count,
-                    SUM(od.total_price) as total_price
-                FROM shipments s
-                JOIN orders o ON s.order_id = o.id
-                LEFT JOIN order_details od ON od.shipment_id = s.id
-                WHERE o.user_id = %s
-                GROUP BY s.id, s.shipment_date, s.status, s.tracking_number, o.id
-                ORDER BY s.shipment_date DESC
-            """, (user_id,))
-            
-            shipments = cursor.fetchall()
-
-            return render_template(
-                'user/shipments/list_shipments.html',
-                token=token,
-                shipments=shipments
-            )
-
-    except Exception as e:
-        logging.error(f"Error fetching user shipments: {e}", exc_info=True)
-        flash("Error loading shipments", "error")
-        return redirect(url_for('token_index', token=token))
-
-
-# Маршрут для перегляду деталей відправлення користувачем
-@app.route('/<token>/shipments/<int:shipment_id>', methods=['GET'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def view_user_shipment(token, shipment_id):
-    try:
-        user_id = session.get('user_id')
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            # Отримуємо інформацію про відправлення
-            cursor.execute("""
-                SELECT 
-                    s.*,
-                    o.id as order_id
-                FROM shipments s
-                JOIN orders o ON s.order_id = o.id
-                WHERE s.id = %s AND o.user_id = %s
-            """, (shipment_id, user_id))
-            
-            shipment = cursor.fetchone()
-            if not shipment:
-                flash("Shipment not found", "error")
-                return redirect(url_for('user_shipments', token=token))
-
-            # Отримуємо деталі відправлення
-            cursor.execute("""
-                SELECT 
-                    od.article,
-                    od.quantity,
-                    od.price,
-                    od.total_price,
-                    od.comment
-                FROM order_details od
-                WHERE od.shipment_id = %s
-            """, (shipment_id,))
-            
-            details = cursor.fetchall()
-
-            return render_template(
-                'user/shipments/view_shipment.html',
-                token=token,
-                shipment=shipment,
-                details=details
-            )
-
-    except Exception as e:
-        logging.error(f"Error fetching shipment details: {e}", exc_info=True)
-        flash("Error loading shipment details", "error")
-        return redirect(url_for('user_shipments', token=token))
-
-
-# Маршрут для обробки створення відвантаження
-@app.route('/<token>/admin/shipments/create', methods=['POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def create_shipment(token):
-    try:
-        user_id = request.form.get('user_id')
-        order_id = request.form.get('order_id')
-        tracking_number = request.form.get('tracking_number')
-        selected_details = request.form.getlist('selected_details')
-
-        if not selected_details:
-            flash("Please select items for shipment", "error")
-            return redirect(url_for('create_shipment_form', token=token, user_id=user_id))
-
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-
-            # Створюємо запис про відвантаження
-            cursor.execute("""
-                INSERT INTO shipments (order_id, shipment_date, status, tracking_number)
-                VALUES (%s, CURRENT_DATE, 'created', %s)
-                RETURNING id
-            """, (order_id, tracking_number))
-            shipment_id = cursor.fetchone()[0]
-
-            # Оновлюємо shipment_id для вибраних деталей замовлення
-            for detail_id in selected_details:
-                cursor.execute("""
-                    UPDATE order_details 
-                    SET shipment_id = %s 
-                    WHERE id = %s AND status = 'invoice_received'
-                """, (shipment_id, detail_id))
-
-            conn.commit()
-            flash("Shipment created successfully", "success")
-
-    except Exception as e:
-        logging.error(f"Error creating shipment: {e}", exc_info=True)
-        flash("Error creating shipment", "error")
-
-    return redirect(url_for('list_shipments', token=token))
-
-# Маршрут для перегляду деталей відвантаження
-@app.route('/<token>/admin/shipments/<int:shipment_id>', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def view_shipment(token, shipment_id):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            # Отримуємо інформацію про відвантаження
-            cursor.execute("""
-                SELECT 
-                    s.*,
-                    o.id as order_id,
-                    u.username as user_name,
-                    u.email as user_email
-                FROM shipments s
-                JOIN orders o ON s.order_id = o.id
-                JOIN users u ON o.user_id = u.id
-                WHERE s.id = %s
-            """, (shipment_id,))
-            
-            shipment = cursor.fetchone()
-            if not shipment:
-                flash("Shipment not found", "error")
-                return redirect(url_for('list_shipments', token=token))
-
-            # Отримуємо деталі відвантаження
-            cursor.execute("""
-                SELECT 
-                    od.id,
-                    od.article,
-                    od.quantity,
-                    od.price,
-                    od.total_price,
-                    od.comment
-                FROM order_details od
-                WHERE od.shipment_id = %s
-            """, (shipment_id,))
-            
-            details = cursor.fetchall()
-
-            return render_template(
-                'admin/shipments/view_shipment.html',
-                token=token,
-                shipment=shipment,
-                details=details
-            )
-
-    except Exception as e:
-        logging.error(f"Error fetching shipment details: {e}", exc_info=True)
-        flash("Error loading shipment details", "error")
-        return redirect(url_for('list_shipments', token=token))
-
-# Маршрут для відображення списку відвантажень
-@app.route('/<token>/admin/shipments', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def list_shipments(token):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            # Отримуємо список всіх відвантажень
-            cursor.execute("""
-                SELECT 
-                    s.id,
-                    s.shipment_date,
-                    s.status,
-                    s.tracking_number,
-                    o.id as order_id,
-                    u.username as user_name
-                FROM shipments s
-                JOIN orders o ON s.order_id = o.id
-                JOIN users u ON o.user_id = u.id
-                ORDER BY s.shipment_date DESC
-            """)
-            shipments = cursor.fetchall()
-
-            return render_template(
-                'admin/shipments/list_shipments.html',
-                token=token,
-                shipments=shipments
-            )
-
-    except Exception as e:
-        logging.error(f"Error fetching shipments: {e}", exc_info=True)
-        flash("Error loading shipments", "error")
-        return redirect(url_for('admin_dashboard', token=token))
-
-
-
-
-@app.route('/<token>/admin/export-orders', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def export_orders(token):
-    try:
-        wb = Workbook()
-
-        # Create sheets for each supplier
-        mercedes_sheet = wb.active
-        mercedes_sheet.title = "Mercedes"
-        bmw_sheet = wb.create_sheet("BMW")
-        vag_sheet = wb.create_sheet("VAG")
-
-        # Set headers for each sheet
-        headers = ['Article', 'Total Quantity', 'Price List']
-        for sheet in [mercedes_sheet, bmw_sheet, vag_sheet]:
-            sheet.append(headers)
-
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            query = """
-                SELECT 
-                    od.article,
-                    SUM(od.quantity) as total_quantity,
-                    od.table_name,
-                    CASE 
-                        WHEN od.table_name LIKE '%mercedes%' THEN 'Mercedes'
-                        WHEN od.table_name LIKE '%bmw%' THEN 'BMW'
-                        WHEN od.table_name LIKE '%vag%' THEN 'VAG'
-                        ELSE 'Unknown'
-                    END as supplier
-                FROM order_details od
-                GROUP BY od.article, od.table_name
-                ORDER BY od.article;
-            """
-
-            cursor.execute(query)
-            results = cursor.fetchall()
-
-            for row in results:
-                data = [row['article'], row['total_quantity'], row['table_name']]
-                if 'mercedes' in row['table_name'].lower():
-                    mercedes_sheet.append(data)
-                elif 'bmw' in row['table_name'].lower():
-                    bmw_sheet.append(data)
-                elif 'vag' in row['table_name'].lower():
-                    vag_sheet.append(data)
-
-        output = io.BytesIO()
-        wb.save(output)
-        output.seek(0)
-
-        return send_file(
-            output,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name='supplier_orders.xlsx'
-        )
-
-    except Exception as e:
-        logging.error(f"Error exporting orders: {e}")
-        flash("Error exporting orders", "error")
-        return redirect(url_for('admin_dashboard', token=token))
-
-
-@app.route('/api/update-supplier-statuses', methods=['POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def update_supplier_statuses():
-    try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file uploaded'}), 400
-
-        file = request.files['file']
-        df = pd.read_excel(file)
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        for _, row in df.iterrows():
-            cursor.execute("""
-                UPDATE order_details 
-                SET status = %s 
-                WHERE article = %s AND order_id = %s
-            """, (row['status'], row['article'], row['order_id']))
-
-        conn.commit()
-        return jsonify({'success': True})
-
-    except Exception as e:
-        logging.error(f"Error updating statuses: {e}", exc_info=True)
-        return jsonify({'error': str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@app.route('/api/process-supplier-invoice', methods=['POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def process_supplier_invoice():
-    try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file uploaded'}), 400
-
-        file = request.files['file']
-        df = pd.read_excel(file)
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Створюємо новий інвойс
-        cursor.execute("""
-            INSERT INTO supplier_invoices (invoice_number, supplier_id, status)
-            VALUES (%s, %s, 'received')
-            RETURNING id
-        """, (df['invoice_number'].iloc[0], df['supplier_id'].iloc[0]))
-
-        invoice_id = cursor.fetchone()[0]
-
-        # Додаємо зв'язки замовлень з інвойсом
-        for _, row in df.iterrows():
-            cursor.execute("""
-                INSERT INTO order_invoice_links 
-                (order_id, invoice_id, article, quantity, status)
-                VALUES (%s, %s, %s, %s, 'in_transit')
-            """, (row['order_id'], invoice_id, row['article'], row['quantity']))
-
-            # Оновлюємо статус замовлення
-            cursor.execute("""
-                UPDATE order_details 
-                SET status = 'in_transit' 
-                WHERE article = %s AND order_id = %s
-            """, (row['article'], row['order_id']))
-
-        conn.commit()
-        return jsonify({'success': True})
-
-    except Exception as e:
-        logging.error(f"Error processing invoice: {e}", exc_info=True)
-        return jsonify({'error': str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-# endpoint accept-match для підтвердження в інвойсах постачальника
-@app.route('/<token>/api/accept-match', methods=['POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def accept_match():
-    try:
-        data = request.json
-        invoice_detail_id = data.get('invoice_detail_id')
-        order_detail_id = data.get('order_detail_id')
-        
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                UPDATE order_details 
-                SET status = 'invoice_received'
-                WHERE id = %s
-            """, (order_detail_id,))
-            
-            conn.commit()
-            
-        return jsonify({'success': True})
-    except Exception as e:
-        logging.error(f"Error accepting match: {e}")
-        return jsonify({'error': str(e)}), 500
-
-
-# експорт результату аналізу інвойса
-@app.route('/<token>/admin/invoice/<int:invoice_id>/export', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def export_invoice_analysis(token, invoice_id):
-    try:
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Invoice Analysis"
-        
-        # Headers
-        headers = ['Article', 'Invoice Qty', 'Order Qty', 'Tracking Code', 'Status', 'Details']
-        ws.append(headers)
-        
-        # Add matched items
-        for item in matching_items:
-            ws.append([
-                item['invoice_item']['article'],
-                item['invoice_item']['quantity'],
-                item['order_item']['order_quantity'],
-                item['invoice_item']['tracking_code'],
-                item['match_type'],
-                f"Received: {item.get('received_qty', '')} Remaining: {item.get('remaining_qty', '')}"
-            ])
-            
-        # Format and return Excel file
-        output = BytesIO()
-        wb.save(output)
-        output.seek(0)
-        
-        return send_file(
-            output,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name=f'invoice_analysis_{invoice_id}.xlsx'
-        )
-        
-    except Exception as e:
-        logging.error(f"Error exporting invoice analysis: {e}")
-        flash("Error exporting analysis", "error")
-        return redirect(url_for('analyze_invoice', token=token, invoice_id=invoice_id))
-
-
-@app.route('/<token>/news')
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def user_news(token):
-    """
-    Відображення списку новин для користувачів з підтримкою багатомовності
-    """
-    logging.info(f"Accessing user news with token: {token}")
-    user_id = session.get('user_id')
-    current_lang = session.get('language', 'uk')
-
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    try:
-        cursor.execute(f"""
-            SELECT 
-                n.id,
-                n.title_{current_lang} as title,
-                n.content_{current_lang} as content,
-                n.html_content_{current_lang} as html_content,
-                n.created_at,
-                CASE WHEN nr.id IS NOT NULL THEN true ELSE false END as is_read
-            FROM news n
-            LEFT JOIN news_reads nr ON nr.news_id = n.id AND nr.user_id = %s
-            WHERE n.is_published = true
-            ORDER BY n.created_at DESC
-        """, (user_id,))
-
-        news_list = cursor.fetchall()
-        logging.info(f"Fetched {len(news_list)} news items for user {user_id} in language {current_lang}")
-
-        return render_template('user/news/user_news.html',
-                               news_list=news_list,
-                               token=token,
-                               current_lang=current_lang)
-
-    except Exception as e:
-        logging.error(f"Error fetching news for user: {e}")
-        flash(_("Error loading news"), "error")
-        return redirect(url_for('index', token=token))
-
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@app.route('/<token>/news/<int:news_id>')
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def get_news_details(token, news_id):
-    """
-    Отримання детальної інформації про новину
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    try:
-        cursor.execute("""
-            SELECT title, html_content, created_at
-            FROM news
-            WHERE id = %s AND is_published = true
-        """, (news_id,))
-
-        news = cursor.fetchone()
-        if news:
-            return jsonify({
-                'title': news['title'],
-                'html_content': news['html_content'],
-                'created_at': news['created_at'].strftime('%d.%m.%Y %H:%M')
-            })
-        return jsonify({'error': _('News not found')}), 404
-
-    except Exception as e:
-        logging.error(f"Error fetching news details: {e}")
-        return jsonify({'error': str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-def get_unread_news_count(user_id):
-    """
-    Підрахунок непрочитаних новин для користувача
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            SELECT COUNT(*) FROM news n
-            LEFT JOIN news_reads nr ON nr.news_id = n.id AND nr.user_id = %s
-            WHERE n.is_published = true AND nr.id IS NULL
-        """, (user_id,))
-        return cursor.fetchone()[0]
-    finally:
-        cursor.close()
-        conn.close()
-
-@app.context_processor
-def inject_unread_news_count():
-    if 'user_id' in session:
-        return {'unread_news_count': get_unread_news_count(session['user_id'])}
-    return {'unread_news_count': 0}
-
-
-@app.route('/<token>/news/<int:news_id>/view', methods=['GET'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def view_news(token, news_id):
-    """
-    Відображення окремої новини з підтримкою багатомовності
-    """
-    # Отримуємо поточну мову користувача, за замовчуванням українська
-    current_lang = session.get('language', 'uk')
-
-    # Підключаємося до бази даних
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    try:
-        # Виконуємо запит з підтримкою старих та нових полів через COALESCE
-        cursor.execute("""
-            SELECT *, 
-                COALESCE(title_uk, title) as title_uk,
-                COALESCE(title_en, title) as title_en,
-                COALESCE(title_sk, title) as title_sk,
-                COALESCE(html_content_uk, html_content) as html_content_uk,
-                COALESCE(html_content_en, html_content) as html_content_en,
-                COALESCE(html_content_sk, html_content) as html_content_sk,
-                created_at
-            FROM news 
-            WHERE id = %s
-        """, (news_id,))
-
-        news = cursor.fetchone()
-
-        if not news:
-            flash("Новину не знайдено", "error")
-            return redirect(url_for('user_news', token=token))
-
-        # Передаємо дані в шаблон
-        return render_template('view_news.html',
-                               news=news,
-                               token=token,
-                               news_id=news_id,
-                               current_lang=current_lang)
-
-    except Exception as e:
-        logging.error(f"Помилка при відображенні новини {news_id}: {e}")
-        flash("Помилка при завантаженні новини", "error")
-        return redirect(url_for('user_news', token=token))
-
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@app.route('/<token>/news/<int:news_id>/mark-read', methods=['POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def mark_news_read(token, news_id):
-    """
-    Окремий endpoint для позначення новини як прочитаної
-    """
-    user_id = session.get('user_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-        INSERT INTO news_reads (user_id, news_id, read_at)
-        VALUES (%s, %s, NOW())
-        ON CONFLICT (user_id, news_id) DO NOTHING
-    """, (user_id, news_id))
-    
-    conn.commit()
-    return jsonify({'success': True})
-
-@app.route('/<token>/news/<int:news_id>/set-read', methods=['POST'])
-@app.route('/<token>/news/<int:news_id>/set-read', methods=['POST'])
-@requires_token_and_roles('user', 'user_25', 'user_29')
-def set_news_as_read(token, news_id):
-    """
-    Endpoint for marking news as read
-    """
-    user_id = session.get('user_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO news_reads (user_id, news_id, read_at)
-        VALUES (%s, %s, NOW())
-        ON CONFLICT (user_id, news_id) DO NOTHING
-    """, (user_id, news_id))
-
-    conn.commit()
-    return jsonify({'success': True})
-
-
-@app.route('/<token>/admin/news/<int:news_id>/edit', methods=['GET', 'POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def edit_news(token, news_id):
-    """
-    Редагування багатомовної новини
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    try:
-        if request.method == 'POST':
-            # Отримуємо дані для кожної мови
-            data = {
-                'uk': {
-                    'title': request.form['title_uk'],
-                    'content': request.form['content_uk'],
-                    'html_content': request.form['html_content_uk']
-                },
-                'en': {
-                    'title': request.form['title_en'],
-                    'content': request.form['content_en'],
-                    'html_content': request.form['html_content_en']
-                },
-                'sk': {
-                    'title': request.form['title_sk'],
-                    'content': request.form['content_sk'],
-                    'html_content': request.form['html_content_sk']
-                }
-            }
-
-            is_published = 'is_published' in request.form
-
-            cursor.execute("""
-                UPDATE news 
-                SET title_uk = %s, content_uk = %s, html_content_uk = %s,
-                    title_en = %s, content_en = %s, html_content_en = %s,
-                    title_sk = %s, content_sk = %s, html_content_sk = %s,
-                    is_published = %s, updated_at = NOW()
-                WHERE id = %s
-            """, (
-                data['uk']['title'], data['uk']['content'], data['uk']['html_content'],
-                data['en']['title'], data['en']['content'], data['en']['html_content'],
-                data['sk']['title'], data['sk']['content'], data['sk']['html_content'],
-                is_published, news_id
-            ))
-
-            conn.commit()
-            flash("Новину успішно оновлено!", "success")
-            return redirect(url_for('admin_news', token=token))
-
-        cursor.execute("SELECT * FROM news WHERE id = %s", (news_id,))
-        news = cursor.fetchone()
-
-        if not news:
-            flash("Новину не знайдено", "error")
-            return redirect(url_for('admin_news', token=token))
-
-        return render_template('admin/news/edit_news.html', news=news, token=token)
-
-    except Exception as e:
-        logging.error(f"Помилка редагування новини: {e}")
-        flash("Помилка оновлення новини", "error")
-        return redirect(url_for('admin_news', token=token))
-
-    finally:
-        cursor.close()
-        conn.close()
 
 
 
@@ -11592,76 +8102,9 @@ def privacy():
     return render_template('public/privacy.html')
 
 
-@app.route('/debug_session')
-def debug_session():
-    """For debugging only, remove in production"""
-    if not app.debug:
-        return "Debug mode is off"
-    
-    result = "<h2>Session Data</h2>"
-    result += "<ul>"
-    for key, value in session.items():
-        result += f"<li><strong>{key}</strong>: {value}</li>"
-    result += "</ul>"
-    
-    result += "<h2>Public Cart Content</h2>"
-    cart = session.get('public_cart', {})
-    if not cart:
-        result += "<p>Cart is empty</p>"
-    else:
-        result += "<ul>"
-        for article, article_items in cart.items():
-            result += f"<li><strong>Article:</strong> {article}"
-            result += "<ul>"
-            for table_name, item_data in article_items.items():
-                result += f"<li><strong>Table:</strong> {table_name}, <strong>Quantity:</strong> {item_data.get('quantity')}, <strong>Price:</strong> {item_data.get('price')}</li>"
-            result += "</ul>"
-            result += "</li>"
-        result += "</ul>"
-    
-    return result
-
-@app.route('/debug_clear_cart')
-def debug_clear_cart():
-    """For debugging only, remove in production"""
-    if not app.debug:
-        return "Debug mode is off"
-    
-    session['public_cart'] = {}
-    session['cart_count'] = 0
-    session.modified = True
-    
-    return "Cart cleared. <a href='/debug_session'>View session</a>"
-
-@app.route('/debug_add_test_item')
-def debug_add_test_item():
-    """For debugging only, remove in production"""
-    if not app.debug:
-        return "Debug mode is off"
-    
-    # Add a test item
-    if 'public_cart' not in session:
-        session['public_cart'] = {}
-    
-    session['public_cart']['TEST123'] = {
-        'stock': {
-            'price': 100.0,
-            'quantity': 1,
-            'brand_id': 1,
-            'comment': 'Test item'
-        }
-    }
-    
-    update_cart_count_in_session()
-    session.modified = True
-    
-    return "Test item added. <a href='/debug_session'>View session</a>"
 
 
-
-
-
-# маршрут для відправки інвойсів
+# маршрут для відправки інвойсів publik users
 @app.route('/<token>/admin/orders/<int:order_id>/send_invoice', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
 @add_noindex_header
@@ -11915,7 +8358,6 @@ def send_invoice_email(to_email, subject, ordered_items, delivery_data, invoice_
         message["From"] = sender_email
         message["To"] = to_email
         message["Subject"] = subject if subject else t['subject']
-        # НЕ додаємо BCC в заголовки, щоб не було видно в листі
         
         # Додаємо обидві версії
         message.attach(MIMEText(text_content, "plain", "utf-8"))
@@ -12030,48 +8472,47 @@ def admin_sitemaps(token):
 @requires_token_and_roles('admin')
 @add_noindex_header
 def admin_generate_sitemaps(token):
-    """Ручна генерація sitemap файлів з адмін-панелі"""
+    generation_type = request.form.get('type', 'all')
+    
     try:
-        # Отримуємо тип генерації
-        generation_type = request.form.get('type', 'all')
-        
         if generation_type == 'all':
-            result = generate_all_sitemaps()
-            flash("All sitemap files generated successfully", "success")
+            success = generate_all_sitemaps()  # БЕЗ other файлів
+            message = "All sitemaps generated successfully (excluding Other products)"
         elif generation_type == 'static':
-            result = generate_sitemap_static_file()
-            flash("Static sitemap generated successfully", "success")
+            success = generate_sitemap_static_file()
+            message = "Static sitemap generated successfully"
         elif generation_type == 'categories':
-            result = generate_sitemap_categories_file()
-            flash("Categories sitemap generated successfully", "success")
+            success = generate_sitemap_categories_file()
+            message = "Categories sitemap generated successfully"
         elif generation_type == 'stock':
-            result = generate_sitemap_stock_files()
-            flash("Stock sitemap files generated successfully", "success")
+            success = generate_sitemap_stock_files()
+            message = "Stock sitemaps generated successfully"
         elif generation_type == 'enriched':
-            result = generate_sitemap_enriched_files()
-            flash("Enriched sitemap files generated successfully", "success")
+            success = generate_sitemap_enriched_files()
+            message = "Enriched sitemaps generated successfully"
         elif generation_type == 'other':
-            result = generate_sitemap_other_files()
-            flash("Other sitemap files generated successfully", "success")
-        elif generation_type == 'index':
-            result = generate_sitemap_index_file()
-            flash("Sitemap index file generated successfully", "success")
-        # Додаємо обробку для типу 'images'
+            success = generate_sitemap_other_files()  # ОКРЕМО для Other
+            message = "Other products sitemaps generated successfully"
         elif generation_type == 'images':
-            result = generate_sitemap_images_file()
-            flash("Images sitemap file generated successfully", "success")
+            success = generate_sitemap_images_file()
+            message = "Images sitemap generated successfully"
+        elif generation_type == 'index':
+            success = generate_sitemap_index_file()
+            message = "Sitemap index generated successfully"
         else:
             flash("Invalid generation type", "error")
             return redirect(url_for('admin_sitemaps', token=token))
         
-        if not result:
-            flash("Error generating sitemap files", "error")
-        
-        return redirect(url_for('admin_sitemaps', token=token))
+        if success:
+            flash(message, "success")
+        else:
+            flash("Error generating sitemaps", "error")
+            
     except Exception as e:
         logging.error(f"Error in admin_generate_sitemaps: {e}", exc_info=True)
-        flash(f"Error: {str(e)}", "error")
-        return redirect(url_for('admin_sitemaps', token=token))
+        flash(f"Error generating sitemaps: {str(e)}", "error")
+    
+    return redirect(url_for('admin_sitemaps', token=token))
 
 @app.route('/<token>/admin/sitemaps/view/<filename>')
 @requires_token_and_roles('admin')
@@ -12294,7 +8735,6 @@ def generate_sitemap_daily():
         logging.info("Starting daily sitemap generation")
         generate_sitemap_static_file()
         generate_sitemap_categories_file()
-        generate_priority_sitemap() # Ця функція викликає помилку
         generate_sitemap_index_file()
         logging.info("Daily sitemap generation completed successfully")
     except Exception as e:
@@ -12313,15 +8753,127 @@ def generate_sitemap_weekly():
         logging.error(f"Error in weekly stock sitemap generation: {e}", exc_info=True)
 
 # Щомісячна повна генерація всіх sitemap файлів
-@scheduler.task('cron', id='generate_sitemap_monthly', day=1, hour=4, minute=0)
+@scheduler.task('cron', id='generate_sitemap_monthly', month='1,4,7,10', day=1, hour=4, minute=0)
 def generate_sitemap_monthly():
-    """Щомісячна повна генерація всіх sitemap файлів (включаючи великі other файли)"""
+    """Щомісячна повна генерація всіх sitemap файлів (БЕЗ other файлів)"""
     try:
-        logging.info("Starting monthly full sitemap generation")
-        generate_sitemaps_distributed()
-        logging.info("Monthly full sitemap generation completed successfully")
+        logging.info("Starting monthly sitemap generation (quality focus)")
+        generate_sitemap_static_file()
+        generate_sitemap_categories_file()
+        generate_sitemap_stock_files()
+        generate_sitemap_enriched_files()  # Тільки якісні товари
+        generate_sitemap_images_file()
+        # generate_sitemap_other_files()  # ВИКЛЮЧЕНО
+        generate_sitemap_index_file()
+        logging.info("Monthly sitemap generation completed successfully")
     except Exception as e:
         logging.error(f"Error in monthly sitemap generation: {e}", exc_info=True)
+
+
+
+
+
+# аналіз данних для потрапляння в сайтмап
+@app.route('/<token>/admin/analyze-sitemap-data')
+@requires_token_and_roles('admin')
+@add_noindex_header
+def analyze_sitemap_data(token):
+    """
+    Аналіз даних для sitemap (тільки якісні товари):
+    """
+    try:
+        min_price = int(request.args.get('min_price', 100))
+        max_price = int(request.args.get('max_price', 800))
+        as_json = request.args.get('format') == 'json'
+
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("SET statement_timeout = 90000")
+
+        # ВИКЛЮЧАЄМО aftermarket і juaguar
+        cursor.execute("SELECT table_name FROM price_lists WHERE table_name NOT IN ('stock', 'aftermarket', 'juaguar')")
+        price_list_tables = [r[0] for r in cursor.fetchall()]
+        
+        if not price_list_tables:
+            return ("<h1>No price list tables found</h1>" if not as_json
+                    else jsonify({"error": "no_tables"}))
+
+        per_table = []
+        total_stock = 0
+        total_enriched = 0
+
+        # Аналіз stock
+        cursor.execute("SELECT COUNT(*) FROM stock WHERE quantity > 0")
+        total_stock = cursor.fetchone()[0] or 0
+
+        # Аналіз enriched (з описами/фото) в ціновому діапазоні
+        union_queries = []
+        for table in price_list_tables:
+            union_queries.append(f"SELECT article FROM {table} WHERE price BETWEEN {min_price} AND {max_price}")
+        
+        if union_queries:
+            all_price_list_query = " UNION ALL ".join(union_queries)
+            
+            enriched_count_query = f"""
+                SELECT COUNT(DISTINCT pl.article) 
+                FROM ({all_price_list_query}) pl
+                JOIN (
+                    SELECT p.article FROM products p
+                    UNION
+                    SELECT pi.product_article FROM product_images pi
+                ) AS enriched ON pl.article = enriched.article
+                LEFT JOIN stock s ON pl.article = s.article
+                WHERE s.article IS NULL
+            """
+            
+            cursor.execute(enriched_count_query)
+            total_enriched = cursor.fetchone()[0] or 0
+
+        result_obj = {
+            "params": {
+                "min_price": min_price,
+                "max_price": max_price,
+                "excluded_tables": ["aftermarket", "juaguar"]
+            },
+            "tables_analyzed": len(price_list_tables),
+            "totals": {
+                "stock_items": total_stock,
+                "enriched_items": total_enriched,
+                "total_sitemap_urls": total_stock + total_enriched
+            },
+            "estimation": {
+                "stock_files": max(1, math.ceil(total_stock / 10000)),
+                "enriched_files": max(1, math.ceil(total_enriched / 10000)),
+                "total_files": max(1, math.ceil(total_stock / 10000)) + max(1, math.ceil(total_enriched / 10000))
+            },
+            "quality_focus": "Only stock + products with descriptions/images included"
+        }
+
+        if as_json:
+            return jsonify(result_obj)
+
+        # HTML відповідь
+        html = [
+            "<h1>Quality Sitemap Analysis</h1>",
+            f"<p>Focus: Stock + Enriched products only</p>",
+            f"<p>Price range: {min_price}–{max_price} €</p>",
+            f"<p>Excluded: aftermarket, juaguar</p>",
+            f"<p><strong>Stock items:</strong> {total_stock:,}</p>",
+            f"<p><strong>Enriched items:</strong> {total_enriched:,}</p>",
+            f"<p><strong>Total URLs:</strong> {total_stock + total_enriched:,}</p>",
+            f"<p><strong>Estimated files:</strong> {result_obj['estimation']['total_files']}</p>",
+            "<p>✅ Much more manageable for Google indexing!</p>"
+        ]
+
+        return "".join(html)
+
+    except Exception as e:
+        logging.error(f"Error in analyze_sitemap_data: {e}", exc_info=True)
+        return f"<h1>Error</h1><p>{e}</p>", 500
+
+
+
+
 
 @app.route('/<token>/admin/run-scheduler-job', methods=['POST'])
 @requires_token_and_roles('admin')
@@ -12527,110 +9079,6 @@ def admin_sitemap_utils(token):
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('admin_sitemaps', token=token))
 
-def test_ftp_connection():
-    """
-    Перевіряє FTP-з'єднання та налаштування.
-    Повертає кортеж (успіх, повідомлення) про статус з'єднання
-    """
-    import ftplib
-    import socket
-    import os
-    import time
-    import re
-    
-    # Отримуємо FTP налаштування з змінних середовища
-    FTP_HOST = os.environ.get('FTP_HOST')
-    FTP_USER = os.environ.get('FTP_USER')
-    FTP_PASS = os.environ.get('FTP_PASS')
-    
-    logging.info(f"Початкові FTP налаштування: хост='{FTP_HOST}'")
-    
-    # Розділяємо хост і порт, якщо вони вказані разом
-    # Використовуємо регулярний вираз для безпечного виділення порту
-    match = re.match(r'^([^:]+)(?::(\d+))?$', FTP_HOST) if FTP_HOST else None
-    
-    if match:
-        FTP_HOST = match.group(1)
-        FTP_PORT = int(match.group(2)) if match.group(2) else 21
-    else:
-        FTP_PORT = 21
-    
-    logging.info(f"Розібрано налаштування: хост='{FTP_HOST}', порт={FTP_PORT}")
-    
-    # Перевіряємо, чи встановлені облікові дані
-    if not FTP_HOST or not FTP_USER or not FTP_PASS:
-        logging.error("FTP облікові дані не встановлені в змінних середовища")
-        return False, "FTP облікові дані не встановлені в змінних середовища"
-    
-    logging.info(f"Тестування FTP підключення до {FTP_HOST}:{FTP_PORT}")
-    
-    # Спробуємо підключитися з таймаутом
-    try:
-        start_time = time.time()
-        logging.info(f"Підключення до FTP серверу: {FTP_HOST}:{FTP_PORT}")
-        
-        ftp = ftplib.FTP()
-        ftp.connect(host=FTP_HOST, port=FTP_PORT, timeout=10)
-        
-        # Важливо: включаємо пасивний режим перед входом
-        logging.info("Переключення на пасивний режим")
-        ftp.set_pasv(True)
-        
-        connect_time = time.time() - start_time
-        logging.info(f"З'єднання встановлено за {connect_time:.2f}с")
-        
-        # Пробуємо увійти
-        try:
-            logging.info("Вхід на FTP сервер...")
-            ftp.login(FTP_USER, FTP_PASS)
-            login_time = time.time() - start_time - connect_time
-            logging.info(f"Вхід виконано за {login_time:.2f}с")
-            
-            # Перевіряємо, чи можемо перейти у потрібну директорію
-            try:
-                logging.info("Перехід до директорії 'sub/image/products/'")
-                ftp.cwd("sub/image/products/")
-                dirs = ftp.nlst()
-                logging.info(f"Знайдено {len(dirs)} файлів/директорій")
-                ftp.quit()
-                return True, f"Підключення успішне. Час підключення: {connect_time:.2f}с, Час входу: {login_time:.2f}с, Знайдено файлів: {len(dirs)}"
-            except ftplib.error_perm as e:
-                logging.error(f"Помилка доступу до директорії: {e}")
-                return False, f"Підключено і увійшов, але не вдалося перейти у директорію: {str(e)}"
-                
-        except ftplib.error_perm as e:
-            logging.error(f"Помилка входу на FTP: {e}")
-            return False, f"Підключення успішне, але вхід невдалий: {str(e)}"
-            
-    except socket.gaierror:
-        logging.error(f"Не вдалося знайти хост: {FTP_HOST}")
-        return False, f"Не вдалося знайти хост: {FTP_HOST}"
-    except socket.timeout:
-        logging.error("Час підключення вичерпано (10 секунд)")
-        return False, f"Час підключення вичерпано (10 секунд)"
-    except ConnectionRefusedError:
-        logging.error(f"Підключення відхилено до {FTP_HOST}:{FTP_PORT}")
-        return False, f"Підключення відхилено. FTP-сервер може бути вимкнений або заблокований фаєрволом."
-    except Exception as e:
-        logging.error(f"Помилка підключення: {e}", exc_info=True)
-        return False, f"Помилка підключення: {str(e)}"
-
-
-@app.route('/<token>/admin/test-ftp')
-@requires_token_and_roles('admin')
-@add_noindex_header
-def test_ftp_admin(token):
-    """Admin endpoint to test FTP connection"""
-    try:
-        success, message = test_ftp_connection()
-        if success:
-            flash(f"FTP connection successful: {message}", "success")
-        else:
-            flash(f"FTP connection failed: {message}", "danger")
-    except Exception as e:
-        flash(f"Error testing FTP connection: {str(e)}", "danger")
-    
-    return redirect(url_for('admin_dashboard', token=token))
 
 # Список всіх статей з фільтрацією
 @app.route('/<token>/admin/blog', methods=['GET'])
@@ -14150,6 +10598,55 @@ def admin_toggle_blog_post(token, post_id):
 
 
 
+
+@app.route('/<token>/admin/test-ftp')
+@requires_token_and_roles('admin')
+@add_noindex_header
+def test_ftp_admin(token):
+    """Test FTP connection from admin panel"""
+    try:
+        # FTP налаштування
+        FTP_HOST = os.environ.get('FTP_HOST')
+        FTP_USER = os.environ.get('FTP_USER')
+        FTP_PASS = os.environ.get('FTP_PASS')
+        
+        if not FTP_HOST or not FTP_USER or not FTP_PASS:
+            flash("FTP credentials not configured", "error")
+            return redirect(url_for('admin_dashboard', token=token))
+        
+        # Розділяємо хост і порт, якщо вони вказані разом
+        if ':' in FTP_HOST:
+            host_parts = FTP_HOST.split(':')
+            ftp_host = host_parts[0]
+            ftp_port = int(host_parts[1])
+        else:
+            ftp_host = FTP_HOST
+            ftp_port = 21
+        
+        # Тестуємо підключення
+        ftp = ftplib.FTP()
+        ftp.connect(ftp_host, ftp_port, timeout=10)
+        ftp.login(FTP_USER, FTP_PASS)
+        
+        # Отримуємо список файлів для перевірки
+        ftp.cwd('sub/image/products/')
+        files = ftp.nlst()[:5]  # Перші 5 файлів
+        
+        ftp.quit()
+        
+        flash(f"FTP connection successful! Found {len(files)} files in products directory", "success")
+        
+    except ftplib.error_perm as e:
+        flash(f"FTP permission error: {e}", "error")
+    except ftplib.error_temp as e:
+        flash(f"FTP temporary error: {e}", "error")
+    except Exception as e:
+        flash(f"FTP connection failed: {e}", "error")
+    
+    return redirect(url_for('admin_dashboard', token=token))
+
+
+
 @app.route('/<token>/admin/generate-image-sitemap', methods=['GET'])
 @requires_token_and_roles('admin')
 @add_noindex_header
@@ -14168,27 +10665,18 @@ def admin_generate_image_sitemap(token):
 
 
 if __name__ == '__main__':
-    # Створюємо директорію для файлів sitemap, якщо вона не існує
+    # Для локальної розробки
     os.makedirs(SITEMAP_DIR, exist_ok=True)
     
-    try:
-        # Перевіряємо наявність sitemap index
-        sitemap_index_path = os.path.join(SITEMAP_DIR, 'sitemap-index.xml')
-        
-        # Ініціалізуємо планувальник тут, ПЕРЕД додаванням задач
-        if not scheduler.running:
-            scheduler.start()
-            logging.info("Scheduler started successfully")
-        
-        # Тепер додаємо задачу, якщо потрібно
-        if not os.path.exists(sitemap_index_path):
-            logging.info(f"No sitemap index found at {sitemap_index_path}, generating...")
-            # Простий виклик функції напряму без планувальника
-            generate_sitemap_index_file()
-        
-        port = int(os.environ.get('PORT', 5000))
-        print(f"Запуск сервера на порту {port}...")
-        app.run(host='0.0.0.0', port=port)
-        
-    except Exception as e:
-        logging.error(f"Помилка при запуску програми: {e}", exc_info=True)
+    # Ініціалізуємо планувальник для локальної розробки
+    initialize_scheduler()
+    
+    # Генеруємо sitemap якщо немає
+    sitemap_index_path = os.path.join(SITEMAP_DIR, 'sitemap-index.xml')
+    if not os.path.exists(sitemap_index_path):
+        logging.info("Generating initial sitemap...")
+        generate_sitemap_index_file()
+    
+    port = int(os.environ.get('PORT', 5000))
+    print(f"Запуск сервера на порту {port}...")
+    app.run(host='0.0.0.0', port=port, debug=False)

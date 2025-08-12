@@ -120,7 +120,8 @@
                     <div class="product-img-container">
                         {% if product.image_url %}
                         <img src="{{ product.image_url }}" class="product-img" 
-                             alt="{{ product.name or product.article }}">
+                             alt="{{ product.name or product.article }}"
+                             loading="lazy" decoding="async" width="320" height="240">
                         {% else %}
                         <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
                         {% endif %}

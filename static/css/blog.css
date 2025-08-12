@@ -1,0 +1,293 @@
+/* Blog Styles */
+
+/* Стилі для карток статей */
+.blog-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.blog-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Стилі для контенту статті */
+.blog-content {
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+.blog-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 1.5rem 0;
+    border-radius: 0.25rem;
+}
+
+.blog-content h2 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+}
+
+.blog-content h3 {
+    margin-top: 1.8rem;
+    margin-bottom: 0.8rem;
+    font-size: 1.5rem;
+}
+
+.blog-content blockquote {
+    border-left: 4px solid #007bff;
+    padding-left: 1rem;
+    font-style: italic;
+    margin: 1.5rem 0;
+    color: #6c757d;
+}
+
+.blog-content pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+}
+
+.blog-content table {
+    width: 100%;
+    margin: 1.5rem 0;
+    border-collapse: collapse;
+}
+
+.blog-content table th,
+.blog-content table td {
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.blog-content table th {
+    background-color: #f8f9fa;
+}
+
+/* Стилі для кнопок соціальних мереж */
+.btn-facebook {
+    background-color: #3b5998;
+    color: white;
+}
+
+.btn-facebook:hover {
+    background-color: #2d4373;
+    color: white;
+}
+
+.btn-twitter {
+    background-color: #1da1f2;
+    color: white;
+}
+
+.btn-twitter:hover {
+    background-color: #0c85d0;
+    color: white;
+}
+
+.btn-linkedin {
+    background-color: #0077b5;
+    color: white;
+}
+
+.btn-linkedin:hover {
+    background-color: #005582;
+    color: white;
+}
+
+/* Адаптивні зображення */
+.responsive-img-container {
+    position: relative;
+    overflow: hidden;
+    padding-top: 56.25%; /* 16:9 співвідношення */
+}
+
+.responsive-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Анімація для lazy loading */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.lazy-load {
+    animation: fadeIn 0.5s ease-in;
+}
+
+/* Покращення для карток блогу */
+.card-img-top {
+    aspect-ratio: 16/9;
+    object-fit: cover;
+}
+
+/* Загальні стилі для таблиць у блозі */
+.blog-content table {
+    overflow-x: auto;
+    display: block;
+    width: 100%;
+}
+
+/* Фіксований розмір карток блогу */
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Адаптивна типографіка */
+.blog-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.blog-excerpt {
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+/* Мобільні адаптації */
+@media (max-width: 768px) {
+    /* Глобальні розміри шрифтів для мобільних */
+    body {
+        font-size: 14px !important;
+    }
+    
+    /* Зменшення заголовків */
+    h1, .h1, .display-4, .blog-title {
+        font-size: 1.75rem !important;
+    }
+    
+    h2, .h2 {
+        font-size: 1.5rem !important;
+    }
+    
+    h3, .h3 {
+        font-size: 1.25rem !important;
+    }
+    
+    /* Контент блогу на мобільних */
+    .blog-content {
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+    
+    .blog-content img {
+        margin: 1rem 0;
+    }
+    
+    .blog-content h2 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .blog-content h3 {
+        margin-top: 1.25rem;
+        margin-bottom: 0.6rem;
+    }
+    
+    /* Зменшення розміру карток блогу */
+    .card-img-top {
+        height: 160px;
+    }
+    
+    /* Зменшення великих кнопок і навігаційних елементів */
+    .btn, .nav-link, .navbar-brand {
+        font-size: 14px !important;
+        padding: 0.25rem 0.5rem !important;
+        height: auto !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* Зменшення іконок */
+    .bi::before, .icon {
+        font-size: 1rem !important;
+    }
+    
+    /* Спеціальне правило для елементів з 20px шрифтом */
+    [style*="font-size: 20px"], [style*="font-size:20px"] {
+        font-size: 14px !important;
+        height: auto !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* Правильний розмір елементів форм */
+    input, select, textarea {
+        font-size: 14px !important;
+        height: auto !important;
+        padding: 0.375rem 0.75rem !important;
+    }
+    
+    /* Виправлення для кнопок з фіксованою висотою */
+    .btn {
+        height: auto !important;
+        min-height: 30px;
+    }
+    
+    /* Коригування відступів у контейнерах */
+    .container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+    
+    /* Пагінація для мобільних */
+    .page-link {
+        padding: 0.25rem 0.5rem !important;
+    }
+    
+    .pagination .page-item:not(.active):not(:first-child):not(:last-child) {
+        display: none;
+    }
+    
+    /* Коригування для share кнопок */
+    .share-buttons .btn {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.75rem !important;
+        margin-bottom: 5px;
+    }
+    
+    /* Зменшення відступів у картках */
+    .card-body {
+        padding: 0.75rem !important;
+    }
+}
+
+/* Додаткові правила для дуже малих екранів */
+@media (max-width: 480px) {
+    body {
+        font-size: 13px !important;
+    }
+    
+    .btn, .nav-link, .navbar-brand {
+        font-size: 13px !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+    
+    h1, .h1, .display-4, .blog-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .card-img-top {
+        height: 140px;
+    }
+    
+    /* Іконки соцмереж для шерінгу */
+    .share-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .share-buttons .btn {
+        flex: 1 0 auto;
+        margin: 0 5px 5px 0;
+    }
+}

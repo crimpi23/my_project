@@ -62,17 +62,6 @@
                         </div>
                         <div class="col-md-6">
                             <div class="d-grid">
-                                <a href="{{ url_for('upload_stock', token=token) }}" class="btn btn-outline-primary">
-                                    <i class="bi bi-cloud-upload me-2"></i>Upload Stock
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <hr>
-                            <h6 class="mb-3">Price Lists</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
                                 <a href="{{ url_for('upload_price_list', token=token) }}" class="btn btn-outline-primary">
                                     <i class="bi bi-upload me-2"></i>Upload Price List
                                 </a>
@@ -87,8 +76,8 @@
                         </div>
                         <div class="col-md-6">
                             <div class="d-grid">
-                                <a href="{{ url_for('compare_prices', token=token) }}" class="btn btn-outline-primary mt-2">
-                                    <i class="bi bi-bar-chart me-2"></i>Compare Prices
+                                <a href="{{ url_for('add_brand', token=token) }}" class="btn btn-outline-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Add Brand
                                 </a>
                             </div>
                         </div>
@@ -134,24 +123,6 @@
                             <div class="d-grid">
                                 <a href="{{ url_for('add_product_descriptions', token=token) }}" class="btn btn-outline-success">
                                     <i class="bi bi-file-plus me-2"></i>Add Descriptions
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <hr>
-                            <h6 class="mb-3">News</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_news', token=token) }}" class="btn btn-outline-success">
-                                    <i class="bi bi-newspaper me-2"></i>Manage News
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('create_news', token=token) }}" class="btn btn-outline-success">
-                                    <i class="bi bi-plus-square me-2"></i>Create News
                                 </a>
                             </div>
                         </div>
@@ -246,13 +217,24 @@
                                 </a>
                             </div>
                         </div>
+                        <div class="col-md-12">
+                            <hr>
+                            <h6 class="mb-3">Analysis</h6>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="d-grid">
+                                <a href="{{ url_for('analyze_sitemap_data', token=token) }}" class="btn btn-outline-info">
+                                    <i class="bi bi-graph-up me-2"></i>Analyze Sitemap Data
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Навігаційна панель блогу для включення в усі admin/blog/*.html шаблони -->
+    <!-- Навігаційна панель блогу -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">Blog Management</h5>
@@ -277,148 +259,13 @@
             </div>
         </div>
     </div>
-
-    <!-- Неактивні функції -->
-    <div class="card mb-4">
-        <div class="card-header bg-secondary text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Inactive Features</h5>
-                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#inactiveFeatures">
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-            </div>
-        </div>
-        <div class="collapse" id="inactiveFeatures">
-            <div class="card-body">
-                <div class="row g-3">
-                    <!-- Клієнтські замовлення -->
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">Client Orders</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    <a href="{{ url_for('admin_orders', token=token) }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-eye me-1"></i>View Orders
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Відправлення -->
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">Shipments</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    <a href="{{ url_for('list_shipments', token=token) }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-truck me-1"></i>View Shipments
-                                    </a>
-                                    <a href="{{ url_for('create_shipment_select_user', token=token) }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-plus-circle me-1"></i>Create Shipment
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Постачальники -->
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">Suppliers</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    <a href="{{ url_for('list_supplier_orders', token=token) }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-box-seam me-1"></i>Supplier Orders
-                                    </a>
-                                    <a href="{{ url_for('manage_suppliers', token=token) }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-building me-1"></i>Manage Suppliers
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Інвойси постачальників -->
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">Invoices</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    <a href="{{ url_for('upload_invoice', token=token) }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-upload me-1"></i>Upload Invoice
-                                    </a>
-                                    <a href="{{ url_for('list_invoices', token=token) }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-file-text me-1"></i>View Invoices
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Склад інформація -->
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">Warehouse</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    <a href="{{ url_for('warehouse_items', token=token) }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-archive me-1"></i>Warehouse Items
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Експорт замовлень -->
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">Reports</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    <a href="{{ url_for('export_orders', token=token) }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-file-earmark-excel me-1"></i>Export Orders
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 {% block extra_js %}
 <script>
-    // Відкрити/закрити неактивні функції на основі локального сховища
+    // Простий JavaScript без збереження стану
     document.addEventListener('DOMContentLoaded', function() {
-        const inactiveFeatures = document.getElementById('inactiveFeatures');
-        const isOpen = localStorage.getItem('inactiveFeaturesOpen') === 'true';
-        
-        if (isOpen) {
-            inactiveFeatures.classList.add('show');
-        }
-        
-        inactiveFeatures.addEventListener('shown.bs.collapse', function () {
-            localStorage.setItem('inactiveFeaturesOpen', 'true');
-        });
-        
-        inactiveFeatures.addEventListener('hidden.bs.collapse', function () {
-            localStorage.setItem('inactiveFeaturesOpen', 'false');
-        });
+        console.log('Admin dashboard loaded');
     });
 </script>
 {% endblock %}

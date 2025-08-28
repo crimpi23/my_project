@@ -1,0 +1,42 @@
+```html
+// filepath: c:\Users\IBM24\Desktop\Local\templates\admin\missing\list.html
+{% extends "base/admin_base.html" %}
+{% block title %}Missing Items{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <h3 class="mb-3">Missing/Out of supply</h3>
+  <div class="table-responsive">
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>Article</th>
+          <th>First missing</th>
+          <th>Latest check</th>
+          <th>Resolved</th>
+          <th>Note</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in items %}
+        <tr>
+          <td>{{ it.stock_article }}</td>
+          <td>{{ it.first_missing_at|datetime }}</td>
+          <td>{{ it.latest_checked_at|datetime }}</td>
+          <td>{{ it.resolved_at|datetime }}</td>
+          <td>{{ it.note or '' }}</td>
+          <td>
+            <!-- чекатиме на ендпоїнт архівації -->
+            <button class="btn btn-sm btn-outline-secondary" disabled>Archive</button>
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not items %}
+        <tr><td colspan="6" class="text-center text-muted">No missing items</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+```

@@ -1,0 +1,273 @@
+<!-- filepath: c:\Users\IBM24\Desktop\Local\templates\admin\pending\list.html -->
+{% extends "base/admin_base.html" %}
+{% block title %}Pending Articles{% endblock %}
+{% block content %}
+<h3>Pending Articles</h3>
+
+<form class="row g-2 mb-3" method="get" action="{{ url_for('admin_pending_articles', token=token) }}">
+  <div class="col-auto">
+    <input class="form-control" name="q" placeholder="Пошук" value="{{ q or '' }}">
+  </div>
+  <div class="col-auto">
+    <select class="form-select" name="status">
+      {% for s in ['pending','approved','rejected','all'] %}
+        <option value="{{s}}" {% if status==s %}selected{% endif %}>{{s}}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select class="form-select" name="brand">
+      <option value="">Всі бренди</option>
+      {% for b in brands or [] %}
+        <option value="{{ b }}" {% if brand==b %}selected{% endif %}>{{ b }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select class="form-select" name="sort">
+      <option value="latest_desc" {% if sort=='latest_desc' %}selected{% endif %}>Останні</option>
+      <option value="brand_asc" {% if sort=='brand_asc' %}selected{% endif %}>Бренд ↑</option>
+      <option value="brand_desc" {% if sort=='brand_desc' %}selected{% endif %}>Бренд ↓</option>
+      <option value="import_asc" {% if sort=='import_asc' %}selected{% endif %}>Import ↑</option>
+      <option value="stock_asc" {% if sort=='stock_asc' %}selected{% endif %}>Stock ↑</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select class="form-select" name="per_page">
+      <option value="25" {% if request.args.get('per_page','25')=='25' %}selected{% endif %}>25</option>
+      <option value="all" {% if request.args.get('per_page')=='all' %}selected{% endif %}>All</option>
+    </select>
+  </div>
+  <div class="col-auto"><button class="btn btn-primary">Фільтрувати</button></div>
+</form>
+
+<div class="bulk-actions mb-3" style="display: none;">
+  <button type="button" class="btn btn-sm btn-success" id="bulk-add-to-whitelist">
+    <i class="fas fa-plus"></i> Add selected to whitelist
+  </button>
+</div>
+
+<table class="table table-sm align-middle">
+  <thead>
+    <tr>
+      <th style="width:1%"><input type="checkbox" id="chk-all"></th>
+      <th>Import</th><th>Stock</th><th>Brand</th><th>Seen</th><th>Suppressed until</th><th>Suggest</th><th>Name</th><th>Name</th><th></th>
+    </tr>
+  </thead>
+  <tbody id="tbl-body">
+    {% for r in items %}
+    <tr data-import="{{ r.import_article }}">
+      <td>
+        <input type="checkbox" class="select-item" data-article="{{ r.stock_article }}">
+      </td>
+      <td><input type="checkbox" class="chk-row"></td>
+      <td class="text-monospace">{{ r.import_article }}</td>
+      <td><input class="form-control form-control-sm stock-article" value="{{ r.stock_article or '' }}"></td>
+      <td>{{ r.brand_from_import or '' }}</td>
+      <td>{{ r.seen_times }}</td>
+      <td>{{ r.suppressed_until|datetime }}</td>
+      <td>
+        <button class="btn btn-outline-secondary btn-sm btn-suggest">Find</button>
+        <div class="small text-muted suggestions"></div>
+      </td>
+      <td>
+        {% if r.product_name %}
+          <span title="{{ r.product_name }}">{{ r.product_name|truncate(30) }}</span>
+        {% else %}
+          <span class="text-muted">—</span>
+        {% endif %}
+      </td>
+      <td>
+        <button class="btn btn-success btn-sm btn-approve">Approve</button>
+        <button class="btn btn-outline-warning btn-sm btn-suppress">7d</button>
+        <button class="btn btn-outline-danger btn-sm btn-reject">Reject</button>
+      </td>
+    </tr>
+    {% endfor %}
+    {% if not items %}<tr><td colspan="9" class="text-center text-muted">No data</td></tr>{% endif %}
+  </tbody>
+</table>
+
+<div class="mb-3">
+  <button id="bulk-approve" class="btn btn-success btn-sm">Approve selected</button>
+  <button id="bulk-suppress" class="btn btn-outline-warning btn-sm">Suppress 7d</button>
+  <button id="bulk-reject" class="btn btn-outline-danger btn-sm">Reject</button>
+</div>
+
+{% if pagination %}
+<nav>
+  <ul class="pagination pagination-sm">
+    {% for p in range(1, pagination.pages+1) %}
+      <li class="page-item {% if p==pagination.page %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('admin_pending_articles', token=token, q=q, status=status, page=p) }}">{{ p }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+
+<script>
+const token = "{{ token }}";
+document.getElementById('chk-all')?.addEventListener('change', e=>{
+  document.querySelectorAll('.chk-row').forEach(ch=>ch.checked = e.target.checked);
+});
+async function post(url, body){
+  const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  return r.json();
+}
+document.querySelectorAll('.btn-suggest').forEach(btn=>{
+  btn.addEventListener('click', async (e)=>{
+    const tr = e.target.closest('tr'); const ia = tr.dataset.import;
+    const box = tr.querySelector('.suggestions');
+    box.textContent = '...';
+    const res = await fetch(`/${token}/admin/pending-articles/suggestions?import_article=${encodeURIComponent(ia)}`);
+    const j = await res.json();
+    if(!j.success){ box.textContent = 'Error'; return; }
+    if(!j.suggestions.length){ box.textContent = 'No suggestions'; return; }
+    box.innerHTML = j.suggestions.map(s=>`<a href="#" class="pick" data-a="${s.article}">${s.article}</a>`).join(' | ');
+    box.querySelectorAll('.pick').forEach(a=>a.addEventListener('click', ev=>{
+      ev.preventDefault(); tr.querySelector('.stock-article').value = a.dataset.a;
+    }));
+  });
+});
+document.querySelectorAll('.btn-approve').forEach(btn=>{
+  btn.addEventListener('click', async (e)=>{
+    const tr = e.target.closest('tr');
+    const ia = tr.dataset.import; const sa = tr.querySelector('.stock-article').value.trim().toUpperCase();
+    if(!sa){ alert('Вкажіть stock article'); return; }
+    const j = await post(`/${token}/admin/pending-articles/approve`, {import_article: ia, stock_article: sa});
+    if(j.success) tr.remove(); else alert(j.message||'Error');
+  });
+});
+document.querySelectorAll('.btn-reject').forEach(btn=>{
+  btn.addEventListener('click', async (e)=>{
+    const tr = e.target.closest('tr');
+    const ia = tr.dataset.import;
+    const j = await post(`/${token}/admin/pending-articles/reject`, {import_article: ia});
+    if(j.success) tr.remove(); else alert(j.message||'Error');
+  });
+});
+document.querySelectorAll('.btn-suppress').forEach(btn=>{
+  btn.addEventListener('click', async (e)=>{
+    const tr = e.target.closest('tr');
+    const ia = tr.dataset.import;
+    const j = await post(`/${token}/admin/pending-articles/suppress`, {import_article: ia, days: 7});
+    if(j.success) tr.remove(); else alert(j.message||'Error');
+  });
+});
+function collectSelected(){
+  const out = [];
+  document.querySelectorAll('#tbl-body tr').forEach(tr=>{
+    const chk = tr.querySelector('.chk-row'); if(!chk.checked) return;
+    out.push({import_article: tr.dataset.import, stock_article: tr.querySelector('.stock-article').value.trim().toUpperCase()});
+  });
+  return out;
+}
+document.getElementById('bulk-approve')?.addEventListener('click', async ()=>{
+  const items = collectSelected().filter(x=>x.stock_article);
+  if(!items.length){ alert('Немає вибраних з stock_article'); return; }
+  const j = await post(`/${token}/admin/pending-articles/bulk`, {action:'approve', items});
+  if(j.success) location.reload(); else alert(j.message||'Error');
+});
+document.getElementById('bulk-suppress')?.addEventListener('click', async ()=>{
+  const items = collectSelected().map(x=>({import_article:x.import_article, days:7}));
+  if(!items.length){ alert('Нічого не вибрано'); return; }
+  const j = await post(`/${token}/admin/pending-articles/bulk`, {action:'suppress', items});
+  if(j.success) location.reload(); else alert(j.message||'Error');
+});
+document.getElementById('bulk-reject')?.addEventListener('click', async ()=>{
+  const items = collectSelected().map(x=>({import_article:x.import_article}));
+  if(!items.length){ alert('Нічого не вибрано'); return; }
+  const j = await post(`/${token}/admin/pending-articles/bulk`, {action:'reject', items});
+  if(j.success) location.reload(); else alert(j.message||'Error');
+});
+$(document).ready(function() {
+  // Обробка кліку на кнопку "Add to Whitelist"
+  $('.btn-add-to-whitelist').click(function() {
+    var article = $(this).data('article');
+    
+    // Логування для діагностики
+    console.log("Adding to whitelist:", article);
+    
+    $.ajax({
+      url: '/' + token + '/admin/add-to-whitelist',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        article: article
+      }),
+      success: function(response) {
+        console.log("Success response:", response);
+        if (response.success) {
+          // Показуємо повідомлення про успіх
+          alert('Article added to whitelist successfully');
+          // Опціонально можна оновити UI
+          $('#whitelist-status-' + article.replace(/[^a-zA-Z0-9]/g, '_'))
+            .html('<span class="badge bg-success">In Whitelist</span>');
+        } else {
+          alert('Error: ' + response.error);
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error("Error response:", error, xhr.responseText);
+        alert('Error adding to whitelist: ' + error);
+      }
+    });
+  });
+
+  // Bulk actions code 
+  // Показувати bulk actions коли вибрано хоча б один елемент
+  $('.select-item').change(function() {
+    updateBulkActionsVisibility();
+  });
+  
+  function updateBulkActionsVisibility() {
+    if ($('.select-item:checked').length > 0) {
+      $('.bulk-actions').show();
+    } else {
+      $('.bulk-actions').hide();
+    }
+  }
+  
+  // Bulk add to whitelist
+  $('#bulk-add-to-whitelist').click(function() {
+    var articles = [];
+    $('.select-item:checked').each(function() {
+      articles.push($(this).data('article'));
+    });
+    
+    if (articles.length === 0) {
+      alert('No items selected');
+      return;
+    }
+    
+    console.log("Bulk adding to whitelist:", articles);
+    
+    $.ajax({
+      url: '/' + token + '/admin/whitelist/bulk-add',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        articles: articles,
+        type: 'auto_update',
+        notes: 'Bulk added from pending articles'
+      }),
+      success: function(response) {
+        console.log("Bulk add response:", response);
+        if (response.success) {
+          alert('Added ' + response.added + ' items to whitelist');
+          // Оновити сторінку для відображення змін
+          window.location.reload();
+        } else {
+          alert('Error: ' + response.error);
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error("Bulk add error:", error, xhr.responseText);
+        alert('Failed to add items to whitelist: ' + error);
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

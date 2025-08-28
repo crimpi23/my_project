@@ -1,4 +1,6 @@
+import hashlib
 import csv
+import pandas as pdimport 
 import io
 import re
 import time
@@ -3697,32 +3699,30 @@ def add_x_robots_tag(response):
 
 
 #Карточка товару
+# ...existing code...
 @app.route('/product/<article>')
 @cache.cached(timeout=3600, key_prefix=make_lang_cache_key)
 def product_details(article):
     try:
         # Нормалізуємо артикул для пошуку в базі
         normalized_article = normalize_article(article)
-        
-        
-        # ДОДАЄМО ДЕТАЛЬНЕ ЛОГУВАННЯ
+
         logging.info(f"=== ARTICLE NORMALIZATION ===")
         logging.info(f"Original article: '{article}'")
         logging.info(f"Normalized article: '{normalized_article}'")
         logging.info(f"Original length: {len(article)}")
         logging.info(f"Normalized length: {len(normalized_article)}")
-                
+
         with safe_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            # Отримуємо поточну мову
+            # Поточна мова
             lang = session.get('language', 'sk')
-
             logging.info(f"=== Starting product_details for original article: {article}, normalized: {normalized_article} ===")
 
-            # Get stock info first - використовуємо нормалізований артикул
+            # 1) Stock з quantity (ВИПРАВЛЕНО: додаємо s.quantity)
             cursor.execute("""
-                SELECT s.article, s.price, s.brand_id, b.name as brand_name
+                SELECT s.article, s.price, s.quantity, s.brand_id, b.name as brand_name
                 FROM stock s
                 LEFT JOIN brands b ON s.brand_id = b.id
                 WHERE s.article = %s
@@ -3730,16 +3730,16 @@ def product_details(article):
             stock_data = cursor.fetchone()
             logging.info(f"Stock data: {dict(stock_data) if stock_data else 'Not found'}")
 
-            # Initialize product_data
+            # Базові дані продукту
             product_data = {
-                'name': article,  # Показуємо оригінальний артикул
+                'name': article,  # показуємо оригінальний
                 'description': '',
                 'photo_urls': [],
                 'brand_name': stock_data['brand_name'] if stock_data else None,
                 'brand_id': stock_data['brand_id'] if stock_data else None
             }
-            
-            # Отримуємо категорії товару - використовуємо нормалізований артикул
+
+            # 2) Категорії товару
             cursor.execute("""
                 SELECT c.*
                 FROM product_categories pc
@@ -3749,7 +3749,7 @@ def product_details(article):
             """, (normalized_article,))
             product_categories = cursor.fetchall()
 
-            # Get product info with language-specific fields - використовуємо нормалізований артикул
+            # 3) Інфо про продукт (мовні поля)
             cursor.execute(f"""
                 SELECT 
                     article,
@@ -3758,13 +3758,12 @@ def product_details(article):
                 FROM products
                 WHERE article = %s
             """, (normalized_article,))
-            
             db_product = cursor.fetchone()
             if db_product:
-                product_data['name'] = db_product['name'] or article  # Показуємо оригінальний
+                product_data['name'] = db_product['name'] or article
                 product_data['description'] = db_product['description'] or ''
 
-            # Отримуємо фотографії - використовуємо нормалізований артикул
+            # 4) Фото
             cursor.execute("""
                 SELECT image_url 
                 FROM product_images 
@@ -3775,20 +3774,25 @@ def product_details(article):
 
             prices = []
 
+            # 5) Додаємо “stock” пропозицію:
+            #    - тільки In Stock якщо quantity > 0
+            #    - якщо quantity = 0 — показуємо “Temporarily unavailable” (без In Stock)
             if stock_data:
+                qty = int(stock_data.get('quantity') or 0)
+                in_stock = qty > 0
                 price_data = {
                     'table_name': 'stock',
                     'brand_name': stock_data['brand_name'],
                     'brand_id': stock_data['brand_id'],
                     'price': stock_data['price'],
                     'base_price': stock_data['price'],
-                    'in_stock': True,
-                    'delivery_time': _("In Stock")
+                    'in_stock': in_stock,
+                    'delivery_time': (_("In Stock") if in_stock else _("Temporarily unavailable"))
                 }
                 prices.append(price_data)
                 logging.info(f"Added stock price: {price_data}")
 
-            # Get prices from price_lists - використовуємо нормалізований артикул
+            # 6) Прайс-листи
             cursor.execute("""
                 SELECT pl.table_name, pl.brand_id, pl.delivery_time, b.name as brand_name 
                 FROM price_lists pl
@@ -3798,84 +3802,89 @@ def product_details(article):
             tables = cursor.fetchall()
 
             price_found = False
-
             for table in tables:
                 if table['table_name'] != 'stock':
                     table_name = table['table_name']
                     brand_id = table['brand_id']
                     brand_name = table['brand_name']
-                    
-                    cursor.execute(f"""
+
+                    # Перевірка існування таблиці
+                    cursor.execute("""
                         SELECT EXISTS (
                             SELECT FROM information_schema.tables 
                             WHERE table_name = %s
                         )
                     """, (table_name,))
-                    
-                    if cursor.fetchone()[0]:
-                        cursor.execute(f"""
-                            SELECT EXISTS (
-                                SELECT FROM information_schema.columns 
-                                WHERE table_name = %s AND column_name = 'brand_id'
-                            )
-                        """, (table_name,))
-                        has_brand_id = cursor.fetchone()[0]
-                        
-                        if has_brand_id:
-                            query = f"""
-                                SELECT t.article, t.price, t.brand_id, b.name as brand_name
-                                FROM {table_name} t
-                                LEFT JOIN brands b ON t.brand_id = b.id
-                                WHERE t.article = %s
-                            """
+                    if not cursor.fetchone()[0]:
+                        continue
+
+                    # Перевірка наявності brand_id колонки
+                    cursor.execute("""
+                        SELECT EXISTS (
+                            SELECT FROM information_schema.columns 
+                            WHERE table_name = %s AND column_name = 'brand_id'
+                        )
+                    """, (table_name,))
+                    has_brand_id = cursor.fetchone()[0]
+
+                    if has_brand_id:
+                        query = f"""
+                            SELECT t.article, t.price, t.brand_id, b.name as brand_name
+                            FROM {table_name} t
+                            LEFT JOIN brands b ON t.brand_id = b.id
+                            WHERE t.article = %s
+                        """
+                    else:
+                        query = f"""
+                            SELECT article, price
+                            FROM {table_name}
+                            WHERE article = %s
+                        """
+
+                    cursor.execute(query, (normalized_article,))
+                    result = cursor.fetchone()
+
+                    if result:
+                        price_found = True
+                        markup_percentage = get_markup_by_role('public')
+                        base_price = result['price']
+                        final_price = calculate_price(base_price, markup_percentage)
+
+                        if has_brand_id and result.get('brand_name'):
+                            actual_brand_name = result['brand_name']
+                            actual_brand_id = result['brand_id']
                         else:
-                            query = f"""
-                                SELECT article, price
-                                FROM {table_name}
-                                WHERE article = %s
-                            """
-                        
-                        cursor.execute(query, (normalized_article,))
-                        result = cursor.fetchone()
-                        
-                        if result:
-                            price_found = True
-                            markup_percentage = get_markup_by_role('public')
-                            base_price = result['price']
-                            final_price = calculate_price(base_price, markup_percentage)
+                            actual_brand_name = brand_name
+                            actual_brand_id = brand_id
 
-                            if has_brand_id and result.get('brand_name'):
-                                actual_brand_name = result['brand_name']
-                                actual_brand_id = result['brand_id']
-                            else:
-                                actual_brand_name = brand_name
-                                actual_brand_id = brand_id
+                        price_data = {
+                            'table_name': table_name,
+                            'brand_name': actual_brand_name,
+                            'brand_id': actual_brand_id,
+                            'price': final_price,
+                            'base_price': base_price,
+                            'in_stock': table['delivery_time'] == '0',
+                            'delivery_time': (_("In Stock") if table['delivery_time'] == '0' 
+                                              else f"{table['delivery_time']} {_('days')}")
+                        }
+                        prices.append(price_data)
+                        logging.info(f"Added price from {table_name}: {price_data}")
 
-                            price_data = {
-                                'table_name': table_name,
-                                'brand_name': actual_brand_name,
-                                'brand_id': actual_brand_id,
-                                'price': final_price,
-                                'base_price': base_price,
-                                'in_stock': table['delivery_time'] == '0',
-                                'delivery_time': (_("In Stock") if table['delivery_time'] == '0' 
-                                                else f"{table['delivery_time']} {_('days')}")
-                            }
-                            prices.append(price_data)
-                            logging.info(f"Added price from {table_name}: {price_data}")
-
+            # 7) Сортуємо за ціною
             prices.sort(key=lambda x: float(x['price']))
             logging.info(f"Final prices count: {len(prices)}")
 
             price = prices[0] if prices else None
-            
-            if price and 'brand_name' in price:
-                product_data['brand_name'] = price['brand_name']
 
+            # Якщо бренд не визначено раніше — беремо з першої ціни
+            if price and 'brand_name' in price:
+                product_data['brand_name'] = product_data['brand_name'] or price['brand_name']
+
+            # 8) Якщо нічого не знайшли
             if not db_product and not stock_data and not price_found:
                 return render_template(
                     'public/article_not_found.html',
-                    article=article  # Показуємо оригінальний артикул
+                    article=article  # оригінальний
                 )
 
             return render_template(
@@ -3884,7 +3893,7 @@ def product_details(article):
                 prices=prices,
                 price=price,
                 brand_name=product_data['brand_name'],
-                article=article,  # Показуємо оригінальний артикул
+                article=article,  # оригінальний
                 product_categories=product_categories
             )
 
@@ -3892,6 +3901,7 @@ def product_details(article):
         logging.error(f"Error in product_details: {e}", exc_info=True)
         flash(_("An error occurred while processing your request."), "error")
         return redirect(url_for('index'))
+# ...existing code...
 
 
 
@@ -10662,6 +10672,2935 @@ def admin_generate_image_sitemap(token):
         logging.error(f"Error in admin_generate_image_sitemap: {e}", exc_info=True)
         flash("Error generating image sitemap", "error")
         return redirect(url_for('admin_dashboard', token=token))
+
+
+
+#============= система автоматичного новлення СТОК ======
+
+
+def calculate_file_hash(file_content):
+    """Обчислює SHA-256 хеш вмісту файлу"""
+    return hashlib.sha256(file_content).hexdigest()
+
+def validate_csv_structure(file_content):
+    """Перевіряє структуру CSV файлу"""
+    try:
+        lines = file_content.decode('utf-8').strip().split('\n')
+        if len(lines) < 2:
+            return False, "File is too short"
+        
+        # Перевіряємо заголовок
+        header = lines[0].split(';')
+        expected_header = ['Артикул', 'Найменування', 'Склад', 'Бренд', 'Залишок', 'Ціна', 'Валюта', 'Вартість']
+        
+        if len(header) != len(expected_header):
+            return False, f"Expected {len(expected_header)} columns, got {len(header)}"
+        
+        return True, "CSV structure is valid"
+    except Exception as e:
+        return False, f"Error validating CSV: {str(e)}"
+
+def parse_csv_import_file(file_content):
+    """Парсить CSV файл і фільтрує тільки 'Склад Словакия' + ПРОПУСКАЄ товари без бренду"""
+    try:
+        lines = file_content.decode('utf-8').strip().split('\n')
+        data = []
+        
+        logging.info(f"Parsing CSV file with {len(lines)} lines")
+        
+        # Пропускаємо заголовок
+        for line_num, line in enumerate(lines[1:], 2):
+            if not line.strip():
+                continue
+                
+            parts = line.split(';')
+            if len(parts) < 6:
+                logging.warning(f"Skipping line {line_num}: insufficient columns ({len(parts)} < 6)")
+                continue
+            
+            try:
+                article = parts[0].strip().upper() if len(parts) > 0 and parts[0].strip() else ''
+                name = parts[1].strip() if len(parts) > 1 and parts[1].strip() else ''
+                warehouse = parts[2].strip() if len(parts) > 2 and parts[2].strip() else ''
+                brand = parts[3].strip() if len(parts) > 3 and parts[3].strip() else ''
+                
+                # ОСНОВНИЙ ФІЛЬТР - тільки "Склад Словакия"
+                if warehouse != 'Склад Словакия':
+                    continue
+                
+                # Конвертація quantity
+                try:
+                    quantity_str = parts[4].strip().replace(',', '.')
+                    quantity = int(float(quantity_str))
+                except (ValueError, IndexError):
+                    logging.warning(f"Skipping line {line_num}: invalid quantity")
+                    continue
+                
+                # Конвертація price
+                try:
+                    price_str = parts[5].strip().replace(',', '.')
+                    price = float(price_str)
+                except (ValueError, IndexError):
+                    logging.warning(f"Skipping line {line_num}: invalid price")
+                    continue
+                
+                # Валідація
+                if not article or not brand or price <= 0:
+                    continue
+                
+                data.append({
+                    'article': article,
+                    'name': name,
+                    'warehouse': warehouse,
+                    'brand': brand,  # Просто як є в файлі
+                    'quantity': quantity,
+                    'price': price
+                })
+                
+            except Exception as e:
+                logging.warning(f"Error parsing line {line_num}: {e}")
+                continue
+        
+        logging.info(f"Successfully parsed {len(data)} valid records")
+        return data, None
+        
+    except Exception as e:
+        logging.error(f"Error parsing CSV: {e}", exc_info=True)
+        return [], f"Error parsing CSV: {str(e)}"
+
+
+
+@app.route('/<token>/admin/import/debug', methods=['GET'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_debug(token):
+    """Відладкова сторінка для перевірки системи імпорту"""
+    try:
+        debug_info = {}
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Перевіряємо існування таблиць
+            tables_to_check = [
+                'import_files', 'import_queue', 'import_whitelist', 
+                'import_blacklist', 'import_price_overrides', 
+                'import_brands_mapping', 'import_price_changes'
+            ]
+            
+            debug_info['tables'] = {}
+            for table in tables_to_check:
+                cursor.execute(f"""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_schema = 'public' 
+                        AND table_name = '{table}'
+                    )
+                """)
+                exists = cursor.fetchone()[0]
+                
+                if exists:
+                    cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                    count = cursor.fetchone()[0]
+                    debug_info['tables'][table] = {'exists': True, 'count': count}
+                else:
+                    debug_info['tables'][table] = {'exists': False, 'count': 0}
+            
+            # Останні файли імпорту
+            cursor.execute("""
+                SELECT * FROM import_files 
+                ORDER BY imported_at DESC 
+                LIMIT 5
+            """)
+            debug_info['recent_files'] = cursor.fetchall()
+            
+            # Останні записи в черзі
+            cursor.execute("""
+                SELECT * FROM import_queue 
+                ORDER BY created_at DESC 
+                LIMIT 10
+            """)
+            debug_info['recent_queue'] = cursor.fetchall()
+            
+        return render_template(
+            'admin/import/debug.html',
+            token=token,
+            debug_info=debug_info
+        )
+        
+    except Exception as e:
+        logging.error(f"Error in admin_import_debug: {e}", exc_info=True)
+        return f"<h1>Debug Error</h1><pre>{str(e)}</pre>"
+
+
+
+def get_or_create_brand_mapping(brand_name):
+    """Отримує або створює маппінг бренду - СПРОЩЕНА ВЕРСІЯ"""
+    try:
+        if not brand_name or not brand_name.strip():
+            return None, "Empty brand name"
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Шукаємо існуючий маппінг
+            cursor.execute("""
+                SELECT brand_id FROM import_brands_mapping 
+                WHERE file_brand_name = %s
+            """, (brand_name,))
+            
+            existing_mapping = cursor.fetchone()
+            if existing_mapping and existing_mapping['brand_id']:
+                return existing_mapping['brand_id'], None
+            
+            # Шукаємо бренд БЕЗ урахування регістру
+            cursor.execute("""
+                SELECT id FROM brands WHERE UPPER(name) = UPPER(%s)
+            """, (brand_name,))
+            
+            brand = cursor.fetchone()
+            
+            if brand:
+                # Створюємо маппінг
+                cursor.execute("""
+                    INSERT INTO import_brands_mapping (file_brand_name, brand_id, auto_approved, created_at)
+                    VALUES (%s, %s, TRUE, NOW())
+                    ON CONFLICT (file_brand_name) DO UPDATE SET brand_id = EXCLUDED.brand_id
+                """, (brand_name, brand['id']))
+                conn.commit()
+                return brand['id'], None
+            
+            # Створюємо новий бренд (як є в файлі)
+            cursor.execute("INSERT INTO brands (name) VALUES (%s) RETURNING id", (brand_name,))
+            new_brand_id = cursor.fetchone()['id']
+            
+            # Створюємо маппінг
+            cursor.execute("""
+                INSERT INTO import_brands_mapping (file_brand_name, brand_id, auto_approved, created_at)
+                VALUES (%s, %s, TRUE, NOW())
+            """, (brand_name, new_brand_id))
+            
+            conn.commit()
+            return new_brand_id, None
+            
+    except Exception as e:
+        logging.error(f"Error in brand mapping: {e}", exc_info=True)
+        return None, f"Brand mapping error: {str(e)}"
+
+def check_article_in_lists(article, brand_id):
+    """Перевіряє в яких списках знаходиться артикул"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Перевіряємо прайс-овєррайди (найвищий пріоритет)
+            cursor.execute("""
+                SELECT id FROM import_price_overrides 
+                WHERE article = %s AND brand_id = %s
+            """, (article, brand_id))
+            
+            if cursor.fetchone():
+                return 'price_override'
+            
+            # Перевіряємо чорний список
+            cursor.execute("""
+                SELECT id FROM import_blacklist 
+                WHERE article = %s AND brand_id = %s
+            """, (article, brand_id))
+            
+            if cursor.fetchone():
+                return 'blacklist'
+            
+            # Перевіряємо білий список
+            cursor.execute("""
+                SELECT id FROM import_whitelist 
+                WHERE article = %s AND brand_id = %s
+            """, (article, brand_id))
+            
+            if cursor.fetchone():
+                return 'whitelist'
+            
+            return 'queue'  # Додати в чергу
+    except Exception as e:
+        logging.error(f"Error checking article lists: {e}")
+        return 'queue'
+
+def calculate_final_price(base_price, markup_percent=15):
+    """Розраховує фінальну ціну з накруткою та ПДВ"""
+    try:
+        markup_multiplier = Decimal('1') + (Decimal(str(markup_percent)) / Decimal('100'))
+        vat_multiplier = Decimal('1.23')  # 23% ПДВ
+        
+        final_price = Decimal(str(base_price)) * markup_multiplier * vat_multiplier
+        return round(final_price, 2)
+    except Exception as e:
+        logging.error(f"Error calculating final price: {e}")
+        return Decimal(str(base_price))
+
+def backup_stock_table():
+    """Створює бекап таблиці stock"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Очищаємо старі бекапи (більше 7 днів)
+            cursor.execute("""
+                DELETE FROM stock_backup 
+                WHERE backup_date < NOW() - INTERVAL '7 days'
+            """)
+            
+            # Створюємо новий бекап
+            cursor.execute("""
+                INSERT INTO stock_backup (article, quantity, price, brand_id)
+                SELECT article, quantity, price, brand_id FROM stock
+            """)
+            
+            conn.commit()
+            logging.info("Stock backup created successfully")
+            return True
+    except Exception as e:
+        logging.error(f"Error creating stock backup: {e}")
+        return False
+
+
+def process_single_article(item, import_file_id, safe_mode):
+    """Оптимізована обробка одного артикула - ВИПРАВЛЕНА ЛОГІКА"""
+    try:
+        article = item['article']
+        brand_name = item['brand']
+        quantity = item['quantity']
+        price = item['price']
+        
+        logging.debug(f"Processing article: {article}, brand: {brand_name}")
+        
+        # Отримуємо brand_id
+        brand_id, brand_error = get_or_create_brand_mapping(brand_name)
+        if brand_error:
+            logging.warning(f"Brand mapping error for {brand_name}: {brand_error}")
+            # Додаємо в чергу якщо проблема з брендом
+            add_to_queue_safe(article, item, import_file_id)
+            return 'queued'
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # 1. Перевіряємо прайс-овєррайди
+            cursor.execute("""
+                SELECT id FROM import_price_overrides 
+                WHERE article = %s AND brand_id = %s
+            """, (article, brand_id))
+            
+            if cursor.fetchone():
+                logging.info(f"Article {article} has price override, ignoring")
+                return 'ignored'
+            
+            # 2. Перевіряємо чорний список
+            cursor.execute("""
+                SELECT id FROM import_blacklist 
+                WHERE article = %s AND brand_id = %s
+            """, (article, brand_id))
+            
+            if cursor.fetchone():
+                logging.info(f"Article {article} is blacklisted, ignoring")
+                return 'ignored'
+            
+            # 3. Перевіряємо білий список
+            cursor.execute("""
+                SELECT markup_percent FROM import_whitelist 
+                WHERE article = %s AND brand_id = %s
+            """, (article, brand_id))
+            
+            whitelist_result = cursor.fetchone()
+            if whitelist_result:
+                logging.info(f"Article {article} is whitelisted, processing to stock")
+                result = process_whitelist_article_optimized(
+                    article, brand_id, quantity, price, 
+                    whitelist_result['markup_percent'], safe_mode, cursor, conn
+                )
+                # ВАЖЛИВО: НЕ додаємо в чергу, якщо оброблено в whitelist
+                return result
+            
+            # 4. ТІЛЬКИ ТЕПЕР додаємо в чергу якщо не знайдено в жодному списку
+            add_to_queue_safe(article, item, import_file_id)
+            return 'queued'
+                
+    except Exception as e:
+        logging.error(f"Error processing article {article}: {e}", exc_info=True)
+        return 'error'
+
+
+
+def add_to_queue_safe(article, item, import_file_id):
+    """Безпечно додає артикул в чергу (оновлює або створює)"""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id FROM import_queue WHERE article = %s
+        """, (article,))
+        
+        existing = cursor.fetchone()
+        
+        if existing:
+            # Оновлюємо існуючий запис
+            cursor.execute("""
+                UPDATE import_queue 
+                SET name = %s, brand = %s, quantity = %s, price = %s, 
+                    import_file_id = %s, processed = FALSE, created_at = NOW()
+                WHERE article = %s
+            """, (item.get('name', ''), item['brand'], item['quantity'], 
+                  item['price'], import_file_id, article))
+            logging.info(f"Updated {article} in import queue")
+        else:
+            # Вставляємо новий запис
+            cursor.execute("""
+                INSERT INTO import_queue 
+                (article, name, brand, quantity, price, import_file_id, processed, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, FALSE, NOW())
+            """, (article, item.get('name', ''), item['brand'], 
+                  item['quantity'], item['price'], import_file_id))
+            logging.info(f"Added {article} to import queue")
+        
+        conn.commit()
+
+@app.route('/<token>/admin/import/queue/clear', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_queue_clear(token):
+    """Очищення черги імпорту"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Підраховуємо кількість записів перед видаленням
+            cursor.execute("SELECT COUNT(*) FROM import_queue")
+            count_before = cursor.fetchone()[0]
+            
+            # Очищаємо таблицю
+            cursor.execute("TRUNCATE TABLE import_queue RESTART IDENTITY")
+            conn.commit()
+            
+            flash(f"Queue cleared successfully. Removed {count_before} items.", "success")
+            logging.info(f"Import queue cleared: {count_before} items removed")
+            
+    except Exception as e:
+        logging.error(f"Error clearing import queue: {e}", exc_info=True)
+        flash("Error clearing import queue", "error")
+    
+    return redirect(url_for('admin_import_queue', token=token))
+
+
+def process_import_file_main(file_data, safe_mode=True):
+    """Головна функція обробки файлу імпорту"""
+    try:
+        # Перевіряємо структуру файлу
+        is_valid, validation_message = validate_csv_structure(file_data)
+        if not is_valid:
+            return False, validation_message
+        
+        # Обчислюємо хеш файлу
+        file_hash = calculate_file_hash(file_data)
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Перевіряємо чи файл вже був оброблений
+            cursor.execute("""
+                SELECT id FROM import_files 
+                WHERE file_hash = %s AND status = 'completed'
+            """, (file_hash,))
+            
+            if cursor.fetchone():
+                return False, "File has already been processed"
+            
+            # Створюємо запис про файл
+            cursor.execute("""
+                INSERT INTO import_files 
+                (filename, file_hash, status, safe_mode, imported_at)
+                VALUES (%s, %s, 'processing', %s, NOW())
+                RETURNING id
+            """, (f"import_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", file_hash, safe_mode))
+            
+            import_file_id = cursor.fetchone()['id']
+            
+            # Парсимо дані файлу
+            parsed_data, parse_error = parse_csv_import_file(file_data)
+            if parse_error:
+                cursor.execute("""
+                    UPDATE import_files 
+                    SET status = 'error', notes = %s
+                    WHERE id = %s
+                """, (parse_error, import_file_id))
+                conn.commit()
+                return False, parse_error
+            
+            # Створюємо бекап якщо не в safe режимі
+            if not safe_mode:
+                backup_stock_table()
+            
+            # Лічильники
+            processed_count = 0
+            new_count = 0
+            updated_count = 0
+            error_count = 0
+            
+            # Обробляємо кожний артикул
+            for item in parsed_data:
+                try:
+                    result = process_single_article(item, import_file_id, safe_mode)
+                    processed_count += 1
+                    
+                    if result == 'new':
+                        new_count += 1
+                    elif result == 'updated':
+                        updated_count += 1
+                        
+                except Exception as e:
+                    error_count += 1
+                    logging.error(f"Error processing article {item.get('article', 'unknown')}: {e}")
+            
+            # Оновлюємо статус файлу
+            cursor.execute("""
+                UPDATE import_files 
+                SET status = 'completed',
+                    processed_count = %s,
+                    new_count = %s,
+                    updated_count = %s,
+                    errors_count = %s
+                WHERE id = %s
+            """, (processed_count, new_count, updated_count, error_count, import_file_id))
+            
+            conn.commit()
+            
+            return True, f"Import completed: {processed_count} processed, {new_count} new, {updated_count} updated, {error_count} errors"
+            
+    except Exception as e:
+        logging.error(f"Error in process_import_file_main: {e}")
+        return False, f"Import failed: {str(e)}"
+
+def process_whitelist_article_optimized(article, brand_id, quantity, price, markup_percent, safe_mode, cursor, conn):
+    """Оптимізована обробка артикула з білого списку"""
+    try:
+        markup_percent = markup_percent or 15
+        final_price = calculate_final_price(price, markup_percent)
+        
+        # Перевіряємо існування в stock одним запитом
+        cursor.execute("""
+            SELECT quantity, price FROM stock WHERE article = %s
+        """, (article,))
+        
+        existing_stock = cursor.fetchone()
+        
+        if existing_stock:
+            current_price = existing_stock['price']
+            
+            if final_price > current_price:
+                # Записуємо зміну ціни
+                cursor.execute("""
+                    INSERT INTO import_price_changes 
+                    (article, brand_id, old_price, new_price, status, created_at)
+                    VALUES (%s, %s, %s, %s, 'pending', NOW())
+                    ON CONFLICT (article, brand_id) DO UPDATE SET
+                        new_price = EXCLUDED.new_price,
+                        status = 'pending'
+                """, (article, brand_id, current_price, final_price))
+                
+                # Оновлюємо тільки кількість
+                cursor.execute("""
+                    UPDATE stock SET quantity = %s WHERE article = %s
+                """, (quantity, article))
+            else:
+                # Оновлюємо ціну і кількість
+                cursor.execute("""
+                    UPDATE stock 
+                    SET quantity = %s, price = %s, brand_id = %s
+                    WHERE article = %s
+                """, (quantity, final_price, brand_id, article))
+            
+            conn.commit()
+            return 'updated'
+        else:
+            # Новий товар
+            cursor.execute("""
+                INSERT INTO stock (article, quantity, price, brand_id)
+                VALUES (%s, %s, %s, %s)
+            """, (article, quantity, final_price, brand_id))
+            conn.commit()
+            return 'new'
+            
+    except Exception as e:
+        logging.error(f"Error processing whitelist article {article}: {e}")
+        raise
+
+def process_whitelist_article(article, brand_id, quantity, price, safe_mode):
+    """Обробляє артикул з білого списку"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо налаштування з білого списку
+            cursor.execute("""
+                SELECT markup_percent FROM import_whitelist 
+                WHERE article = %s AND brand_id = %s
+            """, (article, brand_id))
+            
+            whitelist_settings = cursor.fetchone()
+            markup_percent = whitelist_settings['markup_percent'] if whitelist_settings else 15
+            
+            # Розраховуємо фінальну ціну
+            final_price = calculate_final_price(price, markup_percent)
+            
+            # Перевіряємо чи існує в stock
+            cursor.execute("""
+                SELECT quantity, price FROM stock 
+                WHERE article = %s
+            """, (article,))
+            
+            existing_stock = cursor.fetchone()
+            
+            if existing_stock:
+                # Перевіряємо ціну - якщо нова ціна більша, не оновлюємо автоматично
+                current_price = existing_stock['price']
+                if final_price > current_price:
+                    # Записуємо в таблицю змін цін
+                    cursor.execute("""
+                        INSERT INTO import_price_changes 
+                        (article, brand_id, old_price, new_price, status, created_at)
+                        VALUES (%s, %s, %s, %s, 'pending', NOW())
+                        ON CONFLICT (article, brand_id) DO UPDATE SET
+                            new_price = EXCLUDED.new_price,
+                            status = 'pending'
+                    """, (article, brand_id, current_price, final_price))
+                    
+                    # Оновлюємо тільки кількість
+                    cursor.execute("""
+                        UPDATE stock 
+                        SET quantity = %s
+                        WHERE article = %s
+                    """, (quantity, article))
+                else:
+                    # Оновлюємо і ціну і кількість
+                    cursor.execute("""
+                        UPDATE stock 
+                        SET quantity = %s, price = %s, brand_id = %s
+                        WHERE article = %s
+                    """, (quantity, final_price, brand_id, article))
+                
+                conn.commit()
+                return 'updated'
+            else:
+                # Додаємо новий товар
+                cursor.execute("""
+                    INSERT INTO stock (article, quantity, price, brand_id)
+                    VALUES (%s, %s, %s, %s)
+                """, (article, quantity, final_price, brand_id))
+                conn.commit()
+                return 'new'
+                
+    except Exception as e:
+        logging.error(f"Error processing whitelist article: {e}")
+        raise
+
+# ...existing code...
+def handle_zero_stock_items(safe_mode, import_file_id=None):
+    """Ставит quantity=0 всьому, чого немає в поточному файлі (і не в overrides),
+    та оновлює import_zero_stock. Працює по import_file_articles."""
+    try:
+        if safe_mode:
+            logging.info("Safe mode enabled - skipping zero stock processing")
+            return
+        if not import_file_id:
+            logging.warning("ZeroStock: import_file_id is required; skipping")
+            return
+
+        with get_db_connection() as conn:
+            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            # Переконаємось, що снапшот є
+            cur.execute("SELECT COUNT(*) FROM import_file_articles WHERE import_file_id = %s", (import_file_id,))
+            imported_cnt = cur.fetchone()[0] or 0
+            logging.info(f"ZeroStock: snapshot rows for file {import_file_id}: {imported_cnt}")
+            if imported_cnt == 0:
+                logging.warning("ZeroStock: no snapshot rows; skipping")
+                return
+
+            # 1) Обнулити все, що НЕ в файлі і НЕ в overrides
+            cur.execute("""
+                WITH imported AS (
+                    SELECT article FROM import_file_articles WHERE import_file_id = %s
+                ),
+                overrides AS (
+                    SELECT DISTINCT article FROM import_price_overrides
+                ),
+                to_zero AS (
+                    SELECT s.article, s.brand_id
+                    FROM stock s
+                    WHERE s.quantity > 0
+                      AND NOT EXISTS (SELECT 1 FROM imported i WHERE i.article = s.article)
+                      AND NOT EXISTS (SELECT 1 FROM overrides o WHERE o.article = s.article)
+                )
+                UPDATE stock s
+                SET quantity = 0
+                FROM to_zero tz
+                WHERE s.article = tz.article
+                RETURNING s.article, s.brand_id
+            """, (import_file_id,))
+            zeroed = cur.fetchall()
+            logging.info(f"ZeroStock: zeroed {len(zeroed)} items")
+
+            # 2) Записати/оновити import_zero_stock
+            if zeroed:
+                rows_full = [(a, b, 'active', datetime.now(), 1, datetime.now()) for (a, b) in zeroed]
+                try:
+                    # Основний шлях (коли є унікальне обмеження)
+                    psycopg2.extras.execute_values(
+                        cur,
+                        """
+                        INSERT INTO import_zero_stock (article, brand_id, status, last_seen, import_count_missing, created_at)
+                        VALUES %s
+                        ON CONFLICT (article, brand_id) DO UPDATE SET
+                            status = 'active',
+                            last_seen = EXCLUDED.last_seen,
+                            import_count_missing = import_zero_stock.import_count_missing + 1
+                        """,
+                        rows_full,
+                        page_size=1000
+                    )
+                except Exception as e:
+                    # Резервний шлях без унікального обмеження
+                    if "no unique or exclusion constraint matching the ON CONFLICT specification" in str(e):
+                        logging.warning("ZeroStock: unique constraint missing on import_zero_stock(article, brand_id). Using fallback upsert.")
+                        # 2.1 спочатку вставляємо відсутні рядки (ігноруємо конфлікти)
+                        psycopg2.extras.execute_values(
+                            cur,
+                            """
+                            INSERT INTO import_zero_stock (article, brand_id, status, last_seen, import_count_missing, created_at)
+                            VALUES %s
+                            ON CONFLICT DO NOTHING
+                            """,
+                            rows_full,
+                            page_size=1000
+                        )
+                        # 2.2 оновлюємо існуючі
+                        pair_values = [(a, b) for (a, b) in zeroed]
+                        psycopg2.extras.execute_values(
+                            cur,
+                            """
+                            UPDATE import_zero_stock AS iz
+                            SET status = 'active',
+                                last_seen = NOW(),
+                                import_count_missing = iz.import_count_missing + 1
+                            FROM (VALUES %s) AS v(article, brand_id)
+                            WHERE iz.article = v.article AND iz.brand_id = v.brand_id
+                            """,
+                            pair_values,
+                            template="(%s, %s)",
+                            page_size=1000
+                        )
+                    else:
+                        raise
+
+            conn.commit()
+    except Exception as e:
+        logging.error(f"Error handling zero stock items: {e}", exc_info=True)
+        raise
+# ...existing code...
+
+def send_import_notification(import_result, recipient_email="atgrinfo@gmail.com"):
+    """Відправляє email сповіщення про результати імпорту"""
+    try:
+        if not import_result:
+            return False
+        
+        # Тут буде логіка відправки email
+        # Поки що тільки логуємо
+        logging.info(f"Import notification would be sent to {recipient_email}: {import_result}")
+        return True
+        
+    except Exception as e:
+        logging.error(f"Error sending import notification: {e}")
+        return False
+
+def cleanup_old_import_data():
+    """Очищає старі дані імпорту (>7 днів)"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Очищаємо старі логи
+            cursor.execute("""
+                DELETE FROM import_logs 
+                WHERE created_at < NOW() - INTERVAL '7 days'
+            """)
+            
+            # Очищаємо оброблені записи з черги
+            cursor.execute("""
+                DELETE FROM import_queue 
+                WHERE processed = TRUE AND created_at < NOW() - INTERVAL '7 days'
+            """)
+            
+            # Очищаємо старі бекапи
+            cursor.execute("""
+                DELETE FROM stock_backup 
+                WHERE backup_date < NOW() - INTERVAL '7 days'
+            """)
+            
+            conn.commit()
+            logging.info("Old import data cleaned up")
+            
+    except Exception as e:
+        logging.error(f"Error cleaning up old import data: {e}")
+
+@app.route('/<token>/admin/import/dashboard')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_dashboard(token):
+    """Головна сторінка управління імпортом"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Статистика черги імпорту
+            cursor.execute("SELECT COUNT(*) FROM import_queue WHERE processed = FALSE")
+            queue_count = cursor.fetchone()[0]
+            
+            # Останній імпорт
+            cursor.execute("""
+                SELECT imported_at, status FROM import_files 
+                ORDER BY imported_at DESC LIMIT 1
+            """)
+            last_import = cursor.fetchone()
+            last_import_time = last_import['imported_at'].strftime('%d.%m.%Y %H:%M') if last_import else 'Never'
+            
+            # Статистика списків
+            cursor.execute("SELECT COUNT(*) FROM import_whitelist")
+            whitelist_count = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM import_blacklist")
+            blacklist_count = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM import_price_overrides")
+            price_overrides_count = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM import_price_changes WHERE status = 'pending'")
+            pending_price_changes = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM import_zero_stock WHERE status = 'active'")
+            zero_stock_count = cursor.fetchone()[0]
+            
+            return render_template(
+                'admin/import/dashboard.html',
+                token=token,
+                queue_count=queue_count,
+                last_import_time=last_import_time,
+                auto_import_enabled=True,  # TODO: Додати в налаштування
+                whitelist_count=whitelist_count,
+                blacklist_count=blacklist_count,
+                price_overrides_count=price_overrides_count,
+                pending_price_changes=pending_price_changes,
+                zero_stock_count=zero_stock_count
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_import_dashboard: {e}", exc_info=True)
+        flash("Error loading import dashboard", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+@app.route('/<token>/admin/import/upload', methods=['GET', 'POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_upload(token):
+    """Завантаження файлу імпорту"""
+    if request.method == 'POST':
+        try:
+            file = request.files.get('file')
+            safe_mode = request.form.get('safe_mode') == 'on'
+            notes = request.form.get('notes', '')
+            
+            if not file or file.filename == '':
+                flash("No file selected", "error")
+                return redirect(url_for('admin_import_upload', token=token))
+            
+            # Читаємо вміст файлу
+            file_content = file.read()
+            
+            # ВИПРАВЛЕНО: Використовуємо правильну функцію
+            logging.info("=== CALLING process_import_file_optimized ===")
+            success, message = process_import_file_optimized(file_content, safe_mode)
+            
+            if success:
+                flash(f"Import successful: {message}", "success")
+            else:
+                flash(f"Import failed: {message}", "error")
+            
+            return redirect(url_for('admin_import_upload', token=token))
+            
+        except Exception as e:
+            logging.error(f"Error in manual import: {e}", exc_info=True)
+            flash(f"Import error: {str(e)}", "error")
+            return redirect(url_for('admin_import_upload', token=token))
+    
+    # GET - показуємо форму
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Останні імпорти
+            cursor.execute("""
+                SELECT * FROM import_files 
+                ORDER BY imported_at DESC LIMIT 5
+            """)
+            recent_imports = cursor.fetchall()
+            
+            return render_template(
+                'admin/import/upload.html',
+                token=token,
+                recent_imports=recent_imports
+            )
+            
+    except Exception as e:
+        logging.error(f"Error loading upload page: {e}", exc_info=True)
+        flash("Error loading upload page", "error")
+        return redirect(url_for('admin_import_dashboard', token=token))
+
+
+
+def cleanup_queue_after_list_changes():
+    """Очищає чергу від артикулів, які тепер в blacklist або whitelist"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Видаляємо з черги артикули, які є в blacklist
+            cursor.execute("""
+                DELETE FROM import_queue 
+                WHERE article IN (
+                    SELECT DISTINCT article 
+                    FROM import_blacklist
+                )
+            """)
+            blacklist_removed = cursor.rowcount
+            
+            # Видаляємо з черги артикули, які є в whitelist
+            cursor.execute("""
+                DELETE FROM import_queue 
+                WHERE article IN (
+                    SELECT DISTINCT article 
+                    FROM import_whitelist
+                )
+            """)
+            whitelist_removed = cursor.rowcount
+            
+            conn.commit()
+            logging.info(f"Queue cleanup: removed {blacklist_removed} blacklisted and {whitelist_removed} whitelisted items")
+            
+            return blacklist_removed + whitelist_removed
+            
+    except Exception as e:
+        logging.error(f"Error cleaning up queue: {e}", exc_info=True)
+        return 0
+
+
+
+@app.route('/<token>/admin/import/whitelist')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_whitelist(token):
+    """Управління білим списком"""
+    try:
+        # Фільтри
+        search = request.args.get('search', '')
+        brand_id = request.args.get('brand_id', '')
+        auto_update = request.args.get('auto_update', '')
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Базовий запит
+            query = """
+                SELECT w.*, b.name as brand_name
+                FROM import_whitelist w
+                LEFT JOIN brands b ON w.brand_id = b.id
+                WHERE 1=1
+            """
+            params = []
+            
+            # Фільтри
+            if search:
+                query += " AND w.article ILIKE %s"
+                params.append(f"%{search}%")
+            
+            if brand_id:
+                query += " AND w.brand_id = %s"
+                params.append(brand_id)
+            
+            if auto_update:
+                query += " AND w.auto_update = %s"
+                params.append(auto_update == 'true')
+            
+            query += " ORDER BY w.created_at DESC"
+            
+            cursor.execute(query, params)
+            whitelist_items = cursor.fetchall()
+            
+            # Статистика
+            cursor.execute("SELECT COUNT(*) FROM import_whitelist")
+            whitelist_count = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM import_whitelist WHERE auto_update = TRUE")
+            auto_update_count = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT AVG(markup_percent) FROM import_whitelist")
+            avg_markup = cursor.fetchone()[0] or 0
+            
+            cursor.execute("SELECT COUNT(DISTINCT brand_id) FROM import_whitelist")
+            brands_count = cursor.fetchone()[0]
+            
+            # Список брендів для фільтру
+            cursor.execute("SELECT id, name FROM brands ORDER BY name")
+            brands = cursor.fetchall()
+            
+            return render_template(
+                'admin/import/whitelist.html',
+                token=token,
+                whitelist_items=whitelist_items,
+                whitelist_count=whitelist_count,
+                auto_update_count=auto_update_count,
+                avg_markup=round(avg_markup, 1),
+                brands_count=brands_count,
+                brands=brands,
+                request=request
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_import_whitelist: {e}", exc_info=True)
+        flash("Error loading whitelist", "error")
+        return redirect(url_for('admin_import_dashboard', token=token))
+
+@app.route('/<token>/admin/import/whitelist/add', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_whitelist_add(token):
+    try:
+        article = request.form.get('article', '').strip().upper()
+        brand_id = request.form.get('brand_id')
+        markup_percent = request.form.get('markup_percent', 15)
+        min_quantity = request.form.get('min_quantity') or None
+        max_quantity = request.form.get('max_quantity') or None
+        notes = request.form.get('notes', '')
+        auto_update = 'auto_update' in request.form
+        
+        logging.info(f"Adding to whitelist: article={article}, brand_id={brand_id}")
+        
+        if not article:
+            flash("Артикул обов'язковий", "error")
+            return redirect(url_for('admin_import_whitelist', token=token))
+        
+        # ВИПРАВЛЕНО: Перевірка brand_id
+        if not brand_id or brand_id in ['', 'null', 'None']:
+            # Спробуємо знайти бренд автоматично з черги
+            with get_db_connection() as conn:
+                cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                
+                # Шукаємо бренд в черзі для цього артикула
+                cursor.execute("""
+                    SELECT DISTINCT iq.brand
+                    FROM import_queue iq
+                    WHERE iq.article = %s AND iq.brand IS NOT NULL
+                    LIMIT 1
+                """, (article,))
+                
+                queue_brand = cursor.fetchone()
+                
+                if queue_brand:
+                    # Шукаємо відповідний brand_id
+                    cursor.execute("""
+                        SELECT id FROM brands 
+                        WHERE UPPER(name) = UPPER(%s)
+                    """, (queue_brand['brand'],))
+                    
+                    brand_match = cursor.fetchone()
+                    if brand_match:
+                        brand_id = brand_match['id']
+                        logging.info(f"Auto-found brand_id {brand_id} for article {article}")
+                    else:
+                        flash(f"Бренд '{queue_brand['brand']}' не знайдено в базі. Створіть його спочатку.", "error")
+                        return redirect(url_for('admin_import_whitelist', token=token))
+                else:
+                    flash("Потрібно вибрати бренд", "error")
+                    return redirect(url_for('admin_import_whitelist', token=token))
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Перевірка існування бренду
+            cursor.execute("SELECT name FROM brands WHERE id = %s", (brand_id,))
+            brand = cursor.fetchone()
+            if not brand:
+                flash(f"Бренд з ID {brand_id} не існує", "error")
+                return redirect(url_for('admin_import_whitelist', token=token))
+            
+            cursor.execute("""
+                INSERT INTO import_whitelist 
+                (article, brand_id, markup_percent, min_quantity, max_quantity, notes, auto_update, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (article, brand_id) DO UPDATE SET
+                    markup_percent = EXCLUDED.markup_percent,
+                    min_quantity = EXCLUDED.min_quantity,
+                    max_quantity = EXCLUDED.max_quantity,
+                    notes = EXCLUDED.notes,
+                    auto_update = EXCLUDED.auto_update
+            """, (article, brand_id, markup_percent, min_quantity, max_quantity, notes, auto_update))
+            
+            # Видаляємо з черги після додавання в whitelist
+            cursor.execute("DELETE FROM import_queue WHERE article = %s", (article,))
+            removed_from_queue = cursor.rowcount
+            
+            conn.commit()
+            
+            message = f"Артикул {article} додано в білий список (бренд: {brand[0]})"
+            if removed_from_queue > 0:
+                message += f" і видалено з черги"
+            
+            flash(message, "success")
+            
+    except Exception as e:
+        logging.error(f"Error adding to whitelist: {e}", exc_info=True)
+        flash("Помилка додавання в білий список", "error")
+    
+    return redirect(url_for('admin_import_whitelist', token=token))
+
+
+
+@app.route('/<token>/admin/import/queue/cleanup', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_queue_cleanup(token):
+    """Очищення черги від артикулів, які вже в списках"""
+    try:
+        removed_count = cleanup_queue_after_list_changes()
+        
+        if removed_count > 0:
+            flash(f"Видалено {removed_count} артикулів з черги (які вже в списках)", "success")
+        else:
+            flash("Нічого не видалено - черга вже чиста", "info")
+            
+    except Exception as e:
+        logging.error(f"Error cleaning queue: {e}", exc_info=True)
+        flash("Помилка очищення черги", "error")
+    
+    return redirect(url_for('admin_import_queue', token=token))
+
+
+
+@app.route('/<token>/admin/import/whitelist/remove/<int:item_id>', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_whitelist_remove(token, item_id):
+    """Видалення артикула з білого списку"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM import_whitelist WHERE id = %s", (item_id,))
+            conn.commit()
+            flash("Артикул видалено з білого списку", "success")
+            
+    except Exception as e:
+        logging.error(f"Error removing from whitelist: {e}", exc_info=True)
+        flash("Помилка видалення з білого списку", "error")
+    
+    return redirect(url_for('admin_import_whitelist', token=token))
+
+@app.route('/<token>/admin/import/blacklist')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_blacklist(token):
+    """Управління чорним списком"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            cursor.execute("""
+                SELECT b.*, br.name as brand_name
+                FROM import_blacklist b
+                LEFT JOIN brands br ON b.brand_id = br.id
+                ORDER BY b.created_at DESC
+            """)
+            blacklist_items = cursor.fetchall()
+            
+            # Список брендів
+            cursor.execute("SELECT id, name FROM brands ORDER BY name")
+            brands = cursor.fetchall()
+            
+            return render_template(
+                'admin/import/blacklist.html',
+                token=token,
+                blacklist_items=blacklist_items,
+                brands=brands
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_import_blacklist: {e}", exc_info=True)
+        flash("Error loading blacklist", "error")
+        return redirect(url_for('admin_import_dashboard', token=token))
+
+@app.route('/<token>/admin/import/blacklist/add', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_blacklist_add(token):
+    """Додавання в чорний список"""
+    try:
+        article = request.form.get('article', '').strip().upper()
+        brand_id = request.form.get('brand_id')
+        reason = request.form.get('reason', '')
+        replacement_article = request.form.get('replacement_article', '')
+        notes = request.form.get('notes', '')
+        
+        if not article or not brand_id:
+            flash("Артикул і бренд обов'язкові", "error")
+            return redirect(url_for('admin_import_blacklist', token=token))
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO import_blacklist 
+                (article, brand_id, reason, replacement_article, notes, created_at)
+                VALUES (%s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (article, brand_id) DO UPDATE SET
+                    reason = EXCLUDED.reason,
+                    replacement_article = EXCLUDED.replacement_article,
+                    notes = EXCLUDED.notes
+            """, (article, brand_id, reason, replacement_article, notes))
+            
+            # ДОДАНО: Видаляємо з черги після додавання в blacklist
+            cursor.execute("""
+                DELETE FROM import_queue 
+                WHERE article = %s
+            """, (article,))
+            removed_from_queue = cursor.rowcount
+            
+            conn.commit()
+            
+            message = f"Артикул додано в чорний список"
+            if removed_from_queue > 0:
+                message += f" і видалено з черги ({removed_from_queue} записів)"
+            
+            flash(message, "success")
+            
+    except Exception as e:
+        logging.error(f"Error adding to blacklist: {e}", exc_info=True)
+        flash("Помилка додавання в чорний список", "error")
+    
+    return redirect(url_for('admin_import_blacklist', token=token))
+
+@app.route('/<token>/admin/import/blacklist/remove/<int:item_id>', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_blacklist_remove(token, item_id):
+    """Видалення з чорного списку"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM import_blacklist WHERE id = %s", (item_id,))
+            conn.commit()
+            flash("Артикул видалено з чорного списку", "success")
+            
+    except Exception as e:
+        logging.error(f"Error removing from blacklist: {e}", exc_info=True)
+        flash("Помилка видалення з чорного списку", "error")
+    
+    return redirect(url_for('admin_import_blacklist', token=token))
+
+
+
+@app.route('/<token>/admin/import/whitelist/edit/<int:item_id>', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_whitelist_edit(token, item_id):
+    """Редагування артикула в білому списку"""
+    try:
+        markup_percent = request.form.get('markup_percent', 15)
+        min_quantity = request.form.get('min_quantity') or None
+        max_quantity = request.form.get('max_quantity') or None
+        notes = request.form.get('notes', '')
+        auto_update = 'auto_update' in request.form
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE import_whitelist 
+                SET markup_percent = %s,
+                    min_quantity = %s,
+                    max_quantity = %s,
+                    notes = %s,
+                    auto_update = %s
+                WHERE id = %s
+            """, (markup_percent, min_quantity, max_quantity, notes, auto_update, item_id))
+            
+            conn.commit()
+            flash("Whitelist item updated successfully", "success")
+            
+    except Exception as e:
+        logging.error(f"Error updating whitelist item: {e}", exc_info=True)
+        flash("Error updating whitelist item", "error")
+    
+    return redirect(url_for('admin_import_whitelist', token=token))
+
+
+@app.route('/<token>/admin/import/queue')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_queue(token):
+    """Черга нових артикулів для обробки з пагінацією"""
+    try:
+        # Параметри пагінації
+        page = request.args.get('page', 1, type=int)
+        per_page = 100
+        offset = (page - 1) * per_page
+        
+        # Фільтри
+        search = request.args.get('search', '')
+        brand_filter = request.args.get('brand', '')
+        processed_filter = request.args.get('processed', 'false')  # За замовчуванням показуємо необроблені
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Базовий запит для підрахунку загальної кількості
+            count_query = """
+                SELECT COUNT(*)
+                FROM import_queue q
+                LEFT JOIN brands b ON q.brand = b.name
+                LEFT JOIN import_files if ON q.import_file_id = if.id
+                WHERE 1=1
+            """
+            
+            # Базовий запит для отримання даних
+            data_query = """
+                SELECT q.*, b.name as brand_name, if.imported_at
+                FROM import_queue q
+                LEFT JOIN brands b ON q.brand = b.name
+                LEFT JOIN import_files if ON q.import_file_id = if.id
+                WHERE 1=1
+            """
+            
+            # Параметри для запитів
+            params = []
+            
+            # Додаємо умови фільтрації
+            filter_conditions = []
+            
+            # Фільтр за статусом обробки
+            if processed_filter == 'true':
+                filter_conditions.append("q.processed = TRUE")
+            elif processed_filter == 'false':
+                filter_conditions.append("q.processed = FALSE")
+            # Якщо 'all', то не додаємо умову
+            
+            # Фільтр за пошуком (артикул)
+            if search:
+                filter_conditions.append("q.article ILIKE %s")
+                params.append(f"%{search}%")
+            
+            # Фільтр за брендом
+            if brand_filter:
+                filter_conditions.append("q.brand ILIKE %s")
+                params.append(f"%{brand_filter}%")
+            
+            # Додаємо умови до запитів
+            if filter_conditions:
+                conditions_str = " AND " + " AND ".join(filter_conditions)
+                count_query += conditions_str
+                data_query += conditions_str
+            
+            # Підраховуємо загальну кількість
+            cursor.execute(count_query, params)
+            total_items = cursor.fetchone()[0]
+            
+            # Додаємо сортування і пагінацію до основного запиту
+            data_query += " ORDER BY q.created_at DESC LIMIT %s OFFSET %s"
+            params.extend([per_page, offset])
+            
+            # Отримуємо дані для поточної сторінки
+            cursor.execute(data_query, params)
+            queue_items = cursor.fetchall()
+            
+            # Розраховуємо параметри пагінації
+            total_pages = (total_items + per_page - 1) // per_page
+            has_prev = page > 1
+            has_next = page < total_pages
+            
+            # Список брендів для фільтру
+            cursor.execute("""
+                SELECT DISTINCT brand 
+                FROM import_queue 
+                WHERE brand IS NOT NULL AND brand != ''
+                ORDER BY brand
+            """)
+            available_brands = [row[0] for row in cursor.fetchall()]
+            
+            # Статистика
+            cursor.execute("SELECT COUNT(*) FROM import_queue WHERE processed = FALSE")
+            unprocessed_count = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM import_queue WHERE processed = TRUE")
+            processed_count = cursor.fetchone()[0]
+            
+            return render_template(
+                'admin/import/queue.html',
+                token=token,
+                queue_items=queue_items,
+                available_brands=available_brands,
+                # Пагінація
+                page=page,
+                per_page=per_page,
+                total_items=total_items,
+                total_pages=total_pages,
+                has_prev=has_prev,
+                has_next=has_next,
+                # Фільтри
+                search=search,
+                brand_filter=brand_filter,
+                processed_filter=processed_filter,
+                # Статистика
+                unprocessed_count=unprocessed_count,
+                processed_count=processed_count
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_import_queue: {e}", exc_info=True)
+        flash("Error loading import queue", "error")
+        return redirect(url_for('admin_import_dashboard', token=token))
+
+@app.route('/<token>/admin/import/queue/process', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_queue_process(token):
+    """Обробка артикулів з черги"""
+    try:
+        action = request.form.get('action')
+        selected_items = request.form.getlist('selected_items')
+        
+        if not selected_items:
+            flash("Виберіть артикули для обробки", "warning")
+            return redirect(url_for('admin_import_queue', token=token))
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            processed_count = 0
+            
+            if action == 'move_to_whitelist':
+                default_markup = request.form.get('default_markup', 15)
+                
+                for item_id in selected_items:
+                    # Отримуємо інформацію про артикул
+                    cursor.execute("""
+                        SELECT q.article, q.brand, b.id as brand_id
+                        FROM import_queue q
+                        LEFT JOIN brands b ON q.brand = b.name
+                        WHERE q.id = %s
+                    """, (item_id,))
+                    
+                    queue_item = cursor.fetchone()
+                    if not queue_item or not queue_item['brand_id']:
+                        continue
+                    
+                    # Додаємо в whitelist
+                    cursor.execute("""
+                        INSERT INTO import_whitelist 
+                        (article, brand_id, markup_percent, auto_update, created_at)
+                        VALUES (%s, %s, %s, TRUE, NOW())
+                        ON CONFLICT (article, brand_id) DO UPDATE SET
+                            markup_percent = EXCLUDED.markup_percent,
+                            auto_update = TRUE
+                    """, (queue_item['article'], queue_item['brand_id'], default_markup))
+                    
+                    # ВИДАЛЯЄМО з черги
+                    cursor.execute("DELETE FROM import_queue WHERE id = %s", (item_id,))
+                    if cursor.rowcount > 0:
+                        processed_count += 1
+                
+                flash(f"Переміщено {processed_count} артикулів у білий список", "success")
+                
+            elif action == 'move_to_blacklist':
+                for item_id in selected_items:
+                    # Отримуємо інформацію про артикул
+                    cursor.execute("""
+                        SELECT q.article, q.brand, b.id as brand_id
+                        FROM import_queue q
+                        LEFT JOIN brands b ON q.brand = b.name
+                        WHERE q.id = %s
+                    """, (item_id,))
+                    
+                    queue_item = cursor.fetchone()
+                    if not queue_item or not queue_item['brand_id']:
+                        continue
+                    
+                    # Додаємо в blacklist
+                    cursor.execute("""
+                        INSERT INTO import_blacklist 
+                        (article, brand_id, reason, created_at)
+                        VALUES (%s, %s, 'Moved from queue', NOW())
+                        ON CONFLICT (article, brand_id) DO NOTHING
+                    """, (queue_item['article'], queue_item['brand_id']))
+                    
+                    # ВИДАЛЯЄМО з черги
+                    cursor.execute("DELETE FROM import_queue WHERE id = %s", (item_id,))
+                    if cursor.rowcount > 0:
+                        processed_count += 1
+                
+                flash(f"Переміщено {processed_count} артикулів у чорний список", "success")
+                
+            elif action == 'delete':
+                for item_id in selected_items:
+                    cursor.execute("DELETE FROM import_queue WHERE id = %s", (item_id,))
+                    if cursor.rowcount > 0:
+                        processed_count += 1
+                
+                flash(f"Видалено {processed_count} артикулів з черги", "success")
+            
+            conn.commit()
+            
+    except Exception as e:
+        logging.error(f"Error processing queue: {e}", exc_info=True)
+        flash("Помилка обробки черги", "error")
+        if 'conn' in locals():
+            conn.rollback()
+    
+    return redirect(url_for('admin_import_queue', token=token))
+
+
+
+@app.route('/<token>/admin/import/queue/cleanup-duplicates', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_cleanup_queue_duplicates(token):
+    """Очищає чергу від артикулів, які вже є в whitelist або blacklist"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Видаляємо з черги артикули, які є в whitelist
+            cursor.execute("""
+                DELETE FROM import_queue 
+                WHERE article IN (
+                    SELECT DISTINCT article 
+                    FROM import_whitelist
+                )
+            """)
+            whitelist_removed = cursor.rowcount
+            
+            # Видаляємо з черги артикули, які є в blacklist
+            cursor.execute("""
+                DELETE FROM import_queue 
+                WHERE article IN (
+                    SELECT DISTINCT article 
+                    FROM import_blacklist
+                )
+            """)
+            blacklist_removed = cursor.rowcount
+            
+            conn.commit()
+            
+            total_removed = whitelist_removed + blacklist_removed
+            flash(f"Видалено {total_removed} дублікатів з черги (whitelist: {whitelist_removed}, blacklist: {blacklist_removed})", "success")
+            
+    except Exception as e:
+        logging.error(f"Error cleaning duplicates: {e}", exc_info=True)
+        flash("Помилка очищення дублікатів", "error")
+    
+    return redirect(url_for('admin_import_queue', token=token))
+
+
+
+@app.route('/<token>/admin/import/price-overrides')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_price_overrides(token):
+    """Управління фіксованими цінами з показом статусу stock"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо price overrides
+            cursor.execute("""
+                SELECT po.*, b.name as brand_name
+                FROM import_price_overrides po
+                LEFT JOIN brands b ON po.brand_id = b.id
+                ORDER BY po.created_at DESC
+            """)
+            price_overrides = cursor.fetchall()
+            
+            # Отримуємо інформацію про stock для цих артикулів
+            if price_overrides:
+                articles = [override['article'] for override in price_overrides]
+                cursor.execute("""
+                    SELECT article, quantity, price, brand_id
+                    FROM stock 
+                    WHERE article = ANY(%s)
+                """, (articles,))
+                stock_items = cursor.fetchall()
+            else:
+                stock_items = []
+            
+            # Список брендів
+            cursor.execute("SELECT id, name FROM brands ORDER BY name")
+            brands = cursor.fetchall()
+            
+            return render_template(
+                'admin/import/price_overrides.html',
+                token=token,
+                price_overrides=price_overrides,
+                stock_items=stock_items,
+                brands=brands
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_import_price_overrides: {e}", exc_info=True)
+        flash("Error loading price overrides", "error")
+        return redirect(url_for('admin_import_dashboard', token=token))
+
+@app.route('/<token>/admin/import/price-overrides/add', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_price_overrides_add(token):
+    """Додавання фіксованої ціни"""
+    try:
+        article = request.form.get('article', '').strip().upper()
+        brand_id = request.form.get('brand_id')
+        fixed_price = request.form.get('fixed_price')
+        ignore_file_updates = 'ignore_file_updates' in request.form
+        manual_stock = 'manual_stock' in request.form
+        notes = request.form.get('notes', '')
+        
+        if not all([article, brand_id, fixed_price]):
+            flash("Всі поля обов'язкові", "error")
+            return redirect(url_for('admin_import_price_overrides', token=token))
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO import_price_overrides 
+                (article, brand_id, fixed_price, ignore_file_updates, manual_stock, notes, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (article, brand_id) DO UPDATE SET
+                    fixed_price = EXCLUDED.fixed_price,
+                    ignore_file_updates = EXCLUDED.ignore_file_updates,
+                    manual_stock = EXCLUDED.manual_stock,
+                    notes = EXCLUDED.notes
+            """, (article, brand_id, fixed_price, ignore_file_updates, manual_stock, notes))
+            
+            conn.commit()
+            flash("Фіксована ціна додана", "success")
+            
+    except Exception as e:
+        logging.error(f"Error adding price override: {e}", exc_info=True)
+        flash("Помилка додавання фіксованої ціни", "error")
+    
+    return redirect(url_for('admin_import_price_overrides', token=token))
+
+@app.route('/<token>/admin/import/price-changes')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_price_changes(token):
+    """Перегляд змін цін"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            cursor.execute("""
+                SELECT pc.*, b.name as brand_name
+                FROM import_price_changes pc
+                LEFT JOIN brands b ON pc.brand_id = b.id
+                WHERE pc.status = 'pending'
+                ORDER BY pc.created_at DESC
+            """)
+            price_changes = cursor.fetchall()
+            
+            return render_template(
+                'admin/import/price_changes.html',
+                token=token,
+                price_changes=price_changes
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_import_price_changes: {e}", exc_info=True)
+        flash("Error loading price changes", "error")
+        return redirect(url_for('admin_import_dashboard', token=token))
+
+@app.route('/<token>/admin/import/brands')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_brands(token):
+    """Управління маппінгом брендів"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Невирішені бренди
+            cursor.execute("""
+                SELECT * FROM import_brands_mapping 
+                WHERE brand_id IS NULL AND auto_approved = FALSE
+                ORDER BY created_at DESC
+            """)
+            unmapped_brands = cursor.fetchall()
+            
+            # Відображені бренди
+            cursor.execute("""
+                SELECT ibm.*, b.name as brand_name
+                FROM import_brands_mapping ibm
+                LEFT JOIN brands b ON ibm.brand_id = b.id
+                WHERE ibm.brand_id IS NOT NULL
+                ORDER BY ibm.created_at DESC
+            """)
+            mapped_brands = cursor.fetchall()
+            
+            # Список брендів
+            cursor.execute("SELECT id, name FROM brands ORDER BY name")
+            brands = cursor.fetchall()
+            
+            return render_template(
+                'admin/import/brands.html',
+                token=token,
+                unmapped_brands=unmapped_brands,
+                mapped_brands=mapped_brands,
+                brands=brands
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_import_brands: {e}", exc_info=True)
+        flash("Error loading brand mapping", "error")
+        return redirect(url_for('admin_import_dashboard', token=token))
+
+@app.route('/<token>/admin/import/history')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_history(token):
+    """Історія імпортів"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            cursor.execute("""
+                SELECT * FROM import_files 
+                ORDER BY imported_at DESC 
+                LIMIT 50
+            """)
+            import_history = cursor.fetchall()
+            
+            return render_template(
+                'admin/import/history.html',
+                token=token,
+                import_history=import_history
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_import_history: {e}", exc_info=True)
+        flash("Error loading import history", "error")
+        return redirect(url_for('admin_import_dashboard', token=token))
+
+
+
+
+@app.route('/<token>/admin/import/zero-stock/delete/<int:item_id>', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_delete_zero_stock_item(token, item_id):
+    """Видаляє окремий товар із списку нульових залишків"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Спочатку отримаємо артикул та бренд для логування
+            cursor.execute("SELECT article, brand_id FROM import_zero_stock WHERE id = %s", (item_id,))
+            item = cursor.fetchone()
+            
+            if not item:
+                flash("Item not found", "warning")
+                return redirect(url_for('admin_import_zero_stock', token=token))
+                
+            # Видаляємо запис
+            cursor.execute("DELETE FROM import_zero_stock WHERE id = %s", (item_id,))
+            conn.commit()
+            
+            flash(f"Item {item[0]} removed from zero stock list", "success")
+            
+    except Exception as e:
+        logging.error(f"Error deleting zero stock item: {e}", exc_info=True)
+        flash("Error removing item from zero stock list", "error")
+        
+    return redirect(url_for('admin_import_zero_stock', token=token))
+
+@app.route('/<token>/admin/import/zero-stock/clear', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_clear_zero_stock(token):
+    """Видаляє всі товари із списку нульових залишків"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Рахуємо скільки буде видалено
+            cursor.execute("SELECT COUNT(*) FROM import_zero_stock")
+            count = cursor.fetchone()[0]
+            
+            # Видаляємо всі записи
+            cursor.execute("TRUNCATE import_zero_stock")
+            conn.commit()
+            
+            flash(f"Zero stock list cleared ({count} items removed)", "success")
+            
+    except Exception as e:
+        logging.error(f"Error clearing zero stock list: {e}", exc_info=True)
+        flash("Error clearing zero stock list", "error")
+        
+    return redirect(url_for('admin_import_zero_stock', token=token))
+
+
+
+@app.route('/<token>/admin/import/zero-stock')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_zero_stock(token):
+    """Перегляд товарів з нульовим залишком"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо товари з нульовим залишком
+            cursor.execute("""
+                SELECT 
+                    izs.id,
+                    izs.article,
+                    b.name as brand_name,
+                    izs.brand_id,
+                    s.quantity as current_stock,
+                    izs.import_count_missing,
+                    izs.last_seen,
+                    izs.status
+                FROM import_zero_stock izs
+                LEFT JOIN brands b ON izs.brand_id = b.id
+                LEFT JOIN stock s ON izs.article = s.article
+                ORDER BY izs.last_seen DESC
+            """)
+            
+            zero_stock_items = cursor.fetchall()
+            
+            return render_template(
+                'admin/import/zero_stock.html',
+                zero_stock_items=zero_stock_items,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_import_zero_stock: {e}", exc_info=True)
+        flash("Error loading zero stock items", "error")
+        return redirect(url_for('admin_import_dashboard', token=token))
+
+# Автоматичне очищення старих даних імпорту
+@scheduler.task('cron', id='cleanup_import_data', hour=1, minute=0)
+def scheduled_cleanup_import_data():
+    """Автоматичне очищення старих даних імпорту"""
+    try:
+        cleanup_old_import_data()
+        logging.info("Import data cleanup completed")
+    except Exception as e:
+        logging.error(f"Error in scheduled import cleanup: {e}", exc_info=True)
+
+def create_import_price_changes_table():
+    """Створює таблицю для відстеження цінових змін"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS import_price_changes (
+                    id SERIAL PRIMARY KEY,
+                    article VARCHAR(100) NOT NULL,
+                    brand_id INTEGER REFERENCES brands(id),
+                    old_price DECIMAL(10,2),
+                    new_price DECIMAL(10,2),
+                    status VARCHAR(20) DEFAULT 'pending',
+                    approved_by INTEGER REFERENCES users(id),
+                    approved_at TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    UNIQUE(article, brand_id)
+                );
+            """)
+            conn.commit()
+            logging.info("Created import_price_changes table")
+    except Exception as e:
+        logging.error(f"Error creating import_price_changes table: {e}")
+
+# Додаткові маршрути для управління цінами
+@app.route('/<token>/admin/import/price-changes/approve/<int:change_id>', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_approve_price_change(token, change_id):
+    """Схвалення зміни ціни"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Отримуємо дані про зміну ціни
+            cursor.execute("""
+                SELECT article, brand_id, new_price FROM import_price_changes 
+                WHERE id = %s AND status = 'pending'
+            """, (change_id,))
+            
+            price_change = cursor.fetchone()
+            if not price_change:
+                flash("Price change not found or already processed", "error")
+                return redirect(url_for('admin_import_price_changes', token=token))
+            
+            article, brand_id, new_price = price_change
+            
+            # Оновлюємо ціну в stock
+            cursor.execute("""
+                UPDATE stock 
+                SET price = %s
+                WHERE article = %s AND brand_id = %s
+            """, (new_price, article, brand_id))
+            
+            # Відмічаємо зміну як схвалену
+            cursor.execute("""
+                UPDATE import_price_changes
+                SET status = 'approved', 
+                    approved_by = %s, 
+                    approved_at = NOW()
+                WHERE id = %s
+            """, (session.get('user_id'), change_id))
+            
+            conn.commit()
+            flash("Price change approved and applied", "success")
+            
+    except Exception as e:
+        logging.error(f"Error approving price change: {e}")
+        flash("Error approving price change", "error")
+    
+    return redirect(url_for('admin_import_price_changes', token=token))
+
+@app.route('/<token>/admin/import/price-changes/reject/<int:change_id>', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_reject_price_change(token, change_id):
+    """Відхилення зміни ціни"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE import_price_changes
+                SET status = 'rejected', 
+                    approved_by = %s, 
+                    approved_at = NOW()
+                WHERE id = %s AND status = 'pending'
+            """, (session.get('user_id'), change_id))
+            
+            conn.commit()
+            flash("Price change rejected", "info")
+            
+    except Exception as e:
+        logging.error(f"Error rejecting price change: {e}")
+        flash("Error rejecting price change", "error")
+    
+    return redirect(url_for('admin_import_price_changes', token=token))
+
+# Функція для автоматичного додавання в білий список відомих брендів
+def auto_add_to_whitelist_if_known_brand(article, brand_name):
+    """Автоматично додає в білий список якщо бренд відомий"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Перевіряємо чи бренд є в маппінгу і схвалений
+            cursor.execute("""
+                SELECT brand_id FROM import_brands_mapping 
+                WHERE file_brand_name = %s AND auto_approved = TRUE
+            """, (brand_name,))
+            
+            brand_mapping = cursor.fetchone()
+            if not brand_mapping:
+                return False
+                
+            brand_id = brand_mapping[0]
+            
+            # Додаємо в білий список
+            cursor.execute("""
+                INSERT INTO import_whitelist (article, brand_id, auto_update, created_at)
+                VALUES (%s, %s, TRUE, NOW())
+                ON CONFLICT (article, brand_id) DO NOTHING
+            """, (article, brand_id))
+            
+            conn.commit()
+            return True
+            
+    except Exception as e:
+        logging.error(f"Error auto-adding to whitelist: {e}")
+        return False
+
+# Додаємо планувальник для очищення старих даних
+@scheduler.task('cron', id='cleanup_import_data', hour=2, minute=30)
+def scheduled_cleanup_import_data():
+    """Автоматичне очищення старих даних імпорту"""
+    try:
+        cleanup_old_import_data()
+        logging.info("Scheduled import data cleanup completed")
+    except Exception as e:
+        logging.error(f"Error in scheduled import cleanup: {e}")
+
+# Функція для отримання статистики імпорту
+def get_import_statistics():
+    """Отримує статистику модуля імпорту"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            stats = {}
+            
+            # Загальна кількість записів
+            cursor.execute("SELECT COUNT(*) FROM import_whitelist")
+            stats['whitelist_count'] = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM import_blacklist")
+            stats['blacklist_count'] = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM import_queue WHERE processed = FALSE")
+            stats['queue_count'] = cursor.fetchone()[0]
+            
+            # Статистика останнього імпорту
+            cursor.execute("""
+                SELECT status, processed_count, new_count, updated_count, errors_count
+                FROM import_files 
+                ORDER BY imported_at DESC 
+                LIMIT 1
+            """)
+            last_import = cursor.fetchone()
+            stats['last_import'] = dict(last_import) if last_import else None
+            
+            # Кількість незіркованих брендів
+            cursor.execute("""
+                SELECT COUNT(*) FROM import_brands_mapping 
+                WHERE brand_id IS NULL
+            """)
+            stats['unmapped_brands'] = cursor.fetchone()[0]
+            
+            return stats
+            
+    except Exception as e:
+        logging.error(f"Error getting import statistics: {e}")
+        return {}
+
+# Виклик створення таблиці при запуску
+try:
+    create_import_price_changes_table()
+except Exception as e:
+    logging.error(f"Error creating import tables: {e}")
+
+
+def create_import_tables():
+    """Створює всі необхідні таблиці для системи імпорту"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # 1. Таблиця файлів імпорту
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS import_files (
+                    id SERIAL PRIMARY KEY,
+                    filename VARCHAR(255),
+                    file_hash VARCHAR(64) UNIQUE,
+                    status VARCHAR(20) DEFAULT 'processing',
+                    safe_mode BOOLEAN DEFAULT TRUE,
+                    processed_count INTEGER DEFAULT 0,
+                    new_count INTEGER DEFAULT 0,
+                    updated_count INTEGER DEFAULT 0,
+                    errors_count INTEGER DEFAULT 0,
+                    notes TEXT,
+                    imported_at TIMESTAMP DEFAULT NOW(),
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            """)
+            
+            # 2. Таблиця черги імпорту
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS import_queue (
+                    id SERIAL PRIMARY KEY,
+                    article VARCHAR(100) NOT NULL,
+                    name VARCHAR(500),
+                    brand VARCHAR(100),
+                    quantity INTEGER,
+                    price DECIMAL(10,2),
+                    import_file_id INTEGER REFERENCES import_files(id),
+                    processed BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    CONSTRAINT unique_article_file UNIQUE (article, import_file_id)
+                );
+            """)
+            
+            # 3. Таблиця білого списку
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS import_whitelist (
+                    id SERIAL PRIMARY KEY,
+                    article VARCHAR(100) NOT NULL,
+                    brand_id INTEGER REFERENCES brands(id),
+                    markup_percent DECIMAL(5,2) DEFAULT 15.00,
+                    min_quantity INTEGER,
+                    max_quantity INTEGER,
+                    notes TEXT,
+                    auto_update BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    CONSTRAINT unique_whitelist_article_brand UNIQUE (article, brand_id)
+                );
+            """)
+            
+            # 4. Таблиця чорного списку
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS import_blacklist (
+                    id SERIAL PRIMARY KEY,
+                    article VARCHAR(100) NOT NULL,
+                    brand_id INTEGER REFERENCES brands(id),
+                    reason VARCHAR(100),
+                    replacement_article VARCHAR(100),
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    CONSTRAINT unique_blacklist_article_brand UNIQUE (article, brand_id)
+                );
+            """)
+            
+            # 5. Таблиця фіксованих цін
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS import_price_overrides (
+                    id SERIAL PRIMARY KEY,
+                    article VARCHAR(100) NOT NULL,
+                    brand_id INTEGER REFERENCES brands(id),
+                    fixed_price DECIMAL(10,2) NOT NULL,
+                    ignore_file_updates BOOLEAN DEFAULT FALSE,
+                    manual_stock BOOLEAN DEFAULT FALSE,
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    CONSTRAINT unique_override_article_brand UNIQUE (article, brand_id)
+                );
+            """)
+            
+            # 6. Таблиця змін цін
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS import_price_changes (
+                    id SERIAL PRIMARY KEY,
+                    article VARCHAR(100) NOT NULL,
+                    brand_id INTEGER REFERENCES brands(id),
+                    old_price DECIMAL(10,2),
+                    new_price DECIMAL(10,2),
+                    status VARCHAR(20) DEFAULT 'pending',
+                    approved_by INTEGER REFERENCES users(id),
+                    approved_at TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    CONSTRAINT unique_price_change_article_brand UNIQUE (article, brand_id)
+                );
+            """)
+            
+            # 7. Таблиця мапінгу брендів
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS import_brands_mapping (
+                    id SERIAL PRIMARY KEY,
+                    file_brand_name VARCHAR(100) NOT NULL UNIQUE,
+                    brand_id INTEGER REFERENCES brands(id),
+                    auto_approved BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            """)
+            
+            # 8. Таблиця нульових залишків
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS import_zero_stock (
+                    id SERIAL PRIMARY KEY,
+                    article VARCHAR(100) NOT NULL,
+                    brand_id INTEGER REFERENCES brands(id),
+                    status VARCHAR(20) DEFAULT 'active',
+                    last_seen TIMESTAMP DEFAULT NOW(),
+                    import_count_missing INTEGER DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    CONSTRAINT unique_zero_stock_article_brand UNIQUE (article, brand_id)
+                );
+            """)
+            
+            # 9. Таблиця логів
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS import_logs (
+                    id SERIAL PRIMARY KEY,
+                    level VARCHAR(20),
+                    message TEXT,
+                    article VARCHAR(100),
+                    import_file_id INTEGER REFERENCES import_files(id),
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            """)
+            
+            # 10. Таблиця бекапів stock
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS stock_backup (
+                    id SERIAL PRIMARY KEY,
+                    article VARCHAR(100),
+                    quantity INTEGER,
+                    price DECIMAL(10,2),
+                    brand_id INTEGER,
+                    backup_date TIMESTAMP DEFAULT NOW()
+                );
+            """)
+            
+            # Створюємо індекси для оптимізації
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_import_queue_processed ON import_queue(processed);
+                CREATE INDEX IF NOT EXISTS idx_import_queue_article ON import_queue(article);
+                CREATE INDEX IF NOT EXISTS idx_import_whitelist_article ON import_whitelist(article);
+                CREATE INDEX IF NOT EXISTS idx_import_blacklist_article ON import_blacklist(article);
+                CREATE INDEX IF NOT EXISTS idx_import_price_overrides_article ON import_price_overrides(article);
+                CREATE INDEX IF NOT EXISTS idx_import_brands_mapping_name ON import_brands_mapping(file_brand_name);
+            """)
+            
+            conn.commit()
+            logging.info("All import tables created successfully")
+            return True
+            
+    except Exception as e:
+        logging.error(f"Error creating import tables: {e}", exc_info=True)
+        return False
+
+# Виклик функції створення таблиць при запуску
+try:
+    create_import_tables()
+    logging.info("Import system initialized")
+except Exception as e:
+    logging.error(f"Error initializing import system: {e}")
+
+
+
+def process_import_file_optimized(file_data, safe_mode=True):
+    """Швидка обробка файлу імпорту з батчингом, снапшотом і Zero Stock"""
+    try:
+        logging.info("=== STARTING process_import_file_optimized ===")
+
+        # 1) Перевірка структури файлу
+        is_valid, validation_message = validate_csv_structure(file_data)
+        if not is_valid:
+            logging.error(f"File validation failed: {validation_message}")
+            return False, validation_message
+
+        # 2) Обчислюємо хеш файлу і перевіряємо дубль
+        file_hash = calculate_file_hash(file_data)
+        logging.info(f"File hash: {file_hash[:12]}...")
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            cursor.execute("""
+                SELECT id FROM import_files 
+                WHERE file_hash = %s AND status = 'completed'
+            """, (file_hash,))
+            already = cursor.fetchone()
+            if already:
+                msg = f"File was already processed (id={already['id']})"
+                logging.warning(msg)
+                return False, msg
+
+            # 3) Створюємо запис про імпорт
+            cursor.execute("""
+                INSERT INTO import_files 
+                    (filename, file_hash, status, safe_mode, imported_at)
+                VALUES 
+                    (%s, %s, 'processing', %s, NOW())
+                RETURNING id
+            """, (f"import_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", file_hash, safe_mode))
+            import_file_id = cursor.fetchone()['id']
+            logging.info(f"Import file id: {import_file_id}")
+
+            # 4) Парсимо CSV
+            parsed_data, parse_error = parse_csv_import_file(file_data)
+            if parse_error:
+                cursor.execute("""
+                    UPDATE import_files SET status='error', notes=%s WHERE id=%s
+                """, (parse_error, import_file_id))
+                conn.commit()
+                return False, parse_error
+
+            logging.info(f"Parsed items: {len(parsed_data)}")
+            if not parsed_data:
+                cursor.execute("""
+                    UPDATE import_files 
+                    SET status='completed', notes='No valid data found', processed_count=0
+                    WHERE id=%s
+                """, (import_file_id,))
+                conn.commit()
+                return True, "No valid data found"
+
+            # 5) Снапшот усіх артикулів цього файлу (для Zero Stock)
+            try:
+                saved = _upsert_import_file_articles(cursor, import_file_id, parsed_data)
+                conn.commit()
+                logging.info(f"Snapshot saved: {saved} articles -> import_file_articles")
+            except Exception as e:
+                logging.error(f"Snapshot save failed: {e}", exc_info=True)
+                # Не зупиняємо імпорт, але Zero Stock може не спрацювати
+
+            # 6) Якщо unsafe - робимо бекап stock
+            if not safe_mode:
+                try:
+                    backup_stock_table()
+                except Exception as be:
+                    logging.warning(f"Stock backup failed: {be}")
+
+            # 7) Завантажуємо кеші для швидких перевірок
+            brand_mappings = {}
+            cursor.execute("""
+                SELECT file_brand_name, brand_id 
+                FROM import_brands_mapping 
+                WHERE brand_id IS NOT NULL
+            """)
+            for r in cursor.fetchall():
+                brand_mappings[r['file_brand_name']] = r['brand_id']
+            logging.info(f"Brand mappings loaded: {len(brand_mappings)}")
+
+            whitelist_articles = {}
+            cursor.execute("""
+                SELECT article, brand_id, markup_percent 
+                FROM import_whitelist 
+                WHERE brand_id IS NOT NULL
+            """)
+            for r in cursor.fetchall():
+                whitelist_articles[f"{r['article']}:{r['brand_id']}"] = (r['markup_percent'] or 15)
+            logging.info(f"Whitelist entries: {len(whitelist_articles)}")
+
+            blacklist_articles = set()
+            cursor.execute("SELECT article, brand_id FROM import_blacklist WHERE brand_id IS NOT NULL")
+            for r in cursor.fetchall():
+                blacklist_articles.add(f"{r['article']}:{r['brand_id']}")
+            logging.info(f"Blacklist entries: {len(blacklist_articles)}")
+
+            price_override_articles = set()
+            cursor.execute("SELECT CONCAT(article, ':', brand_id) as key FROM import_price_overrides WHERE brand_id IS NOT NULL")
+            for r in cursor.fetchall():
+                price_override_articles.add(r['key'])
+            logging.info(f"Price overrides: {len(price_override_articles)}")
+
+            # 8) Лічильники та батчі
+            batch_size = 100
+            processed_count = 0
+            new_count = 0
+            updated_count = 0
+            error_count = 0
+
+            override_count = 0
+            blacklist_count = 0
+            whitelist_count = 0
+            queue_count = 0
+
+            queue_batch = []      # tuples: (article, name, brand, quantity, price, import_file_id)
+            whitelist_batch = []  # dicts: {article, brand_id, quantity, price, markup_percent}
+
+            # 9) Обробка кожного запису
+            for item in parsed_data:
+                try:
+                    article = item.get('article')
+                    name = item.get('name') or ''
+                    brand_name = item.get('brand') or ''
+                    quantity = int(item.get('quantity') or 0)
+                    price = float(item.get('price') or 0)
+
+                    if not article or not brand_name or quantity < 0 or price <= 0:
+                        logging.debug(f"Skipping invalid row: {item}")
+                        processed_count += 1
+                        continue
+
+                    # 9.1) brand_id через кеш мапінгу або створити
+                    brand_id = brand_mappings.get(brand_name)
+                    if brand_id is None:
+                        # fallback: повільніше, але надійно
+                        try:
+                            bid, berr = get_or_create_brand_mapping(brand_name)
+                            if berr:
+                                # якщо помилка мапінгу — відправимо в чергу
+                                queue_batch.append((article, name, brand_name, quantity, price, import_file_id))
+                                queue_count += 1
+                                processed_count += 1
+                                continue
+                            brand_id = bid
+                            brand_mappings[brand_name] = brand_id
+                        except Exception as m_err:
+                            logging.warning(f"Brand mapping error for '{brand_name}': {m_err}")
+                            queue_batch.append((article, name, brand_name, quantity, price, import_file_id))
+                            queue_count += 1
+                            processed_count += 1
+                            continue
+
+                    key = f"{article}:{brand_id}"
+
+                    # 9.2) Пріоритет 1: price overrides -> ігноримо імпорт
+                    if key in price_override_articles:
+                        override_count += 1
+                        processed_count += 1
+                        continue
+
+                    # 9.3) Пріоритет 2: blacklist -> ігноримо імпорт
+                    if key in blacklist_articles:
+                        blacklist_count += 1
+                        processed_count += 1
+                        continue
+
+                    # 9.4) Пріоритет 3: whitelist -> обробляємо до stock
+                    if key in whitelist_articles:
+                        whitelist_count += 1
+                        markup_percent = whitelist_articles[key]
+                        whitelist_batch.append({
+                            'article': article,
+                            'brand_id': brand_id,
+                            'quantity': quantity,
+                            'price': price,
+                            'markup_percent': markup_percent
+                        })
+                    else:
+                        # 9.5) Інакше — у чергу на ручну обробку
+                        queue_batch.append((article, name, brand_name, quantity, price, import_file_id))
+                        queue_count += 1
+
+                    # Флаш батчів
+                    if len(queue_batch) >= batch_size:
+                        insert_queue_batch(cursor, queue_batch)
+                        conn.commit()
+                        queue_batch = []
+
+                    if len(whitelist_batch) >= batch_size:
+                        result_counts = process_whitelist_batch(cursor, whitelist_batch, safe_mode)
+                        new_count += result_counts.get('new', 0)
+                        updated_count += result_counts.get('updated', 0)
+                        conn.commit()
+                        whitelist_batch = []
+
+                    processed_count += 1
+
+                except Exception as loop_err:
+                    error_count += 1
+                    processed_count += 1
+                    logging.error(f"Error processing item {item}: {loop_err}", exc_info=True)
+
+            # 10) Флаш залишків батчів
+            try:
+                if queue_batch:
+                    insert_queue_batch(cursor, queue_batch)
+                    conn.commit()
+                if whitelist_batch:
+                    result_counts = process_whitelist_batch(cursor, whitelist_batch, safe_mode)
+                    new_count += result_counts.get('new', 0)
+                    updated_count += result_counts.get('updated', 0)
+                    conn.commit()
+            except Exception as flush_err:
+                logging.error(f"Batch flush error: {flush_err}", exc_info=True)
+                error_count += 1
+
+            # 11) Оновлюємо статус імпорту
+            cursor.execute("""
+                UPDATE import_files 
+                SET status='completed',
+                    processed_count=%s,
+                    new_count=%s,
+                    updated_count=%s,
+                    errors_count=%s,
+                    notes=%s
+                WHERE id=%s
+            """, (
+                processed_count,
+                new_count,
+                updated_count,
+                error_count,
+                f"overrides:{override_count}, blacklist:{blacklist_count}, queued:{queue_count}, whitelist:{whitelist_count}",
+                import_file_id
+            ))
+            conn.commit()
+
+        # 12) Zero Stock (поза транзакцією імпорту)
+        if not safe_mode:
+            logging.info("ZeroStock: start")
+            try:
+                handle_zero_stock_items(safe_mode, import_file_id)
+                logging.info("ZeroStock: done")
+            except Exception as e:
+                logging.error(f"ZeroStock error: {e}", exc_info=True)
+        else:
+            logging.info("Safe mode ON -> ZeroStock skipped")
+
+        final_message = (
+            f"Import #{import_file_id} completed | processed={processed_count}, "
+            f"new={new_count}, updated={updated_count}, errors={error_count}, "
+            f"overrides={override_count}, blacklist={blacklist_count}, "
+            f"queued={queue_count}, whitelist={whitelist_count}"
+        )
+        logging.info(final_message)
+        return True, final_message
+
+    except Exception as e:
+        logging.error(f"Error in process_import_file_optimized: {e}", exc_info=True)
+        return False, f"Import failed: {str(e)}"
+
+
+
+# ...existing code...
+def _upsert_import_file_articles(cursor, import_file_id: int, parsed_data: list) -> int:
+    """Зберігає унікальні артикули поточного файлу в import_file_articles"""
+    if not parsed_data:
+        return 0
+    articles = sorted({row['article'] for row in parsed_data if row.get('article')})
+    if not articles:
+        return 0
+    values = [(import_file_id, a) for a in articles]
+    psycopg2.extras.execute_values(
+        cursor,
+        """
+        INSERT INTO import_file_articles (import_file_id, article)
+        VALUES %s
+        ON CONFLICT (import_file_id, article) DO NOTHING
+        """,
+        values,
+        page_size=1000
+    )
+    return len(values)
+# ...existing code...
+
+def insert_queue_batch(cursor, queue_batch):
+    """Швидка вставка в чергу батчем БЕЗ дублювання"""
+    if not queue_batch:
+        return
+    
+    logging.info(f"Processing queue batch of {len(queue_batch)} items")
+    
+    # Розділяємо batch на два - з import_file_id і без нього
+    batch_with_file_id = []
+    batch_without_file_id = []
+    
+    for item in queue_batch:
+        if item[5] is not None:  # import_file_id не None
+            batch_with_file_id.append(item)
+        else:
+            batch_without_file_id.append(item)
+    
+    # Обробляємо batch з import_file_id
+    if batch_with_file_id:
+        # ВИПРАВЛЕНО: Використовуємо тільки article для унікальності
+        logging.info(f"Processing {len(batch_with_file_id)} items with file_id")
+        
+        for item in batch_with_file_id:
+            article, name, brand, quantity, price, import_file_id = item
+            
+            # Перевіряємо чи існує запис з таким артикулом (незалежно від file_id)
+            cursor.execute("""
+                SELECT id FROM import_queue 
+                WHERE article = %s
+            """, (article,))
+            
+            existing = cursor.fetchone()
+            
+            if existing:
+                # Оновлюємо існуючий запис
+                cursor.execute("""
+                    UPDATE import_queue 
+                    SET name = %s, brand = %s, quantity = %s, price = %s, 
+                        import_file_id = %s, processed = FALSE, created_at = NOW()
+                    WHERE article = %s
+                """, (name, brand, quantity, price, import_file_id, article))
+                logging.debug(f"Updated existing queue item: {article}")
+            else:
+                # Вставляємо новий запис
+                cursor.execute("""
+                    INSERT INTO import_queue 
+                    (article, name, brand, quantity, price, import_file_id, processed, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, FALSE, NOW())
+                """, (article, name, brand, quantity, price, import_file_id))
+                logging.debug(f"Inserted new queue item: {article}")
+    
+    # Обробляємо batch без import_file_id
+    if batch_without_file_id:
+        logging.info(f"Processing {len(batch_without_file_id)} items without file_id")
+        
+        for item in batch_without_file_id:
+            article, name, brand, quantity, price, _ = item
+            
+            # Перевіряємо чи існує запис з таким артикулом
+            cursor.execute("""
+                SELECT id FROM import_queue 
+                WHERE article = %s
+            """, (article,))
+            
+            existing = cursor.fetchone()
+            
+            if existing:
+                # Оновлюємо існуючий запис
+                cursor.execute("""
+                    UPDATE import_queue 
+                    SET name = %s, brand = %s, quantity = %s, price = %s, 
+                        processed = FALSE, created_at = NOW()
+                    WHERE article = %s
+                """, (name, brand, quantity, price, article))
+                logging.debug(f"Updated existing queue item: {article}")
+            else:
+                # Вставляємо новий запис
+                cursor.execute("""
+                    INSERT INTO import_queue 
+                    (article, name, brand, quantity, price, import_file_id, processed, created_at)
+                    VALUES (%s, %s, %s, %s, %s, NULL, FALSE, NOW())
+                """, (article, name, brand, quantity, price))
+                logging.debug(f"Inserted new queue item: {article}")
+    
+    logging.info("Queue batch processing completed")
+
+def process_whitelist_batch(cursor, whitelist_batch, safe_mode):
+    """Швидка обробка whitelist батчем з ПРАВИЛЬНОЮ логікою ціноутворення"""
+    if not whitelist_batch:
+        return {'new': 0, 'updated': 0}
+    
+    new_count = 0
+    updated_count = 0
+    price_changes_count = 0
+    
+    # Отримуємо існуючі записи в stock одним запитом
+    articles = [item['article'] for item in whitelist_batch]
+    cursor.execute("""
+        SELECT article, quantity, price, brand_id 
+        FROM stock 
+        WHERE article = ANY(%s)
+    """, (articles,))
+    existing_stock = {row['article']: row for row in cursor.fetchall()}
+    
+    # Підготовляємо дані для batch операцій
+    insert_data = []
+    update_data = []
+    
+    for item in whitelist_batch:
+        article = item['article']
+        brand_id = item['brand_id']
+        quantity = item['quantity']
+        price = item['price']
+        markup_percent = item.get('markup_percent', 15)
+        
+        final_price = calculate_final_price(price, markup_percent)
+        
+        if article in existing_stock:
+            current_price = float(existing_stock[article]['price'])
+            
+            # ПРАВИЛЬНА ЛОГІКА:
+            if float(final_price) > current_price:
+                # Нова ціна БІЛЬША - додаємо в Pending Price Changes
+                cursor.execute("""
+                    INSERT INTO import_price_changes 
+                    (article, brand_id, old_price, new_price, status, created_at)
+                    VALUES (%s, %s, %s, %s, 'pending', NOW())
+                    ON CONFLICT (article, brand_id) DO UPDATE SET
+                        new_price = EXCLUDED.new_price,
+                        status = 'pending'
+                """, (article, brand_id, current_price, float(final_price)))
+                
+                # Оновлюємо тільки кількість, залишаємо стару ціну
+                update_data.append((quantity, current_price, brand_id, article))
+                price_changes_count += 1
+                logging.info(f"Price increase detected for {article}: {current_price} -> {final_price} - added to pending")
+            else:
+                # Ціна менша або рівна - НІЧОГО НЕ РОБИМО з ціною, оновлюємо тільки кількість
+                update_data.append((quantity, current_price, brand_id, article))
+                logging.debug(f"Price same/lower for {article}: keeping current price {current_price} (file: {final_price})")
+            
+            updated_count += 1
+        else:
+            # Новий товар - додаємо з розрахованою ціною
+            insert_data.append((article, quantity, float(final_price), brand_id))
+            new_count += 1
+            logging.debug(f"New item: {article} -> qty:{quantity}, price:{final_price}")
+    
+    # Виконуємо batch операції
+    if insert_data:
+        psycopg2.extras.execute_values(
+            cursor,
+            "INSERT INTO stock (article, quantity, price, brand_id) VALUES %s",
+            insert_data,
+            template="(%s, %s, %s, %s)",
+            page_size=100
+        )
+        logging.info(f"Inserted {len(insert_data)} new items to stock")
+    
+    if update_data:
+        for quantity, price, brand_id, article in update_data:
+            cursor.execute("""
+                UPDATE stock 
+                SET quantity = %s, price = %s, brand_id = %s 
+                WHERE article = %s
+            """, (quantity, price, brand_id, article))
+        logging.info(f"Updated {len(update_data)} existing items in stock")
+    
+    if price_changes_count > 0:
+        logging.info(f"Created {price_changes_count} pending price changes for manual review")
+    
+    return {'new': new_count, 'updated': updated_count, 'price_changes': price_changes_count}
+
+@app.route('/<token>/admin/import/price-overrides/remove/<int:item_id>', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_price_overrides_remove(token, item_id):
+    """Видалення фіксованої ціни"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM import_price_overrides WHERE id = %s", (item_id,))
+            conn.commit()
+            flash("Price override removed successfully", "success")
+            
+    except Exception as e:
+        logging.error(f"Error removing price override: {e}", exc_info=True)
+        flash("Error removing price override", "error")
+    
+    return redirect(url_for('admin_import_price_overrides', token=token))
+
+@app.route('/<token>/admin/import/price-overrides/add-to-stock', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_add_override_to_stock(token):
+    """Додає всі price overrides в stock (без дублікатів)"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо всі price overrides
+            cursor.execute("""
+                SELECT article, brand_id, fixed_price 
+                FROM import_price_overrides
+            """)
+            
+            overrides = cursor.fetchall()
+            added_count = 0
+            updated_count = 0
+            skipped_count = 0
+            
+            for override in overrides:
+                article = override['article']
+                brand_id = override['brand_id']
+                fixed_price = override['fixed_price']
+                
+                # Перевіряємо чи існує в stock
+                cursor.execute("""
+                    SELECT article, quantity, price FROM stock 
+                    WHERE article = %s
+                """, (article,))
+                
+                existing = cursor.fetchone()
+                
+                if existing:
+                    # Оновлюємо тільки якщо ціна відрізняється або brand_id інший
+                    cursor.execute("""
+                        SELECT article FROM stock 
+                        WHERE article = %s AND (price != %s OR brand_id != %s)
+                    """, (article, fixed_price, brand_id))
+                    
+                    needs_update = cursor.fetchone()
+                    
+                    if needs_update:
+                        cursor.execute("""
+                            UPDATE stock 
+                            SET price = %s, brand_id = %s
+                            WHERE article = %s
+                        """, (fixed_price, brand_id, article))
+                        updated_count += 1
+                    else:
+                        skipped_count += 1
+                else:
+                    # Додаємо новий запис з стандартною кількістю 1
+                    cursor.execute("""
+                        INSERT INTO stock (article, quantity, price, brand_id)
+                        VALUES (%s, %s, %s, %s)
+                    """, (article, 1, fixed_price, brand_id))
+                    added_count += 1
+            
+            conn.commit()
+            
+            # Детальне повідомлення
+            message_parts = []
+            if added_count > 0:
+                message_parts.append(f"{added_count} new items added")
+            if updated_count > 0:
+                message_parts.append(f"{updated_count} items updated")
+            if skipped_count > 0:
+                message_parts.append(f"{skipped_count} items already up-to-date")
+            
+            if message_parts:
+                flash(f"Stock update complete: {', '.join(message_parts)}", "success")
+            else:
+                flash("No items to process", "info")
+            
+    except Exception as e:
+        logging.error(f"Error adding overrides to stock: {e}")
+        flash("Error adding overrides to stock", "error")
+    
+    return redirect(url_for('admin_import_price_overrides', token=token))
+
+@app.route('/<token>/admin/import/price-overrides/add-single-to-stock', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_add_single_override_to_stock(token):
+    """Додає один price override в stock"""
+    try:
+        article = request.form.get('article')
+        quantity = int(request.form.get('quantity', 1))
+        
+        if not article:
+            flash("Article is required", "error")
+            return redirect(url_for('admin_import_price_overrides', token=token))
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо дані override
+            cursor.execute("""
+                SELECT article, brand_id, fixed_price 
+                FROM import_price_overrides 
+                WHERE article = %s
+            """, (article,))
+            
+            override = cursor.fetchone()
+            if not override:
+                flash("Price override not found", "error")
+                return redirect(url_for('admin_import_price_overrides', token=token))
+            
+            # ВИПРАВЛЕНО: Перевіряємо чи існує в stock (без id)
+            cursor.execute("""
+                SELECT article FROM stock 
+                WHERE article = %s
+            """, (article,))
+            
+            existing = cursor.fetchone()
+            
+            if existing:
+                # Оновлюємо існуючий запис
+                cursor.execute("""
+                    UPDATE stock 
+                    SET quantity = %s, price = %s, brand_id = %s
+                    WHERE article = %s
+                """, (quantity, override['fixed_price'], override['brand_id'], article))
+                flash(f"Updated {article} in stock with quantity {quantity}", "success")
+            else:
+                # Додаємо новий запис
+                cursor.execute("""
+                    INSERT INTO stock (article, quantity, price, brand_id)
+                    VALUES (%s, %s, %s, %s)
+                """, (article, quantity, override['fixed_price'], override['brand_id']))
+                flash(f"Added {article} to stock with quantity {quantity}", "success")
+            
+            conn.commit()
+            
+    except Exception as e:
+        logging.error(f"Error adding single override to stock: {e}")
+        flash("Error adding to stock", "error")
+    
+    return redirect(url_for('admin_import_price_overrides', token=token))
+
+
+@app.route('/<token>/admin/import/queue/move-to-whitelist', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_move_to_whitelist(token):
+    """Переміщує артикули з черги в білий список"""
+    try:
+        selected_items = request.form.getlist('selected_items')
+        default_markup = request.form.get('default_markup', 15)
+        
+        if not selected_items:
+            flash("Виберіть артикули для переміщення", "warning")
+            return redirect(url_for('admin_import_queue', token=token))
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            moved_count = 0
+            deleted_count = 0
+            
+            for item_id in selected_items:
+                # Отримуємо інформацію про артикул
+                cursor.execute("""
+                    SELECT q.article, q.brand, b.id as brand_id
+                    FROM import_queue q
+                    LEFT JOIN brands b ON q.brand = b.name
+                    WHERE q.id = %s
+                """, (item_id,))
+                
+                queue_item = cursor.fetchone()
+                if not queue_item or not queue_item['brand_id']:
+                    logging.warning(f"Cannot move item {item_id}: no brand mapping found")
+                    continue
+                
+                # Додаємо в whitelist
+                cursor.execute("""
+                    INSERT INTO import_whitelist 
+                    (article, brand_id, markup_percent, auto_update, created_at)
+                    VALUES (%s, %s, %s, TRUE, NOW())
+                    ON CONFLICT (article, brand_id) DO UPDATE SET
+                        markup_percent = EXCLUDED.markup_percent,
+                        auto_update = TRUE
+                """, (queue_item['article'], queue_item['brand_id'], default_markup))
+                
+                # ВИПРАВЛЕНО: Обов'язково видаляємо з черги
+                cursor.execute("DELETE FROM import_queue WHERE id = %s", (item_id,))
+                rows_deleted = cursor.rowcount
+                
+                if rows_deleted > 0:
+                    deleted_count += 1
+                    moved_count += 1
+                    logging.info(f"Moved and deleted {queue_item['article']} from queue to whitelist")
+                else:
+                    logging.warning(f"Failed to delete item {item_id} from queue")
+            
+            conn.commit()
+            
+            if moved_count > 0:
+                flash(f"Переміщено {moved_count} артикулів у білий список та видалено з черги", "success")
+            else:
+                flash("Жодного артикула не переміщено", "warning")
+            
+    except Exception as e:
+        logging.error(f"Error moving to whitelist: {e}", exc_info=True)
+        flash("Помилка переміщення в білий список", "error")
+        if 'conn' in locals():
+            conn.rollback()
+    
+    return redirect(url_for('admin_import_queue', token=token))
+
+
+
+
+@app.route('/<token>/admin/import/brands/map', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_import_brands_map(token):
+    """Маппінг бренду"""
+    try:
+        file_brand_name = request.form.get('file_brand_name')
+        brand_id = request.form.get('brand_id')
+        
+        if not all([file_brand_name, brand_id]):
+            flash("All fields are required", "error")
+            return redirect(url_for('admin_import_brands', token=token))
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE import_brands_mapping 
+                SET brand_id = %s, auto_approved = FALSE
+                WHERE file_brand_name = %s
+            """, (brand_id, file_brand_name))
+            
+            conn.commit()
+            flash("Brand mapping updated successfully", "success")
+            
+    except Exception as e:
+        logging.error(f"Error mapping brand: {e}", exc_info=True)
+        flash("Error mapping brand", "error")
+    
+    return redirect(url_for('admin_import_brands', token=token))
 
 
 if __name__ == '__main__':

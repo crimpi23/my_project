@@ -1,0 +1,110 @@
+{% extends "base/admin_base.html" %}
+{% block title %}Import Preview{% endblock %}
+{% block content %}
+<h3>Import Preview (run #{{ run_id }})</h3>
+
+<form method="post" class="mb-3">
+  <input type="hidden" name="run_id" value="{{ run_id }}">
+  <button name="apply_changes" value="1" class="btn btn-success" {% if was_dry_run %}{% else %}disabled{% endif %}>
+    Apply changes
+  </button>
+  {% if not was_dry_run %}<small class="text-muted ms-2">Already applied.</small>{% endif %}
+</form>
+
+<div class="row g-3">
+  <div class="col-md-3"><div class="card p-3">Processed: <strong>{{ summary.processed_rows }}</strong></div></div>
+  <div class="col-md-3"><div class="card p-3">New pending: <strong>{{ summary.new_pending }}</strong></div></div>
+  <div class="col-md-3"><div class="card p-3">Will update: <strong>{{ summary.will_update }}</strong></div></div>
+  <div class="col-md-3"><div class="card p-3">Missing: <strong>{{ summary.missing_items }}</strong></div></div>
+</div>
+
+<hr>
+
+<h5>Pending</h5>
+<table class="table table-sm">
+  <thead>
+    <tr><th>Import article</th><th>Name</th><th>Brand</th><th>Qty</th><th>Price</th></tr>
+  </thead>
+  <tbody>
+  {% for it in pending_items %}
+    <tr>
+      <td>{{ it.import_article }}</td>
+      <td>{{ it.name_from_import }}</td>
+      <td>{{ it.brand_from_import }}</td>
+      <td>{{ it.quantity }}</td>
+      <td>{{ it.price|currency }}</td>
+    </tr>
+  {% endfor %}
+  {% if not pending_items %}<tr><td colspan="5" class="text-muted text-center">No pending</td></tr>{% endif %}
+  </tbody>
+</table>
+
+<h5>Stock updates (no review)</h5>
+<table class="table table-sm">
+  <thead>
+    <tr><th>Article</th><th>Qty old→new</th><th>Price old→new</th><th>Import</th><th>Computed</th></tr>
+  </thead>
+  <tbody>
+  {% for u in stock_updates %}
+    <tr>
+      <td>{{ u.article }}</td>
+      <td>{{ u.old_quantity }} → {{ u.new_quantity }}</td>
+      <td>{{ u.old_price|currency }} → {{ u.new_price|currency }}</td>
+      <td>{{ u.import_price|currency }}</td>
+      <td>{{ u.computed_price|currency }}</td>
+    </tr>
+  {% endfor %}
+  {% if not stock_updates %}<tr><td colspan="5" class="text-muted text-center">No updates</td></tr>{% endif %}
+  </tbody>
+</table>
+
+<h5>Price reviews (needs approve)</h5>
+<div class="mb-2">
+  <button id="btn-approve-all" class="btn btn-outline-success btn-sm">Approve all</button>
+</div>
+<table class="table table-sm">
+  <thead>
+    <tr><th>Article</th><th>Old</th><th>Import</th><th>Computed</th><th>Δ%</th><th>Reason</th><th></th></tr>
+  </thead>
+  <tbody id="pr-body">
+  {% for r in price_reviews %}
+    <tr data-article="{{ r.article or r.stock_article }}">
+      <td>{{ r.article or r.stock_article }}</td>
+      <td>{{ r.old_price|currency }}</td>
+      <td>{{ r.import_price|currency }}</td>
+      <td>{{ r.computed_price|currency }}</td>
+      <td>{{ "%.1f"|format(r.percentage_change|default(0)) }}%</td>
+      <td>{{ r.review_reason }}</td>
+      <td>
+        <button class="btn btn-success btn-sm btn-approve">Approve</button>
+        <button class="btn btn-outline-secondary btn-sm btn-keep">Keep</button>
+      </td>
+    </tr>
+  {% endfor %}
+  {% if not price_reviews %}<tr><td colspan="7" class="text-muted text-center">No reviews</td></tr>{% endif %}
+  </tbody>
+</table>
+
+<script>
+const token = "{{ token }}";
+const runId = {{ run_id|int }};
+async function post(url, body){
+  const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  return r.json();
+}
+document.querySelectorAll('.btn-approve').forEach(b=>b.addEventListener('click', async (e)=>{
+  const tr = e.target.closest('tr'); const a = tr.dataset.article;
+  const res = await post(`/${token}/admin/import/price/approve`, {article:a, run_id: runId});
+  if(res.success) tr.remove(); else alert(res.message||'Error');
+}));
+document.querySelectorAll('.btn-keep').forEach(b=>b.addEventListener('click', async (e)=>{
+  const tr = e.target.closest('tr'); const a = tr.dataset.article;
+  const res = await post(`/${token}/admin/import/price/keep`, {article:a, run_id: runId});
+  if(res.success) tr.remove(); else alert(res.message||'Error');
+}));
+document.getElementById('btn-approve-all')?.addEventListener('click', async ()=>{
+  const res = await post(`/${token}/admin/import/price/approve-all`, {run_id: runId});
+  if(res.success) location.reload(); else alert(res.message||'Error');
+});
+</script>
+{% endblock %}

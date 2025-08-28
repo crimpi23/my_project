@@ -1,0 +1,160 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Import Blacklist - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Import Blacklist</h1>
+        <div>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#addModal">
+                <i class="bi bi-plus"></i> Add Article
+            </button>
+            <a href="{{ url_for('admin_import_dashboard', token=token) }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-danger">{{ blacklist_items|length }}</h3>
+                    <p class="mb-0">Blacklisted Articles</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blacklist Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="bi bi-x-circle"></i> Blacklist Articles</h5>
+        </div>
+        <div class="card-body">
+            {% if blacklist_items %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Article</th>
+                            <th>Brand</th>
+                            <th>Reason</th>
+                            <th>Replacement</th>
+                            <th>Added</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in blacklist_items %}
+                        <tr>
+                            <td><strong>{{ item.article }}</strong></td>
+                            <td>
+                                {% if item.brand_name %}
+                                    <span class="badge bg-secondary">{{ item.brand_name }}</span>
+                                {% else %}
+                                    <span class="text-muted">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.reason or '-' }}</td>
+                            <td>{{ item.replacement_article or '-' }}</td>
+                            <td>{{ item.created_at.strftime('%d.%m.%Y') }}</td>
+                            <td>
+                                {% if item.notes %}
+                                    <span class="text-truncate" style="max-width: 100px;" title="{{ item.notes }}">
+                                        {{ item.notes[:20] }}{% if item.notes|length > 20 %}...{% endif %}
+                                    </span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin_import_blacklist_remove', token=token, item_id=item.id) }}" 
+                                      style="display: inline;" onsubmit="return confirm('Remove this article from blacklist?')">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <h5 class="mt-3">No Articles in Blacklist</h5>
+                <p class="text-muted">Add articles to prevent them from being imported.</p>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#addModal">
+                    <i class="bi bi-plus"></i> Add First Article
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add to Blacklist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_import_blacklist_add', token=token) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Article Number *</label>
+                        <input type="text" class="form-control" name="article" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Brand *</label>
+                        <select class="form-select" name="brand_id" required>
+                            <option value="">Select Brand</option>
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}">{{ brand.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <select class="form-select" name="reason">
+                            <option value="">Select Reason</option>
+                            <option value="single_item">Single Item Only</option>
+                            <option value="kit_only">Kit Only</option>
+                            <option value="discontinued">Discontinued</option>
+                            <option value="low_demand">Low Demand</option>
+                            <option value="quality_issues">Quality Issues</option>
+                            <option value="supplier_issues">Supplier Issues</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Replacement Article</label>
+                        <input type="text" class="form-control" name="replacement_article" 
+                               placeholder="Alternative article if available">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2" 
+                                  placeholder="Additional information..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Add to Blacklist</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

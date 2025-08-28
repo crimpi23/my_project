@@ -1,0 +1,65 @@
+```html
+// filepath: c:\Users\IBM24\Desktop\Local\templates\admin\price_reviews\list.html
+{% extends "base/admin_base.html" %}
+{% block title %}Price Reviews{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <h3 class="mb-3">Price Reviews</h3>
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered align-middle">
+      <thead>
+        <tr>
+          <th>Article</th>
+          <th>Old</th>
+          <th>Import</th>
+          <th>Computed</th>
+          <th>Δ%</th>
+          <th>Reason</th>
+          <th>Run</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="reviews-body">
+        {% for r in reviews %}
+        <tr data-article="{{ r.stock_article }}" data-run="{{ r.import_run_id }}">
+          <td>{{ r.stock_article }}</td>
+          <td>€{{ "%.2f"|format(r.old_site_price|default(0)) }}</td>
+          <td>€{{ "%.2f"|format(r.import_base_price|default(0)) }}</td>
+          <td>€{{ "%.2f"|format(r.computed_price|default(0)) }}</td>
+          <td>{{ "%.1f"|format(r.percentage_change|default(0)) }}%</td>
+          <td>{{ r.reason or r.review_reason }}</td>
+          <td>#{{ r.import_run_id }}</td>
+          <td>
+            <button class="btn btn-success btn-sm btn-approve">Approve</button>
+            <button class="btn btn-outline-secondary btn-sm btn-keep">Keep</button>
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not reviews %}
+        <tr><td colspan="8" class="text-center text-muted">No open reviews</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+(async function(){
+  const token = "{{ token }}";
+  async function post(url, body){
+    const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    return r.json();
+  }
+  document.querySelectorAll('.btn-approve').forEach(b=>b.addEventListener('click', async (e)=>{
+    const tr = e.target.closest('tr');
+    const res = await post(`/${token}/admin/import/price/approve`, {article: tr.dataset.article, run_id: tr.dataset.run});
+    if(res.success) tr.remove(); else alert(res.message || 'Error');
+  }));
+  document.querySelectorAll('.btn-keep').forEach(b=>b.addEventListener('click', async (e)=>{
+    const tr = e.target.closest('tr');
+    const res = await post(`/${token}/admin/import/price/keep`, {article: tr.dataset.article, run_id: tr.dataset.run});
+    if(res.success) tr.remove(); else alert(res.message || 'Error');
+  }));
+})();
+</script>
+{% endblock %}
+```

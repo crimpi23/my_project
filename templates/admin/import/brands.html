@@ -1,0 +1,141 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Brand Mapping - Import System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Unmapped Brands</h3>
+                    <div class="card-tools">
+                        <span class="badge bg-warning">{{ unmapped_brands|length }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if unmapped_brands %}
+                    <div class="table-responsive">
+                        <table class="table table-sm admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Brand from File</th>
+                                    <th>First Seen</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for brand in unmapped_brands %}
+                                <tr>
+                                    <td><strong>{{ brand.file_brand_name }}</strong></td>
+                                    <td>{{ brand.created_at.strftime('%d.%m.%Y') if brand.created_at else '-' }}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-primary" 
+                                                onclick="mapBrand('{{ brand.file_brand_name }}')">
+                                            Map
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check"></i> All brands are mapped!
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Mapped Brands</h3>
+                    <div class="card-tools">
+                        <span class="badge bg-success">{{ mapped_brands|length }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if mapped_brands %}
+                    <div class="table-responsive">
+                        <table class="table table-sm admin-table">
+                            <thead>
+                                <tr>
+                                    <th>File Brand</th>
+                                    <th>→ Mapped To</th>
+                                    <th>Auto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mapping in mapped_brands %}
+                                <tr>
+                                    <td>{{ mapping.file_brand_name }}</td>
+                                    <td><strong>{{ mapping.brand_name }}</strong></td>
+                                    <td>
+                                        {% if mapping.auto_approved %}
+                                            <span class="badge bg-success">Auto</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Manual</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No mapped brands yet.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Brand Mapping Modal -->
+<div class="modal fade" id="mapBrandModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('admin_import_brands_map', token=token) }}">
+                <div class="modal-header">
+                    <h4 class="modal-title">Map Brand</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Brand from file:</label>
+                        <input type="text" class="form-control" name="file_brand_name" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="brand_id" class="form-label">Map to existing brand:</label>
+                        <select class="form-control" name="brand_id" required>
+                            <option value="">Select Brand</option>
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}">{{ brand.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Map Brand</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function mapBrand(brandName) {
+    const modal = document.getElementById('mapBrandModal');
+    modal.querySelector('input[name="file_brand_name"]').value = brandName;
+    new bootstrap.Modal(modal).show();
+}
+</script>
+{% endblock %}

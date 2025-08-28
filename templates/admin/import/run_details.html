@@ -1,0 +1,125 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Import Run #{{ run.id }} Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Import Run #{{ run.id }} Details</h3>
+                    <div class="card-tools">
+                        <a href="{{ url_for('admin_import_runs', token=token) }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Back to Import Runs
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Run Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Run Information</h5>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Filename:</strong></td>
+                                    <td>{{ run.filename }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if run.status == 'completed' else 'warning' }}">
+                                            {{ run.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Started:</strong></td>
+                                    <td>{{ run.started_at.strftime('%Y-%m-%d %H:%M:%S') if run.started_at else 'N/A' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Finished:</strong></td>
+                                    <td>{{ run.finished_at.strftime('%Y-%m-%d %H:%M:%S') if run.finished_at else 'Still running' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Statistics</h5>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Total Rows:</strong></td>
+                                    <td>{{ run.total_rows or 0 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Slovakia Rows:</strong></td>
+                                    <td>{{ run.slovakia_rows or 0 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Processed Rows:</strong></td>
+                                    <td>{{ run.processed_rows or 0 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>New Pending:</strong></td>
+                                    <td>{{ run.new_pending_count or 0 }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Sample Rows -->
+                    {% if rows %}
+                    <h5>Sample Import Rows (first 100)</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Row #</th>
+                                    <th>Article</th>
+                                    <th>Name</th>
+                                    <th>Brand</th>
+                                    <th>Warehouse</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Currency</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in rows %}
+                                <tr>
+                                    <td>{{ row.row_number }}</td>
+                                    <td><code>{{ row.import_article }}</code></td>
+                                    <td>{{ row.name_from_file or '-' }}</td>
+                                    <td>{{ row.brand or '-' }}</td>
+                                    <td>{{ row.warehouse or '-' }}</td>
+                                    <td>{{ row.quantity or 0 }}</td>
+                                    <td>{{ "€%.2f"|format(row.price) if row.price else '-' }}</td>
+                                    <td>{{ row.currency or '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No import rows found for this run.
+                    </div>
+                    {% endif %}
+
+                    <!-- Apply Changes Button (if completed and was dry run) -->
+                    {% if run.status == 'completed' %}
+                    <div class="mt-4">
+                        <form method="post" action="{{ url_for('admin_import_run_preview', token=token, run_id=run.id) }}" 
+                              onsubmit="return confirm('Are you sure you want to apply these changes? This cannot be undone.')">
+                            <input type="hidden" name="action" value="apply_changes">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Apply Changes (Not a Dry Run)
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

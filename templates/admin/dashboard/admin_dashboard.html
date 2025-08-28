@@ -259,7 +259,47 @@
             </div>
         </div>
     </div>
+
+    <!-- Керування імпортом -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-upload"></i> Import Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin_import_dashboard', token=token) }}" class="btn btn-primary w-100 mb-2">
+                                <i class="bi bi-speedometer2"></i><br>
+                                Import Dashboard
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin_import_upload', token=token) }}" class="btn btn-success w-100 mb-2">
+                                <i class="bi bi-upload"></i><br>
+                                Upload File
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin_import_queue', token=token) }}" class="btn btn-warning w-100 mb-2">
+                                <i class="bi bi-clock"></i><br>
+                                Queue
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin_import_history', token=token) }}" class="btn btn-info w-100 mb-2">
+                                <i class="bi bi-clock-history"></i><br>
+                                Import History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -298,5 +338,4 @@
         font-weight: 600;
     }
 </style>
-{% endblock %}
 {% endblock %}

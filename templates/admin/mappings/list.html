@@ -1,0 +1,144 @@
+{% extends 'base/admin_base.html' %}
+{% block title %}Mappings{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <h3 class="mb-3">Mappings</h3>
+
+  <form class="row g-2 mb-3" method="get" action="{{ url_for('admin_mappings_list', token=token) }}">
+    <div class="col-auto">
+      <input class="form-control" name="q" placeholder="Пошук (import/stock article)" value="{{ q or '' }}">
+    </div>
+    <div class="col-auto">
+      <select class="form-select" name="status">
+        {% for s in ['approved','pending','rejected','all'] %}
+          <option value="{{s}}" {% if status==s %}selected{% endif %}>{{s}}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-auto">
+      <select class="form-select" name="per_page">
+        <option value="25">25</option>
+        <option value="all">All</option>
+      </select>
+    </div>
+    <div class="col-auto"><button class="btn btn-primary">Фільтрувати</button></div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead>
+        <tr>
+          <th>Import article</th>
+          <th>Stock article</th>
+          <th>Status</th>
+          <th>First seen</th>
+          <th>Latest seen</th>
+          <th>Suppressed until</th>
+          <th style="width:220px">Дії</th>
+          <th style="width:260px">Дод. мапінги</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td class="text-monospace">{{ r.import_article }}</td>
+          <td class="text-monospace">
+            <input class="form-control form-control-sm" value="{{ r.stock_article or '' }}" id="stock_{{ r.import_article }}">
+          </td>
+          <td><span class="badge bg-secondary">{{ r.status }}</span></td>
+          <td>{{ r.first_seen_at|datetime }}</td>
+          <td>{{ r.latest_seen_at|datetime }}</td>
+          <td>{{ r.suppressed_until|datetime }}</td>
+          <td>
+            <button class="btn btn-sm btn-success" onclick="saveMapping('{{ r.import_article }}')">Зберегти</button>
+            <button class="btn btn-sm btn-outline-warning" onclick="deactivateMapping('{{ r.import_article }}')">Деактивувати</button>
+          </td>
+          <td style="width:260px">
+            <div class="mb-1 small">
+              {% for t in (targets_by_ia.get(r.import_article) or []) %}
+                <span class="badge bg-light text-dark border me-1">
+                  {{ t.stock_article }}
+                  <a href="#" class="ms-1 text-danger text-decoration-none rm-target" data-ia="{{ r.import_article }}" data-sa="{{ t.stock_article }}">&times;</a>
+                </span>
+              {% endfor %}
+            </div>
+            <div class="input-group input-group-sm">
+              <input class="form-control" placeholder="New stock_article" id="new_sa_{{ r.import_article }}">
+              <button class="btn btn-outline-primary" onclick="addTarget('{{ r.import_article }}')">Add</button>
+            </div>
+            <div class="small text-muted">Можна додати кілька (працюють разом)</div>
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not rows %}
+        <tr><td colspan="8" class="text-center text-muted">No data</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination and pagination.pages>1 %}
+  <nav>
+    <ul class="pagination pagination-sm">
+      {% for p in range(1, pagination.pages+1) %}
+        <li class="page-item {% if p==pagination.page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('admin_mappings_list', token=token, q=q, status=status, page=p) }}">{{ p }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+
+<script>
+async function saveMapping(importArticle){
+  const stockInput = document.getElementById('stock_'+importArticle);
+  const stockArticle = (stockInput?.value || '').trim().toUpperCase();
+  if(!stockArticle){ alert('Вкажіть stock_article'); return; }
+
+  const res = await fetch('/{{ token }}/admin/mappings/update', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({import_article: importArticle, stock_article: stockArticle})
+  });
+  const j = await res.json();
+  if(j.success){ location.reload(); } else { alert(j.message || 'Помилка'); }
+}
+
+async function deactivateMapping(importArticle){
+  const days = 7;
+  const res = await fetch('/{{ token }}/admin/mappings/deactivate', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({import_article: importArticle, days})
+  });
+  const j = await res.json();
+  if(j.success){ location.reload(); } else { alert(j.message || 'Помилка'); }
+}
+
+async function addTarget(importArticle){
+  const inp = document.getElementById('new_sa_'+importArticle);
+  const sa = (inp?.value || '').trim().toUpperCase();
+  if(!sa){ alert('Вкажіть stock_article'); return; }
+  const res = await fetch('/{{ token }}/admin/mappings/add-target', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({import_article: importArticle, stock_article: sa})
+  });
+  const j = await res.json();
+  if(j.success){ location.reload(); } else { alert(j.message || 'Помилка'); }
+}
+document.querySelectorAll('.rm-target').forEach(a=>{
+  a.addEventListener('click', async (e)=>{
+    e.preventDefault();
+    const ia = a.dataset.ia, sa = a.dataset.sa;
+    const res = await fetch('/{{ token }}/admin/mappings/remove-target', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({import_article: ia, stock_article: sa})
+    });
+    const j = await res.json();
+    if(j.success){ location.reload(); } else { alert(j.message || 'Помилка'); }
+  });
+});
+</script>
+{% endblock %}

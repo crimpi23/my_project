@@ -1,0 +1,200 @@
+{% extends "base/admin_base.html" %}
+{% block title %}Whitelist Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <h3 class="mb-3">Whitelist Management</h3>
+
+  <form class="row g-2 mb-3" method="get" action="{{ url_for('admin_whitelist', token=token) }}">
+    <div class="col-auto">
+      <input class="form-control" name="q" placeholder="Search" value="{{ q or '' }}">
+    </div>
+    <div class="col-auto">
+      <select class="form-select" name="type">
+        <option value="">All Types</option>
+        <option value="auto_update" {% if type_filter=='auto_update' %}selected{% endif %}>Auto Update</option>
+        <option value="ignore" {% if type_filter=='ignore' %}selected{% endif %}>Ignore</option>
+        <option value="fixed_price" {% if type_filter=='fixed_price' %}selected{% endif %}>Fixed Price</option>
+      </select>
+    </div>
+    <div class="col-auto"><button class="btn btn-primary">Filter</button></div>
+  </form>
+
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5>Add to Whitelist</h5>
+          <form id="add-form" class="row g-2">
+            <div class="col-md-5">
+              <input type="text" id="new-article" class="form-control" placeholder="Article" required>
+            </div>
+            <div class="col-md-4">
+              <select id="new-type" class="form-select">
+                <option value="auto_update">Auto Update</option>
+                <option value="ignore">Ignore</option>
+                <option value="fixed_price">Fixed Price</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-success">Add</button>
+            </div>
+            <div id="fixed-price-row" class="col-md-12 mt-2 d-none">
+              <div class="input-group">
+                <span class="input-group-text">€</span>
+                <input type="number" id="new-price" class="form-control" placeholder="Fixed price" step="0.01">
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">Statistics</h5>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="alert alert-info">
+                Auto Update: <strong>{{ type_counts.get('auto_update', 0) }}</strong>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="alert alert-warning">
+                Ignore: <strong>{{ type_counts.get('ignore', 0) }}</strong>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="alert alert-success">
+                Fixed Price: <strong>{{ type_counts.get('fixed_price', 0) }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>Article</th>
+          <th>Type</th>
+          <th>Price Fixed</th>
+          <th>Fixed Price</th>
+          <th>Notes</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in whitelist %}
+        <tr>
+          <td>{{ item.article }}</td>
+          <td>
+            {% if item.type == 'auto_update' %}
+              <span class="badge bg-info">Auto Update</span>
+            {% elif item.type == 'ignore' %}
+              <span class="badge bg-warning">Ignore</span>
+            {% elif item.type == 'fixed_price' %}
+              <span class="badge bg-success">Fixed Price</span>
+            {% endif %}
+          </td>
+          <td>{{ 'Yes' if item.price_fixed else 'No' }}</td>
+          <td>{{ item.fixed_price|currency if item.fixed_price else '-' }}</td>
+          <td>{{ item.notes or '' }}</td>
+          <td>{{ item.created_at|datetime }}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ item.id }}">Delete</button>
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not whitelist %}
+        <tr><td colspan="7" class="text-center text-muted">No whitelist entries</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination and pagination.pages > 1 %}
+  <nav>
+    <ul class="pagination pagination-sm">
+      {% for p in range(1, pagination.pages+1) %}
+      <li class="page-item {% if p == pagination.page %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('admin_whitelist', token=token, q=q, type=type_filter, page=p) }}">{{ p }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+
+<script>
+// Show/hide fixed price input based on type
+document.getElementById('new-type').addEventListener('change', function() {
+  const fixedPriceRow = document.getElementById('fixed-price-row');
+  if (this.value === 'fixed_price') {
+    fixedPriceRow.classList.remove('d-none');
+  } else {
+    fixedPriceRow.classList.add('d-none');
+  }
+});
+
+// Add to whitelist
+document.getElementById('add-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const article = document.getElementById('new-article').value.trim().toUpperCase();
+  const type = document.getElementById('new-type').value;
+  const price = document.getElementById('new-price').value;
+  
+  try {
+    const response = await fetch(`/{{ token }}/admin/whitelist/add`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ 
+        article, 
+        type, 
+        price_fixed: type === 'fixed_price',
+        fixed_price: type === 'fixed_price' ? price : null
+      })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      location.reload();
+    } else {
+      alert(result.message || 'Error adding to whitelist');
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+});
+
+// Delete from whitelist
+document.querySelectorAll('.delete-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+    
+    const id = this.dataset.id;
+    try {
+      const response = await fetch(`/{{ token }}/admin/whitelist/delete/${id}`, {
+        method: 'POST'
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        location.reload();
+      } else {
+        alert(result.message || 'Error deleting from whitelist');
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  });
+});
+</script>
+{% endblock %}

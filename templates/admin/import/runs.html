@@ -1,0 +1,44 @@
+```html
+// filepath: c:\Users\IBM24\Desktop\Local\templates\admin\import\runs.html
+{% extends "base/admin_base.html" %}
+{% block title %}Import Runs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <h3 class="mb-3"><i class="bi bi-clock-history"></i> Import Runs</h3>
+  <div class="table-responsive">
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>File</th>
+          <th>Status</th>
+          <th>Total</th>
+          <th>Slovakia</th>
+          <th>Processed</th>
+          <th>Price Reviews</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in runs %}
+        <tr>
+          <td>{{ r.started_at|datetime }}</td>
+          <td>{{ r.filename }}</td>
+          <td>{{ r.status }}</td>
+          <td>{{ r.total_rows }}</td>
+          <td>{{ r.slovakia_rows }}</td>
+          <td>{{ r.processed_rows }}</td>
+          <td>{{ r.price_review_count or 0 }}</td>
+          <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_import_run_preview', token=token, run_id=r.id) }}">Open</a></td>
+        </tr>
+        {% endfor %}
+        {% if not runs %}
+        <tr><td colspan="8" class="text-center text-muted">No runs</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+```

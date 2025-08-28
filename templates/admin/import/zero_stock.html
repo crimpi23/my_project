@@ -1,0 +1,77 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Zero Stock Items - Import System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Zero Stock Items</h3>
+                    <div class="card-tools">
+                        <span class="badge bg-warning">{{ zero_stock_items|length }} items</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Додайте кнопку для очищення всього списку вгорі сторінки -->
+                    <div class="mb-3">
+                        <form action="{{ url_for('admin_clear_zero_stock', token=token) }}" method="post" onsubmit="return confirm('Are you sure you want to clear all items from the zero stock list?');">
+                            <button type="submit" class="btn btn-danger">Clear All Items</button>
+                        </form>
+                    </div>
+
+                    {% if zero_stock_items %}
+                    <div class="table-responsive">
+                        <table class="table table-striped admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Article</th>
+                                    <th>Brand</th>
+                                    <th>Current Stock</th>
+                                    <th>Missing Count</th>
+                                    <th>Last Seen</th>
+                                    <th>Status</th>
+                                    <th>Actions</th> <!-- Нова колонка -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in zero_stock_items %}
+                                <tr>
+                                    <td><strong>{{ item.article }}</strong></td>
+                                    <td>{{ item.brand_name or 'Unknown' }}</td>
+                                    <td>
+                                        <span class="badge {% if item.current_stock and item.current_stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ item.current_stock or 0 }}
+                                        </span>
+                                    </td>
+                                    <td>{{ item.import_count_missing }}</td>
+                                    <td>{{ item.last_seen.strftime('%d.%m.%Y %H:%M') if item.last_seen else 'Never' }}</td>
+                                    <td>
+                                        <span class="badge {% if item.status == 'active' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ item.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('admin_delete_zero_stock_item', token=token, item_id=item.id) }}" method="post" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this item?');">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No zero stock items found.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

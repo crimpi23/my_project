@@ -1,0 +1,69 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Manual Stock Import{% endblock %}
+
+{% block content %}
+<h3>Manual Import</h3>
+<form method="post" enctype="multipart/form-data" class="mb-4" id="importForm">
+  <div class="row g-2 align-items-center">
+    <div class="col-auto">
+      <input type="file" name="import_file" class="form-control" required>
+    </div>
+    <div class="col-auto form-check">
+      <input class="form-check-input" type="checkbox" value="on" id="dry_run" name="dry_run" checked>
+      <label class="form-check-label" for="dry_run">Dry run (preview only)</label>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-primary">
+        <i class="bi bi-upload"></i> Upload
+      </button>
+    </div>
+  </div>
+  <div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" id="force_reimport" name="force_reimport">
+    <label class="form-check-label" for="force_reimport">
+      Force reimport (ignore checksum check)
+    </label>
+  </div>
+</form>
+
+{% if recent_runs %}
+<h5>Recent Runs</h5>
+<table class="table table-sm">
+  <thead>
+    <tr><th>ID</th><th>File</th><th>Status</th><th>Total</th><th>SK</th><th>Processed</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for r in recent_runs %}
+    <tr>
+      <td>#{{ r.id }}</td>
+      <td>{{ r.filename }}</td>
+      <td>{{ r.status }}</td>
+      <td>{{ r.total_rows }}</td>
+      <td>{{ r.slovakia_rows }}</td>
+      <td>{{ r.processed_rows }}</td>
+      <td><a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin_import_run_preview', token=token, run_id=r.id) }}">Open</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('importForm').addEventListener('submit', function(e) {
+    const fileInput = document.querySelector('input[name="import_file"]');
+    if (!fileInput.files.length) {
+        e.preventDefault();
+        alert('Please select a file to upload');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="bi bi-spinner-border spinner-border-sm"></i> Processing...';
+    submitBtn.disabled = true;
+});
+</script>
+{% endblock %}

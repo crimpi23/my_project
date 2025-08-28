@@ -1,0 +1,72 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Price Changes - Import System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Pending Price Changes</h3>
+                </div>
+                <div class="card-body">
+                    {% if price_changes %}
+                    <div class="table-responsive">
+                        <table class="table table-striped admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Article</th>
+                                    <th>Brand</th>
+                                    <th>Old Price</th>
+                                    <th>New Price</th>
+                                    <th>Difference (% / €)</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for change in price_changes %}
+                                <tr>
+                                    <td><strong>{{ change.article }}</strong></td>
+                                    <td>{{ change.brand_name or 'Unknown' }}</td>
+                                    <td>€{{ "%.2f"|format(change.old_price) }}</td>
+                                    <td>€{{ "%.2f"|format(change.new_price) }}</td>
+                                    <td>
+                                        {% set percent_diff = ((change.new_price - change.old_price) / change.old_price * 100) | round(1) %}
+                                        {% if percent_diff > 0 %}+{% endif %}{{ percent_diff }}% / 
+                                        {% if change.new_price > change.old_price %}+{% endif %}€{{ (change.new_price - change.old_price) | round(2) }}
+                                    </td>
+                                    <td>{{ change.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                    <td>
+                                        <form method="POST" style="display: inline;">
+                                            <button type="submit" 
+                                                    formaction="{{ url_for('admin_approve_price_change', token=token, change_id=change.id) }}"
+                                                    class="btn btn-sm btn-success">
+                                                Approve
+                                            </button>
+                                        </form>
+                                        <form method="POST" style="display: inline;">
+                                            <button type="submit" 
+                                                    formaction="{{ url_for('admin_reject_price_change', token=token, change_id=change.id) }}"
+                                                    class="btn btn-sm btn-danger">
+                                                Reject
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No pending price changes found.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

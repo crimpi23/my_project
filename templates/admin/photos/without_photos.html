@@ -1,0 +1,237 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Items Without Photos{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2">Stock Items Without Photos</h1>
+            <p class="text-muted">Items that need photo management</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin_manage_photos', token=token) }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Photo Management
+            </a>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#bulkUploadModal">
+                <i class="bi bi-upload"></i> Bulk Upload
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-exclamation-triangle text-warning"></i> 
+                Items Without Photos
+                <span class="badge bg-warning">{{ items|length }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if items %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Article</th>
+                            <th>Brand</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr id="row-{{ item.article }}">
+                            <td><strong>{{ item.article }}</strong></td>
+                            <td>
+                                {% if item.brand_name %}
+                                    <span class="badge bg-secondary">{{ item.brand_name }}</span>
+                                {% else %}
+                                    <span class="text-muted">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-success">{{ item.quantity }}</span>
+                            </td>
+                            <td>
+                                <span class="text-success fw-medium">€{{ "%.2f"|format(item.price) }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-primary" 
+                                            onclick="quickAddPhoto('{{ item.article }}')"
+                                            title="Quick Add Photo">
+                                        <i class="bi bi-camera-fill"></i> Quick Add
+                                    </button>
+                                    <a href="{{ url_for('admin_upload_photos', token=token) }}?article={{ item.article }}" 
+                                       class="btn btn-outline-primary"
+                                       title="Detailed Upload">
+                                        <i class="bi bi-upload"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Excellent!</h4>
+                <p class="text-muted">All stock items have photos</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick Add Photo Modal -->
+<div class="modal fade" id="quickPhotoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Add Photo - <span id="quickArticle"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickPhotoForm">
+                    <div class="mb-3">
+                        <label class="form-label">Photo URL</label>
+                        <input type="url" class="form-control" id="quickPhotoUrl" 
+                               placeholder="https://example.com/photo.jpg" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Or multiple URLs (one per line)</label>
+                        <textarea class="form-control" id="quickPhotoUrls" rows="4" 
+                                  placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitQuickPhoto()">Add Photos</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Upload Modal -->
+<div class="modal fade" id="bulkUploadModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bulk Photo Upload</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Format: Article TAB URL</label>
+                    <textarea class="form-control" id="bulkPhotoData" rows="10" 
+                              placeholder="ARTICLE1	https://example.com/photo1.jpg&#10;ARTICLE2	https://example.com/photo2.jpg"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitBulkUpload()">Upload All</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentQuickArticle = '';
+
+function quickAddPhoto(article) {
+    currentQuickArticle = article;
+    document.getElementById('quickArticle').textContent = article;
+    document.getElementById('quickPhotoUrl').value = '';
+    document.getElementById('quickPhotoUrls').value = '';
+    new bootstrap.Modal(document.getElementById('quickPhotoModal')).show();
+}
+
+function submitQuickPhoto() {
+    const url = document.getElementById('quickPhotoUrl').value.trim();
+    const urls = document.getElementById('quickPhotoUrls').value.trim();
+    
+    let urlsToSubmit = [];
+    if (url) urlsToSubmit.push(url);
+    if (urls) {
+        urlsToSubmit = urlsToSubmit.concat(urls.split('\n').map(u => u.trim()).filter(u => u));
+    }
+    
+    if (urlsToSubmit.length === 0) {
+        alert('Please enter at least one URL');
+        return;
+    }
+    
+    // Submit via AJAX
+    fetch(`{{ url_for('admin_upload_photos', token=token) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `article=${currentQuickArticle}&photo_urls=${urlsToSubmit.join('\n')}`
+    })
+    .then(response => {
+        if (response.redirected) {
+            // Remove row from table if successful
+            document.getElementById(`row-${currentQuickArticle}`).remove();
+            bootstrap.Modal.getInstance(document.getElementById('quickPhotoModal')).hide();
+            
+            // Update badge count
+            const badge = document.querySelector('.badge.bg-warning');
+            const currentCount = parseInt(badge.textContent);
+            badge.textContent = currentCount - 1;
+            
+            // Show success message
+            showAlert('Photos added successfully!', 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Error adding photos', 'danger');
+    });
+}
+
+function submitBulkUpload() {
+    const data = document.getElementById('bulkPhotoData').value.trim();
+    if (!data) {
+        alert('Please enter bulk data');
+        return;
+    }
+    
+    fetch(`{{ url_for('admin_upload_photos', token=token) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `images_data=${encodeURIComponent(data)}`
+    })
+    .then(response => {
+        if (response.redirected) {
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Error with bulk upload', 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.container-fluid').firstChild);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

@@ -50,9 +50,7 @@
         "reviewCount": "84",
         "bestRating": "5",
         "worstRating": "1"
-      }{% if product_categories and product_categories|length > 0 %},
-      "category": "{% for category in product_categories %}{{ category.name_sk or category.name_en or category.name_uk }}{% if not loop.last %} > {% endif %}{% endfor %}"
-      {% endif %}
+      }
     }
 </script>
 
@@ -64,24 +62,6 @@
 
 {% block content %}
 <div class="container mt-4">
-{% if product_categories and product_categories|length > 0 %}
-<div class="breadcrumbs-container mb-3">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">{{ _('Home') }}</a></li>
-            {% for category in product_categories %}
-            <li class="breadcrumb-item">
-                <a href="/category/{{ category.slug }}">
-                    {{ category[('name_' + g.locale)] or category.name_sk or category.name_en or category.name_uk }}
-                </a>
-            </li>
-            {% endfor %}
-            <li class="breadcrumb-item active" aria-current="page">{{ product_data.name }}</li>
-        </ol>
-    </nav>
-</div>
-{% endif %}
-
     <div class="row mb-4 product-details-search">
         <div class="col-lg-8 mx-auto">
             <div class="search-card fade-in">
@@ -157,43 +137,6 @@
                                 <span class="meta-value">{{ brand_name }}</span>
                             </div>
                         </div>
-
-{% if product_categories and product_categories|length > 0 %}
-<div class="product-categories mt-3 mb-3">
-    <small class="text-muted d-block mb-1">{{ _('Categories') }}:</small>
-    <div class="category-badges">
-        {% for category in product_categories %}
-        <a href="/category/{{ category.slug }}" class="category-badge">
-            {{ category[('name_' + g.locale)] or category.name_sk or category.name_en or category.name_uk }}
-        </a>
-        {% endfor %}
-    </div>
-    
-    <div class="d-none">
-        <span>
-            {% for category in product_categories %}
-                {{ category[('name_' + g.locale)] or category.name_sk or category.name_en or category.name_uk }}{% if not loop.last %} > {% endif %}
-            {% endfor %}
-        </span>
-        {% if product_categories and product_categories[0].google_category_id %}
-        <span>{{ product_categories[0].google_category_id }}</span>
-        {% endif %}
-    </div>
-</div>
-{% endif %}
-
-{% if not product_categories or product_categories|length == 0 %}
-<div class="product-categories mt-3 mb-3">
-    <small class="text-muted d-block mb-1">{{ _('Popular Categories') }}:</small>
-    <div class="category-badges">
-        <a href="/category/engine-parts" class="category-badge">{{ _('Engine Parts') }}</a>
-        <a href="/category/brake-system" class="category-badge">{{ _('Brake System') }}</a>
-        <a href="/category/filters" class="category-badge">{{ _('Filters') }}</a>
-        <a href="/category/suspension" class="category-badge">{{ _('Suspension') }}</a>
-        <a href="/category/electrical" class="category-badge">{{ _('Electrical') }}</a>
-    </div>
-</div>
-{% endif %}
 
                         <h4 class="mb-3"><i class="bi bi-tag-fill me-2 text-primary"></i>{{ _('Available Prices') }}</h4>
                         {% for price in prices %}
@@ -326,35 +269,6 @@
     </div>
 </div>
 
-<div class="row mt-2">
-    <div class="col-12">
-        {% if product_categories %}
-        <div class="product-categories mt-3 mb-3">
-            <small class="text-muted d-block mb-1">{{ _('Categories') }}:</small>
-            <div class="category-badges">
-                {% for category in product_categories %}
-                <a href="/category/{{ category.slug }}" class="category-badge">
-                    {{ category[('name_' + g.locale)] or category.name_sk or category.name_en or category.name_uk }}
-                </a>
-                {% endfor %}
-            </div>
-            
-            <div class="d-none">
-                <span>
-                    {% for category in product_categories %}
-                        {{ category[('name_' + g.locale)] or category.name_sk or category.name_en or category.name_uk }}{% if not loop.last %} > {% endif %}
-                    {% endfor %}
-                </span>
-                {% if product_categories and product_categories[0].google_category_id %}
-                <span>{{ product_categories[0].google_category_id }}</span>
-                {% endif %}
-            </div>
-        </div>
-        {% else %}
-        {% endif %}
-    </div>
-</div>
-
         <style>
         .category-badges {
             display: flex;
@@ -435,6 +349,19 @@
 </style>
     </div>
 </div>
+
+{% if not product_categories or product_categories|length == 0 %}
+<div class="product-categories mt-3 mb-3">
+    <small class="text-muted d-block mb-1">{{ _('Popular Categories') }}:</small>
+    <div class="category-badges">
+        <a href="#" class="category-badge">{{ _('Engine Parts') }}</a>
+        <a href="#" class="category-badge">{{ _('Brake System') }}</a>
+        <a href="#" class="category-badge">{{ _('Filters') }}</a>
+        <a href="#" class="category-badge">{{ _('Suspension') }}</a>
+        <a href="#" class="category-badge">{{ _('Electrical') }}</a>
+    </div>
+</div>
+{% endif %}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

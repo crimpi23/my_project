@@ -174,87 +174,6 @@
                 <li class="nav-item {% if request.path.startswith('/blog') %}active{% endif %}">
                     <a class="nav-link" href="{{ url_for('blog_index') }}">{{ _('Blog') }}</a>
                 </li>
-{% macro render_categories(categories) %}
-    {% for category in categories %}
-        <li class="menu-item">
-            <div class="menu-item-header">
-                <div class="category-link-container">
-                    <a href="{{ url_for('view_category', slug=category.slug) }}" 
-                       class="category-link">
-                        {{ category.name or category.name_en }}
-                    </a>
-                    
-                    {% if category.subcategories %}
-                        <button class="expand-btn" type="button" 
-                                aria-label="Toggle subcategories">
-                            <i class="bi bi-plus"></i>
-                        </button>
-                    {% endif %}
-                </div>
-            </div>
-            
-            {% if category.subcategories %}
-                <ul class="subcategories">
-                    {{ render_categories(category.subcategories) }}
-                </ul>
-            {% endif %}
-        </li>
-    {% endfor %}
-{% endmacro %}
-
-<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        {{ _('Categories') }}
-    </a>
-    <ul class="dropdown-menu vertical-menu">
-        {% for category in get_main_categories() %}
-            <li class="menu-item">
-                <div class="menu-item-header">
-                    <a href="{{ url_for('view_category', slug=category.slug) }}" class="menu-link">
-                        {{ category.name or category.name_en }}
-                    </a>
-                    {% if category.subcategories %}
-                        <button class="expand-btn" aria-label="Expand">
-                            <i class="bi bi-plus"></i>
-                        </button>
-                    {% endif %}
-                </div>
-                
-                {% if category.subcategories %}
-                    <ul class="submenu">
-                        {% for subcategory in category.subcategories %}
-                            <li class="menu-item">
-                                <div class="menu-item-header">
-                                    <a href="{{ url_for('view_category', slug=subcategory.slug) }}" class="menu-link">
-                                        {{ subcategory.name or subcategory.name_en }}
-                                    </a>
-                                    {% if subcategory.subcategories %}
-                                        <button class="expand-btn" aria-label="Expand">
-                                            <i class="bi bi-plus"></i>
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                
-                                {% if subcategory.subcategories %}
-                                    <ul class="submenu">
-                                        {% for subsubcategory in subcategory.subcategories %}
-                                            <li class="menu-item">
-                                                <a href="{{ url_for('view_category', slug=subsubcategory.slug) }}" class="menu-link">
-                                                    {{ subsubcategory.name or subsubcategory.name_en }}
-                                                </a>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                {% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
-</li>
-
             </ul>
             <ul class="navbar-nav">
                 {% if 'user_id' in session %}
@@ -384,8 +303,8 @@
                 <h5>{{ _('Navigation') }}</h5>
                 <ul class="list-unstyled">
                     <li class="mb-2"><a href="{{ url_for('index') }}" class="footer-link">{{ _('Home') }}</a></li>
-                    <li class="mb-2"><a href="{{ url_for('view_category', slug='auto-parts-accessories') }}" class="footer-link">{{ _('Catalog') }}</a></li>
                     <li class="mb-2"><a href="{{ url_for('about') }}" class="footer-link">{{ _('About Us') }}</a></li>
+                    <li class="mb-2"><a href="{{ url_for('car_service') }}" class="footer-link">{{ _('Car Service') }}</a></li>
                     <li class="mb-2"><a href="{{ url_for('shipping_payment') }}" class="footer-link">{{ _('Shipping & Payment') }}</a></li>
                     <li class="mb-2"><a href="{{ url_for('returns') }}" class="footer-link">{{ _('Returns & Exchange') }}</a></li>
                     <li class="mb-2"><a href="{{ url_for('contacts') }}" class="footer-link">{{ _('Contacts') }}</a></li>

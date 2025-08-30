@@ -647,71 +647,21 @@ def generate_sitemap_static_file():
         return False
 
 def generate_sitemap_categories_file():
-    """Генерує categories sitemap з мовними префіксами"""
+    """Генерує порожній categories sitemap (категорії відключені)"""
     try:
-        host_base = "https://autogroup.sk"
-        languages = ['sk', 'en', 'pl']
-        
         sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
-        sitemap_xml += 'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
-        
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        
-        # Отримуємо всі категорії з перекладами
-        cursor.execute("""
-            SELECT 
-                c.slug,
-                c.name_sk IS NOT NULL as has_sk,
-                c.name_en IS NOT NULL as has_en,
-                c.name_pl IS NOT NULL as has_pl
-            FROM categories c 
-            WHERE c.slug IS NOT NULL AND c.slug != ''
-        """)
-        categories = cursor.fetchall()
-        
-        # Додаємо URL-адреси категорій для кожної мови
-        for category in categories:
-            slug = category['slug']
-            
-            # Визначаємо для яких мов є переклади
-            available_languages = []
-            for lang in languages:
-                if category[f'has_{lang}']:
-                    available_languages.append(lang)
-            
-            # Якщо немає жодного перекладу, використовуємо словацьку за замовчуванням
-            if not available_languages:
-                available_languages = ['sk']
-            
-            # Додаємо URL для кожної доступної мови
-            for lang in available_languages:
-                sitemap_xml += f'  <url>\n'
-                sitemap_xml += f'    <loc>{host_base}/{lang}/category/{slug}</loc>\n'
-                
-                # Додаємо hreflang посилання
-                for alt_lang in available_languages:
-                    sitemap_xml += f'    <xhtml:link rel="alternate" hreflang="{alt_lang}" href="{host_base}/{alt_lang}/category/{slug}" />\n'
-                
-                sitemap_xml += f'    <changefreq>weekly</changefreq>\n'
-                sitemap_xml += f'    <priority>0.8</priority>\n'
-                sitemap_xml += '  </url>\n'
-        
-        cursor.close()
-        conn.close()
-        
+        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         sitemap_xml += '</urlset>'
         
         # Записуємо в файл
         with open(os.path.join(SITEMAP_DIR, 'sitemap-categories.xml'), 'w', encoding='utf-8') as f:
             f.write(sitemap_xml)
             
-        logging.info("Multilingual categories sitemap generated successfully")
+        logging.info("Empty categories sitemap generated successfully")
         return True
         
     except Exception as e:
-        logging.error(f"Error generating multilingual categories sitemap: {e}", exc_info=True)
+        logging.error(f"Error generating categories sitemap: {e}", exc_info=True)
         return False
 
 def generate_sitemap_stock_files():
@@ -1869,60 +1819,6 @@ def validate_vat_route():
 
 
 
-# Заміните існуючу функцію get_categories_for_menu()
-def get_categories_for_menu():
-    """Отримує повну ієрархію категорій для меню"""
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        
-        # Отримуємо поточну мову
-        lang = session.get('language', 'sk')
-        
-        # Отримуємо всі категорії одним запитом
-        cursor.execute(f"""
-            SELECT 
-                id, 
-                name_{lang} as name,
-                name_uk as name_uk, 
-                name_en as name_en,
-                name_sk as name_sk,
-                name_pl as name_pl,
-                parent_id,
-                slug
-            FROM categories 
-            ORDER BY order_index
-        """)
-        
-        # Конвертуємо результат в список словників
-        all_categories = [dict(row) for row in cursor.fetchall()]
-        
-        # Створюємо словник для швидкого доступу до категорій за ID
-        categories_dict = {cat['id']: cat for cat in all_categories}
-        
-        # Створюємо ієрархічну структуру
-        for category in all_categories:
-            category['subcategories'] = []
-        
-        # Заповнюємо підкатегорії
-        main_categories = []
-        for category in all_categories:
-            if category['parent_id'] is None:
-                main_categories.append(category)
-            else:
-                parent = categories_dict.get(category['parent_id'])
-                if parent:
-                    parent.setdefault('subcategories', []).append(category)
-        
-        cursor.close()
-        conn.close()
-        return main_categories
-        
-    except Exception as e:
-        logging.error(f"Error getting main categories: {e}", exc_info=True)
-        return []
-
-
 def get_subcategories(parent_id):
     """Отримує підкатегорії для вказаної батьківської категорії"""
     try:
@@ -2006,7 +1902,58 @@ def inject_category_function():
     
     return {'get_main_categories': get_main_categories}
 
-# Розширена функція inject_template_vars з підтримкою категорій
+
+
+
+
+# Додайте цю функцію перед inject_template_vars():
+
+def get_categories_for_menu():
+    """Повертає порожній список категорій (категорії відключені)"""
+    return []
+
+def get_subcategories(parent_id):
+    """Отримує підкатегорії для вказаної батьківської категорії"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримуємо поточну мову
+        lang = session.get('language', 'uk')
+        
+        # Запит для отримання підкатегорій
+        cursor.execute(f"""
+            SELECT 
+                id, 
+                name_{lang} as name,
+                name_uk as name_uk, 
+                name_en as name_en,
+                name_sk as name_sk,
+                name_pl as name_pl,
+                slug
+            FROM categories 
+            WHERE parent_id = %s 
+            ORDER BY order_index
+        """, (parent_id,))
+        
+        # Конвертуємо в звичайні словники
+        subcategories = [dict(row) for row in cursor.fetchall()]
+        
+        cursor.close()
+        conn.close()
+        return subcategories
+        
+    except Exception as e:
+        logging.error(f"Error getting subcategories: {e}", exc_info=True)
+        return []
+
+def get_category_breadcrumbs(category_id, cursor):
+    """
+    Повертає порожній список (категорії відключені)
+    """
+    return []
+# Замініть функцію inject_template_vars() на цю версію:
+
 @app.context_processor
 def inject_template_vars():
     """Інжекція змінних для всіх шаблонів"""
@@ -2054,50 +2001,14 @@ def inject_template_vars():
             for article_data in cart.values():
                 if isinstance(article_data, dict):
                     for item_data in article_data.values():
-                        if isinstance(item_data, dict):
-                            total_count += item_data.get('quantity', 0)
+                        if isinstance(item_data, dict) and 'quantity' in item_data:
+                            total_count += int(item_data.get('quantity', 0))
             
             # Оновлюємо cart_count в сесії
             session['cart_count'] = total_count
             session.modified = True
             return total_count
-    
-    # Функція для отримання підкатегорій
-    def get_subcategories(parent_id):
-        """Отримує підкатегорії для вказаної батьківської категорії"""
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Отримуємо поточну мову
-            lang = session.get('language', 'sk')
-            
-            # Запит для отримання підкатегорій
-            cursor.execute(f"""
-                SELECT 
-                    id, 
-                    name_{lang} as name,
-                    name_uk as name_uk, 
-                    name_en as name_en,
-                    name_sk as name_sk,
-                    name_pl as name_pl,
-                    slug
-                FROM categories 
-                WHERE parent_id = %s 
-                ORDER BY order_index
-            """, (parent_id,))
-            
-            # Конвертуємо в звичайні словники
-            subcategories = [dict(row) for row in cursor.fetchall()]
-            
-            cursor.close()
-            conn.close()
-            return subcategories
-            
-        except Exception as e:
-            logging.error(f"Error getting subcategories: {e}", exc_info=True)
-            return []
-    
+
     # Повертаємо всі необхідні змінні в єдиному словнику
     return dict(
         get_user_cart_count=get_user_cart_count,
@@ -2106,6 +2017,11 @@ def inject_template_vars():
         get_main_categories=get_categories_for_menu,
         get_subcategories=get_subcategories
     )
+
+def get_categories_for_menu():
+    """Повертає порожній список категорій (категорії відключені)"""
+    return []
+
 
 @app.template_filter('tojson')
 def filter_tojson(obj):
@@ -3660,18 +3576,6 @@ def localized_index(lang):
     
     return index()
 
-@app.route('/<lang>/category/<slug>')
-def localized_category(lang, slug):
-    """Категорія з мовним префіксом"""
-    if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
-        return redirect(url_for('view_category', slug=slug))
-    
-    session['language'] = lang
-    session.modified = True
-    clear_page_cache_for_user()
-    
-    return view_category(slug)
-
 @app.after_request
 def add_headers(response):
     # Додаємо заголовок для сторінок продуктів
@@ -3738,16 +3642,8 @@ def product_details(article):
                 'brand_name': stock_data['brand_name'] if stock_data else None,
                 'brand_id': stock_data['brand_id'] if stock_data else None
             }
-
-            # 2) Категорії товару
-            cursor.execute("""
-                SELECT c.*
-                FROM product_categories pc
-                JOIN categories c ON pc.category_id = c.id
-                WHERE pc.article = %s
-                ORDER BY c.parent_id NULLS FIRST, c.order_index
-            """, (normalized_article,))
-            product_categories = cursor.fetchall()
+            # Використайте цей:
+            product_categories = []  # Категорії відключені
 
             # 3) Інфо про продукт (мовні поля)
             cursor.execute(f"""
@@ -5972,180 +5868,10 @@ def assign_roles(token):
 
 def get_category_breadcrumbs(category_id, cursor):
     """
-    Рекурсивно отримує всі батьківські категорії для заданого ID категорії.
-    Повертає список категорій, починаючи з кореневої.
+    Повертає порожній список (категорії відключені)
     """
-    breadcrumbs = []
-    
-    # Отримуємо батьківську категорію
-    cursor.execute("""
-        SELECT id, slug, name_uk, name_en, name_sk, name_pl, parent_id, image_url 
-        FROM categories 
-        WHERE id = (
-            SELECT parent_id 
-            FROM categories 
-            WHERE id = %s
-        )
-    """, (category_id,))
-    
-    parent = cursor.fetchone()
-    
-    # Якщо є батьківська категорія, отримуємо її breadcrumbs і додаємо її
-    if parent:
-        parent_breadcrumbs = get_category_breadcrumbs(parent['id'], cursor)
-        breadcrumbs = parent_breadcrumbs + [parent]
-    
-    return breadcrumbs
+    return []
 
-
-@app.route('/category/<slug>')
-@cache.cached(timeout=1800, key_prefix=make_lang_cache_key)  # 30 хвилин
-def view_category(slug):
-    try:
-        # Отримуємо поточну мову
-        lang = session.get('language', app.config['BABEL_DEFAULT_LOCALE'])
-        
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Отримуємо інформацію про категорію
-            cursor.execute("""
-                SELECT id, slug, name_uk, name_en, name_sk, name_pl, parent_id, image_url 
-                FROM categories WHERE slug = %s
-            """, (slug,))
-            category = cursor.fetchone()
-            
-            if not category:
-                flash(_("Category not found."), "error")
-                return redirect(url_for('index'))
-            
-            # Отримуємо хлібні крихти (батьківські категорії)
-            breadcrumbs = get_category_breadcrumbs(category['id'], cursor)
-            breadcrumbs.append(category)
-            
-            # Отримуємо підкатегорії
-            cursor.execute("""
-                SELECT id, slug, name_uk, name_en, name_sk, name_pl 
-                FROM categories WHERE parent_id = %s ORDER BY order_index
-            """, (category['id'],))
-            subcategories = cursor.fetchall()
-            
-            # Отримуємо список всіх ID категорій та підкатегорій
-            category_ids = [category['id']]
-            if subcategories:
-                for subcat in subcategories:
-                    category_ids.append(subcat['id'])
-            
-            # Параметри фільтрації та сортування
-            sort = request.args.get('sort', 'name_asc')
-            brand = request.args.get('brand')
-            page = request.args.get('page', 1, type=int)
-            per_page = 24  # Товарів на сторінку
-            offset = (page - 1) * per_page
-            
-            # Формуємо умови для WHERE в залежності від фільтрів
-            where_conditions = ["pc.category_id = ANY(%s)"]
-            params = [category_ids]
-            
-            if brand:
-                # Змінюємо умову з s.brand_name на b.name
-                where_conditions.append("b.name = %s")
-                params.append(brand)
-            
-            where_clause = " AND ".join(where_conditions)
-            
-            # Формуємо умови для ORDER BY в залежності від сортування
-            if sort == 'name_desc':
-                order_by = f"COALESCE(p.name_{lang}, p.name_en, p.name_uk, p.article) DESC"
-            elif sort == 'price_asc':
-                order_by = "s.price ASC"
-            elif sort == 'price_desc':
-                order_by = "s.price DESC"
-            else:  # за замовчуванням name_asc
-                order_by = f"COALESCE(p.name_{lang}, p.name_en, p.name_uk, p.article) ASC"
-            
-            # Підраховуємо загальну кількість товарів
-            count_query = f"""
-                SELECT COUNT(*) FROM product_categories pc 
-                JOIN stock s ON pc.article = s.article 
-                LEFT JOIN products p ON pc.article = p.article 
-                LEFT JOIN brands b ON s.brand_id = b.id
-                WHERE {where_clause}
-            """
-            cursor.execute(count_query, params)
-            total_products = cursor.fetchone()[0]
-            
-            # Отримуємо товари з пагінацією
-            # Отримуємо товари з пагінацією - ВИПРАВЛЕНИЙ ЗАПИТ
-            query = f"""
-                SELECT DISTINCT pc.article, 
-                    COALESCE(p.name_{lang}, p.name_en, p.name_uk, p.article) as name,
-                    s.price, 
-                    b.name as brand_name, 
-                    (
-                        SELECT image_url FROM product_images 
-                        WHERE product_article = pc.article 
-                        ORDER BY is_main DESC, id ASC LIMIT 1
-                    ) as image_url
-                FROM product_categories pc 
-                JOIN stock s ON pc.article = s.article 
-                LEFT JOIN products p ON pc.article = p.article 
-                LEFT JOIN brands b ON s.brand_id = b.id
-                WHERE {where_clause}
-                ORDER BY name {sort.endswith('desc') and 'DESC' or 'ASC'}
-                LIMIT %s OFFSET %s
-            """
-            params.extend([per_page, offset])
-            cursor.execute(query, params)
-            products = cursor.fetchall()
-            
-            
-            # Отримуємо список брендів для фільтрації - ВИПРАВЛЕНИЙ ЗАПИТ
-            cursor.execute("""
-                SELECT DISTINCT b.name as brand_name 
-                FROM product_categories pc
-                JOIN stock s ON pc.article = s.article
-                JOIN brands b ON s.brand_id = b.id
-                WHERE pc.category_id = ANY(%s)
-                AND b.name IS NOT NULL
-                AND b.name != ''
-                ORDER BY b.name
-            """, [category_ids])
-            
-            brands = cursor.fetchall()
-
-            # Формуємо об'єкт пагінації
-            pagination = {
-                'page': page,
-                'per_page': per_page,
-                'total': total_products,
-                'pages': (total_products + per_page - 1) // per_page
-            }
-            
-            # Параметри для пагінації
-            pagination_args = {}
-            if brand:
-                pagination_args['brand'] = brand
-            if sort != 'name_asc':
-                pagination_args['sort'] = sort
-            
-            return render_template(
-                'public/category.html',
-                category=category,
-                subcategories=subcategories,
-                breadcrumbs=breadcrumbs,
-                products=products,
-                brands=brands,
-                total_products=total_products,
-                pagination=pagination,
-                pagination_args=pagination_args,
-                sort=sort
-            )
-    
-    except Exception as e:
-        logging.error(f"Error in view_category: {e}", exc_info=True)
-        flash(_("An error occurred while processing your request."), "error")
-        return redirect(url_for('index'))
 
 
 

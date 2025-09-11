@@ -13329,6 +13329,13 @@ def admin_import_brands_map(token):
     return redirect(url_for('admin_import_brands', token=token))
 
 
+@scheduler.task('interval', id='clear_cache', minutes=60)
+def scheduled_clear_cache():
+    cache.clear()
+    logging.info("Cache cleared")
+
+
+
 if __name__ == '__main__':
     # Для локальної розробки
     os.makedirs(SITEMAP_DIR, exist_ok=True)

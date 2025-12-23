@@ -1,9 +1,58 @@
 {% extends "base/public_base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/public-orders.css') }}">
+<style>
+.order-success-box {
+    padding: 1.2rem 1rem 1rem 1rem;
+    margin-bottom: 1.2rem;
+}
+.order-number {
+    margin-top: 0.7rem;
+    font-size: 1rem;
+    padding: 0.35rem 0.7rem;
+}
+.order-summary-card {
+    margin-top: 1.2rem;
+    margin-bottom: 1.2rem;
+}
+.order-summary-card .card-header {
+    padding: 10px 16px;
+}
+.order-summary-card .card-body {
+    padding: 12px 16px 8px 16px;
+}
+.next-steps-card {
+    margin-top: 1.2rem;
+    margin-bottom: 1.2rem;
+}
+.next-steps-card .card-header {
+    padding: 10px 16px;
+}
+.next-steps-card .card-body {
+    padding: 12px 16px 8px 16px;
+}
+.d-flex.justify-content-center.mt-4.gap-3.fade-in {
+    margin-top: 1.2rem !important;
+    gap: 0.7rem !important;
+}
+@media (max-width: 767px) {
+    .order-success-box, .order-summary-card, .next-steps-card {
+        padding: 0.7rem 0.3rem;
+    }
+    .order-summary-card .card-header, .next-steps-card .card-header {
+        padding: 8px 8px;
+    }
+    .order-summary-card .card-body, .next-steps-card .card-body {
+        padding: 8px 8px 6px 8px;
+    }
+}
+</style>
+{% endblock %}
+
 {% block head %}
 <meta name="description" content="{{ _('Order confirmation at AutogroupEU. Your order has been successfully placed.') }}">
 <meta name="robots" content="noindex, nofollow">
-
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -12,45 +61,40 @@
 {% block title %}{{ _('Order Confirmation') }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5">
+<div class="container mt-4 mb-4">
     <div class="order-success-box fade-in">
         <div class="success-icon">
             <i class="bi bi-check-circle"></i>
         </div>
-        <h2>{{ _('Thank You for Your Order!') }}</h2>
-        <p class="success-message">{{ _('Your order has been placed successfully.') }}</p>
+        <h2 class="mb-2">{{ _('Thank You for Your Order!') }}</h2>
+        <p class="success-message mb-2">{{ _('Your order has been placed successfully.') }}</p>
         <div class="order-number">
             {{ _('Order Number') }}: <strong>#{{ order.id }}</strong>
         </div>
     </div>
     
-    <div class="order-summary-card mt-4 fade-in">
+    <div class="order-summary-card fade-in">
         <div class="card-header">
             <h5>{{ _('Order Summary') }}</h5>
         </div>
         <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="order-date">
-                        <span class="label">{{ _('Order Date') }}:</span>
-                        <span class="value">{{ order.created_at|datetime }}</span>
-                    </div>
+            <div class="row mb-2">
+                <div class="col-6">
+                    <span class="info-label">{{ _('Order Date') }}:</span>
+                    <span class="info-value">{{ order.created_at|datetime }}</span>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <div class="order-total">
-                        <span class="label">{{ _('Total') }}:</span>
-                        <span class="value">€{{ "%.2f"|format(order.total_price) }}</span>
-                    </div>
+                <div class="col-6 text-end">
+                    <span class="info-label">{{ _('Total') }}:</span>
+                    <span class="info-value">€{{ "%.2f"|format(order.total_price) }}</span>
                 </div>
             </div>
-            
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th>{{ _('Article') }}</th>
                             <th>{{ _('Product') }}</th>
-                            <th class="text-center">{{ _('Quantity') }}</th>
+                            <th class="text-center">{{ _('Qty') }}</th>
                             <th class="text-end">{{ _('Price') }}</th>
                             <th class="text-end">{{ _('Total') }}</th>
                         </tr>
@@ -58,9 +102,7 @@
                     <tbody>
                         {% for item in order_items %}
                         <tr>
-                            <td>
-                                <span class="badge bg-secondary">{{ item.article }}</span>
-                            </td>
+                            <td><span class="badge bg-secondary">{{ item.article }}</span></td>
                             <td>{{ item.product_name }}</td>
                             <td class="text-center">{{ item.quantity }}</td>
                             <td class="text-end">€{{ "%.2f"|format(item.price) }}</td>
@@ -79,12 +121,12 @@
         </div>
     </div>
     
-    <div class="next-steps-card mt-4 fade-in">
+    <div class="next-steps-card fade-in">
         <div class="card-header">
             <h5>{{ _('What Happens Next?') }}</h5>
         </div>
         <div class="card-body">
-            <ol class="next-steps-list">
+            <ol class="next-steps-list mb-0">
                 <li>
                     <i class="bi bi-envelope"></i>
                     <div class="step-content">
@@ -130,7 +172,8 @@ if (typeof dataLayer !== 'undefined') {
             'value': {{ order.total_price }},
             'currency': 'EUR',
             'items': [
-                {% for item in order_items %}                {
+                {% for item in order_items %}
+                {
                     'item_id': '{{ item.article }}',
                     'item_name': '{{ item.product_name|default(item.article) }}',
                     'price': {{ item.price }},
@@ -144,30 +187,3 @@ if (typeof dataLayer !== 'undefined') {
 </script>
 {% endif %}
 {% endblock %}
-
-<style>
-/* Покращений контраст для номера замовлення */
-.order-success-box {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    margin-bottom: 2rem;
-}
-
-.order-number {
-    display: inline-block;
-    background-color: #212529; /* Темний фон */
-    color: #ffffff; /* Білий текст */
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    margin-top: 1rem;
-    font-size: 1.1rem;
-}
-
-.order-number strong {
-    color: #ffc107; /* Жовтий колір для номера замовлення */
-    font-weight: 700;
-}
-</style>

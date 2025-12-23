@@ -109,7 +109,9 @@ app.config['BABEL_SUPPORTED_LOCALES'] = ['sk', 'en', 'pl']
 babel = Babel(app)
 babel.init_app(app, locale_selector=get_locale)
 cache = Cache(app, config={
-    'CACHE_TYPE': 'SimpleCache',  # Кеш в пам'яті
+    'CACHE_TYPE': 'FileSystemCache',  # Замість SimpleCache
+    'CACHE_DIR': '/tmp/flask_cache',  # Директорія для кеш-файлів
+    'CACHE_THRESHOLD': 1000,          # Максимальна кількість об'єктів
     'CACHE_DEFAULT_TIMEOUT': 600
 })
 
@@ -2015,8 +2017,43 @@ def inject_template_vars():
         today_year=today_year,
         LANGUAGES=LANGUAGES,
         get_main_categories=get_categories_for_menu,
-        get_subcategories=get_subcategories
+        get_subcategories=get_subcategories,
+        get_categories_tree=get_categories_tree_for_menu
     )
+
+def get_categories_tree_for_menu():
+    """Повертає ієрархічне дерево категорій для меню в навігації"""
+    lang = session.get('language', 'uk')
+    categories = []
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT c.id, c.slug, c.parent_id, c.icon_class,
+                           COALESCE(t.name, c.slug) as name
+                    FROM product_categories c
+                    LEFT JOIN product_category_translations t 
+                        ON c.id = t.category_id AND t.language = %s
+                    WHERE c.is_active = true
+                    ORDER BY c.parent_id NULLS FIRST, c.sort_order, c.id
+                """, (lang,))
+                all_cats = cursor.fetchall()
+                
+                # Будуємо дерево категорій (підтримка 3+ рівнів)
+                all_cats_by_id = {}
+                for cat in all_cats:
+                    cat_data = dict(cat)
+                    cat_data['children'] = []
+                    all_cats_by_id[cat['id']] = cat_data
+                
+                for cat_id, cat_data in all_cats_by_id.items():
+                    if cat_data['parent_id'] is None:
+                        categories.append(cat_data)
+                    elif cat_data['parent_id'] in all_cats_by_id:
+                        all_cats_by_id[cat_data['parent_id']]['children'].append(cat_data)
+    except Exception as e:
+        logging.error(f"Error fetching categories tree: {e}")
+    return categories
 
 def get_categories_for_menu():
     """Повертає порожній список категорій (категорії відключені)"""
@@ -2102,6 +2139,46 @@ def register():
 @app.route('/about')
 def about():
     return render_template('public/about.html')
+
+# Сторінка категорій - ВІДКЛЮЧЕНА, використовуємо dropdown в хедері
+# @app.route('/categories')
+# def categories_page():
+#     """Сторінка з усіма категоріями товарів"""
+#     lang = session.get('language', 'uk')
+#     categories = []
+#     
+#     try:
+#         with get_db_connection() as conn:
+#             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+#                 # Отримуємо всі категорії
+#                 cursor.execute(f"""
+#                     SELECT c.id, c.slug, c.parent_id, c.icon_class,
+#                            COALESCE(t.name, c.slug) as name
+#                     FROM product_categories c
+#                     LEFT JOIN product_category_translations t 
+#                         ON c.id = t.category_id AND t.language = %s
+#                     WHERE c.is_active = true
+#                     ORDER BY c.parent_id NULLS FIRST, c.sort_order, c.id
+#                 """, (lang,))
+#                 all_cats = cursor.fetchall()
+#                 
+#                 # Будуємо дерево категорій (підтримка 3+ рівнів)
+#                 all_cats_by_id = {}
+#                 for cat in all_cats:
+#                     cat_data = dict(cat)
+#                     cat_data['children'] = []
+#                     all_cats_by_id[cat['id']] = cat_data
+#                 
+#                 for cat_id, cat_data in all_cats_by_id.items():
+#                     if cat_data['parent_id'] is None:
+#                         categories.append(cat_data)
+#                     elif cat_data['parent_id'] in all_cats_by_id:
+#                         all_cats_by_id[cat_data['parent_id']]['children'].append(cat_data)
+#                         
+#     except Exception as e:
+#         logging.error(f"Error fetching categories: {e}")
+#     
+#     return render_template('public/categories.html', categories=categories)
 
 # Функція для авторизації користувача
 @app.route('/login', methods=['GET', 'POST'])
@@ -2956,22 +3033,22 @@ def logout():
 
 
 #Продукти зі складу на головній
+# Замініть функцію api_products() на цю версію:
+
 @app.route('/api/products', methods=['GET'])
 def api_products():
-    """API endpoint для отримання додаткових продуктів без перезавантаження сторінки"""
+    """API endpoint для отримання додаткових продуктів (тільки з фото)"""
     try:
         page = request.args.get('page', 1, type=int)
-        per_page = 8  # Кількість товарів на сторінці
+        per_page = 8
         brand_id = request.args.get('brand', type=int)
         
-        # Отримуємо мову з параметра запиту або з сесії
         lang = request.args.get('lang') or session.get('language', 'sk')
         
-        # Підключення до бази даних
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-        # ПІДХІД, ЯК У index() - вибирає перше зображення з сортуванням за is_main DESC
+        # ЗМІНЕНИЙ ЗАПИТ: тільки товари з фото
         query = f"""
             SELECT 
                 s.article, 
@@ -2979,40 +3056,30 @@ def api_products():
                 COALESCE(p.name_{lang}, p.name_uk, p.name_en, p.name_sk, s.article) as name, 
                 b.name as brand_name,
                 b.id as brand_id,
-                (
-                    SELECT image_url 
-                    FROM product_images pi 
-                    WHERE pi.product_article = s.article 
-                    ORDER BY is_main DESC, id ASC 
-                    LIMIT 1
-                ) as image_url
+                pi.image_url
             FROM stock s
             LEFT JOIN products p ON s.article = p.article
             LEFT JOIN brands b ON s.brand_id = b.id
+            INNER JOIN product_images pi ON pi.product_article = s.article AND pi.is_main = true
             WHERE s.quantity > 0
         """
         params = []
         
-        # Додаємо фільтр за брендом, якщо вказано
         if brand_id:
             query += " AND s.brand_id = %s"
             params.append(brand_id)
         
-        # Додаємо сортування і пагінацію
         query += " ORDER BY s.price DESC LIMIT %s OFFSET %s"
         params.extend([per_page, (page - 1) * per_page])
         
-        # Отримання товарів
         cursor.execute(query, params)
         products = cursor.fetchall()
         
-        # Перевіряємо, чи є ще товари для наступної сторінки
         has_more = len(products) == per_page
         
         cursor.close()
         conn.close()
         
-        # Повертаємо результат
         return jsonify({
             'products': [dict(p) for p in products],
             'next_page': page + 1,
@@ -3021,7 +3088,400 @@ def api_products():
             
     except Exception as e:
         logging.error(f"Error in api_products: {e}", exc_info=True)
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+
+# Додайте ці маршрути до app.py:
+
+@app.route('/<token>/admin/products/missing-photos')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_products_missing_photos(token):
+    """Сторінка товарів без фото"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = 50
+        brand_filter = request.args.get('brand', '')
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Запит товарів зі stock без фото
+            query = """
+                SELECT 
+                    s.article,
+                    s.quantity,
+                    s.price,
+                    b.name as brand_name,
+                    b.id as brand_id,
+                    p.name_sk,
+                    p.name_en
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                LEFT JOIN products p ON s.article = p.article
+                WHERE s.quantity > 0 
+                AND NOT EXISTS (
+                    SELECT 1 FROM product_images pi 
+                    WHERE pi.product_article = s.article
+                )
+            """
+            params = []
+            
+            # Фільтр за брендом
+            if brand_filter:
+                query += " AND b.name ILIKE %s"
+                params.append(f"%{brand_filter}%")
+            
+            # Підрахунок загальної кількості
+            count_query = f"SELECT COUNT(*) FROM ({query}) as subq"
+            cursor.execute(count_query, params)
+            total_count = cursor.fetchone()[0]
+            
+            # Додаємо пагінацію
+            query += " ORDER BY s.price DESC, s.article LIMIT %s OFFSET %s"
+            params.extend([per_page, (page - 1) * per_page])
+            
+            cursor.execute(query, params)
+            products = cursor.fetchall()
+            
+            # Отримуємо бренди для фільтра
+            cursor.execute("""
+                SELECT DISTINCT b.name 
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                WHERE s.quantity > 0 
+                AND NOT EXISTS (
+                    SELECT 1 FROM product_images pi 
+                    WHERE pi.product_article = s.article
+                )
+                AND b.name IS NOT NULL
+                ORDER BY b.name
+            """)
+            brands = [row[0] for row in cursor.fetchall()]
+            
+            # Пагінація
+            total_pages = (total_count + per_page - 1) // per_page
+            
+            return render_template(
+                'admin/products/missing_photos.html',
+                products=products,
+                brands=brands,
+                current_page=page,
+                total_pages=total_pages,
+                total_count=total_count,
+                brand_filter=brand_filter,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_products_missing_photos: {e}")
+        flash("Error loading products without photos", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+
+@app.route('/<token>/admin/products/missing-descriptions')
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_products_missing_descriptions(token):
+    """Сторінка товарів зі складу без описів в products"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = 50
+        brand_filter = request.args.get('brand', '')
+        min_price = request.args.get('min_price', 0, type=float)
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Базовий запит - товари в stock без запису в products
+            base_query = """
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                LEFT JOIN products p ON s.article = p.article
+                WHERE p.article IS NULL
+            """
+            params = []
+            
+            # Фільтр за брендом
+            if brand_filter:
+                base_query += " AND b.name ILIKE %s"
+                params.append(f"%{brand_filter}%")
+            
+            # Фільтр за мінімальною ціною
+            if min_price > 0:
+                base_query += " AND s.price >= %s"
+                params.append(min_price)
+            
+            # Підрахунок загальної кількості
+            count_query = f"SELECT COUNT(*) {base_query}"
+            cursor.execute(count_query, params)
+            total_count = cursor.fetchone()[0]
+            
+            # Статистика - кількість в наявності
+            stats_query = f"""
+                SELECT 
+                    COUNT(*) FILTER (WHERE s.quantity > 0) as in_stock,
+                    COALESCE(SUM(s.price * s.quantity), 0) as total_value
+                {base_query}
+            """
+            cursor.execute(stats_query, params)
+            stats = cursor.fetchone()
+            in_stock_count = stats['in_stock'] or 0
+            total_value = float(stats['total_value'] or 0)
+            
+            # Основний запит з пагінацією
+            query = f"""
+                SELECT 
+                    s.article,
+                    s.quantity,
+                    s.price,
+                    b.name as brand_name,
+                    b.id as brand_id
+                {base_query}
+                ORDER BY s.quantity DESC, s.price DESC
+                LIMIT %s OFFSET %s
+            """
+            params.extend([per_page, (page - 1) * per_page])
+            
+            cursor.execute(query, params)
+            products = cursor.fetchall()
+            
+            # Отримуємо бренди для фільтра
+            cursor.execute("""
+                SELECT DISTINCT b.name 
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                LEFT JOIN products p ON s.article = p.article
+                WHERE p.article IS NULL
+                AND b.name IS NOT NULL
+                ORDER BY b.name
+            """)
+            brands = [row[0] for row in cursor.fetchall()]
+            
+            # Пагінація
+            total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
+            
+            return render_template(
+                'admin/products/missing_descriptions.html',
+                products=products,
+                brands=brands,
+                current_page=page,
+                total_pages=total_pages,
+                total_count=total_count,
+                in_stock_count=in_stock_count,
+                total_value=total_value,
+                brand_filter=brand_filter,
+                min_price=min_price,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_products_missing_descriptions: {e}")
+        flash("Error loading products without descriptions", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+
+@app.route('/<token>/admin/products/edit/<article>', methods=['GET', 'POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_edit_product(token, article):
+    """Редагування або створення опису товару"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            if request.method == 'POST':
+                # Отримуємо дані з форми
+                brand_id = request.form.get('brand_id', type=int)
+                name_sk = request.form.get('name_sk', '').strip()
+                name_en = request.form.get('name_en', '').strip()
+                name_pl = request.form.get('name_pl', '').strip()
+                description_sk = request.form.get('description_sk', '').strip()
+                description_en = request.form.get('description_en', '').strip()
+                description_pl = request.form.get('description_pl', '').strip()
+                
+                # Перевіряємо чи існує товар
+                cursor.execute("SELECT id FROM products WHERE article = %s", (article,))
+                exists = cursor.fetchone()
+                
+                if exists:
+                    # Оновлюємо існуючий товар
+                    cursor.execute("""
+                        UPDATE products SET
+                            brand_id = COALESCE(%s, brand_id),
+                            name_sk = COALESCE(NULLIF(%s, ''), name_sk),
+                            name_en = COALESCE(NULLIF(%s, ''), name_en),
+                            name_pl = COALESCE(NULLIF(%s, ''), name_pl),
+                            description_sk = COALESCE(NULLIF(%s, ''), description_sk),
+                            description_en = COALESCE(NULLIF(%s, ''), description_en),
+                            description_pl = COALESCE(NULLIF(%s, ''), description_pl)
+                        WHERE article = %s
+                    """, (brand_id, name_sk, name_en, name_pl,
+                          description_sk, description_en, description_pl, article))
+                    flash(f"Товар {article} оновлено!", "success")
+                else:
+                    # Створюємо новий товар
+                    cursor.execute("""
+                        INSERT INTO products (
+                            article, brand_id, 
+                            name_sk, name_en, name_pl,
+                            description_sk, description_en, description_pl
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (article, brand_id, name_sk, name_en, name_pl,
+                          description_sk, description_en, description_pl))
+                    flash(f"Товар {article} створено!", "success")
+                
+                conn.commit()
+                return redirect(url_for('admin_products_missing_descriptions', token=token))
+            
+            # GET - показуємо форму
+            # Перевіряємо чи існує товар в products
+            cursor.execute("""
+                SELECT p.*, b.name as brand_name
+                FROM products p
+                LEFT JOIN brands b ON p.brand_id = b.id
+                WHERE p.article = %s
+            """, (article,))
+            product = cursor.fetchone()
+            
+            # Отримуємо інформацію зі stock
+            cursor.execute("""
+                SELECT s.*, b.name as brand_name
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                WHERE s.article = %s
+            """, (article,))
+            stock_info = cursor.fetchone()
+            
+            # Отримуємо список брендів
+            cursor.execute("SELECT id, name FROM brands ORDER BY name")
+            brands = cursor.fetchall()
+            
+            return render_template(
+                'admin/products/edit_product.html',
+                article=article,
+                product=product,
+                stock_info=stock_info,
+                brands=brands,
+                is_new=product is None,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_edit_product: {e}")
+        flash(f"Помилка: {str(e)}", "error")
+        return redirect(url_for('admin_products_missing_descriptions', token=token))
+
+
+@app.route('/<token>/admin/products/add-photos/<article>', methods=['GET', 'POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_add_photos_to_product(token, article):
+    """Додавання фото до конкретного товару"""
+    if request.method == 'POST':
+        try:
+            files = request.files.getlist('photos')
+            main_photo_index = int(request.form.get('main_photo', 0))
+            
+            if not files or not files[0].filename:
+                flash("Будь ласка, оберіть хоча б одне фото", "error")
+                return redirect(url_for('admin_add_photos_to_product', token=token, article=article))
+            
+            uploaded_urls = []
+            
+            # Завантажуємо всі фото
+            for i, file in enumerate(files):
+                if file and allowed_file(file.filename):
+                    try:
+                        # Генеруємо унікальне ім'я файлу
+                        file_extension = file.filename.rsplit('.', 1)[1].lower()
+                        unique_filename = f"{article}_{i}_{int(time.time())}.{file_extension}"
+                        
+                        # Зберігаємо тимчасово
+                        temp_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                        file.save(temp_path)
+                        
+                        # Завантажуємо на FTP
+                        image_url = upload_to_ftp(temp_path, unique_filename)
+                        
+                        if image_url:
+                            uploaded_urls.append(image_url)
+                            
+                        # Видаляємо тимчасовий файл
+                        try:
+                            os.remove(temp_path)
+                        except:
+                            pass
+                            
+                    except Exception as e:
+                        logging.error(f"Error uploading file {file.filename}: {e}")
+                        continue
+            
+            if not uploaded_urls:
+                flash("Не вдалося завантажити жодне фото", "error")
+                return redirect(url_for('admin_add_photos_to_product', token=token, article=article))
+            
+            # Зберігаємо в базу
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                for i, url in enumerate(uploaded_urls):
+                    is_main = (i == main_photo_index and main_photo_index < len(uploaded_urls))
+                    
+                    cursor.execute("""
+                        INSERT INTO product_images (product_article, image_url, is_main)
+                        VALUES (%s, %s, %s)
+                    """, (article, url, is_main))
+                
+                conn.commit()
+            
+            flash(f"Успішно додано {len(uploaded_urls)} фото для артикула {article}", "success")
+            return redirect(url_for('admin_products_missing_photos', token=token))
+            
+        except Exception as e:
+            logging.error(f"Error adding photos to product {article}: {e}")
+            flash(f"Помилка при додаванні фото: {str(e)}", "error")
+    
+    # GET - показуємо форму
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Отримуємо інформацію про товар
+            cursor.execute("""
+                SELECT 
+                    s.article,
+                    s.quantity,
+                    s.price,
+                    b.name as brand_name,
+                    p.name_sk,
+                    p.name_en
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                LEFT JOIN products p ON s.article = p.article
+                WHERE s.article = %s
+            """, (article,))
+            
+            product = cursor.fetchone()
+            
+            if not product:
+                flash("Товар не знайдено", "error")
+                return redirect(url_for('admin_products_missing_photos', token=token))
+            
+            return render_template(
+                'admin/products/add_photos_form.html',
+                product=product,
+                token=token,
+                article=article
+            )
+            
+    except Exception as e:
+        logging.error(f"Error loading product {article}: {e}")
+        flash("Помилка завантаження товару", "error")
+        return redirect(url_for('admin_products_missing_photos', token=token))
+
+
 
 # Перегляд кошика публічного користувача
 @app.route('/public_cart')
@@ -3061,7 +3521,8 @@ def public_cart():
                 ORDER BY is_default DESC, created_at DESC
             """, (user_id,))
             saved_addresses = cursor.fetchall()
-            
+            saved_addresses = [dict(row) for row in saved_addresses]  # ДОДАЙ ЦЕ
+
             # Get saved companies
             cursor.execute("""
                 SELECT 
@@ -3601,30 +4062,17 @@ def add_x_robots_tag(response):
         response.headers['X-Robots-Tag'] = 'index, follow'
     return response
 
-
-#Карточка товару
 # ...existing code...
 @app.route('/product/<article>')
 @cache.cached(timeout=3600, key_prefix=make_lang_cache_key)
 def product_details(article):
     try:
-        # Нормалізуємо артикул для пошуку в базі
         normalized_article = normalize_article(article)
-
-        logging.info(f"=== ARTICLE NORMALIZATION ===")
-        logging.info(f"Original article: '{article}'")
-        logging.info(f"Normalized article: '{normalized_article}'")
-        logging.info(f"Original length: {len(article)}")
-        logging.info(f"Normalized length: {len(normalized_article)}")
-
         with safe_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            # Поточна мова
             lang = session.get('language', 'sk')
-            logging.info(f"=== Starting product_details for original article: {article}, normalized: {normalized_article} ===")
 
-            # 1) Stock з quantity (ВИПРАВЛЕНО: додаємо s.quantity)
+            # 1. Stock
             cursor.execute("""
                 SELECT s.article, s.price, s.quantity, s.brand_id, b.name as brand_name
                 FROM stock s
@@ -3632,20 +4080,33 @@ def product_details(article):
                 WHERE s.article = %s
             """, (normalized_article,))
             stock_data = cursor.fetchone()
-            logging.info(f"Stock data: {dict(stock_data) if stock_data else 'Not found'}")
 
-            # Базові дані продукту
             product_data = {
-                'name': article,  # показуємо оригінальний
+                'name': article,
                 'description': '',
                 'photo_urls': [],
                 'brand_name': stock_data['brand_name'] if stock_data else None,
                 'brand_id': stock_data['brand_id'] if stock_data else None
             }
-            # Використайте цей:
-            product_categories = []  # Категорії відключені
+            product_categories = []
+            
+            # Отримуємо категорії товару для хлібних крихт
+            cursor.execute(f"""
+                SELECT c.id, c.slug, c.parent_id,
+                       COALESCE(t.name, c.slug) as name
+                FROM product_category_mapping pcm
+                JOIN product_categories c ON pcm.category_id = c.id
+                LEFT JOIN product_category_translations t 
+                    ON c.id = t.category_id AND t.language = %s
+                WHERE pcm.article = %s
+                ORDER BY c.parent_id NULLS FIRST, c.id
+                LIMIT 1
+            """, (lang, normalized_article))
+            cat_row = cursor.fetchone()
+            if cat_row:
+                product_categories.append(dict(cat_row))
 
-            # 3) Інфо про продукт (мовні поля)
+            # 2. Product info
             cursor.execute(f"""
                 SELECT 
                     article,
@@ -3659,7 +4120,7 @@ def product_details(article):
                 product_data['name'] = db_product['name'] or article
                 product_data['description'] = db_product['description'] or ''
 
-            # 4) Фото
+            # 3. Photos
             cursor.execute("""
                 SELECT image_url 
                 FROM product_images 
@@ -3670,9 +4131,7 @@ def product_details(article):
 
             prices = []
 
-            # 5) Додаємо “stock” пропозицію:
-            #    - тільки In Stock якщо quantity > 0
-            #    - якщо quantity = 0 — показуємо “Temporarily unavailable” (без In Stock)
+            # 4. Stock price (додаємо завжди, але кнопка буде тільки якщо quantity > 0)
             if stock_data:
                 qty = int(stock_data.get('quantity') or 0)
                 in_stock = qty > 0
@@ -3686,9 +4145,8 @@ def product_details(article):
                     'delivery_time': (_("In Stock") if in_stock else _("Temporarily unavailable"))
                 }
                 prices.append(price_data)
-                logging.info(f"Added stock price: {price_data}")
 
-            # 6) Прайс-листи
+            # 5. Інші price_lists (non-stock)
             cursor.execute("""
                 SELECT pl.table_name, pl.brand_id, pl.delivery_time, b.name as brand_name 
                 FROM price_lists pl
@@ -3697,90 +4155,84 @@ def product_details(article):
             """)
             tables = cursor.fetchall()
 
-            price_found = False
             for table in tables:
-                if table['table_name'] != 'stock':
-                    table_name = table['table_name']
-                    brand_id = table['brand_id']
-                    brand_name = table['brand_name']
+                table_name = table['table_name']
+                brand_id = table['brand_id']
+                brand_name = table['brand_name']
 
-                    # Перевірка існування таблиці
-                    cursor.execute("""
-                        SELECT EXISTS (
-                            SELECT FROM information_schema.tables 
-                            WHERE table_name = %s
-                        )
-                    """, (table_name,))
-                    if not cursor.fetchone()[0]:
-                        continue
+                # Перевірка існування таблиці
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = %s
+                    )
+                """, (table_name,))
+                if not cursor.fetchone()[0]:
+                    continue
 
-                    # Перевірка наявності brand_id колонки
-                    cursor.execute("""
-                        SELECT EXISTS (
-                            SELECT FROM information_schema.columns 
-                            WHERE table_name = %s AND column_name = 'brand_id'
-                        )
-                    """, (table_name,))
-                    has_brand_id = cursor.fetchone()[0]
+                # Перевірка наявності brand_id колонки
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.columns 
+                        WHERE table_name = %s AND column_name = 'brand_id'
+                    )
+                """, (table_name,))
+                has_brand_id = cursor.fetchone()[0]
 
-                    if has_brand_id:
-                        query = f"""
-                            SELECT t.article, t.price, t.brand_id, b.name as brand_name
-                            FROM {table_name} t
-                            LEFT JOIN brands b ON t.brand_id = b.id
-                            WHERE t.article = %s
-                        """
+                if has_brand_id:
+                    query = f"""
+                        SELECT t.article, t.price, t.brand_id, b.name as brand_name
+                        FROM {table_name} t
+                        LEFT JOIN brands b ON t.brand_id = b.id
+                        WHERE t.article = %s
+                    """
+                else:
+                    query = f"""
+                        SELECT article, price
+                        FROM {table_name}
+                        WHERE article = %s
+                    """
+
+                cursor.execute(query, (normalized_article,))
+                result = cursor.fetchone()
+
+                if result:
+                    markup_percentage = get_markup_by_role('public')
+                    base_price = result['price']
+                    final_price = calculate_price(base_price, markup_percentage)
+
+                    if has_brand_id and result.get('brand_name'):
+                        actual_brand_name = result['brand_name']
+                        actual_brand_id = result['brand_id']
                     else:
-                        query = f"""
-                            SELECT article, price
-                            FROM {table_name}
-                            WHERE article = %s
-                        """
+                        actual_brand_name = brand_name
+                        actual_brand_id = brand_id
 
-                    cursor.execute(query, (normalized_article,))
-                    result = cursor.fetchone()
+                    price_data = {
+                        'table_name': table_name,
+                        'brand_name': actual_brand_name,
+                        'brand_id': actual_brand_id,
+                        'price': final_price,
+                        'base_price': base_price,
+                        'in_stock': True,  # для non-stock завжди True (кнопка завжди є)
+                        'delivery_time': ( _("In Stock") if table['delivery_time'] == '0'
+                                           else f"{table['delivery_time']} {_('days')}" )
+                    }
+                    prices.append(price_data)
 
-                    if result:
-                        price_found = True
-                        markup_percentage = get_markup_by_role('public')
-                        base_price = result['price']
-                        final_price = calculate_price(base_price, markup_percentage)
-
-                        if has_brand_id and result.get('brand_name'):
-                            actual_brand_name = result['brand_name']
-                            actual_brand_id = result['brand_id']
-                        else:
-                            actual_brand_name = brand_name
-                            actual_brand_id = brand_id
-
-                        price_data = {
-                            'table_name': table_name,
-                            'brand_name': actual_brand_name,
-                            'brand_id': actual_brand_id,
-                            'price': final_price,
-                            'base_price': base_price,
-                            'in_stock': table['delivery_time'] == '0',
-                            'delivery_time': (_("In Stock") if table['delivery_time'] == '0' 
-                                              else f"{table['delivery_time']} {_('days')}")
-                        }
-                        prices.append(price_data)
-                        logging.info(f"Added price from {table_name}: {price_data}")
-
-            # 7) Сортуємо за ціною
+            # 6. Сортуємо за ціною
             prices.sort(key=lambda x: float(x['price']))
-            logging.info(f"Final prices count: {len(prices)}")
-
             price = prices[0] if prices else None
 
             # Якщо бренд не визначено раніше — беремо з першої ціни
             if price and 'brand_name' in price:
                 product_data['brand_name'] = product_data['brand_name'] or price['brand_name']
 
-            # 8) Якщо нічого не знайшли
-            if not db_product and not stock_data and not price_found:
+            # 7. Якщо нічого не знайшли
+            if not db_product and not stock_data and not prices:
                 return render_template(
                     'public/article_not_found.html',
-                    article=article  # оригінальний
+                    article=article
                 )
 
             return render_template(
@@ -3789,7 +4241,7 @@ def product_details(article):
                 prices=prices,
                 price=price,
                 brand_name=product_data['brand_name'],
-                article=article,  # оригінальний
+                article=article,
                 product_categories=product_categories
             )
 
@@ -5236,91 +5688,154 @@ def token_index(token):
 
 
 # Головна сторінка - сортування за ціною від високої до низької
+# Замініть функцію index() на цю версію:
+
 @app.route('/')
 def index():
-    """Головна сторінка з товарами"""
-    # Очищаємо накопичені повідомлення про невірний токен
-    if '_flashes' in session:
-        current_flashes = session.pop('_flashes')
-        # Залишаємо тільки останнє повідомлення, якщо воно не про невірний токен
-        filtered_flashes = [(cat, msg) for cat, msg in current_flashes
-                          if 'Invalid token' not in msg]
-        if filtered_flashes:
-            session['_flashes'] = filtered_flashes
+    """Головна сторінка з товарами (тільки з фото)"""
     try:
         page = request.args.get('page', 1, type=int)
-        per_page = 24  # 4x5 сітка
+        per_page = 24  # 4x6 сітка
         brand_filter = request.args.get('brand', type=int)
+        category_filter = request.args.get('category', type=int)
         
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
-            # Отримання доступних брендів з товарів на складі
+            # Отримуємо мову
+            lang = session.get('language', 'sk')
+            
+            # ЗМІНЕНИЙ ЗАПИТ: тільки товари з фото (показуємо всі, включаючи з кількістю 0)
+            query = f"""
+                SELECT 
+                    s.article, 
+                    s.price, 
+                    s.quantity,
+                    COALESCE(p.name_{lang}, p.name_uk, p.name_en, p.name_sk, s.article) as name, 
+                    b.name as brand_name,
+                    b.id as brand_id,
+                    pi.image_url
+                FROM stock s
+                LEFT JOIN products p ON s.article = p.article
+                LEFT JOIN brands b ON s.brand_id = b.id
+                INNER JOIN product_images pi ON pi.product_article = s.article AND pi.is_main = true
+            """
+            params = []
+            where_clauses = []
+            
+            # Додаємо фільтр за брендом
+            if brand_filter:
+                where_clauses.append("s.brand_id = %s")
+                params.append(brand_filter)
+            
+            # Додаємо фільтр за категорією (включаючи всі вкладені підкатегорії - до 3 рівнів)
+            if category_filter:
+                where_clauses.append("""
+                    s.article IN (
+                        SELECT pm.article 
+                        FROM product_category_mapping pm
+                        INNER JOIN product_categories pc ON pc.id = pm.category_id
+                        WHERE pc.id = %s 
+                           OR pc.parent_id = %s
+                           OR pc.parent_id IN (SELECT id FROM product_categories WHERE parent_id = %s)
+                    )
+                """)
+                params.append(category_filter)
+                params.append(category_filter)
+                params.append(category_filter)
+            
+            # Додаємо WHERE якщо є умови
+            if where_clauses:
+                query += " WHERE " + " AND ".join(where_clauses)
+            
+            # Додаємо сортування: спочатку в наявності (quantity > 0), потім по ціні від дорогих до дешевих
+            query += " ORDER BY CASE WHEN s.quantity > 0 THEN 0 ELSE 1 END, s.price DESC LIMIT %s OFFSET %s"
+            params.extend([per_page, (page - 1) * per_page])
+            
+            cursor.execute(query, params)
+            products = cursor.fetchall()
+            
+            # Перевіряємо чи є ще товари
+            has_more = len(products) == per_page
+            
+            # Отримуємо бренди для фільтра
             cursor.execute("""
                 SELECT DISTINCT b.id, b.name 
-                FROM stock s
-                JOIN brands b ON s.brand_id = b.id
+                FROM brands b 
+                INNER JOIN stock s ON b.id = s.brand_id 
+                INNER JOIN product_images pi ON pi.product_article = s.article 
                 WHERE s.quantity > 0
                 ORDER BY b.name
             """)
             brands = cursor.fetchall()
             
-            # Базовий SQL-запит
-            base_query = """
+            # Отримуємо категорії (основні та підкатегорії, груповані за батьком)
+            cursor.execute(f"""
                 SELECT 
-                    s.article,
-                    s.quantity,
-                    s.price,
-                    b.name as brand_name,
-                    b.id as brand_id,
-                    p.name_uk as name,
-                    p.description_uk as description,
-                    (
-                        SELECT image_url 
-                        FROM product_images pi 
-                        WHERE pi.product_article = s.article 
-                        ORDER BY is_main DESC, id ASC 
-                        LIMIT 1
-                    ) as image_url
-                FROM stock s
-                LEFT JOIN brands b ON s.brand_id = b.id
-                LEFT JOIN products p ON s.article = p.article
-                WHERE s.quantity > 0
-            """
+                    c.id,
+                    c.slug,
+                    c.parent_id,
+                    c.icon_class,
+                    c.is_active,
+                    pct.name,
+                    pct.description
+                FROM product_categories c
+                LEFT JOIN product_category_translations pct ON pct.category_id = c.id AND pct.language = %s
+                WHERE c.is_active = true
+                ORDER BY c.parent_id NULLS FIRST, c.sort_order, c.id
+            """, [lang])
+            categories_raw = cursor.fetchall()
             
-            # Додаємо фільтр за брендом, якщо вказано
-            params = []
-            if brand_filter:
-                base_query += " AND s.brand_id = %s"
-                params.append(brand_filter)
+            # Групуємо категорії: підтримка 3+ рівнів вкладеності
+            categories = []
+            all_cats_by_id = {}
             
-            # Спершу підрахуємо загальну кількість товарів
-            count_query = f"SELECT COUNT(*) FROM ({base_query}) AS filtered_stock"
-            cursor.execute(count_query, params)
-            total_items = cursor.fetchone()[0]
+            # Спочатку створюємо всі категорії як словники
+            for cat in categories_raw:
+                cat_dict = {
+                    'id': cat['id'],
+                    'slug': cat['slug'],
+                    'parent_id': cat['parent_id'],
+                    'icon_class': cat['icon_class'],
+                    'name': cat['name'] or cat['slug'],
+                    'description': cat['description'],
+                    'children': []
+                }
+                all_cats_by_id[cat['id']] = cat_dict
             
-            # Додаємо сортування та пагінацію
-            base_query += " ORDER BY s.price DESC LIMIT %s OFFSET %s"
-            params.extend([per_page, (page - 1) * per_page])
+            # Тепер прив'язуємо дітей до батьків
+            for cat_id, cat_dict in all_cats_by_id.items():
+                if cat_dict['parent_id'] is None:
+                    # Це головна категорія (рівень 1)
+                    categories.append(cat_dict)
+                elif cat_dict['parent_id'] in all_cats_by_id:
+                    # Додаємо як дочірню до батька
+                    all_cats_by_id[cat_dict['parent_id']]['children'].append(cat_dict)
             
-            # Виконуємо запит з товарами
-            cursor.execute(base_query, params)
-            products = cursor.fetchall()
+            # Знаходимо обрану категорію з усіх категорій (включаючи підкатегорії)
+            selected_cat_obj = all_cats_by_id.get(category_filter) if category_filter else None
             
-            has_more = total_items > (page * per_page)
-
+            # Знаходимо батьківську категорію
+            parent_cat_obj = None
+            if selected_cat_obj and selected_cat_obj.get('parent_id'):
+                parent_cat_obj = all_cats_by_id.get(selected_cat_obj['parent_id'])
+            
             return render_template(
                 'public/index.html',
                 products=products,
                 brands=brands,
+                categories=categories,
+                has_more=has_more,
                 page=page,
-                has_more=has_more
+                selected_category=category_filter,
+                selected_category_obj=selected_cat_obj,
+                parent_category_obj=parent_cat_obj
             )
-
+    
     except Exception as e:
         logging.error(f"Error in index: {e}")
         flash("Error loading products", "error")
-        return render_template('public/index.html')
+        return render_template('public/index.html', products=[], brands=[], categories=[])
     
 # Додавання товару в кошик публічного користувача
 @app.route('/public_add_to_cart', methods=['POST'])
@@ -11809,6 +12324,11 @@ def admin_import_queue_process(token):
         action = request.form.get('action')
         selected_items = request.form.getlist('selected_items')
         
+        logging.info(f"=== QUEUE PROCESS START ===")
+        logging.info(f"Action: {action}")
+        logging.info(f"Selected items count: {len(selected_items)}")
+        logging.info(f"Selected item IDs: {selected_items}")
+        
         if not selected_items:
             flash("Виберіть артикули для обробки", "warning")
             return redirect(url_for('admin_import_queue', token=token))
@@ -11819,75 +12339,127 @@ def admin_import_queue_process(token):
             
             if action == 'move_to_whitelist':
                 default_markup = request.form.get('default_markup', 15)
+                logging.info(f"Moving to whitelist with markup: {default_markup}")
                 
                 for item_id in selected_items:
-                    # Отримуємо інформацію про артикул
-                    cursor.execute("""
-                        SELECT q.article, q.brand, b.id as brand_id
-                        FROM import_queue q
-                        LEFT JOIN brands b ON q.brand = b.name
-                        WHERE q.id = %s
-                    """, (item_id,))
-                    
-                    queue_item = cursor.fetchone()
-                    if not queue_item or not queue_item['brand_id']:
+                    try:
+                        logging.debug(f"Processing queue item ID: {item_id}")
+                        
+                        # Отримуємо інформацію про артикул
+                        cursor.execute("""
+                            SELECT q.id, q.article, q.brand, q.quantity, q.price, b.id as brand_id
+                            FROM import_queue q
+                            LEFT JOIN brands b ON LOWER(q.brand) = LOWER(b.name)
+                            WHERE q.id = %s
+                        """, (item_id,))
+                        
+                        queue_item = cursor.fetchone()
+                        logging.debug(f"Queue item data: {queue_item}")
+                        
+                        if not queue_item:
+                            logging.warning(f"Queue item not found: {item_id}")
+                            continue
+                        
+                        if not queue_item['brand_id']:
+                            logging.warning(f"Brand not mapped for: {queue_item['article']}, brand: {queue_item['brand']}")
+                            continue
+                        
+                        logging.info(f"Adding to whitelist: article={queue_item['article']}, brand_id={queue_item['brand_id']}")
+                        
+                        # Додаємо в whitelist
+                        cursor.execute("""
+                            INSERT INTO import_whitelist 
+                            (article, brand_id, markup_percent, auto_update, created_at)
+                            VALUES (%s, %s, %s, TRUE, NOW())
+                            ON CONFLICT (article, brand_id) DO UPDATE SET
+                                markup_percent = EXCLUDED.markup_percent,
+                                auto_update = TRUE
+                        """, (queue_item['article'], queue_item['brand_id'], default_markup))
+                        
+                        logging.debug(f"Whitelist insert executed for: {queue_item['article']}")
+                        
+                        # ВИДАЛЯЄМО з черги
+                        cursor.execute("DELETE FROM import_queue WHERE id = %s", (item_id,))
+                        
+                        if cursor.rowcount > 0:
+                            processed_count += 1
+                            logging.info(f"Successfully processed: {queue_item['article']}")
+                        else:
+                            logging.warning(f"Failed to delete from queue: {item_id}")
+                        
+                    except Exception as item_err:
+                        logging.error(f"Error processing item {item_id}: {item_err}", exc_info=True)
                         continue
-                    
-                    # Додаємо в whitelist
-                    cursor.execute("""
-                        INSERT INTO import_whitelist 
-                        (article, brand_id, markup_percent, auto_update, created_at)
-                        VALUES (%s, %s, %s, TRUE, NOW())
-                        ON CONFLICT (article, brand_id) DO UPDATE SET
-                            markup_percent = EXCLUDED.markup_percent,
-                            auto_update = TRUE
-                    """, (queue_item['article'], queue_item['brand_id'], default_markup))
-                    
-                    # ВИДАЛЯЄМО з черги
-                    cursor.execute("DELETE FROM import_queue WHERE id = %s", (item_id,))
-                    if cursor.rowcount > 0:
-                        processed_count += 1
                 
+                conn.commit()
+                logging.info(f"Whitelist: Total processed: {processed_count}")
                 flash(f"Переміщено {processed_count} артикулів у білий список", "success")
                 
             elif action == 'move_to_blacklist':
-                for item_id in selected_items:
-                    # Отримуємо інформацію про артикул
-                    cursor.execute("""
-                        SELECT q.article, q.brand, b.id as brand_id
-                        FROM import_queue q
-                        LEFT JOIN brands b ON q.brand = b.name
-                        WHERE q.id = %s
-                    """, (item_id,))
-                    
-                    queue_item = cursor.fetchone()
-                    if not queue_item or not queue_item['brand_id']:
-                        continue
-                    
-                    # Додаємо в blacklist
-                    cursor.execute("""
-                        INSERT INTO import_blacklist 
-                        (article, brand_id, reason, created_at)
-                        VALUES (%s, %s, 'Moved from queue', NOW())
-                        ON CONFLICT (article, brand_id) DO NOTHING
-                    """, (queue_item['article'], queue_item['brand_id']))
-                    
-                    # ВИДАЛЯЄМО з черги
-                    cursor.execute("DELETE FROM import_queue WHERE id = %s", (item_id,))
-                    if cursor.rowcount > 0:
-                        processed_count += 1
+                logging.info("Moving to blacklist")
                 
+                for item_id in selected_items:
+                    try:
+                        # Отримуємо інформацію про артикул
+                        cursor.execute("""
+                            SELECT q.id, q.article, q.brand, b.id as brand_id
+                            FROM import_queue q
+                            LEFT JOIN brands b ON q.brand = b.name
+                            WHERE q.id = %s
+                        """, (item_id,))
+                        
+                        queue_item = cursor.fetchone()
+                        
+                        if not queue_item:
+                            logging.warning(f"Queue item not found: {item_id}")
+                            continue
+                        
+                        if not queue_item['brand_id']:
+                            logging.warning(f"Brand not mapped for blacklist: {queue_item['article']}")
+                            continue
+                        
+                        logging.info(f"Adding to blacklist: article={queue_item['article']}, brand_id={queue_item['brand_id']}")
+                        
+                        # Додаємо в blacklist
+                        cursor.execute("""
+                            INSERT INTO import_blacklist 
+                            (article, brand_id, reason, created_at)
+                            VALUES (%s, %s, 'Moved from queue', NOW())
+                            ON CONFLICT (article, brand_id) DO NOTHING
+                        """, (queue_item['article'], queue_item['brand_id']))
+                        
+                        # ВИДАЛЯЄМО з черги
+                        cursor.execute("DELETE FROM import_queue WHERE id = %s", (item_id,))
+                        
+                        if cursor.rowcount > 0:
+                            processed_count += 1
+                            logging.info(f"Successfully moved to blacklist: {queue_item['article']}")
+                        
+                    except Exception as item_err:
+                        logging.error(f"Error processing blacklist item {item_id}: {item_err}", exc_info=True)
+                        continue
+                
+                conn.commit()
+                logging.info(f"Blacklist: Total processed: {processed_count}")
                 flash(f"Переміщено {processed_count} артикулів у чорний список", "success")
                 
             elif action == 'delete':
-                for item_id in selected_items:
-                    cursor.execute("DELETE FROM import_queue WHERE id = %s", (item_id,))
-                    if cursor.rowcount > 0:
-                        processed_count += 1
+                logging.info("Deleting from queue")
                 
+                for item_id in selected_items:
+                    try:
+                        cursor.execute("DELETE FROM import_queue WHERE id = %s", (item_id,))
+                        if cursor.rowcount > 0:
+                            processed_count += 1
+                    except Exception as item_err:
+                        logging.error(f"Error deleting item {item_id}: {item_err}", exc_info=True)
+                        continue
+                
+                conn.commit()
+                logging.info(f"Delete: Total processed: {processed_count}")
                 flash(f"Видалено {processed_count} артикулів з черги", "success")
             
-            conn.commit()
+            logging.info(f"=== QUEUE PROCESS END (processed: {processed_count}) ===")
             
     except Exception as e:
         logging.error(f"Error processing queue: {e}", exc_info=True)
@@ -13329,11 +13901,471 @@ def admin_import_brands_map(token):
     return redirect(url_for('admin_import_brands', token=token))
 
 
+# Додайте цей маршрут до app.py
+
+@app.route('/vin-request', methods=['POST'])
+def handle_vin_request():
+    logging.info("VIN request endpoint called")
+    """Обробляє запити на підбір запчастин за VIN кодом"""
+    try:
+        data = request.get_json()
+        logging.info(f"VIN request data: vin_code={data.get('vin_code')}, phone={data.get('phone')}, email={data.get('email')}, parts_description={data.get('parts_description')}")
+        
+        # Валідація даних
+        vin_code = data.get('vin_code', '').strip().upper()
+        phone = data.get('phone', '').strip()
+        email = data.get('email', '').strip()
+        parts_description = data.get('parts_description', '').strip()
+        
+        # Основна валідація
+        if not vin_code or len(vin_code) != 17:
+            return jsonify({'success': False, 'error': 'Invalid VIN code'})
+        
+        if not phone or not phone.startswith('+') or len(phone) < 10:
+            return jsonify({'success': False, 'error': 'Invalid phone number'})
+        
+        if not email or '@' not in email:
+            return jsonify({'success': False, 'error': 'Invalid email address'})
+        
+        # Логування запиту (поки що без збереження в БД)
+        logging.info(f"VIN Request received: VIN={vin_code}, Phone={phone}, Email={email}")
+        
+        # Відправка email (опціонально)
+        try:
+            send_vin_request_notification(vin_code, phone, email, parts_description)
+        except Exception as e:
+            logging.error(f"Error sending VIN request notification: {e}")
+        
+        return jsonify({'success': True, 'message': 'Request received successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error handling VIN request: {e}")
+        return jsonify({'success': False, 'error': 'Server error'})
+
+def send_vin_request_notification(vin_code, phone, email, parts_description):
+    """Відправляє сповіщення про VIN запит"""
+    try:
+        smtp_host = os.getenv("SMTP_HOST")
+        smtp_port = int(os.getenv("SMTP_PORT"))
+        sender_email = os.getenv("SMTP_EMAIL")
+        sender_password = os.getenv("SMTP_PASSWORD")
+
+        if not all([smtp_host, smtp_port, sender_email, sender_password]):
+            logging.warning("SMTP not configured, skipping VIN request notification")
+            return
+
+        subject = f"VIN Request: {vin_code}"
+        body = f"""
+New VIN request received:
+
+VIN Code: {vin_code}
+Phone: {phone}
+Email: {email}
+Parts Description: {parts_description or 'Not specified'}
+
+Request time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        """
+
+        message = MIMEText(body, 'plain', 'utf-8')
+        message['From'] = sender_email
+        message['To'] = sender_email
+        message['Subject'] = subject
+
+        # --- ВАЖЛИВО: вибір типу SMTP ---
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port)
+            server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(message)
+        server.quit()
+
+        logging.info(f"VIN request notification sent for VIN: {vin_code}")
+
+    except Exception as e:
+        logging.error(f"Error sending VIN request notification: {e}", exc_info=True)
+
+
 @scheduler.task('interval', id='clear_cache', minutes=60)
 def scheduled_clear_cache():
     cache.clear()
     logging.info("Cache cleared")
 
+
+# ========== КАТЕГОРІЇ - АДМІН ==========
+
+@app.route('/<token>/admin/categories', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+@add_noindex_header
+def admin_categories(token):
+    """Управління категоріями продуктів"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            if request.method == 'POST':
+                action = request.form.get('action')
+                
+                if action == 'add':
+                    # Додавання нової категорії
+                    parent_id = request.form.get('parent_id') or None
+                    slug = request.form.get('slug', '').strip().lower()
+                    icon_class = request.form.get('icon_class', '').strip()
+                    
+                    # Перевіряємо slug на унікальність
+                    cursor.execute("SELECT id FROM product_categories WHERE slug = %s", (slug,))
+                    if cursor.fetchone():
+                        flash("Slug вже існує!", "error")
+                        return redirect(url_for('admin_categories', token=token))
+                    
+                    # Додаємо категорію
+                    cursor.execute("""
+                        INSERT INTO product_categories 
+                        (slug, parent_id, icon_class, is_active, created_at, updated_at)
+                        VALUES (%s, %s, %s, TRUE, NOW(), NOW())
+                        RETURNING id
+                    """, (slug, parent_id, icon_class))
+                    
+                    category_id = cursor.fetchone()['id']
+                    
+                    # Додаємо переклади для кожної мови
+                    langs = ['sk', 'en', 'uk', 'pl']  # Наші мови
+                    for lang in langs:
+                        name = request.form.get(f'name_{lang}', '').strip()
+                        description = request.form.get(f'description_{lang}', '').strip()
+                        
+                        if name:
+                            cursor.execute("""
+                                INSERT INTO product_category_translations 
+                                (category_id, language, name, description, created_at)
+                                VALUES (%s, %s, %s, %s, NOW())
+                            """, (category_id, lang, name, description))
+                    
+                    conn.commit()
+                    flash(f"✅ Категорія '{slug}' додана успішно!", "success")
+                    
+                elif action == 'edit':
+                    # Редагування категорії
+                    category_id = request.form.get('category_id', type=int)
+                    parent_id = request.form.get('parent_id') or None
+                    icon_class = request.form.get('icon_class', '').strip()
+                    sort_order = request.form.get('sort_order', 0, type=int)
+                    is_active = request.form.get('is_active') == 'on'
+                    
+                    # Оновлюємо категорію
+                    cursor.execute("""
+                        UPDATE product_categories 
+                        SET parent_id = %s, icon_class = %s, sort_order = %s, 
+                            is_active = %s, updated_at = NOW()
+                        WHERE id = %s
+                    """, (parent_id, icon_class, sort_order, is_active, category_id))
+                    
+                    # Оновлюємо переклади
+                    langs = ['sk', 'en', 'uk', 'pl']
+                    for lang in langs:
+                        name = request.form.get(f'name_{lang}', '').strip()
+                        description = request.form.get(f'description_{lang}', '').strip()
+                        
+                        if name:
+                            cursor.execute("""
+                                INSERT INTO product_category_translations 
+                                (category_id, language, name, description, created_at)
+                                VALUES (%s, %s, %s, %s, NOW())
+                                ON CONFLICT (category_id, language) 
+                                DO UPDATE SET name = %s, description = %s, created_at = NOW()
+                            """, (category_id, lang, name, description, name, description))
+                    
+                    conn.commit()
+                    flash("✅ Категорія оновлена!", "success")
+                    
+                elif action == 'delete':
+                    # Видалення категорії
+                    category_id = request.form.get('category_id', type=int)
+                    
+                    # Перевіряємо чи є товари в цій категорії
+                    cursor.execute("SELECT COUNT(*) as cnt FROM product_category_mapping WHERE category_id = %s", (category_id,))
+                    if cursor.fetchone()['cnt'] > 0:
+                        flash("⚠️ Не можна видалити категорію, яка містить товари!", "warning")
+                        return redirect(url_for('admin_categories', token=token))
+                    
+                    # Видаляємо переклади
+                    cursor.execute("DELETE FROM product_category_translations WHERE category_id = %s", (category_id,))
+                    
+                    # Видаляємо саму категорію
+                    cursor.execute("DELETE FROM product_categories WHERE id = %s", (category_id,))
+                    
+                    conn.commit()
+                    flash("✅ Категорія видалена!", "success")
+                
+                return redirect(url_for('admin_categories', token=token))
+            
+            # GET - показуємо форму
+            lang = session.get('language', 'sk')
+            
+            # Отримуємо всі категорії з перекладами
+            cursor.execute(f"""
+                SELECT 
+                    pc.id,
+                    pc.slug,
+                    pc.parent_id,
+                    pc.icon_class,
+                    pc.sort_order,
+                    pc.is_active,
+                    pct.name,
+                    pct.description,
+                    pct.language
+                FROM product_categories pc
+                LEFT JOIN product_category_translations pct 
+                    ON pc.id = pct.category_id
+                ORDER BY pc.parent_id NULLS FIRST, pc.sort_order, pc.id
+            """)
+            
+            rows = cursor.fetchall()
+            
+            # Групуємо по категоріям (кожна категорія має 4 рядки - по одній мові)
+            categories = {}
+            for row in rows:
+                cat_id = row['id']
+                if cat_id not in categories:
+                    categories[cat_id] = {
+                        'id': row['id'],
+                        'slug': row['slug'],
+                        'parent_id': row['parent_id'],
+                        'icon_class': row['icon_class'],
+                        'sort_order': row['sort_order'],
+                        'is_active': row['is_active'],
+                        'translations': {}
+                    }
+                if row['language']:
+                    categories[cat_id]['translations'][row['language']] = {
+                        'name': row['name'],
+                        'description': row['description']
+                    }
+            
+            categories_list = list(categories.values())
+            
+            return render_template(
+                'admin/categories.html',
+                categories=categories_list,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_categories: {e}", exc_info=True)
+        flash("❌ Помилка при роботі з категоріями", "error")
+        return redirect(url_for('admin_dashboard', token=token))
+
+
+@app.route('/<token>/admin/product-categories', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+@add_noindex_header
+def admin_product_categories(token):
+    """Масове прив'язування товарів до категорій"""
+    try:
+        # Фільтри
+        article_filter = request.args.get('article', '').strip().upper()
+        category_filter = request.args.get('category', type=int)
+        status_filter = request.args.get('status', 'all')  # all, assigned, unassigned
+        page = request.args.get('page', 1, type=int)
+        per_page = 30
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            if request.method == 'POST':
+                action = request.form.get('action')
+                
+                if action == 'bulk_assign':
+                    # Масове додавання до категорії
+                    selected_articles = request.form.getlist('articles')
+                    target_category = request.form.get('target_category', type=int)
+                    
+                    if not target_category or not selected_articles:
+                        flash("❌ Виберіть товари та категорію", "error")
+                    else:
+                        count = 0
+                        for article in selected_articles:
+                            article = article.strip().upper()
+                            
+                            # Перевіряємо наявність товару
+                            cursor.execute("SELECT article FROM stock WHERE article = %s", (article,))
+                            if not cursor.fetchone():
+                                continue
+                            
+                            # Перевіряємо чи вже існує зв'язок
+                            cursor.execute(
+                                "SELECT id FROM product_category_mapping WHERE article = %s AND category_id = %s",
+                                (article, target_category)
+                            )
+                            if not cursor.fetchone():
+                                # Додаємо новий зв'язок
+                                cursor.execute("""
+                                    INSERT INTO product_category_mapping (article, category_id, created_at)
+                                    VALUES (%s, %s, NOW())
+                                """, (article, target_category))
+                                count += 1
+                        
+                        conn.commit()
+                        flash(f"✅ Додано {count} товарів до категорії", "success")
+                    
+                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, status=status_filter, page=page))
+                
+                elif action == 'bulk_remove':
+                    # Масове видалення з категорії
+                    selected_articles = request.form.getlist('articles')
+                    
+                    if not selected_articles:
+                        flash("❌ Виберіть товари", "error")
+                    else:
+                        count = 0
+                        for article in selected_articles:
+                            article = article.strip().upper()
+                            cursor.execute(
+                                "DELETE FROM product_category_mapping WHERE article = %s",
+                                (article,)
+                            )
+                            count += cursor.rowcount
+                        
+                        conn.commit()
+                        flash(f"✅ Видалено {count} зв'язків", "success")
+                    
+                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, status=status_filter, page=page))
+            
+            # Отримуємо категорії для фільтра та вибору
+            lang = session.get('language', 'sk')
+            cursor.execute(f"""
+                SELECT 
+                    pc.id,
+                    pc.slug,
+                    pc.parent_id,
+                    COALESCE(pct.name, pc.slug) as name
+                FROM product_categories pc
+                LEFT JOIN product_category_translations pct 
+                    ON pc.id = pct.category_id AND pct.language = %s
+                WHERE pc.is_active = TRUE
+                ORDER BY pc.parent_id NULLS FIRST, pc.sort_order, pc.id
+            """, (lang,))
+            
+            categories_raw = cursor.fetchall()
+            
+            # Будуємо ієрархічний список категорій з відступами
+            all_cats_by_id = {}
+            for cat in categories_raw:
+                all_cats_by_id[cat['id']] = {
+                    'id': cat['id'],
+                    'slug': cat['slug'],
+                    'parent_id': cat['parent_id'],
+                    'name': cat['name'] or cat['slug'],
+                    'children': []
+                }
+            
+            # Прив'язуємо дітей до батьків
+            root_cats = []
+            for cat_id, cat_data in all_cats_by_id.items():
+                if cat_data['parent_id'] is None:
+                    root_cats.append(cat_data)
+                elif cat_data['parent_id'] in all_cats_by_id:
+                    all_cats_by_id[cat_data['parent_id']]['children'].append(cat_data)
+            
+            # Формуємо плоский список з відступами (для select)
+            categories_list = []
+            def add_with_indent(cat, level=0):
+                indent = "—" * level
+                prefix = f"{indent} " if level > 0 else ""
+                categories_list.append({
+                    'id': cat['id'],
+                    'name': f"{prefix}{cat['name']}",
+                    'level': level,
+                    'parent_id': cat['parent_id']
+                })
+                for child in cat['children']:
+                    add_with_indent(child, level + 1)
+            
+            for root in root_cats:
+                add_with_indent(root, 0)
+            
+            categories = categories_list
+            
+            # Будуємо базовий запит для товарів (без GROUP BY спочатку для COUNT)
+            base_query = f"""
+                s.article,
+                b.name as brand_name,
+                p.name_sk,
+                s.price,
+                s.quantity,
+                COUNT(pcm.category_id) as category_count,
+                STRING_AGG(pct.name, ', ' ORDER BY pct.name) as categories
+                FROM stock s
+                LEFT JOIN brands b ON s.brand_id = b.id
+                LEFT JOIN products p ON s.article = p.article
+                LEFT JOIN product_category_mapping pcm ON s.article = pcm.article
+                LEFT JOIN product_category_translations pct 
+                    ON pcm.category_id = pct.category_id AND pct.language = %s
+                WHERE 1=1
+            """
+            params = [lang]
+            
+            # Додаємо фільтри
+            if article_filter:
+                base_query += " AND s.article ILIKE %s"
+                params.append(f"%{article_filter}%")
+            
+            if category_filter:
+                base_query += " AND pcm.category_id = %s"
+                params.append(category_filter)
+            
+            if status_filter == 'assigned':
+                base_query += " AND pcm.category_id IS NOT NULL"
+            elif status_filter == 'unassigned':
+                base_query += " AND pcm.category_id IS NULL"
+            
+            base_query += " GROUP BY s.article, b.name, p.name_sk, s.price, s.quantity"
+            
+            # Підрахункуємо загальну кількість товарів (без пагінації)
+            count_query = f"SELECT COUNT(*) FROM (SELECT {base_query}) as t"
+            cursor.execute(count_query, params)
+            total = cursor.fetchone()[0]
+            
+            # Додаємо сортування і пагінацію до основного запиту
+            query = f"SELECT {base_query} ORDER BY s.article LIMIT %s OFFSET %s"
+            params.extend([per_page, (page - 1) * per_page])
+            
+            cursor.execute(query, params)
+            products = cursor.fetchall()
+            
+            total_pages = (total + per_page - 1) // per_page
+            
+            # Обчислюємо діапазон товарів для відображення
+            start_item = (page - 1) * per_page + 1 if total > 0 else 0
+            end_item = min(page * per_page, total)
+            
+            # Обчислюємо діапазон сторінок для пагінації (5 сторінок: 2 до, поточна, 2 після)
+            page_start = max(1, page - 2)
+            page_end = min(total_pages + 1, page + 3)
+            page_range = range(page_start, page_end)
+            
+            return render_template(
+                'admin/product_categories.html',
+                products=products,
+                categories=categories,
+                article_filter=article_filter,
+                category_filter=category_filter,
+                status_filter=status_filter,
+                page=page,
+                total_pages=total_pages,
+                total_items=total,
+                per_page=per_page,
+                start_item=start_item,
+                end_item=end_item,
+                page_range=page_range,
+                token=token
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_product_categories: {e}", exc_info=True)
+        flash("❌ Помилка при роботі з категоріями товарів", "error")
+        return redirect(url_for('admin_dashboard', token=token))
 
 
 if __name__ == '__main__':

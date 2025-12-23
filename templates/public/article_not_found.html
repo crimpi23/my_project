@@ -8,97 +8,85 @@
 {% block title %}{{ _('Article Not Found') }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4 page-not-found">
-    <div class="not-found-card fade-in">
-        <div class="section-header section-header-danger">
-            <div class="header-icon">
-                <i class="bi bi-exclamation-triangle"></i>
-            </div>
-            <h2>{{ _('Product Not Found') }}</h2>
-        </div>
-        <div class="not-found-body">
-            <div class="search-icon-container">
-                <i class="bi bi-search search-icon"></i>
-            </div>
-            
-            <h3>{{ _('The requested article was not found in our catalog') }}</h3>
-            
-            {% if article %}
-            <div class="article-badge">{{ article }}</div>
-            {% endif %}
-            
-            <p class="text-muted">
-                {{ _('The article you are looking for might have been discontinued, or the number might be incorrect.') }}
-                {{ _('Please check the article number and try again or contact our support team for assistance.') }}
-            </p>
-            
-
-            <form method="POST" action="{{ url_for('public_search') }}" class="search-form">
-                <div class="input-group">
-                    <input type="text" name="article" class="form-control"
-                           placeholder="{{ _('Enter article number...') }}" 
-                           {% if article %}value="{{ article }}"{% endif %}
-                           required>
-                    <button type="submit" class="btn-action btn-action-primary">
-                        <i class="bi bi-search me-2"></i>
-                        {{ _('Search') }}
-                    </button>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-base fade-in mb-4 not-found-card">
+                <div class="section-header section-header-danger d-flex align-items-center mb-3">
+                    <div class="category-icon me-3">
+                        <i class="bi bi-exclamation-triangle text-danger"></i>
+                    </div>
+                    <h2 class="mb-0 text-danger">{{ _('Product Not Found') }}</h2>
                 </div>
-            </form>
-            
+                <div class="not-found-body p-4">
+                    <div class="search-icon-container mb-3 text-center">
+                        <i class="bi bi-search search-icon text-primary" style="font-size:2.5rem;"></i>
+                    </div>
+                    
+                    <h4 class="mb-3">{{ _('The requested article was not found in our catalog') }}</h4>
+                    
+                    {% if article %}
+                    <div class="article-badge mb-3">{{ article }}</div>
+                    {% endif %}
+                    
+                    <p class="text-muted mb-4">
+                        {{ _('The article you are looking for might have been discontinued, or the number might be incorrect.') }}
+                        {{ _('Please check the article number and try again or contact our support team for assistance.') }}
+                    </p>
+                    
+                    <!-- Пошук видалено тут -->
 
-            <div class="action-buttons">
-                <a href="{{ url_for('index') }}" class="btn-outline btn-outline-primary">
-                    <i class="bi bi-house me-2"></i>
-                    {{ _('Back to Home') }}
-                </a>
-                <a href="{{ url_for('contacts') }}" class="btn-action btn-action-info">
-                    <i class="bi bi-headset me-2"></i>
-                    {{ _('Contact Support') }}
-                </a>
+                    <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-house me-2"></i>
+                            {{ _('Back to Home') }}
+                        </a>
+                        <a href="{{ url_for('contacts') }}" class="btn btn-info text-white">
+                            <i class="bi bi-headset me-2"></i>
+                            {{ _('Contact Support') }}
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
+
     {% if similar_products and similar_products|length > 0 %}
     <div class="recommendations fade-in">
-        <div class="recommendations-header">
-            <div class="header-icon">
-                <i class="bi bi-lightbulb"></i>
+        <div class="section-header d-flex align-items-center mb-3">
+            <div class="category-icon me-3">
+                <i class="bi bi-lightbulb text-warning"></i>
             </div>
-            <h3>{{ _('Recommended Products') }}</h3>
+            <h3 class="mb-0 text-warning">{{ _('Recommended Products') }}</h3>
         </div>
-        
         <div class="row row-cols-1 row-cols-md-4 g-4">
             {% for product in similar_products %}
             <div class="col">
                 <div class="card h-100 product-card">
-                    <div class="product-img-container">
+                    <div class="product-image-container">
                         {% if product.image_url %}
-                        <img src="{{ product.image_url }}" class="product-img" 
+                        <img src="{{ product.image_url }}" class="product-image" 
                              alt="{{ product.name or product.article }}">
                         {% else %}
                         <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
                         {% endif %}
                     </div>
-                    
-                    <div class="card-body">
-                        <h5 class="product-title">{{ product.name or product.article }}</h5>
+                    <div class="product-content">
+                        <div class="product-title">{{ product.name or product.article }}</div>
                         <div class="product-meta">
-                            <div class="product-meta-item">
-                                <span class="meta-label">{{ _('Brand') }}</span>
+                            <div class="meta-item">
+                                <span class="meta-label">{{ _('Brand') }}:</span>
                                 <span class="meta-value">{{ product.brand_name }}</span>
                             </div>
-                            <div class="product-meta-item">
-                                <span class="meta-label">{{ _('Article') }}</span>
+                            <div class="meta-item">
+                                <span class="meta-label">{{ _('Article') }}:</span>
                                 <span class="product-article">{{ product.article }}</span>
                             </div>
-                            <div class="product-meta-item">
-                                <span class="meta-label">{{ _('Price') }}</span>
+                            <div class="meta-item">
+                                <span class="meta-label">{{ _('Price') }}:</span>
                                 <span class="meta-value product-price">{{ "%.2f"|format(product.price) }} €</span>
                             </div>
                         </div>
-                        
                         <a href="{{ url_for('product_details', article=product.article) }}" 
                            class="btn btn-primary btn-sm w-100 mt-2">
                             <i class="bi bi-eye-fill me-2"></i>

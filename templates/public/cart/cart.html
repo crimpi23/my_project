@@ -3,150 +3,7 @@
 {% block head %}
 <meta name="description" content="{{ _('View and manage your shopping cart at AutogroupEU. Check prices, quantities, and proceed to checkout.') }}">
 <meta name="robots" content="noindex, nofollow">
-
-<style>
-/* Покращення мобільного відображення таблиці кошика */
-@media (max-width: 767px) {
-    .cart-table {
-        width: 100%;
-    }
-    
-    .cart-table tbody tr {
-        padding: 15px 10px;
-        margin-bottom: 15px;
-        display: block;
-        border: 1px solid #eee;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    
-    .cart-table tbody td {
-        text-align: right;
-        padding: 12px 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border: none;
-    }
-    
-    .cart-table tbody td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        margin-right: 10px;
-        text-align: left;
-        flex: 1;
-    }
-    
-    .cart-table tbody td:not(:last-child) {
-        border-bottom: 1px solid #f0f0f0;
-    }
-    
-    /* Покращення відображення ціни */
-    .price-value, .total-value {
-        font-weight: 700;
-        font-size: 1rem;
-        white-space: nowrap;
-        color: var(--primary-color, #0d6efd);
-    }
-    
-    /* Налаштування дій для товарів */
-    .cart-table td:last-child {
-        border-bottom: none;
-    }
-    
-    /* Приховання заголовків таблиці на мобільних */
-    .cart-table thead {
-        display: none;
-    }
-    
-    /* Налаштування підвалу таблиці */
-    .cart-table tfoot tr {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        margin-top: 15px;
-    }
-    
-    .cart-table tfoot td {
-        padding: 0;
-        border: none;
-    }
-    
-    /* Добавляємо стилі для групи кількості */
-    .quantity-input {
-        display: flex;
-        align-items: center;
-        width: 100px; /* Фіксована ширина */
-        min-width: 100px; /* Мінімальна ширина */
-    }
-    
-    .quantity-input input {
-        width: 60px; /* Зменшена ширина input */
-        text-align: center;
-        border-right: none;
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-        padding: 0.375rem 0.25rem; /* Зменшені горизонтальні відступи */
-    }
-    
-    .quantity-update-btn {
-        flex-shrink: 0; /* Запобігає стисканню кнопки */
-        width: 40px; /* Фіксована ширина кнопки */
-        background-color: var(--primary-color, #0d6efd);
-        color: white;
-        border: none;
-        border-radius: 0 4px 4px 0;
-        padding: 0.375rem 0;
-        height: 38px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-}
-
-/* Медіа-запит для desktop */
-@media (min-width: 768px) {
-    .cart-table td {
-        vertical-align: middle; /* Вирівнювання вмісту комірок по центру */
-    }
-}
-
-/* Стилі для всіх розмірів екрану */
-.quantity-input {
-    display: flex;
-    align-items: center;
-    width: 100px; /* Фіксована ширина */
-    min-width: 100px; /* Мінімальна ширина */
-}
-
-.quantity-input input {
-    width: 60px; /* Зменшена ширина input */
-    text-align: center;
-    border-right: none;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    padding: 0.375rem 0.25rem; /* Зменшені горизонтальні відступи */
-}
-
-.quantity-update-btn {
-    flex-shrink: 0; /* Запобігає стисканню кнопки */
-    width: 40px; /* Фіксована ширина кнопки */
-    background-color: var(--primary-color, #0d6efd);
-    color: white;
-    border: none;
-    border-radius: 0 4px 4px 0;
-    padding: 0.375rem 0;
-    height: 38px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-</style>
+<link href="/static/css/public-cart.css" rel="stylesheet">
 {% endblock %}
 
 {% block title %}{{ _('Shopping Cart') }}{% endblock %}
@@ -363,7 +220,7 @@
             <h5 class="mb-0">{{ _('Delivery Information') }}</h5>
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ url_for('guest_checkout') }}">
+            <form method="POST" action="{{ url_for('guest_checkout') }}" id="guestOrderForm">
                 <h6 class="section-title">{{ _('Your Contact Information') }}</h6>
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -512,18 +369,21 @@
     </div>
     {% endif %}
 </div>
-{% endblock %}
 
-{% block scripts %}
-{{ super() }}
+<!-- Додайте цей скрипт прямо перед закриваючим тегом блоку content -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Cart script loaded'); // Для перевірки в консолі
+    
+    // Форма нової адреси
     const useNewAddressCheckbox = document.getElementById('use_new_address');
     const deliveryAddressSelect = document.querySelectorAll('input[name="delivery_address"]');
     const newAddressFields = document.getElementById('new_address_fields');
     
     if (useNewAddressCheckbox && newAddressFields) {
+        console.log('Address elements found');
         useNewAddressCheckbox.addEventListener('change', function() {
+            console.log('Checkbox clicked, checked:', this.checked);
             if (this.checked) {
                 newAddressFields.style.display = 'block';
                 deliveryAddressSelect.forEach(radio => {
@@ -535,147 +395,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    deliveryAddressSelect.forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (this.checked && useNewAddressCheckbox) {
-                useNewAddressCheckbox.checked = false;
-                newAddressFields.style.display = 'none';
-            }
-        });
-    });
-    
+    // Форма фактури
     const needsInvoice = document.getElementById('needs_invoice');
     const invoiceFields = document.getElementById('invoice_fields');
     
     if (needsInvoice && invoiceFields) {
+        console.log('Invoice elements found');
         needsInvoice.addEventListener('change', function() {
+            console.log('Invoice checkbox clicked, checked:', this.checked);
             invoiceFields.style.display = this.checked ? 'block' : 'none';
-        });
-    }
-    
-    const useNewCompanyRadio = document.getElementById('useNewCompany');
-    const savedCompanyRadios = document.querySelectorAll('input[name="company_id"]');
-    const newCompanyForm = document.getElementById('newCompanyForm');
-
-    function toggleNewCompanyForm() {
-        if (useNewCompanyRadio && useNewCompanyRadio.checked) {
-            if (newCompanyForm) newCompanyForm.style.display = 'block';
-
-            savedCompanyRadios.forEach(radio => radio.checked = false);
-        } else if (newCompanyForm) {
-            newCompanyForm.style.display = 'none';
-        }
-    }
-
-    if (useNewCompanyRadio) {
-        useNewCompanyRadio.addEventListener('change', toggleNewCompanyForm);
-    }
-    
-    savedCompanyRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (this.checked && useNewCompanyRadio) {
-                useNewCompanyRadio.checked = false;
-                if (newCompanyForm) newCompanyForm.style.display = 'none';
-            }
-        });
-    });
-    
-    const phoneInput = document.getElementById('phone');
-    if (phoneInput) {
-        phoneInput.addEventListener('blur', async function() {
-            if (!this.value) return;
-            try {
-                const response = await fetch('/validate_phone', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: this.value })
-                });
-                const result = await response.json();
-                const messageDiv = document.getElementById('phoneValidationMessage');
-                if (messageDiv) {
-                    if (!result.valid) {
-                        messageDiv.textContent = result.message;
-                        messageDiv.classList.add('text-danger');
-                        this.focus();
-                    } else {
-                        messageDiv.textContent = '';
-                        messageDiv.classList.remove('text-danger');
-                    }
-                }
-            } catch (error) {
-                console.error('Error validating phone:', error);
-            }
-        });
-    }
-
-    const vatInput = document.getElementById('vatNumber');
-    if (vatInput) {
-        vatInput.addEventListener('blur', async function() {
-            if (!this.value || !needsInvoice || !needsInvoice.checked) return;
-            try {
-                const response = await fetch('/validate-vat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ vat_number: this.value })
-                });
-                const result = await response.json();
-                const messageDiv = document.getElementById('vatValidationMessage');
-                if (messageDiv) {
-                    messageDiv.textContent = result.message;
-                    if (result.valid) {
-                        messageDiv.className = 'form-text text-success';
-                    } else {
-                        messageDiv.className = 'form-text text-danger';
-                        this.focus();
-                    }
-                }
-            } catch (error) {
-                console.error('Error validating VAT:', error);
-            }
-        });
-    }
-    
-    const guestOrderForm = document.getElementById('guestOrderForm');
-    if (guestOrderForm) {
-        const guestPhoneInput = document.getElementById('guest_phone');
-        if (guestPhoneInput) {
-            guestPhoneInput.addEventListener('blur', async function() {
-                if (!this.value) return;
-                try {
-                    const response = await fetch('/validate_phone', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ phone: this.value })
-                    });
-                    const result = await response.json();
-                    const messageDiv = document.getElementById('guestPhoneValidationMessage');
-                    if (messageDiv) {
-                        if (!result.valid) {
-                            messageDiv.textContent = result.message;
-                            messageDiv.classList.add('text-danger');
-                            this.focus();
-                        } else {
-                            messageDiv.textContent = '';
-                            messageDiv.classList.remove('text-danger');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error validating phone:', error);
-                }
-            });
-        }
-        
-        guestOrderForm.addEventListener('submit', function(e) {
-            const submitBtn = document.getElementById('guestPlaceOrderBtn');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '{{ _("Processing...") }}';
-            }
         });
     }
 });
 </script>
+{% endblock %}
 
+{% block scripts %}
+{{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function updateShippingOptions() {

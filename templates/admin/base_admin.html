@@ -1,0 +1,49 @@
+<!-- Знайдіть секцію Catalog Management і додайте це посилання -->
+
+<!-- В розділі Catalog Management після інших посилань -->
+<div class="nav-section">
+    <h6 class="nav-section-title">Catalog Management</h6>
+    
+    <!-- Існуючі посилання -->
+    <a href="{{ url_for('upload_price_list', token=token) }}" class="nav-link">
+        <i class="bi bi-upload"></i>
+        Upload Price List
+    </a>
+    
+    <a href="{{ url_for('manage_stock', token=token) }}" class="nav-link">
+        <i class="bi bi-boxes"></i>
+        Manage Stock
+    </a>
+    
+    <!-- ДОДАЙТЕ ЦЕ ПОСИЛАННЯ -->
+    <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="nav-link">
+        <i class="bi bi-image"></i>
+        Products Missing Photos
+        <!-- Опціонально: показати кількість товарів без фото -->
+        <span class="badge bg-warning text-dark ms-1" id="missing-photos-count">
+            <i class="bi bi-exclamation-triangle"></i>
+        </span>
+    </a>
+    
+    <!-- Решта посилань -->
+</div>
+
+<!-- В розділі Content Management -->
+
+<div class="nav-section">
+    <h6 class="nav-section-title">Content Management</h6>
+    
+    <a href="{{ url_for('manage_descriptions', token=token) }}" class="nav-link">
+        <i class="bi bi-card-text"></i>
+        Product Descriptions
+    </a>
+    
+    <!-- ДОДАЙТЕ ЦЕ ПОСИЛАННЯ -->
+    <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="nav-link">
+        <i class="bi bi-image-fill"></i>
+        Missing Photos
+        <small class="text-muted">(Products)</small>
+    </a>
+    
+    <!-- Решта посилань Content Management -->
+</div>

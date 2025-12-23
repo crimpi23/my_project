@@ -1,247 +1,297 @@
 <!DOCTYPE html>
-<html lang="{{ g.locale }}">
+<html lang="{{ session.get('language', 'sk') }}">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block head %}{% endblock %}
     
-    <script>
-    window.dataLayer = window.dataLayer || [];
-    
-    function initGTM() {
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-N4RD9ZH9');
-    }
-    
-    function initFacebookPixel() {
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', 'FACEBOOK_PIXEL_ID');
-        fbq('track', 'PageView');
-    }
-    
-    const consentGiven = localStorage.getItem('cookieConsent') === 'full';
-    if (consentGiven) {
-        initGTM();
-        initFacebookPixel();
-    }
-    </script>
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">    <meta name="theme-color" content="#007bff">
     <title>{% block title %}AutogroupEU{% endblock %}</title>
     
-    <link rel="icon" href="https://image.autogroup.sk/static/favicon.ico" type="image/x-icon">
-    <link rel="shortcut icon" href="https://image.autogroup.sk/static/favicon.ico" type="image/x-icon">
-    
-    <link rel="preconnect" href="https://image.autogroup.sk">
-    <link rel="dns-prefetch" href="https://image.autogroup.sk">
-    
-    <meta name="description" content="{% block meta_description %}AutogroupEU - Your reliable partner in auto parts supply across Europe{% endblock %}">
-    <meta name="keywords" content="auto parts, car parts, automotive, spare parts, Europe">
-    <meta name="author" content="AutogroupEU">
-    <meta name="robots" content="index, follow">
-
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:title" content="{% block og_title %}AutogroupEU{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}Your reliable partner in auto parts supply across Europe{% endblock %}">
-    <meta property="og:image" content="{{ url_for('static', filename='images/AutogroupEU.png', _external=True) }}">
-    <meta property="og:site_name" content="AutogroupEU">
-
-    {% for lang_code in config['BABEL_SUPPORTED_LOCALES'] %}
-    <link rel="alternate" 
-          hreflang="{{ lang_code }}" 
-          href="{{ request.host_url }}{{ lang_code }}/product/{{ article }}" />
-    {% endfor %}
-    <link rel="alternate" 
-          hreflang="x-default" 
-          href="{{ request.host_url }}uk/product/{{ article }}" />
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/blog.css') }}">
-
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/public-base.css') }}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 
-    {% block head %}{% endblock %}
-
-    <script>
-    function _(text) {
-        return window.translations[text] || text;
-    }
-    </script>
-        
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom-layout.css') }}">
-    <style>
-    .social-links {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-    }
-
-    .social-link {
-        color: #6c757d;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: #f8f9fa;
-    }
-
-    .social-link:hover {
-        color: #ffffff;
-        transform: translateY(-3px);
-    }
-
-    .social-link:hover .bi-facebook {
-        background-color: #1877F2;
-    }
-
-    .social-link:hover .bi-instagram {
-        background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
-    }
-
-    .social-link:hover .bi-shop {
-        background-color: #e53238; /* eBay червоний колір */
-    }
-
-    .social-link:hover .bi-basket {
-        background-color: #ff5a00; /* Allegro помаранчевий колір */
-    }
-
-    @media (max-width: 768px) {
-        /* Оптимізації для мобільних пристроїв */
-        .some-class {
-            padding: 10px;
-            font-size: 14px;
-        }
-    }
-    </style>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>	
-<body class="d-flex flex-column min-vh-100" style="font-family: 'Inter', system-ui, -apple-system, sans-serif;">
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N4RD9ZH9"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=FACEBOOK_PIXEL_ID&ev=PageView&noscript=1"
-    /></noscript>
-
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('index') }}">
-            <img src="{{ url_for('static', filename='images/AutogroupEU.png') }}" alt="AutogroupEU">
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index') }}">
-                        <i class="bi bi-house me-1"></i> {{ _('Home') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('about') }}">
-                        <i class="bi bi-info-circle me-1"></i> {{ _('About Us') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('shipping_payment') }}">
-                        <i class="bi bi-truck me-1"></i> {{ _('Shipping & Payment') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('contacts') }}">
-                        <i class="bi bi-chat-dots me-1"></i> {{ _('Contact Us') }}
-                    </a>
-                </li>
-                <li class="nav-item {% if request.path.startswith('/blog') %}active{% endif %}">
-                    <a class="nav-link" href="{{ url_for('blog_index') }}">{{ _('Blog') }}</a>
-                </li>
-            </ul>
-            <ul class="navbar-nav">
-                {% if 'user_id' in session %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-circle me-1"></i> {{ session.get('username', _('My Account')) }}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <li>
-                            <a class="dropdown-item" href="{{ url_for('public_user_profile') }}">
-                                <i class="bi bi-person me-2"></i> {{ _('Profile') }}
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ url_for('public_view_orders') }}">
-                                <i class="bi bi-list-check me-2"></i> {{ _('Orders') }}
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item" href="{{ url_for('logout') }}">
-                                <i class="bi bi-box-arrow-right me-2"></i> {{ _('Logout') }}
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('login') }}">
-                        <i class="bi bi-box-arrow-in-right me-1"></i> {{ _('Login') }}
-                    </a>
-                </li>
-                {% endif %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('public_cart') }}"
-     aria-label="{{ _('Cart') }}{% if session.get('cart_count', 0) > 0 %} ({{ session.get('cart_count') }}){% endif %}">
-    <i class="bi bi-cart3"></i> {{ _('Cart') }}
-    {% if session.get('cart_count', 0) > 0 %}
-    <span class="cart-badge" aria-live="polite">{{ session.get('cart_count') }}</span>
-    {% endif %}
-  </a>
-                </li>
-                <li class="nav-item dropdown language-dropdown">
-  <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    {{ LANGUAGES.get(g.locale, 'English') }}
-  </a>
-  <ul class="dropdown-menu" aria-labelledby="languageDropdown">
-    {% for lang_code, lang_name in LANGUAGES.items() %}
-      <li>
-        <a class="dropdown-item {% if g.locale == lang_code %}active{% endif %}" 
-           href="{{ url_for('set_language', lang=lang_code) }}">
-           {{ lang_name }}
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
-</li>
-
-            </ul>
+    <meta name="description" content="{% block meta_description %}{{ _('AutogroupEU - Your reliable partner in auto parts supply across Europe.') }}{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}AutogroupEU{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ _('Find the best auto parts for your vehicle with quick delivery across Europe') }}{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+</head>
+<body>
+    <!-- Cookie Notice (na vrchu) -->
+    <div id="cookieNotice" class="cookie-notice" style="display: none;">
+        <div class="container">
+            <div class="cookie-content">
+                <div class="cookie-text">
+                    <span>{{ _('This website uses cookies...') }}</span>
+                    <a href="{{ url_for('privacy') }}#cookies" class="cookie-link">{{ _('Privacy Policy') }}</a>.
+                </div>
+                <div class="cookie-actions">
+                    <button type="button" class="btn btn-primary btn-sm" id="acceptCookies">
+                        {{ _('Accept') }}
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="declineCookies">
+                        {{ _('Only Essential') }}
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-</nav>
 
+    <!-- Header -->
+    <header class="main-header">
+        <!-- Top Bar (тільки на десктопі) -->
+        <div class="header-top d-none d-lg-block">
+            <div class="container">
+                <div class="header-top-content">
+                    <div class="header-contacts">
+                        <a href="tel:+421907400865" class="header-contact-item">
+                            <i class="bi bi-telephone-fill"></i>
+                            +421 907 400 865 (SK/CZ/PL)
+                        </a>
+                        <a href="tel:+421907539325" class="header-contact-item">
+                            <i class="bi bi-telephone-fill"></i>
+                            +421 907 539 325 (HU/EN)
+                        </a>
+                        <a href="mailto:info@autogroup.sk" class="header-contact-item">
+                            <i class="bi bi-envelope"></i>
+                            info@autogroup.sk
+                        </a>
+                    </div>
+                    <div class="language-selector">
+                        <div class="dropdown">
+                            <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-globe me-1"></i>
+                                {% if session.get('language') == 'sk' %}SK
+                                {% elif session.get('language') == 'en' %}EN
+                                {% elif session.get('language') == 'pl' %}PL
+                                {% else %}SK{% endif %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('set_language', lang='sk') }}">Slovenčina</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') }}">English</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('set_language', lang='pl') }}">Polski</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Header Level 1 -->
+        <div class="header-main">
+          <div class="container adaptive-header">
+            <div class="header-logo">
+              <a class="navbar-brand" href="{{ url_for('index') }}">AutogroupEU</a>
+            </div>
+            <!-- Desktop Navigation (hidden on mobile) -->
+            <nav class="header-nav d-none d-lg-flex">
+                <ul class="nav-menu">
+                    <!-- <li class="nav-item">
+                        <a href="{{ url_for('index') }}" class="nav-link">{{ _('Home') }}</a>
+                    </li> -->
+                    <li class="nav-item catalog-nav-item">
+                        <button class="catalog-nav-btn" type="button" id="headerCatalogBtn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h2A1.5 1.5 0 0 1 5 1.5v2A1.5 1.5 0 0 1 3.5 5h-2A1.5 1.5 0 0 1 0 3.5v-2zM1.5 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-2zM0 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V8zm1 3v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2H1zm14-1V8a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v2h14zM2 8.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                            </svg>
+                            <span>{{ _('Catalog') }}</span>
+                            <i class="bi bi-chevron-down cat-arrow-nav"></i>
+                        </button>
+                        <!-- Dropdown меню категорій -->
+                        <div class="catalog-dropdown" id="headerCatalogDropdown">
+                            {% set categories = get_categories_tree() %}
+                            {% if categories %}
+                            <ul class="catalog-menu-list">
+                                {% for cat in categories %}
+                                <li class="catalog-menu-item">
+                                    <a href="{{ url_for('index', category=cat.id) }}" class="catalog-menu-link">
+                                        <i class="{{ cat.icon_class or 'bi bi-folder' }}"></i>
+                                        <span>{{ cat.name }}</span>
+                                        {% if cat.children %}<i class="bi bi-chevron-right sub-arrow"></i>{% endif %}
+                                    </a>
+                                    {% if cat.children %}
+                                    <ul class="catalog-submenu">
+                                        {% for sub in cat.children %}
+                                        <li class="catalog-submenu-item">
+                                            <a href="{{ url_for('index', category=sub.id) }}" class="catalog-submenu-link">
+                                                <span>{{ sub.name }}</span>
+                                                {% if sub.children %}<i class="bi bi-chevron-right sub-arrow"></i>{% endif %}
+                                            </a>
+                                            {% if sub.children %}
+                                            <ul class="catalog-submenu-l3">
+                                                {% for sub2 in sub.children %}
+                                                <li><a href="{{ url_for('index', category=sub2.id) }}">{{ sub2.name }}</a></li>
+                                                {% endfor %}
+                                            </ul>
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('about') }}" class="nav-link">{{ _('About Us') }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('car_service') }}" class="nav-link">{{ _('Car Service') }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('contacts') }}" class="nav-link">{{ _('Contact Us') }}</a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Пошук біля лого (десктоп) -->
+            <form class="header-search-form search-desktop" action="{{ url_for('public_search') }}" method="post">
+              <div class="input-group stylish-search">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-primary"></i></span>
+                <input type="text" name="article" class="form-control header-search-input border-start-0" placeholder="{{ _('Search by article number...') }}">
+                <button type="submit" class="btn btn-primary px-3" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;"><i class="bi bi-search"></i></button>
+              </div>
+            </form>
+
+            <!-- User Actions -->
+            <div class="header-actions">
+              <a href="{{ url_for('public_cart') }}" class="header-action-btn" title="Cart">
+                <!-- Cart SVG -->
+                <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="9" cy="21" r="1.5"/>
+                  <circle cx="18" cy="21" r="1.5"/>
+                  <path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/>
+                </svg>
+                {% if get_user_cart_count() > 0 %}
+                  <span class="cart-badge">{{ get_user_cart_count() }}</span>
+                {% endif %}
+              </a>
+              <div class="dropdown">
+                    <button class="header-action-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Account">
+                    <!-- Account SVG -->
+                    <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M4 20c0-4 8-6 8-6s8 2 8 6"/>
+                    </svg>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      {% if session.get('user_id') %}
+                        <li><a class="dropdown-item" href="{{ url_for('public_user_profile') }}">{{ _('Profile') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('public_view_orders') }}">{{ _('Orders') }}</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('logout') }}">{{ _('Logout') }}</a></li>
+                      {% else %}
+                        <li><a class="dropdown-item" href="{{ url_for('login') }}">{{ _('Login') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('register') }}">{{ _('Register') }}</a></li>
+                      {% endif %}
+                    </ul>
+                </div>
+              <!-- Бургер-кнопка для мобільного -->
+              <button class="burger-btn d-lg-none" type="button" aria-label="Menu" aria-controls="mobileMenu">
+                <span class="burger-icon"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Третій рівень: пошук тільки для мобільних -->
+        <div class="mobile-search-bar d-md-none">
+            <div class="container">
+                <form action="{{ url_for('public_search') }}" method="post">
+                    <div class="input-group">
+                        <input type="text" name="article" class="form-control header-search-input" placeholder="{{ _('Search by article number...') }}">
+                        <button type="submit" class="btn"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Level 3 -->
+        
+    </header>
+
+    <!-- Mobile Menu (Offcanvas) -->
+    <div id="mobileMenu" class="mobile-menu">
+      <div class="mobile-menu-header">
+        <span class="mobile-menu-title">{{ _('Menu') }}</span>
+        <button class="close-mobile-menu" type="button" aria-label="Close">&times;</button>
+      </div>
+      
+      <!-- Кнопка каталогу в мобільному меню -->
+      <div class="mobile-catalog-section">
+        <button class="mobile-catalog-btn" type="button" id="mobileCatalogBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h2A1.5 1.5 0 0 1 5 1.5v2A1.5 1.5 0 0 1 3.5 5h-2A1.5 1.5 0 0 1 0 3.5v-2zM1.5 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-2zM0 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V8zm1 3v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2H1zm14-1V8a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v2h14zM2 8.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+          </svg>
+          <span>{{ _('Catalog') }}</span>
+          <i class="bi bi-chevron-down mobile-cat-arrow"></i>
+        </button>
+        
+        <!-- Вкладене меню категорій -->
+        <div class="mobile-catalog-menu" id="mobileCatalogMenu">
+          {% set categories = get_categories_tree() %}
+          {% if categories %}
+          <ul class="mobile-cat-list">
+            {% for cat in categories %}
+            <li class="mobile-cat-item">
+              <div class="mobile-cat-header">
+                <a href="{{ url_for('index', category=cat.id) }}" class="mobile-cat-link">
+                  <i class="{{ cat.icon_class or 'bi bi-folder' }}"></i>
+                  {{ cat.name }}
+                </a>
+                {% if cat.children %}
+                <button class="mobile-cat-toggle" type="button"><i class="bi bi-chevron-down"></i></button>
+                {% endif %}
+              </div>
+              {% if cat.children %}
+              <ul class="mobile-cat-sub">
+                {% for sub in cat.children %}
+                <li class="mobile-cat-sub-item">
+                  <div class="mobile-cat-header">
+                    <a href="{{ url_for('index', category=sub.id) }}" class="mobile-cat-sub-link">{{ sub.name }}</a>
+                    {% if sub.children %}
+                    <button class="mobile-cat-toggle-l2" type="button"><i class="bi bi-chevron-down"></i></button>
+                    {% endif %}
+                  </div>
+                  {% if sub.children %}
+                  <ul class="mobile-cat-sub-l3">
+                    {% for sub2 in sub.children %}
+                    <li><a href="{{ url_for('index', category=sub2.id) }}" class="mobile-cat-link-l3">{{ sub2.name }}</a></li>
+                    {% endfor %}
+                  </ul>
+                  {% endif %}
+                </li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+      </div>
+      
+      <ul class="mobile-menu-list">
+        <li><a href="{{ url_for('index') }}">{{ _('Home') }}</a></li>
+        <li><a href="{{ url_for('about') }}">{{ _('About Us') }}</a></li>
+        <li><a href="{{ url_for('car_service') }}">{{ _('Car Service') }}</a></li>
+        <li><a href="{{ url_for('shipping_payment') }}">{{ _('Shipping') }}</a></li>
+        <li><a href="{{ url_for('returns') }}">{{ _('Returns') }}</a></li>
+        <li><a href="{{ url_for('contacts') }}">{{ _('Contact Us') }}</a></li>
+      </ul>
+    </div>
+    <div class="mobile-menu-backdrop"></div>
+
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="container mt-3">
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
                         {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
@@ -250,463 +300,159 @@
         {% endif %}
     {% endwith %}
 
-    <div id="cookie-consent-banner" class="cookie-banner" style="display: none;">
-        <div class="cookie-content">
-            <div class="cookie-text">
-                <p>{{ _('This website uses cookies...') }} <a href="{{ url_for('privacy') }}#cookies">{{ _('Privacy Policy') }}</a>.</p>
-            </div>
-            <div class="cookie-buttons">
-                <button id="cookie-accept" class="btn-action btn-action-primary">{{ _('Accept') }}</button>
-                <button id="cookie-decline" class="btn-outline btn-outline-secondary">{{ _('Only Essential') }}</button>
-            </div>
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Додайте перед футером (після main) -->
+    <div class="floating-contact">
+        <button class="btn btn-primary rounded-circle contact-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#contactOptions" aria-expanded="false" aria-controls="contactOptions" style="width:56px;height:56px;">
+            <i class="bi bi-headset fs-3"></i>
+        </button>
+        <div class="collapse contact-options" id="contactOptions">
+            <a href="tel:+421907400865" class="contact-option" title="{{ _('Call us (SK/CZ/PL)') }}">
+                <i class="bi bi-telephone"></i>
+            </a>
+            <a href="tel:+421907539325" class="contact-option" title="{{ _('Call us (HU/EN)') }}">
+                <i class="bi bi-telephone-fill"></i>
+            </a>
+            <a href="mailto:info@autogroup.sk" class="contact-option" title="Email">
+                <i class="bi bi-envelope"></i>
+            </a>
         </div>
     </div>
+    <div class="fixed-contact-buttons">
+        <a href="https://wa.me/421907400865" class="contact-button whatsapp-button rounded-circle" target="_blank" style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;">
+            <i class="bi bi-whatsapp fs-3"></i>
+        </a>
+    </div>
 
-    {% block content %}{% endblock %}
-
-    <footer class="footer mt-auto">
-    <div class="container py-4">
-        <div class="row g-4">
-            <div class="col-md-4">
-                <h5>{{ _('Contact Us') }}</h5>
-                <ul class="list-unstyled footer-contact">
-                    <li class="mb-2">
-                        <a href="tel:+421907400865" class="footer-link">
-                            <i class="bi bi-telephone me-2"></i>+421 907 400 865 (SK/CZ/PL)
+    <!-- Footer -->
+    <footer class="footer improved-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h5>{{ _('Contact Us') }}</h5>
+                    <div class="contact-item">
+                        <i class="bi bi-telephone"></i>
+                        <span>+421 907 400 865 (SK/CZ/PL)</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="bi bi-telephone"></i>
+                        <span>+421 907 539 325 (HU/EN)</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="bi bi-envelope"></i>
+                        <span>info@autogroup.sk</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="bi bi-geo-alt"></i>
+                        <span>066 01 Humenné, Mierová 99, Slovakia</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="bi bi-box-seam"></i>
+                        <span>{{ _('Warehouse') }}: Tušická Nová Ves 90, Tušice 07202, Slovakia</span>
+                    </div>
+                    <div class="social-icons">
+                        <a href="https://facebook.com/autogroup.sk/" target="_blank"><i class="bi bi-facebook"></i></a>
+                        <a href="https://www.instagram.com/autogroupeu" target="_blank"><i class="bi bi-instagram"></i></a>
+                        <a href="https://www.ebay.com/usr/autogroup-eu" target="_blank" title="eBay">
+                            <img src="{{ url_for('static', filename='img/EBay_logo.svg') }}" alt="eBay" style="height:24px;">
                         </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="tel:+421907539325" class="footer-link">
-                            <i class="bi bi-telephone me-2"></i>+421 907 539 325 (HU/EN)
+                        <a href="https://allegro.sk/pouzivatel/Autogroup-EU" target="_blank" title="Allegro">
+                            <img src="{{ url_for('static', filename='img/Allegro.pl_sklep.svg') }}" alt="Allegro" style="height:24px;">
                         </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="https://wa.me/421907400865" class="footer-link" target="_blank">
-                            <i class="bi bi-whatsapp me-2"></i>WhatsApp
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="mailto:info@autogroup.sk" class="footer-link">
-                            <i class="bi bi-envelope me-2"></i>info@autogroup.sk
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-geo-alt me-2"></i>066 01 Humenné, Mierová 99, Slovakia
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-box-seam me-2"></i>{{ _('Warehouse') }}: Tušická Nová Ves 90, Tušice 07202, Slovakia
-                    </li>
-                </ul>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h5>{{ _('Navigation') }}</h5>
+                    <ul>
+                        <li><a href="{{ url_for('index') }}">{{ _('Home') }}</a></li>
+                        <li><a href="{{ url_for('about') }}">{{ _('About Us') }}</a></li>
+                        <li><a href="{{ url_for('car_service') }}">{{ _('Car Service') }}</a></li>
+                        <li><a href="{{ url_for('contacts') }}">{{ _('Contact Us') }}</a></li>
+                        <li><a href="{{ url_for('shipping_payment') }}">{{ _('Shipping & Payment') }}</a></li>
+                        <li><a href="{{ url_for('returns') }}">{{ _('Returns') }}</a></li>
+                        <li><a href="{{ url_for('privacy') }}">{{ _('Privacy Policy') }}</a></li>
+                        <li><a href="{{ url_for('terms') }}">{{ _('Terms & Conditions') }}</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h5>{{ _('Company Info') }}</h5>
+                    <p>AUTOGROUP-EU s.r.o.<br>
+                       IČO: 47948311<br>
+                       DIČ: 2120009089<br>
+                       DIČ DPH: SK2120009089<br>
+                       Obch. register: Okresný súd Prešov, Sro/30964/P</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h5>{{ _('Bank Details') }}</h5>
+                    <p>IBAN: SK51 0900 0000 0050 6892 5563<br>
+                       BIC: GIBASKBX<br>
+                       {{ _('Account') }}: 5068925563/0900<br>
+                       {{ _('Bank') }}: Slovenská sporiteľňa, a.s.</p>
+                </div>
             </div>
             
-            <div class="col-md-4">
-                <h5>{{ _('Navigation') }}</h5>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><a href="{{ url_for('index') }}" class="footer-link">{{ _('Home') }}</a></li>
-                    <li class="mb-2"><a href="{{ url_for('about') }}" class="footer-link">{{ _('About Us') }}</a></li>
-                    <li class="mb-2"><a href="{{ url_for('car_service') }}" class="footer-link">{{ _('Car Service') }}</a></li>
-                    <li class="mb-2"><a href="{{ url_for('shipping_payment') }}" class="footer-link">{{ _('Shipping & Payment') }}</a></li>
-                    <li class="mb-2"><a href="{{ url_for('returns') }}" class="footer-link">{{ _('Returns & Exchange') }}</a></li>
-                    <li class="mb-2"><a href="{{ url_for('contacts') }}" class="footer-link">{{ _('Contacts') }}</a></li>
-                </ul>
-            </div>
-            
-            <div class="col-md-4">
-                <h5>{{ _('Company Info') }}</h5>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><strong>AUTOGROUP-EU s.r.o.</strong></li>
-                    <li class="mb-2">IČO: 47948311</li>
-                    <li class="mb-2">DIČ: 2120009089</li>
-                    <li class="mb-2">DIČ DPH: SK2120009089</li>
-                    <li class="mb-2">Obch. register: Okresný súd Prešov, Sro/30964/P</li>
-                    <li class="mt-3">
-                        <strong>{{ _('Bank Details') }}:</strong><br>
-                        IBAN: SK51 0900 0000 0050 6892 5563<br>
-                        BIC: GIBASKBX<br>
-                        {{ _('Account') }}: 5068925563/0900<br>
-                        {{ _('Bank') }}: Slovenská sporiteľňa, a.s.
-                    </li>
-                </ul>
+            <div class="footer-bottom">
+                &copy; 2014-{{ today_year() }} AutogroupEU. {{ _('All rights reserved.') }}
+                <br>
+                <!-- <small>{{ _('Developed by') }} crimpi23</small> -->
             </div>
         </div>
-        
-        <hr class="my-4">
-        
-        <div class="d-flex flex-wrap justify-content-between">
-            <div class="footer-links">
-                <a href="{{ url_for('privacy') }}" class="footer-link">{{ _('Privacy Policy') }}</a>
-                <a href="{{ url_for('terms') }}" class="footer-link">{{ _('Terms & Conditions') }}</a>
-                <a href="{{ url_for('returns') }}" class="footer-link">{{ _('Returns & Exchange') }}</a>
-                <a href="#" id="cookie-settings">{{ _('Cookie Settings') }}</a>
-            </div>
-            <div class="copyright">
-                © 2014-{{ today_year() }} AutogroupEU
-            </div>
-        </div>
-        
-        <div class="row mt-3">
-            <div class="col-12 text-center">
-                <small class="text-muted">{{ _('All prices shown include VAT unless otherwise stated. EU business customers with valid VAT ID may receive invoices without VAT.') }}</small>
-            </div>
-        </div>
-        
-        <div class="row mt-4">
-    <div class="col-12 text-center">
-        <h5>{{ _('Follow Us') }}</h5>
-        <div class="social-links mt-3">
-            <a href="https://facebook.com/autogroup.sk/" target="_blank" class="social-link me-3" aria-label="Facebook">
-                <i class="bi bi-facebook fs-4"></i>
-            </a>
-            <a href="https://www.instagram.com/autogroupeu" target="_blank" class="social-link me-3" aria-label="Instagram">
-                <i class="bi bi-instagram fs-4"></i>
-            </a>
-        </div>
-    </div>
-</div>
+    </footer>
 
-<div class="row mt-4">
-    <div class="col-12 text-center">
-        <h5>{{ _('Find Us Also On') }}</h5>
-        <div class="mt-2">
-            <a href="https://www.ebay.com/usr/autogroup-eu" target="_blank" class="me-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="90" height="36" viewBox="0 0 122 48.592">
-                    <g>
-                        <path fill="#F02D2D" d="M24.355 22.759c-.269-5.738-4.412-7.838-8.826-7.813-4.756.026-8.544 2.459-9.183 7.915zM6.234 26.93c.364 5.553 4.208 8.814 9.476 8.785 3.648-.021 6.885-1.524 7.952-4.763l6.306-.035c-1.187 6.568-8.151 8.834-14.145 8.866C4.911 39.844.043 33.865-.002 25.759c-.05-8.927 4.917-14.822 15.765-14.884 8.628-.048 14.978 4.433 15.033 14.291l.01 1.625z"></path>
-                        <path fill="#0968F6" d="M46.544 35.429c5.688-.032 9.543-4.148 9.508-10.32s-3.947-10.246-9.622-10.214-9.543 4.148-9.509 10.32 3.974 10.245 9.623 10.214zM30.652.029l6.116-.034.085 15.369c2.978-3.588 7.1-4.65 11.167-4.674 6.817-.037 14.412 4.518 14.468 14.454.045 8.29-5.941 14.407-14.422 14.454-4.463.026-8.624-1.545-11.218-4.681a33.237 33.237 0 01-.19 3.731l-5.994.034c.09-1.915.185-4.364.174-6.322z"></path>
-                        <path fill="#FFBD14" d="M77.282 25.724c-5.548.216-8.985 1.229-8.965 4.883.013 2.365 1.94 4.919 6.7 4.891 6.415-.035 9.826-3.556 9.794-9.289v-.637c-2.252.02-5.039.054-7.529.152zm13.683 7.506c.01 1.778.071 3.538.232 5.1l-5.688.032a33.381 33.381 0 01-.225-3.825c-3.052 3.8-6.708 4.909-11.783 4.938-7.532.042-11.585-3.915-11.611-8.518-.037-6.665 5.434-9.049 14.954-9.318 2.6-.072 5.529-.1 7.945-.116v-.637c-.026-4.463-2.9-6.285-7.854-6.257-3.68.021-6.368 1.561-6.653 4.2l-6.434.035c.645-6.566 7.53-8.269 13.595-8.3 7.263-.04 13.406 2.508 13.448 10.192z"></path>
-                        <path fill="#92C821" d="M91.939 19.852l-4.5-8.362 7.154-.04 10.589 20.922 10.328-21.02 6.486-.048-18.707 37.251-6.85.039 5.382-10.348-9.887-18.393"></path>
-                    </g>
-                </svg>
-            </a>
-            <a href="https://allegro.sk/pouzivatel/Autogroup-EU" target="_blank" class="me-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="90" height="36" viewBox="0 0 145 50" fill="#ff5a00">
-                    <title>Allegro</title>
-                    <path d="M141.72 16.69a13.1 13.1 0 0 0-20.7 0 13.59 13.59 0 0 0-2.46 8 13.59 13.59 0 0 0 2.46 8 13.1 13.1 0 0 0 20.7 0 13.6 13.6 0 0 0 2.46-8 13.6 13.6 0 0 0-2.46-8zm-4.1 11c-.94 2.81-3.17 5-6.26 5.07s-5.32-2.26-6.25-5.07a9.27 9.27 0 0 1 0-6c.94-2.81 3.17-5-6.25-5.07s5.32 2.26 6.26 5.07a9.28 9.28 0 0 1 0 5.99zm-94.25 9.4a.74.74 0 0 1-.74.74h-4.3a.74.74 0 0 1-.74-.74V1.74a.74.74 0 0 1 .74-.74h4.3a.74.74 0 0 1 .74.74v35.35zm-10.1 0a.74.74 0 0 1-.74.74h-4.3a.74.74 0 0 1-.74-.74V1.74a.74.74 0 0 1 .73-.74h4.3a.74.74 0 0 1 .74.74v35.35zm84.32-24v3a.78.78 0 0 1-1 .85c-4.86-1-7.85 1.16-7.85 5.65v14.5a.74.74 0 0 1-.74.74h-4.3a.74.74 0 0 1-.74-.74V22.28a10 10 0 0 1 3.17-7.49 11.16 11.16 0 0 1 7.87-3.18 16.69 16.69 0 0 1 3 .28c.51.17.59.47.59 1.24zM99.18 24.68a13.41 13.41 0 0 0-2.46-8 13.1 13.1 0 0 0-20.7 0 14.07 14.07 0 0 0 0 16 12.73 12.73 0 0 0 10.35 5.07 13.2 13.2 0 0 0 7.37-2.22v3.16c0 4.29-3.75 5.07-6.15 5.22a28.26 28.26 0 0 1-4.94-.27c-.66-.1-1.12 0-1.12.71v3.8a.65.65 0 0 0 .68.62c5.57.48 9.32.38 12.14-1.23a9.18 9.18 0 0 0 4.11-5.23 17.49 17.49 0 0 0 .71-5.22V24.68zm-12.81 8.06c-3.09 0-5.32-2.26-6.26-5.07a9.27 9.27 0 0 1 0-6c.94-2.81 3.17-5.07 6.26-5.07 6.91 0 7.14 7.05 7.14 8.07s-.23 8.07-7.14 8.07zM23.55 22.09c0-3.41-.76-6-2.4-7.79s-4.94-2.68-8-2.68a17.34 17.34 0 0 0-8.75 2.33.55.55 0 0 0-.27.48l.23 3.76a.67.67 0 0 0 1.1.39C9.21 16.27 13.71 15.84 16 17a4 4 0 0 1 2 3.61v.55h-6.25c-2.69 0-10.93 1-10.93 8.57v.08a7.34 7.34 0 0 0 2.67 6.08 10.56 10.56 0 0 0 6.68 1.91h12.65a.74.74 0 0 0 .74-.74v-15zM18 33.18h-7.47a4.62 4.62 0 0 1-2.65-.93 2.94 2.94 0 0 1-1.25-2.46c0-1.35.91-4.05 5.46-4.05H18v7.44zm41.2-21.56c-7.65 0-11 5.13-12.07 9.47a14.58 14.58 0 0 0-.44 3.58 13.6 13.6 0 0 0 2.46 8 13.13 13.13 0 0 0 10.35 5.07c4.13.15 6.89-.55 9-1.75a1.17 1.17 0 0 0 .5-1.27v-3.33c0-.68-.41-1-1-.59a13.05 13.05 0 0 1-8.32 2A6.81 6.81 0 0 1 53 26.73h17a.7.7 0 0 0 .7-.69c.3-4.65-1.05-14.42-11.5-14.42zm-6.11 10.51a5.78 5.78 0 0 1 6.12-5.51 5.14 5.14 0 0 1 5.44 5.51H53.09z"/>
-                </svg>
-            </a>
-        </div>
-    </div>
-</div>
-    </div>
-</footer>
-
-<div class="floating-contact">
-    <button class="btn btn-primary rounded-circle contact-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#contactOptions" aria-expanded="false" aria-controls="contactOptions">
-        <i class="bi bi-headset"></i>
-    </button>
-    <div class="collapse contact-options" id="contactOptions">
-        <a href="tel:+421907400865" class="contact-option" title="{{ _('Call us (SK/CZ/PL)') }}">
-            <i class="bi bi-telephone"></i>
-        </a>
-        <a href="tel:+421907539325" class="contact-option" title="{{ _('Call us (HU/EN)') }}">
-            <i class="bi bi-telephone-fill"></i>
-        </a>
-        <a href="mailto:info@autogroup.sk" class="contact-option" title="Email">
-            <i class="bi bi-envelope"></i>
-        </a>
-    </div>
-</div>
-
-<div class="fixed-contact-buttons">
-    <a href="https://wa.me/421907400865" class="contact-button whatsapp-button" target="_blank">
-        <i class="bi bi-whatsapp"></i>
-        <span class="contact-tooltip">{{ _('Contact us via WhatsApp') }}</span>
-    </a>
-</div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-    {% block scripts %}{% endblock %}
-
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/header.js') }}"></script>
+    
+    <!-- Cookie Notice Script -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const cookieBanner = document.getElementById('cookie-consent-banner');
-        const acceptBtn = document.getElementById('cookie-accept');
-        const essentialBtn = document.getElementById('cookie-decline');
-        const cookieSettings = document.getElementById('cookie-settings');
+        const cookieNotice = document.getElementById('cookieNotice');
+        const acceptBtn = document.getElementById('acceptCookies');
+        const declineBtn = document.getElementById('declineCookies');
         
-        const consentStatus = localStorage.getItem('cookieConsent');
-        
-        function enableAllTrackingScripts() {
-            initGTM();
-            
-            initFacebookPixel();
-        }
-        
-        if (!consentStatus) {
-            cookieBanner.style.display = 'block';
-        } else if (consentStatus === 'full') {
-            enableAllTrackingScripts();
+        // Перевіряємо чи користувач вже зробив вибір
+        if (!localStorage.getItem('cookieChoice')) {
+            // Показуємо через 1 секунду після завантаження
+            setTimeout(() => {
+                cookieNotice.style.display = 'block';
+                cookieNotice.classList.add('show');
+            }, 1000);
         }
         
         acceptBtn.addEventListener('click', function() {
-            localStorage.setItem('cookieConsent', 'full');
-            cookieBanner.style.display = 'none';
-            enableAllTrackingScripts();
+            localStorage.setItem('cookieChoice', 'accepted');
+            hideCookieNotice();
         });
         
-        essentialBtn.addEventListener('click', function() {
-            localStorage.setItem('cookieConsent', 'essential');
-            cookieBanner.style.display = 'none';
+        declineBtn.addEventListener('click', function() {
+            localStorage.setItem('cookieChoice', 'declined');
+            hideCookieNotice();
         });
         
-        cookieSettings.addEventListener('click', function(e) {
-            e.preventDefault();
-            cookieBanner.style.display = 'block';
-        });
+        function hideCookieNotice() {
+            cookieNotice.classList.remove('show');
+            setTimeout(() => {
+                cookieNotice.style.display = 'none';
+            }, 300);
+        }
+        
+        // Функція для показу налаштувань cookies
+        window.showCookieSettings = function() {
+            cookieNotice.style.display = 'block';
+            cookieNotice.classList.add('show');
+        };
     });
     </script>
-
-
-
-
-<script src="{{ url_for('static', filename='js/filters.js') }}"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    function setupMobileMenu() {
-        const toggleButtons = document.querySelectorAll('.mobile-toggle-btn');
-        
-        toggleButtons.forEach(button => {
-            button.removeEventListener('click', toggleSubmenu);
-            button.addEventListener('click', toggleSubmenu);
-        });
-        
-        function toggleSubmenu(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const button = this;
-            const submenu = button.nextElementSibling;
-            
-            if (submenu && submenu.classList.contains('mobile-submenu')) {
-                button.classList.toggle('active');
-                button.querySelector('i').classList.toggle('bi-chevron-down');
-                button.querySelector('i').classList.toggle('bi-chevron-up');
-                
-                submenu.classList.toggle('show');
-                
-                if (submenu.classList.contains('show')) {
-                    setTimeout(() => {
-                        const rect = button.getBoundingClientRect();
-                        if (rect.top < 0 || rect.bottom > window.innerHeight) {
-                            button.scrollIntoView({behavior: 'smooth', block: 'start'});
-                        }
-                    }, 300);
-                }
-            }
-        }
-    }
     
-    setupMobileMenu();
-    
-    window.addEventListener('resize', setupMobileMenu);
-    
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.mobile-categories-menu')) {
-            document.querySelectorAll('.mobile-submenu.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
-            document.querySelectorAll('.mobile-toggle-btn.active').forEach(btn => {
-                btn.classList.remove('active');
-                btn.querySelector('i').classList.replace('bi-chevron-up', 'bi-chevron-down');
-            });
-        }
-    });
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
-    dropdownElementList.forEach(function (dropdownToggleEl) {
-        new bootstrap.Dropdown(dropdownToggleEl);
-    });
-    
-    var dropdownSubmenus = document.querySelectorAll('.dropdown-submenu');
-    dropdownSubmenus.forEach(function(element) {
-        element.addEventListener('click', function(e) {
-            var nextEl = e.target.nextElementSibling;
-            if (nextEl && nextEl.classList.contains('dropdown-menu')) {
-                e.stopPropagation();
-            }
-        });
-        
-        if(window.innerWidth < 992) {
-            element.querySelector('a').addEventListener('click', function(e) {
-                if(this.nextElementSibling && this.nextElementSibling.classList.contains('dropdown-menu')) {
-                    e.preventDefault();
-                    if(this.nextElementSibling.style.display == 'block') {
-                        this.nextElementSibling.style.display = 'none';
-                    } else {
-                        this.nextElementSibling.style.display = 'block';
-                    }
-                }
-            });
-        }
-    });
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const toggleButtons = document.querySelectorAll('.mobile-toggle-btn');
-    
-    toggleButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            this.classList.toggle('active');
-            
-            const submenu = this.nextElementSibling;
-            if (submenu && submenu.classList.contains('mobile-submenu')) {
-                submenu.classList.toggle('show');
-            }
-        });
-    });
-    
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.mobile-categories-menu')) {
-            document.querySelectorAll('.mobile-submenu.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
-            document.querySelectorAll('.mobile-toggle-btn.active').forEach(btn => {
-                btn.classList.remove('active');
-            });
-        }
-    });
-    
-    window.addEventListener('resize', function() {
-        if (window.innerWidth >= 992) { 
-            document.querySelectorAll('.mobile-submenu.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
-            document.querySelectorAll('.mobile-toggle-btn.active').forEach(btn => {
-                btn.classList.remove('active');
-            });
-        }
-    });
-});
-</script>
-<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const expandButtons = document.querySelectorAll('.expand-btn');
-    
-    expandButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const menuItem = this.closest('.menu-item');
-            const subMenu = menuItem.querySelector('.subcategories');
-            
-            this.classList.toggle('active');
-            if (subMenu) {
-                subMenu.classList.toggle('show');
-            }
-        });
-    });
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const consentGiven = localStorage.getItem('cookieConsent') === 'full';
-    if (!consentGiven || typeof dataLayer === 'undefined') return;
-    
-    document.querySelectorAll('a[href^="tel:"]').forEach(function(phoneLink) {
-        phoneLink.addEventListener('click', function() {
-            const phoneNumber = this.getAttribute('href').replace('tel:', '');
-            dataLayer.push({
-                'event': 'contact_interaction',
-                'interaction_type': 'phone_call',
-                'contact_value': phoneNumber
-            });
-        });
-    });
-    
-    document.querySelectorAll('a[href^="https://wa.me/"]').forEach(function(whatsappLink) {
-        whatsappLink.addEventListener('click', function() {
-            const whatsappNumber = this.getAttribute('href').replace('https://wa.me/', '');
-            dataLayer.push({
-                'event': 'contact_interaction',
-                'interaction_type': 'whatsapp',
-                'contact_value': whatsappNumber
-            });
-        });
-    });
-    
-    document.querySelectorAll('a[href^="mailto:"]').forEach(function(emailLink) {
-        emailLink.addEventListener('click', function() {
-            const emailAddress = this.getAttribute('href').replace('mailto:', '');
-            dataLayer.push({
-                'event': 'contact_interaction',
-                'interaction_type': 'email',
-                'contact_value': emailAddress
-            });
-        });
-    });
-    
-    const whatsappButton = document.querySelector('.whatsapp-button');
-    if (whatsappButton) {
-        whatsappButton.addEventListener('click', function() {
-            dataLayer.push({
-                'event': 'contact_interaction',
-                'interaction_type': 'whatsapp_button',
-                'contact_value': 'fixed_button'
-            });
-        });
-    }
-    
-    const floatingContactOptions = document.querySelectorAll('.contact-options .contact-option');
-    floatingContactOptions.forEach(function(option) {
-        option.addEventListener('click', function() {
-            let interactionType = 'contact_button';
-            const href = this.getAttribute('href');
-            
-            if (href.startsWith('tel:')) {
-                interactionType = 'floating_phone';
-            } else if (href.startsWith('mailto:')) {
-                interactionType = 'floating_email';
-            }
-            
-            dataLayer.push({
-                'event': 'contact_interaction',
-                'interaction_type': interactionType,
-                'contact_value': href.replace(/^(tel:|mailto:)/, '')
-            });
-        });
-    });
-});
-</script>
-<script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Autogroup-EU s.r.o.",
-      "legalName": "AutogroupEU s.r.o.",
-      "alternateName": "AutogroupEU",
-      "url": "https://autogroup.sk",
-      "logo": "https://autogroup.sk/static/images/AutogroupEU.png",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Mierová 99",
-        "addressLocality": "Humenné",
-        "postalCode": "066 01",
-        "addressCountry": "SK"  
-      },
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "+421 907 400 865",
-        "email": "info@autogroup.sk",
-        "contactType": "customer service"
-      },
-      "sameAs": [
-        "https://facebook.com/autogroup.sk/",
-        "https://www.instagram.com/autogroupeu",
-        "https://www.ebay.com/usr/autogroup-eu",
-        "https://allegro.sk/pouzivatel/Autogroup-EU",
-        "https://allegro.pl/uzytkownik/Autogroup-EU"
-      ]
-    }
-    </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

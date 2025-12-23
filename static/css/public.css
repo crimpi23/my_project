@@ -6203,40 +6203,64 @@ tr:hover .article-badge {
         word-break: break-word;
     }
 }
+/* ...existing code... */
 /* НАДВАЖЛИВЕ ВИПРАВЛЕННЯ ДВОКОЛОНКОВОЇ ВІТРИНИ - НЕ ВИДАЛЯТИ! */
 @media (max-width: 767px) {
-    /* Змушуємо контейнер бути на всю ширину */
-    .container {
-      max-width: 100% !important;
-      width: 100% !important;
-      padding-left: 10px !important;
-      padding-right: 10px !important;
-    }
-    
-    /* НАЙВАЖЛИВІШЕ - використовуємо CSS Grid замість flexbox */
-    .row-products {
-      display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important;
-      grid-gap: 10px !important;
-      width: 100% !important;
-      margin: 0 !important; 
-    }
-    
-    /* Скидаємо всі стандартні стилі Bootstrap для колонок */
-    .product-column,
-    div[class*="col-"].product-column,
-    .row-products > div {
-      width: auto !important;
-      max-width: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      float: none !important;
-      flex: none !important;
-    }
-    
-    /* Гарантуємо, що карточки товарів мають правильні відступи */
-    .product-card {
-      margin-bottom: 0 !important;
-      height: 100% !important;
-    }
+  .row-products {
+    /* було: grid-template-columns: repeat(2, 1fr) */
+    display: grid !important;
+    grid-template-columns: 1fr !important; /* 1 колонка */
+    grid-gap: 10px !important;
+    width: 100% !important;
+    margin: 0 !important;
   }
+  .product-column,
+  div[class*="col-"].product-column,
+  .row-products > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+}
+/* Додатковий запобіжник від горизонтального скролу */
+@media (max-width: 767px) {
+  html, body { overflow-x: hidden; }
+}
+/* ...existing code... */
+.search-card .input-group .form-control {
+  border-width: 1px;            /* було 2px */
+  padding: .5rem .75rem;        /* компактніше */
+  border-radius: 8px;
+}
+.search-card .btn-search { padding: .5rem .75rem; }
+/* Мобільні */
+/* Мобільна вітрина: 1 колонка, без скролу */
+@media (max-width: 575.98px) {
+  html, body { overflow-x: hidden; }
+
+  .row-products { --bs-gutter-x: .5rem; --bs-gutter-y: .75rem; margin: 0 !important; }
+  .row-products > [class*="col"] { flex: 0 0 100% !important; max-width: 100% !important; padding: 0 !important; }
+
+  /* Ховаємо великі блоки на головній */
+  .welcome-card, .info-card { display: none !important; }
+
+  /* Компактна пошукова форма */
+  .search-card .input-group .form-control { border: 1px solid #6f42c1; padding: .5rem .75rem; font-size: .95rem; border-radius: 8px; }
+  .search-card .btn-search { padding: .5rem .75rem; }
+}
+
+/* Вся картка клікабельна */
+.product-card { position: relative; }
+.product-card .stretched-link { position: absolute; inset: 0; z-index: 1; }
+
+/* Зображення в картці */
+.product-img { width: 100%; height: 180px; object-fit: cover; display: block; }
+@media (max-width: 575.98px) { .product-img { height: 160px; } }
+
+/* Прибрати бейдж Override, якщо раптом приходить з бекенду */
+.badge-override, .override-badge { display: none !important; }
+
+/* Запобіжник від сторонніх правил, що ламали сітку на мобільному */
+@media (max-width: 575.98px) {
+  .product-column { width: 100% !important; max-width: 100% !important; }
+}

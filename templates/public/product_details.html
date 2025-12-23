@@ -1,4 +1,50 @@
 {% extends "base/public_base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/public-product-details.css') }}">
+<style>
+/* Хлібні крихти */
+.breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-link {
+    color: #2563eb;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+}
+
+.breadcrumb-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.breadcrumb-sep {
+    color: #cbd5e1;
+}
+
+.breadcrumb-current {
+    color: #334155;
+    font-weight: 500;
+}
+
+@media (max-width: 576px) {
+    .breadcrumb-nav {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.8rem;
+    }
+}
+</style>
+{% endblock %}
 
 {% block head %}
 {% if product_data.description %}
@@ -62,25 +108,19 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row mb-4 product-details-search">
-        <div class="col-lg-8 mx-auto">
-            <div class="search-card fade-in">
-                <div class="search-body">
-                    <form method="POST" action="{{ url_for('public_search') }}" class="mb-0">
-                        <div class="input-group">
-                            <input type="text" name="article" class="form-control form-control-lg"
-                                placeholder="{{ _('Enter article number...') }}" required>
-                            <button type="submit" class="btn-search">
-                                <i class="bi bi-search me-2"></i>
-                                {{ _('Search') }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    
+    <!-- Хлібні крихти -->
+    <nav class="breadcrumb-nav" aria-label="breadcrumb">
+        <a href="{{ url_for('index') }}" class="breadcrumb-link">
+            <i class="bi bi-house-door"></i> {{ _('Home') }}
+        </a>
+        <span class="breadcrumb-sep">/</span>
+        {% if product_categories and product_categories|length > 0 %}
+            {% set cat = product_categories[0] %}
+            <a href="{{ url_for('index', category=cat.id) }}" class="breadcrumb-link">{{ cat.name }}</a>
+            <span class="breadcrumb-sep">/</span>
+        {% endif %}
+        <span class="breadcrumb-current">{{ product_data.name[:50] }}{% if product_data.name|length > 50 %}...{% endif %}</span>
+    </nav>
     
     <div class="product-container fade-in">
         <div class="row">
@@ -129,12 +169,11 @@
                         <div class="product-meta">
                             <div class="product-meta-item">
                                 <span class="meta-label">{{ _('Article') }}:</span>
-                                <span class="article-badge">{{ article }}</span>
+                                <span class="article-badge">{{ article or '-' }}</span>
                             </div>
-                            
                             <div class="product-meta-item">
                                 <span class="meta-label">{{ _('Brand') }}:</span>
-                                <span class="meta-value">{{ brand_name }}</span>
+                                <span class="meta-value">{{ brand_name or '-' }}</span>
                             </div>
                         </div>
 
@@ -147,38 +186,41 @@
                                     <span class="price-value">{{ "%.2f"|format(price.price|float) }} €</span>
                                     <small class="d-block text-muted">{{ _('incl. VAT') }}</small>
                                 </div>
-                                
                                 <div class="availability-column">
                                     <span class="availability-label">{{ _('Availability') }}:</span>
                                     <span class="availability-value {% if price.in_stock %}text-success{% else %}text-warning{% endif %}">
-                                        {% if price.in_stock %}
-                                        <i class="bi bi-check-circle-fill"></i> {{ _('In Stock') }}
+                                        {% if price.table_name == 'stock' %}
+                                            {% if price.in_stock %}
+                                                <i class="bi bi-check-circle-fill"></i> {{ _('In Stock') }}
+                                            {% else %}
+                                                <i class="bi bi-x-circle"></i> {{ _('Temporarily unavailable') }}
+                                            {% endif %}
                                         {% else %}
-                                        <i class="bi bi-clock"></i> {{ price.delivery_time }}
+                                            <i class="bi bi-clock"></i> {{ price.delivery_time or _('14-21 days') }}
                                         {% endif %}
                                     </span>
                                 </div>
-                                
-                                <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-form">
-                                    <input type="hidden" name="article" value="{{ article }}">
-                                    <input type="hidden" name="selected_price" value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}">
-                                    
-                                    <div class="quantity-column">
-                                        <label for="quantity_{{ price.table_name }}" class="quantity-label">{{ _('Qty') }}:</label>
-                                        <input type="number" 
-                                               id="quantity_{{ price.table_name }}"
-                                               name="quantity" 
-                                               value="1" 
-                                               min="1" 
-                                               class="quantity-input">
-                                    </div>
-                                    
+                                {% if price.table_name == 'stock' and not price.in_stock %}
                                     <div class="button-column">
-                                        <button type="submit" class="btn-add-to-cart" title="{{ _('Add to Cart') }}">
-                                            <i class="bi bi-cart-plus"></i>
-                                        </button>
+                                        <span class="out-of-stock-msg">
+                                            {{ _('Temporarily unavailable on our stock. You can order this part by regular price.') }}
+                                        </span>
                                     </div>
-                                </form>
+                                {% else %}
+                                    <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-form">
+                                        <input type="hidden" name="article" value="{{ article }}">
+                                        <input type="hidden" name="selected_price" value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}">
+                                        <div class="quantity-column">
+                                            <label for="quantity_{{ price.table_name }}" class="quantity-label">{{ _('Qty') }}:</label>
+                                            <input type="number" id="quantity_{{ price.table_name }}" name="quantity" value="1" min="1" class="quantity-input">
+                                        </div>
+                                        <div class="button-column">
+                                            <button type="submit" class="btn-add-to-cart" title="{{ _('Add to Cart') }}">
+                                                <i class="bi bi-cart-plus"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                {% endif %}
                             </div>
                         </div>
                         {% endfor %}
@@ -345,6 +387,33 @@
 }
 .call-to-action {
     margin-top: 20px;
+}
+.sticky-buy-btn {
+    position: -webkit-sticky;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    padding: 10px;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+.btn-add-to-cart {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.btn-add-to-cart:hover {
+    background-color: #0056b3;
 }
 </style>
     </div>

@@ -1,29 +1,78 @@
 {% extends "base/public_base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/public-orders.css') }}">
+<style>
+.order-success-box {
+    padding: 1.2rem 1rem 1rem 1rem;
+    margin-bottom: 1.2rem;
+}
+.order-number {
+    margin-top: 0.7rem;
+    font-size: 1rem;
+    padding: 0.35rem 0.7rem;
+}
+.order-details-card, .order-items-card, .next-steps-card {
+    margin-bottom: 1.2rem;
+}
+.order-details-card .card-header,
+.order-items-card .card-header,
+.next-steps-card .card-header {
+    padding: 10px 16px;
+}
+.order-details-card .card-body,
+.order-items-card .card-body,
+.next-steps-card .card-body {
+    padding: 12px 16px 8px 16px;
+}
+.d-flex.justify-content-center.mt-4.gap-3.fade-in {
+    margin-top: 1.2rem !important;
+    gap: 0.7rem !important;
+}
+@media (max-width: 767px) {
+    .order-success-box, .order-details-card, .order-items-card, .next-steps-card {
+        padding: 0.7rem 0.3rem;
+    }
+    .order-details-card .card-header, .order-items-card .card-header, .next-steps-card .card-header {
+        padding: 8px 8px;
+    }
+    .order-details-card .card-body, .order-items-card .card-body, .next-steps-card .card-body {
+        padding: 8px 8px 6px 8px;
+    }
+}
+</style>
+{% endblock %}
+
 {% block title %}{{ _('Order Confirmation') }}{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="row">
-        <div class="col">
-            <h1 class="mb-4">{{ _('Thank You for Your Order!') }}</h1>
-            
-            <div class="alert alert-success">
-                <h4 class="alert-heading">{{ _('Order #') }}{{ order.order_id }} {{ _('Confirmed') }}</h4>
-                <p>{{ _('A confirmation email has been sent to your email address.') }}</p>
-                <p>{{ _('Order Date') }}: {{ order.created_at }}</p>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">{{ _('Delivery Information') }}</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>{{ _('Name') }}:</strong> {{ order.delivery_data.full_name }}</p>
-                    <p><strong>{{ _('Phone') }}:</strong> {{ order.delivery_data.phone }}</p>
-                    <p><strong>{{ _('Address') }}:</strong> {{ order.delivery_data.street }}, {{ order.delivery_data.city }}, {{ order.delivery_data.postal_code }}, {{ order.delivery_data.country }}</p>
-                    
-                    <p><strong>{{ _('Shipping Method') }}:</strong> 
+<div class="container mt-4 mb-4">
+    <div class="order-success-box fade-in">
+        <div class="success-icon">
+            <i class="bi bi-check-circle"></i>
+        </div>
+        <h2 class="mb-2">{{ _('Thank You for Your Order!') }}</h2>
+        <p class="success-message mb-2">{{ _('A confirmation email has been sent to your email address.') }}</p>
+        <div class="order-number">
+            {{ _('Order Number') }}: <strong>#{{ order.order_id }}</strong>
+        </div>
+        <div class="order-date mt-2">
+            <span class="info-label">{{ _('Order Date') }}:</span>
+            <span class="info-value">{{ order.created_at }}</span>
+        </div>
+    </div>
+
+    <div class="order-details-card fade-in">
+        <div class="card-header">
+            <h5 class="mb-0">{{ _('Delivery Information') }}</h5>
+        </div>
+        <div class="card-body">
+            <ul class="order-info-list mb-0">
+                <li><span class="info-label">{{ _('Name') }}:</span> <span class="info-value">{{ order.delivery_data.full_name }}</span></li>
+                <li><span class="info-label">{{ _('Phone') }}:</span> <span class="info-value">{{ order.delivery_data.phone }}</span></li>
+                <li><span class="info-label">{{ _('Address') }}:</span> <span class="info-value">{{ order.delivery_data.street }}, {{ order.delivery_data.city }}, {{ order.delivery_data.postal_code }}, {{ order.delivery_data.country }}</span></li>
+                <li><span class="info-label">{{ _('Shipping Method') }}:</span>
+                    <span class="info-value">
                         {% if order.delivery_data.shipping_method == 'pickup' %}
                             {{ _('Pickup from Warehouse') }}
                         {% elif order.delivery_data.shipping_method == 'standard' %}
@@ -33,53 +82,88 @@
                         {% else %}
                             {{ order.delivery_data.shipping_method }}
                         {% endif %}
-                    </p>
-                </div>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">{{ _('Order Summary') }}</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>{{ _('Article') }}</th>
-                                    <th>{{ _('Price') }}</th>
-                                    <th>{{ _('Quantity') }}</th>
-                                    <th>{{ _('Total') }}</th>
-                                    <th>{{ _('Delivery Time') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in items %}
-                                <tr>
-                                    <td>{{ item.article }}</td>
-                                    <td>{{ item.price|currency }}</td>
-                                    <td>{{ item.quantity }}</td>
-                                    <td>{{ (item.price * item.quantity)|currency }}</td>
-                                    <td>{{ item.delivery_time }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="3" class="text-end"><strong>{{ _('Total Amount') }}:</strong></td>
-                                    <td colspan="2"><strong>{{ order.total_price|currency }}</strong></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="text-center">
-                <a href="{{ url_for('index') }}" class="btn btn-primary">{{ _('Continue Shopping') }}</a>
-                <a href="{{ url_for('login') }}" class="btn btn-outline-secondary">{{ _('Create an Account') }}</a>
+                    </span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="order-items-card fade-in">
+        <div class="card-header">
+            <h5 class="mb-0">{{ _('Order Summary') }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Article') }}</th>
+                            <th>{{ _('Price') }}</th>
+                            <th>{{ _('Quantity') }}</th>
+                            <th>{{ _('Total') }}</th>
+                            <th>{{ _('Delivery Time') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ item.article }}</td>
+                            <td>{{ item.price|currency }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ (item.price * item.quantity)|currency }}</td>
+                            <td>{{ item.delivery_time }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>{{ _('Total Amount') }}:</strong></td>
+                            <td colspan="2"><strong>{{ order.total_price|currency }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </div>
+    </div>
+
+    <div class="next-steps-card fade-in">
+        <div class="card-header">
+            <h5>{{ _('What Happens Next?') }}</h5>
+        </div>
+        <div class="card-body">
+            <ol class="next-steps-list mb-0">
+                <li>
+                    <i class="bi bi-envelope"></i>
+                    <div class="step-content">
+                        <h6>{{ _('Order Confirmation Email') }}</h6>
+                        <p>{{ _('We\'ve sent a confirmation email with your order details.') }}</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="bi bi-box-seam"></i>
+                    <div class="step-content">
+                        <h6>{{ _('Order Processing') }}</h6>
+                        <p>{{ _('We\'ll process your order and prepare it for shipping.') }}</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="bi bi-truck"></i>
+                    <div class="step-content">
+                        <h6>{{ _('Shipping') }}</h6>
+                        <p>{{ _('Once shipped, you\'ll receive tracking information via email.') }}</p>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center mt-4 gap-3 fade-in">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+            <i class="bi bi-house me-2"></i>{{ _('Continue Shopping') }}
+        </a>
+        <a href="{{ url_for('login') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-2"></i>{{ _('Create an Account') }}
+        </a>
     </div>
 </div>
 {% endblock %}

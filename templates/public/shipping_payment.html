@@ -21,7 +21,7 @@
         <div class="col-lg-10 mx-auto">
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
-                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(0,123,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <div class="category-icon me-3">
                         <i class="bi bi-truck text-primary"></i>
                     </div>
                     <h5 class="mb-0 text-primary">{{ _('Delivery Information') }}</h5>
@@ -31,13 +31,10 @@
                     <p>
                         {{ _('Orders placed before 12:00 (noon) will be processed and shipped on the same business day. Orders placed after 12:00 will be processed and shipped on the next business day. Average order processing time on a business day: from 15 minutes to 1 hour.') }}
                     </p>
-                    
                     <p>
                         {{ _('We ship all products from our warehouse within one business day after receiving your order and payment. For products that need to be ordered, we will contact you to discuss delivery details before you make a payment.') }}
                     </p>
-                    
                     <h6 class="mt-4 mb-3">{{ _('Delivery Methods') }}</h6>
-                    
                     <div class="shipping-method mb-3">
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-box-seam me-2 text-primary"></i>
@@ -49,8 +46,6 @@
                             <p class="mb-1 text-muted small">{{ _('This shipping method is available only for deliveries within Slovakia.') }}</p>
                         </div>
                     </div>
-                    
-                   
                     <div class="shipping-method mb-3">
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-shop me-2 text-success"></i>
@@ -62,7 +57,6 @@
                             <p class="text-muted small">{{ _('Please call us in advance to arrange pickup.') }}</p>
                         </div>
                     </div>
-                    
                     <div class="shipping-method mb-3 mt-4">
                         <div class="d-flex align-items-center mb-3">
                             <i class="bi bi-globe me-2 text-primary"></i>
@@ -70,12 +64,10 @@
                         </div>
                         <div class="ps-4">
                             <p>{{ _('Our main international shipping partner is GLS, offering reliable delivery service across Europe. This is the primary shipping method for all countries outside Slovakia.') }}</p>
-                            
                             <div class="alert alert-info mb-3">
                                 <i class="bi bi-info-circle me-1"></i> 
                                 {{ _('GLS International Delivery is the only available shipping method for deliveries outside Slovakia.') }}
                             </div>
-                            
                             <h6 class="mt-3 mb-2">{{ _('Delivery Zones & Estimated Times') }}</h6>
                             <div class="table-responsive mb-3">
                                 <table class="table table-sm table-bordered">
@@ -111,11 +103,9 @@
                                 </table>
                             </div>
                             <p class="text-muted small">{{ _('Note: Delivery times are indicative and depend on the pickup time by the courier.') }}</p>
-                            
                             <div class="alert alert-warning mt-2 mb-3">
                                 <small><strong>{{ _('Excluded from EU deliveries:') }}</strong> {{ _('Andorra, Büsingen am Hochrhein, Ceuta, Gibraltar, Great Britain, Greece, Livigno, Malta, Melilla, Monaco, Norway, San Marino, Switzerland and all European islands (except for the German Islands).') }}</small>
                             </div>
-                            
                             <h6 class="mt-3 mb-2">{{ _('International Shipping Rates') }}</h6>
                             <div class="table-responsive mb-3">
                                 <table class="table table-sm table-bordered">
@@ -167,7 +157,6 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
                             <h6 class="mt-3 mb-2">{{ _('Delivery within Slovakia') }}</h6>
                             <div class="table-responsive mb-3">
                                 <table class="table table-sm table-bordered">
@@ -207,13 +196,11 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
                             <div class="alert alert-info mt-2">
                                 <small><i class="bi bi-info-circle me-1"></i> {{ _('A parcel can weigh up to 31,5 kg.') }}</small>
                             </div>
                         </div>
                     </div>
-                    
                     <div class="alert alert-info mt-4">
                         <i class="bi bi-info-circle me-2"></i>
                         {{ _('For urgent deliveries or special shipping requests, please contact us directly.') }}
@@ -223,7 +210,7 @@
 
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
-                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(40,167,69,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <div class="category-icon me-3">
                         <i class="bi bi-credit-card text-success"></i>
                     </div>
                     <h5 class="mb-0 text-success">{{ _('Payment Methods') }}</h5>
@@ -233,10 +220,8 @@
                     <p>
                         {{ _('We accept payments via bank transfer to our account. When making a payment, please include your order number in the payment description.') }}
                     </p>
-                    
                     <div class="payment-details mt-4">
                         <h6 class="mb-3">{{ _('Bank Account Details') }}</h6>
-                        
                         <div class="row">
                             <div class="col-md-4">
                                 <p class="mb-1"><strong>{{ _('Bank') }}:</strong></p>
@@ -251,18 +236,15 @@
                                 <p class="mb-3">GIBASKBX</p>
                             </div>
                         </div>
-                        
                         <div class="alert alert-warning">
                             <i class="bi bi-exclamation-triangle me-2"></i>
                             {{ _('Important: Always include your order number in the payment description.') }}
                         </div>
                     </div>
-                    
                     <h6 class="mt-4 mb-3">{{ _('Order Processing') }}</h6>
                     <p>
                         {{ _('For items in stock, we will process and ship your order within one business day after receiving payment. For items that need to be ordered from our suppliers, we will contact you to discuss delivery times and payment details before processing.') }}
                     </p>
-                    
                     <div class="alert alert-info mt-4">
                         <i class="bi bi-info-circle me-2"></i>
                         {{ _('If you have any questions about payment or need additional information, please contact our customer service.') }}
@@ -272,7 +254,7 @@
 
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
-                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(23,162,184,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <div class="category-icon me-3">
                         <i class="bi bi-receipt text-info"></i>
                     </div>
                     <h5 class="mb-0 text-info">{{ _('VAT Information') }}</h5>
@@ -283,7 +265,6 @@
                         <h6 class="mb-2">{{ _('All prices on our website include VAT') }}</h6>
                         <p>{{ _('All prices shown on our website include VAT (Value Added Tax) at the applicable rate.') }}</p>
                     </div>
-                    
                     <div class="vat-policies mb-3">
                         <h6 class="mb-2">{{ _('VAT policies by customer type:') }}</h6>
                         <ul class="list-group">
@@ -305,7 +286,6 @@
                             </li>
                         </ul>
                     </div>
-                    
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2"></i>
                         {{ _('To receive an invoice without VAT, EU business customers must provide a valid VAT identification number during checkout. VAT ID will be verified through the VIES system.') }}

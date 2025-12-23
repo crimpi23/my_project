@@ -1,0 +1,254 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Додати фото для {{ article }} - {{ super() }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.photo-preview {
+    position: relative;
+    display: inline-block;
+    margin: 10px;
+}
+.photo-preview img {
+    max-width: 200px;
+    max-height: 200px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+}
+.photo-preview.main-photo img {
+    border-color: #007bff;
+    box-shadow: 0 0 10px rgba(0,123,255,0.3);
+}
+.main-photo-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #007bff;
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+.photo-select-btn {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-plus-circle"></i> Додати фото для товару</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="{{ url_for('admin_dashboard', token=token) }}">Панель адміністратора</a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="{{ url_for('admin_products_missing_photos', token=token) }}">Товари без фото</a>
+                            </li>
+                            <li class="breadcrumb-item active">{{ article }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Назад до списку
+                </a>
+            </div>
+
+            <!-- Інформація про товар -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-info-circle"></i> Інформація про товар</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Артикул:</strong><br>
+                            <code class="text-primary fs-5">{{ product.article }}</code>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Бренд:</strong><br>
+                            <span class="badge bg-secondary fs-6">{{ product.brand_name or 'N/A' }}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Кількість:</strong><br>
+                            <span class="badge bg-success fs-6">{{ product.quantity }}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Ціна:</strong><br>
+                            <span class="fs-5 fw-bold">{{ "%.2f"|format(product.price) }} €</span>
+                        </div>
+                    </div>
+                    {% if product.name_sk or product.name_en %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <strong>Назва:</strong><br>
+                            {{ product.name_sk or product.name_en }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Форма завантаження фото -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-upload"></i> Завантаження фотографій</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="photoForm">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="photos" class="form-label">
+                                        <i class="bi bi-images"></i>
+                                        Оберіть фотографії (можна декілька)
+                                    </label>
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="photos" 
+                                           name="photos" 
+                                           multiple 
+                                           accept="image/*" 
+                                           required>
+                                    <div class="form-text">
+                                        Підтримувані формати: JPG, PNG, GIF, WEBP. Максимальний розмір: 5MB на файл.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Попередній перегляд -->
+                        <div id="photoPreview" class="mb-4"></div>
+
+                        <!-- Вибір головного фото -->
+                        <div id="mainPhotoSection" class="mb-3" style="display: none;">
+                            <label class="form-label">
+                                <i class="bi bi-star"></i>
+                                Головне фото
+                            </label>
+                            <p class="text-muted">Натисніть на фото, щоб вибрати його як головне</p>
+                            <input type="hidden" name="main_photo" id="mainPhotoInput" value="0">
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                                <i class="bi bi-cloud-upload"></i>
+                                Завантажити фото
+                            </button>
+                            <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="btn btn-outline-secondary">
+                                Скасувати
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const photosInput = document.getElementById('photos');
+    const photoPreview = document.getElementById('photoPreview');
+    const mainPhotoSection = document.getElementById('mainPhotoSection');
+    const mainPhotoInput = document.getElementById('mainPhotoInput');
+    const submitBtn = document.getElementById('submitBtn');
+    let selectedMainPhoto = 0;
+
+    photosInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        
+        if (files.length === 0) {
+            photoPreview.innerHTML = '';
+            mainPhotoSection.style.display = 'none';
+            submitBtn.disabled = true;
+            return;
+        }
+
+        photoPreview.innerHTML = '';
+        submitBtn.disabled = false;
+        
+        if (files.length > 1) {
+            mainPhotoSection.style.display = 'block';
+        } else {
+            mainPhotoSection.style.display = 'none';
+            selectedMainPhoto = 0;
+            mainPhotoInput.value = 0;
+        }
+
+        files.forEach((file, index) => {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = `photo-preview ${index === selectedMainPhoto ? 'main-photo' : ''}`;
+                    previewDiv.dataset.index = index;
+                    
+                    previewDiv.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview ${index + 1}">
+                        ${index === selectedMainPhoto ? '<div class="main-photo-badge">★</div>' : ''}
+                        ${files.length > 1 ? `<button type="button" class="btn btn-sm btn-outline-primary photo-select-btn" onclick="selectMainPhoto(${index})">Головне</button>` : ''}
+                    `;
+                    
+                    photoPreview.appendChild(previewDiv);
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+
+    window.selectMainPhoto = function(index) {
+        selectedMainPhoto = index;
+        mainPhotoInput.value = index;
+        
+        // Оновлюємо всі превью
+        document.querySelectorAll('.photo-preview').forEach((preview, i) => {
+            if (i === index) {
+                preview.classList.add('main-photo');
+                preview.innerHTML = preview.innerHTML.replace(
+                    /<div class="main-photo-badge">.*?<\/div>/g, 
+                    '<div class="main-photo-badge">★</div>'
+                );
+                if (!preview.querySelector('.main-photo-badge')) {
+                    preview.innerHTML += '<div class="main-photo-badge">★</div>';
+                }
+            } else {
+                preview.classList.remove('main-photo');
+                const badge = preview.querySelector('.main-photo-badge');
+                if (badge) badge.remove();
+            }
+        });
+    };
+
+    // Попередження при закритті сторінки з незбереженими змінами
+    let formChanged = false;
+    photosInput.addEventListener('change', () => formChanged = true);
+    
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged && photosInput.files.length > 0) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+    
+    document.getElementById('photoForm').addEventListener('submit', () => formChanged = false);
+});
+</script>
+{% endblock %}

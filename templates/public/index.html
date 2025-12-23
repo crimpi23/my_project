@@ -1,5 +1,7 @@
 {% extends "base/public_base.html" %}
-
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/public-index.css') }}">
+{% endblock %}
 
 {% block meta_description %}{{ _('AutogroupEU - Your reliable partner in auto parts supply across Europe.') }}{% endblock %}
 {% block og_title %}AutogroupEU - {{ _('Auto Parts Supply') }}{% endblock %}
@@ -8,167 +10,279 @@
 {% block title %}{{ _('Home') }} - AutogroupEU{% endblock %}
 
 {% block content %}
-<div class="container mt-4 page-sections">
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="welcome-card fade-in">
-                <div class="welcome-header">
-                    <h1>{{ _('Welcome to AutogroupEU') }}</h1>
+<div class="main-content-wide mt-4">
+    <div class="pre-products-bar-scroll">
+      <div class="pre-products-bar-inner">
+        <!-- Need Help -->
+        <button class="mini-card btn-card" id="openHelpModal" type="button">
+          <div class="mini-title"><i class="bi bi-headset me-2"></i>{{ _('Need Help?') }}</div>
+          <div class="mini-sub">{{ _("If you have any questions, don't hesitate to contact us:") }}</div>
+        </button>
+        <!-- Car Service -->
+        <button class="mini-card btn-card" id="openServiceModal" type="button">
+          <div class="mini-title"><i class="bi bi-tools me-2"></i>{{ _('Car Service & Programming') }}</div>
+          <div class="mini-sub">{{ _('We offer professional car repair and programming services.') }}</div>
+        </button>
+        <!-- VIN Request -->
+        <button class="mini-card btn-card" id="openVinModal" type="button">
+          <div class="mini-title"><i class="bi bi-key me-2"></i>VIN Request</div>
+          <div class="mini-sub">{{ _('Request parts by VIN code') }}</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ХЛІБНІ КРИХТИ (Breadcrumbs) -->
+    {% if selected_category %}
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-3">
+        <a href="{{ url_for('index') }}" class="breadcrumb-link">{{ _('All Products') }}</a>
+        
+        {% if parent_category_obj %}
+        <span class="breadcrumb-sep">/</span>
+        <a href="{{ url_for('index', category=parent_category_obj.id) }}" class="breadcrumb-link">
+            {{ parent_category_obj.name }}
+        </a>
+        {% endif %}
+        
+        {% if selected_category_obj %}
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">{{ selected_category_obj.name }}</span>
+        {% endif %}
+    </nav>
+    {% endif %}
+
+    <!-- КОНТЕЙНЕР З КОНТЕНТОМ -->
+    <div class="categories-container-wrapper">
+        <!-- ОСНОВНИЙ КОНТЕНТ -->
+        <div class="categories-main-content">
+        
+        <!-- ЗАГОЛОВОК + КАТЕГОРІЇ - КРАСИВА КАРТКА -->
+        <div class="stock-header-card mb-4">
+            <div class="stock-header-content">
+                <div class="stock-header-icon">
+                    <i class="bi bi-box-seam-fill"></i>
                 </div>
-                <div class="welcome-body">
-                    <p class="lead">
-                        {{ _('Your reliable partner in auto parts supply across Europe. Enter the article number to check prices and availability.') }}
+                <div class="stock-header-text">
+                    <h2 class="stock-header-title">{{ _('Items in Our Stock') }}</h2>
+                    <p class="stock-header-subtitle">
+                        <i class="bi bi-lightning-charge-fill text-warning me-1"></i>
+                        {{ _('Available for immediate delivery') }}
                     </p>
                 </div>
             </div>
-
-            <div class="search-card fade-in">
-                <div class="search-body">
-                    <form method="POST" action="{{ url_for('public_search') }}" class="mb-0">
-                        <div class="input-group">
-                            <input type="text" name="article" class="form-control form-control-lg"
-                                placeholder="{{ _('Enter article number...') }}" required>
-                            <button type="submit" class="btn-search">
-                                <i class="bi bi-search me-2"></i>
-                                {{ _('Search') }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="info-card fade-in">
-                <div class="card-header contact-header">
-                    <h4>
-                        <i class="bi bi-headset me-1"></i>
-                        {{ _('Need Help?') }}
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <p class="mb-2">{{ _("If you have any questions, don't hesitate to contact us:") }}</p>
-                    <div class="contact-phone">
-                        <div class="phone-icon">
-                            <i class="bi bi-telephone-fill"></i>
-                        </div>
-                        <div>
-                            <div class="phone-number">+421 907 400 865</div>
-                            <div class="phone-hours">{{ _('Mon-Fri: 9:00 - 19:00') }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="info-card fade-in">
-                <div class="card-header service-header">
-                    <h4>
-                        <i class="bi bi-tools me-1"></i>
-                        {{ _('Car Service & Programming') }}
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <p class="mb-2">{{ _('We offer professional car repair and programming services.') }}</p>
-                    <a href="{{ url_for('car_service') }}" class="btn btn-primary">{{ _("Learn More") }}</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="products-section fade-in">
-        <div class="row align-items-center mb-3">
-            <div class="col-lg-6">
-                <div class="section-header section-header-secondary">
-                    <div class="header-icon">
-                        <i class="bi bi-box"></i>
-                    </div>
-                    <h2>{{ _('Items in Our Stock') }}</h2>
-                </div>
-            </div>
             
-            <div class="col-lg-6">
-                <div class="filter-card">
-                    <div class="filter-body">
-                        <form id="brandFilterForm" method="GET" action="{{ url_for('index') }}" class="d-flex align-items-center">
-                            <label for="brandFilter" class="me-2 filter-label">
-                                <i class="bi bi-funnel me-1"></i>
-                                {{ _('Filter by brand:') }}
-                            </label>
-                            <select id="brandFilter" name="brand" class="form-select select-brand me-2" onchange="this.form.submit()">
-                                <option value="">{{ _('All Brands') }}</option>
-                                {% for brand in brands %}
-                                <option value="{{ brand.id }}" {% if request.args.get('brand')|int == brand.id %}selected{% endif %}>
-                                    {{ brand.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            {% if request.args.get('brand') %}
-                            <a href="{{ url_for('index') }}" class="btn-action btn-action-danger btn-sm">
-                                <i class="bi bi-x-circle"></i> {{ _('Clear') }}
-                            </a>
-                            {% endif %}
-                        </form>
-                    </div>
-                </div>
+            {% if categories %}
+            <div class="stock-header-actions">
+                <button class="catalog-btn" type="button" id="openMobileCat">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h2A1.5 1.5 0 0 1 5 1.5v2A1.5 1.5 0 0 1 3.5 5h-2A1.5 1.5 0 0 1 0 3.5v-2zM1.5 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-2zM0 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V8zm1 3v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2H1zm14-1V8a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v2h14zM2 8.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                    <span>{{ _('Catalog') }}</span>
+                    <i class="bi bi-chevron-down cat-arrow"></i>
+                </button>
             </div>
+            {% endif %}
         </div>
-
-        <div class="row row-products">
-            {% for product in products %}
-            <div class="col-6 col-md-4 col-lg-3 product-column">
-                <div class="product-card">
-                    <div class="product-img-container">
-                        {% if product.image_url %}
-                        <img src="{{ product.image_url }}" class="product-img" 
-                             alt="{{ product.name or product.article }}"
-                             loading="lazy" decoding="async" width="320" height="240">
-                        {% else %}
-                        <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+        
+        <!-- МЕНЮ КАТЕГОРІЙ (розгортається під заголовком) -->
+        {% if categories %}
+        <div id="mobileCatMenu" class="mobile-cat-menu">
+            <ul class="mobile-cat-list">
+                <li>
+                    <a href="{{ url_for('index') }}" class="mobile-cat-link {% if not selected_category %}active{% endif %}">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                        {{ _('All Products') }}
+                    </a>
+                </li>
+                {% for category in categories %}
+                <li class="mobile-cat-item">
+                    <div class="mobile-cat-row">
+                        {% if category.children %}
+                        <button type="button" class="mobile-cat-toggle" data-target="indexSub{{ category.id }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
                         {% endif %}
+                        <a href="{{ url_for('index', category=category.id) }}" 
+                           class="mobile-cat-link {% if selected_category == category.id %}active{% endif %}">
+                            {% if category.icon_class %}<i class="bi {{ category.icon_class }}"></i>{% else %}<i class="bi bi-folder"></i>{% endif %}
+                            {{ category.name }}
+                        </a>
                     </div>
+                    {% if category.children %}
+                    <ul class="mobile-cat-sub" id="indexSub{{ category.id }}">
+                        {% for sub in category.children %}
+                        <li class="mobile-cat-item">
+                            <div class="mobile-cat-row">
+                                {% if sub.children %}
+                                <button type="button" class="mobile-cat-toggle mobile-cat-toggle-l2" data-target="indexSub{{ sub.id }}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                                {% endif %}
+                                <a href="{{ url_for('index', category=sub.id) }}" 
+                                   class="mobile-cat-link {% if selected_category == sub.id %}active{% endif %}">
+                                    {% if sub.icon_class %}<i class="bi {{ sub.icon_class }}"></i>{% else %}<i class="bi bi-tag"></i>{% endif %}
+                                    {{ sub.name }}
+                                </a>
+                            </div>
+                            {% if sub.children %}
+                            <ul class="mobile-cat-sub mobile-cat-sub-l3" id="indexSub{{ sub.id }}">
+                                {% for sub3 in sub.children %}
+                                <li>
+                                    <a href="{{ url_for('index', category=sub3.id) }}" 
+                                       class="mobile-cat-link mobile-cat-link-l3 {% if selected_category == sub3.id %}active{% endif %}">
+                                        {% if sub3.icon_class %}<i class="bi {{ sub3.icon_class }}"></i>{% else %}<i class="bi bi-dot"></i>{% endif %}
+                                        {{ sub3.name }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
-                    <div class="product-body">
-                        <h5 class="product-title">{% if product.name %}{{ product.name }}{% else %}{{ product.article }}{% endif %}</h5>
-                        <div class="product-meta">
-                            <div class="product-meta-item">
-                                <span class="meta-label">{{ _('Brand') }}</span>
-                                <span class="meta-value">{{ product.brand_name }}</span>
-                            </div>
-                            <div class="product-meta-item">
-                                <span class="meta-label">{{ _('Article') }}</span>
-                                <span class="product-article">{{ product.article }}</span>
-                            </div>
-                            <div class="product-meta-item">
-                                <span class="meta-label">{{ _('Price') }}</span>
-                                <span class="meta-value product-price">{{ "%.2f"|format(product.price) }} € <small class="text-muted">{{ _('incl. VAT') }}</small></span>
-                            </div>
+        <!-- Сітка товарів -->
+        <div class="products-grid" id="productsGrid">
+            {% for product in products %}
+            <div class="product-card {% if product.quantity <= 0 %}out-of-stock{% endif %}">
+                <div class="product-image-container">
+                    {% if product.quantity <= 0 %}
+                    <div class="out-of-stock-badge">
+                        <i class="bi bi-clock-history"></i>
+                        {{ _('Out of Stock') }}
+                    </div>
+                    {% endif %}
+                    {% if product.image_url %}
+                    <img src="{{ product.image_url }}" 
+                         class="product-image" 
+                         alt="{{ product.name or product.article }}"
+                         loading="lazy" 
+                         decoding="async">
+                    {% else %}
+                    <div class="product-image-placeholder">
+                        <i class="bi bi-image"></i>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="product-content">
+                    <h3 class="product-title">
+                        {% if product.name %}{{ product.name }}{% else %}{% endif %}
+                    </h3>
+                    
+                    <div class="product-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">{{ _('Brand') }}</span>
+                            <span class="meta-value">{{ product.brand_name }}</span>
                         </div>
-                        
-                        <div class="product-actions mt-3">
-                            <a href="{{ url_for('product_details', article=product.article) }}" 
-                               class="btn-details">
-                                <i class="bi bi-eye-fill"></i>
-                                {{ _('View Details') }}
-                            </a>
+                        <div class="meta-item">
+                            <span class="meta-label">{{ _('Article') }}</span>
+                            <span class="meta-value">{{ product.article }}</span>
                         </div>
+                        <div class="meta-item">
+                            <span class="meta-label">{{ _('Price') }}</span>
+                            <span class="meta-value product-price">
+                                {{ "%.2f"|format(product.price) }} €
+                                <small class="price-note">{{ _('incl. VAT') }}</small>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="product-actions">
+                        <a href="{{ url_for('product_details', article=product.article) }}" 
+                           class="btn btn-primary btn-sm product-btn">
+                            <i class="bi bi-eye me-1"></i>
+                            {{ _('View Details') }}
+                        </a>
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
 
+        <!-- Кнопка "Показати більше" -->
         {% if has_more %}
-        <div class="text-center mt-4 mb-4">
-            <button id="loadMoreButton" class="btn-outline btn-outline-primary" data-next-page="{{ (page or 1)|int + 1 }}">
-                <i class="bi bi-plus-circle"></i>
-                <span class="button-text">{{ _('Show More Products') }}</span>
-                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+        <div class="text-center mt-4">
+            <button id="loadMoreButton" 
+                    class="btn btn-outline-primary btn-lg load-more-btn" 
+                    data-next-page="{{ (page or 1)|int + 1 }}">
+                <span class="button-text">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    {{ _('Show More Products') }}
+                </span>
+                <span class="spinner-border spinner-border-sm d-none ms-2" role="status"></span>
             </button>
         </div>
         {% endif %}
     </div>
-</div>
+    <!-- Закриття products-section -->
+        </div>
+        <!-- Закриття categories-main-content -->
+    </div>
+    <!-- Закриття categories-container-wrapper -->
 
+    <!-- Need Help Modal -->
+    <div id="helpModalOverlay" class="vin-modal-overlay d-none">
+        <div class="vin-modal-window">
+            <button class="vin-modal-close" id="closeHelpModal" aria-label="Close">&times;</button>
+            <h2 class="vin-modal-title"><i class="bi bi-headset me-2"></i>{{ _('Need Help?') }}</h2>
+            <p>{{ _("If you have any questions, don't hesitate to contact us:") }}</p>
+            <p>
+                <a href="tel:+421907400865" class="text-primary" style="font-size:1.2rem;">
+                    +421 907 400 865
+                </a><br>
+                <span class="text-muted">{{ _('Mon-Fri: 9:00 - 19:00') }}</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Car Service Modal -->
+    <div id="serviceModalOverlay" class="vin-modal-overlay d-none">
+        <div class="vin-modal-window">
+            <button class="vin-modal-close" id="closeServiceModal" aria-label="Close">&times;</button>
+            <h2 class="vin-modal-title"><i class="bi bi-tools me-2"></i>{{ _('Car Service & Programming') }}</h2>
+            <p>{{ _('We offer professional car repair and programming services.') }}</p>
+            <a href="{{ url_for('car_service') }}" class="btn btn-primary mt-2">{{ _('Learn More') }}</a>
+        </div>
+    </div>
+
+    <!-- VIN Request Modal -->
+    <div id="vinModalOverlay" class="vin-modal-overlay d-none">
+    <div class="vin-modal-window">
+        <button class="vin-modal-close" id="closeVinModal" aria-label="Close">&times;</button>
+        <h2 class="vin-modal-title"><i class="bi bi-key me-2"></i>VIN Request</h2>
+        <form id="vinModalForm" autocomplete="off">
+            <div class="mb-3">
+                <label for="vin_code" class="form-label">VIN code (17 chars)</label>
+                <input type="text" name="vin_code" id="vin_code" maxlength="17" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">Phone (+421...)</label>
+                <input type="text" name="phone" id="phone" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" name="email" id="email" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="parts_description" class="form-label">Describe needed parts</label>
+                <textarea name="parts_description" id="parts_description" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Send Request</button>
+            <div id="vinModalStatus" class="mt-2 small"></div>
+        </form>
+        </div>
+    </div>
+</div>
+<!-- Закриття main-content-wide -->
+{% endblock %}
+
+{% block extra_js %}
 <script>
 window.translations = {
     'Brand': '{{ _("Brand") }}',
@@ -178,10 +292,9 @@ window.translations = {
     'View Details': '{{ _("View Details") }}',
     'incl. VAT': '{{ _("incl. VAT") }}'
 };
-</script>
 
-<script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Обробка посилань на продукти для відкриття в новій вкладці середньою кнопкою миші
     const productLinks = document.querySelectorAll('.product-card a');
     productLinks.forEach(link => {
         link.addEventListener('auxclick', function(e) {
@@ -192,19 +305,29 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Кнопка "Показати більше"
     const loadMoreButton = document.getElementById('loadMoreButton');
     if (loadMoreButton) {
         loadMoreButton.addEventListener('click', function() {
-            let nextPage = parseInt(this.getAttribute('data-next-page'));
+            const productsGrid = document.getElementById('productsGrid');
+            const currentCount = productsGrid ? productsGrid.querySelectorAll('.product-card').length : 0;
+
+            // Бекенд у вас очікує per_page = 8 для /api/products
+            const perPageApi = 8;
+
+            // Обчислюємо page (1-based) таким чином, щоб уникнути перекриття з початковою сторінкою
+            // Якщо currentCount = 24 -> Math.floor(24/8)+1 = 4, отже запитнемо сторінку 4 (items 25-32)
+            const nextPage = Math.floor(currentCount / perPageApi) + 1;
+
             const brandFilter = document.getElementById('brandFilter');
             const brandId = brandFilter ? brandFilter.value : '';
-            
+
             const spinner = this.querySelector('.spinner-border');
             const buttonText = this.querySelector('.button-text');
             spinner.classList.remove('d-none');
-            buttonText.classList.add('d-none');
+            buttonText.style.opacity = '0.7';
             this.disabled = true;
-            
+
             fetch(`/api/products?page=${nextPage}&brand=${brandId}&lang={{ g.locale }}`)
                 .then(response => {
                     if (!response.ok) {
@@ -213,16 +336,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json();
                 })
                 .then(data => {
-                    const productsContainer = document.querySelector('.row-products');
-                    
+                    const productsGrid = document.querySelector('.products-grid');
+
                     data.products.forEach(product => {
                         const productHtml = createProductCard(product);
-                        const productCol = document.createElement('div');
-                        productCol.className = 'col-6 col-md-4 col-lg-3 product-column';
-                        productCol.innerHTML = productHtml;
-                        productsContainer.appendChild(productCol);
-                        
-                        const newProductLink = productCol.querySelector('.product-card a');
+                        const productCard = document.createElement('div');
+                        productCard.className = 'product-card';
+                        productCard.innerHTML = productHtml;
+                        productCard.style.opacity = '0';
+                        productsGrid.appendChild(productCard);
+                        setTimeout(() => {
+                            productCard.style.transition = 'opacity 0.4s';
+                            productCard.style.opacity = '1';
+                        }, 10);
+
+                        const newProductLink = productCard.querySelector('a');
                         if (newProductLink) {
                             newProductLink.addEventListener('auxclick', function(e) {
                                 if (e.button === 1 || e.which === 2) {
@@ -232,21 +360,22 @@ document.addEventListener('DOMContentLoaded', function() {
                             });
                         }
                     });
-                    
+
                     if (data.has_more) {
+                        // підвищуємо data-next-page для сумісності, але фактично client обчислює page динамічно
                         loadMoreButton.setAttribute('data-next-page', nextPage + 1);
                         loadMoreButton.disabled = false;
                         spinner.classList.add('d-none');
-                        buttonText.classList.remove('d-none');
+                        buttonText.style.opacity = '1';
                     } else {
-                        loadMoreButton.parentElement.classList.add('d-none');
+                        loadMoreButton.parentElement.remove();
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching products:', error);
                     loadMoreButton.disabled = false;
                     spinner.classList.add('d-none');
-                    buttonText.classList.remove('d-none');
+                    buttonText.style.opacity = '1';
                 });
         });
     }
@@ -258,41 +387,387 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         return `
-            <div class="product-card">
-                <div class="product-img-container">
-                    ${product.image_url 
-                        ? `<img src="${product.image_url}" class="product-img" alt="${product.name || product.article}">`
-                        : `<i class="bi bi-image text-muted" style="font-size: 2rem;"></i>`
-                    }
+            <div class="product-image-container">
+                ${product.image_url 
+                    ? `<img src="${product.image_url}" class="product-image" alt="${product.name || product.article}" loading="lazy" decoding="async">`
+                    : `<div class="product-image-placeholder"><i class="bi bi-image"></i></div>`
+                }
+            </div>
+            <div class="product-content">
+                <h3 class="product-title">${product.name || product.article}</h3>
+                <div class="product-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">${t('Brand')}</span>
+                        <span class="meta-value">${product.brand_name}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">${t('Article')}</span>
+                        <span class="meta-value">${product.article}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">${t('Price')}</span>
+                        <span class="meta-value product-price">
+                            ${parseFloat(product.price).toFixed(2)} €
+                            <small class="price-note">${t('incl. VAT')}</small>
+                        </span>
+                    </div>
                 </div>
-
-                <div class="product-body">
-                    <h5 class="product-title">${product.name || product.article}</h5>
-                    <div class="product-meta">
-                        <div class="product-meta-item">
-                            <span class="meta-label">${t('Brand')}</span>
-                            <span class="meta-value">${product.brand_name}</span>
-                        </div>
-                        <div class="product-meta-item">
-                            <span class="meta-label">${t('Article')}</span>
-                            <span class="product-article">${product.article}</span>
-                        </div>
-                        <div class="product-meta-item">
-                            <span class="meta-label">${t('Price')}</span>
-                            <span class="meta-value product-price">${parseFloat(product.price).toFixed(2)} € <small class="text-muted">${t('incl. VAT')}</small></span>
-                        </div>
-                    </div>
-                    
-                    <div class="product-actions mt-3">
-                        <a href="/product/${product.article}" class="btn-details">
-                            <i class="bi bi-eye-fill"></i>
-                            ${t('View Details')}
-                        </a>
-                    </div>
+                <div class="product-actions">
+                    <a href="/product/${product.article}" class="btn btn-primary btn-sm product-btn">
+                        <i class="bi bi-eye me-1"></i>
+                        ${t('View Details')}
+                    </a>
                 </div>
             </div>
         `;
     }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Accordion toggle
+    const toggleBtn = document.getElementById('vinRequestToggle');
+    const collapseDiv = document.getElementById('vinRequestCollapse');
+    if (toggleBtn && collapseDiv) {
+        toggleBtn.addEventListener('click', function() {
+            if (collapseDiv.style.display === 'none' || !collapseDiv.style.display) {
+                collapseDiv.style.display = 'block';
+                toggleBtn.classList.add('active');
+            } else {
+                collapseDiv.style.display = 'none';
+                toggleBtn.classList.remove('active');
+            }
+        });
+    }
+
+    // VIN form AJAX
+    const vinForm = document.getElementById('vinRequestForm');
+    if (vinForm) {
+        vinForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const statusDiv = document.getElementById('vinRequestStatus');
+            statusDiv.textContent = '';
+            statusDiv.className = 'mt-2 small';
+            fetch('/vin-request', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    vin_code: form.vin_code.value,
+                    phone: form.phone.value,
+                    email: form.email.value,
+                    parts_description: form.parts_description.value
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.textContent = 'Request sent successfully!';
+                    statusDiv.className = 'mt-2 small text-success';
+                    form.reset();
+                } else {
+                    statusDiv.textContent = data.error || 'Error sending request';
+                    statusDiv.className = 'mt-2 small text-danger';
+                }
+            })
+            .catch((err) => {
+                statusDiv.textContent = 'Server error';
+                statusDiv.className = 'mt-2 small text-danger';
+                console.error('VIN request error:', err);
+            });
+        });
+    }
+
+    /* Welcome strip once per session */
+    const welcomeStrip = document.getElementById('welcomeStrip');
+    const closeWelcome = document.getElementById('closeWelcomeStrip');
+    if (welcomeStrip) {
+        if (!sessionStorage.getItem('welcomeStripClosed')) {
+            welcomeStrip.classList.remove('d-none');
+        }
+        closeWelcome.addEventListener('click', () => {
+            welcomeStrip.classList.add('d-none');
+            sessionStorage.setItem('welcomeStripClosed','1');
+        });
+    }
+
+    /* VIN mini toggle */
+    const vinToggle = document.getElementById('vinMiniToggle');
+    const vinPanel = document.getElementById('vinMiniPanel');
+    const vinStatus = document.getElementById('vinMiniStatus');
+    if (vinToggle && vinPanel) {
+        vinToggle.addEventListener('click', () => {
+            const open = vinPanel.classList.toggle('open');
+            vinToggle.querySelector('.vin-toggle-text').textContent = open ? '{{ _("Close") }}' : '{{ _("Open") }}';
+        });
+    }
+
+    /* VIN mini form submit */
+    const vinMiniForm = document.getElementById('vinMiniForm');
+    if (vinMiniForm) {
+        vinMiniForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            vinStatus.textContent = '';
+            vinStatus.className = 'small';
+            const f = e.target;
+            fetch('/vin-request', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    vin_code: f.vin_code.value,
+                    phone: f.phone.value,
+                    email: f.email.value,
+                    parts_description: f.parts_description.value
+                })
+            }).then(r=>r.json()).then(data=>{
+                if (data.success) {
+                    vinStatus.textContent = '{{ _("Sent") }}';
+                    vinStatus.classList.add('text-success');
+                    f.reset();
+                } else {
+                    vinStatus.textContent = data.error || 'Error';
+                    vinStatus.classList.add('text-danger');
+                }
+            }).catch(()=>{
+                vinStatus.textContent = 'Server error';
+                vinStatus.classList.add('text-danger');
+            });
+        });
+    }
+
+    // VIN Modal form AJAX
+    const vinModalForm = document.getElementById('vinModalForm');
+    if (vinModalForm) {
+        vinModalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const statusDiv = document.getElementById('vinModalStatus');
+            statusDiv.textContent = '';
+            statusDiv.className = 'mt-2 small';
+            fetch('/vin-request', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    vin_code: form.vin_code.value,
+                    phone: form.phone.value,
+                    email: form.email.value,
+                    parts_description: form.parts_description.value
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.textContent = 'Request sent successfully!';
+                    statusDiv.className = 'mt-2 small text-success';
+                    form.reset();
+                    // Закриваємо модалку після успішного відправлення
+                    document.getElementById('vinModalOverlay').classList.add('d-none');
+                } else {
+                    statusDiv.textContent = data.error || 'Error sending request';
+                    statusDiv.className = 'mt-2 small text-danger';
+                }
+            })
+            .catch((err) => {
+                statusDiv.textContent = 'Server error';
+                statusDiv.className = 'mt-2 small text-danger';
+                console.error('VIN request error:', err);
+            });
+        });
+    }
+
+    // Закриття модалки
+    const closeVinModal = document.getElementById('closeVinModal');
+    if (closeVinModal) {
+        closeVinModal.addEventListener('click', () => {
+            document.getElementById('vinModalOverlay').classList.add('d-none');
+        });
+    }
+
+    // Відкриття модалки з формою VIN запиту
+    const openVinModalButtons = document.querySelectorAll('[data-open-vin-modal]');
+    openVinModalButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            document.getElementById('vinModalOverlay').classList.remove('d-none');
+        });
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Відкриття модалки
+    const openVinModal = document.getElementById('openVinModal');
+    if (openVinModal) {
+        openVinModal.addEventListener('click', function() {
+            document.getElementById('vinModalOverlay').classList.remove('d-none');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+    // Закриття модалки
+    const closeVinModal = document.getElementById('closeVinModal');
+    if (closeVinModal) {
+        closeVinModal.addEventListener('click', function() {
+            document.getElementById('vinModalOverlay').classList.add('d-none');
+            document.body.style.overflow = '';
+        });
+    }
+    // Клік по фону для закриття
+    const vinModalOverlay = document.getElementById('vinModalOverlay');
+    if (vinModalOverlay) {
+        vinModalOverlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('d-none');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+    // Відправка форми VIN
+    const vinModalForm = document.getElementById('vinModalForm');
+    if (vinModalForm) {
+        vinModalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const status = document.getElementById('vinModalStatus');
+            status.textContent = '';
+            fetch('/vin-request', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    vin_code: this.vin_code.value,
+                    phone: this.phone.value,
+                    email: this.email.value,
+                    parts_description: this.parts_description.value
+                })
+            }).then(r=>r.json()).then(data=>{
+                if (data.success) {
+                    status.textContent = 'Request sent!';
+                    status.className = 'text-success small';
+                    this.reset();
+                    setTimeout(() => {
+                        document.getElementById('vinModalOverlay').classList.add('d-none');
+                        document.body.style.overflow = '';
+                        status.textContent = '';
+                    }, 1200);
+                } else {
+                    status.textContent = data.error || 'Error';
+                    status.className = 'text-danger small';
+                }
+            }).catch(()=>{
+                status.textContent = 'Server error';
+                status.className = 'text-danger small';
+            });
+        });
+    }
+
+    // ========== НОВЕ МОБІЛЬНЕ МЕНЮ КАТЕГОРІЙ ==========
+    
+    // Кнопка відкриття/закриття головного меню
+    const openMobileCat = document.getElementById('openMobileCat');
+    const mobileCatMenu = document.getElementById('mobileCatMenu');
+    
+    if (openMobileCat && mobileCatMenu) {
+        openMobileCat.addEventListener('click', () => {
+            openMobileCat.classList.toggle('open');
+            mobileCatMenu.classList.toggle('open');
+        });
+    }
+    
+    // Кнопки розгортання підкатегорій (шукаємо тільки всередині mobileCatMenu)
+    const catToggles = mobileCatMenu ? mobileCatMenu.querySelectorAll('.mobile-cat-toggle') : [];
+    
+    catToggles.forEach((toggle, idx) => {
+        toggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const targetId = toggle.getAttribute('data-target');
+            const subMenu = document.getElementById(targetId);
+            
+            if (subMenu) {
+                const isOpen = subMenu.classList.contains('open');
+                const isLevel2 = toggle.classList.contains('mobile-cat-toggle-l2');
+                
+                // Закриваємо тільки підменю того ж рівня (не батьківські)
+                if (!isLevel2) {
+                    // Це кнопка 1-го рівня - закриваємо інші меню 1-го рівня
+                    document.querySelectorAll('.mobile-cat-sub.open').forEach(openSub => {
+                        // Закриваємо тільки якщо це не наше підменю і не його нащадки
+                        if (openSub !== subMenu && !subMenu.contains(openSub)) {
+                            openSub.classList.remove('open');
+                            const otherToggle = document.querySelector(`[data-target="${openSub.id}"]`);
+                            if (otherToggle) {
+                                otherToggle.classList.remove('open');
+                            }
+                        }
+                    });
+                }
+                
+                // Перемикаємо поточне
+                if (isOpen) {
+                    subMenu.classList.remove('open');
+                    toggle.classList.remove('open');
+                    // Закриваємо також всі вкладені підменю
+                    subMenu.querySelectorAll('.mobile-cat-sub.open').forEach(nested => {
+                        nested.classList.remove('open');
+                        const nestedToggle = document.querySelector(`[data-target="${nested.id}"]`);
+                        if (nestedToggle) nestedToggle.classList.remove('open');
+                    });
+                } else {
+                    subMenu.classList.add('open');
+                    toggle.classList.add('open');
+                }
+            }
+        });
+    });
+
+    // Need Help Modal
+    const openHelpModal = document.getElementById('openHelpModal');
+    const helpModalOverlay = document.getElementById('helpModalOverlay');
+    const closeHelpModal = document.getElementById('closeHelpModal');
+    
+    if (openHelpModal && helpModalOverlay) {
+        openHelpModal.onclick = function() {
+            helpModalOverlay.classList.remove('d-none');
+            document.body.style.overflow = 'hidden';
+        };
+        if (closeHelpModal) {
+            closeHelpModal.onclick = function() {
+                helpModalOverlay.classList.add('d-none');
+                document.body.style.overflow = '';
+            };
+        }
+        helpModalOverlay.onclick = function(e) {
+            if (e.target === this) {
+                this.classList.add('d-none');
+                document.body.style.overflow = '';
+            }
+        };
+    }
+
+    // Car Service Modal
+    const openServiceModal = document.getElementById('openServiceModal');
+    const serviceModalOverlay = document.getElementById('serviceModalOverlay');
+    const closeServiceModal = document.getElementById('closeServiceModal');
+    
+    if (openServiceModal && serviceModalOverlay) {
+        openServiceModal.onclick = function() {
+            serviceModalOverlay.classList.remove('d-none');
+            document.body.style.overflow = 'hidden';
+        };
+        if (closeServiceModal) {
+            closeServiceModal.onclick = function() {
+                serviceModalOverlay.classList.add('d-none');
+                document.body.style.overflow = '';
+            };
+        }
+        serviceModalOverlay.onclick = function(e) {
+            if (e.target === this) {
+                this.classList.add('d-none');
+                document.body.style.overflow = '';
+            }
+        };
+    }
+
+    // Розгортання/згортання меню категорій
+    // Видалено - використовуємо статичне меню
 });
 </script>
 {% endblock %}

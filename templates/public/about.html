@@ -20,7 +20,7 @@
         <div class="col-lg-8 mx-auto">
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
-                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(0,123,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <div class="me-3 category-icon">
                         <i class="bi bi-info-circle text-primary"></i>
                     </div>
                     <h5 class="mb-0 text-primary">{{ _('Our Company') }}</h5>
@@ -33,7 +33,6 @@
                     
                     <div class="parts-categories mt-4">
                         <h6 class="mb-3">{{ _('Our extensive catalog includes the following categories:') }}</h6>
-                        
                         <div class="row g-4">
                             <div class="col-md-6">
                                 <div class="category-card">
@@ -46,7 +45,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -58,7 +56,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -70,7 +67,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -82,7 +78,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -94,7 +89,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -106,7 +100,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -118,7 +111,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -130,7 +122,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -142,7 +133,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -154,7 +144,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -166,7 +155,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -178,7 +166,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="col-md-6">
                                 <div class="category-card">
                                     <div class="category-header">
@@ -199,7 +186,7 @@
 
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
-                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(23,162,184,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <div class="me-3 category-icon">
                         <i class="bi bi-tools text-info"></i>
                     </div>
                     <h5 class="mb-0 text-info">{{ _('Workshop & Programming Services') }}</h5>
@@ -249,7 +236,7 @@
 
             <div class="card-base fade-in mb-4">
                 <div class="d-flex align-items-center mb-3 px-4 pt-4">
-                    <div class="me-3" style="width: 40px; height: 40px; background-color: rgba(255,193,7,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <div class="me-3 category-icon">
                         <i class="bi bi-award text-warning"></i>
                     </div>
                     <h5 class="mb-0 text-warning">{{ _('Available Brands') }}</h5>
@@ -310,42 +297,4 @@
         </div>
     </div>
 </div>
-
-<style>
-.category-card {
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 16px;
-    height: 100%;
-    transition: all 0.3s ease;
-}
-
-.category-card:hover {
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    transform: translateY(-3px);
-    border-color: #d1d9e6;
-}
-
-.category-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.category-header i {
-    font-size: 1.4rem;
-    margin-right: 10px;
-}
-
-.category-header h6 {
-    margin: 0;
-    font-weight: 600;
-}
-
-.category-items {
-    color: #6c757d;
-    font-size: 0.9rem;
-    line-height: 1.5;
-}
-</style>
 {% endblock %}

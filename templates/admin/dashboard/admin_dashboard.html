@@ -49,17 +49,10 @@
         <div class="col-xl-4 col-md-6">
             <div class="card h-100 border-primary">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>Catalog Management</h5>
+                    <h5 class="mb-0"><i class="bi bi-archive me-2"></i>Catalog Management</h5>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('manage_stock', token=token) }}" class="btn btn-outline-primary">
-                                    <i class="bi bi-boxes me-2"></i>Manage Stock
-                                </a>
-                            </div>
-                        </div>
                         <div class="col-md-6">
                             <div class="d-grid">
                                 <a href="{{ url_for('upload_price_list', token=token) }}" class="btn btn-outline-primary">
@@ -69,15 +62,24 @@
                         </div>
                         <div class="col-md-6">
                             <div class="d-grid">
-                                <a href="{{ url_for('manage_price_lists', token=token) }}" class="btn btn-outline-primary">
-                                    <i class="bi bi-list-check me-2"></i>Manage Lists
+                                <a href="{{ url_for('manage_stock', token=token) }}" class="btn btn-outline-primary">
+                                    <i class="bi bi-boxes me-2"></i>Manage Stock
                                 </a>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="d-grid">
-                                <a href="{{ url_for('add_brand', token=token) }}" class="btn btn-outline-primary">
-                                    <i class="bi bi-plus-circle me-2"></i>Add Brand
+                                <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="btn btn-warning">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>Products Missing Photos</strong>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="d-grid">
+                                <a href="{{ url_for('admin_products_missing_descriptions', token=token) }}" class="btn btn-danger">
+                                    <i class="bi bi-file-text me-2"></i>
+                                    <strong>Products Missing Descriptions</strong>
                                 </a>
                             </div>
                         </div>
@@ -105,6 +107,14 @@
                             <div class="d-grid">
                                 <a href="{{ url_for('admin_upload_photos', token=token) }}" class="btn btn-outline-success">
                                     <i class="bi bi-image-add me-2"></i>Add Images
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="d-grid">
+                                <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="btn btn-warning">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>Products Missing Photos
+                                    <small class="d-block text-muted">Find products without images</small>
                                 </a>
                             </div>
                         </div>

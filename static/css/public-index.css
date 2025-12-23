@@ -1,0 +1,1499 @@
+/* Вітальна секція */
+.welcome-section {
+    background: linear-gradient(90deg, #eff6ff 0%, #f1f5f9 100%);
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.04);
+    padding: 2.5rem 1.5rem 2.5rem 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* ХЛІБНІ КРИХТИ */
+.breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+}
+
+.breadcrumb-link {
+    color: #2563eb;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.breadcrumb-sep {
+    color: #cbd5e1;
+}
+
+.breadcrumb-current {
+    color: #334155;
+    font-weight: 500;
+}
+
+/* КОНТЕЙНЕР */
+.categories-container-wrapper {
+    display: block;
+}
+
+/* ========== ЗАГОЛОВОК + КАТЕГОРІЇ - КРАСИВА КАРТКА ========== */
+.stock-header-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.2rem 1.5rem;
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #0ea5e9 100%);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.stock-header-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.stock-header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    z-index: 1;
+}
+
+.stock-header-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    color: #fff;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+    backdrop-filter: blur(4px);
+}
+
+.stock-header-text {
+    color: #fff;
+}
+
+.stock-header-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.stock-header-subtitle {
+    font-size: 0.9rem;
+    margin: 0;
+    opacity: 0.95;
+    display: flex;
+    align-items: center;
+}
+
+.stock-header-actions {
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+/* Кнопка категорій */
+/* Кнопка Каталог */
+.catalog-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.2rem;
+    background: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e40af;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.catalog-btn:hover {
+    background: #f0f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.catalog-btn svg {
+    flex-shrink: 0;
+}
+
+.catalog-btn .cat-arrow {
+    transition: transform 0.3s ease;
+    font-size: 0.75rem;
+    margin-left: 0.25rem;
+}
+
+.catalog-btn.open .cat-arrow {
+    transform: rotate(180deg);
+}
+
+.cat-dropdown-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.25rem;
+    background: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1d4ed8;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.cat-dropdown-btn:hover {
+    background: #f0f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.cat-dropdown-btn .cat-arrow {
+    transition: transform 0.3s ease;
+    font-size: 0.8rem;
+}
+
+.cat-dropdown-btn.open .cat-arrow {
+    transform: rotate(180deg);
+}
+
+.cat-dropdown-btn i:first-child {
+    font-size: 1.1rem;
+}
+
+/* Адаптивність для картки */
+@media (max-width: 768px) {
+    .stock-header-card {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .stock-header-content {
+        justify-content: center;
+        text-align: center;
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+    
+    .stock-header-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.5rem;
+    }
+    
+    .stock-header-title {
+        font-size: 1.2rem;
+    }
+    
+    .stock-header-subtitle {
+        justify-content: center;
+    }
+    
+    .stock-header-actions {
+        width: 100%;
+    }
+    
+    .cat-dropdown-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* БІЧНЕ МЕНЮ */
+.categories-sidebar {
+    background: #fff;
+    border: 1px solid #e0e7ef;
+    border-radius: 10px;
+    padding: 1.2rem;
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 3px solid #2563eb;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 7px;
+    text-decoration: none;
+    color: #475569;
+    transition: all 0.25s ease;
+    font-size: 0.92rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-weight: 500;
+}
+
+.menu-item:hover {
+    background: #eff6ff;
+    color: #2563eb;
+    transform: translateX(4px);
+}
+
+.menu-item.active {
+    background: #2563eb;
+    color: #fff;
+    font-weight: 600;
+}
+
+.menu-category {
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.menu-subcategory {
+    padding-left: 2.3rem !important;
+    font-size: 0.88rem;
+    color: #64748b;
+}
+
+.categories-main-content {
+    min-width: 0;
+}
+
+/* КАТЕГОРІЇ - горизонтальна стрічка (видно тільки на мобільній) */
+.categories-section {
+    display: none;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #e0e7ef;
+    margin-bottom: 1rem;
+}
+
+/* ПІДКАТЕГОРІЇ - списком */
+.subcategories-section {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 0.8rem;
+    border: 1px solid #cbd5e1;
+    margin-bottom: 1rem;
+}
+
+.subcategories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.7rem;
+}
+
+.subcategory-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #334155;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.subcategory-item:hover {
+    background: #f1f5f9;
+    border-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(37,99,235,0.1);
+}
+
+.subcategory-item.active {
+    background: #3b82f6;
+    border-color: #2563eb;
+    color: #fff;
+}
+
+.subcategory-item.back-link {
+    background: #e0f2fe;
+    border-color: #0284c7;
+    color: #0284c7;
+}
+
+.subcategory-item.back-link:hover {
+    background: #0284c7;
+    color: #fff;
+}
+
+.sub-icon {
+    font-size: 1.5rem;
+    color: inherit;
+}
+
+.sub-name {
+    font-weight: 500;
+    font-size: 0.85rem;
+    line-height: 1.1;
+}
+
+/* ========== НОВЕ МОБІЛЬНЕ МЕНЮ КАТЕГОРІЙ ========== */
+
+/* ========== МЕНЮ КАТЕГОРІЙ ========== */
+
+/* Контейнер для розгортуваного меню */
+.mobile-cat-menu {
+    display: none;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.mobile-cat-menu.open {
+    display: block;
+    animation: fadeSlideDown 0.3s ease;
+}
+
+@keyframes fadeSlideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Список категорій */
+.mobile-cat-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.mobile-cat-item {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.mobile-cat-item:last-child {
+    border-bottom: none;
+}
+
+/* Рядок категорії (кнопка + посилання) */
+.mobile-cat-row {
+    display: flex;
+    align-items: stretch;
+}
+
+/* Кнопка розгортання */
+.mobile-cat-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    background: #f8fafc;
+    border: none;
+    border-right: 1px solid #e2e8f0;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.mobile-cat-toggle:hover {
+    background: #e2e8f0;
+    color: #2563eb;
+}
+
+.mobile-cat-toggle i {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.9rem;
+}
+
+.mobile-cat-toggle.open i {
+    transform: rotate(90deg);
+}
+
+/* Посилання на категорію */
+.mobile-cat-link {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex: 1;
+    padding: 0.85rem 1rem;
+    text-decoration: none;
+    color: #334155;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.mobile-cat-link:hover {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.mobile-cat-link.active {
+    background: #dbeafe;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.mobile-cat-link i {
+    font-size: 1.1rem;
+    color: inherit;
+    flex-shrink: 0;
+}
+
+/* Підкатегорії */
+.mobile-cat-sub {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    background: #f8fafc;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-cat-sub.open {
+    max-height: 1500px;
+}
+
+.mobile-cat-sub li {
+    border-top: 1px solid #e2e8f0;
+}
+
+.mobile-cat-sub .mobile-cat-link {
+    padding-left: 3.5rem;
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 400;
+}
+
+.mobile-cat-sub .mobile-cat-link:hover {
+    background: #fff;
+    color: #2563eb;
+}
+
+.mobile-cat-sub .mobile-cat-link.active {
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+
+/* 3-й рівень категорій */
+.mobile-cat-sub .mobile-cat-row {
+    display: flex;
+    align-items: stretch;
+}
+
+.mobile-cat-toggle-l2 {
+    width: 40px;
+    background: #f1f5f9;
+}
+
+.mobile-cat-sub-l3 {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    background: #f1f5f9;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-cat-sub-l3.open {
+    max-height: 800px;
+}
+
+.mobile-cat-link-l3 {
+    padding-left: 5rem !important;
+    font-size: 0.85rem !important;
+    color: #94a3b8 !important;
+}
+
+.mobile-cat-link-l3:hover {
+    background: #e2e8f0 !important;
+    color: #2563eb !important;
+}
+
+.mobile-cat-link-l3.active {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+    font-weight: 600 !important;
+}
+
+/* Сайдбар: стилі списку */
+.sidebar-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 7px;
+    text-decoration: none;
+    color: #475569;
+    font-size: 0.92rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.sidebar-link:hover {
+    background: #eff6ff;
+    color: #2563eb;
+    transform: translateX(3px);
+}
+
+.sidebar-link.active {
+    background: #2563eb;
+    color: #fff;
+    font-weight: 600;
+}
+
+.sidebar-link i {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.sidebar-submenu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-sublink {
+    padding-left: 2.2rem !important;
+    font-size: 0.88rem;
+    color: #64748b;
+}
+
+.sidebar-sublink.active {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* АДАПТИВНІСТЬ */
+@media (max-width: 1024px) {
+    .categories-section {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    .breadcrumb-nav {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.85rem;
+        gap: 0.4rem;
+    }
+
+    .subcategories-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .subcategory-item {
+        padding: 0.5rem;
+        gap: 0.3rem;
+        font-size: 0.85rem;
+    }
+
+    .sub-icon {
+        font-size: 1.2rem;
+    }
+
+    .sub-name {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .breadcrumb-nav {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    .subcategories-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 0.4rem;
+    }
+
+    .subcategory-item {
+        padding: 0.4rem;
+    }
+    
+    .mobile-cat-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .mobile-cat-link {
+        padding: 0.75rem 0.8rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* КАТЕГОРІЇ - горизонтальна стрічка */
+.categories-section {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #e0e7ef;
+}
+
+.categories-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    padding: 0.3rem 0;
+    margin: 0 -0.8rem;
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+}
+
+.categories-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.categories-scroll::-webkit-scrollbar-track {
+    background: #e0e7ef;
+    border-radius: 2px;
+}
+
+.categories-scroll::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 2px;
+}
+
+.categories-scroll::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+.categories-container {
+    display: flex;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.category-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    text-decoration: none;
+    color: #334155;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.category-card:hover {
+    background: #f1f5f9;
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.category-card.active {
+    background: #3b82f6;
+    border-color: #2563eb;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.2);
+}
+
+.category-icon-wrapper {
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.category-info {
+    text-align: center;
+}
+
+.category-name {
+    font-weight: 500;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+.category-sub-count {
+    font-size: 0.7rem;
+    opacity: 0.6;
+}
+
+/* ПІДКАТЕГОРІЇ - списком */
+.subcategories-section {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 0.8rem;
+    border: 1px solid #cbd5e1;
+}
+
+.subcategories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.7rem;
+}
+
+.subcategory-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #334155;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.subcategory-item:hover {
+    background: #f1f5f9;
+    border-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(37,99,235,0.1);
+}
+
+.subcategory-item.active {
+    background: #3b82f6;
+    border-color: #2563eb;
+    color: #fff;
+}
+
+.subcategory-item.back-link {
+    background: #e0f2fe;
+    border-color: #0284c7;
+    color: #0284c7;
+}
+
+.subcategory-item.back-link:hover {
+    background: #0284c7;
+    color: #fff;
+}
+
+.sub-icon {
+    font-size: 1.5rem;
+    color: inherit;
+}
+
+.sub-name {
+    font-weight: 500;
+    font-size: 0.85rem;
+    line-height: 1.1;
+}
+
+/* MOBILE VERSION */
+@media (max-width: 768px) {
+    .categories-section {
+        padding: 0.5rem 0.6rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .categories-scroll {
+        padding: 0.2rem 0;
+        margin: 0 -0.6rem;
+        padding-left: 0.6rem;
+        padding-right: 0.6rem;
+    }
+
+    .categories-container {
+        gap: 0.5rem;
+    }
+
+    .category-card {
+        padding: 0.4rem 0.6rem;
+        gap: 0.2rem;
+        font-size: 0.8rem;
+    }
+
+    .category-icon-wrapper {
+        font-size: 1rem;
+    }
+
+    .category-name {
+        font-size: 0.75rem;
+    }
+
+    .subcategories-section {
+        padding: 0.6rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .subcategories-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .subcategory-item {
+        padding: 0.5rem;
+        gap: 0.3rem;
+        font-size: 0.85rem;
+    }
+
+    .sub-icon {
+        font-size: 1.2rem;
+    }
+
+    .sub-name {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .categories-card {
+        padding: 0.3rem 0.5rem;
+    }
+
+    .subcategories-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 0.4rem;
+    }
+
+    .subcategory-item {
+        padding: 0.4rem;
+    }
+}
+
+/* Вітальна секція */
+.welcome-section {
+    background: linear-gradient(90deg, #eff6ff 0%, #f1f5f9 100%);
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.04);
+    padding: 2.5rem 1.5rem 2.5rem 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+.welcome-title {
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: #2563eb;
+    margin-bottom: 12px;
+}
+.welcome-subtitle {
+    font-size: 1.1rem;
+    color: #334155;
+    margin-bottom: 0;
+}
+/* Сітка товарів */
+.products-section {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+    padding: 1.5rem 1.2rem 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e0e7ef;
+    padding-left: 0.7rem;
+    padding-right: 0.7rem;
+}
+.section-header {
+    margin-bottom: 18px;
+    border-bottom: 1px solid #e0e7ef;
+    padding-bottom: 0.7rem;
+}
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2563eb;
+}
+.section-subtitle {
+    font-size: 1rem;
+    color: #64748b;
+}
+.filter-section {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    min-width: 220px;
+    max-width: 100%;
+}
+.brand-select {
+    min-width: 140px;
+    max-width: 220px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 1rem;
+    transition: border-color 0.18s, box-shadow 0.18s;
+}
+.brand-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px #eff6ff;
+}
+.filter-label {
+    font-weight: 500;
+    color: #334155;
+    margin-right: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+    margin-bottom: 0;
+}
+.btn-outline-secondary.btn-sm {
+    border-radius: 8px;
+    padding: 0.25rem 0.7rem;
+}
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 колонки */
+    gap: 18px;
+}
+.load-more-btn { margin-top: 18px; }
+@media (max-width: 991px) {
+    .products-section { padding: 1rem 0.7rem 1.5rem; }
+    .section-header { flex-direction: column; align-items: flex-start !important; gap: 0.7rem; }
+    .filter-section { width: 100%; }
+    .products-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .col-lg-3 {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        background: #f1f5f9;
+        display: flex;
+        gap: 10px;
+        padding: 8px 8px 12px 8px;
+        box-shadow: 0 -2px 12px rgba(37,99,235,0.07);
+    }
+
+}
+@media (max-width: 600px) {
+    .products-grid { grid-template-columns: 1fr; gap: 8px; }
+    .welcome-section { padding: 18px 8px 14px 8px; }
+    .welcome-title { font-size: 1.3rem; }
+    .filter-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+    .brand-select {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+    .filter-label {
+        margin-bottom: 0;
+    }
+}
+.info-card, .sidebar-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+    margin-bottom: 18px;
+    padding: 1.2rem 1rem;
+    border: 1px solid #e0e7ef;
+    transition: box-shadow 0.18s;
+}
+.info-card:hover, .sidebar-card:hover {
+    box-shadow: 0 4px 16px rgba(37,99,235,0.10);
+}
+.card-header {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-bottom: 0.7rem;
+}
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.contact-info .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.5rem;
+}
+.contact-icon {
+    background: #eff6ff;
+    color: #2563eb;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+.phone-number {
+    font-weight: 700;
+    color: #2563eb;
+}
+.phone-hours {
+    font-size: 0.95rem;
+    color: #64748b;
+}
+@media (max-width: 991px) {
+    .sidebar-card, .info-card { padding: 1rem 0.7rem; }
+}
+.btn-primary, .btn-outline-primary {
+    background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+    color: #fff;
+    border: none;
+}
+.btn-primary:hover, .btn-outline-primary:hover {
+    background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 100%);
+    color: #fff;
+}
+.btn-primary:active, .btn-outline-primary:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.10);
+}
+.product-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    overflow: hidden;
+    margin-bottom: 14px;
+    border: 1px solid #e2e8f0;
+    min-width: 0;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.product-card:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+    transform: translateY(-2px) scale(1.01);
+    border-color: #b6d4fe;
+}
+.product-image-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 12px 12px 0 0;
+    padding: 0;
+    min-height: 120px;
+}
+
+/* Out of Stock Badge */
+.out-of-stock-badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    z-index: 10;
+    gap: 0.3rem;
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.out-of-stock-badge i {
+    font-size: 1.5rem;
+    opacity: 0.9;
+}
+
+.product-card.out-of-stock {
+    opacity: 0.85;
+}
+
+.product-card.out-of-stock:hover {
+    opacity: 1;
+}
+
+.product-image {
+    width: 92%;
+    height: 92%;
+    object-fit: contain !important;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.07);
+    border: 1px solid #e2e8f0;
+    display: block;
+    margin: auto;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.product-image-placeholder {
+    width: 100%;
+    height: 100%;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #bbb;
+    font-size: 2.2rem;
+}
+.product-content {
+    padding: 0.5rem 0.7rem 0.5rem 0.7rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 1px;
+    gap: 0.2rem;
+}
+.product-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 0.15rem;
+    line-height: 1.2;
+    min-height: 2.1em;
+    word-break: break-word;
+    white-space: normal;
+}
+.product-meta {
+    font-size: 0.93rem;
+    color: #555;
+    margin-bottom: 0.15rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.7rem;
+}
+.meta-item {
+    display: flex;
+    gap: 0.2em;
+    align-items: center;
+    padding: 0;
+    border: none;
+}
+.meta-label {
+    color: #888;
+    font-weight: 500;
+}
+.product-price {
+    font-weight: 700;
+    color: #0d6efd;
+    font-size: 1.05rem;
+    margin-bottom: 0.1rem;
+}
+.price-note {
+    font-size: 0.82em;
+    color: #888;
+    margin-left: 2px;
+}
+.product-actions {
+    margin-top: auto;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 0.3rem;
+}
+.product-btn {
+    font-size: 0.97rem;
+    padding: 0.35em 1.1em;
+    border-radius: 6px;
+    margin-top: 0.1rem;
+}
+.product-title:empty { display: none; }
+@media (max-width: 991px) {
+    .product-content {
+        padding: 0.4rem 0.5rem 0.4rem 0.5rem;
+        gap: 0.15rem;
+    }
+}
+@media (max-width: 600px) {
+    .product-card { margin-bottom: 7px; }
+    .product-image-container { min-height: 90px; }
+}
+
+/* --- Compact Welcome Strip --- */
+.welcome-strip {
+    background: linear-gradient(90deg,#2563eb 0%,#1d4ed8 100%);
+    color:#fff;
+    padding:6px 14px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:0.92rem;
+    margin-bottom:14px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.08);
+}
+.welcome-strip .strip-close {
+    background:none;
+    border:none;
+    color:#fff;
+    font-size:1.4rem;
+    line-height:1;
+    padding:0 4px;
+    cursor:pointer;
+    opacity:.75;
+    transition:opacity .18s;
+}
+.welcome-strip .strip-close:hover { opacity:1; }
+
+/* --- Horizontal mini info bar --- */
+.pre-products-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 18px;
+    width: 100%;
+}
+.btn-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 80px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    transition: box-shadow .18s, transform .18s, background .18s;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 16px 18px;
+    text-align: left;
+}
+.btn-card:hover, .btn-card:focus {
+    background: #f1f5fb;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.08);
+    text-decoration: none;
+}
+.help-btn i { color: #25d366; }
+.service-btn i { color: #2563eb; }
+.vin-mini .btn { font-size: 1.6rem; }
+@media (max-width: 991px) {
+    .pre-products-bar { grid-template-columns: 1fr; }
+    .btn-card { min-height: 60px; }
+}
+@media (max-width: 992px) {
+    .pre-products-bar { grid-template-columns: 1fr; }
+    .vin-mini-panel.open { max-height: 260px; }
+}
+@media (max-width: 600px) {
+    #vinMiniForm .row > div { flex:0 0 100%; max-width:100%; }
+}
+
+/* --- Swipeable pre-products-bar --- */
+.pre-products-bar-scroll {
+    width: 100%;
+    margin-bottom: 18px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.pre-products-bar-scroll::-webkit-scrollbar { display: none; }
+
+.pre-products-bar-inner {
+    display: flex;
+    gap: 18px;
+    width: max-content;
+    padding: 0; /* менший padding для кращого peek-ефекту */
+}
+
+.btn-card {
+    flex: 0 0 72vw; /* менша ширина картки */
+    max-width: 340px;
+    min-width: 220px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    transition: box-shadow .18s, transform .18s, background .18s;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 16px 14px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 80px;
+}
+
+.btn-card:hover, .btn-card:focus {
+    background: #f1f5fb;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.08);
+    text-decoration: none;
+}
+
+@media (min-width: 992px) {
+    .pre-products-bar-scroll {
+        overflow: visible;
+        margin-bottom: 18px;
+    }
+    .pre-products-bar-inner {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        width: 100%;
+        padding: 0;
+    }
+    .btn-card {
+        flex: 1 1 0;
+        max-width: none;
+        min-width: 0;
+    }
+}
+
+/* Utility */
+.pre-products-bar .mini-card.vin-mini { padding-bottom:10px; }
+/* VIN Modal Overlay */
+.vin-modal-overlay {
+    position: fixed;
+    z-index: 2000;
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    background: rgba(30,41,59,0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity .25s;
+}
+.vin-modal-overlay.d-none { display: none; }
+.vin-modal-window {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    padding: 32px 28px 24px;
+    max-width: 420px;
+    width: 96vw;
+    max-height: 96vh;
+    overflow-y: auto;
+    position: relative;
+    animation: vinModalIn .25s;
+}
+@keyframes vinModalIn {
+    from { transform: translateY(40px) scale(0.98); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+}
+.vin-modal-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: #2563eb;
+    text-align: center;
+}
+.vin-modal-close {
+    position: absolute;
+    top: 14px; right: 18px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #64748b;
+    cursor: pointer;
+    opacity: .7;
+    transition: opacity .18s;
+    z-index: 10;
+}
+.vin-modal-close:hover { opacity: 1; }
+@media (max-width: 600px) {
+    .vin-modal-window {
+        padding: 18px 6vw 14px;
+        max-width: 98vw;
+    }
+    .vin-modal-title { font-size: 1.1rem; }
+}
+
+/* Wide main content container */
+.main-content-wide {
+    width: 100%;
+    max-width: 1440px; /* або 1320px, підбери під дизайн */
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 24px;
+    padding-right: 24px;
+}
+@media (max-width: 1399px) {
+    .main-content-wide { max-width: 98vw; }
+}
+
+/* Яскравіші картки pre-products-bar */
+.btn-card {
+    background: linear-gradient(105deg, #eff6ff 0%, #f1f5f9 100%);
+    border: 1.5px solid #b6c3e6;
+    box-shadow: 0 4px 16px rgba(37,99,235,0.10);
+    color: #1e293b;
+    transition: box-shadow .18s, transform .18s, background .18s, border .18s;
+}
+.btn-card:hover, .btn-card:focus {
+    background: linear-gradient(105deg, #dbeafe 0%, #eff6ff 100%);
+    border-color: #2563eb;
+    box-shadow: 0 8px 32px rgba(37,99,235,0.18);
+    color: #2563eb;
+}
+.mini-title i { color: #2563eb; }
+.mini-title { color: #2563eb; font-weight: 700; }
+.mini-sub { color: #334155; }
+
+/* Яскравіші картки товарів */
+.product-card {
+    background: linear-gradient(90deg, #f8fafc 0%, #eff6ff 100%);
+    border: 1.5px solid #c7d2fe;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+    border-radius: 12px;
+    transition: box-shadow 0.18s, transform 0.18s, border 0.18s;
+}
+.product-card:hover {
+    box-shadow: 0 8px 32px rgba(37,99,235,0.16);
+    border-color: #2563eb;
+    transform: translateY(-4px) scale(1.02);
+}
+.product-title { color: #2563eb; font-weight: 600; }
+.product-price { color: #1d4ed8; font-weight: 700; }

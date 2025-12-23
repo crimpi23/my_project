@@ -1,5 +1,9 @@
 {% extends "base/public_base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/public-orders.css') }}">
+{% endblock %}
+
 {% block head %}
 <meta name="description" content="{{ _('View your order history at AutogroupEU. Track your purchases and check delivery status.') }}">
 <meta name="robots" content="noindex, nofollow">
@@ -53,7 +57,6 @@
                             'delivered': _('Delivered'),
                             'cancelled': _('Cancelled')
                         } %}
-                        
                         {% set status_icon = {
                             'new': 'bi-hourglass',
                             'processing': 'bi-gear',
@@ -61,7 +64,6 @@
                             'delivered': 'bi-check-circle',
                             'cancelled': 'bi-x-circle'
                         } %}
-                        
                         {% set status_class = {
                             'new': 'status-pending',
                             'processing': 'status-processing',
@@ -69,7 +71,6 @@
                             'delivered': 'status-delivered',
                             'cancelled': 'status-cancelled'
                         } %}
-                        
                         <span class="status-badge {{ status_class[order.status] }}">
                             <i class="bi {{ status_icon[order.status] }}"></i>
                             {{ status_translation[order.status] }}

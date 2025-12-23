@@ -1,5 +1,9 @@
 {% extends "base/public_base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/public-orders.css') }}">
+{% endblock %}
+
 {% block head %}
 <meta name="description" content="{{ _('Order details at AutogroupEU. View products, prices, and delivery information.') }}">
 <meta name="robots" content="noindex, nofollow">
@@ -44,7 +48,6 @@
                                     'delivered': _('Delivered'),
                                     'cancelled': _('Cancelled')
                                 } %}
-                                
                                 {% set status_class = {
                                     'new': 'text-primary',
                                     'processing': 'text-info',
@@ -52,7 +55,6 @@
                                     'delivered': 'text-success',
                                     'cancelled': 'text-danger'
                                 } %}
-                                
                                 <span class="{{ status_class[order.status] }}">
                                     {{ status_translation[order.status] }}
                                 </span>

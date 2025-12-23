@@ -1,0 +1,279 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}Product → Categories - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-link-45deg"></i> Product → Categories (Bulk Assignment)</h1>
+        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Quick Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h3 class="text-success">{{ total_items }}</h3>
+                    <p class="mb-0"><i class="bi bi-box-seam"></i> Total Products</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card text-center border-info">
+                <div class="card-body">
+                    <h3 class="text-info">{{ categories|length }}</h3>
+                    <p class="mb-0"><i class="bi bi-collection"></i> Available Categories</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Filters & Search</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <form method="GET" class="d-flex gap-2">
+                        <input type="text" 
+                               name="article" 
+                               class="form-control form-control-sm" 
+                               placeholder="🔍 Search article..." 
+                               value="{{ article_filter }}">
+                        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                        {% if article_filter or category_filter or status_filter != 'all' %}
+                        <a href="{{ url_for('admin_product_categories', token=token) }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </a>
+                        {% endif %}
+                    </form>
+                </div>
+                
+                <div class="col-md-2">
+                    <form method="GET" class="d-inline">
+                        <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">📂 All Categories</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if category_filter == cat.id %}selected{% endif %}
+                                style="{% if cat.level == 0 %}font-weight: bold;{% endif %}">
+                                {{ cat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                
+                <div class="col-md-2">
+                    <form method="GET" class="d-inline">
+                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>📊 All Products</option>
+                            <option value="assigned" {% if status_filter == 'assigned' %}selected{% endif %}>✓ With Categories</option>
+                            <option value="unassigned" {% if status_filter == 'unassigned' %}selected{% endif %}>✗ Without Categories</option>
+                        </select>
+                    </form>
+                </div>
+
+                <div class="col-md-4 text-end">
+                    <small class="text-muted">
+                        📊 Showing <strong>{{ start_item }}-{{ end_item }}</strong> 
+                        of <strong>{{ total_items }}</strong> products | Page {{ page }} / {{ total_pages }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Operations -->
+    <form method="POST" id="bulkForm">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-hammer"></i> Bulk Operations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleSelectAll()">
+                            <i class="bi bi-check-square"></i> Select All on Page
+                        </button>
+                        <span id="selectedCount" class="badge bg-info ms-2">Selected: 0</span>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <select name="target_category" class="form-select form-select-sm">
+                            <option value="">-- Select Category --</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" style="{% if cat.level == 0 %}font-weight: bold; background: #e9ecef;{% elif cat.level == 1 %}padding-left: 20px;{% else %}padding-left: 40px; color: #6c757d;{% endif %}">
+                                {{ cat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-success btn-sm" 
+                                onclick="submitBulkAction('bulk_assign')">
+                            <i class="bi bi-plus-circle"></i> Add to Category
+                        </button>
+                        
+                        <button type="button" class="btn btn-danger btn-sm" 
+                                onclick="submitBulkAction('bulk_remove')">
+                            <i class="bi bi-trash"></i> Remove from All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Table -->
+        {% if products %}
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-table"></i> Products</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                            </th>
+                            <th>Article</th>
+                            <th>Name</th>
+                            <th>Brand</th>
+                            <th>Categories</th>
+                            <th style="width: 80px;">Price</th>
+                            <th style="width: 80px;">Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="articles" value="{{ product.article }}" 
+                                       class="product-checkbox" onchange="updateSelectedCount()">
+                            </td>
+                            <td><strong>{{ product.article }}</strong></td>
+                            <td>{{ product.name_sk or '—' }}</td>
+                            <td>{{ product.brand_name or '—' }}</td>
+                            <td>
+                                {% if product.categories %}
+                                <span class="badge bg-success">{{ product.category_count }}</span>
+                                <small class="text-muted">{{ product.categories }}</small>
+                                {% else %}
+                                <span class="badge bg-warning">None</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">{{ product.price or '—' }} €</td>
+                            <td class="text-end">
+                                <span class="badge bg-{% if product.quantity > 0 %}info{% else %}warning{% endif %}">
+                                    {{ product.quantity }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <div class="card-footer bg-light">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm mb-0 justify-content-center">
+                        {% if page > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, status=status_filter, page=1) }}">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, status=status_filter, page=page-1) }}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for p in page_range %}
+                        <li class="page-item {% if p == page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, status=status_filter, page=p) }}">
+                                {{ p }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if page < total_pages %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, status=status_filter, page=page+1) }}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, status=status_filter, page=total_pages) }}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            No products found for the selected filters.
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const productCheckboxes = document.querySelectorAll('.product-checkbox');
+    
+    productCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const checked = document.querySelectorAll('.product-checkbox:checked').length;
+    document.getElementById('selectedCount').textContent = `Selected: ${checked}`;
+}
+
+function submitBulkAction(action) {
+    const form = document.getElementById('bulkForm');
+    const checked = document.querySelectorAll('.product-checkbox:checked').length;
+    
+    if (checked === 0) {
+        alert('⚠️ Please select at least one product');
+        return;
+    }
+    
+    if (action === 'bulk_assign') {
+        const category = document.querySelector('select[name="target_category"]').value;
+        if (!category) {
+            alert('⚠️ Please select a category');
+            return;
+        }
+    }
+    
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = 'action';
+    hidden.value = action;
+    form.appendChild(hidden);
+    
+    form.submit();
+}
+</script>
+{% endblock %}
+

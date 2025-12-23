@@ -1,0 +1,283 @@
+{% extends "base/public_base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/public-index.css') }}">
+<style>
+.categories-page-header {
+    text-align: center;
+    padding: 2rem 0;
+    background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+}
+
+.categories-page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e40af;
+    margin-bottom: 0.5rem;
+}
+
+.categories-page-header p {
+    color: #64748b;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.category-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(37,99,235,0.12);
+    border-color: #2563eb;
+}
+
+.category-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.category-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #dbeafe;
+    border-radius: 10px;
+    color: #2563eb;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.category-card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.category-card-header h3 a {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s;
+}
+
+.category-card-header h3 a:hover {
+    color: #2563eb;
+}
+
+.category-card-body {
+    padding: 0;
+}
+
+.subcategory-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.subcategory-list li {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.subcategory-list li:last-child {
+    border-bottom: none;
+}
+
+.subcategory-item-wrap {
+    padding: 0;
+}
+
+.subcategory-main-link {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.2rem;
+    text-decoration: none;
+    color: #475569;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.subcategory-main-link:hover {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.subcategory-main-link i {
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+/* 3-й рівень на сторінці категорій */
+.subcategory-level3 {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0.5rem 2.5rem;
+    background: #f8fafc;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.subcategory-level3 li {
+    border: none !important;
+}
+
+.subcategory-level3 a {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    background: #e2e8f0;
+    color: #64748b;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.subcategory-level3 a:hover {
+    background: #2563eb;
+    color: #fff;
+}
+
+.category-card-footer {
+    padding: 0.8rem 1.2rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+.category-card-footer a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.category-card-footer a:hover {
+    color: #1d4ed8;
+}
+
+.no-subcategories {
+    padding: 1rem 1.2rem;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .categories-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .categories-page-header {
+        padding: 1.5rem 1rem;
+    }
+    
+    .categories-page-header h1 {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block title %}{{ _('Product Categories') }} - AutogroupEU{% endblock %}
+
+{% block head %}
+<meta name="description" content="{{ _('Browse all product categories at AutogroupEU. Find auto parts by category: engine, brakes, suspension, electrical and more.') }}">
+<meta property="og:title" content="{{ _('Product Categories') }} - AutogroupEU">
+<meta property="og:description" content="{{ _('Browse all product categories. Fast delivery across Europe.') }}">
+<meta property="og:type" content="website">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Хлібні крихти -->
+    <nav class="breadcrumb-nav" aria-label="breadcrumb">
+        <a href="{{ url_for('index') }}" class="breadcrumb-link">
+            <i class="bi bi-house-door"></i> {{ _('Home') }}
+        </a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">{{ _('Categories') }}</span>
+    </nav>
+
+    <!-- Заголовок -->
+    <div class="categories-page-header">
+        <h1><i class="bi bi-grid-3x3-gap me-2"></i>{{ _('Product Categories') }}</h1>
+        <p>{{ _('Browse our catalog by category') }}</p>
+    </div>
+
+    <!-- Сітка категорій -->
+    <div class="categories-grid">
+        {% for category in categories %}
+        <div class="category-card">
+            <div class="category-card-header">
+                <div class="category-icon">
+                    <i class="bi {{ category.icon_class if category.icon_class else 'bi-folder' }}"></i>
+                </div>
+                <h3>
+                    <a href="{{ url_for('index', category=category.id) }}">{{ category.name }}</a>
+                </h3>
+            </div>
+            <div class="category-card-body">
+                {% if category.children %}
+                <ul class="subcategory-list">
+                    {% for sub in category.children %}
+                    <li class="subcategory-item-wrap">
+                        <a href="{{ url_for('index', category=sub.id) }}" class="subcategory-main-link">
+                            <i class="bi {{ sub.icon_class if sub.icon_class else 'bi-tag' }}"></i>
+                            {{ sub.name }}
+                        </a>
+                        {% if sub.children %}
+                        <ul class="subcategory-level3">
+                            {% for sub3 in sub.children %}
+                            <li>
+                                <a href="{{ url_for('index', category=sub3.id) }}">
+                                    {{ sub3.name }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="no-subcategories">
+                    <i class="bi bi-box-seam me-1"></i> {{ _('View products') }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="category-card-footer">
+                <a href="{{ url_for('index', category=category.id) }}">
+                    {{ _('Browse category') }}
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

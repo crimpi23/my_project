@@ -228,7 +228,7 @@ body {
 /* --- CONTACT BUTTONS --- */
 .floating-contact, .fixed-contact-buttons {
     position: fixed;
-    left: 24px;
+    right: 24px;
     z-index: 100;
     display: flex;
     flex-direction: column;
@@ -359,8 +359,8 @@ body {
 /* --- RESPONSIVE --- */
 @media (max-width: 991px) {
     .footer-grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .floating-contact { left: 8px; bottom: 140px; }
-    .fixed-contact-buttons { left: 8px; bottom: 70px; }
+    .floating-contact { right: 8px; bottom: 140px; }
+    .fixed-contact-buttons { right: 8px; bottom: 70px; }
 }
 @media (max-width: 767px) {
     .footer-grid { grid-template-columns: 1fr; gap: 1.5rem; }
@@ -441,6 +441,7 @@ body {
   width: 82vw;
   max-width: 340px;
   height: 100vh;
+  height: 100dvh; /* Для мобільних браузерів */
   background: #fff;
   box-shadow: 2px 0 16px rgba(0,0,0,0.13);
   z-index: 1200;
@@ -448,7 +449,9 @@ body {
   transition: transform 0.25s cubic-bezier(.4,0,.2,1);
   display: flex;
   flex-direction: column;
-  padding-bottom: 2rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 .mobile-menu.open {
   transform: translateX(0);
@@ -459,6 +462,15 @@ body {
   justify-content: space-between;
   padding: 1.1rem 1.3rem 1rem 1.3rem;
   border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+.mobile-menu-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
 }
 .mobile-menu-title {
   font-size: 1.2rem;
@@ -504,6 +516,54 @@ body {
   display: block;
   opacity: 1;
 }
+
+/* Перемикач мови для мобільної версії */
+.mobile-language-selector {
+  padding: 16px 16px 32px 16px;
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.mobile-lang-title {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.mobile-lang-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mobile-lang-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--light-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.mobile-lang-btn:hover {
+  background: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
+}
+.mobile-lang-btn.active {
+  background: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
+}
+.mobile-lang-btn .lang-flag {
+  font-size: 1.1rem;
+}
+
 @media (min-width: 992px) {
   .burger-btn, .mobile-menu, .mobile-menu-backdrop { display: none !important; }
 }

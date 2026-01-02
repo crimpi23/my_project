@@ -1828,7 +1828,7 @@ def get_subcategories(parent_id):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
         # Отримуємо поточну мову
-        lang = session.get('language', 'uk')
+        lang = session.get('language', 'sk')
         
         # Запит для отримання підкатегорій
         cursor.execute(f"""
@@ -1921,7 +1921,7 @@ def get_subcategories(parent_id):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
         # Отримуємо поточну мову
-        lang = session.get('language', 'uk')
+        lang = session.get('language', 'sk')
         
         # Запит для отримання підкатегорій
         cursor.execute(f"""
@@ -2023,7 +2023,7 @@ def inject_template_vars():
 
 def get_categories_tree_for_menu():
     """Повертає ієрархічне дерево категорій для меню в навігації"""
-    lang = session.get('language', 'uk')
+    lang = session.get('language', 'sk')
     categories = []
     try:
         with get_db_connection() as conn:
@@ -11272,26 +11272,69 @@ def process_single_article(item, import_file_id, safe_mode):
 
 
 def add_to_queue_safe(article, item, import_file_id):
-    """Безпечно додає артикул в чергу (оновлює або створює)"""
+    """Безпечно додає артикул в чергу (оновлює або створює).
+    
+    НЕ додає товар якщо він вже є в whitelist, blacklist або вже в черзі з processed=FALSE.
+    """
     with get_db_connection() as conn:
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
+        brand_name = item.get('brand', '')
+        
+        # Отримуємо brand_id для перевірки списків
+        brand_id = None
+        if brand_name:
+            cursor.execute("SELECT id FROM brands WHERE LOWER(name) = LOWER(%s)", (brand_name,))
+            brand_result = cursor.fetchone()
+            if brand_result:
+                brand_id = brand_result['id']
+        
+        # 1. Перевіряємо чорний список
+        if brand_id:
+            cursor.execute("""
+                SELECT id FROM import_blacklist 
+                WHERE article = %s AND brand_id = %s
+            """, (article, brand_id))
+            if cursor.fetchone():
+                logging.info(f"Article {article} is in blacklist, skipping queue")
+                return 'blacklisted'
+        
+        # 2. Перевіряємо білий список
+        if brand_id:
+            cursor.execute("""
+                SELECT id FROM import_whitelist 
+                WHERE article = %s AND brand_id = %s
+            """, (article, brand_id))
+            if cursor.fetchone():
+                logging.info(f"Article {article} is in whitelist, skipping queue")
+                return 'whitelisted'
+        
+        # 3. Перевіряємо чи вже є в черзі з processed=FALSE (не оброблений)
         cursor.execute("""
-            SELECT id FROM import_queue WHERE article = %s
+            SELECT id, processed FROM import_queue WHERE article = %s
         """, (article,))
         
         existing = cursor.fetchone()
         
         if existing:
-            # Оновлюємо існуючий запис
-            cursor.execute("""
-                UPDATE import_queue 
-                SET name = %s, brand = %s, quantity = %s, price = %s, 
-                    import_file_id = %s, processed = FALSE, created_at = NOW()
-                WHERE article = %s
-            """, (item.get('name', ''), item['brand'], item['quantity'], 
-                  item['price'], import_file_id, article))
-            logging.info(f"Updated {article} in import queue")
+            if not existing['processed']:
+                # Товар вже в черзі і ще не оброблений - тільки оновлюємо ціну/кількість
+                cursor.execute("""
+                    UPDATE import_queue 
+                    SET quantity = %s, price = %s, import_file_id = %s, created_at = NOW()
+                    WHERE article = %s AND processed = FALSE
+                """, (item['quantity'], item['price'], import_file_id, article))
+                logging.info(f"Updated {article} in import queue (was already pending)")
+            else:
+                # Товар був в черзі але вже оброблений - скидаємо статус
+                cursor.execute("""
+                    UPDATE import_queue 
+                    SET name = %s, brand = %s, quantity = %s, price = %s, 
+                        import_file_id = %s, processed = FALSE, created_at = NOW()
+                    WHERE article = %s
+                """, (item.get('name', ''), item['brand'], item['quantity'], 
+                      item['price'], import_file_id, article))
+                logging.info(f"Reset {article} in import queue (was processed)")
         else:
             # Вставляємо новий запис
             cursor.execute("""
@@ -11303,6 +11346,7 @@ def add_to_queue_safe(article, item, import_file_id):
             logging.info(f"Added {article} to import queue")
         
         conn.commit()
+        return 'queued'
 
 @app.route('/<token>/admin/import/queue/clear', methods=['POST'])
 @requires_token_and_roles('admin', 'manager')
@@ -11993,6 +12037,13 @@ def admin_import_whitelist_add(token):
                     auto_update = EXCLUDED.auto_update
             """, (article, brand_id, markup_percent, min_quantity, max_quantity, notes, auto_update))
             
+            # ДОДАНО: Видаляємо з blacklist (взаємовиключення)
+            cursor.execute("""
+                DELETE FROM import_blacklist 
+                WHERE article = %s AND brand_id = %s
+            """, (article, brand_id))
+            removed_from_blacklist = cursor.rowcount
+            
             # Видаляємо з черги після додавання в whitelist
             cursor.execute("DELETE FROM import_queue WHERE article = %s", (article,))
             removed_from_queue = cursor.rowcount
@@ -12000,8 +12051,10 @@ def admin_import_whitelist_add(token):
             conn.commit()
             
             message = f"Артикул {article} додано в білий список (бренд: {brand[0]})"
+            if removed_from_blacklist > 0:
+                message += f", видалено з чорного списку"
             if removed_from_queue > 0:
-                message += f" і видалено з черги"
+                message += f", видалено з черги"
             
             flash(message, "success")
             
@@ -12114,6 +12167,13 @@ def admin_import_blacklist_add(token):
                     notes = EXCLUDED.notes
             """, (article, brand_id, reason, replacement_article, notes))
             
+            # ДОДАНО: Видаляємо з whitelist (взаємовиключення)
+            cursor.execute("""
+                DELETE FROM import_whitelist 
+                WHERE article = %s AND brand_id = %s
+            """, (article, brand_id))
+            removed_from_whitelist = cursor.rowcount
+            
             # ДОДАНО: Видаляємо з черги після додавання в blacklist
             cursor.execute("""
                 DELETE FROM import_queue 
@@ -12124,8 +12184,10 @@ def admin_import_blacklist_add(token):
             conn.commit()
             
             message = f"Артикул додано в чорний список"
+            if removed_from_whitelist > 0:
+                message += f", видалено з білого списку"
             if removed_from_queue > 0:
-                message += f" і видалено з черги ({removed_from_queue} записів)"
+                message += f", видалено з черги ({removed_from_queue} записів)"
             
             flash(message, "success")
             
@@ -14161,12 +14223,13 @@ def admin_categories(token):
 @requires_token_and_roles('admin')
 @add_noindex_header
 def admin_product_categories(token):
-    """Масове прив'язування товарів до категорій"""
+    """Масове прив'язування товарів до категорій (Many-to-Many з підтримкою головної категорії)"""
     try:
         # Фільтри
         article_filter = request.args.get('article', '').strip().upper()
         category_filter = request.args.get('category', type=int)
-        status_filter = request.args.get('status', 'all')  # all, assigned, unassigned
+        brand_filter = request.args.get('brand', type=int)
+        status_filter = request.args.get('status', 'all')  # all, assigned, unassigned, multiple
         page = request.args.get('page', 1, type=int)
         per_page = 30
         
@@ -14180,6 +14243,7 @@ def admin_product_categories(token):
                     # Масове додавання до категорії
                     selected_articles = request.form.getlist('articles')
                     target_category = request.form.get('target_category', type=int)
+                    set_as_primary = request.form.get('set_as_primary') == 'on'
                     
                     if not target_category or not selected_articles:
                         flash("❌ Виберіть товари та категорію", "error")
@@ -14193,31 +14257,49 @@ def admin_product_categories(token):
                             if not cursor.fetchone():
                                 continue
                             
-                            # Перевіряємо чи вже існує зв'язок
-                            cursor.execute(
-                                "SELECT id FROM product_category_mapping WHERE article = %s AND category_id = %s",
-                                (article, target_category)
-                            )
-                            if not cursor.fetchone():
-                                # Додаємо новий зв'язок
+                            # Якщо встановлюємо як головну, знімаємо прапор з інших
+                            if set_as_primary:
                                 cursor.execute("""
-                                    INSERT INTO product_category_mapping (article, category_id, created_at)
-                                    VALUES (%s, %s, NOW())
-                                """, (article, target_category))
-                                count += 1
+                                    UPDATE product_category_mapping 
+                                    SET is_primary = FALSE 
+                                    WHERE article = %s
+                                """, (article,))
+                            
+                            # Додаємо зв'язок (або оновлюємо якщо існує)
+                            cursor.execute("""
+                                INSERT INTO product_category_mapping (article, category_id, is_primary, created_at)
+                                VALUES (%s, %s, %s, NOW())
+                                ON CONFLICT (article, category_id) 
+                                DO UPDATE SET is_primary = EXCLUDED.is_primary
+                            """, (article, target_category, set_as_primary))
+                            count += 1
                         
                         conn.commit()
-                        flash(f"✅ Додано {count} товарів до категорії", "success")
+                        flash(f"✅ Додано/оновлено {count} товарів до категорії", "success")
                     
-                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, status=status_filter, page=page))
+                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=page))
                 
                 elif action == 'bulk_remove':
                     # Масове видалення з категорії
                     selected_articles = request.form.getlist('articles')
+                    remove_from_category = request.form.get('remove_from_category', type=int)
                     
                     if not selected_articles:
                         flash("❌ Виберіть товари", "error")
+                    elif remove_from_category:
+                        # Видаляємо з конкретної категорії
+                        count = 0
+                        for article in selected_articles:
+                            article = article.strip().upper()
+                            cursor.execute("""
+                                DELETE FROM product_category_mapping 
+                                WHERE article = %s AND category_id = %s
+                            """, (article, remove_from_category))
+                            count += cursor.rowcount
+                        conn.commit()
+                        flash(f"✅ Видалено {count} зв'язків з категорії", "success")
                     else:
+                        # Видаляємо всі зв'язки
                         count = 0
                         for article in selected_articles:
                             article = article.strip().upper()
@@ -14226,11 +14308,35 @@ def admin_product_categories(token):
                                 (article,)
                             )
                             count += cursor.rowcount
-                        
                         conn.commit()
                         flash(f"✅ Видалено {count} зв'язків", "success")
                     
-                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, status=status_filter, page=page))
+                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=page))
+                
+                elif action == 'set_primary':
+                    # Встановлення головної категорії
+                    article = request.form.get('article', '').strip().upper()
+                    primary_category = request.form.get('primary_category', type=int)
+                    
+                    if article and primary_category:
+                        # Знімаємо прапор з усіх категорій товару
+                        cursor.execute("""
+                            UPDATE product_category_mapping 
+                            SET is_primary = FALSE 
+                            WHERE article = %s
+                        """, (article,))
+                        
+                        # Встановлюємо головну категорію
+                        cursor.execute("""
+                            UPDATE product_category_mapping 
+                            SET is_primary = TRUE 
+                            WHERE article = %s AND category_id = %s
+                        """, (article, primary_category))
+                        
+                        conn.commit()
+                        flash(f"✅ Головна категорія встановлена для {article}", "success")
+                    
+                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=page))
             
             # Отримуємо категорії для фільтра та вибору
             lang = session.get('language', 'sk')
@@ -14248,6 +14354,16 @@ def admin_product_categories(token):
             """, (lang,))
             
             categories_raw = cursor.fetchall()
+            
+            # Отримуємо бренди для фільтра
+            cursor.execute("""
+                SELECT DISTINCT b.id, b.name 
+                FROM brands b
+                INNER JOIN stock s ON s.brand_id = b.id
+                WHERE s.quantity > 0 OR s.price > 0
+                ORDER BY b.name
+            """)
+            brands = cursor.fetchall()
             
             # Будуємо ієрархічний список категорій з відступами
             all_cats_by_id = {}
@@ -14287,19 +14403,26 @@ def admin_product_categories(token):
             
             categories = categories_list
             
-            # Будуємо базовий запит для товарів (без GROUP BY спочатку для COUNT)
+            # Будуємо базовий запит для товарів з підтримкою кількох категорій
             base_query = f"""
                 s.article,
                 b.name as brand_name,
+                b.id as brand_id,
                 p.name_sk,
                 s.price,
                 s.quantity,
                 COUNT(pcm.category_id) as category_count,
-                STRING_AGG(pct.name, ', ' ORDER BY pct.name) as categories
+                STRING_AGG(
+                    COALESCE(pct.name, pc.slug) || 
+                    CASE WHEN pcm.is_primary THEN ' ★' ELSE '' END, 
+                    ', ' ORDER BY pcm.is_primary DESC, pct.name
+                ) as categories,
+                ARRAY_AGG(pcm.category_id ORDER BY pcm.is_primary DESC) FILTER (WHERE pcm.category_id IS NOT NULL) as category_ids
                 FROM stock s
                 LEFT JOIN brands b ON s.brand_id = b.id
                 LEFT JOIN products p ON s.article = p.article
                 LEFT JOIN product_category_mapping pcm ON s.article = pcm.article
+                LEFT JOIN product_categories pc ON pcm.category_id = pc.id
                 LEFT JOIN product_category_translations pct 
                     ON pcm.category_id = pct.category_id AND pct.language = %s
                 WHERE 1=1
@@ -14315,20 +14438,29 @@ def admin_product_categories(token):
                 base_query += " AND pcm.category_id = %s"
                 params.append(category_filter)
             
+            if brand_filter:
+                base_query += " AND s.brand_id = %s"
+                params.append(brand_filter)
+            
             if status_filter == 'assigned':
                 base_query += " AND pcm.category_id IS NOT NULL"
             elif status_filter == 'unassigned':
                 base_query += " AND pcm.category_id IS NULL"
             
-            base_query += " GROUP BY s.article, b.name, p.name_sk, s.price, s.quantity"
+            base_query += " GROUP BY s.article, b.name, b.id, p.name_sk, s.price, s.quantity"
+            
+            # HAVING для фільтру "multiple" (товари в кількох категоріях)
+            having_clause = ""
+            if status_filter == 'multiple':
+                having_clause = " HAVING COUNT(pcm.category_id) > 1"
             
             # Підрахункуємо загальну кількість товарів (без пагінації)
-            count_query = f"SELECT COUNT(*) FROM (SELECT {base_query}) as t"
+            count_query = f"SELECT COUNT(*) FROM (SELECT {base_query}{having_clause}) as t"
             cursor.execute(count_query, params)
             total = cursor.fetchone()[0]
             
             # Додаємо сортування і пагінацію до основного запиту
-            query = f"SELECT {base_query} ORDER BY s.article LIMIT %s OFFSET %s"
+            query = f"SELECT {base_query}{having_clause} ORDER BY s.article LIMIT %s OFFSET %s"
             params.extend([per_page, (page - 1) * per_page])
             
             cursor.execute(query, params)
@@ -14345,16 +14477,32 @@ def admin_product_categories(token):
             page_end = min(total_pages + 1, page + 3)
             page_range = range(page_start, page_end)
             
+            # Статистика
+            cursor.execute("SELECT COUNT(DISTINCT article) FROM product_category_mapping")
+            assigned_count = cursor.fetchone()[0]
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM (
+                    SELECT article FROM product_category_mapping 
+                    GROUP BY article HAVING COUNT(*) > 1
+                ) t
+            """)
+            multiple_count = cursor.fetchone()[0]
+            
             return render_template(
                 'admin/product_categories.html',
                 products=products,
                 categories=categories,
+                brands=brands,
                 article_filter=article_filter,
                 category_filter=category_filter,
+                brand_filter=brand_filter,
                 status_filter=status_filter,
                 page=page,
                 total_pages=total_pages,
                 total_items=total,
+                assigned_count=assigned_count,
+                multiple_count=multiple_count,
                 per_page=per_page,
                 start_item=start_item,
                 end_item=end_item,

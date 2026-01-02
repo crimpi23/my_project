@@ -193,38 +193,32 @@
     .stock-header-card {
         flex-direction: column;
         align-items: stretch;
-        padding: 1rem;
-        gap: 1rem;
+        padding: 0.75rem;
+        gap: 0;
+        background: transparent;
+        box-shadow: none;
     }
     
+    .stock-header-card::before {
+        display: none;
+    }
+    
+    /* Ховаємо заголовок і субтайтл на мобілці */
     .stock-header-content {
-        justify-content: center;
-        text-align: center;
-        flex-direction: column;
-        gap: 0.8rem;
-    }
-    
-    .stock-header-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 1.5rem;
-    }
-    
-    .stock-header-title {
-        font-size: 1.2rem;
-    }
-    
-    .stock-header-subtitle {
-        justify-content: center;
+        display: none;
     }
     
     .stock-header-actions {
         width: 100%;
     }
     
-    .cat-dropdown-btn {
+    .catalog-btn {
         width: 100%;
         justify-content: center;
+        padding: 0.9rem 1.5rem;
+        font-size: 1rem;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        border-radius: 12px;
     }
 }
 

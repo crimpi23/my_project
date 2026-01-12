@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8fafc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e2e8f0;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#94a3b8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#64748b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="400" fill="url(#bgGrad)" rx="8"/>
+  
+  <!-- Border -->
+  <rect x="4" y="4" width="392" height="392" fill="none" stroke="#e2e8f0" stroke-width="2" rx="6"/>
+  
+  <!-- Camera Icon -->
+  <g transform="translate(200, 175)">
+    <!-- Camera body -->
+    <rect x="-70" y="-30" width="140" height="90" rx="12" fill="url(#iconGrad)" opacity="0.6"/>
+    
+    <!-- Camera lens -->
+    <circle cx="0" cy="15" r="30" fill="none" stroke="#fff" stroke-width="4" opacity="0.8"/>
+    <circle cx="0" cy="15" r="18" fill="#fff" opacity="0.3"/>
+    
+    <!-- Flash -->
+    <rect x="-50" y="-45" width="35" height="18" rx="4" fill="url(#iconGrad)" opacity="0.5"/>
+    
+    <!-- Cross line (no photo) -->
+    <line x1="-85" y1="-55" x2="85" y2="75" stroke="#ef4444" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="200" y="310" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="500" fill="#64748b">
+    No photo available
+  </text>
+  <text x="200" y="335" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#94a3b8">
+    Foto nie je k dispozícii
+  </text>
+</svg>

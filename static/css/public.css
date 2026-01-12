@@ -457,25 +457,26 @@ body {
 }
 
 /* === ФУТЕР === */
-.footer {
+/* .footer стили переопределены в public-base.css через .improved-footer */
+.footer:not(.improved-footer) {
     margin-top: auto;
     padding: 2rem 0;
     background-color: var(--light-bg);
     border-top: 1px solid var(--border-color);
 }
 
-.footer h5 {
+.footer:not(.improved-footer) h5 {
     color: var(--dark-bg);
     margin-bottom: 1rem;
     font-weight: 600;
 }
 
-.footer a {
+.footer:not(.improved-footer) a {
     color: var(--secondary-color);
     transition: color 0.3s ease;
 }
 
-.footer a:hover {
+.footer:not(.improved-footer) a:hover {
     color: var(--primary-color);
     text-decoration: none;
 }

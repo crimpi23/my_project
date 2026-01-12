@@ -135,11 +135,12 @@ body {
     border-radius: 0;
 }
 .stylish-search {
-    box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.12);
     border-radius: 2rem;
     overflow: hidden;
     background: #fff;
     max-width: 420px;
+    border: 2px solid #2563eb;
 }
 .stylish-search .form-control {
     border: none;
@@ -232,10 +233,10 @@ body {
     z-index: 100;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 .floating-contact { bottom: 180px; }
-.fixed-contact-buttons { bottom: 110px; }
+.fixed-contact-buttons { bottom: 24px; }
 .contact-toggle {
     box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
@@ -265,6 +266,17 @@ body {
 .whatsapp-button:hover {
     background: #128c7e;
     color: #fff !important;
+}
+/* Scroll to Top Button */
+.scroll-top-button {
+    background: #6c757d;
+    color: #fff !important;
+    transition: background 0.2s, transform 0.2s;
+}
+.scroll-top-button:hover {
+    background: #495057;
+    color: #fff !important;
+    transform: translateY(-2px);
 }
 
 /* --- SOCIAL ICONS --- */
@@ -686,6 +698,11 @@ main > .container {
 }
 
 /* ========== КАТАЛОГ КНОПКА В НАВІГАЦІЇ ========== */
+.catalog-nav-wrapper {
+    position: relative;
+    margin-left: 1rem;
+}
+
 .catalog-nav-item {
     position: relative;
 }
@@ -744,6 +761,7 @@ main > .container {
     padding: 0.5rem 0;
 }
 
+.catalog-nav-wrapper:hover .catalog-dropdown,
 .catalog-nav-item:hover .catalog-dropdown,
 .catalog-dropdown.show {
     opacity: 1;

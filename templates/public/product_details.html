@@ -66,21 +66,22 @@
     {
       "@context": "https://schema.org/",
       "@type": "Product",
-      "name": "{% if product_data.name %}{{ product_data.name }}{% else %}{{ _('Auto Part') }} {{ article }}{% endif %}",
-      "description": "{% if product_data.description %}{{ product_data.description }}{% else %}{{ _('Quality auto part with article number') }} {{ article }}. {{ _('Available for order at AutogroupEU. Fast delivery across Europe.') }}{% endif %}",
+      "name": "{% if product_data.name %}{{ product_data.name|e }}{% else %}{{ _('Auto Part') }} {{ article }}{% endif %}",
+      "description": "{% if product_data.description %}{{ product_data.description|e }}{% else %}{{ _('Quality auto part with article number') }} {{ article }}. {{ _('Available for order at AutogroupEU. Fast delivery across Europe.') }}{% endif %}",
       "sku": "{{ article }}",
+      "mpn": "{{ article }}",
       "image": [
         {% if product_data.photo_urls and product_data.photo_urls|length > 0 %}
         {% for url in product_data.photo_urls %}
         "{{ url }}"{% if not loop.last %},{% endif %}
         {% endfor %}
         {% else %}
-        "{{ url_for('static', filename='img/placeholder.jpg', _external=True) }}"
+        "{{ url_for('static', filename='img/no-photo.svg', _external=True) }}"
         {% endif %}
       ],
       "brand": {
         "@type": "Brand", 
-        "name": "{{ brand_name if brand_name else 'AutogroupEU' }}"
+        "name": "{{ brand_name if brand_name else 'OEM' }}"
       },
       "offers": {
         "@type": "Offer",
@@ -88,14 +89,40 @@
         "priceCurrency": "EUR",
         "price": "{% if price %}{{ price.price }}{% elif prices and prices|length > 0 %}{{ prices[0].price }}{% else %}0.00{% endif %}",
         "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}",
-        "availability": "{% if price and price.in_stock %}https://schema.org/InStock{% elif prices and prices|length > 0 and prices[0].in_stock %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.7",
-        "reviewCount": "84",
-        "bestRating": "5",
-        "worstRating": "1"
+        "availability": "{% if price and price.in_stock %}https://schema.org/InStock{% elif prices and prices|length > 0 and prices[0].in_stock %}https://schema.org/InStock{% else %}https://schema.org/PreOrder{% endif %}",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": {
+          "@type": "Organization",
+          "name": "AutogroupEU s.r.o.",
+          "url": "https://autogroup.sk"
+        },
+        "shippingDetails": {
+          "@type": "OfferShippingDetails",
+          "shippingRate": {
+            "@type": "MonetaryAmount",
+            "value": "0",
+            "currency": "EUR"
+          },
+          "shippingDestination": {
+            "@type": "DefinedRegion",
+            "addressCountry": ["SK", "CZ", "PL", "HU", "AT", "DE"]
+          },
+          "deliveryTime": {
+            "@type": "ShippingDeliveryTime",
+            "handlingTime": {
+              "@type": "QuantitativeValue",
+              "minValue": 1,
+              "maxValue": 2,
+              "unitCode": "DAY"
+            },
+            "transitTime": {
+              "@type": "QuantitativeValue",
+              "minValue": 2,
+              "maxValue": 5,
+              "unitCode": "DAY"
+            }
+          }
+        }
       }
     }
 </script>
@@ -127,10 +154,18 @@
             <div class="col-md-6 mobile-second">
                 <div class="image-section">
                     <div class="image-container">
+                        {% if product_data.photo_urls and product_data.photo_urls|length > 0 %}
                         <img id="productImage"
                              src="{{ product_data.photo_urls[0] }}"
                              alt="{{ product_data.name }}"
                              loading="lazy" decoding="async" width="800" height="600">
+                        {% else %}
+                        <img id="productImage"
+                             src="{{ url_for('static', filename='img/no-photo.svg') }}"
+                             alt="{{ _('No photo available') }} - {{ product_data.name }}"
+                             class="no-photo-placeholder"
+                             loading="lazy" decoding="async" width="800" height="600">
+                        {% endif %}
                     </div>
                     
                     {% if product_data.photo_urls|length > 1 %}
@@ -168,7 +203,7 @@
                     <div class="product-info-body">
                         <div class="product-meta">
                             <div class="product-meta-item">
-                                <span class="meta-label">{{ _('Article') }}:</span>
+                                <span class="meta-label">Číslo:</span>
                                 <span class="article-badge">{{ article or '-' }}</span>
                             </div>
                             <div class="product-meta-item">
@@ -182,9 +217,14 @@
                         <div class="price-card">
                             <div class="price-info">
                                 <div class="price-column">
-                                    <span class="price-label">{{ _('Price') }}:</span>
-                                    <span class="price-value">{{ "%.2f"|format(price.price|float) }} €</span>
-                                    <small class="d-block text-muted">{{ _('incl. VAT') }}</small>
+                                    <div class="price-row">
+                                        <span class="price-label">{{ _('excl. VAT') }}:</span>
+                                        <span class="price-value">{{ "%.2f"|format((price.price|float / 1.23)) }} €</span>
+                                    </div>
+                                    <div class="price-row">
+                                        <span class="price-label">{{ _('incl. VAT') }}:</span>
+                                        <span class="price-value">{{ "%.2f"|format(price.price|float) }} €</span>
+                                    </div>
                                 </div>
                                 <div class="availability-column">
                                     <span class="availability-label">{{ _('Availability') }}:</span>

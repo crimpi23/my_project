@@ -370,12 +370,10 @@
     {% endif %}
 </div>
 
-<!-- Додайте цей скрипт прямо перед закриваючим тегом блоку content -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Cart script loaded'); // Для перевірки в консолі
+    console.log('Cart script loaded');
     
-    // Форма нової адреси
     const useNewAddressCheckbox = document.getElementById('use_new_address');
     const deliveryAddressSelect = document.querySelectorAll('input[name="delivery_address"]');
     const newAddressFields = document.getElementById('new_address_fields');
@@ -395,7 +393,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Форма фактури
     const needsInvoice = document.getElementById('needs_invoice');
     const invoiceFields = document.getElementById('invoice_fields');
     

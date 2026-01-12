@@ -2,26 +2,6 @@
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://autogroup.sk/sitemap-static.xml</loc>
-    <lastmod>2025-09-07</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>https://autogroup.sk/sitemap-categories.xml</loc>
-    <lastmod>2025-09-07</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>https://autogroup.sk/sitemap-stock-1.xml</loc>
-    <lastmod>2025-09-07</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>https://autogroup.sk/sitemap-enriched-1.xml</loc>
-    <lastmod>2025-09-07</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>https://autogroup.sk/sitemap-other-1.xml</loc>
-    <lastmod>2025-09-07</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>https://autogroup.sk/sitemap-other-2.xml</loc>
-    <lastmod>2025-09-07</lastmod>
+    <lastmod>2026-01-07</lastmod>
   </sitemap>
 </sitemapindex>

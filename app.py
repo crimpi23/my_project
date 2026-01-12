@@ -1444,25 +1444,25 @@ def validate_phone(phone_number):
         
         # Перевіряємо базовий формат
         if not phone:
-            return False, "Phone number is required"
+            return False, _("Phone number is required")
             
         # Перевіряємо наявність '+' на початку
         if not phone.startswith('+'):
-            return False, "Phone number must start with +"
+            return False, _("Phone number must start with +")
             
         # Перевіряємо що решта символів - цифри
         if not phone[1:].replace('-', '').isdigit():
-            return False, "Phone number must contain only digits after +"
+            return False, _("Phone number must contain only digits after +")
             
         # Перевіряємо мінімальну довжину (включаючи '+' і код країни)
         if len(phone) < 9:
-            return False, "Phone number is too short"
+            return False, _("Phone number is too short")
             
         return True, phone
         
     except Exception as e:
         logging.error(f"Phone validation error: {e}")
-        return False, str(e)
+        return False, _("Phone validation error")
 
 @app.route('/save_delivery_address', methods=['POST'])
 def save_delivery_address():
@@ -2231,6 +2231,237 @@ def login():
             return redirect(url_for('login'))
 
     return render_template('auth/login.html')
+
+
+# =============== ВІДНОВЛЕННЯ ПАРОЛЮ ===============
+
+import secrets
+import hashlib
+
+def generate_password_reset_token():
+    """Генерує унікальний токен для скидання паролю"""
+    return secrets.token_urlsafe(32)
+
+def hash_token(token):
+    """Хешує токен для безпечного зберігання в БД"""
+    return hashlib.sha256(token.encode()).hexdigest()
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    """Сторінка запиту на скидання паролю"""
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        
+        if not email:
+            flash(_("Please enter your email address"), "error")
+            return render_template('auth/forgot_password.html')
+        
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                
+                # Шукаємо користувача по email
+                cursor.execute("SELECT id, username, email FROM users WHERE LOWER(email) = %s", (email,))
+                user = cursor.fetchone()
+                
+                if user:
+                    # Генеруємо токен
+                    token = generate_password_reset_token()
+                    token_hash = hash_token(token)
+                    expires_at = datetime.now() + timedelta(hours=1)
+                    
+                    # Видаляємо старі токени для цього користувача
+                    cursor.execute("DELETE FROM password_reset_tokens WHERE user_id = %s", (user['id'],))
+                    
+                    # Зберігаємо новий токен
+                    cursor.execute("""
+                        INSERT INTO password_reset_tokens (user_id, token_hash, expires_at, created_at)
+                        VALUES (%s, %s, %s, NOW())
+                    """, (user['id'], token_hash, expires_at))
+                    conn.commit()
+                    
+                    # Відправляємо email
+                    reset_link = f"{get_base_url()}/reset-password/{token}"
+                    send_password_reset_email(user['email'], user['username'], reset_link)
+                    
+                    logging.info(f"Password reset email sent to {email}")
+                
+                # Завжди показуємо однакове повідомлення (для безпеки)
+                flash(_("If an account with this email exists, we have sent a password reset link."), "success")
+                return redirect(url_for('login'))
+                
+        except Exception as e:
+            logging.error(f"Error in forgot_password: {e}", exc_info=True)
+            flash(_("An error occurred. Please try again later."), "error")
+            
+    return render_template('auth/forgot_password.html')
+
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Сторінка скидання паролю з токеном"""
+    try:
+        token_hash = hash_token(token)
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # Перевіряємо токен
+            cursor.execute("""
+                SELECT prt.user_id, prt.expires_at, u.username, u.email
+                FROM password_reset_tokens prt
+                JOIN users u ON prt.user_id = u.id
+                WHERE prt.token_hash = %s
+            """, (token_hash,))
+            
+            token_data = cursor.fetchone()
+            
+            if not token_data:
+                flash(_("Invalid or expired password reset link."), "error")
+                return redirect(url_for('forgot_password'))
+            
+            if token_data['expires_at'] < datetime.now():
+                # Видаляємо прострочений токен
+                cursor.execute("DELETE FROM password_reset_tokens WHERE token_hash = %s", (token_hash,))
+                conn.commit()
+                flash(_("This password reset link has expired. Please request a new one."), "error")
+                return redirect(url_for('forgot_password'))
+            
+            if request.method == 'POST':
+                password = request.form.get('password', '')
+                confirm_password = request.form.get('confirm_password', '')
+                
+                if len(password) < 6:
+                    flash(_("Password must be at least 6 characters long."), "error")
+                    return render_template('auth/reset_password.html')
+                
+                if password != confirm_password:
+                    flash(_("Passwords do not match."), "error")
+                    return render_template('auth/reset_password.html')
+                
+                # Оновлюємо пароль
+                hashed_password = hash_password(password)
+                cursor.execute("UPDATE users SET password_hash = %s WHERE id = %s", 
+                             (hashed_password, token_data['user_id']))
+                
+                # Видаляємо використаний токен
+                cursor.execute("DELETE FROM password_reset_tokens WHERE user_id = %s", (token_data['user_id'],))
+                conn.commit()
+                
+                logging.info(f"Password reset successful for user {token_data['username']}")
+                flash(_("Your password has been reset successfully. You can now log in."), "success")
+                return redirect(url_for('login'))
+            
+            return render_template('auth/reset_password.html')
+            
+    except Exception as e:
+        logging.error(f"Error in reset_password: {e}", exc_info=True)
+        flash(_("An error occurred. Please try again later."), "error")
+        return redirect(url_for('forgot_password'))
+
+
+def send_password_reset_email(to_email, username, reset_link):
+    """Відправляє email зі скиданням паролю"""
+    try:
+        smtp_host = os.getenv("SMTP_HOST")
+        smtp_port = int(os.getenv("SMTP_PORT"))
+        sender_email = os.getenv("SMTP_EMAIL")
+        sender_password = os.getenv("SMTP_PASSWORD")
+        
+        if not sender_email or not sender_password:
+            logging.error("SMTP credentials are not set")
+            return False
+        
+        # Переклади
+        lang = session.get('language', 'sk')
+        translations = {
+            'sk': {
+                'subject': 'Obnovenie hesla - AutogroupEU',
+                'greeting': f'Dobrý deň, {username}!',
+                'intro': 'Dostali sme žiadosť o obnovenie hesla pre Váš účet.',
+                'reset_button': 'Obnoviť heslo',
+                'link_text': 'Alebo skopírujte tento odkaz do prehliadača:',
+                'expires_note': 'Tento odkaz je platný 1 hodinu.',
+                'ignore_note': 'Ak ste o obnovenie hesla nepožiadali, ignorujte tento e-mail.',
+                'footer_text': 'Tento e-mail bol vygenerovaný automaticky.'
+            },
+            'en': {
+                'subject': 'Password Reset - AutogroupEU',
+                'greeting': f'Hello, {username}!',
+                'intro': 'We received a request to reset your password.',
+                'reset_button': 'Reset Password',
+                'link_text': 'Or copy this link to your browser:',
+                'expires_note': 'This link is valid for 1 hour.',
+                'ignore_note': 'If you did not request a password reset, please ignore this email.',
+                'footer_text': 'This email was generated automatically.'
+            },
+            'pl': {
+                'subject': 'Resetowanie hasła - AutogroupEU',
+                'greeting': f'Witaj, {username}!',
+                'intro': 'Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta.',
+                'reset_button': 'Zresetuj hasło',
+                'link_text': 'Lub skopiuj ten link do przeglądarki:',
+                'expires_note': 'Ten link jest ważny przez 1 godzinę.',
+                'ignore_note': 'Jeśli nie prosiłeś o zresetowanie hasła, zignoruj tę wiadomość.',
+                'footer_text': 'Ten e-mail został wygenerowany automatycznie.'
+            }
+        }
+        
+        t = translations.get(lang, translations['en'])
+        
+        # Рендеримо шаблони
+        text_content = render_template('emails/password_reset.txt', 
+                                       t=t, reset_link=reset_link, 
+                                       subject=t['subject'], current_year=datetime.now().year)
+        html_content = render_template('emails/password_reset.html', 
+                                       t=t, reset_link=reset_link, 
+                                       subject=t['subject'], current_year=datetime.now().year)
+        
+        # Формуємо повідомлення
+        message = MIMEMultipart('alternative')
+        message["From"] = sender_email
+        message["To"] = to_email
+        message["Subject"] = t['subject']
+        
+        message.attach(MIMEText(text_content, "plain", "utf-8"))
+        message.attach(MIMEText(html_content, "html", "utf-8"))
+        
+        # Відправляємо - використовуємо той же підхід що й в send_email
+        try:
+            # Використовуємо SSL для порту 465
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=30)
+            
+            # Вимикаємо детальне логування
+            server.set_debuglevel(0)
+            
+            # Аутентифікація
+            server.login(sender_email, sender_password)
+            
+            # Відправка
+            server.sendmail(sender_email, [to_email], message.as_string())
+            logging.info(f"Password reset email sent to {to_email}")
+            server.quit()
+            return True
+            
+        except smtplib.SMTPConnectError as e:
+            logging.error(f"SMTP Connection Error in password reset: {e}")
+            return False
+        except smtplib.SMTPAuthenticationError as e:
+            logging.error(f"SMTP Authentication Error in password reset: {e}")
+            return False
+        except smtplib.SMTPException as e:
+            logging.error(f"SMTP Error in password reset: {e}")
+            return False
+        except ConnectionError as e:
+            logging.error(f"Connection Error in password reset: {e}")
+            return False
+        
+    except Exception as e:
+        logging.error(f"Error sending password reset email: {e}")
+        return False
+
+# =============== КІНЕЦЬ ВІДНОВЛЕННЯ ПАРОЛЮ ===============
+
 
 def get_user_companies(user_id):
     """Get all saved companies for a user"""
@@ -3042,15 +3273,16 @@ def api_products():
         page = request.args.get('page', 1, type=int)
         per_page = 8
         brand_id = request.args.get('brand', type=int)
+        category_id = request.args.get('category', type=int)  # Додано фільтр по категорії
         
         lang = request.args.get('lang') or session.get('language', 'sk')
         
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-        # ЗМІНЕНИЙ ЗАПИТ: тільки товари з фото
+        # Базовий запит: тільки товари з фото
         query = f"""
-            SELECT 
+            SELECT DISTINCT
                 s.article, 
                 s.price, 
                 COALESCE(p.name_{lang}, p.name_uk, p.name_en, p.name_sk, s.article) as name, 
@@ -3061,14 +3293,26 @@ def api_products():
             LEFT JOIN products p ON s.article = p.article
             LEFT JOIN brands b ON s.brand_id = b.id
             INNER JOIN product_images pi ON pi.product_article = s.article AND pi.is_main = true
-            WHERE s.quantity > 0
         """
+        
         params = []
+        conditions = ["s.quantity > 0"]
+        
+        # Фільтр по категорії (включаючи підкатегорії)
+        if category_id:
+            query += """
+            INNER JOIN product_category_mapping pcm ON s.article = pcm.article
+            INNER JOIN product_categories pc ON pcm.category_id = pc.id
+            """
+            # Включаємо і батьківську категорію, і всі підкатегорії
+            conditions.append("(pc.id = %s OR pc.parent_id = %s)")
+            params.extend([category_id, category_id])
         
         if brand_id:
-            query += " AND s.brand_id = %s"
+            conditions.append("s.brand_id = %s")
             params.append(brand_id)
         
+        query += " WHERE " + " AND ".join(conditions)
         query += " ORDER BY s.price DESC LIMIT %s OFFSET %s"
         params.extend([per_page, (page - 1) * per_page])
         
@@ -5820,6 +6064,14 @@ def index():
             if selected_cat_obj and selected_cat_obj.get('parent_id'):
                 parent_cat_obj = all_cats_by_id.get(selected_cat_obj['parent_id'])
             
+            # Збираємо всі ID батьківських категорій для правильного відображення в sidebar
+            parent_category_ids = []
+            if category_filter and category_filter in all_cats_by_id:
+                current_cat = all_cats_by_id[category_filter]
+                while current_cat.get('parent_id'):
+                    parent_category_ids.append(current_cat['parent_id'])
+                    current_cat = all_cats_by_id.get(current_cat['parent_id'], {})
+            
             return render_template(
                 'public/index.html',
                 products=products,
@@ -5829,7 +6081,8 @@ def index():
                 page=page,
                 selected_category=category_filter,
                 selected_category_obj=selected_cat_obj,
-                parent_category_obj=parent_cat_obj
+                parent_category_obj=parent_cat_obj,
+                parent_category_ids=parent_category_ids
             )
     
     except Exception as e:
@@ -5929,16 +6182,44 @@ def public_add_to_cart():
             session.modified = True
         
         logging.info(f"Cart after adding: {session.get('public_cart')}")
-        flash(_("Item added to cart"), "success")
         
         update_cart_count_in_session()
+        cart_count = session.get('cart_count', 0)
+        
+        # Перевіряємо чи це AJAX-запит
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+                  request.content_type == 'application/x-www-form-urlencoded' and \
+                  request.headers.get('Accept', '').find('application/json') != -1
+        
+        if is_ajax or request.headers.get('Accept') == 'application/json':
+            return jsonify({
+                'success': True,
+                'message': str(_("Item added to cart")),
+                'cart_count': cart_count
+            })
+        
+        flash(_("Item added to cart"), "success")
+        # Повертаємо користувача на сторінку товару з оригінальним артикулом
+        if original_article:
+            return redirect(url_for('product_details', article=original_article))
+        else:
+            return redirect(url_for('index'))
         
     except Exception as e:
         logging.error(f"Error adding to cart: {e}", exc_info=True)
-        flash(_("Error adding item to cart"), "error")
         
-    finally:
-        # Повертаємо користувача на сторінку товару з оригінальним артикулом
+        # Перевіряємо чи це AJAX-запит
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+                  request.content_type == 'application/x-www-form-urlencoded'
+        
+        if is_ajax or request.headers.get('Accept') == 'application/json':
+            return jsonify({
+                'success': False,
+                'message': str(_("Error adding item to cart")),
+                'cart_count': session.get('cart_count', 0)
+            })
+        
+        flash(_("Error adding item to cart"), "error")
         if 'original_article' in locals() and original_article:
             return redirect(url_for('product_details', article=original_article))
         else:
@@ -6095,6 +6376,98 @@ def admin_panel(token):
     finally:
         if 'conn' in locals() and conn:
             conn.close()
+
+
+# Список користувачів для управління паролями
+@app.route('/<token>/admin/users/manage')
+@requires_token_and_roles('admin')
+@add_noindex_header
+def admin_manage_users(token):
+    """Список користувачів з можливістю зміни паролю"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримуємо список всіх користувачів з їх ролями
+        cursor.execute("""
+            SELECT u.id, u.username, u.email, u.created_at, r.name as role_name
+            FROM users u
+            LEFT JOIN user_roles ur ON u.id = ur.user_id
+            LEFT JOIN roles r ON ur.role_id = r.id
+            ORDER BY u.created_at DESC
+        """)
+        users = cursor.fetchall()
+        
+        return render_template('admin/users/manage_users.html', users=users, token=token)
+        
+    except Exception as e:
+        logging.error(f"Error loading users list: {e}", exc_info=True)
+        flash(_("Error loading users"), "error")
+        return redirect(url_for('admin_dashboard', token=token))
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+
+# Зміна паролю користувача адміном
+@app.route('/<token>/admin/users/change-password/<int:user_id>', methods=['GET', 'POST'])
+@requires_token_and_roles('admin')
+@add_noindex_header
+def admin_change_user_password(token, user_id):
+    """Зміна паролю користувача адміністратором"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Отримуємо інформацію про користувача
+        cursor.execute("""
+            SELECT u.id, u.username, u.email, r.name as role_name
+            FROM users u
+            LEFT JOIN user_roles ur ON u.id = ur.user_id
+            LEFT JOIN roles r ON ur.role_id = r.id
+            WHERE u.id = %s
+        """, (user_id,))
+        user = cursor.fetchone()
+        
+        if not user:
+            flash(_("User not found"), "error")
+            return redirect(url_for('admin_manage_users', token=token))
+        
+        if request.method == 'POST':
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            
+            if not new_password or len(new_password) < 8:
+                flash(_("Password must be at least 8 characters long"), "error")
+                return render_template('admin/users/change_password.html', user=user, token=token)
+            
+            if new_password != confirm_password:
+                flash(_("Passwords do not match"), "error")
+                return render_template('admin/users/change_password.html', user=user, token=token)
+            
+            # Хешуємо новий пароль
+            hashed_password = hash_password(new_password)
+            
+            # Оновлюємо пароль в БД
+            cursor.execute("""
+                UPDATE users SET password_hash = %s WHERE id = %s
+            """, (hashed_password, user_id))
+            conn.commit()
+            
+            logging.info(f"Password changed for user {user['username']} (ID: {user_id}) by admin")
+            flash(_("Password changed successfully"), "success")
+            return redirect(url_for('admin_manage_users', token=token))
+        
+        return render_template('admin/users/change_password.html', user=user, token=token)
+        
+    except Exception as e:
+        logging.error(f"Error changing user password: {e}", exc_info=True)
+        flash(_("Error changing password"), "error")
+        return redirect(url_for('admin_manage_users', token=token))
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
 
 # Головна сторінка адмінки
 @app.route('/<token>/admin/dashboard')

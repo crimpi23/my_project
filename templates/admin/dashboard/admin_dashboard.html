@@ -213,17 +213,24 @@
                             <hr>
                             <h6 class="mb-3">Users</h6>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="d-grid">
                                 <a href="{{ url_for('create_user', token=token) }}" class="btn btn-outline-info">
                                     <i class="bi bi-person-plus me-2"></i>Create User
                                 </a>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="d-grid">
                                 <a href="{{ url_for('assign_roles', token=token) }}" class="btn btn-outline-info">
                                     <i class="bi bi-person-check me-2"></i>Assign Roles
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-grid">
+                                <a href="{{ url_for('admin_manage_users', token=token) }}" class="btn btn-outline-warning">
+                                    <i class="bi bi-key me-2"></i>Manage Passwords
                                 </a>
                             </div>
                         </div>

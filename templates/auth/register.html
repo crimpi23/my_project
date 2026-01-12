@@ -1,5 +1,9 @@
 {% extends "base/public_base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}">
+{% endblock %}
+
 {% block title %}{{ _('Register') }}{% endblock %}
 
 {% block content %}
@@ -7,7 +11,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-6 col-md-8">
             <div class="info-card fade-in">
-                <div class="info-card-header section-header-info">
+                <div class="info-card-header section-header-primary">
                     <h5>
                         <div class="header-icon">
                             <i class="bi bi-person-plus"></i>

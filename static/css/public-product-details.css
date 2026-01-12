@@ -120,41 +120,79 @@
     background: #fff;
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(37,99,235,0.06);
-    padding: 14px 18px;
-    margin-bottom: 12px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
     border: 1.5px solid #c7d2fe;
 }
 .price-info {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+.price-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 130px;
+}
+.price-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 .price-label {
     color: #64748b;
     font-weight: 500;
+    font-size: 0.85rem;
+    min-width: 70px;
+    text-align: right;
 }
 .price-value {
     font-weight: 700;
     color: #1d4ed8;
-    font-size: 1.2rem;
-    margin-left: 8px;
+    font-size: 1rem;
+    white-space: nowrap;
 }
-.availability-column { font-size: 0.98rem; }
-.quantity-column { margin-left: 16px; }
+.availability-column {
+    font-size: 0.9rem;
+    min-width: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.availability-label {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+.availability-value {
+    font-weight: 600;
+    white-space: nowrap;
+}
+.quantity-column {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.quantity-label {
+    color: #64748b;
+    font-size: 0.85rem;
+}
 .quantity-input {
-    width: 60px;
+    width: 55px;
     border-radius: 6px;
     border: 1px solid #e2e8f0;
-    padding: 3px 8px;
+    padding: 4px 6px;
+    text-align: center;
 }
-.button-column { margin-left: 12px; }
+.button-column { margin-left: auto; }
 .btn-add-to-cart {
     background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
     color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 8px 18px;
-    font-size: 1.1rem;
+    padding: 8px 16px;
+    font-size: 1rem;
     font-weight: 600;
     transition: background 0.2s, box-shadow 0.18s;
     box-shadow: 0 2px 8px rgba(37,99,235,0.08);
@@ -266,4 +304,16 @@
     .product-info-header h1 { font-size: 1.1rem; }
     .description-header { padding: 12px 10px; }
     .description-body { padding: 10px; }
+}
+
+/* No photo placeholder styling */
+.no-photo-placeholder {
+    opacity: 0.85;
+    padding: 40px;
+    min-height: 300px;
+}
+
+.image-container .no-photo-placeholder:hover {
+    transform: none;
+    box-shadow: none;
 }

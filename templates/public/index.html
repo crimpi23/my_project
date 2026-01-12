@@ -25,13 +25,12 @@
         </button>
         <!-- VIN Request -->
         <button class="mini-card btn-card" id="openVinModal" type="button">
-          <div class="mini-title"><i class="bi bi-key me-2"></i>VIN Request</div>
+          <div class="mini-title"><i class="bi bi-key me-2"></i>{{ _('VIN Request') }}</div>
           <div class="mini-sub">{{ _('Request parts by VIN code') }}</div>
         </button>
       </div>
     </div>
 
-    <!-- ХЛІБНІ КРИХТИ (Breadcrumbs) -->
     {% if selected_category %}
     <nav aria-label="breadcrumb" class="breadcrumb-nav mb-3">
         <a href="{{ url_for('index') }}" class="breadcrumb-link">{{ _('All Products') }}</a>
@@ -50,130 +49,133 @@
     </nav>
     {% endif %}
 
-    <!-- КОНТЕЙНЕР З КОНТЕНТОМ -->
-    <div class="categories-container-wrapper">
-        <!-- ОСНОВНИЙ КОНТЕНТ -->
-        <div class="categories-main-content">
-        
-        <!-- ЗАГОЛОВОК + КАТЕГОРІЇ - КРАСИВА КАРТКА -->
-        <div class="stock-header-card mb-4">
-            <div class="stock-header-content">
-                <div class="stock-header-icon">
-                    <i class="bi bi-box-seam-fill"></i>
-                </div>
-                <div class="stock-header-text">
-                    <h2 class="stock-header-title">{{ _('Items in Our Stock') }}</h2>
-                    <p class="stock-header-subtitle">
-                        <i class="bi bi-lightning-charge-fill text-warning me-1"></i>
-                        {{ _('Available for immediate delivery') }}
-                    </p>
-                </div>
-            </div>
-            
-            {% if categories %}
-            <div class="stock-header-actions">
-                <button class="catalog-btn" type="button" id="openMobileCat">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h2A1.5 1.5 0 0 1 5 1.5v2A1.5 1.5 0 0 1 3.5 5h-2A1.5 1.5 0 0 1 0 3.5v-2zM1.5 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-2zM0 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V8zm1 3v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2H1zm14-1V8a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v2h14zM2 8.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
-                    </svg>
-                    <span>{{ _('Catalog') }}</span>
-                    <i class="bi bi-chevron-down cat-arrow"></i>
-                </button>
-            </div>
-            {% endif %}
-        </div>
-        
-        <!-- МЕНЮ КАТЕГОРІЙ (розгортається під заголовком) -->
+    <div class="catalog-layout">
         {% if categories %}
-        <div id="mobileCatMenu" class="mobile-cat-menu">
-            <ul class="mobile-cat-list">
-                <li>
-                    <a href="{{ url_for('index') }}" class="mobile-cat-link {% if not selected_category %}active{% endif %}">
-                        <i class="bi bi-grid-3x3-gap-fill"></i>
-                        {{ _('All Products') }}
-                    </a>
-                </li>
-                {% for category in categories %}
-                <li class="mobile-cat-item">
-                    <div class="mobile-cat-row">
-                        {% if category.children %}
-                        <button type="button" class="mobile-cat-toggle" data-target="indexSub{{ category.id }}">
-                            <i class="bi bi-chevron-right"></i>
-                        </button>
-                        {% endif %}
-                        <a href="{{ url_for('index', category=category.id) }}" 
-                           class="mobile-cat-link {% if selected_category == category.id %}active{% endif %}">
-                            {% if category.icon_class %}<i class="bi {{ category.icon_class }}"></i>{% else %}<i class="bi bi-folder"></i>{% endif %}
-                            {{ category.name }}
+        <aside class="catalog-sidebar" id="catalogSidebar">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">
+                    <i class="bi bi-list-nested me-2"></i>{{ _('Product Categories') }}
+                </h3>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <a href="{{ url_for('index') }}" class="sidebar-link {% if not selected_category %}active{% endif %}">
+                            <i class="bi bi-grid-3x3-gap-fill"></i>
+                            <span>{{ _('All Products') }}</span>
                         </a>
-                    </div>
-                    {% if category.children %}
-                    <ul class="mobile-cat-sub" id="indexSub{{ category.id }}">
-                        {% for sub in category.children %}
-                        <li class="mobile-cat-item">
-                            <div class="mobile-cat-row">
-                                {% if sub.children %}
-                                <button type="button" class="mobile-cat-toggle mobile-cat-toggle-l2" data-target="indexSub{{ sub.id }}">
-                                    <i class="bi bi-chevron-right"></i>
-                                </button>
-                                {% endif %}
-                                <a href="{{ url_for('index', category=sub.id) }}" 
-                                   class="mobile-cat-link {% if selected_category == sub.id %}active{% endif %}">
-                                    {% if sub.icon_class %}<i class="bi {{ sub.icon_class }}"></i>{% else %}<i class="bi bi-tag"></i>{% endif %}
-                                    {{ sub.name }}
-                                </a>
-                            </div>
-                            {% if sub.children %}
-                            <ul class="mobile-cat-sub mobile-cat-sub-l3" id="indexSub{{ sub.id }}">
-                                {% for sub3 in sub.children %}
-                                <li>
-                                    <a href="{{ url_for('index', category=sub3.id) }}" 
-                                       class="mobile-cat-link mobile-cat-link-l3 {% if selected_category == sub3.id %}active{% endif %}">
-                                        {% if sub3.icon_class %}<i class="bi {{ sub3.icon_class }}"></i>{% else %}<i class="bi bi-dot"></i>{% endif %}
-                                        {{ sub3.name }}
-                                    </a>
-                                </li>
-                                {% endfor %}
-                            </ul>
+                    </li>
+                    {% for category in categories %}
+                    <li class="sidebar-item {% if category.id == selected_category or category.id in parent_category_ids %}expanded{% endif %}">
+                        <div class="sidebar-link-row">
+                            {% if category.children %}
+                            <button type="button" class="sidebar-toggle" data-target="sidebarSub{{ category.id }}">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
                             {% endif %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
+                            <a href="{{ url_for('index', category=category.id) }}" 
+                               class="sidebar-link {% if selected_category == category.id %}active{% endif %}">
+                                {% if category.icon_class %}<i class="bi {{ category.icon_class }}"></i>{% else %}<i class="bi bi-folder"></i>{% endif %}
+                                <span>{{ category.name }}</span>
+                            </a>
+                        </div>
+                        {% if category.children %}
+                        <ul class="sidebar-submenu {% if category.id == selected_category or category.id in parent_category_ids %}open{% endif %}" id="sidebarSub{{ category.id }}">
+                            {% for sub in category.children %}
+                            <li class="sidebar-item {% if sub.id == selected_category or sub.id in parent_category_ids %}expanded{% endif %}">
+                                <div class="sidebar-link-row">
+                                    {% if sub.children %}
+                                    <button type="button" class="sidebar-toggle sidebar-toggle-l2" data-target="sidebarSub{{ sub.id }}">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </button>
+                                    {% endif %}
+                                    <a href="{{ url_for('index', category=sub.id) }}" 
+                                       class="sidebar-link {% if selected_category == sub.id %}active{% endif %}">
+                                        <span>{{ sub.name }}</span>
+                                    </a>
+                                </div>
+                                {% if sub.children %}
+                                <ul class="sidebar-submenu sidebar-submenu-l3 {% if sub.id == selected_category or sub.id in parent_category_ids %}open{% endif %}" id="sidebarSub{{ sub.id }}">
+                                    {% for sub3 in sub.children %}
+                                    <li class="sidebar-item">
+                                        <a href="{{ url_for('index', category=sub3.id) }}" 
+                                           class="sidebar-link sidebar-link-l3 {% if selected_category == sub3.id %}active{% endif %}">
+                                            <span>{{ sub3.name }}</span>
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        </aside>
         {% endif %}
 
-        <!-- Сітка товарів -->
+        <div class="catalog-main-content">
+            <div class="mobile-catalog-toggle d-lg-none mb-3">
+                <button class="catalog-btn w-100" type="button" id="openMobileCat">
+                    <i class="bi bi-list-nested me-2"></i>
+                    <span>{{ _('Categories') }}</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </button>
+            </div>
+        
+            <div class="stock-header-card mb-4">
+                <div class="stock-header-content">
+                    <div class="stock-header-icon">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                    <div class="stock-header-text">
+                        {% if selected_category_obj %}
+                        <h2 class="stock-header-title">{{ selected_category_obj.name }}</h2>
+                        {% else %}
+                        <h2 class="stock-header-title">{{ _('Items in Our Stock') }}</h2>
+                        {% endif %}
+                        <p class="stock-header-subtitle">
+                            <i class="bi bi-lightning-charge-fill text-warning me-1"></i>
+                            {{ _('Available for immediate delivery') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
         <div class="products-grid" id="productsGrid">
             {% for product in products %}
             <div class="product-card {% if product.quantity <= 0 %}out-of-stock{% endif %}">
-                <div class="product-image-container">
-                    {% if product.quantity <= 0 %}
-                    <div class="out-of-stock-badge">
-                        <i class="bi bi-clock-history"></i>
-                        {{ _('Out of Stock') }}
+                <a href="{{ url_for('product_details', article=product.article) }}" class="product-image-link">
+                    <div class="product-image-container">
+                        {% if product.quantity <= 0 %}
+                        <div class="out-of-stock-badge">
+                            <i class="bi bi-clock-history"></i>
+                            {{ _('Out of Stock') }}
+                        </div>
+                        {% endif %}
+                        {% if product.image_url %}
+                        <img src="{{ product.image_url }}" 
+                             class="product-image" 
+                             alt="{{ product.name or product.article }}"
+                             loading="lazy" 
+                             decoding="async">
+                        {% else %}
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-image"></i>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
-                    {% if product.image_url %}
-                    <img src="{{ product.image_url }}" 
-                         class="product-image" 
-                         alt="{{ product.name or product.article }}"
-                         loading="lazy" 
-                         decoding="async">
-                    {% else %}
-                    <div class="product-image-placeholder">
-                        <i class="bi bi-image"></i>
-                    </div>
-                    {% endif %}
-                </div>
+                </a>
 
                 <div class="product-content">
-                    <h3 class="product-title">
-                        {% if product.name %}{{ product.name }}{% else %}{% endif %}
-                    </h3>
+                    <a href="{{ url_for('product_details', article=product.article) }}" class="product-title-link">
+                        <h3 class="product-title">
+                            {% if product.name %}{{ product.name }}{% else %}{{ product.article }}{% endif %}
+                        </h3>
+                    </a>
                     
                     <div class="product-meta">
                         <div class="meta-item">
@@ -194,18 +196,29 @@
                     </div>
                     
                     <div class="product-actions">
+                        {% if product.quantity > 0 %}
+                        <button type="button" 
+                                class="btn btn-success btn-sm product-btn add-to-cart-btn"
+                                data-article="{{ product.article }}"
+                                data-table="stock"
+                                data-price="{{ product.price }}"
+                                data-brand-id="{{ product.brand_id or '' }}">
+                            <i class="bi bi-cart-plus me-1"></i>
+                            {{ _('Add to Cart') }}
+                        </button>
+                        {% else %}
                         <a href="{{ url_for('product_details', article=product.article) }}" 
-                           class="btn btn-primary btn-sm product-btn">
+                           class="btn btn-outline-primary btn-sm product-btn">
                             <i class="bi bi-eye me-1"></i>
                             {{ _('View Details') }}
                         </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <!-- Кнопка "Показати більше" -->
         {% if has_more %}
         <div class="text-center mt-4">
             <button id="loadMoreButton" 
@@ -219,14 +232,10 @@
             </button>
         </div>
         {% endif %}
-    </div>
-    <!-- Закриття products-section -->
         </div>
-        <!-- Закриття categories-main-content -->
     </div>
-    <!-- Закриття categories-container-wrapper -->
+</div>
 
-    <!-- Need Help Modal -->
     <div id="helpModalOverlay" class="vin-modal-overlay d-none">
         <div class="vin-modal-window">
             <button class="vin-modal-close" id="closeHelpModal" aria-label="Close">&times;</button>
@@ -241,7 +250,6 @@
         </div>
     </div>
 
-    <!-- Car Service Modal -->
     <div id="serviceModalOverlay" class="vin-modal-overlay d-none">
         <div class="vin-modal-window">
             <button class="vin-modal-close" id="closeServiceModal" aria-label="Close">&times;</button>
@@ -251,35 +259,33 @@
         </div>
     </div>
 
-    <!-- VIN Request Modal -->
     <div id="vinModalOverlay" class="vin-modal-overlay d-none">
     <div class="vin-modal-window">
         <button class="vin-modal-close" id="closeVinModal" aria-label="Close">&times;</button>
-        <h2 class="vin-modal-title"><i class="bi bi-key me-2"></i>VIN Request</h2>
+        <h2 class="vin-modal-title"><i class="bi bi-key me-2"></i>{{ _('VIN Request') }}</h2>
         <form id="vinModalForm" autocomplete="off">
             <div class="mb-3">
-                <label for="vin_code" class="form-label">VIN code (17 chars)</label>
+                <label for="vin_code" class="form-label">{{ _('VIN code (17 characters)') }}</label>
                 <input type="text" name="vin_code" id="vin_code" maxlength="17" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label for="phone" class="form-label">Phone (+421...)</label>
+                <label for="phone" class="form-label">{{ _('Phone') }} (+421...)</label>
                 <input type="text" name="phone" id="phone" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
+                <label for="email" class="form-label">{{ _('Email') }}</label>
                 <input type="email" name="email" id="email" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label for="parts_description" class="form-label">Describe needed parts</label>
+                <label for="parts_description" class="form-label">{{ _('Describe needed parts') }}</label>
                 <textarea name="parts_description" id="parts_description" class="form-control" rows="3"></textarea>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Send Request</button>
+            <button type="submit" class="btn btn-primary w-100">{{ _('Send Request') }}</button>
             <div id="vinModalStatus" class="mt-2 small"></div>
         </form>
         </div>
     </div>
 </div>
-<!-- Закриття main-content-wide -->
 {% endblock %}
 
 {% block extra_js %}
@@ -294,7 +300,6 @@ window.translations = {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Обробка посилань на продукти для відкриття в новій вкладці середньою кнопкою миші
     const productLinks = document.querySelectorAll('.product-card a');
     productLinks.forEach(link => {
         link.addEventListener('auxclick', function(e) {
@@ -305,22 +310,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Кнопка "Показати більше"
     const loadMoreButton = document.getElementById('loadMoreButton');
     if (loadMoreButton) {
         loadMoreButton.addEventListener('click', function() {
             const productsGrid = document.getElementById('productsGrid');
             const currentCount = productsGrid ? productsGrid.querySelectorAll('.product-card').length : 0;
 
-            // Бекенд у вас очікує per_page = 8 для /api/products
             const perPageApi = 8;
 
-            // Обчислюємо page (1-based) таким чином, щоб уникнути перекриття з початковою сторінкою
-            // Якщо currentCount = 24 -> Math.floor(24/8)+1 = 4, отже запитнемо сторінку 4 (items 25-32)
             const nextPage = Math.floor(currentCount / perPageApi) + 1;
 
             const brandFilter = document.getElementById('brandFilter');
             const brandId = brandFilter ? brandFilter.value : '';
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryId = urlParams.get('category') || '';
 
             const spinner = this.querySelector('.spinner-border');
             const buttonText = this.querySelector('.button-text');
@@ -328,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
             buttonText.style.opacity = '0.7';
             this.disabled = true;
 
-            fetch(`/api/products?page=${nextPage}&brand=${brandId}&lang={{ g.locale }}`)
+            fetch(`/api/products?page=${nextPage}&brand=${brandId}&category=${categoryId}&lang={{ g.locale }}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -362,7 +366,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
 
                     if (data.has_more) {
-                        // підвищуємо data-next-page для сумісності, але фактично client обчислює page динамічно
                         loadMoreButton.setAttribute('data-next-page', nextPage + 1);
                         loadMoreButton.disabled = false;
                         spinner.classList.add('d-none');
@@ -560,7 +563,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     statusDiv.textContent = 'Request sent successfully!';
                     statusDiv.className = 'mt-2 small text-success';
                     form.reset();
-                    // Закриваємо модалку після успішного відправлення
                     document.getElementById('vinModalOverlay').classList.add('d-none');
                 } else {
                     statusDiv.textContent = data.error || 'Error sending request';
@@ -575,7 +577,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Закриття модалки
     const closeVinModal = document.getElementById('closeVinModal');
     if (closeVinModal) {
         closeVinModal.addEventListener('click', () => {
@@ -583,7 +584,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Відкриття модалки з формою VIN запиту
     const openVinModalButtons = document.querySelectorAll('[data-open-vin-modal]');
     openVinModalButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -594,7 +594,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Відкриття модалки
     const openVinModal = document.getElementById('openVinModal');
     if (openVinModal) {
         openVinModal.addEventListener('click', function() {
@@ -602,7 +601,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.style.overflow = 'hidden';
         });
     }
-    // Закриття модалки
     const closeVinModal = document.getElementById('closeVinModal');
     if (closeVinModal) {
         closeVinModal.addEventListener('click', function() {
@@ -610,7 +608,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.style.overflow = '';
         });
     }
-    // Клік по фону для закриття
     const vinModalOverlay = document.getElementById('vinModalOverlay');
     if (vinModalOverlay) {
         vinModalOverlay.addEventListener('click', function(e) {
@@ -620,7 +617,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    // Відправка форми VIN
     const vinModalForm = document.getElementById('vinModalForm');
     if (vinModalForm) {
         vinModalForm.addEventListener('submit', function(e) {
@@ -656,67 +652,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-
-    // ========== НОВЕ МОБІЛЬНЕ МЕНЮ КАТЕГОРІЙ ==========
-    
-    // Кнопка відкриття/закриття головного меню
-    const openMobileCat = document.getElementById('openMobileCat');
-    const mobileCatMenu = document.getElementById('mobileCatMenu');
-    
-    if (openMobileCat && mobileCatMenu) {
-        openMobileCat.addEventListener('click', () => {
-            openMobileCat.classList.toggle('open');
-            mobileCatMenu.classList.toggle('open');
-        });
-    }
-    
-    // Кнопки розгортання підкатегорій (шукаємо тільки всередині mobileCatMenu)
-    const catToggles = mobileCatMenu ? mobileCatMenu.querySelectorAll('.mobile-cat-toggle') : [];
-    
-    catToggles.forEach((toggle, idx) => {
-        toggle.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const targetId = toggle.getAttribute('data-target');
-            const subMenu = document.getElementById(targetId);
-            
-            if (subMenu) {
-                const isOpen = subMenu.classList.contains('open');
-                const isLevel2 = toggle.classList.contains('mobile-cat-toggle-l2');
-                
-                // Закриваємо тільки підменю того ж рівня (не батьківські)
-                if (!isLevel2) {
-                    // Це кнопка 1-го рівня - закриваємо інші меню 1-го рівня
-                    document.querySelectorAll('.mobile-cat-sub.open').forEach(openSub => {
-                        // Закриваємо тільки якщо це не наше підменю і не його нащадки
-                        if (openSub !== subMenu && !subMenu.contains(openSub)) {
-                            openSub.classList.remove('open');
-                            const otherToggle = document.querySelector(`[data-target="${openSub.id}"]`);
-                            if (otherToggle) {
-                                otherToggle.classList.remove('open');
-                            }
-                        }
-                    });
-                }
-                
-                // Перемикаємо поточне
-                if (isOpen) {
-                    subMenu.classList.remove('open');
-                    toggle.classList.remove('open');
-                    // Закриваємо також всі вкладені підменю
-                    subMenu.querySelectorAll('.mobile-cat-sub.open').forEach(nested => {
-                        nested.classList.remove('open');
-                        const nestedToggle = document.querySelector(`[data-target="${nested.id}"]`);
-                        if (nestedToggle) nestedToggle.classList.remove('open');
-                    });
-                } else {
-                    subMenu.classList.add('open');
-                    toggle.classList.add('open');
-                }
-            }
-        });
-    });
 
     // Need Help Modal
     const openHelpModal = document.getElementById('openHelpModal');
@@ -766,8 +701,142 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    // Розгортання/згортання меню категорій
-    // Видалено - використовуємо статичне меню
+
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const article = this.dataset.article;
+            const table = this.dataset.table || 'stock';
+            const price = this.dataset.price;
+            const button = this;
+            
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>{{ _("Adding...") }}';
+            button.disabled = true;
+            
+            const brandId = this.dataset.brandId || '';
+            const selectedPrice = `${table}:${price}|${brandId}`;
+            
+            fetch('/public_add_to_cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: `article=${encodeURIComponent(article)}&selected_price=${encodeURIComponent(selectedPrice)}&quantity=1`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.innerHTML = '<i class="bi bi-check me-1"></i>{{ _("Added!") }}';
+                    button.classList.add('added');
+                    const cartBadge = document.getElementById('cart-badge');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cart_count;
+                        cartBadge.style.display = data.cart_count > 0 ? '' : 'none';
+                    }
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.classList.remove('added');
+                        button.disabled = false;
+                    }, 2000);
+                } else {
+                    button.innerHTML = '<i class="bi bi-x me-1"></i>{{ _("Error") }}';
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                }
+            })
+            .catch(err => {
+                console.error('Add to cart error:', err);
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        });
+    });
+
+    const SIDEBAR_STATE_KEY = 'sidebarCatalogState';
+    const catalogSidebar = document.getElementById('catalogSidebar');
+    const openMobileCatBtn = document.getElementById('openMobileCat');
+    
+    if (openMobileCatBtn && catalogSidebar) {
+        openMobileCatBtn.addEventListener('click', () => {
+            catalogSidebar.classList.toggle('open');
+            document.body.style.overflow = catalogSidebar.classList.contains('open') ? 'hidden' : '';
+        });
+        
+        catalogSidebar.addEventListener('click', (e) => {
+            if (e.target === catalogSidebar) {
+                catalogSidebar.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+    
+    document.querySelectorAll('.sidebar-toggle').forEach(toggle => {
+        toggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const targetId = toggle.getAttribute('data-target');
+            const subMenu = document.getElementById(targetId);
+            
+            if (subMenu) {
+                const isOpen = subMenu.classList.contains('open');
+                
+                if (isOpen) {
+                    subMenu.classList.remove('open');
+                    toggle.classList.remove('open');
+                    subMenu.querySelectorAll('.sidebar-submenu.open').forEach(nested => {
+                        nested.classList.remove('open');
+                        const nestedToggle = document.querySelector(`[data-target="${nested.id}"]`);
+                        if (nestedToggle) nestedToggle.classList.remove('open');
+                    });
+                } else {
+                    subMenu.classList.add('open');
+                    toggle.classList.add('open');
+                }
+                
+                saveSidebarState();
+            }
+        });
+    });
+    
+    function saveSidebarState() {
+        try {
+            const openItems = [];
+            document.querySelectorAll('.sidebar-submenu.open').forEach(sub => {
+                if (sub.id) openItems.push(sub.id);
+            });
+            localStorage.setItem(SIDEBAR_STATE_KEY, JSON.stringify(openItems));
+        } catch (e) {
+            console.error('Error saving sidebar state:', e);
+        }
+    }
+    
+    function restoreSidebarState() {
+        try {
+            const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
+            if (savedState) {
+                const openItems = JSON.parse(savedState);
+                openItems.forEach(id => {
+                    const subMenu = document.getElementById(id);
+                    const toggle = document.querySelector(`[data-target="${id}"]`);
+                    if (subMenu) {
+                        subMenu.classList.add('open');
+                    }
+                    if (toggle) {
+                        toggle.classList.add('open');
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Error restoring sidebar state:', e);
+        }
+    }
+    
+    restoreSidebarState();
 });
 </script>
 {% endblock %}

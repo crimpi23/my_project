@@ -435,9 +435,8 @@ msgid "Your password has been reset successfully. You can now log in."
 msgstr "Vaša objednávka bola úspešne odoslaná."
 
 #: app.py:4389 templates/public/product_details.html:236
-#, fuzzy
 msgid "Temporarily unavailable"
-msgstr "Fakturačné údaje boli aktualizované"
+msgstr "Dočasne nedostupné"
 
 #: app.py:6405
 msgid "Error loading users"
@@ -2070,7 +2069,7 @@ msgstr ""
 msgid ""
 "Temporarily unavailable on our stock. You can order this part by regular "
 "price."
-msgstr ""
+msgstr "Dočasne nedostupné na našom sklade. Tento diel si môžete objednať za bežnú cenu."
 
 #: templates/public/orders/confirmation.html:97
 #: templates/public/product_details.html:254
@@ -5077,3 +5076,6 @@ msgstr "Popíšte potrebné diely"
 
 msgid "Send Request"
 msgstr "Odoslať žiadosť"
+
+msgid "excl. VAT (B2B)"
+msgstr "bez DPH (pre firmy)"

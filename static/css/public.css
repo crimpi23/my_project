@@ -2053,6 +2053,7 @@ tr:hover .article-badge {
     margin: 0;
     font-size: 1.5rem;
     font-weight: 600;
+    color: #fff !important;
 }
 
 .product-info-body {

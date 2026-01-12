@@ -215,20 +215,20 @@
                         <h4 class="mb-3"><i class="bi bi-tag-fill me-2 text-primary"></i>{{ _('Available Prices') }}</h4>
                         {% for price in prices %}
                         <div class="price-card">
-                            <div class="price-info">
+                            <div class="price-info{% if price.table_name == 'stock' and not price.in_stock %} out-of-stock-layout{% endif %}">
                                 <div class="price-column">
-                                    <div class="price-row">
-                                        <span class="price-label">{{ _('excl. VAT') }}:</span>
-                                        <span class="price-value">{{ "%.2f"|format((price.price|float / 1.23)) }} €</span>
+                                    <div class="price-row price-main">
+                                        <span class="price-value-main">{{ "%.2f"|format(price.price|float) }} €</span>
+                                        <span class="price-label-vat">{{ _('incl. VAT') }}</span>
                                     </div>
-                                    <div class="price-row">
-                                        <span class="price-label">{{ _('incl. VAT') }}:</span>
-                                        <span class="price-value">{{ "%.2f"|format(price.price|float) }} €</span>
+                                    <div class="price-row price-secondary">
+                                        <span class="price-value-secondary">{{ "%.2f"|format((price.price|float / 1.23)) }} €</span>
+                                        <span class="price-label-novat">{{ _('excl. VAT (B2B)') }}</span>
                                     </div>
                                 </div>
                                 <div class="availability-column">
                                     <span class="availability-label">{{ _('Availability') }}:</span>
-                                    <span class="availability-value {% if price.in_stock %}text-success{% else %}text-warning{% endif %}">
+                                    <span class="availability-value {% if price.in_stock %}text-success{% elif price.table_name == 'stock' %}text-danger{% else %}text-warning{% endif %}">
                                         {% if price.table_name == 'stock' %}
                                             {% if price.in_stock %}
                                                 <i class="bi bi-check-circle-fill"></i> {{ _('In Stock') }}
@@ -241,11 +241,9 @@
                                     </span>
                                 </div>
                                 {% if price.table_name == 'stock' and not price.in_stock %}
-                                    <div class="button-column">
-                                        <span class="out-of-stock-msg">
-                                            {{ _('Temporarily unavailable on our stock. You can order this part by regular price.') }}
-                                        </span>
-                                    </div>
+                                    <span class="out-of-stock-msg">
+                                        <i class="bi bi-info-circle"></i> {{ _('Temporarily unavailable on our stock. You can order this part by regular price.') }}
+                                    </span>
                                 {% else %}
                                     <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-form">
                                         <input type="hidden" name="article" value="{{ article }}">

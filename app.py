@@ -35,6 +35,7 @@ from werkzeug.utils import secure_filename
 from email.mime.base import MIMEBase
 from email import encoders
 import math
+import gc  # Для примусового очищення пам'яті
 from flask_apscheduler import APScheduler
 from functools import wraps
 from logging.handlers import RotatingFileHandler
@@ -111,8 +112,8 @@ babel.init_app(app, locale_selector=get_locale)
 cache = Cache(app, config={
     'CACHE_TYPE': 'FileSystemCache',  # Замість SimpleCache
     'CACHE_DIR': '/tmp/flask_cache',  # Директорія для кеш-файлів
-    'CACHE_THRESHOLD': 1000,          # Максимальна кількість об'єктів
-    'CACHE_DEFAULT_TIMEOUT': 600
+    'CACHE_THRESHOLD': 200,           # Зменшено з 1000 для економії пам'яті
+    'CACHE_DEFAULT_TIMEOUT': 300      # Зменшено з 600 секунд
 })
 
 # Налаштування планувальника
@@ -212,6 +213,44 @@ def safe_db_connection():
 # Створюємо директорію для зберігання sitemap файлів
 SITEMAP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'sitemaps')
 os.makedirs(SITEMAP_DIR, exist_ok=True)
+
+# =============== БЛОКУВАННЯ БОТ-СПАМУ ===============
+# Паттерни URL для блокування (неіснуючі сторінки, які боти намагаються сканувати)
+BLOCKED_URL_PATTERNS = [
+    '/select/',
+    '/en/select/',
+    '/sk/select/',
+    '/pl/select/',
+]
+
+BLOCKED_QUERY_PATTERNS = [
+    'action=cron_',
+    'Price=TOYOTA',
+    'Price=BMW',
+    'Price=MERCEDES',
+    '&post=',
+]
+
+@app.before_request
+def block_bot_spam_requests():
+    """Блокує спам-запити від ботів на неіснуючі URL"""
+    path = request.path
+    query = request.query_string.decode('utf-8', errors='ignore')
+    
+    # Перевіряємо шлях - блокуємо /select/ (якого не існує на сайті)
+    for pattern in BLOCKED_URL_PATTERNS:
+        if pattern in path:
+            # 410 Gone = "цієї сторінки більше немає, видаліть з індексу"
+            return '', 410
+    
+    # Перевіряємо query параметри (спам-запити)
+    for pattern in BLOCKED_QUERY_PATTERNS:
+        if pattern in query:
+            return '', 410
+    
+    # Все інше - пропускаємо нормально
+    return None
+# =============== КІНЕЦЬ БЛОКУВАННЯ БОТ-СПАМУ ===============
 
 @app.before_request
 def store_utm_params():
@@ -1214,27 +1253,34 @@ def normalize_article(article):
 
 @scheduler.task('interval', id='generate_sitemaps_distributed', days=30)
 def generate_sitemaps_distributed():
-    """Розподілений генератор sitemap файлів"""
+    """Розподілений генератор sitemap файлів з очищенням пам'яті"""
     try:
         logging.info("Starting distributed generation of all sitemap files")
         
+        # Примусове очищення пам'яті перед початком
+        gc.collect()
+        
         # Поступово генеруємо кожен тип sitemap з паузами
         generate_sitemap_static_file()
-        time.sleep(10)  # Пауза між задачами
+        gc.collect()  # Очищуємо пам'ять після кожної операції
+        time.sleep(10)
         
         generate_sitemap_categories_file()
+        gc.collect()
         time.sleep(10)
         
         generate_sitemap_stock_files()
-        time.sleep(30)  # Довша пауза після важкої операції
+        gc.collect()
+        time.sleep(60)  # Довша пауза після важкої операції
         
         generate_sitemap_enriched_files()
-        time.sleep(30)
+        gc.collect()
+        time.sleep(60)
         
-        generate_sitemap_other_files()
-        time.sleep(30)
+        # generate_sitemap_other_files() - ВИКЛЮЧЕНО (товари без описів/фото)
         
         generate_sitemap_index_file()
+        gc.collect()
         
         logging.info("All sitemap files generated successfully via distributed task")
     except Exception as e:
@@ -1398,6 +1444,10 @@ Allow: /
 Allow: /product/
 Allow: /category/
 Allow: /blog/
+Allow: /about
+Allow: /contacts
+Allow: /shipping-payment
+Allow: /returns
 
 # Дозволяємо тільки якісні sitemap
 Allow: /sitemap-static.xml
@@ -1407,14 +1457,25 @@ Allow: /sitemap-enriched-*
 Allow: /sitemap-images.xml
 Allow: /sitemap-blog.xml
 
+# БЛОКУЄМО неіснуючі URL (спам від ботів)
+Disallow: /select/
+Disallow: /en/select/
+Disallow: /sk/select/
+Disallow: /pl/select/
+Disallow: /*?action=cron_*
+Disallow: /*?Price=*
+Disallow: /*?post=*
+
 # Блокуємо прайс-листи без описів
 Disallow: /sitemap-other-*
 
-# Блокуємо адмінку
+# Блокуємо адмінку та службові сторінки
 Disallow: /admin/
 Disallow: /*token*/
 Disallow: /debug_*
 Disallow: /api/
+Disallow: /public_search
+Disallow: /guest_checkout
 
 # Основний sitemap
 Sitemap: https://autogroup.sk/sitemap-index.xml

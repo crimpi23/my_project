@@ -421,12 +421,27 @@ def init_scheduler():
 
 
 def generate_sitemap_index_file():
-    """Генерує sitemap index і зберігає на диск"""
+    """Генерує sitemap index і зберігає на диск. Видаляє старі other файли."""
     try:
         logging.info("Starting generation of sitemap index file")
         
         host_base = "https://autogroup.sk"
         today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Видаляємо старі sitemap-other файли (вони більше не потрібні)
+        deleted_other = 0
+        for filename in os.listdir(SITEMAP_DIR):
+            if filename.startswith('sitemap-other-'):
+                old_file_path = os.path.join(SITEMAP_DIR, filename)
+                try:
+                    os.remove(old_file_path)
+                    deleted_other += 1
+                    logging.info(f"Deleted old sitemap file: {filename}")
+                except Exception as e:
+                    logging.warning(f"Could not delete {filename}: {e}")
+        
+        if deleted_other > 0:
+            logging.info(f"Deleted {deleted_other} old sitemap-other files")
 
         sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
         sitemap_xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -453,11 +468,7 @@ def generate_sitemap_index_file():
             sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{enriched_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
             total_sitemaps += 1
         
-        # Додаємо файли other
-        other_files = [f for f in os.listdir(SITEMAP_DIR) if f.startswith('sitemap-other-') and f.endswith('.xml')]
-        for other_file in sorted(other_files):
-            sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{other_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
-            total_sitemaps += 1
+        # НЕ додаємо файли other - вони виключені!
         
         # Перевіряємо, чи є хоча б один sitemap, щоб уникнути порожнього індексу
         if total_sitemaps == 0:
@@ -1243,6 +1254,47 @@ def generate_all_sitemaps():
         generate_sitemap_stock_files()
         generate_sitemap_enriched_files()  # Тільки з описами/фото
         # generate_sitemap_other_files()  # ПОВНІСТЮ ВИКЛЮЧЕНО
+        generate_sitemap_images_file()
+        generate_sitemap_blog_file()  # Якщо є блог
+        generate_sitemap_index_file()  # Автоматично видаляє old other files
+        
+        logging.info("Sitemap files generated successfully (without other)")
+        return True
+    except Exception as e:
+        logging.error(f"Error generating sitemap files: {e}", exc_info=True)
+        return False
+
+
+def cleanup_old_sitemap_files():
+    """
+    Видаляє застарілі sitemap-other файли
+    Повертає кількість видалених файлів та список їх імен
+    """
+    try:
+        deleted_count = 0
+        deleted_files = []
+        total_size_kb = 0
+        
+        for filename in os.listdir(SITEMAP_DIR):
+            # Видаляємо sitemap-other файли
+            if filename.startswith('sitemap-other-'):
+                filepath = os.path.join(SITEMAP_DIR, filename)
+                try:
+                    file_size = os.path.getsize(filepath) / 1024  # KB
+                    os.remove(filepath)
+                    deleted_files.append(filename)
+                    total_size_kb += file_size
+                    deleted_count += 1
+                    logging.info(f"Deleted old sitemap: {filename} ({file_size:.2f} KB)")
+                except Exception as e:
+                    logging.warning(f"Could not delete {filename}: {e}")
+        
+        logging.info(f"Cleanup completed: deleted {deleted_count} files, freed {total_size_kb:.2f} KB")
+        return deleted_count, deleted_files, total_size_kb
+        
+    except Exception as e:
+        logging.error(f"Error in cleanup_old_sitemap_files: {e}")
+        return 0, [], 0
         generate_sitemap_images_file()
         generate_sitemap_blog_file()  # Якщо є блог
         generate_sitemap_index_file()
@@ -9155,7 +9207,16 @@ def admin_generate_sitemaps(token):
     generation_type = request.form.get('type', 'all')
     
     try:
-        if generation_type == 'all':
+        if generation_type == 'cleanup':
+            # Очищення старих файлів
+            deleted_count, deleted_files, total_size = cleanup_old_sitemap_files()
+            if deleted_count > 0:
+                message = f"Видалено {deleted_count} файлів ({total_size:.2f} KB): {', '.join(deleted_files)}"
+            else:
+                message = "Немає старих файлів для видалення"
+            flash(message, "success" if deleted_count > 0 else "info")
+            return redirect(url_for('admin_sitemaps', token=token))
+        elif generation_type == 'all':
             success = generate_all_sitemaps()  # БЕЗ other файлів
             message = "All sitemaps generated successfully (excluding Other products)"
         elif generation_type == 'static':

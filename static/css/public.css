@@ -6243,8 +6243,8 @@ tr:hover .article-badge {
   .row-products { --bs-gutter-x: .5rem; --bs-gutter-y: .75rem; margin: 0 !important; }
   .row-products > [class*="col"] { flex: 0 0 100% !important; max-width: 100% !important; padding: 0 !important; }
 
-  /* Ховаємо великі блоки на головній */
-  .welcome-card, .info-card { display: none !important; }
+  /* Ховаємо великі блоки тільки на головній сторінці */
+  .home-page .welcome-card { display: none !important; }
 
   /* Компактна пошукова форма */
   .search-card .input-group .form-control { border: 1px solid #6f42c1; padding: .5rem .75rem; font-size: .95rem; border-radius: 8px; }

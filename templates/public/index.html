@@ -10,7 +10,7 @@
 {% block title %}{{ _('Home') }} - AutogroupEU{% endblock %}
 
 {% block content %}
-<div class="main-content-wide mt-4">
+<div class="main-content-wide mt-4 home-page">
     <div class="pre-products-bar-scroll">
       <div class="pre-products-bar-inner">
         <!-- Need Help -->
@@ -177,21 +177,19 @@
                         </h3>
                     </a>
                     
-                    <div class="product-meta">
-                        <div class="meta-item">
-                            <span class="meta-label">{{ _('Brand') }}</span>
-                            <span class="meta-value">{{ product.brand_name }}</span>
+                    <div class="product-meta-compact">
+                        <span class="product-brand">{{ product.brand_name }}</span>
+                        <span class="product-article">{{ product.article }}</span>
+                    </div>
+                    
+                    <div class="product-prices">
+                        <div class="price-main-line">
+                            <span class="price-with-vat">{{ "%.2f"|format(product.price|float) }} €</span>
+                            <span class="price-vat-label">{{ _('incl. VAT') }}</span>
                         </div>
-                        <div class="meta-item">
-                            <span class="meta-label">{{ _('Article') }}</span>
-                            <span class="meta-value">{{ product.article }}</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-label">{{ _('Price') }}</span>
-                            <span class="meta-value product-price">
-                                {{ "%.2f"|format(product.price) }} €
-                                <small class="price-note">{{ _('incl. VAT') }}</small>
-                            </span>
+                        <div class="price-secondary-line">
+                            <span class="price-without-vat">{{ "%.2f"|format((product.price|float) / 1.23) }} €</span>
+                            <span class="price-novat-label">{{ _('excl. VAT') }}</span>
                         </div>
                     </div>
                     
@@ -388,6 +386,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const t = function(text) {
             return translations[text] || text;
         };
+        const priceWithVat = parseFloat(product.price).toFixed(2);
+        const priceWithoutVat = (parseFloat(product.price) / 1.23).toFixed(2);
         
         return `
             <div class="product-image-container">
@@ -398,21 +398,18 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="product-content">
                 <h3 class="product-title">${product.name || product.article}</h3>
-                <div class="product-meta">
-                    <div class="meta-item">
-                        <span class="meta-label">${t('Brand')}</span>
-                        <span class="meta-value">${product.brand_name}</span>
+                <div class="product-meta-compact">
+                    <span class="product-brand">${product.brand_name}</span>
+                    <span class="product-article">${product.article}</span>
+                </div>
+                <div class="product-prices">
+                    <div class="price-main-line">
+                        <span class="price-with-vat">${priceWithVat} €</span>
+                        <span class="price-vat-label">${t('incl. VAT')}</span>
                     </div>
-                    <div class="meta-item">
-                        <span class="meta-label">${t('Article')}</span>
-                        <span class="meta-value">${product.article}</span>
-                    </div>
-                    <div class="meta-item">
-                        <span class="meta-label">${t('Price')}</span>
-                        <span class="meta-value product-price">
-                            ${parseFloat(product.price).toFixed(2)} €
-                            <small class="price-note">${t('incl. VAT')}</small>
-                        </span>
+                    <div class="price-secondary-line">
+                        <span class="price-without-vat">${priceWithoutVat} €</span>
+                        <span class="price-novat-label">${t('excl. VAT')}</span>
                     </div>
                 </div>
                 <div class="product-actions">
@@ -465,16 +462,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    statusDiv.textContent = 'Request sent successfully!';
+                    statusDiv.textContent = '{{ _("Request sent successfully!") }}';
                     statusDiv.className = 'mt-2 small text-success';
                     form.reset();
                 } else {
-                    statusDiv.textContent = data.error || 'Error sending request';
+                    statusDiv.textContent = data.error || '{{ _("Error sending request") }}';
                     statusDiv.className = 'mt-2 small text-danger';
                 }
             })
             .catch((err) => {
-                statusDiv.textContent = 'Server error';
+                statusDiv.textContent = '{{ _("Server error") }}';
                 statusDiv.className = 'mt-2 small text-danger';
                 console.error('VIN request error:', err);
             });
@@ -524,15 +521,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             }).then(r=>r.json()).then(data=>{
                 if (data.success) {
-                    vinStatus.textContent = '{{ _("Sent") }}';
+                    vinStatus.textContent = '{{ _("Request sent successfully!") }}';
                     vinStatus.classList.add('text-success');
                     f.reset();
                 } else {
-                    vinStatus.textContent = data.error || 'Error';
+                    vinStatus.textContent = data.error || '{{ _("Error sending request") }}';
                     vinStatus.classList.add('text-danger');
                 }
             }).catch(()=>{
-                vinStatus.textContent = 'Server error';
+                vinStatus.textContent = '{{ _("Server error") }}';
                 vinStatus.classList.add('text-danger');
             });
         });
@@ -560,17 +557,17 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    statusDiv.textContent = 'Request sent successfully!';
+                    statusDiv.textContent = '{{ _("Request sent successfully!") }}';
                     statusDiv.className = 'mt-2 small text-success';
                     form.reset();
                     document.getElementById('vinModalOverlay').classList.add('d-none');
                 } else {
-                    statusDiv.textContent = data.error || 'Error sending request';
+                    statusDiv.textContent = data.error || '{{ _("Error sending request") }}';
                     statusDiv.className = 'mt-2 small text-danger';
                 }
             })
             .catch((err) => {
-                statusDiv.textContent = 'Server error';
+                statusDiv.textContent = '{{ _("Server error") }}';
                 statusDiv.className = 'mt-2 small text-danger';
                 console.error('VIN request error:', err);
             });

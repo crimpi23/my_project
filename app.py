@@ -2187,6 +2187,9 @@ def login():
         username = request.form['username']
         password = request.form['password']
         logging.debug("Verifying password")
+        
+        # Зберігаємо кошик гостя перед авторизацією
+        guest_cart = session.get('public_cart', {}).copy()
 
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -2218,6 +2221,48 @@ def login():
                 session['role'] = role
                 
                 logging.info(f"User logged in: user_id={user['id']}, username={user['username']}, role={role}")
+                
+                # Переносимо кошик гостя в БД користувача
+                if guest_cart:
+                    logging.info(f"Transferring guest cart to user {user['id']}: {guest_cart}")
+                    for article, tables in guest_cart.items():
+                        for table_name, item_data in tables.items():
+                            # Перевіряємо чи товар вже є в кошику користувача
+                            cursor.execute("""
+                                SELECT id, quantity FROM cart
+                                WHERE user_id = %s AND article = %s AND table_name = %s
+                            """, (user['id'], article, table_name))
+                            existing = cursor.fetchone()
+                            
+                            if existing:
+                                # Оновлюємо кількість
+                                new_quantity = existing['quantity'] + item_data.get('quantity', 1)
+                                cursor.execute("""
+                                    UPDATE cart SET quantity = %s WHERE id = %s
+                                """, (new_quantity, existing['id']))
+                            else:
+                                # Додаємо новий товар
+                                cursor.execute("""
+                                    INSERT INTO cart 
+                                    (user_id, article, table_name, base_price, final_price, quantity, comment, brand_id, added_at)
+                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                                """, (
+                                    user['id'],
+                                    article,
+                                    table_name,
+                                    item_data.get('price', 0),
+                                    item_data.get('price', 0),
+                                    item_data.get('quantity', 1),
+                                    item_data.get('comment', ''),
+                                    item_data.get('brand_id')
+                                ))
+                    conn.commit()
+                    # Очищуємо кошик гостя з сесії
+                    session.pop('public_cart', None)
+                    logging.info(f"Guest cart transferred successfully to user {user['id']}")
+                
+                # Оновлюємо кількість товарів у кошику
+                update_cart_count_in_session()
                 
                 # Перевіряємо, чи є URL для перенаправлення
                 next_url = session.get('next_url')

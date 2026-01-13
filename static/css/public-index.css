@@ -1427,6 +1427,58 @@
     flex-wrap: wrap;
     gap: 0.2rem 0.7rem;
 }
+/* Compact product meta without labels */
+.product-meta-compact {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+}
+.product-brand {
+    color: #64748b;
+    font-weight: 500;
+}
+.product-article {
+    color: #2563eb;
+    font-weight: 600;
+    background: #e0e7ff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+/* Compact prices */
+.product-prices {
+    margin-bottom: 8px;
+}
+.price-main-line {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+.price-with-vat {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1d4ed8;
+}
+.price-vat-label {
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+.price-secondary-line {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+.price-without-vat {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #64748b;
+}
+.price-novat-label {
+    font-size: 0.65rem;
+    color: #94a3b8;
+}
 .meta-item {
     display: flex;
     gap: 0.2em;

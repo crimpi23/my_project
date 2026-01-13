@@ -174,9 +174,8 @@ msgid "An error occurred while processing your request."
 msgstr "Pri spracovaní vašej požiadavky došlo k chybe."
 
 #: (2).py:3358 app app.py:3979 копія –
-#, fuzzy
 msgid "Invalid VAT number format"
-msgstr "Neplatný formát ceny"
+msgstr "Neplatný formát IČ DPH"
 
 #: (2).py:3363 app app.py:3984 копія –
 msgid "All fields are required"
@@ -369,14 +368,12 @@ msgid "Article not found"
 msgstr "Tovar nebol nájdený"
 
 #: (2).py:10110 app app.py:10732 копія –
-#, fuzzy
 msgid "An error occurred while loading the article"
-msgstr "Pri pridávaní položiek do košíka došlo k chybe"
+msgstr "Pri načítaní článku došlo k chybe"
 
 #: (2).py:10396 app app.py:11018 копія –
-#, fuzzy
 msgid "An error occurred during search"
-msgstr "Počas odosielania došlo k chybe"
+msgstr "Počas vyhľadávania došlo k chybe"
 
 #: app.py:1447
 msgid "Phone number is required"
@@ -400,39 +397,35 @@ msgstr "Chyba pri overovaní telefónneho čísla"
 
 #: app.py:2256
 msgid "Please enter your email address"
-msgstr ""
+msgstr "Zadajte svoju e-mailovú adresu"
 
 #: app.py:2290
 msgid "If an account with this email exists, we have sent a password reset link."
-msgstr ""
+msgstr "Ak existuje účet s touto e-mailovou adresou, poslali sme vám odkaz na obnovenie hesla."
 
 #: app.py:2295 app.py:2359
-#, fuzzy
 msgid "An error occurred. Please try again later."
-msgstr "Počas vyhľadávania došlo k chybe. Skúste to prosím neskôr."
+msgstr "Vyskytla sa chyba. Skúste to prosím neskôr."
 
 #: app.py:2320
 msgid "Invalid or expired password reset link."
-msgstr ""
+msgstr "Neplatný alebo expirovaný odkaz na obnovenie hesla."
 
 #: app.py:2327
 msgid "This password reset link has expired. Please request a new one."
-msgstr ""
+msgstr "Tento odkaz na obnovenie hesla vypršal. Požiadajte o nový."
 
 #: app.py:2335
-#, fuzzy
 msgid "Password must be at least 6 characters long."
-msgstr "Heslo musí mať aspoň 8 znakov"
+msgstr "Heslo musí mať aspoň 6 znakov."
 
 #: app.py:2339
-#, fuzzy
 msgid "Passwords do not match."
-msgstr "Heslá sa nezhodujú"
+msgstr "Heslá sa nezhodujú."
 
 #: app.py:2352
-#, fuzzy
 msgid "Your password has been reset successfully. You can now log in."
-msgstr "Vaša objednávka bola úspešne odoslaná."
+msgstr "Vaše heslo bolo úspešne obnovené. Teraz sa môžete prihlásiť."
 
 #: app.py:4389 templates/public/product_details.html:236
 msgid "Temporarily unavailable"
@@ -807,9 +800,8 @@ msgid ""
 msgstr "Zadajte svoju e-mailovú adresu a pošleme vám odkaz na obnovenie hesla."
 
 #: templates/auth/forgot_password.html:30
-#, fuzzy
 msgid "Enter your email address"
-msgstr "Chyba pri ukladaní adresy"
+msgstr "Zadajte svoju e-mailovú adresu"
 
 #: templates/auth/forgot_password.html:34
 msgid "Send Reset Link"
@@ -1820,18 +1812,16 @@ msgid "No description available."
 msgstr "Popis nie je k dispozícii."
 
 #: templates/public/index.html:504
-#, fuzzy
 msgid "Close"
-msgstr "Cena:"
+msgstr "Zavrieť"
 
 #: templates/public/index.html:504
 msgid "Open"
-msgstr ""
+msgstr "Otvoriť"
 
 #: templates/public/index.html:527
-#, fuzzy
 msgid "Sent"
-msgstr "Zásielky"
+msgstr "Odoslané"
 
 #: templates/public/index.html:714
 msgid "Adding..."
@@ -2116,47 +2106,40 @@ msgid "Call Now"
 msgstr "Zavolajte teraz"
 
 #: templates/public/product_details.html:312
-#, fuzzy
 msgid "Related Searches"
-msgstr "Vyhľadávanie podľa čísla dielu"
+msgstr "Súvisiacé vyhľadávania"
 
 #: templates/public/product_details.html:316
-#, fuzzy
 msgid "compatible"
-msgstr "Spoločnosti"
+msgstr "kompatibilný"
 
 #: templates/public/product_details.html:317
 msgid "alternative"
-msgstr ""
+msgstr "alternatíva"
 
 #: templates/public/product_details.html:318
-#, fuzzy
 msgid "original"
-msgstr "Kód tovaru"
+msgstr "originál"
 
 #: templates/public/product_details.html:464
-#, fuzzy
 msgid "Popular Categories"
-msgstr "Kategórie"
+msgstr "Obľúbené kategórie"
 
 #: templates/public/product_details.html:466
-#, fuzzy
 msgid "Engine Parts"
-msgstr "Aktualizácie softvéru"
+msgstr "Diely motora"
 
 #: templates/public/product_details.html:468
 msgid "Filters"
 msgstr "Filtre"
 
 #: templates/public/product_details.html:469
-#, fuzzy
 msgid "Suspension"
-msgstr "Rozmer"
+msgstr "Podvozok"
 
 #: templates/public/product_details.html:470
-#, fuzzy
 msgid "Electrical"
-msgstr "Položky cenníka"
+msgstr "Elektrika"
 
 #: templates/public/returns.html:4 templates/public/returns.html:7
 msgid "Learn about AutogroupEU's returns and exchanges policy for auto parts."
@@ -3021,22 +3004,19 @@ msgstr "Hľadať"
 
 #: templates/public/blog/index.html:57 templates/user/orders/orders.html:68
 msgid "All"
-msgstr ""
+msgstr "Všetky"
 
 #: templates/public/blog/index.html:77
-#, fuzzy
 msgid "Newest"
-msgstr "Novinky"
+msgstr "Najnovšie"
 
 #: templates/public/blog/index.html:81
-#, fuzzy
 msgid "Oldest"
-msgstr "Objednávky"
+msgstr "Najstaršie"
 
 #: templates/public/blog/index.html:85
-#, fuzzy
 msgid "Popular"
-msgstr "Poľsko"
+msgstr "Populárne"
 
 #: templates/public/blog/index.html:90
 msgid "Found {0} posts"
@@ -3044,9 +3024,8 @@ msgstr "Nájdených {0} príspevkov"
 
 #: templates/public/blog/index.html:127 templates/public/blog/post.html:128
 #: templates/public/blog/search_results.html:57
-#, fuzzy
 msgid "Read more"
-msgstr "Zisti viac"
+msgstr "Čítať viac"
 
 #: templates/public/blog/index.html:145 templates/public/blog/index.html:150
 #: templates/public/blog/search_results.html:81
@@ -3143,7 +3122,7 @@ msgstr "Celé meno"
 #: templates/public/cart/cart.html:144 templates/public/cart/cart.html:246
 #: templates/public/user/profile.html:179
 msgid "Country"
-msgstr "Krajiny"
+msgstr "Krajina"
 
 #: templates/public/cart/cart.html:154 templates/public/cart/cart.html:260
 #: templates/public/user/profile.html:190
@@ -3179,12 +3158,10 @@ msgid "VAT number"
 msgstr "IČ DPH"
 
 #: templates/public/cart/cart.html:196 templates/public/cart/cart.html:319
-#, fuzzy
 msgid "Registration number"
 msgstr "IČO"
 
 #: templates/public/cart/cart.html:200 templates/public/cart/cart.html:323
-#, fuzzy
 msgid "Company address"
 msgstr "Adresa spoločnosti"
 
@@ -3194,14 +3171,12 @@ msgid "Place Order"
 msgstr "Zadať objednávku"
 
 #: templates/public/cart/cart.html:224
-#, fuzzy
 msgid "Your Contact Information"
-msgstr "Osobné údaje"
+msgstr "Vaše kontaktné údaje"
 
 #: templates/public/cart/cart.html:248
-#, fuzzy
 msgid "Select country"
-msgstr "Krajiny"
+msgstr "Vyberte krajinu"
 
 #: templates/public/cart/cart.html:250 templates/public/user/profile.html:184
 msgid "Czech Republic"
@@ -3217,7 +3192,7 @@ msgstr "Maďarsko"
 
 #: templates/public/cart/cart.html:253 templates/public/user/profile.html:183
 msgid "Ukraine"
-msgstr "Ukrajinčina"
+msgstr "Ukrajina"
 
 #: templates/public/cart/cart.html:254
 msgid "Germany"
@@ -3228,15 +3203,13 @@ msgid "Austria"
 msgstr "Rakúsko"
 
 #: templates/public/cart/cart.html:256
-#, fuzzy
 msgid "Other country"
-msgstr "Krajiny"
+msgstr "Iná krajina"
 
 #: templates/public/cart/cart.html:274
 #: templates/public/orders/guest_confirmation.html:74
-#, fuzzy
 msgid "Shipping Method"
-msgstr "Doprava a platba"
+msgstr "Spôsob dopravy"
 
 #: templates/public/cart/cart.html:279
 #, fuzzy
@@ -3244,19 +3217,16 @@ msgid "Standard Shipping (Slovakia only)"
 msgstr "Štandardné doručenie"
 
 #: templates/public/cart/cart.html:280 templates/public/cart/cart.html:288
-#, fuzzy
 msgid "Delivery time"
 msgstr "Čas doručenia"
 
 #: templates/public/cart/cart.html:296
-#, fuzzy
 msgid "Location"
-msgstr "Lokalita:"
+msgstr "Lokalita"
 
 #: templates/public/cart/cart.html:305
-#, fuzzy
 msgid "I need an invoice (company details)"
-msgstr "Nové údaje spoločnosti"
+msgstr "Potrebujem faktúru (údaje spoločnosti)"
 
 #: templates/public/cart/cart.html:340 templates/user/index.html:54
 msgid "or"
@@ -3350,9 +3320,8 @@ msgid "View My Orders"
 msgstr "Zobraziť moje objednávky"
 
 #: templates/public/orders/guest_confirmation.html:55
-#, fuzzy
 msgid "A confirmation email has been sent to your email address."
-msgstr "Poslali sme vám potvrdzovací e-mail s podrobnosťami o vašej objednávke."
+msgstr "Na váš e-mail sme odoslali potvrdenie objednávky."
 
 #: templates/public/orders/guest_confirmation.html:73
 #: templates/public/orders/order_details.html:127
@@ -3406,7 +3375,6 @@ msgstr "Objednávka nebola nájdená"
 
 #: templates/public/orders/list_orders.html:92
 #: templates/public/orders/orders.html:95
-#, fuzzy
 msgid "You have not placed any orders yet."
 msgstr "Zatiaľ ste nezadali žiadne objednávky."
 
@@ -3450,9 +3418,8 @@ msgstr "Nový"
 
 #: templates/public/orders/order_details.html:46
 #: templates/public/orders/orders.html:55
-#, fuzzy
 msgid "Processing"
-msgstr "Spracovanie"
+msgstr "Spracováva sa"
 
 #: templates/public/orders/order_details.html:47
 #: templates/public/orders/orders.html:56
@@ -3467,7 +3434,7 @@ msgstr "Doručené"
 #: templates/public/orders/order_details.html:49
 #: templates/public/orders/orders.html:58 templates/user/orders/orders.html:71
 msgid "Cancelled"
-msgstr ""
+msgstr "Zrušené"
 
 #: templates/public/orders/order_details.html:64
 msgid "Payment Status"
@@ -3486,9 +3453,8 @@ msgid "No delivery address information"
 msgstr "Žiadne informácie o adrese doručenia"
 
 #: templates/public/orders/order_details.html:110
-#, fuzzy
 msgid "Invoice Information"
-msgstr "Informácie o faktúre"
+msgstr "Fakturačné údaje"
 
 #: templates/public/orders/order_details.html:140
 msgid "Order Items"
@@ -5079,3 +5045,20 @@ msgstr "Odoslať žiadosť"
 
 msgid "excl. VAT (B2B)"
 msgstr "bez DPH (pre firmy)"
+
+msgid "Article Number"
+msgstr "Číslo dielu"
+
+msgid "14-21 days"
+msgstr "14-21 dní"
+msgid "Request sent successfully!"
+msgstr "Žiadosť bola úspešne odoslaná!"
+
+msgid "Error sending request"
+msgstr "Chyba pri odosielaní žiadosti"
+
+msgid "Server error"
+msgstr "Chyba servera"
+
+msgid "excl. VAT"
+msgstr "bez DPH"

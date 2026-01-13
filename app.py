@@ -221,6 +221,8 @@ BLOCKED_URL_PATTERNS = [
     '/en/select/',
     '/sk/select/',
     '/pl/select/',
+    '/uk/',           # Українська мова не підтримується на сайті
+    '/index.php',     # PHP-боти
 ]
 
 BLOCKED_QUERY_PATTERNS = [
@@ -229,6 +231,8 @@ BLOCKED_QUERY_PATTERNS = [
     'Price=BMW',
     'Price=MERCEDES',
     '&post=',
+    'post=PriceList',  # Спам-запити на прайс-листи
+    'PriceName=',      # Спам-запити з назвами прайсів
 ]
 
 @app.before_request
@@ -834,160 +838,103 @@ def generate_sitemap_stock_files():
         return False
 
 def generate_sitemap_enriched_files():
-    """Генерує enriched sitemap файли з багатомовними URL"""
+    """
+    Генерує sitemap файли для товарів з описами або фото (оптимізована версія)
+    Використовує прості запити замість складних JOIN для уникнення timeout
+    """
     try:
-        logging.info("Starting generation of multilingual enriched sitemap files")
+        logging.info("Starting optimized generation of enriched sitemap files")
         start_time = datetime.now()
         
         host_base = "https://autogroup.sk"
-        
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        
-        # Підтримувані мови
         languages = ['sk', 'en', 'pl']
+        products_per_sitemap = 3500
         
-        # ВИКЛЮЧАЄМО aftermarket і juaguar + обмежуємо ціновий діапазон
-        cursor.execute("SELECT table_name FROM price_lists WHERE table_name NOT IN ('stock', 'aftermarket', 'juaguar')")
-        price_list_tables = [row[0] for row in cursor.fetchall()]
-        logging.info(f"Found {len(price_list_tables)} price list tables: {price_list_tables}")
-        
-        # Якщо немає прайс-листів, створюємо один пустий файл
-        if not price_list_tables:
-            logging.info("No price lists found, creating empty enriched sitemap")
-            sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-            sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-            sitemap_xml += '</urlset>'
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
-            file_path = os.path.join(SITEMAP_DIR, 'sitemap-enriched-1.xml')
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(sitemap_xml)
+            # Простий запит 1: артикули з фото
+            logging.info("Fetching articles with photos...")
+            cursor.execute("""
+                SELECT DISTINCT product_article as article
+                FROM product_images
+                ORDER BY product_article
+            """)
+            photo_articles = set(row['article'] for row in cursor.fetchall())
+            logging.info(f"Found {len(photo_articles)} articles with photos")
             
-            logging.info(f"Created empty enriched sitemap at {file_path}")
-            return True
-        
-        # Формуємо динамічний SQL для запиту всіх товарів з прайс-листів з ЦІНОВИМ ФІЛЬТРОМ
-        union_queries = []
-        for table in price_list_tables:
-            union_queries.append(f"SELECT article, '{table}' AS source_table FROM {table} WHERE price BETWEEN 100 AND 800")
-        
-        all_price_list_query = " UNION ALL ".join(union_queries)
-        
-        # Рахуємо загальну кількість enriched товарів
-        enriched_count_query = f"""
-            SELECT COUNT(DISTINCT pl.article) 
-            FROM ({all_price_list_query}) pl
-            JOIN (
-                SELECT p.article FROM products p
-                UNION
-                SELECT pi.product_article FROM product_images pi
-            ) AS enriched ON pl.article = enriched.article
-            LEFT JOIN stock s ON pl.article = s.article
-            WHERE s.article IS NULL
-        """
-        
-        cursor.execute(enriched_count_query)
-        total_enriched = cursor.fetchone()[0]
-        logging.info(f"Found {total_enriched} enriched products in price range 100-800€")
-
-        # Розраховуємо кількість файлів (з урахуванням мультимовності)
-        products_per_sitemap = 3500  # Зменшуємо, бо тепер у 3 рази більше URL
-        total_files = max(1, math.ceil(total_enriched / products_per_sitemap))
-        
-        # Для кожного файлу створюємо окремий sitemap
-        for page in range(1, total_files + 1):
-            offset = (page - 1) * products_per_sitemap
+            # Простий запит 2: артикули з описами
+            logging.info("Fetching articles with descriptions...")
+            cursor.execute("""
+                SELECT article
+                FROM products
+                WHERE (description_sk IS NOT NULL AND description_sk != '')
+                   OR (description_en IS NOT NULL AND description_en != '')
+                   OR (description_pl IS NOT NULL AND description_pl != '')
+                ORDER BY article
+            """)
+            desc_articles = set(row['article'] for row in cursor.fetchall())
+            logging.info(f"Found {len(desc_articles)} articles with descriptions")
             
-            # Створюємо XML-заголовок з hreflang підтримкою
-            sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-            sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
-            sitemap_xml += 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" '
-            sitemap_xml += 'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
+            # Об'єднуємо унікальні артикули в Python (швидше ніж SQL UNION)
+            all_enriched_articles = sorted(photo_articles | desc_articles)
+            total_enriched = len(all_enriched_articles)
+            logging.info(f"Total unique enriched articles: {total_enriched}")
             
-            # Запит для отримання товарів з описами або зображеннями + назвами мовами
-            enriched_query = f"""
-                SELECT DISTINCT 
-                    pl.article, 
-                    pl.source_table,
-                    p.name_sk,
-                    p.name_en, 
-                    p.name_pl,
-                    array_agg(DISTINCT pi.image_url) FILTER (WHERE pi.image_url IS NOT NULL) as images
-                FROM ({all_price_list_query}) pl
-                JOIN (
-                    SELECT p.article FROM products p
-                    UNION
-                    SELECT pi.product_article FROM product_images pi
-                ) AS enriched ON pl.article = enriched.article
-                LEFT JOIN stock s ON pl.article = s.article
-                LEFT JOIN products p ON pl.article = p.article
-                LEFT JOIN product_images pi ON pl.article = pi.product_article
-                WHERE s.article IS NULL
-                GROUP BY pl.article, pl.source_table, p.name_sk, p.name_en, p.name_pl
-                ORDER BY pl.article
-                LIMIT {products_per_sitemap} OFFSET {offset}
-            """
+            if total_enriched == 0:
+                logging.warning("No enriched products found, creating empty sitemap")
+                file_path = os.path.join(SITEMAP_DIR, 'sitemap-enriched-1.xml')
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                    f.write('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>')
+                return True
             
-            cursor.execute(enriched_query)
-            enriched_products = cursor.fetchall()
+            # Розраховуємо кількість файлів
+            total_files = max(1, math.ceil(total_enriched / products_per_sitemap))
+            logging.info(f"Will generate {total_files} enriched sitemap file(s)")
             
-            # Додаємо URL для кожної мови для кожного товару
-            for product in enriched_products:
-                article = product['article']
-                images = product['images'] or []
+            # Генеруємо файли
+            for page in range(1, total_files + 1):
+                start_idx = (page - 1) * products_per_sitemap
+                end_idx = min(start_idx + products_per_sitemap, total_enriched)
+                page_articles = all_enriched_articles[start_idx:end_idx]
                 
-                # Створюємо URL для кожної мови
-                for lang in languages:
-                    # Отримуємо назву для поточної мови
-                    product_name = (product[f'name_{lang}'] or 
-                                   product['name_sk'] or 
-                                   product['name_en'] or 
-                                   article)
+                file_path = os.path.join(SITEMAP_DIR, f'sitemap-enriched-{page}.xml')
+                
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                    f.write('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ')
+                    f.write('xmlns:xhtml="http://www.w3.org/1999/xhtml">\n')
                     
-                    sitemap_xml += f'  <url>\n'
-                    # НОВИЙ ФОРМАТ URL з мовним префіксом
-                    sitemap_xml += f'    <loc>{host_base}/{lang}/product/{article}</loc>\n'
-                    
-                    # Додаємо hreflang посилання на інші мовні версії
-                    for alt_lang in languages:
-                        sitemap_xml += f'    <xhtml:link rel="alternate" hreflang="{alt_lang}" href="{host_base}/{alt_lang}/product/{article}" />\n'
-                    
-                    sitemap_xml += f'    <changefreq>weekly</changefreq>\n'
-                    sitemap_xml += f'    <priority>0.7</priority>\n'
-                    
-                    # Додаємо зображення, якщо вони є
-                    for image_url in images[:3]:
-                        if image_url:
-                            import html
-                            image_title = html.escape(f"{product_name}")
+                    url_count = 0
+                    for article in page_articles:
+                        for lang in languages:
+                            f.write(f'  <url>\n')
+                            f.write(f'    <loc>{host_base}/{lang}/product/{article}</loc>\n')
                             
-                            sitemap_xml += f'    <image:image>\n'
-                            sitemap_xml += f'      <image:loc>{image_url}</image:loc>\n'
-                            sitemap_xml += f'      <image:title>{image_title}</image:title>\n'
-                            sitemap_xml += f'    </image:image>\n'
+                            # hreflang посилання на інші мовні версії
+                            for alt_lang in languages:
+                                f.write(f'    <xhtml:link rel="alternate" hreflang="{alt_lang}" ')
+                                f.write(f'href="{host_base}/{alt_lang}/product/{article}" />\n')
+                            
+                            f.write(f'    <changefreq>weekly</changefreq>\n')
+                            f.write(f'    <priority>0.8</priority>\n')
+                            f.write(f'  </url>\n')
+                            url_count += 1
                     
-                    sitemap_xml += f'  </url>\n'
-            
-            # Закриваємо XML
-            sitemap_xml += '</urlset>'
-            
-            # Записуємо в файл
-            file_path = os.path.join(SITEMAP_DIR, f'sitemap-enriched-{page}.xml')
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(sitemap_xml)
-            
-            logging.info(f"Generated multilingual sitemap-enriched-{page}.xml with {len(enriched_products) * len(languages)} URLs")
+                    f.write('</urlset>')
+                
+                logging.info(f"Generated sitemap-enriched-{page}.xml with {url_count} URLs")
+                
+                # Очищаємо пам'ять після кожного файлу
+                gc.collect()
         
-        cursor.close()
-        conn.close()
-        
-        end_time = datetime.now()
-        duration = (end_time - start_time).total_seconds()
-        logging.info(f"Completed generation of multilingual enriched sitemap files in {duration:.2f} seconds")
+        duration = (datetime.now() - start_time).total_seconds()
+        logging.info(f"Completed enriched sitemap generation in {duration:.2f} seconds")
         return True
         
     except Exception as e:
-        logging.error(f"Error generating multilingual enriched sitemap files: {e}", exc_info=True)
+        logging.error(f"Error generating enriched sitemap files: {e}", exc_info=True)
         return False
 
 def generate_sitemap_other_files():
@@ -1462,9 +1409,12 @@ Disallow: /select/
 Disallow: /en/select/
 Disallow: /sk/select/
 Disallow: /pl/select/
+Disallow: /uk/
+Disallow: /index.php
 Disallow: /*?action=cron_*
 Disallow: /*?Price=*
 Disallow: /*?post=*
+Disallow: /*?PriceName=*
 
 # Блокуємо прайс-листи без описів
 Disallow: /sitemap-other-*

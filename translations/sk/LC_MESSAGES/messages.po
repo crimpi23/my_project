@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-01-12 11:30+0200\n"
+"POT-Creation-Date: 2026-01-23 23:23+0200\n"
 "PO-Revision-Date: 2025-03-03 22:26+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: sk\n"
@@ -18,31 +18,51 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: (2).py:246 (2).py:5325 app app.py:248 app.py:5925 копія –
+#: app.py:317 app.py:6065
 msgid "Invalid token."
 msgstr "Neplatný token."
 
-#: (2).py:251 app app.py:253 копія –
+#: app.py:322
 msgid "Please log in."
 msgstr "Prosím, prihláste sa."
 
-#: (2).py:256 app app.py:258 копія –
+#: app.py:327
 msgid "You don't have permission to access this page."
 msgstr "Nemáte oprávnenie na prístup k tejto stránke."
 
-#: (2).py:1539 app app.py:1491 копія –
+#: app.py:1531
+msgid "Phone number is required"
+msgstr "Telefónne číslo je povinné"
+
+#: app.py:1535
+msgid "Phone number must start with +"
+msgstr "Telefónne číslo musí začínať znakom +"
+
+#: app.py:1539
+msgid "Phone number must contain only digits after +"
+msgstr "Telefónne číslo musí obsahovať iba číslice po +"
+
+#: app.py:1543
+msgid "Phone number is too short"
+msgstr "Telefónne číslo je príliš krátke"
+
+#: app.py:1549
+msgid "Phone validation error"
+msgstr "Chyba pri overovaní telefónneho čísla"
+
+#: app.py:1575
 msgid "Address saved successfully"
 msgstr "Adresa bola úspešne uložená"
 
-#: (2).py:1544 app app.py:1496 копія –
+#: app.py:1580
 msgid "Error saving address"
 msgstr "Chyba pri ukladaní adresy"
 
-#: (2).py:1699 app app.py:1651 копія –
+#: app.py:1735
 msgid "Please enter at least one article number"
 msgstr "Zadajte aspoň jedno číslo tovaru"
 
-#: (2).py:1709 app app.py:1661 копія –
+#: app.py:1745
 msgid ""
 "Maximum {max_articles} articles per request. Only first {max_articles} "
 "will be processed."
@@ -50,737 +70,3626 @@ msgstr ""
 "Maximálne {max_articles} kódov na požiadavku. Iba prvých {max_articles} "
 "bude spracovaných."
 
-#: (2).py:1718 (2).py:1759 app app.py:1670 app.py:1711 копія –
+#: app.py:1754 app.py:1795
 msgid "error"
 msgstr "chyba"
 
-#: (2).py:1734 app app.py:1686 копія –
+#: app.py:1770
 msgid "An error occurred while processing your request"
 msgstr "Pri spracovaní vašej žiadosti došlo k chybe"
 
-#: (2).py:1746 app app.py:1698 копія –
+#: app.py:1782
 msgid "No parts selected"
 msgstr "Neboli vybrané žiadne diely"
 
-#: (2).py:1806 app app.py:1758 копія –
+#: app.py:1842
 msgid "{count} items added to cart"
 msgstr "{count} položiek pridaných do košíka"
 
-#: (2).py:1809 app app.py:1761 копія –
+#: app.py:1845
 msgid "No items were added to cart"
 msgstr "Do košíka neboli pridané žiadne položky"
 
-#: (2).py:1814 app app.py:1766 копія –
+#: app.py:1850
 msgid "An error occurred while adding items to cart"
 msgstr "Pri pridávaní položiek do košíka došlo k chybe"
 
-#: (2).py:1852 app app.py:1804 копія –
+#: app.py:1888
 msgid "Error validating phone number"
 msgstr "Chyba pri overovaní telefónneho čísla"
 
-#: (2).py:2144 app app.py:2097 копія –
+#: app.py:2181
 msgid "Username, email or phone already registered."
 msgstr "Používateľské meno, e-mail alebo telefón je už zaregistrovaný."
 
-#: (2).py:2175 app app.py:2128 копія –
+#: app.py:2212
 msgid "Registration successful! You are now logged in."
 msgstr "Registrácia úspešná! Ste prihlásený."
 
-#: (2).py:2180 app app.py:2133 копія –
+#: app.py:2217
 msgid "Registration failed. Please try again."
 msgstr "Registrácia zlyhala. Prosím, skúste znova."
 
-#: (2).py:2237 app app.py:2230 копія –
+#: app.py:2359
 msgid "Invalid username or password"
 msgstr "Neplatné používateľské meno alebo heslo"
 
-#: (2).py:2451 app app.py:2675 копія –
+#: app.py:2385
+msgid "Please enter your email address"
+msgstr "Zadajte svoju e-mailovú adresu"
+
+#: app.py:2419
+msgid "If an account with this email exists, we have sent a password reset link."
+msgstr ""
+"Ak existuje účet s touto e-mailovou adresou, poslali sme vám odkaz na "
+"obnovenie hesla."
+
+#: app.py:2424 app.py:2488
+msgid "An error occurred. Please try again later."
+msgstr "Vyskytla sa chyba. Skúste to prosím neskôr."
+
+#: app.py:2449
+msgid "Invalid or expired password reset link."
+msgstr "Neplatný alebo expirovaný odkaz na obnovenie hesla."
+
+#: app.py:2456
+msgid "This password reset link has expired. Please request a new one."
+msgstr "Tento odkaz na obnovenie hesla vypršal. Požiadajte o nový."
+
+#: app.py:2464
+msgid "Password must be at least 6 characters long."
+msgstr "Heslo musí mať aspoň 6 znakov."
+
+#: app.py:2468
+msgid "Passwords do not match."
+msgstr "Heslá sa nezhodujú."
+
+#: app.py:2481
+msgid "Your password has been reset successfully. You can now log in."
+msgstr "Vaše heslo bolo úspešne obnovené. Teraz sa môžete prihlásiť."
+
+#: app.py:2784
 msgid "Please log in to place an order."
 msgstr "Pre zadanie objednávky sa prosím prihláste."
 
-#: (2).py:2496 app app.py:2720 копія –
+#: app.py:2829
 msgid "Selected address not found"
 msgstr "Vybraná adresa nebola nájdená"
 
-#: (2).py:2560 app app.py:2784 копія –
+#: app.py:2893
 msgid "Selected company not found"
 msgstr "Vybraná spoločnosť nebola nájdená"
 
-#: (2).py:2605 (2).py:2613 (2).py:2650 (2).py:2658 (2).py:3207 (2).py:3211
-#: (2).py:3284 (2).py:3288 (2).py:3466 (2).py:3474 (2).py:3788 (2).py:3863 app
-#: app.py:2829 app.py:2837 app.py:2874 app.py:2882 app.py:3828 app.py:3832
-#: app.py:3905 app.py:3909 app.py:4087 app.py:4095 app.py:4389 app.py:4462
-#: templates/public/cart/cart.html:54 templates/public/product_details.html:234
-#: копія –
+#: app.py:2938 app.py:2946 app.py:2983 app.py:2991 app.py:3943 app.py:3947
+#: app.py:4020 app.py:4024 app.py:4202 app.py:4210 app.py:4504 app.py:4577
+#: templates/admin/import/price_overrides.html:74
+#: templates/admin/product_categories.html:88
+#: templates/public/cart/cart.html:54 templates/public/product_details.html:268
 msgid "In Stock"
 msgstr "Na sklade"
 
-#: (2).py:2613 (2).py:2658 (2).py:3211 (2).py:3288 (2).py:3474 (2).py:3864 app
-#: app.py:2837 app.py:2882 app.py:3832 app.py:3909 app.py:4095 app.py:4463
-#: копія –
+#: app.py:2946 app.py:2991 app.py:3947 app.py:4024 app.py:4210 app.py:4578
+#: templates/admin/price_lists/manage_price_lists.html:65
 msgid "days"
 msgstr "dní"
 
-#: (2).py:2672 (2).py:3380 app app.py:2896 app.py:4001 копія –
+#: app.py:3005 app.py:4116
 msgid "Your cart is empty"
 msgstr "Váš košík je prázdny"
 
-#: (2).py:2790 app app.py:3014 копія –
+#: app.py:3123
 msgid "Order placed successfully!"
 msgstr "Objednávka bola úspešne odoslaná!"
 
-#: (2).py:2798 (2).py:2843 app app.py:3022 app.py:3067 копія –
+#: app.py:3131 app.py:3176
 msgid "Order not found"
 msgstr "Objednávka nebola nájdená"
 
-#: (2).py:2815 (2).py:2867 app app.py:3039 app.py:3091 копія –
+#: app.py:3148 app.py:3200
 msgid "Error displaying order confirmation."
 msgstr "Chyba pri zobrazovaní potvrdenia objednávky."
 
-#: (2).py:2837 (2).py:2973 app app.py:3061 app.py:3197 копія –
+#: app.py:3170 app.py:3306
 msgid "Please log in to view order details."
 msgstr "Pre zobrazenie detailov objednávky sa prosím prihláste."
 
-#: (2).py:2847 app app.py:3071 копія –
+#: app.py:3180
 msgid "Access denied"
 msgstr "Prístup odmietnutý"
 
-#: (2).py:2928 app app.py:3152 копія –
+#: app.py:3261
 msgid "Cart cleared successfully"
 msgstr "Košík bol úspešne vymazaný"
 
-#: (2).py:2938 app app.py:3162 копія –
+#: app.py:3271
 msgid "Please log in to view your orders."
 msgstr "Pre zobrazenie objednávok sa prosím prihláste."
 
-#: (2).py:2961 app app.py:3185 копія –
+#: app.py:3294
 msgid "Error retrieving your orders"
 msgstr "Chyba pri získavaní vašich objednávok"
 
-#: (2).py:2991 app app.py:3215 копія –
+#: app.py:3324
 msgid "Order not found."
 msgstr "Objednávka nebola nájdená."
 
-#: (2).py:3017 app app.py:3241 копія –
+#: app.py:3350
 msgid "Error loading order details."
 msgstr "Chyba pri načítavaní detailov objednávky."
 
-#: (2).py:3037 app app.py:3261 копія –
+#: app.py:3370
 msgid "You have been logged out."
 msgstr "Boli ste odhlásený."
 
-#: (2).py:3310 (2).py:3895 (2).py:6139 app app.py:3931 app.py:4494 копія –
+#: app.py:4046 app.py:4609
 msgid "An error occurred while processing your request."
 msgstr "Pri spracovaní vašej požiadavky došlo k chybe."
 
-#: (2).py:3358 app app.py:3979 копія –
+#: app.py:4094
 msgid "Invalid VAT number format"
 msgstr "Neplatný formát IČ DPH"
 
-#: (2).py:3363 app app.py:3984 копія –
+#: app.py:4099
 msgid "All fields are required"
 msgstr "Všetky polia sú povinné"
 
-#: (2).py:3374 (2).py:7884 app app.py:3995 app.py:8506 копія –
+#: app.py:4110 app.py:8680
 msgid "Invalid email format"
 msgstr "Neplatný formát e-mailu"
 
-#: (2).py:3565 app app.py:4186 копія –
+#: app.py:4301
 msgid "Your order has been placed! Check your email for confirmation."
 msgstr ""
 "Vaša objednávka bola úspešne vytvorená! Skontrolujte svoj e-mail pre "
 "potvrdenie."
 
-#: (2).py:3577 app app.py:4198 копія –
+#: app.py:4313
 msgid "Error processing your order. Please try again."
 msgstr "Chyba pri spracovaní vašej objednávky. Skúste to znova."
 
-#: (2).py:3595 app app.py:4216 копія –
+#: app.py:4331
 msgid "Order information not found."
 msgstr "Informácie o objednávke neboli nájdené."
 
-#: (2).py:4948 app app.py:5548 копія –
-msgid "Missing article information"
-msgstr "Chýbajúce informácie o tovare"
-
-#: (2).py:4952 (2).py:5459 app app.py:5552 app.py:6131 копія –
-msgid "Quantity must be at least 1"
-msgstr "Množstvo musí byť aspoň 1"
-
-#: (2).py:4976 (2).py:4991 app app.py:5576 app.py:5591 копія –
-msgid "Cart updated successfully"
-msgstr "Košík bol úspešne aktualizovaný"
-
-#: (2).py:4978 (2).py:4993 app app.py:5578 app.py:5593 копія –
-msgid "Item not found in cart"
-msgstr "Položka nebola v košíku nájdená"
-
-#: (2).py:4998 app app.py:5598 копія –
-msgid "Invalid quantity"
-msgstr "Neplatné množstvo"
-
-#: (2).py:5002 app app.py:5602 копія –
-msgid "Error updating cart"
-msgstr "Chyba pri aktualizácii košíka"
-
-#: (2).py:5017 app app.py:5617 копія –
-msgid "Missing article or table name"
-msgstr "Chýbajúci kód tovaru alebo názov tabuľky"
-
-#: (2).py:5052 app app.py:5652 копія –
-msgid "Item removed from cart"
-msgstr "Položka bola odstránená z košíka"
-
-#: (2).py:5056 app app.py:5656 копія –
-msgid "Error removing item from cart"
-msgstr "Chyba pri odstraňovaní položky z košíka"
-
-#: (2).py:5433 app app.py:6105 копія –
-msgid "Missing required product information"
-msgstr "Chýbajúce povinné informácie o produkte"
-
-#: (2).py:5440 app app.py:6112 копія –
-msgid "Invalid price format"
-msgstr "Neplatný formát ceny"
-
-#: (2).py:5513 app app.py:6197 app.py:6201 копія –
-msgid "Item added to cart"
-msgstr "Položka bola pridaná do košíka"
-
-#: (2).py:5519 app app.py:6218 app.py:6222 копія –
-msgid "Error adding item to cart"
-msgstr "Chyba pri pridávaní položky do košíka"
-
-#: (2).py:5559 (2).py:5575 app app.py:6259 app.py:6275 копія –
-msgid "Please enter an article for search."
-msgstr "Zadajte kód tovaru pre vyhľadávanie."
-
-#: (2).py:5602 app app.py:6302 копія –
-msgid "An error occurred during the search. Please try again later."
-msgstr "Počas vyhľadávania došlo k chybe. Skúste to prosím neskôr."
-
-#: (2).py:6011 app копія –
-msgid "Category not found."
-msgstr "Kategória nebola nájdená."
-
-#: (2).py:7413 app app.py:8035 копія –
-msgid "Delivery address updated"
-msgstr "Doručovacia adresa bola aktualizovaná"
-
-#: (2).py:7429 app app.py:8051 копія –
-msgid "Invoice details updated"
-msgstr "Fakturačné údaje boli aktualizované"
-
-#: (2).py:7431 app app.py:8053 копія –
-msgid "Invalid invoice data format"
-msgstr "Neplatný formát fakturačných údajov"
-
-#: (2).py:7523 app app.py:8145 копія –
-msgid "Item processed successfully"
-msgstr "Položka bola úspešne spracovaná"
-
-#: (2).py:7536 app app.py:8158 копія –
-msgid "Error processing orders"
-msgstr "Chyba pri spracovaní objednávok"
-
-#: (2).py:7834 app app.py:8456 копія –
-msgid "Please login to access your profile"
-msgstr "Pre prístup k profilu sa prosím prihláste"
-
-#: (2).py:7891 (2).py:7945 app app.py:8513 app.py:8567 копія –
-msgid "This email is already in use by another user"
-msgstr "Tento e-mail už používa iný používateľ"
-
-#: (2).py:7897 (2).py:7947 app app.py:8519 app.py:8569 копія –
-msgid "This phone number is already in use by another user"
-msgstr "Toto telefónne číslo už používa iný používateľ"
-
-#: (2).py:7908 app app.py:8530 копія –
-msgid "Current password is incorrect"
-msgstr "Aktuálne heslo je nesprávne"
-
-#: (2).py:7913 app app.py:8535 копія –
-msgid "New passwords do not match"
-msgstr "Nové heslá sa nezhodujú"
-
-#: (2).py:7926 app app.py:8548 копія –
-msgid "Profile and password updated successfully"
-msgstr "Profil a heslo boli úspešne aktualizované"
-
-#: (2).py:7939 app app.py:8561 копія –
-msgid "Profile updated successfully"
-msgstr "Profil bol úspešne aktualizovaný"
-
-#: (2).py:7949 app app.py:8571 копія –
-msgid "Error updating profile: duplicate value"
-msgstr "Chyba pri aktualizácii profilu: duplicitná hodnota"
-
-#: (2).py:7980 app app.py:8602 копія –
-msgid "Address added successfully"
-msgstr "Adresa bola úspešne pridaná"
-
-#: (2).py:7992 app app.py:8614 копія –
-msgid "Address deleted successfully"
-msgstr "Adresa bola úspešne odstránená"
-
-#: (2).py:8014 app app.py:8636 копія –
-msgid "Default address updated"
-msgstr "Predvolená adresa bola aktualizovaná"
-
-#: (2).py:8041 app app.py:8663 копія –
-msgid "Company added successfully"
-msgstr "Spoločnosť bola úspešne pridaná"
-
-#: (2).py:8053 app app.py:8675 копія –
-msgid "Company deleted successfully"
-msgstr "Spoločnosť bola úspešne odstránená"
-
-#: (2).py:8075 app app.py:8697 копія –
-msgid "Default company updated"
-msgstr "Predvolená spoločnosť bola aktualizovaná"
-
-#: (2).py:8083 app app.py:8705 копія –
-msgid "Ukrainian"
-msgstr "Ukrajinčina"
-
-#: (2).py:8083 app app.py:8705 копія –
-msgid "English"
-msgstr "Angličtina"
-
-#: (2).py:8083 app app.py:8705 копія –
-msgid "Slovak"
-msgstr "Slovenčina"
-
-#: (2).py:8083 app app.py:8705 копія –
-msgid "Polish"
-msgstr "Poľština"
-
-#: (2).py:8089 app app.py:8711 копія –
-msgid "Error accessing user profile"
-msgstr "Chyba pri prístupe k používateľskému profilu"
-
-#: (2).py:9311 app app.py:9933 копія –
-msgid "An error occurred while loading blog posts"
-msgstr "Pri pridávaní položiek do košíka došlo k chybe"
-
-#: (2).py:10041 app app.py:10663 копія –
-msgid "Article not found"
-msgstr "Tovar nebol nájdený"
-
-#: (2).py:10110 app app.py:10732 копія –
-msgid "An error occurred while loading the article"
-msgstr "Pri načítaní článku došlo k chybe"
-
-#: (2).py:10396 app app.py:11018 копія –
-msgid "An error occurred during search"
-msgstr "Počas vyhľadávania došlo k chybe"
-
-#: app.py:1447
-msgid "Phone number is required"
-msgstr "Telefónne číslo je povinné"
-
-#: app.py:1451
-msgid "Phone number must start with +"
-msgstr "Telefónne číslo musí začínať znakom +"
-
-#: app.py:1455
-msgid "Phone number must contain only digits after +"
-msgstr "Telefónne číslo musí obsahovať iba číslice po +"
-
-#: app.py:1459
-msgid "Phone number is too short"
-msgstr "Telefónne číslo je príliš krátke"
-
-#: app.py:1465
-msgid "Phone validation error"
-msgstr "Chyba pri overovaní telefónneho čísla"
-
-#: app.py:2256
-msgid "Please enter your email address"
-msgstr "Zadajte svoju e-mailovú adresu"
-
-#: app.py:2290
-msgid "If an account with this email exists, we have sent a password reset link."
-msgstr "Ak existuje účet s touto e-mailovou adresou, poslali sme vám odkaz na obnovenie hesla."
-
-#: app.py:2295 app.py:2359
-msgid "An error occurred. Please try again later."
-msgstr "Vyskytla sa chyba. Skúste to prosím neskôr."
-
-#: app.py:2320
-msgid "Invalid or expired password reset link."
-msgstr "Neplatný alebo expirovaný odkaz na obnovenie hesla."
-
-#: app.py:2327
-msgid "This password reset link has expired. Please request a new one."
-msgstr "Tento odkaz na obnovenie hesla vypršal. Požiadajte o nový."
-
-#: app.py:2335
-msgid "Password must be at least 6 characters long."
-msgstr "Heslo musí mať aspoň 6 znakov."
-
-#: app.py:2339
-msgid "Passwords do not match."
-msgstr "Heslá sa nezhodujú."
-
-#: app.py:2352
-msgid "Your password has been reset successfully. You can now log in."
-msgstr "Vaše heslo bolo úspešne obnovené. Teraz sa môžete prihlásiť."
-
-#: app.py:4389 templates/public/product_details.html:236
+#: app.py:4504 templates/public/product_details.html:270
 msgid "Temporarily unavailable"
 msgstr "Dočasne nedostupné"
 
-#: app.py:6405
+#: app.py:5682
+msgid "Missing article information"
+msgstr "Chýbajúce informácie o tovare"
+
+#: app.py:5686 app.py:6272
+msgid "Quantity must be at least 1"
+msgstr "Množstvo musí byť aspoň 1"
+
+#: app.py:5710 app.py:5725
+msgid "Cart updated successfully"
+msgstr "Košík bol úspešne aktualizovaný"
+
+#: app.py:5712 app.py:5727
+msgid "Item not found in cart"
+msgstr "Položka nebola v košíku nájdená"
+
+#: app.py:5732
+msgid "Invalid quantity"
+msgstr "Neplatné množstvo"
+
+#: app.py:5736
+msgid "Error updating cart"
+msgstr "Chyba pri aktualizácii košíka"
+
+#: app.py:5751
+msgid "Missing article or table name"
+msgstr "Chýbajúci kód tovaru alebo názov tabuľky"
+
+#: app.py:5786
+msgid "Item removed from cart"
+msgstr "Položka bola odstránená z košíka"
+
+#: app.py:5790
+msgid "Error removing item from cart"
+msgstr "Chyba pri odstraňovaní položky z košíka"
+
+#: app.py:6246
+msgid "Missing required product information"
+msgstr "Chýbajúce povinné informácie o produkte"
+
+#: app.py:6253
+msgid "Invalid price format"
+msgstr "Neplatný formát ceny"
+
+#: app.py:6338 app.py:6342
+msgid "Item added to cart"
+msgstr "Položka bola pridaná do košíka"
+
+#: app.py:6359 app.py:6363
+msgid "Error adding item to cart"
+msgstr "Chyba pri pridávaní položky do košíka"
+
+#: app.py:6400 app.py:6416
+msgid "Please enter an article for search."
+msgstr "Zadajte kód tovaru pre vyhľadávanie."
+
+#: app.py:6443
+msgid "An error occurred during the search. Please try again later."
+msgstr "Počas vyhľadávania došlo k chybe. Skúste to prosím neskôr."
+
+#: app.py:6546
 msgid "Error loading users"
 msgstr "Chyba pri načítaní používateľov"
 
-#: app.py:6433
+#: app.py:6574
 msgid "User not found"
 msgstr "Používateľ nebol nájdený"
 
-#: app.py:6441 templates/admin/users/change_password.html:47
-#: templates/admin/users/change_password.html:117
+#: app.py:6582 templates/admin/users/change_password.html:60
+#: templates/admin/users/create_user.html:77
 #: templates/public/user/profile.html:341
 msgid "Password must be at least 8 characters long"
 msgstr "Heslo musí mať aspoň 8 znakov"
 
-#: app.py:6445 templates/admin/users/change_password.html:111
+#: app.py:6586
 msgid "Passwords do not match"
 msgstr "Heslá sa nezhodujú"
 
-#: app.py:6458
+#: app.py:6599
 msgid "Password changed successfully"
 msgstr "Heslo bolo úspešne zmenené"
 
-#: app.py:6465
+#: app.py:6606
 msgid "Error changing password"
 msgstr "Chyba pri zmene hesla"
 
-#: templates/admin/admin_login.html:10
+#: app.py:8176
+msgid "Delivery address updated"
+msgstr "Doručovacia adresa bola aktualizovaná"
+
+#: app.py:8192
+msgid "Invoice details updated"
+msgstr "Fakturačné údaje boli aktualizované"
+
+#: app.py:8194
+msgid "Invalid invoice data format"
+msgstr "Neplatný formát fakturačných údajov"
+
+#: app.py:8286
+msgid "Item processed successfully"
+msgstr "Položka bola úspešne spracovaná"
+
+#: app.py:8299
+msgid "Error processing orders"
+msgstr "Chyba pri spracovaní objednávok"
+
+#: app.py:8630
+msgid "Please login to access your profile"
+msgstr "Pre prístup k profilu sa prosím prihláste"
+
+#: app.py:8687 app.py:8741
+msgid "This email is already in use by another user"
+msgstr "Tento e-mail už používa iný používateľ"
+
+#: app.py:8693 app.py:8743
+msgid "This phone number is already in use by another user"
+msgstr "Toto telefónne číslo už používa iný používateľ"
+
+#: app.py:8704
+msgid "Current password is incorrect"
+msgstr "Aktuálne heslo je nesprávne"
+
+#: app.py:8709
+msgid "New passwords do not match"
+msgstr "Nové heslá sa nezhodujú"
+
+#: app.py:8722
+msgid "Profile and password updated successfully"
+msgstr "Profil a heslo boli úspešne aktualizované"
+
+#: app.py:8735
+msgid "Profile updated successfully"
+msgstr "Profil bol úspešne aktualizovaný"
+
+#: app.py:8745
+msgid "Error updating profile: duplicate value"
+msgstr "Chyba pri aktualizácii profilu: duplicitná hodnota"
+
+#: app.py:8776
+msgid "Address added successfully"
+msgstr "Adresa bola úspešne pridaná"
+
+#: app.py:8788
+msgid "Address deleted successfully"
+msgstr "Adresa bola úspešne odstránená"
+
+#: app.py:8810
+msgid "Default address updated"
+msgstr "Predvolená adresa bola aktualizovaná"
+
+#: app.py:8837
+msgid "Company added successfully"
+msgstr "Spoločnosť bola úspešne pridaná"
+
+#: app.py:8849
+msgid "Company deleted successfully"
+msgstr "Spoločnosť bola úspešne odstránená"
+
+#: app.py:8871
+msgid "Default company updated"
+msgstr "Predvolená spoločnosť bola aktualizovaná"
+
+#: app.py:8879
+msgid "Slovak"
+msgstr "Slovenčina"
+
+#: app.py:8879
+msgid "English"
+msgstr "Angličtina"
+
+#: app.py:8879
+msgid "Polish"
+msgstr "Poľština"
+
+#: app.py:8885
+msgid "Error accessing user profile"
+msgstr "Chyba pri prístupe k používateľskému profilu"
+
+#: templates/admin/admin_login.html:3 templates/admin/admin_login.html:11
 msgid "Admin Login"
 msgstr "Prihlásenie správcu"
 
-#: templates/admin/admin_login.html:16 templates/auth/login.html:29
+#: templates/admin/admin_login.html:28
+#: templates/admin/users/create_user.html:59 templates/auth/login.html:29
 #: templates/auth/register.html:33 templates/public/user/profile.html:40
 msgid "Password"
 msgstr "Heslo"
 
-#: templates/admin/admin_login.html:19 templates/auth/login.html:3
-#: templates/auth/login.html:19 templates/auth/login.html:37
-#: templates/base/public_base.html:176 templates/public/cart/cart.html:339
+#: templates/admin/admin_login.html:39
+#, fuzzy
+msgid "Enter admin password"
+msgstr "Zadajte nové heslo"
+
+#: templates/admin/admin_login.html:43 templates/auth/login.html:3
+#: templates/auth/login.html:19 templates/auth/login.html:34
+#: templates/auth/register.html:57 templates/base/public_base.html:308
+#: templates/public/cart/cart.html:339
 msgid "Login"
 msgstr "Prihlásiť sa"
 
-#: templates/admin/orders/process_orders.html:6
-msgid "Process Public Orders"
+#: templates/admin/admin_login.html:48
+msgid "Secure Admin Access"
+msgstr ""
+
+#: templates/admin/categories.html:3 templates/admin/categories.html:7
+#: templates/admin/dashboard/admin_dashboard.html:82
+#: templates/base/admin_base.html:495
+#, fuzzy
+msgid "Manage Categories"
+msgstr "Kategórie"
+
+#: templates/admin/categories.html:10
+#: templates/admin/google_feed/settings.html:13
+#: templates/admin/import/dashboard.html:10
+#: templates/admin/orders/process_orders.html:10
+#: templates/admin/price_lists/manage_price_lists.html:13
+#: templates/admin/product_categories.html:10
+#: templates/admin/products/add_images.html:10
+#: templates/admin/products/missing_descriptions.html:10
+#: templates/admin/products/missing_photos.html:10
+#: templates/admin/sitemaps/manage_sitemaps.html:19
+#: templates/admin/stock/manage_stock.html:10
+#: templates/admin/users/manage_users.html:13
+#, fuzzy
+msgid "Back to Dashboard"
+msgstr "Späť k objednávkam"
+
+#: templates/admin/categories.html:20
+#, fuzzy
+msgid "Total Categories"
+msgstr "Kategórie"
+
+#: templates/admin/categories.html:26
+#, fuzzy
+msgid "Main Categories"
+msgstr "Kategórie"
+
+#: templates/admin/categories.html:32
+#, fuzzy
+msgid "Subcategories"
+msgstr "Kategórie"
+
+#: templates/admin/categories.html:40
+#, fuzzy
+msgid "Add New Category"
+msgstr "Pridať novú spoločnosť"
+
+#: templates/admin/categories.html:47
+msgid "Slug (Identifier)"
+msgstr ""
+
+#: templates/admin/categories.html:50
+msgid "No spaces, lowercase, letters/numbers/hyphens only"
+msgstr ""
+
+#: templates/admin/categories.html:54 templates/admin/categories.html:253
+#, fuzzy
+msgid "Parent Category"
+msgstr "Prehľadať kategóriu"
+
+#: templates/admin/categories.html:56 templates/admin/categories.html:255
+#, fuzzy
+msgid "Main category"
+msgstr "Prehľadať kategóriu"
+
+#: templates/admin/categories.html:75 templates/admin/categories.html:159
+#: templates/admin/categories.html:274
+msgid "Icon"
+msgstr ""
+
+#: templates/admin/categories.html:86 templates/admin/categories.html:292
+#, fuzzy
+msgid "Translations"
+msgstr "Akcie"
+
+#: templates/admin/categories.html:91 templates/admin/categories.html:101
+#: templates/admin/categories.html:111 templates/admin/categories.html:121
+#: templates/admin/categories.html:156 templates/admin/categories.html:297
+#: templates/admin/categories.html:307 templates/admin/categories.html:317
+#: templates/admin/categories.html:327 templates/admin/import/queue.html:115
+#: templates/admin/product_categories.html:172
+#: templates/admin/products/add_photos_form.html:96
+#: templates/admin/products/edit_product.html:86
+#: templates/admin/products/edit_product.html:101
+#: templates/admin/products/edit_product.html:116
+#: templates/admin/products/manage_descriptions.html:179
+#: templates/admin/products/missing_photos.html:54
+#: templates/public/cart/cart.html:23
+#: templates/public/orders/guest_confirmation.html:71
+msgid "Name"
+msgstr "Názov"
+
+#: templates/admin/categories.html:95 templates/admin/categories.html:105
+#: templates/admin/categories.html:115 templates/admin/categories.html:125
+#: templates/admin/categories.html:301 templates/admin/categories.html:311
+#: templates/admin/categories.html:321 templates/admin/categories.html:331
+#: templates/admin/products/edit_product.html:92
+#: templates/admin/products/edit_product.html:107
+#: templates/admin/products/edit_product.html:122
+#: templates/admin/products/manage_descriptions.html:183
+#: templates/public/product_details.html:315
+msgid "Description"
+msgstr "Popis"
+
+#: templates/admin/categories.html:131
+#, fuzzy
+msgid "Add Category"
+msgstr "Prehľadať kategóriu"
+
+#: templates/admin/categories.html:141
+#, fuzzy
+msgid "Existing Categories"
+msgstr "Kategórie"
+
+#: templates/admin/categories.html:147
+msgid "No categories yet. Add the first category above!"
+msgstr ""
+
+#: templates/admin/categories.html:157
+msgid "Slug"
+msgstr ""
+
+#: templates/admin/categories.html:158
+#, fuzzy
+msgid "Parent"
+msgstr "Odoslané"
+
+#: templates/admin/categories.html:160 templates/admin/categories.html:279
+#: templates/public/orders/order_details.html:12
+#: templates/public/orders/order_details.html:26
+msgid "Order"
+msgstr "Objednávka"
+
+#: templates/admin/categories.html:161 templates/admin/categories.html:201
+#: templates/admin/categories.html:286
+#: templates/admin/google_feed/settings.html:162
+#: templates/admin/scheduler_status.html:67
+#, fuzzy
+msgid "Active"
+msgstr "Číslo"
+
+#: templates/admin/categories.html:162
+#: templates/admin/google_feed/settings.html:154
+#: templates/admin/import/blacklist.html:44
+#: templates/admin/import/price_changes.html:41
+#: templates/admin/import/price_overrides.html:46
+#: templates/admin/import/queue.html:121
+#: templates/admin/import/whitelist.html:102
+#: templates/admin/import/zero_stock.html:47
+#: templates/admin/orders/process_orders.html:178
+#: templates/admin/price_lists/manage_price_lists.html:43
+#: templates/admin/price_lists/upload_price_list.html:81
+#: templates/admin/product_categories.html:177
+#: templates/admin/products/edit_product.html:137
+#: templates/admin/products/manage_descriptions.html:83
+#: templates/admin/products/missing_descriptions.html:95
+#: templates/admin/products/missing_photos.html:58
+#: templates/admin/sitemaps/manage_sitemaps.html:168
+#: templates/admin/stock/manage_stock.html:94
+#: templates/admin/users/assign_roles.html:51
+#: templates/admin/users/manage_users.html:32
+#: templates/public/cart/cart.html:29 templates/public/orders/orders.html:32
+#: templates/public/orders/orders.html:79
+msgid "Actions"
+msgstr "Akcie"
+
+#: templates/admin/categories.html:188
+#: templates/admin/products/add_photos_form.html:194
+#, fuzzy
+msgid "Main"
+msgstr "E-mail"
+
+#: templates/admin/categories.html:201
+#: templates/admin/google_feed/settings.html:162
+#, fuzzy
+msgid "Inactive"
+msgstr "alternatíva"
+
+#: templates/admin/categories.html:225
+msgid "Delete this category?"
+msgstr ""
+
+#: templates/admin/categories.html:243
+#, fuzzy
+msgid "Edit Category"
+msgstr "Prehľadať kategóriu"
+
+#: templates/admin/categories.html:337
+#: templates/admin/import/blacklist.html:147
+#: templates/admin/import/brands.html:145
+#: templates/admin/import/price_overrides.html:177
+#: templates/admin/import/whitelist.html:208
+#: templates/admin/import/whitelist.html:271
+#: templates/admin/photos/manage_photos.html:230
+#: templates/admin/price_lists/upload_price_list.html:120
+#: templates/admin/product_categories.html:321
+#: templates/admin/products/add_photos_form.html:143
+#: templates/admin/products/manage_descriptions.html:193
+#: templates/admin/products/manage_descriptions.html:241
+#: templates/admin/users/change_password.html:89
+msgid "Cancel"
+msgstr ""
+
+#: templates/admin/categories.html:339
+#: templates/admin/price_lists/manage_price_lists.html:76
+#: templates/admin/products/manage_descriptions.html:194
+#, fuzzy
+msgid "Save"
+msgstr "Zdieľať"
+
+#: templates/admin/dashboard/admin_dashboard.html:85
+#: templates/admin/product_categories.html:3
+#: templates/admin/product_categories.html:7 templates/base/admin_base.html:500
+#: templates/public/categories.html:206 templates/public/categories.html:210
+#: templates/public/categories.html:228 templates/public/index.html:57
+msgid "Product Categories"
+msgstr "Kategórie produktov"
+
+#: templates/admin/product_categories.html:20
+#, fuzzy
+msgid "Total Products"
+msgstr "Všetky produkty"
+
+#: templates/admin/product_categories.html:26
+#: templates/admin/product_categories.html:81
+#, fuzzy
+msgid "With Categories"
+msgstr "Kategórie"
+
+#: templates/admin/product_categories.html:32
+#, fuzzy
+msgid "Multiple Categories"
+msgstr "Obľúbené kategórie"
+
+#: templates/admin/product_categories.html:38
+#, fuzzy
+msgid "Available Categories"
+msgstr "Dostupné ceny"
+
+#: templates/admin/import/blacklist.html:38
+#: templates/admin/import/debug.html:109
+#: templates/admin/import/price_changes.html:35
+#: templates/admin/import/price_overrides.html:38
+#: templates/admin/import/price_overrides.html:137
+#: templates/admin/import/queue.html:114
+#: templates/admin/import/whitelist.html:94
+#: templates/admin/import/whitelist.html:162
+#: templates/admin/import/whitelist.html:229
+#: templates/admin/import/zero_stock.html:41
+#: templates/admin/orders/process_orders.html:172
+#: templates/admin/orders/send_invoice.html:54
+#: templates/admin/photos/manage_photos.html:73
+#: templates/admin/product_categories.html:47
+#: templates/admin/product_categories.html:171
+#: templates/admin/products/add_photos_form.html:77
+#: templates/admin/products/edit_product.html:25
+#: templates/admin/products/manage_descriptions.html:79
+#: templates/admin/products/missing_descriptions.html:90
+#: templates/admin/products/missing_photos.html:53
+#: templates/admin/stock/manage_stock.html:46
+#: templates/admin/stock/manage_stock.html:90
+#: templates/public/article_not_found.html:82
+#: templates/public/cart/cart.html:22 templates/public/index.html:293
+#: templates/public/orders/confirmation.html:95
+#: templates/public/orders/guest_confirmation.html:100
+#: templates/public/orders/order_details.html:146
+msgid "Article"
+msgstr "Číslo"
+
+#: templates/admin/product_categories.html:49
+#, fuzzy
+msgid "Search..."
+msgstr "Hľadať"
+
+#: templates/admin/google_feed/settings.html:87
+#: templates/admin/google_feed/settings.html:148
+#: templates/admin/import/blacklist.html:39
+#: templates/admin/import/blacklist.html:111
+#: templates/admin/import/debug.html:110
+#: templates/admin/import/price_changes.html:36
+#: templates/admin/import/price_overrides.html:39
+#: templates/admin/import/price_overrides.html:142
+#: templates/admin/import/queue.html:48 templates/admin/import/queue.html:116
+#: templates/admin/import/whitelist.html:55
+#: templates/admin/import/whitelist.html:95
+#: templates/admin/import/whitelist.html:167
+#: templates/admin/import/whitelist.html:233
+#: templates/admin/import/zero_stock.html:42
+#: templates/admin/orders/send_invoice.html:55
+#: templates/admin/product_categories.html:53
+#: templates/admin/product_categories.html:173
+#: templates/admin/products/add_photos_form.html:81
+#: templates/admin/products/edit_product.html:50
+#: templates/admin/products/edit_product.html:162
+#: templates/admin/products/missing_descriptions.html:91
+#: templates/admin/products/missing_photos.html:55
+#: templates/admin/stock/manage_stock.html:58
+#: templates/admin/stock/manage_stock.html:93
+#: templates/public/article_not_found.html:78
+#: templates/public/cart/cart.html:24 templates/public/index.html:292
+#: templates/public/orders/order_details.html:148
+#: templates/public/product_details.html:244
+msgid "Brand"
+msgstr "Značka"
+
+#: templates/admin/google_feed/settings.html:89
+#: templates/admin/google_feed/settings.html:165
+#: templates/admin/import/queue.html:50
+#: templates/admin/import/whitelist.html:57
+#: templates/admin/product_categories.html:55
+#: templates/admin/products/missing_descriptions.html:23
+#: templates/admin/products/missing_photos.html:23
+#, fuzzy
+msgid "All Brands"
+msgstr "Dostupné značky"
+
+#: templates/admin/google_feed/settings.html:149
+#: templates/admin/product_categories.html:65
+#, fuzzy
+msgid "Category"
+msgstr "Kategórie"
+
+#: templates/admin/product_categories.html:67
+#, fuzzy
+msgid "All Categories"
+msgstr "Kategórie"
+
+#: templates/admin/google_feed/settings.html:147
+#: templates/admin/import/debug.html:60 templates/admin/import/history.html:49
+#: templates/admin/import/queue.html:59 templates/admin/import/queue.html:119
+#: templates/admin/import/zero_stock.html:46
+#: templates/admin/orders/process_orders.html:177
+#: templates/admin/orders/send_invoice.html:31
+#: templates/admin/product_categories.html:78
+#: templates/admin/scheduler_status.html:50
+#: templates/admin/sitemaps/sitemap_utils.html:73
+#: templates/public/cart/cart.html:28
+#: templates/public/orders/order_details.html:42
+#: templates/public/orders/orders.html:31
+#: templates/public/orders/orders.html:52
+msgid "Status"
+msgstr "Stav"
+
+#: templates/admin/import/queue.html:63
+#: templates/admin/import/whitelist.html:68
+#: templates/admin/product_categories.html:80
+#: templates/admin/product_categories.html:90
+msgid "All"
+msgstr "Všetky"
+
+#: templates/admin/product_categories.html:82
+msgid "Without"
+msgstr ""
+
+#: templates/admin/product_categories.html:83
+msgid "Multiple"
+msgstr ""
+
+#: templates/admin/import/queue.html:68
+#: templates/admin/import/whitelist.html:75
+#: templates/admin/photos/manage_photos.html:87
+#: templates/admin/product_categories.html:98
+#: templates/admin/products/missing_descriptions.html:36
+#: templates/admin/products/missing_photos.html:31
+#, fuzzy
+msgid "Filter"
+msgstr "Filtre"
+
+#: templates/admin/import/queue.html:76
+#: templates/admin/product_categories.html:108
+#, fuzzy
+msgid "Showing"
+msgstr "Doprava"
+
+#: templates/admin/import/queue.html:76 templates/admin/import/queue.html:77
+#: templates/admin/product_categories.html:108
+#: templates/admin/products/missing_descriptions.html:78
+#: templates/admin/products/missing_photos.html:45
+msgid "of"
+msgstr ""
+
+#: templates/admin/product_categories.html:120
+#, fuzzy
+msgid "Select All"
+msgstr "Vybrať súbor"
+
+#: templates/admin/product_categories.html:122
+#: templates/admin/product_categories.html:350
+#, fuzzy
+msgid "selected"
+msgstr "Vybrať"
+
+#: templates/admin/product_categories.html:130
+#, fuzzy
+msgid "Select category..."
+msgstr "Vyberte krajinu"
+
+#: templates/admin/product_categories.html:140
+msgid "Primary"
+msgstr ""
+
+#: templates/admin/price_lists/upload_price_list.html:121
+#: templates/admin/product_categories.html:143
+#: templates/admin/stock/manage_stock.html:67
+#, fuzzy
+msgid "Add"
+msgstr "Pridané!"
+
+#: templates/admin/product_categories.html:150
+#, fuzzy
+msgid "All categories"
+msgstr "Kategórie"
+
+#: templates/admin/import/blacklist.html:73
+#: templates/admin/product_categories.html:156
+#: templates/admin/users/assign_roles.html:77
+#: templates/public/cart/cart.html:63
+msgid "Remove"
+msgstr "Odstrániť"
+
+#: templates/admin/dashboard/admin_dashboard.html:77
+#: templates/admin/product_categories.html:174
+#: templates/admin/sitemaps/manage_sitemaps.html:61
+#: templates/base/admin_base.html:491 templates/public/categories.html:223
+#: templates/public/index.html:124
+msgid "Categories"
+msgstr "Kategórie"
+
+#: templates/admin/import/debug.html:112 templates/admin/import/queue.html:118
+#: templates/admin/orders/process_orders.html:174
+#: templates/admin/orders/send_invoice.html:56
+#: templates/admin/product_categories.html:175
+#: templates/admin/products/add_photos_form.html:89
+#: templates/admin/products/edit_product.html:174
+#: templates/admin/products/missing_descriptions.html:93
+#: templates/admin/products/missing_photos.html:57
+#: templates/admin/stock/manage_stock.html:54
+#: templates/admin/stock/manage_stock.html:92
+#: templates/public/article_not_found.html:86
+#: templates/public/cart/cart.html:25 templates/public/index.html:294
+#: templates/public/orders/confirmation.html:98
+#: templates/public/orders/guest_confirmation.html:101
+#: templates/public/orders/order_details.html:149
+#: templates/public/shipping_payment.html:167
+msgid "Price"
+msgstr "Cena"
+
+#: templates/admin/product_categories.html:176
+#: templates/admin/products/edit_product.html:30
+#: templates/admin/products/missing_descriptions.html:92
+#: templates/admin/products/missing_photos.html:56
+#: templates/admin/stock/manage_stock.html:50
+#: templates/public/orders/confirmation.html:97
+#: templates/public/product_details.html:286
+msgid "Qty"
+msgstr "Počet"
+
+#: templates/admin/product_categories.html:215
+#, fuzzy
+msgid "categories"
+msgstr "Kategórie"
+
+#: templates/admin/product_categories.html:218
+#, fuzzy
+msgid "No category"
+msgstr "Prehľadať kategóriu"
+
+#: templates/admin/product_categories.html:231
+#, fuzzy
+msgid "Set primary category"
+msgstr "Prehľadať kategóriu"
+
+#: templates/admin/product_categories.html:288
+msgid "No products found for the selected filters."
+msgstr ""
+
+#: templates/admin/product_categories.html:302
+#, fuzzy
+msgid "Set Primary Category"
+msgstr "Prehľadať kategóriu"
+
+#: templates/admin/product_categories.html:323
+msgid "Set Primary"
+msgstr ""
+
+#: templates/admin/product_categories.html:362
+#, fuzzy
+msgid "Please select at least one product"
+msgstr "Zadajte aspoň jedno číslo tovaru"
+
+#: templates/admin/product_categories.html:369
+msgid "Please select a category"
+msgstr ""
+
+#: templates/admin/scheduler_status.html:3
+#: templates/admin/scheduler_status.html:7
+msgid "Scheduler Status"
+msgstr ""
+
+#: templates/admin/scheduler_status.html:10
+#: templates/admin/sitemaps/sitemap_utils.html:13
+#: templates/admin/sitemaps/view_sitemap.html:10
+#, fuzzy
+msgid "Back to Sitemaps"
+msgstr "Späť hore"
+
+#: templates/admin/scheduler_status.html:20
+#, fuzzy
+msgid "Total Jobs"
+msgstr "Celkom"
+
+#: templates/admin/scheduler_status.html:26
+#, fuzzy
+msgid "Active Jobs"
+msgstr "Akcie"
+
+#: templates/admin/scheduler_status.html:32
+msgid "Paused Jobs"
+msgstr ""
+
+#: templates/admin/scheduler_status.html:40
+#: templates/admin/sitemaps/manage_sitemaps.html:35
+#: templates/admin/sitemaps/manage_sitemaps.html:114
+msgid "Scheduled Jobs"
+msgstr ""
+
+#: templates/admin/scheduler_status.html:47
+msgid "Job ID"
+msgstr ""
+
+#: templates/admin/scheduler_status.html:48
+#: templates/admin/sitemaps/manage_sitemaps.html:123
+#, fuzzy
+msgid "Next Run"
+msgstr "Ďalšie"
+
+#: templates/admin/scheduler_status.html:49
+#: templates/admin/sitemaps/manage_sitemaps.html:124
+msgid "Schedule"
+msgstr ""
+
+#: templates/admin/scheduler_status.html:61
+#, fuzzy
+msgid "Not scheduled"
+msgstr "Neboli vybrané žiadne diely"
+
+#: templates/admin/scheduler_status.html:69
+#, fuzzy
+msgid "Paused"
+msgstr "Poľština"
+
+#: templates/admin/scheduler_status.html:81
+#: templates/admin/sitemaps/manage_sitemaps.html:141
+#, fuzzy
+msgid "No scheduled jobs found."
+msgstr "Zásielky"
+
+#: templates/admin/scheduler_status.html:90
+msgid "Manual Job Execution"
+msgstr ""
+
+#: templates/admin/scheduler_status.html:95
+#, fuzzy
+msgid "Select Job"
+msgstr "Vybrať"
+
+#: templates/admin/scheduler_status.html:97
+#, fuzzy
+msgid "Select job to run"
+msgstr "Vyberte krajinu"
+
+#: templates/admin/scheduler_status.html:105
+msgid "Run Now"
+msgstr ""
+
+#: templates/admin/dashboard/admin_dashboard.html:3
+#: templates/admin/dashboard/admin_dashboard.html:7
+#: templates/admin/products/add_photos_form.html:60
+#: templates/base/admin_base.html:6 templates/base/admin_base.html:444
+#, fuzzy
+msgid "Dashboard"
+msgstr "Späť k objednávkam"
+
+#: templates/admin/dashboard/admin_dashboard.html:22
+#: templates/base/admin_base.html:457 templates/base/public_base.html:223
+#: templates/base/public_base.html:345
+msgid "Catalog"
+msgstr "Katalóg"
+
+#: templates/admin/dashboard/admin_dashboard.html:27
+#: templates/admin/price_lists/manage_price_lists.html:10
+#: templates/admin/price_lists/upload_price_list.html:3
+#: templates/admin/price_lists/upload_price_list.html:7
+#: templates/admin/price_lists/upload_price_list.html:60
+#: templates/base/admin_base.html:461
+#, fuzzy
+msgid "Upload Price List"
+msgstr "Položky cenníka"
+
+#: templates/admin/dashboard/admin_dashboard.html:30
+#: templates/admin/stock/manage_stock.html:3
+#: templates/admin/stock/manage_stock.html:7 templates/base/admin_base.html:466
+#, fuzzy
+msgid "Manage Stock"
+msgstr "Na sklade"
+
+#: templates/admin/dashboard/admin_dashboard.html:34
+msgid "Needs Attention"
+msgstr ""
+
+#: templates/admin/dashboard/admin_dashboard.html:37
+#: templates/admin/products/add_photos_form.html:63
+#: templates/admin/products/missing_photos.html:3
+#, fuzzy
+msgid "Missing Photos"
+msgstr "Chýbajúca možnosť"
+
+#: templates/admin/dashboard/admin_dashboard.html:40
+#: templates/admin/products/missing_descriptions.html:3
+#, fuzzy
+msgid "Missing Descriptions"
+msgstr "Chýbajúca možnosť"
+
+#: templates/admin/dashboard/admin_dashboard.html:51
+#: templates/base/admin_base.html:474
+#, fuzzy
+msgid "Content"
+msgstr "Príkazy"
+
+#: templates/admin/dashboard/admin_dashboard.html:55
+#: templates/base/admin_base.html:483
+#, fuzzy
+msgid "Photos"
+msgstr "Možnosti"
+
+#: templates/admin/dashboard/admin_dashboard.html:57
+#: templates/admin/photos/manage_photos.html:3
+#: templates/admin/photos/manage_photos.html:58
+#, fuzzy
+msgid "Manage Photos"
+msgstr "Správa používateľov"
+
+#: templates/admin/dashboard/admin_dashboard.html:60
+#: templates/admin/photos/manage_photos.html:64
+#: templates/admin/photos/upload_photos.html:3
+#: templates/admin/photos/upload_photos.html:67
+#: templates/admin/products/add_photos_form.html:107
+#: templates/admin/products/add_photos_form.html:140
+msgid "Upload Photos"
+msgstr ""
+
+#: templates/admin/dashboard/admin_dashboard.html:64
+#: templates/base/admin_base.html:478
+#, fuzzy
+msgid "Descriptions"
+msgstr "Popis"
+
+#: templates/admin/dashboard/admin_dashboard.html:66
+#: templates/admin/products/manage_descriptions.html:3
+#: templates/admin/products/manage_descriptions.html:7
+#, fuzzy
+msgid "Manage Descriptions"
+msgstr "Popis"
+
+#: templates/admin/dashboard/admin_dashboard.html:107
+msgid "Analytics"
+msgstr ""
+
+#: templates/admin/dashboard/admin_dashboard.html:118
+msgid "Import"
+msgstr ""
+
+#: templates/admin/dashboard/admin_dashboard.html:123
+#, fuzzy
+msgid "Import Dashboard"
+msgstr "Späť k objednávkam"
+
+#: templates/admin/dashboard/admin_dashboard.html:126
+#: templates/admin/import/dashboard.html:55
+#: templates/admin/import/history.html:98 templates/admin/import/queue.html:205
+#: templates/admin/price_lists/upload_price_list.html:52
+#, fuzzy
+msgid "Upload File"
+msgstr "Nie sú vybrané žiadne položky"
+
+#: templates/admin/dashboard/admin_dashboard.html:129
+#: templates/admin/import/dashboard.html:72
+msgid "Queue"
+msgstr ""
+
+# New translations for address updates
+#: templates/admin/dashboard/admin_dashboard.html:132
+#, fuzzy
+msgid "History"
+msgstr "Obchod"
+
+#: templates/admin/dashboard/admin_dashboard.html:143
+#: templates/base/admin_base.html:512
+#, fuzzy
+msgid "Users"
+msgstr "Všetci používatelia"
+
+#: templates/admin/dashboard/admin_dashboard.html:148
+#: templates/admin/users/create_user.html:3
+#: templates/admin/users/create_user.html:101
+#: templates/admin/users/manage_users.html:10
+#, fuzzy
+msgid "Create User"
+msgstr "Vyhľadávanie podľa čísla dielu"
+
+#: templates/admin/dashboard/admin_dashboard.html:151
+#, fuzzy
+msgid "Assign Roles"
+msgstr "Chýbajúce informácie o tovare"
+
+#: templates/admin/dashboard/admin_dashboard.html:154
+#: templates/admin/users/manage_users.html:3
+msgid "Manage Users"
+msgstr "Správa používateľov"
+
+#: templates/admin/google_feed/settings.html:3
+msgid "Google Merchant Feed"
+msgstr ""
+
+#: templates/admin/google_feed/settings.html:7
+msgid "Google Merchant Feed Settings"
+msgstr ""
+
+#: templates/admin/google_feed/settings.html:10
+#, fuzzy
+msgid "Update All Feeds"
+msgstr "Aktualizovať adresu"
+
+#: templates/admin/google_feed/settings.html:23
+#, fuzzy
+msgid "Total Configurations"
+msgstr "Potvrdenie objednávky"
+
+#: templates/admin/google_feed/settings.html:29
+msgid "Active Feeds"
+msgstr ""
+
+#: templates/admin/google_feed/settings.html:35
+#, fuzzy
+msgid "Languages"
+msgstr "Jazyk"
+
+#: templates/admin/google_feed/settings.html:42
+msgid "Feed Links"
+msgstr ""
+
+#: templates/admin/google_feed/settings.html:52
+msgid "View Feed"
+msgstr ""
+
+#: templates/admin/google_feed/settings.html:57
+msgid "Download Feed"
+msgstr ""
+
+#: templates/admin/google_feed/settings.html:69
+#, fuzzy
+msgid "Add New Feed Configuration"
+msgstr "Potvrdenie objednávky"
+
+#: templates/admin/google_feed/settings.html:77
+msgid "Enable Feed"
+msgstr ""
+
+#: templates/admin/google_feed/settings.html:81
+#, fuzzy
+msgid "Google Category"
+msgstr "Prehľadať kategóriu"
+
+#: templates/admin/google_feed/settings.html:83
+msgid "e.g. Vehicle Parts & Accessories > Car Parts"
+msgstr ""
+
+#: templates/admin/google_feed/settings.html:101
+#: templates/admin/google_feed/settings.html:150
+#: templates/admin/products/manage_descriptions.html:216
+#: templates/base/public_base.html:402
+msgid "Language"
+msgstr "Jazyk"
+
+#: templates/admin/google_feed/settings.html:110
+#: templates/admin/google_feed/settings.html:151
+#, fuzzy
+msgid "Price List"
+msgstr "Položky cenníka"
+
+#: templates/admin/google_feed/settings.html:112
+#, fuzzy
+msgid "Select Price List"
+msgstr "Položky cenníka"
+
+#: templates/admin/google_feed/settings.html:120
+#: templates/admin/import/whitelist.html:176
+#: templates/admin/import/whitelist.html:237
+msgid "Markup Percentage"
+msgstr ""
+
+#: templates/admin/google_feed/settings.html:131
+#, fuzzy
+msgid "Save Configuration"
+msgstr "Potvrdenie objednávky"
+
+#: templates/admin/google_feed/settings.html:140
+#, fuzzy
+msgid "Current Configurations"
+msgstr "Potvrdenie objednávky"
+
+#: templates/admin/google_feed/settings.html:152
+#: templates/admin/import/whitelist.html:96
+msgid "Markup"
+msgstr ""
+
+#: templates/admin/google_feed/settings.html:153
+#: templates/admin/import/debug.html:114
+#: templates/admin/import/price_changes.html:40
+#: templates/admin/import/price_overrides.html:45
+#: templates/admin/price_lists/manage_price_lists.html:42
+#: templates/admin/price_lists/upload_price_list.html:79
+#: templates/admin/users/manage_users.html:31
+msgid "Created"
+msgstr "Vytvorené"
+
+#: templates/admin/google_feed/settings.html:178
+#, fuzzy
+msgid "Update"
+msgstr "Dátum"
+
+#: templates/admin/google_feed/settings.html:184
+#, fuzzy
+msgid "Delete this feed configuration?"
+msgstr "Zopakujte pre potvrdenie"
+
+#: templates/admin/google_feed/settings.html:198
+msgid "No feed configurations yet. Add one above."
+msgstr ""
+
+#: templates/admin/import/blacklist.html:3
+#: templates/admin/import/blacklist.html:7
+msgid "Import Blacklist"
+msgstr ""
+
+#: templates/admin/import/blacklist.html:10
+#, fuzzy
+msgid "Add Article"
+msgstr "Číslo"
+
+#: templates/admin/import/blacklist.html:13
+#: templates/admin/import/brands.html:10 templates/admin/import/debug.html:10
+#: templates/admin/import/history.html:10
+#: templates/admin/import/price_changes.html:10
+#: templates/admin/import/price_overrides.html:13
+#: templates/admin/import/queue.html:12 templates/admin/import/upload.html:10
+#: templates/admin/import/whitelist.html:13
+#: templates/admin/import/zero_stock.html:16
+#, fuzzy
+msgid "Back to Import"
+msgstr "Späť hore"
+
+#: templates/admin/import/blacklist.html:23
+#, fuzzy
+msgid "Blacklisted Articles"
+msgstr "Hľadať číslo dielov"
+
+#: templates/admin/import/blacklist.html:31
+#, fuzzy
+msgid "Blacklist Articles"
+msgstr "Chýbajúce informácie o tovare"
+
+#: templates/admin/import/blacklist.html:40
+#: templates/admin/import/blacklist.html:121
+msgid "Reason"
+msgstr ""
+
+#: templates/admin/import/blacklist.html:41
+#, fuzzy
+msgid "Replacement"
+msgstr "Objem"
+
+#: templates/admin/import/blacklist.html:42
+#: templates/admin/import/whitelist.html:101
+#, fuzzy
+msgid "Added"
+msgstr "Pridané!"
+
+#: templates/admin/import/blacklist.html:43
+#: templates/admin/import/blacklist.html:141
+#: templates/admin/import/history.html:56
+#: templates/admin/import/price_overrides.html:44
+#: templates/admin/import/price_overrides.html:171
+#: templates/admin/import/whitelist.html:100
+#: templates/admin/import/whitelist.html:202
+#: templates/admin/import/whitelist.html:266
+#, fuzzy
+msgid "Notes"
+msgstr "Novinky"
+
+#: templates/admin/import/blacklist.html:55
+#: templates/admin/import/history.html:63
+#: templates/admin/import/price_changes.html:48
+#: templates/admin/import/price_overrides.html:53
+#: templates/admin/import/queue.html:132
+#: templates/admin/import/whitelist.html:109
+#: templates/admin/import/zero_stock.html:54
+#, fuzzy
+msgid "Unknown"
+msgstr "neznáma chyba"
+
+#: templates/admin/import/blacklist.html:72
+msgid "Remove this article from blacklist?"
+msgstr ""
+
+#: templates/admin/import/blacklist.html:86
+msgid "No Articles in Blacklist"
+msgstr ""
+
+#: templates/admin/import/blacklist.html:87
+msgid "Add articles to prevent them from being imported."
+msgstr ""
+
+#: templates/admin/import/blacklist.html:89
+#, fuzzy
+msgid "Add First Article"
+msgstr "Pridať do košíka"
+
+#: templates/admin/import/blacklist.html:100
+#: templates/admin/import/blacklist.html:149
+#, fuzzy
+msgid "Add to Blacklist"
+msgstr "Pridať do košíka"
+
+#: templates/admin/import/blacklist.html:106
+#: templates/public/product_details.html:240
+msgid "Article Number"
+msgstr "Číslo dielu"
+
+#: templates/admin/import/blacklist.html:113
+#: templates/admin/import/brands.html:137
+#: templates/admin/import/price_overrides.html:144
+#: templates/admin/import/whitelist.html:169
+#: templates/admin/price_lists/upload_price_list.html:43
+#, fuzzy
+msgid "Select Brand"
+msgstr "Vybrať"
+
+#: templates/admin/import/blacklist.html:123
+#, fuzzy
+msgid "Select Reason"
+msgstr "Vybrať súbor"
+
+#: templates/admin/import/blacklist.html:124
+msgid "Single Item Only"
+msgstr ""
+
+#: templates/admin/import/blacklist.html:125
+#, fuzzy
+msgid "Kit Only"
+msgstr "Len Slovensko"
+
+#: templates/admin/import/blacklist.html:126
+msgid "Discontinued"
+msgstr ""
+
+#: templates/admin/import/blacklist.html:127
+msgid "Low Demand"
+msgstr ""
+
+#: templates/admin/import/blacklist.html:128
+#, fuzzy
+msgid "Quality Issues"
+msgstr "Záruka kvality"
+
+#: templates/admin/import/blacklist.html:129
+msgid "Supplier Issues"
+msgstr ""
+
+#: templates/admin/import/blacklist.html:130
+#, fuzzy
+msgid "Other"
+msgstr "Objednávka"
+
+#: templates/admin/import/blacklist.html:135
+#, fuzzy
+msgid "Replacement Article"
+msgstr "Hľadať číslo dielov"
+
+#: templates/admin/import/blacklist.html:137
+#, fuzzy
+msgid "Alternative article if available"
+msgstr "Dočasne nedostupné"
+
+#: templates/admin/import/blacklist.html:143
+#, fuzzy
+msgid "Additional information..."
+msgstr "Osobné údaje"
+
+#: templates/admin/import/brands.html:3 templates/admin/import/brands.html:7
+#: templates/admin/import/dashboard.html:83
+#, fuzzy
+msgid "Brand Mapping"
+msgstr "Značka:"
+
+#: templates/admin/import/brands.html:20 templates/admin/import/brands.html:36
+msgid "Unmapped Brands"
+msgstr ""
+
+#: templates/admin/import/brands.html:26 templates/admin/import/brands.html:79
+#, fuzzy
+msgid "Mapped Brands"
+msgstr "Dostupné značky"
+
+#: templates/admin/import/brands.html:44
+#, fuzzy
+msgid "Brand from File"
+msgstr "Značka:"
+
+#: templates/admin/import/brands.html:45
+msgid "First Seen"
+msgstr ""
+
+#: templates/admin/import/brands.html:46
+#, fuzzy
+msgid "Action"
+msgstr "Akcie"
+
+#: templates/admin/import/brands.html:57
+msgid "Map"
+msgstr ""
+
+#: templates/admin/import/brands.html:68
+msgid "All brands are mapped!"
+msgstr ""
+
+#: templates/admin/import/brands.html:87
+#, fuzzy
+msgid "File Brand"
+msgstr "Dostupné značky"
+
+#: templates/admin/import/brands.html:88
+msgid "Mapped To"
+msgstr ""
+
+#: templates/admin/import/brands.html:89
+#: templates/admin/orders/process_orders.html:176
+msgid "Type"
+msgstr "Typ"
+
+#: templates/admin/import/brands.html:99
+#, fuzzy
+msgid "Auto"
+msgstr "Autodiel"
+
+#: templates/admin/import/brands.html:101
+msgid "Manual"
+msgstr ""
+
+#: templates/admin/import/brands.html:112
+msgid "No mapped brands yet."
+msgstr ""
+
+#: templates/admin/import/brands.html:126
+#: templates/admin/import/brands.html:147
+#, fuzzy
+msgid "Map Brand"
+msgstr "Značka"
+
+#: templates/admin/import/brands.html:131
+#, fuzzy
+msgid "Brand from file"
+msgstr "Značka:"
+
+#: templates/admin/import/brands.html:135
+msgid "Map to existing brand"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:3
+#, fuzzy
+msgid "Import Management"
+msgstr "Správa používateľov"
+
+#: templates/admin/import/dashboard.html:7
+#, fuzzy
+msgid "Warehouse Import Management"
+msgstr "Správa používateľov"
+
+#: templates/admin/import/dashboard.html:20
+#, fuzzy
+msgid "Queue Items"
+msgstr "Položky objednávky"
+
+#: templates/admin/import/dashboard.html:26
+#: templates/admin/import/dashboard.html:117
+#: templates/admin/import/queue.html:146
+#, fuzzy
+msgid "Whitelist"
+msgstr "Položky cenníka"
+
+#: templates/admin/import/dashboard.html:32
+#: templates/admin/import/dashboard.html:134
+#: templates/admin/import/queue.html:150
+msgid "Blacklist"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:38
+#: templates/admin/import/price_changes.html:20
+#, fuzzy
+msgid "Pending Changes"
+msgstr "Vrátenie a výmena"
+
+#: templates/admin/import/dashboard.html:49
+msgid "Manual Upload"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:52
+msgid "Upload CSV files with Safe Mode option"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:66 templates/admin/import/queue.html:3
+#: templates/admin/import/queue.html:7
+msgid "Import Queue"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:69
+msgid "Review and process new articles"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:86
+msgid "Map file brands to database brands"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:89
+#, fuzzy
+msgid "Manage Brands"
+msgstr "Dostupné značky"
+
+#: templates/admin/import/dashboard.html:100
+#: templates/admin/import/history.html:3 templates/admin/import/history.html:7
+msgid "Import History"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:103
+msgid "View previous import operations"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:106
+msgid "View History"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:120
+msgid "Approved articles for auto-import"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:123
+msgid "Manage Whitelist"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:137
+#, fuzzy
+msgid "Blocked articles"
+msgstr "Nie sú vybrané žiadne položky"
+
+#: templates/admin/import/dashboard.html:140
+msgid "Manage Blacklist"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:151
+#: templates/admin/import/dashboard.html:157
+#: templates/admin/import/dashboard.html:219
+#: templates/admin/import/price_overrides.html:3
+#: templates/admin/import/price_overrides.html:7
+#, fuzzy
+msgid "Price Overrides"
+msgstr "Položky cenníka"
+
+#: templates/admin/import/dashboard.html:154
+#, fuzzy
+msgid "Fixed price articles"
+msgstr "Hľadať číslo dielov"
+
+#: templates/admin/import/dashboard.html:168
+#: templates/admin/import/price_changes.html:3
+#, fuzzy
+msgid "Price Changes"
+msgstr "Vrátenie a výmena"
+
+#: templates/admin/import/dashboard.html:171
+#, fuzzy
+msgid "Review pending price changes"
+msgstr "Vrátenie a výmena"
+
+#: templates/admin/import/dashboard.html:174
+#, fuzzy
+msgid "Review"
+msgstr "Odstrániť"
+
+#: templates/admin/import/dashboard.html:185
+#: templates/admin/import/dashboard.html:191
+#, fuzzy
+msgid "Zero Stock"
+msgstr "Na sklade"
+
+#: templates/admin/import/dashboard.html:188
+msgid "Items with zero quantity"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:202
+#, fuzzy
+msgid "System Status"
+msgstr "Stav platby"
+
+#: templates/admin/import/dashboard.html:207
+#, fuzzy
+msgid "Last Import"
+msgstr "Liatina"
+
+#: templates/admin/import/dashboard.html:208
+#: templates/admin/import/zero_stock.html:61
+msgid "Never"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:211
+#, fuzzy
+msgid "Auto Import"
+msgstr "Autodiel"
+
+#: templates/admin/import/dashboard.html:213
+msgid "Enabled"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:215
+msgid "Disabled"
+msgstr ""
+
+#: templates/admin/import/dashboard.html:220
+#: templates/admin/import/queue.html:76 templates/admin/import/upload.html:99
+#: templates/admin/products/manage_descriptions.html:42
+#, fuzzy
+msgid "items"
+msgstr "Položky"
+
+#: templates/admin/import/dashboard.html:223
+#, fuzzy
+msgid "Processing Status"
+msgstr "Spracováva sa"
+
+#: templates/admin/import/dashboard.html:224
+#, fuzzy
+msgid "Ready"
+msgstr "Vytvorené"
+
+#: templates/admin/import/debug.html:3
+msgid "Import Debug"
+msgstr ""
+
+#: templates/admin/import/debug.html:7
+msgid "Import System Debug"
+msgstr ""
+
+#: templates/admin/import/debug.html:18
+msgid "Database Tables Status"
+msgstr ""
+
+#: templates/admin/import/debug.html:24
+#, fuzzy
+msgid "Table"
+msgstr "Celkom"
+
+#: templates/admin/import/debug.html:25
+#, fuzzy
+msgid "Exists"
+msgstr "Ďalšie"
+
+#: templates/admin/import/debug.html:26
+#, fuzzy
+msgid "Records"
+msgstr "adresár"
+
+#: templates/admin/import/debug.html:35 templates/admin/import/debug.html:126
+#: templates/admin/import/history.html:77
+#: templates/admin/import/price_overrides.html:57
+#: templates/admin/import/price_overrides.html:64
+#: templates/admin/import/whitelist.html:69
+#: templates/admin/import/whitelist.html:115
+msgid "Yes"
+msgstr ""
+
+#: templates/admin/import/debug.html:37 templates/admin/import/debug.html:128
+#: templates/admin/import/history.html:79
+#: templates/admin/import/price_overrides.html:59
+#: templates/admin/import/price_overrides.html:66
+#: templates/admin/import/whitelist.html:70
+#: templates/admin/import/whitelist.html:117
+msgid "No"
+msgstr ""
+
+#: templates/admin/import/debug.html:51
+msgid "Recent Import Files"
+msgstr ""
+
+#: templates/admin/import/debug.html:59 templates/admin/import/history.html:48
+#: templates/admin/sitemaps/manage_sitemaps.html:165
+#: templates/admin/sitemaps/sitemap_utils.html:72
+#, fuzzy
+msgid "Filename"
+msgstr "Celé meno"
+
+#: templates/admin/import/debug.html:61 templates/admin/import/debug.html:113
+#: templates/admin/import/history.html:51 templates/admin/import/queue.html:10
+#: templates/admin/import/queue.html:62 templates/admin/import/queue.html:137
+#, fuzzy
+msgid "Processed"
+msgstr "Spracováva sa"
+
+#: templates/admin/import/debug.html:62 templates/admin/import/history.html:32
+#: templates/admin/import/history.html:54
+#, fuzzy
+msgid "Errors"
+msgstr "Chyba"
+
+#: templates/admin/import/debug.html:63
+#: templates/admin/orders/process_orders.html:24
+#: templates/public/orders/orders.html:29
+#: templates/public/orders/orders.html:43
+msgid "Date"
+msgstr "Dátum"
+
+#: templates/admin/import/debug.html:93
+#, fuzzy
+msgid "No import files found"
+msgstr "Objednávka nebola nájdená"
+
+#: templates/admin/import/debug.html:102
+#, fuzzy
+msgid "Recent Queue Items"
+msgstr "Položky cenníka"
+
+#: templates/admin/import/debug.html:111 templates/admin/import/queue.html:117
+#: templates/admin/orders/process_orders.html:173
+#: templates/admin/orders/send_invoice.html:57
+#: templates/admin/products/add_photos_form.html:85
+#: templates/admin/products/edit_product.html:166
+#: templates/admin/stock/manage_stock.html:91
+#: templates/public/cart/cart.html:26
+#: templates/public/orders/guest_confirmation.html:102
+#: templates/public/orders/order_details.html:150
+msgid "Quantity"
+msgstr "Množstvo"
+
+#: templates/admin/import/debug.html:140
+#, fuzzy
+msgid "No queue items found"
+msgstr "Neboli nájdené žiadne uložené adresy"
+
+#: templates/admin/import/history.html:20
+#, fuzzy
+msgid "Total Imports"
+msgstr "Celkom"
+
+#: templates/admin/import/history.html:26
+#: templates/admin/import/history.html:66
+#, fuzzy
+msgid "Completed"
+msgstr "kompatibilný"
+
+#: templates/admin/import/history.html:40 templates/admin/import/upload.html:92
+msgid "Recent Imports"
+msgstr ""
+
+#: templates/admin/import/history.html:50 templates/admin/import/upload.html:82
+#, fuzzy
+msgid "Safe Mode"
+msgstr "PSČ"
+
+#: templates/admin/import/history.html:52
+#: templates/public/orders/order_details.html:45
+#: templates/public/orders/orders.html:54
+msgid "New"
+msgstr "Nový"
+
+#: templates/admin/import/history.html:53
+#, fuzzy
+msgid "Updated"
+msgstr "Dátum"
+
+#: templates/admin/import/history.html:55 templates/admin/import/queue.html:120
+#, fuzzy
+msgid "Import Date"
+msgstr "Aktualizácie softvéru"
+
+#: templates/admin/import/history.html:68
+#: templates/public/orders/order_details.html:46
+#: templates/public/orders/orders.html:55
+msgid "Processing"
+msgstr "Spracováva sa"
+
+#: templates/admin/import/history.html:70
+#: templates/admin/products/manage_descriptions.html:304
+#: templates/public/index.html:741
+msgid "Error"
+msgstr "Chyba"
+
+#: templates/admin/import/history.html:96
+#, fuzzy
+msgid "No import history found"
+msgstr "Objednávka nebola nájdená"
+
+#: templates/admin/import/price_changes.html:7
+#, fuzzy
+msgid "Pending Price Changes"
+msgstr "Vrátenie a výmena"
+
+#: templates/admin/import/price_changes.html:28
+msgid "Price Changes Requiring Approval"
+msgstr ""
+
+#: templates/admin/import/price_changes.html:37
+#, fuzzy
+msgid "Old Price"
+msgstr "Celkom"
+
+#: templates/admin/import/price_changes.html:38
+#, fuzzy
+msgid "New Price"
+msgstr "Cena"
+
+#: templates/admin/import/price_changes.html:39
+msgid "Difference"
+msgstr ""
+
+#: templates/admin/import/price_changes.html:66
+#, fuzzy
+msgid "Approve"
+msgstr "Odstrániť"
+
+#: templates/admin/import/price_changes.html:73
+#: templates/admin/orders/process_orders.html:216
+#: templates/admin/orders/process_orders.html:223
+msgid "Reject"
+msgstr "Odmietnuť"
+
+#: templates/admin/import/price_changes.html:85
+#, fuzzy
+msgid "No pending price changes found."
+msgstr "Neboli nájdené žiadne uložené fakturačné údaje"
+
+#: templates/admin/import/price_overrides.html:10
+#: templates/admin/import/price_overrides.html:179
+msgid "Add Override"
+msgstr ""
+
+#: templates/admin/import/price_overrides.html:23
+#, fuzzy
+msgid "Total Overrides"
+msgstr "Celkom"
+
+#: templates/admin/import/price_overrides.html:31
+#, fuzzy
+msgid "Fixed Price Articles"
+msgstr "Hľadať číslo dielov"
+
+#: templates/admin/import/price_overrides.html:40
+#: templates/admin/import/price_overrides.html:151
+#, fuzzy
+msgid "Fixed Price"
+msgstr "Cena"
+
+#: templates/admin/import/price_overrides.html:41
+#, fuzzy
+msgid "Ignore Updates"
+msgstr "Dátum objednávky"
+
+#: templates/admin/import/price_overrides.html:42
+#, fuzzy
+msgid "Manual Stock"
+msgstr "Na sklade"
+
+#: templates/admin/import/price_overrides.html:43
+#, fuzzy
+msgid "Stock Status"
+msgstr "Skladové položky"
+
+#: templates/admin/import/price_overrides.html:78
+#, fuzzy
+msgid "Not in Stock"
+msgstr "Na sklade"
+
+#: templates/admin/import/price_overrides.html:89
+#, fuzzy
+msgid "Add to Stock"
+msgstr "Pridať do košíka"
+
+#: templates/admin/import/price_overrides.html:98
+msgid "Remove this price override?"
+msgstr ""
+
+#: templates/admin/import/price_overrides.html:112
+msgid "Add all price overrides to stock?"
+msgstr ""
+
+#: templates/admin/import/price_overrides.html:113
+msgid "Add All to Stock"
+msgstr ""
+
+#: templates/admin/import/price_overrides.html:120
+msgid "No price overrides configured yet."
+msgstr ""
+
+#: templates/admin/import/price_overrides.html:132
+msgid "Add Price Override"
+msgstr ""
+
+#: templates/admin/import/price_overrides.html:139
+#: templates/admin/import/whitelist.html:164
+#, fuzzy
+msgid "Enter article code"
+msgstr "Zadajte kód tovaru..."
+
+#: templates/admin/import/price_overrides.html:158
+msgid "Ignore file updates (never update this article from imports)"
+msgstr ""
+
+#: templates/admin/import/price_overrides.html:166
+#, fuzzy
+msgid "Manual stock management"
+msgstr "Správa používateľov"
+
+#: templates/admin/import/price_overrides.html:173
+#: templates/admin/import/whitelist.html:204
+#, fuzzy
+msgid "Optional notes"
+msgstr "Možnosti"
+
+#: templates/admin/import/queue.html:9 templates/admin/import/queue.html:61
+#, fuzzy
+msgid "Unprocessed"
+msgstr "Proces vrátenia"
+
+#: templates/admin/import/queue.html:22
+#, fuzzy
+msgid "Pending Items"
+msgstr "Čaká na platbu"
+
+#: templates/admin/import/queue.html:28
+#, fuzzy
+msgid "Processed Items"
+msgstr "Položky cenníka"
+
+#: templates/admin/import/queue.html:34
+#: templates/admin/import/whitelist.html:23
+#, fuzzy
+msgid "Total Items"
+msgstr "Celkom"
+
+#: templates/admin/import/queue.html:43
+#: templates/admin/import/whitelist.html:50
+#, fuzzy
+msgid "Search Article"
+msgstr "Hľadať číslo dielov"
+
+#: templates/admin/import/queue.html:45
+#: templates/admin/import/whitelist.html:52
+#, fuzzy
+msgid "Enter article..."
+msgstr "Hľadať číslo dielov"
+
+#: templates/admin/import/queue.html:71
+#: templates/admin/import/whitelist.html:78
+#: templates/admin/users/create_user.html:104
+#, fuzzy
+msgid "Reset"
+msgstr "Odmietnuť"
+
+#: templates/admin/import/queue.html:77
+#, fuzzy
+msgid "Page"
+msgstr "Použitie:"
+
+#: templates/admin/import/queue.html:90
+#, fuzzy
+msgid "Select Action"
+msgstr "Vyberte krajinu"
+
+#: templates/admin/import/queue.html:91
+msgid "Move to Whitelist"
+msgstr ""
+
+#: templates/admin/import/queue.html:92
+msgid "Move to Blacklist"
+msgstr ""
+
+#: templates/admin/import/queue.html:93
+msgid "Delete from Queue"
+msgstr ""
+
+#: templates/admin/import/queue.html:96
+msgid "Apply action to selected items?"
+msgstr ""
+
+#: templates/admin/import/queue.html:97
+msgid "Apply"
+msgstr ""
+
+#: templates/admin/import/queue.html:103
+msgid "Toggle All"
+msgstr ""
+
+#: templates/admin/import/queue.html:139
+#: templates/public/orders/order_details.html:69
+msgid "Pending"
+msgstr "Čaká na platbu"
+
+#: templates/admin/import/queue.html:202
+#, fuzzy
+msgid "No items in queue"
+msgstr "V tejto objednávke nie sú žiadne položky"
+
+#: templates/admin/import/queue.html:203
+msgid "Upload a file to add items to the queue."
+msgstr ""
+
+#: templates/admin/import/queue.html:226
+msgid "Move this item to whitelist?"
+msgstr ""
+
+#: templates/admin/import/queue.html:249
+msgid "Move this item to blacklist?"
+msgstr ""
+
+#: templates/admin/import/upload.html:3 templates/admin/import/upload.html:7
+msgid "Manual Import Upload"
+msgstr ""
+
+#: templates/admin/import/upload.html:19
+#, fuzzy
+msgid "Upload CSV File"
+msgstr "Nie sú vybrané žiadne položky"
+
+#: templates/admin/import/upload.html:24
+#, fuzzy
+msgid "Select CSV File"
+msgstr "Vybrať súbor"
+
+#: templates/admin/import/upload.html:27
+#, fuzzy
+msgid "File format"
+msgstr "Neplatný formát ceny"
+
+#: templates/admin/import/upload.html:35
+msgid "Safe Import Mode"
+msgstr ""
+
+#: templates/admin/import/upload.html:37
+msgid ""
+"Only update existing items and add new ones. Do not set quantity to 0 for"
+" missing items."
+msgstr ""
+
+#: templates/admin/import/upload.html:44
+msgid "Import Notes"
+msgstr ""
+
+#: templates/admin/import/upload.html:44
+#, fuzzy
+msgid "Optional"
+msgstr "(voliteľné)"
+
+#: templates/admin/import/upload.html:46
+msgid "Add any notes about this import..."
+msgstr ""
+
+#: templates/admin/import/upload.html:51
+#, fuzzy
+msgid "Upload and Process"
+msgstr "Vyhľadávanie podľa čísla dielu"
+
+#: templates/admin/import/upload.html:55
+#, fuzzy
+msgid "Preview File"
+msgstr "Profil"
+
+#: templates/admin/import/upload.html:66
+#, fuzzy
+msgid "Import Information"
+msgstr "Informácie o objednávke"
+
+#: templates/admin/import/upload.html:69
+msgid "Expected File Format"
+msgstr ""
+
+#: templates/admin/import/upload.html:73
+#, fuzzy
+msgid "Processing Rules"
+msgstr "Spracováva sa"
+
+#: templates/admin/import/upload.html:75
+msgid "Articles in whitelist: Auto-processed"
+msgstr ""
+
+#: templates/admin/import/upload.html:76
+msgid "Articles in blacklist: Ignored"
+msgstr ""
+
+#: templates/admin/import/upload.html:77
+msgid "New articles: Added to queue"
+msgstr ""
+
+#: templates/admin/import/upload.html:78
+msgid "Unknown brands: Require mapping"
+msgstr ""
+
+#: templates/admin/import/upload.html:79
+msgid "Price increases: Require approval"
+msgstr ""
+
+#: templates/admin/import/upload.html:84
+msgid ""
+"When enabled, existing stock items not in the file will keep their "
+"current quantities. When disabled, items not in file will have quantity "
+"set to 0."
+msgstr ""
+
+#: templates/admin/import/upload.html:101
+#, fuzzy
+msgid "Safe"
+msgstr "Zdieľať"
+
+#: templates/admin/import/upload.html:103
+#, fuzzy
+msgid "Full"
+msgstr "Celé meno"
+
+#: templates/admin/import/upload.html:122
+msgid "File Preview"
+msgstr ""
+
+#: templates/admin/import/upload.html:129
+#, fuzzy
+msgid "Loading..."
+msgstr "Pridávam..."
+
+#: templates/admin/import/upload.html:143
+#, fuzzy
+msgid "Processing..."
+msgstr "Spracováva sa"
+
+#: templates/admin/import/upload.html:150
+#, fuzzy
+msgid "Please select a file first"
+msgstr "Zadajte aspoň jeden kód tovaru."
+
+#: templates/admin/import/upload.html:181
+#, fuzzy
+msgid "and"
+msgstr "Značka"
+
+#: templates/admin/import/upload.html:181
+#, fuzzy
+msgid "more lines"
+msgstr "ID objednávky"
+
+#: templates/admin/import/whitelist.html:3
+#: templates/admin/import/whitelist.html:7
+#, fuzzy
+msgid "Import Whitelist"
+msgstr "Položky cenníka"
+
+#: templates/admin/import/whitelist.html:10
+#: templates/admin/import/whitelist.html:157
+#: templates/admin/import/whitelist.html:210
+msgid "Add to Whitelist"
+msgstr ""
+
+#: templates/admin/import/whitelist.html:29
+#: templates/admin/import/whitelist.html:66
+#: templates/admin/import/whitelist.html:99
+#, fuzzy
+msgid "Auto Update"
+msgstr "Autodiel"
+
+#: templates/admin/import/whitelist.html:35
+msgid "Avg Markup"
+msgstr ""
+
+#: templates/admin/import/whitelist.html:41
+#: templates/admin/products/missing_descriptions.html:70
+#, fuzzy
+msgid "Brands"
+msgstr "Značka"
+
+#: templates/admin/import/whitelist.html:87
+#, fuzzy
+msgid "Whitelist Items"
+msgstr "Položky cenníka"
+
+#: templates/admin/import/whitelist.html:97
+#, fuzzy
+msgid "Min Qty"
+msgstr "Počet"
+
+#: templates/admin/import/whitelist.html:98
+#, fuzzy
+msgid "Max Qty"
+msgstr "Počet"
+
+#: templates/admin/import/whitelist.html:130
+msgid "Remove this item from whitelist?"
+msgstr ""
+
+#: templates/admin/import/whitelist.html:143
+#, fuzzy
+msgid "No items in whitelist yet"
+msgstr "V tejto objednávke nie sú žiadne položky"
+
+#: templates/admin/import/whitelist.html:145
+msgid "Add First Item"
+msgstr ""
+
+#: templates/admin/import/whitelist.html:182
+#: templates/admin/import/whitelist.html:244
+#, fuzzy
+msgid "Min Quantity"
+msgstr "Množstvo"
+
+#: templates/admin/import/whitelist.html:188
+#: templates/admin/import/whitelist.html:251
+#, fuzzy
+msgid "Max Quantity"
+msgstr "Množstvo"
+
+#: templates/admin/import/whitelist.html:197
+#: templates/admin/import/whitelist.html:261
+#, fuzzy
+msgid "Auto update prices and quantities"
+msgstr "Zadajte kód tovaru..."
+
+#: templates/admin/import/whitelist.html:224
+#, fuzzy
+msgid "Edit Whitelist Item"
+msgstr "Položky cenníka"
+
+#: templates/admin/import/whitelist.html:273
+#, fuzzy
+msgid "Update Item"
+msgstr "Aktualizovať profil"
+
+#: templates/admin/import/zero_stock.html:3
+#: templates/admin/import/zero_stock.html:7
+#: templates/admin/import/zero_stock.html:26
+#, fuzzy
+msgid "Zero Stock Items"
+msgstr "Skladové položky"
+
+#: templates/admin/import/zero_stock.html:10
+#, fuzzy
+msgid "Are you sure you want to clear all items?"
+msgstr "Ste si istí, že chcete vymazať túto spoločnosť?"
+
+#: templates/admin/import/zero_stock.html:12
+#: templates/admin/stock/manage_stock.html:82
+#, fuzzy
+msgid "Clear All"
+msgstr "Chyba pri mazaní výsledkov vyhľadávania"
+
+#: templates/admin/import/zero_stock.html:34
+msgid "Items with Zero Quantity"
+msgstr ""
+
+#: templates/admin/import/zero_stock.html:43
+#: templates/admin/stock/manage_stock.html:78
+#, fuzzy
+msgid "Current Stock"
+msgstr "Aktuálne heslo"
+
+#: templates/admin/import/zero_stock.html:44
+#, fuzzy
+msgid "Missing Count"
+msgstr "Chýbajúci príkaz."
+
+#: templates/admin/import/zero_stock.html:45
+msgid "Last Seen"
+msgstr ""
+
+#: templates/admin/import/zero_stock.html:70
+#: templates/admin/stock/manage_stock.html:128
+msgid "Delete this item?"
+msgstr ""
+
+#: templates/admin/import/zero_stock.html:83
+#, fuzzy
+msgid "No zero stock items found."
+msgstr "Zásielky"
+
+#: templates/admin/orders/process_orders.html:3
+#: templates/admin/orders/process_orders.html:7
+#, fuzzy
+msgid "Process Orders"
 msgstr "Spracovať verejné objednávky"
 
-#: templates/admin/orders/process_orders.html:14
-#: templates/user/orders/order_changes.html:12
-#: templates/user/orders/orders.html:99
+#: templates/admin/orders/process_orders.html:22
 msgid "Order ID"
 msgstr "ID objednávky"
 
-#: templates/admin/orders/process_orders.html:15
-#: templates/admin/orders/process_orders.html:37
-#: templates/admin/users/change_password.html:21
-#: templates/admin/users/manage_users.html:32 templates/auth/login.html:25
+#: templates/admin/orders/process_orders.html:23
+#: templates/admin/orders/process_orders.html:45
+#: templates/admin/users/assign_roles.html:49
+#: templates/admin/users/change_password.html:27
+#: templates/admin/users/create_user.html:26
+#: templates/admin/users/manage_users.html:28 templates/auth/login.html:25
 #: templates/auth/register.html:25 templates/public/user/profile.html:62
 msgid "Username"
 msgstr "Používateľské meno"
 
-#: templates/admin/orders/process_orders.html:16
-#: templates/public/orders/list_orders.html:29
-#: templates/public/orders/list_orders.html:44
-#: templates/public/orders/orders.html:29
-#: templates/public/orders/orders.html:43 templates/user/orders/orders.html:100
-msgid "Date"
-msgstr "Dátum"
-
-#: templates/admin/orders/process_orders.html:17
+#: templates/admin/orders/process_orders.html:25
 msgid "Stock Items"
 msgstr "Skladové položky"
 
-#: templates/admin/orders/process_orders.html:18
+#: templates/admin/orders/process_orders.html:26
 msgid "Pricelist Items"
 msgstr "Položky cenníka"
 
-#: templates/admin/orders/process_orders.html:35
+#: templates/admin/orders/process_orders.html:43
 msgid "User Information"
 msgstr "Informácie o používateľovi"
 
-#: templates/admin/orders/process_orders.html:38
-#: templates/admin/users/change_password.html:22
-#: templates/admin/users/manage_users.html:33
+#: templates/admin/orders/process_orders.html:46
+#: templates/admin/orders/send_invoice.html:27
+#: templates/admin/users/change_password.html:28
+#: templates/admin/users/create_user.html:44
+#: templates/admin/users/manage_users.html:29
 #: templates/auth/forgot_password.html:28 templates/auth/register.html:29
-#: templates/public/cart/cart.html:227 templates/public/returns.html:119
-#: templates/public/user/profile.html:68
+#: templates/public/cart/cart.html:227 templates/public/index.html:274
+#: templates/public/returns.html:119 templates/public/user/profile.html:68
 msgid "Email"
 msgstr "E-mail"
 
-#: templates/admin/orders/process_orders.html:45
+#: templates/admin/orders/process_orders.html:53
 #: templates/public/cart/cart.html:237
 #: templates/public/orders/order_details.html:85
 msgid "Delivery Address"
 msgstr "Doručovacia adresa"
 
-#: templates/admin/orders/process_orders.html:48
+#: templates/admin/orders/process_orders.html:56
 msgid "Change Address"
 msgstr "Zmeniť adresu"
 
-#: templates/admin/orders/process_orders.html:66
+#: templates/admin/orders/process_orders.html:74
 msgid "No delivery address provided"
 msgstr "Nebola poskytnutá doručovacia adresa"
 
-#: templates/admin/orders/process_orders.html:73
+#: templates/admin/orders/process_orders.html:81
 msgid "Saved Addresses"
 msgstr "Uložené adresy"
 
-#: templates/admin/orders/process_orders.html:83
+#: templates/admin/orders/process_orders.html:91
 #: templates/public/user/profile.html:120
 #: templates/public/user/profile.html:236
 msgid "Default"
 msgstr "Predvolená"
 
-#: templates/admin/orders/process_orders.html:87
+#: templates/admin/orders/process_orders.html:95
 msgid "Update Address"
 msgstr "Aktualizovať adresu"
 
-#: templates/admin/orders/process_orders.html:92
+#: templates/admin/orders/process_orders.html:100
 msgid "No saved addresses found"
 msgstr "Neboli nájdené žiadne uložené adresy"
 
-#: templates/admin/orders/process_orders.html:100
+#: templates/admin/orders/process_orders.html:108
 msgid "Invoice Details"
 msgstr "Fakturačné údaje"
 
-#: templates/admin/orders/process_orders.html:103
+#: templates/admin/orders/process_orders.html:111
 msgid "Change Invoice Details"
 msgstr "Zmeniť fakturačné údaje"
 
-#: templates/admin/orders/process_orders.html:113
+#: templates/admin/orders/process_orders.html:121
 #: templates/public/user/profile.html:281
 msgid "Company Name"
 msgstr "Názov spoločnosti"
 
-#: templates/admin/orders/process_orders.html:114
+#: templates/admin/orders/process_orders.html:122
 #: templates/public/orders/order_details.html:118
 #: templates/public/user/profile.html:285
 msgid "VAT Number"
 msgstr "IČ DPH"
 
-#: templates/admin/orders/process_orders.html:116
+#: templates/admin/orders/process_orders.html:124
 #: templates/public/orders/order_details.html:122
 #: templates/public/user/profile.html:289
 msgid "Registration Number"
 msgstr "IČO"
 
-#: templates/admin/orders/process_orders.html:119
+#: templates/admin/orders/process_orders.html:127
 #: templates/public/contacts.html:63 templates/public/user/profile.html:293
 msgid "Company Address"
 msgstr "Adresa spoločnosti"
 
-#: templates/admin/orders/process_orders.html:125
+#: templates/admin/orders/process_orders.html:133
 msgid "Invoice requested but details missing"
 msgstr "Faktúra vyžiadaná, ale chýbajú údaje"
 
-#: templates/admin/orders/process_orders.html:128
+#: templates/admin/orders/process_orders.html:136
 msgid "No invoice requested"
 msgstr "Faktúra nevyžiadaná"
 
-#: templates/admin/orders/process_orders.html:135
+#: templates/admin/orders/process_orders.html:143
 msgid "Saved Invoice Details"
 msgstr "Uložené fakturačné údaje"
 
-#: templates/admin/orders/process_orders.html:150
+#: templates/admin/orders/process_orders.html:158
 msgid "Update Invoice Details"
 msgstr "Aktualizovať fakturačné údaje"
 
-#: templates/admin/orders/process_orders.html:155
+#: templates/admin/orders/process_orders.html:163
 msgid "No saved invoice details found"
 msgstr "Neboli nájdené žiadne uložené fakturačné údaje"
 
-#: templates/admin/orders/process_orders.html:164
-#: templates/public/article_not_found.html:82
-#: templates/public/cart/cart.html:22 templates/public/index.html:186
-#: templates/public/index.html:295 templates/public/orders/confirmation.html:95
-#: templates/public/orders/guest_confirmation.html:100
-#: templates/public/orders/order_details.html:146
-#: templates/user/cart/cart.html:14 templates/user/orders/order_changes.html:13
-#: templates/user/orders/order_details.html:20
-#: templates/user/orders/orders.html:62
-#: templates/user/search/intermediate.html:16
-#: templates/user/search/search_results.html:15
-#: templates/user/shipments/shipments.html:23
-#: templates/user/shipments/view_shipment.html:39
-msgid "Article"
-msgstr "Číslo"
-
-#: templates/admin/orders/process_orders.html:165
-#: templates/public/cart/cart.html:26
-#: templates/public/orders/guest_confirmation.html:102
-#: templates/public/orders/order_details.html:150
-#: templates/user/cart/cart.html:18 templates/user/orders/order_details.html:25
-#: templates/user/search/intermediate.html:18
-#: templates/user/search/search_results.html:17
-#: templates/user/shipments/shipments.html:24
-#: templates/user/shipments/view_shipment.html:40
-msgid "Quantity"
-msgstr "Množstvo"
-
-#: templates/admin/orders/process_orders.html:166
-#: templates/public/article_not_found.html:86
-#: templates/public/cart/cart.html:25 templates/public/index.html:190
-#: templates/public/index.html:296 templates/public/orders/confirmation.html:98
-#: templates/public/orders/guest_confirmation.html:101
-#: templates/public/orders/order_details.html:149
-#: templates/public/shipping_payment.html:167 templates/user/cart/cart.html:17
-#: templates/user/orders/order_details.html:24
-#: templates/user/shipments/shipments.html:25
-#: templates/user/shipments/view_shipment.html:41
-msgid "Price"
-msgstr "Cena"
-
-#: templates/admin/orders/process_orders.html:167
+#: templates/admin/orders/process_orders.html:175
+#: templates/admin/orders/send_invoice.html:58
+#: templates/admin/orders/send_invoice.html:74
 #: templates/public/cart/cart.html:27
 #: templates/public/orders/confirmation.html:87
 #: templates/public/orders/confirmation.html:99
 #: templates/public/orders/confirmation.html:115
 #: templates/public/orders/guest_confirmation.html:103
-#: templates/public/orders/list_orders.html:31
-#: templates/public/orders/list_orders.html:53
 #: templates/public/orders/order_details.html:74
 #: templates/public/orders/order_details.html:151
 #: templates/public/orders/order_details.html:170
 #: templates/public/orders/orders.html:30
-#: templates/public/orders/orders.html:49 templates/user/cart/cart.html:19
-#: templates/user/orders/order_details.html:26
+#: templates/public/orders/orders.html:49
 msgid "Total"
 msgstr "Celkom"
 
-#: templates/admin/orders/process_orders.html:168
-msgid "Type"
-msgstr "Typ"
-
-#: templates/admin/orders/process_orders.html:169
-#: templates/public/cart/cart.html:28
-#: templates/public/orders/list_orders.html:32
-#: templates/public/orders/list_orders.html:56
-#: templates/public/orders/order_details.html:42
-#: templates/public/orders/orders.html:31
-#: templates/public/orders/orders.html:52
-#: templates/user/orders/order_details.html:28
-#: templates/user/orders/orders.html:66 templates/user/orders/orders.html:102
-#: templates/user/shipments/list_shipments.html:18
-msgid "Status"
-msgstr "Stav"
-
-#: templates/admin/orders/process_orders.html:170
-#: templates/admin/users/manage_users.html:36
-#: templates/public/cart/cart.html:29
-#: templates/public/orders/list_orders.html:33
-#: templates/public/orders/list_orders.html:76
-#: templates/public/orders/orders.html:32
-#: templates/public/orders/orders.html:79 templates/user/cart/cart.html:21
-#: templates/user/orders/orders.html:103
-#: templates/user/shipments/list_shipments.html:22
-msgid "Actions"
-msgstr "Akcie"
-
-#: templates/admin/orders/process_orders.html:205
-#: templates/admin/orders/process_orders.html:212
-#: templates/base/public_base.html:32
+#: templates/admin/orders/process_orders.html:213
+#: templates/admin/orders/process_orders.html:220
+#: templates/base/public_base.html:164
 msgid "Accept"
 msgstr "Prijať"
 
-#: templates/admin/orders/process_orders.html:208
-#: templates/admin/orders/process_orders.html:215
-msgid "Reject"
-msgstr "Odmietnuť"
-
-#: templates/admin/orders/process_orders.html:225
+#: templates/admin/orders/process_orders.html:233
 msgid "No items in this order"
 msgstr "V tejto objednávke nie sú žiadne položky"
 
-#: templates/admin/users/change_password.html:3
-msgid "Change User Password"
-msgstr "Zmeniť heslo používateľa"
+#: templates/admin/orders/process_orders.html:241
+#: templates/admin/orders/send_invoice.html:3
+#: templates/admin/orders/send_invoice.html:7
+#: templates/admin/orders/send_invoice.html:87
+#: templates/admin/orders/send_invoice.html:123
+#, fuzzy
+msgid "Send Invoice"
+msgstr "Uložené fakturačné údaje"
 
-#: templates/admin/users/change_password.html:13
-msgid "Change Password for User"
-msgstr "Zmeniť heslo pre používateľa"
+#: templates/admin/orders/send_invoice.html:10
+#: templates/public/orders/order_details.html:18
+#: templates/public/orders/order_details.html:180
+msgid "Back to Orders"
+msgstr "Späť k objednávkam"
 
-#: templates/admin/users/change_password.html:19
-msgid "User Info"
-msgstr "Informácie o používateľovi"
+#: templates/admin/orders/send_invoice.html:20
+#: templates/public/orders/order_details.html:33
+msgid "Order Information"
+msgstr "Informácie o objednávke"
 
-#: templates/admin/users/change_password.html:23
-#: templates/admin/users/manage_users.html:34
+#: templates/admin/orders/send_invoice.html:25
+#: templates/public/orders/confirmation.html:83
+#: templates/public/orders/guest_confirmation.html:60
+#: templates/public/orders/order_details.html:38
+msgid "Order Date"
+msgstr "Dátum objednávky"
+
+#: templates/admin/orders/send_invoice.html:26
+#, fuzzy
+msgid "Customer"
+msgstr "Slovenskí zákazníci:"
+
+#: templates/admin/orders/send_invoice.html:30
+#: templates/public/orders/guest_confirmation.html:120
+msgid "Total Amount"
+msgstr ""
+
+#: templates/admin/orders/send_invoice.html:48
+#: templates/public/orders/order_details.html:140
+msgid "Order Items"
+msgstr "Položky objednávky"
+
+#: templates/admin/orders/send_invoice.html:92
+#, fuzzy
+msgid "Invoice PDF File"
+msgstr "Fakturačné údaje"
+
+#: templates/admin/orders/send_invoice.html:94
+msgid "Upload invoice PDF from your accounting software"
+msgstr ""
+
+#: templates/admin/orders/send_invoice.html:99
+msgid "Self Pickup (No delivery cost)"
+msgstr ""
+
+#: templates/admin/orders/send_invoice.html:103
+#, fuzzy
+msgid "Delivery Cost"
+msgstr "Čas doručenia"
+
+#: templates/admin/orders/send_invoice.html:108
+#: templates/public/cart/cart.html:82 templates/public/cart/cart.html:220
+#: templates/public/orders/guest_confirmation.html:67
+#: templates/public/shipping_payment.html:27
+msgid "Delivery Information"
+msgstr "Informácie o doručení"
+
+#: templates/admin/orders/send_invoice.html:110
+msgid "Carrier, tracking number, pickup instructions..."
+msgstr ""
+
+#: templates/admin/orders/send_invoice.html:114
+msgid "Note"
+msgstr ""
+
+#: templates/admin/orders/send_invoice.html:114
+#, fuzzy
+msgid "Sending this invoice will"
+msgstr "Uložené fakturačné údaje"
+
+#: templates/admin/orders/send_invoice.html:116
+msgid "Update order status to \"invoice_sent\""
+msgstr ""
+
+#: templates/admin/orders/send_invoice.html:117
+msgid "Send email to customer with invoice attached"
+msgstr ""
+
+#: templates/admin/orders/send_invoice.html:118
+msgid "Update payment status to \"awaiting_payment\""
+msgstr ""
+
+#: templates/admin/photos/manage_photos.html:61
+#: templates/admin/price_lists/upload_price_list.html:10
+#: templates/admin/products/manage_descriptions.html:10
+#, fuzzy
+msgid "Back"
+msgstr "Banka"
+
+#: templates/admin/photos/manage_photos.html:75
+#, fuzzy
+msgid "Enter article"
+msgstr "Hľadať číslo dielov"
+
+# New translations for address updates
+#: templates/admin/photos/manage_photos.html:78
+#, fuzzy
+msgid "Source"
+msgstr "Obchod"
+
+#: templates/admin/photos/manage_photos.html:80
+#, fuzzy
+msgid "All products"
+msgstr "Všetky produkty"
+
+#: templates/admin/photos/manage_photos.html:81
+#, fuzzy
+msgid "Stock only"
+msgstr "Len Slovensko"
+
+#: templates/admin/photos/manage_photos.html:82
+msgid "Enriched only"
+msgstr ""
+
+#: templates/admin/photos/manage_photos.html:95
+#: templates/admin/products/manage_descriptions.html:42
+#: templates/admin/products/missing_descriptions.html:15
+#: templates/admin/products/missing_photos.html:15
+#, fuzzy
+msgid "Found"
+msgstr "Vrátenie peňazí"
+
+#: templates/admin/photos/manage_photos.html:95
+#, fuzzy
+msgid "products"
+msgstr "Produkt"
+
+#: templates/admin/photos/manage_photos.html:146
+#: templates/admin/photos/manage_photos.html:337
+#: templates/admin/photos/manage_photos.html:451
+#, fuzzy
+msgid "Set as main"
+msgstr "Predvolená"
+
+#: templates/admin/photos/manage_photos.html:150
+#: templates/admin/photos/manage_photos.html:341
+#: templates/admin/price_lists/manage_price_lists.html:83
+#: templates/admin/sitemaps/manage_sitemaps.html:190
+#: templates/public/user/profile.html:146
+#: templates/public/user/profile.html:261
+msgid "Delete"
+msgstr "Vymazať"
+
+#: templates/admin/photos/manage_photos.html:160
+#: templates/admin/photos/manage_photos.html:419
+#, fuzzy
+msgid "No photos"
+msgstr "Možnosti"
+
+#: templates/admin/photos/manage_photos.html:167
+#, fuzzy
+msgid "Add photo"
+msgstr "Pridať do košíka"
+
+#: templates/admin/photos/manage_photos.html:171
+#, fuzzy
+msgid "Reorder"
+msgstr "Objednávka"
+
+#: templates/admin/photos/manage_photos.html:187
+#: templates/admin/products/manage_descriptions.html:132
+msgid "Previous"
+msgstr "Predchádzajúce"
+
+#: templates/admin/photos/manage_photos.html:203
+#: templates/admin/products/manage_descriptions.html:148
+msgid "Next"
+msgstr "Ďalšie"
+
+#: templates/admin/photos/manage_photos.html:212
+msgid ""
+"No products found. Change filters or make sure photos have been added to "
+"products."
+msgstr ""
+
+#: templates/admin/photos/manage_photos.html:221
+#, fuzzy
+msgid "Reorder Photos"
+msgstr "Položky objednávky"
+
+#: templates/admin/photos/manage_photos.html:225
+msgid "Drag photos to reorder. First photo will be the main one."
+msgstr ""
+
+#: templates/admin/photos/manage_photos.html:231
+#, fuzzy
+msgid "Save Order"
+msgstr "Zadať objednávku"
+
+#: templates/admin/photos/manage_photos.html:262
+#: templates/admin/photos/manage_photos.html:483
+#, fuzzy
+msgid "Are you sure you want to delete this photo?"
+msgstr "Ste si istí, že chcete vymazať túto spoločnosť?"
+
+#: templates/admin/photos/manage_photos.html:351
+#, fuzzy
+msgid "Photo order updated"
+msgstr "Dátum objednávky"
+
+#: templates/admin/photos/manage_photos.html:353
+#: templates/admin/photos/manage_photos.html:358
+#, fuzzy
+msgid "Error updating photo order"
+msgstr "Chyba pri aktualizácii košíka"
+
+#: templates/admin/photos/manage_photos.html:388
+#: templates/admin/photos/manage_photos.html:393
+#, fuzzy
+msgid "Error setting main photo"
+msgstr "Chyba pri aktualizácii košíka"
+
+#: templates/admin/photos/manage_photos.html:426
+#: templates/admin/photos/manage_photos.html:431
+#, fuzzy
+msgid "Error deleting photo"
+msgstr "Chyba pri aktualizácii košíka"
+
+#: templates/admin/photos/upload_photos.html:7
+#, fuzzy
+msgid "Upload Product Photos"
+msgstr "Všetky produkty"
+
+#: templates/admin/photos/upload_photos.html:10
+#, fuzzy
+msgid "Back to Management"
+msgstr "Späť domov"
+
+#: templates/admin/photos/upload_photos.html:32
+#: templates/admin/photos/upload_photos.html:123
+msgid "File Upload"
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:38
+#: templates/admin/photos/upload_photos.html:132
+msgid "URL Import"
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:44
+#: templates/admin/photos/upload_photos.html:108
+#: templates/admin/photos/upload_photos.html:141
+msgid "Bulk Upload"
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:55
+#: templates/admin/photos/upload_photos.html:76
+#, fuzzy
+msgid "Product Article"
+msgstr "Produkty a služby"
+
+#: templates/admin/photos/upload_photos.html:58
+#: templates/admin/photos/upload_photos.html:79
+msgid "Enter the article of the product for which you are uploading photos"
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:61
+#, fuzzy
+msgid "Select image files"
+msgstr "Vybrať súbor"
+
+#: templates/admin/photos/upload_photos.html:64
+msgid "You can select multiple files. Supported formats: JPG, PNG, GIF, WebP"
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:82
+#, fuzzy
+msgid "Image URLs"
+msgstr "Správa používateľov"
+
+#: templates/admin/photos/upload_photos.html:86
+msgid "Enter each URL on a new line"
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:89
+msgid "Import by URL"
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:98
+#: templates/admin/products/add_images.html:22
+#, fuzzy
+msgid "Image Data"
+msgstr "Zmeniť adresu"
+
+#: templates/admin/photos/upload_photos.html:103
+msgid "Format: Article[TAB]URL (one per line)."
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:104
+msgid "Use the tab character to separate article and URL."
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:118
+#, fuzzy
+msgid "Instructions"
+msgstr "Úvod"
+
+#: templates/admin/photos/upload_photos.html:124
+msgid "Use this tab to upload photos from your computer."
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:126
+#: templates/admin/photos/upload_photos.html:135
+#, fuzzy
+msgid "Enter product article"
+msgstr "Produkty a služby"
+
+#: templates/admin/photos/upload_photos.html:127
+msgid "Select one or more image files"
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:128
+msgid "Click \"Upload Photos\""
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:133
+msgid "Use this tab to import photos by URL."
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:136
+msgid "Enter image URLs (each on a new line)"
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:137
+msgid "Click \"Import by URL\""
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:142
+msgid "Use for bulk uploading for multiple products."
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:144
+msgid "Enter data in Article[TAB]URL format"
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:145
+msgid "Each product on a new line"
+msgstr ""
+
+#: templates/admin/photos/upload_photos.html:146
+msgid "Click \"Bulk Upload\""
+msgstr ""
+
+#: templates/admin/price_lists/manage_price_lists.html:3
+#, fuzzy
+msgid "Manage Price Lists"
+msgstr "Dostupné služby"
+
+#: templates/admin/price_lists/manage_price_lists.html:7
+#, fuzzy
+msgid "Price Lists Management"
+msgstr "Položky cenníka"
+
+#: templates/admin/price_lists/manage_price_lists.html:23
+#, fuzzy
+msgid "Total Price Lists"
+msgstr "Celkom"
+
+#: templates/admin/price_lists/manage_price_lists.html:31
+#, fuzzy
+msgid "Price Lists"
+msgstr "Položky cenníka"
+
+#: templates/admin/price_lists/manage_price_lists.html:39
+#: templates/admin/price_lists/upload_price_list.html:76
+#, fuzzy
+msgid "Table Name"
+msgstr "Celé meno"
+
+#: templates/admin/price_lists/manage_price_lists.html:40
+#: templates/admin/price_lists/upload_price_list.html:77
+msgid "Supplier"
+msgstr ""
+
+#: templates/admin/price_lists/manage_price_lists.html:41
+#: templates/admin/price_lists/upload_price_list.html:78
+#: templates/public/orders/guest_confirmation.html:104
+#: templates/public/shipping_payment.html:78
+msgid "Delivery Time"
+msgstr "Čas doručenia"
+
+#: templates/admin/price_lists/manage_price_lists.html:55
+#, fuzzy
+msgid "Select Supplier"
+msgstr "Vybrať súbor"
+
+#: templates/admin/price_lists/manage_price_lists.html:82
+#, fuzzy
+msgid "Delete this price list?"
+msgstr "Položky cenníka"
+
+#: templates/admin/price_lists/manage_price_lists.html:97
+msgid "No price lists found. Upload a new one."
+msgstr ""
+
+#: templates/admin/price_lists/upload_price_list.html:13
+#: templates/admin/price_lists/upload_price_list.html:109
+#, fuzzy
+msgid "Add New Brand"
+msgstr "Pridať novú spoločnosť"
+
+#: templates/admin/price_lists/upload_price_list.html:24
+#, fuzzy
+msgid "Select Existing Price List or Create New"
+msgstr "Zadajte aspoň jeden kód tovaru."
+
+#: templates/admin/price_lists/upload_price_list.html:29
+#, fuzzy
+msgid "Create New Price List"
+msgstr "Položky cenníka"
+
+#: templates/admin/price_lists/upload_price_list.html:34
+#, fuzzy
+msgid "New Price List Name"
+msgstr "Položky cenníka"
+
+#: templates/admin/price_lists/upload_price_list.html:36
+msgid "Enter new table name (lowercase, no spaces)"
+msgstr ""
+
+#: templates/admin/price_lists/upload_price_list.html:37
+msgid "Use only lowercase letters, numbers, and underscores."
+msgstr ""
+
+#: templates/admin/price_lists/upload_price_list.html:54
+msgid "Supported formats"
+msgstr ""
+
+#: templates/admin/price_lists/upload_price_list.html:70
+#, fuzzy
+msgid "Current Price Lists"
+msgstr "Položky cenníka"
+
+#: templates/admin/price_lists/upload_price_list.html:80
+#, fuzzy
+msgid "Last Updated"
+msgstr "Aktualizácie softvéru"
+
+#: templates/admin/price_lists/upload_price_list.html:94
+#, fuzzy
+msgid "Manage"
+msgstr "Jazyk"
+
+#: templates/admin/price_lists/upload_price_list.html:115
+#, fuzzy
+msgid "Brand Name"
+msgstr "Značka:"
+
+#: templates/admin/products/add_images.html:3
+#, fuzzy
+msgid "Add Images"
+msgstr "Pridať adresu"
+
+#: templates/admin/products/add_images.html:7
+msgid "Bulk Add Images"
+msgstr ""
+
+#: templates/admin/products/add_images.html:17
+msgid "Import Images by URL"
+msgstr ""
+
+#: templates/admin/products/add_images.html:25
+msgid "Format: Article[TAB]URL (one per line)"
+msgstr ""
+
+#: templates/admin/products/add_images.html:29
+msgid "Import Images"
+msgstr ""
+
+#: templates/admin/products/add_photos_form.html:3
+#: templates/admin/products/add_photos_form.html:48
+#: templates/admin/products/edit_product.html:147
+msgid "Add Photos"
+msgstr ""
+
+#: templates/admin/products/add_photos_form.html:51
+#: templates/admin/products/edit_product.html:17
+#, fuzzy
+msgid "Back to List"
+msgstr "Späť na prihlásenie"
+
+#: templates/admin/products/add_photos_form.html:72
+#, fuzzy
+msgid "Product Info"
+msgstr "Produkt nebol nájdený"
+
+#: templates/admin/products/add_photos_form.html:115
+msgid "Select photos (multiple allowed)"
+msgstr ""
+
+#: templates/admin/products/add_photos_form.html:120
+msgid "Supported formats: JPG, PNG, GIF, WEBP. Max size: 5MB per file."
+msgstr ""
+
+#: templates/admin/products/add_photos_form.html:132
+msgid "Main Photo"
+msgstr ""
+
+#: templates/admin/products/add_photos_form.html:134
+msgid "Click on a photo to set it as main"
+msgstr ""
+
+#: templates/admin/products/edit_product.html:3
+#, fuzzy
+msgid "Add Description"
+msgstr "Popis"
+
+#: templates/admin/products/edit_product.html:3
+#: templates/admin/products/edit_product.html:9
+#, fuzzy
+msgid "Edit Product"
+msgstr "Produkt"
+
+#: templates/admin/products/edit_product.html:9
+#, fuzzy
+msgid "Add Product Description"
+msgstr "Popis"
+
+#: templates/admin/products/edit_product.html:14
+#, fuzzy
+msgid "Search Google"
+msgstr "Hľadať číslo dielov"
+
+#: templates/admin/products/edit_product.html:45
+#, fuzzy
+msgid "Product Information"
+msgstr "Informácie o objednávke"
+
+#: templates/admin/products/edit_product.html:89
+msgid "Enter name in Slovak"
+msgstr ""
+
+#: templates/admin/products/edit_product.html:94
+#, fuzzy
+msgid "Enter description in Slovak"
+msgstr "Popis nie je k dispozícii."
+
+#: templates/admin/products/edit_product.html:104
+msgid "Enter name in English"
+msgstr ""
+
+#: templates/admin/products/edit_product.html:109
+#, fuzzy
+msgid "Enter description in English"
+msgstr "Popis nie je k dispozícii."
+
+#: templates/admin/products/edit_product.html:119
+msgid "Enter name in Polish"
+msgstr ""
+
+#: templates/admin/products/edit_product.html:124
+#, fuzzy
+msgid "Enter description in Polish"
+msgstr "Popis nie je k dispozícii."
+
+#: templates/admin/products/edit_product.html:143
+#, fuzzy
+msgid "Create Description"
+msgstr "Popis"
+
+#: templates/admin/products/edit_product.html:143
+#, fuzzy
+msgid "Save Changes"
+msgstr "Vrátenie a výmena"
+
+#: templates/admin/products/edit_product.html:157
+#, fuzzy
+msgid "Stock Info"
+msgstr "Skladové položky"
+
+#: templates/admin/products/edit_product.html:178
+#, fuzzy
+msgid "Total Value"
+msgstr "Celkom"
+
+#: templates/admin/products/edit_product.html:189
+msgid "Quick Fill"
+msgstr ""
+
+#: templates/admin/products/edit_product.html:192
+msgid "Enter name in English and click button to copy to other languages"
+msgstr ""
+
+#: templates/admin/products/edit_product.html:194
+msgid "Copy EN → all languages"
+msgstr ""
+
+#: templates/admin/products/edit_product.html:208
+msgid "Please fill in English fields first!"
+msgstr ""
+
+#: templates/admin/products/edit_product.html:220
+msgid "Copied! Now you can translate the texts."
+msgstr ""
+
+#: templates/admin/products/manage_descriptions.html:13
+#: templates/admin/products/manage_descriptions.html:208
+msgid "Bulk Import"
+msgstr ""
+
+#: templates/admin/products/manage_descriptions.html:22
+#: templates/admin/products/manage_descriptions.html:29
+#: templates/user/index.html:24
+msgid "Search"
+msgstr "Hľadať"
+
+#: templates/admin/products/manage_descriptions.html:24
+#, fuzzy
+msgid "Search by article..."
+msgstr "Zadajte číslo dielu..."
+
+#: templates/admin/products/manage_descriptions.html:33
+#: templates/admin/products/missing_descriptions.html:40
+#: templates/admin/products/missing_photos.html:35
+#, fuzzy
+msgid "Clear"
+msgstr "Košík"
+
+#: templates/admin/products/manage_descriptions.html:161
+#, fuzzy
+msgid "Edit Description"
+msgstr "Popis"
+
+#: templates/admin/products/manage_descriptions.html:224
+#, fuzzy
+msgid "Mode"
+msgstr "Objednávka"
+
+#: templates/admin/products/manage_descriptions.html:226
+msgid "Create only (skip existing)"
+msgstr ""
+
+#: templates/admin/products/manage_descriptions.html:227
+#, fuzzy
+msgid "Update existing"
+msgstr "Aktualizovať adresu"
+
+#: templates/admin/products/manage_descriptions.html:233
+#, fuzzy
+msgid "Data format"
+msgstr "Informácie o DPH"
+
+#: templates/admin/products/manage_descriptions.html:236
+msgid "Each line: article, brand_id, name, description — separated by TAB"
+msgstr ""
+
+#: templates/admin/products/manage_descriptions.html:243
+#: templates/admin/stock/manage_stock.html:29
+#, fuzzy
+msgid "Upload"
+msgstr "Poľsko"
+
+#: templates/admin/products/missing_descriptions.html:7
+msgid "Products Without Descriptions"
+msgstr ""
+
+#: templates/admin/products/missing_descriptions.html:15
+msgid "products from stock without descriptions"
+msgstr ""
+
+#: templates/admin/products/missing_descriptions.html:21
+#: templates/admin/products/missing_photos.html:21
+msgid "Filter by Brand"
+msgstr ""
+
+#: templates/admin/products/missing_descriptions.html:30
+#, fuzzy
+msgid "Min. Price"
+msgstr "Cena"
+
+#: templates/admin/products/missing_descriptions.html:52
+msgid "Total without descriptions"
+msgstr ""
+
+#: templates/admin/products/missing_descriptions.html:58
+#, fuzzy
+msgid "In stock"
+msgstr "Na sklade"
+
+#: templates/admin/products/missing_descriptions.html:64
+#, fuzzy
+msgid "Total value"
+msgstr "Celkom"
+
+#: templates/admin/products/missing_descriptions.html:78
+#: templates/admin/products/missing_photos.html:45
+#, fuzzy
+msgid "Products"
+msgstr "Produkt"
+
+#: templates/admin/products/missing_descriptions.html:78
+#: templates/admin/products/missing_photos.html:45
+#, fuzzy
+msgid "page"
+msgstr "Použitie:"
+
+#: templates/admin/products/missing_descriptions.html:80
+#, fuzzy
+msgid "Copy Articles"
+msgstr "Hľadať číslo dielov"
+
+#: templates/admin/products/missing_descriptions.html:94
+msgid "Value"
+msgstr ""
+
+#: templates/admin/products/missing_descriptions.html:113
+msgid "Edit"
+msgstr ""
+
+#: templates/admin/products/missing_descriptions.html:163
+#: templates/admin/products/missing_photos.html:123
+msgid "Excellent!"
+msgstr ""
+
+#: templates/admin/products/missing_descriptions.html:164
+msgid "All products in stock have descriptions"
+msgstr ""
+
+#: templates/admin/products/missing_descriptions.html:180
+msgid "Articles copied to clipboard!"
+msgstr ""
+
+#: templates/admin/products/missing_photos.html:7
+msgid "Products Without Photos"
+msgstr ""
+
+#: templates/admin/products/missing_photos.html:15
+msgid "products from stock without photos"
+msgstr ""
+
+#: templates/admin/products/missing_photos.html:69
+#, fuzzy
+msgid "No name"
+msgstr "Názov"
+
+#: templates/admin/products/missing_photos.html:78
+#, fuzzy
+msgid "Add Photo"
+msgstr "Pridať do košíka"
+
+#: templates/admin/products/missing_photos.html:126
+#, fuzzy
+msgid "All products of brand"
+msgstr "Všetky produkty"
+
+#: templates/admin/products/missing_photos.html:126
+msgid "have photos"
+msgstr ""
+
+#: templates/admin/products/missing_photos.html:128
+msgid "All products in stock have photos"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:3
+#: templates/admin/sitemaps/manage_sitemaps.html:7
+#, fuzzy
+msgid "Sitemap Management"
+msgstr "Správa používateľov"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:10
+#: templates/admin/sitemaps/sitemap_utils.html:10
+#, fuzzy
+msgid "Check Data"
+msgstr "Zmeniť adresu"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:13
+#, fuzzy
+msgid "Utils"
+msgstr "Detaily"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:16
+msgid "Scheduler"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:29
+#: templates/admin/sitemaps/manage_sitemaps.html:158
+#, fuzzy
+msgid "Sitemap Files"
+msgstr "Filtre"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:51
+msgid "Generate Sitemaps"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:54
+msgid "Generate sitemap files for different sections of the website."
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:57
+#, fuzzy
+msgid "Generation Type"
+msgstr "Typ motora"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:59
+#, fuzzy
+msgid "All Sitemaps"
+msgstr "Všetci používatelia"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:59
+msgid "without Other"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:60
+#, fuzzy
+msgid "Static Pages"
+msgstr "Aktualizácie softvéru"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:62
+#, fuzzy
+msgid "Products in Stock"
+msgstr "Vypredané"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:63
+#, fuzzy
+msgid "Enriched Products"
+msgstr "Zobraziť produkty"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:64
+msgid "Index File Only"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:65
+#, fuzzy
+msgid "Product Images"
+msgstr "Kategórie produktov"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:69
+#, fuzzy
+msgid "Generate"
+msgstr "Dátum"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:76
+msgid "Large Files (caution!)"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:79
+msgid ""
+"Other Products contains all products from price lists without "
+"descriptions/photos. This may create very large files!"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:82
+msgid "WARNING! This may create very large sitemap files. Continue?"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:85
+msgid "Generate Other Products"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:93
+#, fuzzy
+msgid "Cleanup Old Files"
+msgstr "Filtre"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:96
+msgid "Removes old sitemap-other files that are no longer used and take up space."
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:99
+msgid "Delete all old sitemap-other files?"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:102
+#, fuzzy
+msgid "Delete Old Files"
+msgstr "Vybrať súbor"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:122
+msgid "Job"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:147
+msgid "Detailed Scheduler Status"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:166
+msgid "Size"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:167
+msgid "Modified"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:180
+msgid "View"
+msgstr ""
+
+#: templates/admin/sitemaps/manage_sitemaps.html:184
+#: templates/public/index.html:501
+msgid "Open"
+msgstr "Otvoriť"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:189
+#, fuzzy
+msgid "Delete this file?"
+msgstr "Vybrať súbor"
+
+#: templates/admin/sitemaps/manage_sitemaps.html:205
+msgid "No sitemap files found in the directory."
+msgstr ""
+
+#: templates/admin/sitemaps/sitemap_utils.html:3
+#: templates/admin/sitemaps/sitemap_utils.html:7
+msgid "Sitemap Utilities"
+msgstr ""
+
+#: templates/admin/sitemaps/sitemap_utils.html:23
+msgid "Files in Index"
+msgstr ""
+
+#: templates/admin/sitemaps/sitemap_utils.html:29
+#, fuzzy
+msgid "Existing Files"
+msgstr "Chýbajúce informácie o tovare"
+
+#: templates/admin/sitemaps/sitemap_utils.html:35
+#: templates/admin/sitemaps/sitemap_utils.html:50
+#, fuzzy
+msgid "Missing Files"
+msgstr "Chýbajúce informácie o tovare"
+
+#: templates/admin/sitemaps/sitemap_utils.html:43
+msgid "Index File Analysis"
+msgstr ""
+
+#: templates/admin/sitemaps/sitemap_utils.html:46
+msgid ""
+"This tool checks if all files referenced in sitemap-index.xml actually "
+"exist on the server."
+msgstr ""
+
+#: templates/admin/sitemaps/sitemap_utils.html:51
+msgid ""
+"The following files are referenced in the index but do not exist on the "
+"server:"
+msgstr ""
+
+#: templates/admin/sitemaps/sitemap_utils.html:60
+msgid "Regenerate All Files"
+msgstr ""
+
+#: templates/admin/sitemaps/sitemap_utils.html:67
+msgid "Files Referenced in Index"
+msgstr ""
+
+#: templates/admin/sitemaps/sitemap_utils.html:82
+#, fuzzy
+msgid "Missing"
+msgstr "Chýbajúca možnosť"
+
+#: templates/admin/sitemaps/sitemap_utils.html:84
+msgid "OK"
+msgstr ""
+
+#: templates/admin/sitemaps/sitemap_utils.html:95
+msgid "No files referenced in index."
+msgstr ""
+
+#: templates/admin/sitemaps/view_sitemap.html:3
+#: templates/admin/sitemaps/view_sitemap.html:7
+msgid "View Sitemap"
+msgstr ""
+
+#: templates/admin/sitemaps/view_sitemap.html:20
+#, fuzzy
+msgid "File Size"
+msgstr "Filtre"
+
+#: templates/admin/sitemaps/view_sitemap.html:26
+#, fuzzy
+msgid "Path"
+msgstr "cesta"
+
+#: templates/admin/sitemaps/view_sitemap.html:34
+#, fuzzy
+msgid "File Content"
+msgstr "Online kontakt"
+
+#: templates/admin/stock/manage_stock.html:20
+#, fuzzy
+msgid "Upload Data (Excel)"
+msgstr "Vyhľadávanie podľa čísla dielu"
+
+#: templates/admin/stock/manage_stock.html:25
+msgid "Select Excel file with columns"
+msgstr ""
+
+#: templates/admin/stock/manage_stock.html:40
+#, fuzzy
+msgid "Add New Item"
+msgstr "Pridať novú spoločnosť"
+
+#: templates/admin/stock/manage_stock.html:81
+#, fuzzy
+msgid "Are you sure you want to clear all stock?"
+msgstr "Ste si istí, že chcete vymazať túto spoločnosť?"
+
+#: templates/admin/users/assign_roles.html:3
+#: templates/admin/users/assign_roles.html:7
+#, fuzzy
+msgid "Role Management"
+msgstr "Správa používateľov"
+
+#: templates/admin/users/assign_roles.html:10
+#: templates/admin/users/change_password.html:10
+#: templates/admin/users/create_user.html:10
+#, fuzzy
+msgid "Back to Users"
+msgstr "Späť k objednávkam"
+
+#: templates/admin/users/assign_roles.html:20
+#, fuzzy
+msgid "Assigned Roles"
+msgstr "Chýbajúce informácie o tovare"
+
+#: templates/admin/users/assign_roles.html:26
+#, fuzzy
+msgid "Total Users"
+msgstr "Všetci používatelia"
+
+#: templates/admin/users/assign_roles.html:32
+#, fuzzy
+msgid "Available Roles"
+msgstr "Dostupné ceny"
+
+#: templates/admin/users/assign_roles.html:42
+#, fuzzy
+msgid "Current User Roles"
+msgstr "Proces vrátenia"
+
+#: templates/admin/users/assign_roles.html:50
+#: templates/admin/users/change_password.html:29
+#: templates/admin/users/create_user.html:82
+#: templates/admin/users/manage_users.html:30
 #, fuzzy
 msgid "Role"
 msgstr "Profil"
 
-#: templates/admin/users/change_password.html:29
+#: templates/admin/users/assign_roles.html:76
+msgid "Remove this role?"
+msgstr ""
+
+#: templates/admin/users/assign_roles.html:89
+#, fuzzy
+msgid "No roles assigned yet."
+msgstr "Objednávky a platba"
+
+#: templates/admin/users/assign_roles.html:100
+msgid "Assign New Role"
+msgstr ""
+
+#: templates/admin/users/assign_roles.html:107
+#, fuzzy
+msgid "Search User"
+msgstr "Hľadať"
+
+#: templates/admin/users/assign_roles.html:115
+#, fuzzy
+msgid "Search by username"
+msgstr "Používateľské meno"
+
+#: templates/admin/users/assign_roles.html:121
+#: templates/admin/users/assign_roles.html:123
+#, fuzzy
+msgid "Select User"
+msgstr "Vybrať súbor"
+
+#: templates/admin/users/assign_roles.html:131
+#: templates/admin/users/assign_roles.html:133
+#: templates/admin/users/create_user.html:88
+#, fuzzy
+msgid "Select Role"
+msgstr "Vybrať súbor"
+
+#: templates/admin/users/assign_roles.html:141
+msgid "Assign Role"
+msgstr ""
+
+#: templates/admin/users/change_password.html:3
+#: templates/admin/users/change_password.html:7
+msgid "Change User Password"
+msgstr "Zmeniť heslo používateľa"
+
+#: templates/admin/users/change_password.html:25
+msgid "User Info"
+msgstr "Informácie o používateľovi"
+
+#: templates/admin/users/change_password.html:42
 #: templates/auth/reset_password.html:25 templates/public/user/profile.html:338
 msgid "New Password"
 msgstr "Nové heslo"
 
-#: templates/admin/users/change_password.html:40
+#: templates/admin/users/change_password.html:53
 #: templates/auth/reset_password.html:27
 msgid "Enter new password"
 msgstr "Zadajte nové heslo"
 
-#: templates/admin/users/change_password.html:51
+#: templates/admin/users/change_password.html:64
 #: templates/auth/reset_password.html:31
 msgid "Confirm Password"
 msgstr "Potvrdiť heslo"
 
-#: templates/admin/users/change_password.html:62
+#: templates/admin/users/change_password.html:75
 #: templates/auth/reset_password.html:33
 msgid "Confirm new password"
 msgstr "Potvrďte nové heslo"
 
-#: templates/admin/users/change_password.html:74
-#: templates/admin/users/manage_users.html:73
-#: templates/admin/users/manage_users.html:75
+#: templates/admin/users/change_password.html:86
+#: templates/admin/users/manage_users.html:69
+#: templates/admin/users/manage_users.html:71
 #: templates/public/user/profile.html:322
 #: templates/public/user/profile.html:350
 msgid "Change Password"
 msgstr "Zmeniť heslo"
 
-#: templates/admin/users/change_password.html:78
-#: templates/user/search/intermediate.html:64
-msgid "Cancel"
+#: templates/admin/users/change_password.html:121
+#, fuzzy
+msgid "Passwords do not match!"
+msgstr "Heslá sa nezhodujú"
+
+#: templates/admin/users/create_user.html:7
+#, fuzzy
+msgid "Create New User"
+msgstr "Vyhľadávanie podľa čísla dielu"
+
+#: templates/admin/users/create_user.html:19
+#, fuzzy
+msgid "User Details"
+msgstr "Zobraziť detaily"
+
+#: templates/admin/users/create_user.html:36
+#, fuzzy
+msgid "Username must be at least 3 characters"
+msgstr "Heslo musí mať aspoň 8 znakov"
+
+#: templates/admin/users/create_user.html:37
+#, fuzzy
+msgid "Enter username"
+msgstr "Používateľské meno"
+
+#: templates/admin/users/create_user.html:39
+msgid "Letters, numbers and underscores only"
 msgstr ""
 
-#: templates/admin/users/manage_users.html:3
-msgid "Manage Users"
-msgstr "Správa používateľov"
+#: templates/admin/users/create_user.html:53
+#, fuzzy
+msgid "Enter email"
+msgstr "Zadajte svoju e-mailovú adresu"
 
-#: templates/admin/users/manage_users.html:10
+#: templates/admin/users/create_user.html:70
+#, fuzzy
+msgid "Enter password"
+msgstr "Zadajte nové heslo"
+
+#: templates/admin/users/create_user.html:116
+msgid "Password Requirements"
+msgstr ""
+
+#: templates/admin/users/create_user.html:120
+#, fuzzy
+msgid "Minimum 8 characters"
+msgstr "VIN kód (17 znakov)"
+
+#: templates/admin/users/create_user.html:121
+msgid "Recommended: use letters, numbers and special characters"
+msgstr ""
+
+#: templates/admin/users/create_user.html:122
+msgid "Avoid using easily guessable passwords"
+msgstr ""
+
+#: templates/admin/users/manage_users.html:7
 msgid "User Management"
 msgstr "Správa používateľov"
 
-#: templates/admin/users/manage_users.html:14
-#, fuzzy
-msgid "Create User"
-msgstr "Vyhľadávanie podľa čísla dielu"
-
-#: templates/admin/users/manage_users.html:17
-#, fuzzy
-msgid "Back to Dashboard"
-msgstr "Späť k objednávkam"
-
-#: templates/admin/users/manage_users.html:24
+#: templates/admin/users/manage_users.html:20
 msgid "All Users"
 msgstr "Všetci používatelia"
 
-#: templates/admin/users/manage_users.html:35
-msgid "Created"
-msgstr "Vytvorené"
-
-#: templates/admin/users/manage_users.html:82
+#: templates/admin/users/manage_users.html:78
 msgid "No users found"
 msgstr "Žiadni používatelia neboli nájdení"
 
@@ -807,25 +3716,17 @@ msgstr "Zadajte svoju e-mailovú adresu"
 msgid "Send Reset Link"
 msgstr "Odoslať odkaz"
 
-#: templates/auth/forgot_password.html:37 templates/auth/reset_password.html:40
+#: templates/auth/forgot_password.html:38 templates/auth/reset_password.html:41
 msgid "Back to Login"
 msgstr "Späť na prihlásenie"
 
-#: templates/auth/login.html:32
-msgid "Forgot your password?"
+#: templates/auth/login.html:38
+msgid "Forgot password?"
 msgstr "Zabudli ste heslo?"
 
-#: templates/auth/login.html:39
-msgid "Don't have an account?"
-msgstr "Nemáte účet?"
-
-#: templates/auth/login.html:40
-msgid "Register here"
-msgstr "Zaregistrujte sa tu"
-
-#: templates/auth/register.html:7 templates/auth/register.html:19
-#: templates/auth/register.html:52 templates/base/public_base.html:177
-#: templates/public/cart/cart.html:341
+#: templates/auth/login.html:41 templates/auth/register.html:7
+#: templates/auth/register.html:19 templates/auth/register.html:52
+#: templates/base/public_base.html:309 templates/public/cart/cart.html:341
 msgid "Register"
 msgstr "Registrovať sa"
 
@@ -841,13 +3742,9 @@ msgstr "Telefónne číslo musí byť v medzinárodnom formáte (napr. +42190712
 msgid "Enter phone number in international format (e.g. +421907123456)"
 msgstr "Zadajte telefónne číslo v medzinárodnom formáte (napr. +421907123456)"
 
-#: templates/auth/register.html:54 templates/public/cart/cart.html:338
+#: templates/auth/register.html:55 templates/public/cart/cart.html:338
 msgid "Already have an account?"
 msgstr "Už máte účet?"
-
-#: templates/auth/register.html:55
-msgid "Login here"
-msgstr "Prihláste sa tu"
 
 #: templates/auth/reset_password.html:19
 msgid "Set New Password"
@@ -857,12 +3754,21 @@ msgstr "Nastaviť nové heslo"
 msgid "Minimum 6 characters"
 msgstr ""
 
+#: templates/base/admin_base.html:449 templates/base/base.html:222
+#: templates/base/public_base.html:304
+msgid "Orders"
+msgstr "Objednávky"
+
+#: templates/base/admin_base.html:508
+#, fuzzy
+msgid "Settings"
+msgstr "Riadenie"
+
 #: templates/base/base.html:6 templates/user/index.html:3
 msgid "Article Price Search"
 msgstr "Vyhľadávanie cien produktov"
 
-#: templates/base/base.html:205 templates/user/news/user_news.html:3
-#: templates/user/news/user_news.html:7
+#: templates/base/base.html:205
 msgid "News"
 msgstr "Novinky"
 
@@ -870,156 +3776,152 @@ msgstr "Novinky"
 msgid "Cart"
 msgstr "Košík"
 
-#: templates/base/base.html:222 templates/base/public_base.html:172
-msgid "Orders"
-msgstr "Objednávky"
-
-#: templates/base/base.html:228 templates/user/orders/order_changes.html:5
+#: templates/base/base.html:228
 msgid "Order Changes History"
 msgstr "História zmien objednávky"
 
-#: templates/base/base.html:234 templates/user/shipments/shipments.html:3
+#: templates/base/base.html:234
 msgid "Shipments"
 msgstr "Zásielky"
 
-#: templates/base/public_base.html:16 templates/public/index.html:6
-msgid "AutogroupEU - Your reliable partner in auto parts supply across Europe."
-msgstr "AutogroupEU – Váš spoľahlivý partner v dodávke autodielov po celej Európe"
-
-#: templates/base/public_base.html:18 templates/public/index.html:8
+#: templates/base/public_base.html:16
 msgid ""
-"Find the best auto parts for your vehicle with quick delivery across "
-"Europe"
+"AutogroupEU - Original and quality aftermarket parts for Land Rover, "
+"Range Rover, Jaguar. Fast delivery across Europe. Professional service."
 msgstr ""
-"Nájdite najlepšie autodiely pre vaše vozidlo s rýchlym doručením po celej"
-" Európe"
 
-#: templates/base/public_base.html:27
+#: templates/base/public_base.html:18
+msgid ""
+"Original and aftermarket parts for Land Rover, Range Rover, Jaguar. Over "
+"100,000 parts in stock. Fast delivery across EU."
+msgstr ""
+
+#: templates/base/public_base.html:38
+msgid ""
+"Professional supplier of original and aftermarket parts for Land Rover, "
+"Range Rover, and Jaguar vehicles. Fast delivery across Europe."
+msgstr ""
+
+#: templates/base/public_base.html:159
 msgid "This website uses cookies..."
 msgstr "Táto webstránka používa cookies..."
 
-#: templates/base/public_base.html:28 templates/base/public_base.html:376
+#: templates/base/public_base.html:160 templates/base/public_base.html:504
 #: templates/public/privacy.html:7 templates/public/privacy.html:14
 msgid "Privacy Policy"
 msgstr "Ochrana osobných údajov"
 
-#: templates/base/public_base.html:35
+#: templates/base/public_base.html:167
 msgid "Only Essential"
 msgstr "Len nevyhnutné"
 
-#: templates/base/public_base.html:91 templates/base/public_base.html:213
-msgid "Catalog"
-msgstr "Katalóg"
-
-#: templates/base/public_base.html:134 templates/base/public_base.html:262
-#: templates/base/public_base.html:371 templates/public/about.html:6
+#: templates/base/public_base.html:266 templates/base/public_base.html:394
+#: templates/base/public_base.html:499 templates/public/about.html:6
 #: templates/public/about.html:11 templates/public/about.html:16
 msgid "About Us"
 msgstr "O nás"
 
-#: templates/base/public_base.html:137 templates/base/public_base.html:263
-#: templates/base/public_base.html:372
+#: templates/base/public_base.html:269 templates/base/public_base.html:395
+#: templates/base/public_base.html:500
 msgid "Car Service"
 msgstr "Autoservis"
 
-#: templates/base/public_base.html:140 templates/base/public_base.html:266
-#: templates/base/public_base.html:334 templates/base/public_base.html:373
+#: templates/base/public_base.html:272 templates/base/public_base.html:398
+#: templates/base/public_base.html:466 templates/base/public_base.html:501
 #: templates/public/car_service.html:230 templates/public/contacts.html:3
 #: templates/public/contacts.html:8 templates/public/privacy.html:138
-#: templates/public/product_details.html:300 templates/public/returns.html:113
+#: templates/public/product_details.html:332 templates/public/returns.html:113
 #: templates/public/terms.html:213
 msgid "Contact Us"
 msgstr "Kontaktujte nás"
 
-#: templates/base/public_base.html:148 templates/base/public_base.html:192
+#: templates/base/public_base.html:280 templates/base/public_base.html:324
 msgid "Search by article number..."
 msgstr "Zadajte číslo dielu..."
 
-#: templates/base/public_base.html:171 templates/public/user/profile.html:22
+#: templates/base/public_base.html:303 templates/public/user/profile.html:22
 msgid "Profile"
 msgstr "Profil"
 
-#: templates/base/public_base.html:174
+#: templates/base/public_base.html:306
 msgid "Logout"
 msgstr "Odhlásiť sa"
 
-#: templates/base/public_base.html:203
+#: templates/base/public_base.html:335
 msgid "Menu"
 msgstr ""
 
-#: templates/base/public_base.html:261 templates/base/public_base.html:370
-#: templates/public/blog/post.html:21 templates/public/categories.html:220
-#: templates/public/index.html:10 templates/public/product_details.html:141
+#: templates/base/public_base.html:393 templates/base/public_base.html:498
+#: templates/public/categories.html:220 templates/public/index.html:10
+#: templates/public/product_details.html:139
+#: templates/public/product_details.html:175
 msgid "Home"
 msgstr "Domov"
 
-#: templates/base/public_base.html:264
+#: templates/base/public_base.html:396
 #: templates/public/orders/confirmation.html:147
 #: templates/public/orders/guest_confirmation.html:152
 msgid "Shipping"
 msgstr "Doprava"
 
-#: templates/base/public_base.html:265 templates/base/public_base.html:375
+#: templates/base/public_base.html:397 templates/base/public_base.html:503
 msgid "Returns"
 msgstr "Vrátenie tovaru"
 
-#: templates/base/public_base.html:270
-msgid "Language"
-msgstr "Jazyk"
-
-#: templates/base/public_base.html:309
+#: templates/base/public_base.html:441
 msgid "Call us (SK/CZ/PL)"
 msgstr "Zavolajte nám (SK/CZ/PL)"
 
-#: templates/base/public_base.html:312
+#: templates/base/public_base.html:444
 msgid "Call us (HU/EN)"
 msgstr "Zavolajte nám (HU/EN)"
 
-#: templates/base/public_base.html:325
+#: templates/base/public_base.html:457
 msgid "Back to top"
 msgstr "Späť hore"
 
-#: templates/base/public_base.html:353
-msgid "Warehouse"
-msgstr "Sklad"
+# New translations for address updates
+#: templates/base/public_base.html:481
+msgid "Store"
+msgstr "Obchod"
 
-#: templates/base/public_base.html:368
+#: templates/base/public_base.html:496
 msgid "Navigation"
 msgstr "Navigácia"
 
-#: templates/base/public_base.html:374 templates/public/shipping_payment.html:6
+#: templates/base/public_base.html:502 templates/public/shipping_payment.html:6
 #: templates/public/shipping_payment.html:11
 #: templates/public/shipping_payment.html:16
 msgid "Shipping & Payment"
 msgstr "Doprava a platba"
 
-#: templates/base/public_base.html:377 templates/public/terms.html:6
+#: templates/base/public_base.html:505 templates/public/terms.html:6
 #: templates/public/terms.html:11 templates/public/terms.html:16
 msgid "Terms & Conditions"
 msgstr "Obchodné podmienky"
 
-#: templates/base/public_base.html:382
+#: templates/base/public_base.html:510
 msgid "Company Info"
 msgstr "Informácie o spoločnosti"
 
-#: templates/base/public_base.html:391
+#: templates/base/public_base.html:521
 msgid "Bank Details"
 msgstr "Bankové údaje"
 
-#: templates/base/public_base.html:394
+#: templates/base/public_base.html:524
 msgid "Account"
 msgstr "Účet"
 
-#: templates/base/public_base.html:395
+#: templates/base/public_base.html:525
 #: templates/public/shipping_payment.html:227
 msgid "Bank"
 msgstr "Banka"
 
-#: templates/base/public_base.html:400
+#: templates/base/public_base.html:530
 msgid "All rights reserved."
 msgstr ""
 
-#: templates/base/public_base.html:402
+#: templates/base/public_base.html:532
 msgid "Developed by"
 msgstr ""
 
@@ -1049,31 +3951,43 @@ msgstr "Naša spoločnosť"
 
 #: templates/public/about.html:30
 msgid ""
-"Founded on November 15, 2014, we have been supplying original auto parts "
-"for many years. We have an online store where you can order parts to be "
-"delivered or purchase items available in our stock."
+"AUTOGROUP-EU s.r.o. has been operating since November 2014. Over more "
+"than 10 years, we have built a reliable network of suppliers and served "
+"thousands of satisfied customers across Europe."
 msgstr ""
-"Založená 15. novembra 2014, dodávame originálne autodiely už mnoho rokov."
-" Máme internetový obchod, kde si môžete objednať diely na dodanie alebo "
-"kúpiť tovary dostupné na našom sklade."
+"Spoločnosť AUTOGROUP-EU s.r.o. pôsobí od novembra 2014. Za viac ako "
+"10 rokov sme vybudovali spoľahlivú sieť dodávateľov a obslúžili tisíce "
+"spokojných zákazníkov po celej Európe."
 
 #: templates/public/about.html:32
 msgid ""
-"We provide original parts from European official warehouses at the lowest"
-" prices. All parts are original and new."
+"We specialize in original spare parts for Land Rover, Range Rover, "
+"Jaguar, BMW, and other premium brands. All parts come directly from "
+"official European warehouses with full manufacturer warranty."
 msgstr ""
-"Poskytujeme originálne diely z európskych oficiálnych skladov za "
-"najnižšie ceny. Všetky diely sú originálne a nové."
+"Špecializujeme sa na originálne náhradné diely pre Land Rover, Range "
+"Rover, Jaguar, BMW a ďalšie prémiové značky. Všetky diely pochádzajú "
+"priamo z oficiálnych európskych skladov s plnou zárukou výrobcu."
 
-#: templates/public/about.html:35
+#: templates/public/about.html:34
+msgid ""
+"Why choose us? Fast delivery (2-5 business days), competitive prices, "
+"professional consultation, and the option for personal pickup at our "
+"warehouse in Slovakia."
+msgstr ""
+"Prečo si vybrať nás? Rýchle dodanie (2-5 pracovných dní), konkurenčné "
+"ceny, odborné poradenstvo a možnosť osobného odberu na našom sklade "
+"na Slovensku."
+
+#: templates/public/about.html:37
 msgid "Our extensive catalog includes the following categories:"
 msgstr "Náš rozsiahly katalóg zahŕňa nasledujúce kategórie:"
 
-#: templates/public/about.html:41
+#: templates/public/about.html:43
 msgid "Engine and Components"
 msgstr "Motor a komponenty"
 
-#: templates/public/about.html:44
+#: templates/public/about.html:46
 msgid ""
 "Cylinder blocks, Cylinder heads, Pistons, Crankshafts, Turbochargers, "
 "Fuel injectors, Gaskets and seals"
@@ -1081,11 +3995,11 @@ msgstr ""
 "Bloky motorov, hlavy valcov, piesty, kľukové hriadele, turbodúchadlá, "
 "vstrekovače paliva, tesnenia"
 
-#: templates/public/about.html:52
+#: templates/public/about.html:54
 msgid "Fuel and Exhaust Systems"
 msgstr "Palivové a výfukové systémy"
 
-#: templates/public/about.html:55
+#: templates/public/about.html:57
 msgid ""
 "Fuel pumps, Injectors, Carburetors, Fuel filters, Catalytic converters, "
 "Mufflers, Exhaust manifolds"
@@ -1093,29 +4007,29 @@ msgstr ""
 "Palivové čerpadlá, vstrekovače, karburátory, palivové filtre, "
 "katalyzátory, tlmiče výfuku, výfukové zvody"
 
-#: templates/public/about.html:63
+#: templates/public/about.html:65
 msgid "Cooling and Heating"
 msgstr "Chladenie a kúrenie"
 
-#: templates/public/about.html:66
+#: templates/public/about.html:68
 msgid "Radiators, Water pumps, Thermostats, Fans, Intercoolers, Cabin heaters"
 msgstr ""
 "Chladiče, vodné čerpadlá, termostaty, ventilátory, medzichladiče, kúrenia"
 " kabíny"
 
-#: templates/public/about.html:74
+#: templates/public/about.html:76
 msgid "Lubrication System"
 msgstr "Mazací systém"
 
-#: templates/public/about.html:77
+#: templates/public/about.html:79
 msgid "Oil pumps, Oil filters, Engine oil pans, Dipsticks"
 msgstr "Olejové čerpadlá, olejové filtre, olejové vane, mierky oleja"
 
-#: templates/public/about.html:85
+#: templates/public/about.html:87
 msgid "Suspension and Chassis"
 msgstr "Zavesenie a podvozok"
 
-#: templates/public/about.html:88
+#: templates/public/about.html:90
 msgid ""
 "Shock absorbers, Springs, Stabilizers, Suspension arms, Engine mounts, "
 "Hub bearings"
@@ -1123,11 +4037,11 @@ msgstr ""
 "Tlmiče, pružiny, stabilizátory, ramená zavesenia, silentbloky motora, "
 "ložiská nábojov"
 
-#: templates/public/about.html:96 templates/public/product_details.html:467
+#: templates/public/about.html:98 templates/public/product_details.html:499
 msgid "Brake System"
 msgstr "Brzdový systém"
 
-#: templates/public/about.html:99
+#: templates/public/about.html:101
 msgid ""
 "Brake pads, Discs and drums, Brake calipers, Master cylinders, Vacuum "
 "boosters"
@@ -1135,21 +4049,21 @@ msgstr ""
 "Brzdové doštičky, kotúče a bubny, brzdové strmene, hlavné brzdové valce, "
 "podtlakové posilňovače"
 
-#: templates/public/about.html:107
+#: templates/public/about.html:109
 msgid "Steering"
 msgstr "Riadenie"
 
-#: templates/public/about.html:110
+#: templates/public/about.html:112
 msgid "Steering racks, Power steering pumps, Tie rod ends, Hydraulic cylinders"
 msgstr ""
 "Tyče riadenia, čerpadlá posilňovača riadenia, čapy riadenia, hydraulické "
 "valce"
 
-#: templates/public/about.html:118
+#: templates/public/about.html:120
 msgid "Transmission and Drivetrain"
 msgstr "Prevodovka a pohon"
 
-#: templates/public/about.html:121
+#: templates/public/about.html:123
 msgid ""
 "Manual and automatic transmissions, Clutches, Drive shafts, Transfer "
 "cases, Differentials"
@@ -1157,11 +4071,11 @@ msgstr ""
 "Manuálne a automatické prevodovky, spojky, hnacie hriadele, rozdeľovacie "
 "prevodovky, diferenciály"
 
-#: templates/public/about.html:129
+#: templates/public/about.html:131
 msgid "Electrical and Lighting"
 msgstr "Elektronika a osvetlenie"
 
-#: templates/public/about.html:132
+#: templates/public/about.html:134
 msgid ""
 "Starters, Alternators, Batteries, Lights and headlights, Spark plugs, "
 "Various sensors, Electronic control units (ECUs)"
@@ -1169,11 +4083,11 @@ msgstr ""
 "Štartéry, alternátory, batérie, svetlá a svetlomety, zapaľovacie sviečky,"
 " rôzne senzory, elektronické riadiace jednotky (ECU)"
 
-#: templates/public/about.html:140
+#: templates/public/about.html:142
 msgid "Body Parts and Accessories"
 msgstr "Karosárske diely a príslušenstvo"
 
-#: templates/public/about.html:143
+#: templates/public/about.html:145
 msgid ""
 "Hoods, doors, fenders, bumpers, Windows (windshield, side, rear), "
 "Mirrors, Emblems and moldings"
@@ -1181,11 +4095,11 @@ msgstr ""
 "Kapoty, dvere, blatníky, nárazníky, Okná (čelné, bočné, zadné), zrkadlá, "
 "emblémy a lišty"
 
-#: templates/public/about.html:151
+#: templates/public/about.html:153
 msgid "Interior and Comfort"
 msgstr "Interiér a komfort"
 
-#: templates/public/about.html:154
+#: templates/public/about.html:156
 msgid ""
 "Dashboards, Seats and armrests, Steering wheels and gear knobs, Heating "
 "and air conditioning, Audio systems"
@@ -1193,19 +4107,19 @@ msgstr ""
 "Prístrojové dosky, sedadlá a opierky, volanty a hlavice radiacej páky, "
 "kúrenie a klimatizácia, audio systémy"
 
-#: templates/public/about.html:162
+#: templates/public/about.html:164
 msgid "Wheels and Tires"
 msgstr "Kolesá a pneumatiky"
 
-#: templates/public/about.html:165
+#: templates/public/about.html:167
 msgid "Steel and alloy rims, Tires, Tire pressure sensors"
 msgstr "Oceľové a zliatinové disky, pneumatiky, snímače tlaku v pneumatikách"
 
-#: templates/public/about.html:173
+#: templates/public/about.html:175
 msgid "Fluids and Lubricants"
 msgstr "Kvapaliny a mazivá"
 
-#: templates/public/about.html:176
+#: templates/public/about.html:178
 msgid ""
 "Engine and transmission oils, Antifreeze, Brake fluid, Hydraulic fluids, "
 "Windshield washer fluid"
@@ -1213,7 +4127,7 @@ msgstr ""
 "Motorové a prevodové oleje, nemrznúca zmes, brzdová kvapalina, "
 "hydraulické kvapaliny, kvapalina do ostrekovačov"
 
-#: templates/public/about.html:183
+#: templates/public/about.html:185
 msgid ""
 "Our company is registered at 066 01 Humenné Mierová 99, Slovakia, and our"
 " main warehouse is located in Tusicka Nova Ves 90, Tusice 07202, "
@@ -1225,11 +4139,11 @@ msgstr ""
 " 07202, Slovensko. Po predchádzajúcej dohode si vždy môžete diely "
 "vyzdvihnúť osobne."
 
-#: templates/public/about.html:192
+#: templates/public/about.html:194
 msgid "Workshop & Programming Services"
 msgstr "Servisné a programovacie služby"
 
-#: templates/public/about.html:196
+#: templates/public/about.html:198
 msgid ""
 "In addition to parts supply, we have our own workshop where we specialize"
 " in car repairs and programming."
@@ -1237,7 +4151,7 @@ msgstr ""
 "Okrem dodávok dielov máme vlastnú dielňu, kde sa špecializujeme na opravy"
 " a programovanie vozidiel."
 
-#: templates/public/about.html:198
+#: templates/public/about.html:200
 msgid ""
 "We can help with complex engine repairs, specializing in Land Rover, BMW,"
 " Ford, and Mercedes-Benz vehicles. Our particular expertise is with 306DT"
@@ -1249,7 +4163,7 @@ msgstr ""
 "je s motormi 306DT, ktoré opravujeme už mnoho rokov, ale pracujeme aj s "
 "mnohými inými typmi motorov."
 
-#: templates/public/about.html:200
+#: templates/public/about.html:202
 msgid ""
 "We have all the necessary diagnostic software. Through our partners, we "
 "can also provide chip tuning services to increase your vehicle's "
@@ -1259,23 +4173,23 @@ msgstr ""
 "partnerov môžeme tiež poskytovať služby chiptuning na zvýšenie výkonu "
 "vášho vozidla."
 
-#: templates/public/about.html:203
+#: templates/public/about.html:205
 msgid "We specialize in the following brands:"
 msgstr "Špecializujeme sa na nasledujúce značky:"
 
-#: templates/public/about.html:231
+#: templates/public/about.html:233
 msgid "*VAG Group includes Audi, Volkswagen, Porsche"
 msgstr "*Skupina VAG zahŕňa Audi, Volkswagen, Porsche"
 
-#: templates/public/about.html:242
+#: templates/public/about.html:244
 msgid "Available Brands"
 msgstr "Dostupné značky"
 
-#: templates/public/about.html:246
+#: templates/public/about.html:248
 msgid "We can supply parts for these car brands:"
 msgstr "Môžeme dodávať diely pre tieto značky automobilov:"
 
-#: templates/public/about.html:286
+#: templates/public/about.html:288
 msgid "We also supply parts for motorcycles:"
 msgstr "Dodávame tiež diely pre motocykle:"
 
@@ -1321,20 +4235,8 @@ msgstr "Kontaktovať podporu"
 msgid "Recommended Products"
 msgstr "Odporúčané produkty"
 
-#: templates/public/article_not_found.html:78
-#: templates/public/cart/cart.html:24 templates/public/index.html:182
-#: templates/public/index.html:294
-#: templates/public/orders/order_details.html:148
-#: templates/public/product_details.html:210 templates/user/cart/cart.html:16
-#: templates/user/search/intermediate.html:35
-msgid "Brand"
-msgstr "Značka"
-
-#: templates/public/article_not_found.html:93 templates/public/index.html:213
-#: templates/public/index.html:298 templates/public/orders/list_orders.html:80
-#: templates/public/orders/orders.html:83 templates/user/news/user_news.html:44
-#: templates/user/orders/orders.html:124
-#: templates/user/shipments/list_shipments.html:36
+#: templates/public/article_not_found.html:93 templates/public/index.html:211
+#: templates/public/index.html:296 templates/public/orders/orders.html:83
 msgid "View Details"
 msgstr "Zobraziť detaily"
 
@@ -1348,8 +4250,8 @@ msgid ""
 "From Discovery and Defender to Range Rover and Jaguar F-PACE — trust your"
 " premium vehicle to real professionals with extensive experience."
 msgstr ""
-"Profesionálna oprava a údržba všetkých modelov Land Rover a Jaguar. "
-"Od Discovery a Defender po Range Rover a Jaguar F-PACE — zverte svoje "
+"Profesionálna oprava a údržba všetkých modelov Land Rover a Jaguar. Od "
+"Discovery a Defender po Range Rover a Jaguar F-PACE — zverte svoje "
 "prémiové vozidlo skutočným profesionálom s rozsiahlými skúsenosti."
 
 #: templates/public/car_service.html:19
@@ -1364,9 +4266,9 @@ msgid ""
 "and reliability."
 msgstr ""
 "Sme uznávaní odborníci na opravu naftových motorov Land Rover 3.0 TDV6 a "
-"SDV6 (kódové označenie 306DT). Pri kompletných renováciách motorov používame "
-"výlučne nové originálne diely Land Rover, čo zaručuje najvyššiu kvalitu "
-"a spoľahlivosť."
+"SDV6 (kódové označenie 306DT). Pri kompletných renováciách motorov "
+"používame výlučne nové originálne diely Land Rover, čo zaručuje najvyššiu"
+" kvalitu a spoľahlivosť."
 
 #: templates/public/car_service.html:25
 msgid "Expertise with Both Engine Generations"
@@ -1377,8 +4279,8 @@ msgid ""
 "Our mechanics thoroughly understand the features of both generations of "
 "Land Rover 3.0 TDV6 / SDV6 (306DT) engines:"
 msgstr ""
-"Naši mechanici dôkladne poznajú vlastnosti oboch generácií motorov "
-"Land Rover 3.0 TDV6 / SDV6 (306DT):"
+"Naši mechanici dôkladne poznajú vlastnosti oboch generácií motorov Land "
+"Rover 3.0 TDV6 / SDV6 (306DT):"
 
 #: templates/public/car_service.html:33
 msgid "GEN1"
@@ -1456,9 +4358,9 @@ msgid ""
 "Instead of repairing or grinding the crankshaft, we install exclusively "
 "new genuine Land Rover crankshafts, ensuring maximum engine durability."
 msgstr ""
-"Namiesto opravy alebo prebrusivania kľukového hriadeľa inštalujeme výlučne "
-"nové originálne kľukové hriadele Land Rover, čo zaručuje maximálnu "
-"životnosť motora."
+"Namiesto opravy alebo prebrusivania kľukového hriadeľa inštalujeme "
+"výlučne nové originálne kľukové hriadele Land Rover, čo zaručuje "
+"maximálnu životnosť motora."
 
 #: templates/public/car_service.html:82
 msgid "Turbocharger Wear and Failure"
@@ -1497,8 +4399,8 @@ msgid ""
 "During repairs, we install a new oil pump, with special attention to GEN2"
 " models equipped with electromagnetic solenoid pumps."
 msgstr ""
-"Počas opráv inštalujeme nové olejové čerpadlo, so špeciálnou pozornosťou na "
-"modely GEN2 vybavené elektromagnetickými solenoidovými čerpadlami."
+"Počas opráv inštalujeme nové olejové čerpadlo, so špeciálnou pozornosťou "
+"na modely GEN2 vybavené elektromagnetickými solenoidovými čerpadlami."
 
 #: templates/public/car_service.html:108
 msgid "Fuel Injector Problems"
@@ -1509,16 +4411,16 @@ msgid ""
 "Some injectors in 306DT engines can deliver excessive fuel, leading to "
 "overheating and piston damage."
 msgstr ""
-"Niektoré vstrekovace v motoroch 306DT môžu dodávať nadmerné množstvo paliva, "
-"čo vedie k prehriatiu a poškodeniu piestov."
+"Niektoré vstrekovace v motoroch 306DT môžu dodávať nadmerné množstvo "
+"paliva, čo vedie k prehriatiu a poškodeniu piestov."
 
 #: templates/public/car_service.html:114
 msgid ""
 "We diagnose, adjust, and if necessary, replace injectors with new genuine"
 " Land Rover components."
 msgstr ""
-"Diagnostikujeme, nastavujeme a v prípade potreby vymieňame vstrekovace za "
-"nové originálne komponenty Land Rover."
+"Diagnostikujeme, nastavujeme a v prípade potreby vymieňame vstrekovace za"
+" nové originálne komponenty Land Rover."
 
 #: templates/public/car_service.html:120
 msgid "Technical Specifications of the Land Rover 306DT (3.0 TDV6/SDV6) Engine"
@@ -1602,7 +4504,9 @@ msgstr "Iba originálne diely"
 
 #: templates/public/car_service.html:177
 msgid "We use exclusively original Land Rover parts — no compromises in quality"
-msgstr "Používame výlučne originálne diely Land Rover — žiadne kompromisy v kvalite"
+msgstr ""
+"Používame výlučne originálne diely Land Rover — žiadne kompromisy v "
+"kvalite"
 
 #: templates/public/car_service.html:185
 msgid "Professional Diagnostics"
@@ -1613,8 +4517,8 @@ msgid ""
 "With deep understanding of engine design, we identify problems before "
 "they lead to serious damage"
 msgstr ""
-"S hĺbkým pochopením konštrukcie motora identifikujeme problémy skôr, "
-"ako vedú k vážnym poškodeniam"
+"S hĺbkým pochopením konštrukcie motora identifikujeme problémy skôr, ako "
+"vedú k vážnym poškodeniam"
 
 #: templates/public/car_service.html:196
 msgid "Experience with All Generations"
@@ -1625,8 +4529,8 @@ msgid ""
 "We have experience repairing both GEN1 and GEN2 engine versions, "
 "considering their unique requirements"
 msgstr ""
-"Máme skúsenosti s opravou motorov GEN1 aj GEN2, "
-"berieme do úvahy ich špecifické požiadavky"
+"Máme skúsenosti s opravou motorov GEN1 aj GEN2, berieme do úvahy ich "
+"špecifické požiadavky"
 
 #: templates/public/car_service.html:207
 msgid "Quality Guarantee"
@@ -1637,8 +4541,8 @@ msgid ""
 "We provide warranty for all completed work and installed parts, "
 "demonstrating our confidence in service quality"
 msgstr ""
-"Poskytujeme záruku na všetky vykonané práce a inštalované diely, "
-"čo dokazuje našu dôveru v kvalitu služieb"
+"Poskytujeme záruku na všetky vykonané práce a inštalované diely, čo "
+"dokazuje našu dôveru v kvalitu služieb"
 
 #: templates/public/car_service.html:216
 msgid "Additional Services for Land Rover and Jaguar"
@@ -1680,11 +4584,6 @@ msgstr ""
 msgid "For more information about our car services, please contact us:"
 msgstr "Pre viac informácií o našich službách pre automobily nás kontaktujte:"
 
-#: templates/public/categories.html:206 templates/public/categories.html:210
-#: templates/public/categories.html:228 templates/public/index.html:57
-msgid "Product Categories"
-msgstr "Kategórie produktov"
-
 #: templates/public/categories.html:209
 msgid ""
 "Browse all product categories at AutogroupEU. Find auto parts by "
@@ -1692,13 +4591,8 @@ msgid ""
 msgstr ""
 
 #: templates/public/categories.html:211
-#, fuzzy
 msgid "Browse all product categories. Fast delivery across Europe."
-msgstr "Rýchle dodanie po celej Európe"
-
-#: templates/public/categories.html:223 templates/public/index.html:124
-msgid "Categories"
-msgstr "Kategórie"
+msgstr "Prehliadajte všetky kategórie produktov. Rýchle dodanie po celej Európe."
 
 #: templates/public/categories.html:229
 msgid "Browse our catalog by category"
@@ -1729,38 +4623,50 @@ msgid "Online Contact"
 msgstr "Online kontakt"
 
 #: templates/public/contacts.html:69
-msgid "Office"
-msgstr "Kancelária"
+msgid "Store / Warehouse"
+msgstr "Predajňa / Sklad"
 
-#: templates/public/contacts.html:70 templates/public/returns.html:58
-msgid "Main warehouse"
-msgstr "Hlavný sklad"
+#: templates/public/contacts.html:70
+msgid "Visit our store or pick up your order"
+msgstr "Navštívte našu predajňu alebo si vyzdvihnite objednávku"
 
-#: templates/public/contacts.html:74 templates/public/user/profile.html:223
-msgid "Company Information"
-msgstr "Informácie o spoločnosti"
+#: templates/public/contacts.html:74
+msgid "Legal Address"
+msgstr "Právna adresa"
+
+#: templates/public/index.html:6
+msgid "AutogroupEU - Your reliable partner in auto parts supply across Europe."
+msgstr "AutogroupEU – Váš spoľahlivý partner v dodávke autodielov po celej Európe"
 
 #: templates/public/index.html:7
 msgid "Auto Parts Supply"
 msgstr "Dodávka autodielov"
 
-#: templates/public/index.html:18 templates/public/index.html:242
+#: templates/public/index.html:8
+msgid ""
+"Find the best auto parts for your vehicle with quick delivery across "
+"Europe"
+msgstr ""
+"Nájdite najlepšie autodiely pre vaše vozidlo s rýchlym doručením po celej"
+" Európe"
+
+#: templates/public/index.html:18 templates/public/index.html:240
 msgid "Need Help?"
 msgstr "Potrebujete pomoc?"
 
-#: templates/public/index.html:19 templates/public/index.html:243
+#: templates/public/index.html:19 templates/public/index.html:241
 msgid "If you have any questions, don't hesitate to contact us:"
 msgstr "Ak máte akékoľvek otázky, neváhajte nás kontaktovať:"
 
-#: templates/public/index.html:23 templates/public/index.html:256
+#: templates/public/index.html:23 templates/public/index.html:254
 msgid "Car Service & Programming"
 msgstr "Autoservis a programovanie"
 
-#: templates/public/index.html:24 templates/public/index.html:257
+#: templates/public/index.html:24 templates/public/index.html:255
 msgid "We offer professional car repair and programming services."
 msgstr "Ponúkame profesionálne služby opravy a programovania áut."
 
-#: templates/public/index.html:28
+#: templates/public/index.html:28 templates/public/index.html:263
 msgid "VIN Request"
 msgstr "VIN požiadavka"
 
@@ -1784,56 +4690,82 @@ msgstr "Dostupné na okamžité dodanie"
 msgid "Out of Stock"
 msgstr "Vypredané"
 
-#: templates/public/index.html:193 templates/public/index.html:299
-#: templates/public/product_details.html:225
+#: templates/public/index.html:188 templates/public/index.html:297
+#: templates/public/product_details.html:256
 msgid "incl. VAT"
 msgstr "vrátane DPH"
 
-#: templates/public/index.html:207 templates/public/product_details.html:258
-#: templates/user/search/intermediate.html:61
-#: templates/user/search/search_results.html:82
+#: templates/public/index.html:192
+msgid "excl. VAT"
+msgstr "bez DPH"
+
+#: templates/public/index.html:205 templates/public/product_details.html:290
 msgid "Add to Cart"
 msgstr "Pridať do košíka"
 
-#: templates/public/index.html:229
+#: templates/public/index.html:227
 msgid "Show More Products"
 msgstr "Zobraziť viac produktov"
 
-#: templates/public/index.html:248
+#: templates/public/index.html:246
 msgid "Mon-Fri: 9:00 - 19:00"
 msgstr "Po-Pi: 9:00 - 19:00"
 
-#: templates/public/index.html:258
+#: templates/public/index.html:256
 msgid "Learn More"
 msgstr "Zisti viac"
 
-#: templates/public/index.html:297
+#: templates/public/index.html:266
+msgid "VIN code (17 characters)"
+msgstr "VIN kód (17 znakov)"
+
+#: templates/public/cart/cart.html:137 templates/public/cart/cart.html:231
+#: templates/public/index.html:270
+#: templates/public/orders/guest_confirmation.html:72
+#: templates/public/returns.html:120 templates/public/user/profile.html:73
+#: templates/public/user/profile.html:127
+#: templates/public/user/profile.html:170
+msgid "Phone"
+msgstr "Telefón"
+
+#: templates/public/index.html:278
+msgid "Describe needed parts"
+msgstr "Popíšte potrebné diely"
+
+#: templates/public/index.html:281
+msgid "Send Request"
+msgstr "Odoslať žiadosť"
+
+#: templates/public/index.html:295
 msgid "No description available."
 msgstr "Popis nie je k dispozícii."
 
-#: templates/public/index.html:504
+#: templates/public/index.html:465 templates/public/index.html:524
+#: templates/public/index.html:560
+msgid "Request sent successfully!"
+msgstr "Žiadosť bola úspešne odoslaná!"
+
+#: templates/public/index.html:469 templates/public/index.html:528
+#: templates/public/index.html:565
+msgid "Error sending request"
+msgstr "Chyba pri odosielaní žiadosti"
+
+#: templates/public/index.html:474 templates/public/index.html:532
+#: templates/public/index.html:570
+msgid "Server error"
+msgstr "Chyba servera"
+
+#: templates/public/index.html:501
 msgid "Close"
 msgstr "Zavrieť"
 
-#: templates/public/index.html:504
-msgid "Open"
-msgstr "Otvoriť"
-
-#: templates/public/index.html:527
-msgid "Sent"
-msgstr "Odoslané"
-
-#: templates/public/index.html:714
+#: templates/public/index.html:711
 msgid "Adding..."
 msgstr "Pridávam..."
 
-#: templates/public/index.html:731
+#: templates/public/index.html:728
 msgid "Added!"
 msgstr "Pridané!"
-
-#: templates/public/index.html:744
-msgid "Error"
-msgstr "Chyba"
 
 #: templates/public/privacy.html:4
 msgid ""
@@ -1937,8 +4869,9 @@ msgid ""
 "We may share your data with trusted partners (e.g., delivery services) "
 "only as necessary to fulfill your order"
 msgstr ""
-"Vaše údaje môžeme zdieľať s dôveryhodnými partnermi (napr. doručovateľskými "
-"službami) len v rozsahu potrebnom na splnenie vašej objednávky"
+"Vaše údaje môžeme zdieľať s dôveryhodnými partnermi (napr. "
+"doručovateľskými službami) len v rozsahu potrebnom na splnenie vašej "
+"objednávky"
 
 #: templates/public/privacy.html:98
 msgid "We may disclose your data if required by law"
@@ -1977,8 +4910,8 @@ msgid ""
 "If you have any questions about this Privacy Policy or your personal "
 "data, please contact us:"
 msgstr ""
-"Ak máte akékoľvek otázky týkajúce sa týchto Zásad ochrany osobných údajov "
-"alebo vašich osobných údajov, kontaktujte nás:"
+"Ak máte akékoľvek otázky týkajúce sa týchto Zásad ochrany osobných údajov"
+" alebo vašich osobných údajov, kontaktujte nás:"
 
 #: templates/public/product_details.html:53
 msgid "Find part number"
@@ -2005,7 +4938,7 @@ msgid "Auto part"
 msgstr "Autodiel"
 
 #: templates/public/product_details.html:60
-#: templates/public/product_details.html:290
+#: templates/public/product_details.html:322
 msgid "Looking for part"
 msgstr "Hľadáte diel"
 
@@ -2018,7 +4951,7 @@ msgstr ""
 " Európe!"
 
 #: templates/public/product_details.html:69
-#: templates/public/product_details.html:133
+#: templates/public/product_details.html:167
 msgid "Auto Part"
 msgstr "Autodiel"
 
@@ -2030,53 +4963,45 @@ msgstr "Kvalitný autodiel s číslom tovaru"
 msgid "Available for order at AutogroupEU. Fast delivery across Europe."
 msgstr "Dostupný na objednávku v AutogroupEU. Rýchle dodanie po celej Európe."
 
-#: templates/public/product_details.html:133
-#, fuzzy
+#: templates/public/product_details.html:167
 msgid "Find it at AutogroupEU"
-msgstr "produktov v AutogroupEU"
+msgstr "Nájdite ho v AutogroupEU"
 
-#: templates/public/product_details.html:165
+#: templates/public/product_details.html:199
 msgid "No photo available"
 msgstr "Foto nie je k dispozícii"
 
-#: templates/public/product_details.html:215
+#: templates/public/product_details.html:249
 msgid "Available Prices"
 msgstr "Dostupné ceny"
 
-#: templates/public/product_details.html:221
-msgid "excl. VAT"
-msgstr "bez DPH"
+#: templates/public/product_details.html:260
+msgid "excl. VAT (B2B)"
+msgstr "bez DPH (pre firmy)"
 
-#: templates/public/product_details.html:230
+#: templates/public/product_details.html:264
 msgid "Availability"
 msgstr "Dostupnosť"
 
-#: templates/public/product_details.html:239
+#: templates/public/product_details.html:273
 msgid "14-21 days"
 msgstr ""
 
-#: templates/public/product_details.html:246
+#: templates/public/product_details.html:279
 msgid ""
 "Temporarily unavailable on our stock. You can order this part by regular "
 "price."
-msgstr "Dočasne nedostupné na našom sklade. Tento diel si môžete objednať za bežnú cenu."
-
-#: templates/public/orders/confirmation.html:97
-#: templates/public/product_details.html:254
-msgid "Qty"
-msgstr "Počet"
+msgstr ""
+"Dočasne nedostupné na našom sklade. Tento diel si môžete objednať za "
+"bežnú cenu."
 
 #: templates/public/cart/cart.html:208 templates/public/cart/cart.html:330
 #: templates/public/orders/guest_confirmation.html:162
-#: templates/public/product_details.html:271
+#: templates/public/product_details.html:303
 msgid "Continue Shopping"
 msgstr "Pokračovať v nákupe"
 
-#: templates/public/product_details.html:283
-msgid "Description"
-msgstr "Popis"
-
-#: templates/public/product_details.html:291
+#: templates/public/product_details.html:323
 msgid ""
 "This auto part is available for order from AutogroupEU. Contact us for "
 "more details about specifications, compatibility, and delivery times."
@@ -2085,59 +5010,59 @@ msgstr ""
 "pre podrobnejšie informácie o špecifikáciách, kompatibilite a dodacích "
 "lehotách."
 
-#: templates/public/product_details.html:293
+#: templates/public/product_details.html:325
 msgid "Original or high-quality alternative"
 msgstr "Originál alebo kvalitná alternatíva"
 
-#: templates/public/product_details.html:294
+#: templates/public/product_details.html:326
 msgid "Fast delivery across Europe"
 msgstr "Rýchle dodanie po celej Európe"
 
-#: templates/public/product_details.html:295
+#: templates/public/product_details.html:327
 msgid "Professional support"
 msgstr "Profesionálna podpora"
 
-#: templates/public/product_details.html:296
+#: templates/public/product_details.html:328
 msgid "Warranty on all parts"
 msgstr "Záruka na všetky diely"
 
-#: templates/public/product_details.html:303
+#: templates/public/product_details.html:335
 msgid "Call Now"
 msgstr "Zavolajte teraz"
 
-#: templates/public/product_details.html:312
+#: templates/public/product_details.html:344
 msgid "Related Searches"
 msgstr "Súvisiacé vyhľadávania"
 
-#: templates/public/product_details.html:316
+#: templates/public/product_details.html:348
 msgid "compatible"
 msgstr "kompatibilný"
 
-#: templates/public/product_details.html:317
+#: templates/public/product_details.html:349
 msgid "alternative"
 msgstr "alternatíva"
 
-#: templates/public/product_details.html:318
+#: templates/public/product_details.html:350
 msgid "original"
 msgstr "originál"
 
-#: templates/public/product_details.html:464
+#: templates/public/product_details.html:496
 msgid "Popular Categories"
 msgstr "Obľúbené kategórie"
 
-#: templates/public/product_details.html:466
+#: templates/public/product_details.html:498
 msgid "Engine Parts"
 msgstr "Diely motora"
 
-#: templates/public/product_details.html:468
+#: templates/public/product_details.html:500
 msgid "Filters"
 msgstr "Filtre"
 
-#: templates/public/product_details.html:469
+#: templates/public/product_details.html:501
 msgid "Suspension"
 msgstr "Podvozok"
 
-#: templates/public/product_details.html:470
+#: templates/public/product_details.html:502
 msgid "Electrical"
 msgstr "Elektrika"
 
@@ -2288,6 +5213,10 @@ msgstr "Adresa pre vrátenie"
 msgid "Office Address"
 msgstr "Adresa kancelárie"
 
+#: templates/public/returns.html:58
+msgid "Main warehouse"
+msgstr "Hlavný sklad"
+
 #: templates/public/returns.html:59
 msgid "You can always pick up your parts in person by prior arrangement."
 msgstr "Svoje diely si vždy môžete vyzdvihnúť osobne po predchádzajúcej dohode."
@@ -2386,14 +5315,6 @@ msgstr ""
 "Ak máte akékoľvek otázky týkajúce sa našich pravidiel vrátenia, "
 "kontaktujte nás:"
 
-#: templates/public/cart/cart.html:137 templates/public/cart/cart.html:231
-#: templates/public/orders/guest_confirmation.html:72
-#: templates/public/returns.html:120 templates/public/user/profile.html:73
-#: templates/public/user/profile.html:127
-#: templates/public/user/profile.html:170
-msgid "Phone"
-msgstr "Telefón"
-
 #: templates/public/shipping_payment.html:4
 #: templates/public/shipping_payment.html:7
 msgid "Information about shipping methods and payment options at AutogroupEU."
@@ -2406,12 +5327,6 @@ msgstr "doprava, doručenie, platba, možnosti platby, bankový prevod, doručen
 #: templates/public/shipping_payment.html:17
 msgid "Information about delivery and payment options"
 msgstr "Informácie o možnostiach doručenia a platby"
-
-#: templates/public/cart/cart.html:82 templates/public/cart/cart.html:220
-#: templates/public/orders/guest_confirmation.html:67
-#: templates/public/shipping_payment.html:27
-msgid "Delivery Information"
-msgstr "Informácie o doručení"
 
 #: templates/public/shipping_payment.html:32
 msgid ""
@@ -2485,9 +5400,8 @@ msgstr "Lokalita:"
 #: templates/public/cart/cart.html:249 templates/public/cart/cart.html:296
 #: templates/public/shipping_payment.html:55
 #: templates/public/user/profile.html:182
-#, fuzzy
 msgid "Slovakia"
-msgstr "Slovenčina"
+msgstr "Slovensko"
 
 #: templates/public/shipping_payment.html:56
 msgid "Free"
@@ -2536,11 +5450,6 @@ msgstr "Eurozóna"
 #: templates/public/shipping_payment.html:77
 msgid "Countries"
 msgstr "Krajiny"
-
-#: templates/public/orders/guest_confirmation.html:104
-#: templates/public/shipping_payment.html:78
-msgid "Delivery Time"
-msgstr "Čas doručenia"
 
 #: templates/public/shipping_payment.html:105
 msgid ""
@@ -2980,104 +5889,6 @@ msgstr ""
 "kontaktujte nás na:\"msgstr \"Ak máte akékoľvek otázky týkajúce sa týchto"
 " Obchodných podmienok, kontaktujte nás na:"
 
-#: templates/public/blog/index.html:8 templates/public/blog/index.html:32
-#: templates/public/blog/post.html:22
-#: templates/public/blog/search_results.html:5
-#, fuzzy
-msgid "Blog"
-msgstr "Blog"
-
-#: templates/public/blog/index.html:12
-#, fuzzy
-msgid "Latest articles about automotive parts and repairs"
-msgstr "autodiely, automobilové diely"
-
-#: templates/public/blog/index.html:35
-msgid "Latest articles and news from the automotive world"
-msgstr "Najnovšie články a novinky zo sveta automobilov"
-
-#: templates/public/blog/index.html:41
-#: templates/public/blog/search_results.html:21
-#: templates/public/blog/search_results.html:24 templates/user/index.html:24
-msgid "Search"
-msgstr "Hľadať"
-
-#: templates/public/blog/index.html:57 templates/user/orders/orders.html:68
-msgid "All"
-msgstr "Všetky"
-
-#: templates/public/blog/index.html:77
-msgid "Newest"
-msgstr "Najnovšie"
-
-#: templates/public/blog/index.html:81
-msgid "Oldest"
-msgstr "Najstaršie"
-
-#: templates/public/blog/index.html:85
-msgid "Popular"
-msgstr "Populárne"
-
-#: templates/public/blog/index.html:90
-msgid "Found {0} posts"
-msgstr "Nájdených {0} príspevkov"
-
-#: templates/public/blog/index.html:127 templates/public/blog/post.html:128
-#: templates/public/blog/search_results.html:57
-msgid "Read more"
-msgstr "Čítať viac"
-
-#: templates/public/blog/index.html:145 templates/public/blog/index.html:150
-#: templates/public/blog/search_results.html:81
-#: templates/public/blog/search_results.html:86
-msgid "Previous"
-msgstr "Predchádzajúce"
-
-#: templates/public/blog/index.html:165 templates/public/blog/index.html:170
-#: templates/public/blog/search_results.html:101
-#: templates/public/blog/search_results.html:106
-msgid "Next"
-msgstr "Ďalšie"
-
-#: templates/public/blog/post.html:50
-msgid "min read"
-msgstr "min čítania"
-
-#: templates/public/blog/post.html:81
-msgid "Tags"
-msgstr "Značky"
-
-#: templates/public/blog/post.html:94
-msgid "Share"
-msgstr "Zdieľať"
-
-#: templates/public/blog/post.html:116
-msgid "You might also like"
-msgstr "Mohlo by vás zaujímať"
-
-#: templates/public/blog/search_results.html:5
-msgid "Search Results for \"{0}\""
-msgstr "Výsledky vyhľadávania pre \"{0}\""
-
-#: templates/public/blog/search_results.html:16
-#: templates/user/search/search_results.html:3
-#: templates/user/search/search_results.html:7
-msgid "Search Results"
-msgstr "Výsledky hľadania"
-
-#: templates/public/blog/search_results.html:17
-msgid "Found {0} results for \"{1}\""
-msgstr "Nájdených {0} výsledkov pre \"{1}\""
-
-#: templates/public/blog/search_results.html:66
-msgid "No articles found matching your search criteria."
-msgstr "Nenašli sa žiadne články zodpovedajúce vašim vyhľadávacím kritériám."
-
-#: templates/public/blog/search_results.html:119
-#, fuzzy
-msgid "Back to Blog"
-msgstr "Späť domov"
-
 #: templates/public/cart/cart.html:4
 msgid ""
 "View and manage your shopping cart at AutogroupEU. Check prices, "
@@ -3085,20 +5896,10 @@ msgid ""
 msgstr ""
 
 #: templates/public/cart/cart.html:9 templates/public/cart/cart.html:14
-#: templates/user/cart/cart.html:3 templates/user/cart/cart.html:7
 msgid "Shopping Cart"
 msgstr "Nákupný košík"
 
-#: templates/public/cart/cart.html:23
-#: templates/public/orders/guest_confirmation.html:71
-msgid "Name"
-msgstr "Názov"
-
-#: templates/public/cart/cart.html:63
-msgid "Remove"
-msgstr "Odstrániť"
-
-#: templates/public/cart/cart.html:71 templates/user/cart/cart.html:57
+#: templates/public/cart/cart.html:71
 msgid "Total:"
 msgstr "Celkom"
 
@@ -3148,12 +5949,10 @@ msgid "Need invoice with VAT number"
 msgstr "Potrebujem faktúru s DPH"
 
 #: templates/public/cart/cart.html:188 templates/public/cart/cart.html:311
-#, fuzzy
 msgid "Company name"
 msgstr "Názov spoločnosti"
 
 #: templates/public/cart/cart.html:192 templates/public/cart/cart.html:315
-#, fuzzy
 msgid "VAT number"
 msgstr "IČ DPH"
 
@@ -3166,7 +5965,6 @@ msgid "Company address"
 msgstr "Adresa spoločnosti"
 
 #: templates/public/cart/cart.html:211 templates/public/cart/cart.html:333
-#: templates/user/cart/cart.html:68
 msgid "Place Order"
 msgstr "Zadať objednávku"
 
@@ -3212,9 +6010,8 @@ msgid "Shipping Method"
 msgstr "Spôsob dopravy"
 
 #: templates/public/cart/cart.html:279
-#, fuzzy
 msgid "Standard Shipping (Slovakia only)"
-msgstr "Štandardné doručenie"
+msgstr "Štandardné doručenie (iba Slovensko)"
 
 #: templates/public/cart/cart.html:280 templates/public/cart/cart.html:288
 msgid "Delivery time"
@@ -3232,16 +6029,15 @@ msgstr "Potrebujem faktúru (údaje spoločnosti)"
 msgid "or"
 msgstr "alebo"
 
-#: templates/public/cart/cart.html:356 templates/user/cart/cart.html:93
+#: templates/public/cart/cart.html:356
 msgid "Your Cart is Empty"
 msgstr "Váš košík je prázdny"
 
-#: templates/public/cart/cart.html:363 templates/user/cart/cart.html:94
+#: templates/public/cart/cart.html:363
 msgid "Start adding items to your cart!"
 msgstr "„Začnite pridávať položky do svojho košíka!"
 
-#: templates/public/cart/cart.html:366 templates/user/cart/cart.html:96
-#: templates/user/index.html:11
+#: templates/public/cart/cart.html:366 templates/user/index.html:11
 msgid "Search Articles"
 msgstr "Hľadať číslo dielov"
 
@@ -3274,12 +6070,6 @@ msgstr "Číslo objednávky"
 #: templates/public/orders/guest_confirmation.html:93
 msgid "Order Summary"
 msgstr "Súhrn objednávky"
-
-#: templates/public/orders/confirmation.html:83
-#: templates/public/orders/guest_confirmation.html:60
-#: templates/public/orders/order_details.html:38
-msgid "Order Date"
-msgstr "Dátum objednávky"
 
 #: templates/public/orders/confirmation.html:96
 #: templates/public/orders/order_details.html:147
@@ -3326,62 +6116,12 @@ msgstr "Na váš e-mail sme odoslali potvrdenie objednávky."
 #: templates/public/orders/guest_confirmation.html:73
 #: templates/public/orders/order_details.html:127
 #: templates/public/user/profile.html:243
-#, fuzzy
 msgid "Address"
 msgstr "Adresa"
 
-#: templates/public/orders/guest_confirmation.html:120
-msgid "Total Amount"
-msgstr ""
-
 #: templates/public/orders/guest_confirmation.html:165
-#, fuzzy
 msgid "Create an Account"
-msgstr "Už máte účet?"
-
-#: templates/public/orders/list_orders.html:8
-#: templates/public/orders/orders.html:8
-msgid ""
-"View your order history at AutogroupEU. Track your purchases and check "
-"delivery status."
-msgstr ""
-"Zobraziť históriu vašich objednávok v AutogroupEU. Sledujte svoje nákupy "
-"askontrolujte stav doručenia."
-
-#: templates/public/orders/list_orders.html:12
-#: templates/public/orders/list_orders.html:20
-#: templates/public/orders/orders.html:12
-#: templates/public/orders/orders.html:20 templates/user/orders/orders.html:55
-msgid "My Orders"
-msgstr "Moje objednávky"
-
-#: templates/public/orders/list_orders.html:28
-#: templates/public/orders/list_orders.html:39
-#: templates/public/orders/orders.html:28
-#: templates/public/orders/orders.html:38
-msgid "Order #"
-msgstr "Objednávka"
-
-#: templates/public/orders/list_orders.html:30
-#: templates/public/orders/list_orders.html:50
-#: templates/user/shipments/view_shipment.html:31
-msgid "Items"
-msgstr "Položky"
-
-#: templates/public/orders/list_orders.html:91
-#: templates/public/orders/orders.html:94 templates/user/orders/orders.html:133
-msgid "No Orders Found"
-msgstr "Objednávka nebola nájdená"
-
-#: templates/public/orders/list_orders.html:92
-#: templates/public/orders/orders.html:95
-msgid "You have not placed any orders yet."
-msgstr "Zatiaľ ste nezadali žiadne objednávky."
-
-#: templates/public/orders/list_orders.html:95
-#: templates/public/orders/orders.html:98 templates/user/orders/orders.html:136
-msgid "Start Shopping"
-msgstr "Začať nakupovať"
+msgstr "Vytvoriť účet"
 
 #: templates/public/orders/order_details.html:8
 msgid ""
@@ -3392,34 +6132,8 @@ msgstr ""
 "doručení."
 
 #: templates/public/orders/order_details.html:12
-#: templates/public/orders/order_details.html:26
-msgid "Order"
-msgstr "Objednávka"
-
-#: templates/public/orders/order_details.html:12
 msgid "Details"
 msgstr "Detaily"
-
-#: templates/public/orders/order_details.html:18
-#: templates/public/orders/order_details.html:180
-#: templates/user/orders/order_details.html:11
-msgid "Back to Orders"
-msgstr "Späť k objednávkam"
-
-#: templates/public/orders/order_details.html:33
-msgid "Order Information"
-msgstr "Informácie o objednávke"
-
-#: templates/public/orders/order_details.html:45
-#: templates/public/orders/orders.html:54 templates/user/news/user_news.html:18
-#: templates/user/orders/orders.html:69
-msgid "New"
-msgstr "Nový"
-
-#: templates/public/orders/order_details.html:46
-#: templates/public/orders/orders.html:55
-msgid "Processing"
-msgstr "Spracováva sa"
 
 #: templates/public/orders/order_details.html:47
 #: templates/public/orders/orders.html:56
@@ -3432,7 +6146,7 @@ msgid "Delivered"
 msgstr "Doručené"
 
 #: templates/public/orders/order_details.html:49
-#: templates/public/orders/orders.html:58 templates/user/orders/orders.html:71
+#: templates/public/orders/orders.html:58
 msgid "Cancelled"
 msgstr "Zrušené"
 
@@ -3444,10 +6158,6 @@ msgstr "Stav platby"
 msgid "Paid"
 msgstr "Zaplatené"
 
-#: templates/public/orders/order_details.html:69
-msgid "Pending"
-msgstr "Čaká na platbu"
-
 #: templates/public/orders/order_details.html:102
 msgid "No delivery address information"
 msgstr "Žiadne informácie o adrese doručenia"
@@ -3456,9 +6166,35 @@ msgstr "Žiadne informácie o adrese doručenia"
 msgid "Invoice Information"
 msgstr "Fakturačné údaje"
 
-#: templates/public/orders/order_details.html:140
-msgid "Order Items"
-msgstr "Položky objednávky"
+#: templates/public/orders/orders.html:8
+msgid ""
+"View your order history at AutogroupEU. Track your purchases and check "
+"delivery status."
+msgstr ""
+"Zobraziť históriu vašich objednávok v AutogroupEU. Sledujte svoje nákupy "
+"askontrolujte stav doručenia."
+
+#: templates/public/orders/orders.html:12
+#: templates/public/orders/orders.html:20
+msgid "My Orders"
+msgstr "Moje objednávky"
+
+#: templates/public/orders/orders.html:28
+#: templates/public/orders/orders.html:38
+msgid "Order #"
+msgstr "Objednávka"
+
+#: templates/public/orders/orders.html:94
+msgid "No Orders Found"
+msgstr "Objednávka nebola nájdená"
+
+#: templates/public/orders/orders.html:95
+msgid "You have not placed any orders yet."
+msgstr "Zatiaľ ste nezadali žiadne objednávky."
+
+#: templates/public/orders/orders.html:98
+msgid "Start Shopping"
+msgstr "Začať nakupovať"
 
 #: templates/public/user/profile.html:7 templates/public/user/profile.html:13
 msgid "My Profile"
@@ -3509,11 +6245,6 @@ msgstr "Predvolená"
 msgid "Are you sure you want to delete this address?"
 msgstr ""
 
-#: templates/public/user/profile.html:146
-#: templates/public/user/profile.html:261
-msgid "Delete"
-msgstr "Vymazať"
-
 #: templates/public/user/profile.html:157
 msgid "You have no saved addresses yet."
 msgstr "Zatiaľ nemáte žiadne uložené adresy."
@@ -3533,6 +6264,10 @@ msgstr "Nastaviť ako predvolenú adresu"
 #: templates/public/user/profile.html:207
 msgid "Add Address"
 msgstr "Pridať adresu"
+
+#: templates/public/user/profile.html:223
+msgid "Company Information"
+msgstr "Informácie o spoločnosti"
 
 #: templates/public/user/profile.html:227
 msgid "Your Companies"
@@ -3612,300 +6347,6 @@ msgstr "Vybrať súbor"
 #, fuzzy
 msgid "Upload and Search"
 msgstr "Vyhľadávanie podľa čísla dielu"
-
-#: templates/user/cart/cart.html:15 templates/user/orders/order_details.html:22
-#, fuzzy
-msgid "Price List"
-msgstr "Položky cenníka"
-
-#: templates/user/cart/cart.html:20 templates/user/orders/order_details.html:27
-#: templates/user/search/intermediate.html:19
-#: templates/user/search/search_results.html:18
-#: templates/user/shipments/view_shipment.html:43
-#, fuzzy
-msgid "Comment"
-msgstr "Príkazy"
-
-#: templates/user/cart/cart.html:42 templates/user/orders/order_details.html:63
-msgid "No comment"
-msgstr ""
-
-#: templates/user/cart/cart.html:74
-msgid "Clear Cart"
-msgstr ""
-
-#: templates/user/cart/cart.html:81
-#: templates/user/search/search_results.html:70
-#, fuzzy
-msgid "Missing Articles:"
-msgstr "Chýbajúce informácie o tovare"
-
-#: templates/user/cart/cart.html:82
-#, fuzzy
-msgid "The following articles were not found:"
-msgstr "Tovar nebol nájdený"
-
-#: templates/user/news/user_news.html:12
-#, fuzzy
-msgid "New Messages"
-msgstr "Chyba: {message}"
-
-#: templates/user/news/user_news.html:26
-msgid "Read More"
-msgstr ""
-
-#: templates/user/news/user_news.html:36
-msgid "News Archive"
-msgstr ""
-
-#: templates/user/news/view_news.html:9
-msgid "Mark as Read"
-msgstr ""
-
-#: templates/user/news/view_news.html:16
-#, fuzzy
-msgid "Published:"
-msgstr "Poľština"
-
-#: templates/user/orders/order_changes.html:14
-#, fuzzy
-msgid "Change Type"
-msgstr "Zmeniť adresu"
-
-#: templates/user/orders/order_changes.html:15
-msgid "Old Value"
-msgstr ""
-
-#: templates/user/orders/order_changes.html:16
-msgid "New Value"
-msgstr ""
-
-#: templates/user/orders/order_changes.html:17
-#, fuzzy
-msgid "Change Date"
-msgstr "Zmeniť adresu"
-
-#: templates/user/orders/order_changes.html:27
-#, fuzzy
-msgid "Article Number Change"
-msgstr "Vyhľadávanie podľa čísla dielu"
-
-#: templates/user/orders/order_changes.html:29
-#, fuzzy
-msgid "Price Change"
-msgstr "Vrátenie a výmena"
-
-#: templates/user/orders/order_changes.html:42
-msgid "No changes found."
-msgstr ""
-
-#: templates/user/orders/order_details.html:4
-#: templates/user/orders/order_details.html:9
-#: templates/user/shipments/shipments.html:19
-#, fuzzy
-msgid "Order Details"
-msgstr "Zobraziť detaily"
-
-#: templates/user/orders/order_details.html:21
-#, fuzzy
-msgid "Original Article"
-msgstr "Kód tovaru"
-
-#: templates/user/orders/order_details.html:23
-#, fuzzy
-msgid "Brand ID"
-msgstr "Značka:"
-
-#: templates/user/orders/order_details.html:86
-msgid "Total Order Amount:"
-msgstr "Celková suma objednávky:"
-
-#: templates/user/orders/order_details.html:96
-#, fuzzy
-msgid "Order Timeline"
-msgstr "ID objednávky"
-
-#: templates/user/orders/order_details.html:115
-#, fuzzy
-msgid "No Details Available"
-msgstr "Fakturačné údaje boli aktualizované"
-
-#: templates/user/orders/order_details.html:116
-msgid "The details for this order could not be found."
-msgstr ""
-
-#: templates/user/orders/orders.html:70
-#, fuzzy
-msgid "Accepted"
-msgstr "Prijať"
-
-#: templates/user/orders/orders.html:75
-#, fuzzy
-msgid "Start Date"
-msgstr "Aktualizácie softvéru"
-
-#: templates/user/orders/orders.html:79
-#, fuzzy
-msgid "End Date"
-msgstr "Dátum"
-
-#: templates/user/orders/orders.html:84
-#, fuzzy
-msgid "Filter"
-msgstr "Filtre"
-
-#: templates/user/orders/orders.html:87
-#, fuzzy
-msgid "Clear Filters"
-msgstr "Filtre"
-
-#: templates/user/orders/orders.html:101
-#: templates/user/shipments/list_shipments.html:21
-#: templates/user/shipments/shipments.html:26
-#: templates/user/shipments/view_shipment.html:42
-#, fuzzy
-msgid "Total Price"
-msgstr "Celkom"
-
-#: templates/user/orders/orders.html:134
-msgid "You haven't placed any orders yet."
-msgstr "Zatiaľ ste nezadali žiadne objednávky."
-
-#: templates/user/search/intermediate.html:3
-#, fuzzy
-msgid "Select Price Lists"
-msgstr "Položky cenníka"
-
-#: templates/user/search/intermediate.html:7
-msgid "Intermediate Results"
-msgstr "Predbežné výsledky"
-
-#: templates/user/search/intermediate.html:8
-#, fuzzy
-msgid "Please select a price list for each article."
-msgstr "Zadajte aspoň jeden kód tovaru."
-
-#: templates/user/search/intermediate.html:17
-#, fuzzy
-msgid "Available Price Lists"
-msgstr "Dostupné služby"
-
-#: templates/user/search/intermediate.html:71
-#, fuzzy
-msgid "Missing Articles"
-msgstr "Chýbajúce informácie o tovare"
-
-#: templates/user/search/intermediate.html:72
-#: templates/user/search/search_results.html:71
-msgid "The following articles were not found in any price list:"
-msgstr "Nasledujúce tovary neboli nájdené v žiadnom cenníku:"
-
-#: templates/user/search/search_results.html:16
-#, fuzzy
-msgid "Price Lists"
-msgstr "Položky cenníka"
-
-#: templates/user/search/search_results.html:19
-msgid "Select"
-msgstr "Vybrať"
-
-#: templates/user/search/search_results.html:86
-#, fuzzy
-msgid "Clear Results"
-msgstr "Chyba pri mazaní výsledkov vyhľadávania"
-
-#: templates/user/search/search_results.html:92
-#, fuzzy
-msgid "No Results Found"
-msgstr "Neboli nájdené žiadne uložené adresy"
-
-#: templates/user/search/search_results.html:93
-msgid "Try searching with different articles or check your input format."
-msgstr "Skúste vyhľadávať s inými kódmi tovaru alebo skontrolujte formát zadania."
-
-#: templates/user/search/search_results.html:95
-#, fuzzy
-msgid "New Search"
-msgstr "Vyhľadávanie podľa čísla dielu"
-
-#: templates/user/shipments/list_shipments.html:9
-#: templates/user/shipments/shipments.html:7
-#, fuzzy
-msgid "My Shipments"
-msgstr "Zásielky"
-
-#: templates/user/shipments/list_shipments.html:17
-#, fuzzy
-msgid "Shipment Date"
-msgstr "Zásielky"
-
-#: templates/user/shipments/list_shipments.html:19
-#, fuzzy
-msgid "Tracking Number"
-msgstr "IČO"
-
-#: templates/user/shipments/list_shipments.html:20
-#, fuzzy
-msgid "Items Count"
-msgstr "Zľava"
-
-#: templates/user/shipments/list_shipments.html:30
-msgid "N/A"
-msgstr "nie je k dispozícii"
-
-#: templates/user/shipments/list_shipments.html:45
-#: templates/user/shipments/shipments.html:44
-#, fuzzy
-msgid "No shipments found."
-msgstr "Zásielky"
-
-#: templates/user/shipments/shipments.html:13
-#, fuzzy
-msgid "Shipment Date:"
-msgstr "Zásielky"
-
-#: templates/user/shipments/shipments.html:13
-#: templates/user/shipments/view_shipment.html:22
-#, fuzzy
-msgid "Status:"
-msgstr "Stav"
-
-#: templates/user/shipments/shipments.html:15
-#: templates/user/shipments/view_shipment.html:23
-#, fuzzy
-msgid "Tracking Number:"
-msgstr "IČO"
-
-#: templates/user/shipments/view_shipment.html:3
-#: templates/user/shipments/view_shipment.html:8
-#, fuzzy
-msgid "Shipment Details"
-msgstr "Zásielky"
-
-#: templates/user/shipments/view_shipment.html:10
-#, fuzzy
-msgid "Back to Shipments"
-msgstr "Späť domov"
-
-#: templates/user/shipments/view_shipment.html:16
-#, fuzzy
-msgid "Shipment Information"
-msgstr "Informácie o používateľovi"
-
-#: templates/user/shipments/view_shipment.html:21
-#, fuzzy
-msgid "Date:"
-msgstr "Dátum"
-
-#: templates/user/shipments/view_shipment.html:23
-#, fuzzy
-msgid "Not specified"
-msgstr "Neboli vybrané žiadne diely"
-
-#: templates/user/shipments/view_shipment.html:60
-#, fuzzy
-msgid "No items in this shipment."
-msgstr "V tejto objednávke nie sú žiadne položky"
 
 #: venv/Lib/site-packages/click/_termui_impl.py:556
 msgid "{editor}: Editing failed"
@@ -5033,32 +7474,221 @@ msgstr[2] "Vyžaduje sa {len_type} hodnôt, ale bolo zadaných {len_value}."
 #~ msgid "Confirmed"
 #~ msgstr "Potvrďte nové heslo"
 
-#: templates/public/index.html VIN modal
-msgid "VIN code (17 characters)"
-msgstr "VIN kód (17 znakov)"
+#~ msgid "Category not found."
+#~ msgstr "Kategória nebola nájdená."
 
-msgid "Describe needed parts"
-msgstr "Popíšte potrebné diely"
+#~ msgid "Ukrainian"
+#~ msgstr "Ukrajinčina"
 
-msgid "Send Request"
-msgstr "Odoslať žiadosť"
+#~ msgid "An error occurred while loading blog posts"
+#~ msgstr "Pri pridávaní položiek do košíka došlo k chybe"
 
-msgid "excl. VAT (B2B)"
-msgstr "bez DPH (pre firmy)"
+#~ msgid "Article not found"
+#~ msgstr "Tovar nebol nájdený"
 
-msgid "Article Number"
-msgstr "Číslo dielu"
+#~ msgid "An error occurred while loading the article"
+#~ msgstr "Pri načítaní článku došlo k chybe"
 
-msgid "14-21 days"
-msgstr "14-21 dní"
-msgid "Request sent successfully!"
-msgstr "Žiadosť bola úspešne odoslaná!"
+#~ msgid "An error occurred during search"
+#~ msgstr "Počas vyhľadávania došlo k chybe"
 
-msgid "Error sending request"
-msgstr "Chyba pri odosielaní žiadosti"
+#~ msgid "Change Password for User"
+#~ msgstr "Zmeniť heslo pre používateľa"
 
-msgid "Server error"
-msgstr "Chyba servera"
+#~ msgid "Forgot your password?"
+#~ msgstr "Zabudli ste heslo?"
 
-msgid "excl. VAT"
-msgstr "bez DPH"
+#~ msgid "Don't have an account?"
+#~ msgstr "Nemáte účet?"
+
+#~ msgid "Register here"
+#~ msgstr "Zaregistrujte sa tu"
+
+#~ msgid "Login here"
+#~ msgstr "Prihláste sa tu"
+
+#~ msgid "Warehouse"
+#~ msgstr "Sklad"
+
+#~ msgid "Office"
+#~ msgstr "Kancelária"
+
+#~ msgid "Blog"
+#~ msgstr "Blog"
+
+#~ msgid "Latest articles about automotive parts and repairs"
+#~ msgstr "autodiely, automobilové diely"
+
+#~ msgid "Latest articles and news from the automotive world"
+#~ msgstr "Najnovšie články a novinky zo sveta automobilov"
+
+#~ msgid "Newest"
+#~ msgstr "Najnovšie"
+
+#~ msgid "Oldest"
+#~ msgstr "Najstaršie"
+
+#~ msgid "Popular"
+#~ msgstr "Populárne"
+
+#~ msgid "Found {0} posts"
+#~ msgstr "Nájdených {0} príspevkov"
+
+#~ msgid "Read more"
+#~ msgstr "Čítať viac"
+
+#~ msgid "min read"
+#~ msgstr "min čítania"
+
+#~ msgid "Tags"
+#~ msgstr "Značky"
+
+#~ msgid "You might also like"
+#~ msgstr "Mohlo by vás zaujímať"
+
+#~ msgid "Search Results for \"{0}\""
+#~ msgstr "Výsledky vyhľadávania pre \"{0}\""
+
+#~ msgid "Search Results"
+#~ msgstr "Výsledky hľadania"
+
+#~ msgid "Found {0} results for \"{1}\""
+#~ msgstr "Nájdených {0} výsledkov pre \"{1}\""
+
+#~ msgid "No articles found matching your search criteria."
+#~ msgstr "Nenašli sa žiadne články zodpovedajúce vašim vyhľadávacím kritériám."
+
+#~ msgid "Back to Blog"
+#~ msgstr "Späť domov"
+
+#~ msgid "No comment"
+#~ msgstr ""
+
+#~ msgid "Clear Cart"
+#~ msgstr ""
+
+#~ msgid "Missing Articles:"
+#~ msgstr "Chýbajúce informácie o tovare"
+
+#~ msgid "The following articles were not found:"
+#~ msgstr "Tovar nebol nájdený"
+
+#~ msgid "New Messages"
+#~ msgstr "Chyba: {message}"
+
+#~ msgid "Read More"
+#~ msgstr ""
+
+#~ msgid "News Archive"
+#~ msgstr ""
+
+#~ msgid "Mark as Read"
+#~ msgstr ""
+
+#~ msgid "Change Type"
+#~ msgstr "Zmeniť adresu"
+
+#~ msgid "Old Value"
+#~ msgstr ""
+
+#~ msgid "New Value"
+#~ msgstr ""
+
+#~ msgid "Article Number Change"
+#~ msgstr "Vyhľadávanie podľa čísla dielu"
+
+#~ msgid "No changes found."
+#~ msgstr ""
+
+#~ msgid "Original Article"
+#~ msgstr "Kód tovaru"
+
+#~ msgid "Total Order Amount:"
+#~ msgstr "Celková suma objednávky:"
+
+#~ msgid "No Details Available"
+#~ msgstr "Fakturačné údaje boli aktualizované"
+
+#~ msgid "The details for this order could not be found."
+#~ msgstr ""
+
+#~ msgid "Accepted"
+#~ msgstr "Prijať"
+
+#~ msgid "You haven't placed any orders yet."
+#~ msgstr "Zatiaľ ste nezadali žiadne objednávky."
+
+#~ msgid "Intermediate Results"
+#~ msgstr "Predbežné výsledky"
+
+#~ msgid "The following articles were not found in any price list:"
+#~ msgstr "Nasledujúce tovary neboli nájdené v žiadnom cenníku:"
+
+#~ msgid "Try searching with different articles or check your input format."
+#~ msgstr ""
+#~ "Skúste vyhľadávať s inými kódmi tovaru"
+#~ " alebo skontrolujte formát zadania."
+
+#~ msgid "New Search"
+#~ msgstr "Vyhľadávanie podľa čísla dielu"
+
+#~ msgid "My Shipments"
+#~ msgstr "Zásielky"
+
+#~ msgid "Shipment Date"
+#~ msgstr "Zásielky"
+
+#~ msgid "Tracking Number"
+#~ msgstr "IČO"
+
+#~ msgid "Items Count"
+#~ msgstr "Zľava"
+
+#~ msgid "N/A"
+#~ msgstr "nie je k dispozícii"
+
+#~ msgid "Shipment Date:"
+#~ msgstr "Zásielky"
+
+#~ msgid "Status:"
+#~ msgstr "Stav"
+
+#~ msgid "Tracking Number:"
+#~ msgstr "IČO"
+
+#~ msgid "Shipment Details"
+#~ msgstr "Zásielky"
+
+#~ msgid "Shipment Information"
+#~ msgstr "Informácie o používateľovi"
+
+#~ msgid "Date:"
+#~ msgstr "Dátum"
+
+#~ msgid "No items in this shipment."
+#~ msgstr "V tejto objednávke nie sú žiadne položky"
+
+#~ msgid ""
+#~ "Founded on November 15, 2014, we "
+#~ "have been supplying original auto parts"
+#~ " for many years. We have an "
+#~ "online store where you can order "
+#~ "parts to be delivered or purchase "
+#~ "items available in our stock."
+#~ msgstr ""
+#~ "Založená 15. novembra 2014, dodávame "
+#~ "originálne autodiely už mnoho rokov. "
+#~ "Máme internetový obchod, kde si môžete"
+#~ " objednať diely na dodanie alebo "
+#~ "kúpiť tovary dostupné na našom sklade."
+
+#~ msgid ""
+#~ "We provide original parts from European"
+#~ " official warehouses at the lowest "
+#~ "prices. All parts are original and "
+#~ "new."
+#~ msgstr ""
+#~ "Poskytujeme originálne diely z európskych "
+#~ "oficiálnych skladov za najnižšie ceny. "
+#~ "Všetky diely sú originálne a nové."
+

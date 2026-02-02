@@ -517,12 +517,12 @@
                 <a class="nav-link {% if request.endpoint == 'admin_sitemaps' %}active{% endif %}" 
                    href="{{ url_for('admin_sitemaps', token=token) }}">
                     <i class="bi bi-map"></i>
-                    <span>Sitemaps</span>
+                    <span>{{ _('Sitemaps') }}</span>
                 </a>
                 <a class="nav-link {% if request.endpoint == 'manage_google_feed' %}active{% endif %}" 
                    href="{{ url_for('manage_google_feed', token=token) }}">
                     <i class="bi bi-google"></i>
-                    <span>Google Feed</span>
+                    <span>{{ _('Google Feed') }}</span>
                 </a>
             </div>
 

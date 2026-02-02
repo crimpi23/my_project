@@ -36,7 +36,7 @@
                 <input type="checkbox" name="incomplete_only" id="incomplete_only" class="form-check-input" 
                        value="1" {% if incomplete_only %}checked{% endif %}>
                 <label class="form-check-label" for="incomplete_only">
-                    Неповні описи ({{ incomplete_products_count }})
+                    {{ _('Incomplete descriptions') }} ({{ incomplete_products_count }})
                 </label>
             </div>
         </div>
@@ -86,12 +86,12 @@
     <div class="card-body">
         <div class="row align-items-center">
             <div class="col-md-6">
-                <h6 class="card-title mb-2"><i class="bi bi-plus-circle-fill text-info"></i> Додати новий артикул</h6>
-                <p class="text-muted small mb-0">Створити опис для артикула якого немає в base, але треба додати</p>
+                <h6 class="card-title mb-2"><i class="bi bi-plus-circle-fill text-info"></i> {{ _('Add new article') }}</h6>
+                <p class="text-muted small mb-0">{{ _('Create description for an article not in the base, but needs to be added') }}</p>
             </div>
             <div class="col-md-6 text-end">
                 <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addNewArticleModal">
-                    <i class="bi bi-plus"></i> Додати новий
+                    <i class="bi bi-plus"></i> {{ _('Add new') }}
                 </button>
             </div>
         </div>
@@ -103,19 +103,19 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Додати новий артикул</h5>
+                <h5 class="modal-title">{{ _('Add new article') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="addArticleForm">
                     <div class="mb-3">
-                        <label for="newArticle" class="form-label">Артикул <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="newArticle" placeholder="Напр. LR123456" required>
+                        <label for="newArticle" class="form-label">{{ _('Article') }} <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="newArticle" placeholder="{{ _('E.g. LR123456') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label for="newBrand" class="form-label">Бренд</label>
+                        <label for="newBrand" class="form-label">{{ _('Brand') }}</label>
                         <select class="form-select" id="newBrand">
-                            <option value="">Виберіть бренд...</option>
+                            <option value="">{{ _('Select brand...') }}</option>
                             {% for brand in brands %}
                             <option value="{{ brand }}">{{ brand }}</option>
                             {% endfor %}
@@ -124,8 +124,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
-                <button type="button" class="btn btn-primary" onclick="addNewArticle()">Створити</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="button" class="btn btn-primary" onclick="addNewArticle()">{{ _('Create') }}</button>
             </div>
         </div>
     </div>
@@ -135,7 +135,7 @@
 function addNewArticle() {
     const article = document.getElementById('newArticle').value.trim().toUpperCase();
     if (!article) {
-        alert('Введіть артикул!');
+        alert('{{ _('Enter article number!') }}');
         return;
     }
     // Редирект на форму редагування з новим артикулом

@@ -97,6 +97,11 @@
     margin-bottom: 14px;
 }
 .product-info-body { }
+.prices-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #334155;
+}
 .product-meta {
     font-size: 1rem;
     color: #334155;
@@ -334,30 +339,262 @@
 }
 
 @media (max-width: 991px) {
-    .product-container { padding: 12px 4px; }
-    .image-container img { max-height: 260px; }
-    .product-info-card { padding: 12px 6px 8px 6px; }
-    .description-section { padding: 0 2px; }
-  .sticky-buy-btn {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
-    background: #fff;
-    box-shadow: 0 -2px 12px rgba(37,99,235,0.10);
-    padding: 10px 12px 14px 12px;
-    z-index: 1000;
-  }
-  .sticky-buy-btn .btn-add-to-cart {
-    font-size: 1.15rem;
-    padding: 12px 0;
-    border-radius: 10px;
-  }
+    .product-container { padding: 10px 6px; }
+    .image-container img { max-height: 220px; }
+    .product-info-card { padding: 10px 10px 8px 10px; }
+    .description-section { padding: 0; }
 }
-@media (max-width: 600px) {
-    .product-info-header h1 { font-size: 1.1rem; }
-    .description-header { padding: 12px 10px; }
-    .description-body { padding: 10px; }
+
+@media (max-width: 767px) {
+    /* Змінюємо порядок: info перша, image друга */
+    .row {
+        display: flex;
+        flex-direction: column;
+    }
+    .mobile-first { order: 1; }
+    .mobile-second { order: 2; margin-top: 12px; }
+    .mobile-last { order: 3; }
+    
+    .product-container {
+        padding: 8px;
+        border-radius: 10px;
+    }
+    
+    /* Компактний заголовок */
+    .product-info-header h1 {
+        font-size: 1.05rem;
+        line-height: 1.3;
+        margin-bottom: 10px;
+    }
+    
+    /* Компактні мета-дані */
+    .product-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .product-meta-item {
+        margin-bottom: 0;
+        font-size: 0.85rem;
+    }
+    
+    .prices-title {
+        font-size: 0.9rem;
+        margin-top: 6px;
+    }
+    
+    .article-badge {
+        padding: 2px 6px;
+        font-size: 0.85rem;
+        margin-left: 4px;
+    }
+    
+    /* Компактна price card */
+    .price-card {
+        padding: 8px 10px;
+        margin-bottom: 8px;
+    }
+    
+    .price-info {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        gap: 6px 10px;
+        align-items: center;
+    }
+    
+    .price-column {
+        grid-column: 1;
+        grid-row: 1;
+        min-width: unset;
+    }
+    
+    .price-value-main {
+        font-size: 1.15rem;
+    }
+    
+    .price-value-secondary {
+        font-size: 0.8rem;
+    }
+    
+    .availability-column {
+        grid-column: 1;
+        grid-row: 2;
+        flex-direction: row;
+        gap: 6px;
+        font-size: 0.8rem;
+    }
+    
+    .availability-label {
+        display: none; /* Приховуємо label для компактності */
+    }
+    
+    .quantity-column {
+        grid-column: 2;
+        grid-row: 1;
+        gap: 4px;
+    }
+    
+    .quantity-label {
+        display: none;
+    }
+    
+    .quantity-input {
+        width: 45px;
+        padding: 4px;
+        font-size: 0.9rem;
+    }
+    
+    .button-column {
+        grid-column: 2;
+        grid-row: 2;
+        margin-left: 0;
+    }
+    
+    .price-card .btn-add-to-cart {
+        padding: 6px 10px !important;
+        font-size: 1rem !important;
+        min-width: 40px;
+        min-height: 34px;
+    }
+    
+    /* Out of stock message */
+    .out-of-stock-msg {
+        font-size: 0.75rem;
+        padding: 3px 6px;
+        max-width: 100%;
+    }
+    
+    .price-info.out-of-stock-layout .out-of-stock-msg {
+        grid-column: 1 / -1;
+        grid-row: 3;
+    }
+    
+    /* Continue shopping button */
+    .mt-4 .btn-outline {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+    
+    /* Image section */
+    .image-container img {
+        max-height: 180px;
+    }
+    
+    .image-nav {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+    
+    .thumbnail img {
+        width: 50px;
+        height: 38px;
+    }
+    
+    /* Sticky buy button for mobile */
+    .sticky-buy-btn {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        background: #fff;
+        box-shadow: 0 -2px 12px rgba(37,99,235,0.12);
+        padding: 8px 12px 12px 12px;
+        z-index: 1000;
+    }
+}
+
+@media (max-width: 400px) {
+    .product-info-header h1 {
+        font-size: 0.95rem;
+    }
+    
+    .price-value-main {
+        font-size: 1.05rem;
+    }
+    
+    .image-container img {
+        max-height: 150px;
+    }
+}
+
+/* Description section mobile */
+@media (max-width: 767px) {
+    .description-section {
+        margin-top: 12px;
+        border-radius: 8px;
+    }
+    
+    .description-header {
+        padding: 10px 12px;
+    }
+    
+    .description-header h2 {
+        font-size: 1rem;
+    }
+    
+    .description-body {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+    
+    .no-description-alert {
+        padding: 12px;
+    }
+    
+    .no-description-alert h4 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+    
+    .part-benefits {
+        margin: 10px 0;
+    }
+    
+    .part-benefits li {
+        padding: 3px 0;
+        font-size: 0.85rem;
+    }
+    
+    .call-to-action .btn {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+    
+    .call-to-action .btn.ms-2 {
+        margin-left: 6px !important;
+        margin-top: 0;
+    }
+    
+    /* Related searches */
+    .related-searches {
+        padding: 10px;
+        margin-top: 12px;
+    }
+    
+    .related-searches h5 {
+        font-size: 0.9rem;
+    }
+    
+    .related-search-tags a {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+    
+    /* Breadcrumb compact */
+    .breadcrumb-nav {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+    
+    .breadcrumb-nav i {
+        font-size: 0.9rem;
+    }
 }
 
 /* No photo placeholder styling */

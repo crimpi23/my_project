@@ -1,211 +1,210 @@
 {% extends "base/admin_base.html" %}
 
-{% block title %}Manage Sitemaps{% endblock %}
+{% block title %}{{ _('Sitemap Management') }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h2">Sitemap Management</h1>
-        <div>
-            <a href="{{ url_for('admin_check_sitemap_data', token=token) }}" class="btn btn-info me-2">
-                <i class="bi bi-database-check"></i> Check Sitemap Data
-            </a>
-            <a href="{{ url_for('admin_sitemap_utils', token=token) }}" class="btn btn-info me-2">
-                <i class="bi bi-tools"></i> Sitemap Utils
-            </a>
-            <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Dashboard
-            </a>
+<div class="page-header">
+    <h1><i class="bi bi-diagram-2"></i> {{ _('Sitemap Management') }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_check_sitemap_data', token=token) }}" class="btn btn-outline-primary">
+            <i class="bi bi-database-check"></i> {{ _('Check Data') }}
+        </a>
+        <a href="{{ url_for('admin_sitemap_utils', token=token) }}" class="btn btn-outline-primary">
+            <i class="bi bi-tools"></i> {{ _('Utils') }}
+        </a>
+        <a href="{{ url_for('admin_scheduler_status', token=token) }}" class="btn btn-outline-primary">
+            <i class="bi bi-clock"></i> {{ _('Scheduler') }}
+        </a>
+        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Dashboard') }}
+        </a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card primary">
+            <div class="stat-value">{{ sitemap_files|length }}</div>
+            <div class="stat-label">{{ _('Sitemap Files') }}</div>
         </div>
     </div>
+    <div class="col-md-4">
+        <div class="stat-card success">
+            <div class="stat-value">{{ scheduler_jobs|length if scheduler_jobs else 0 }}</div>
+            <div class="stat-label">{{ _('Scheduled Jobs') }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-value"><i class="bi bi-folder"></i></div>
+            <div class="stat-label">{{ sitemap_dir }}</div>
+        </div>
+    </div>
+</div>
 
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Generate Sitemaps</h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted">Generate sitemap files for different sections of the website.</p>
-                    <form action="{{ url_for('admin_generate_sitemaps', token=token) }}" method="post">
-                        <div class="mb-3">
-                            <label for="type" class="form-label">Generation Type</label>
-                            <select class="form-select" name="type" id="type">
-                                <option value="all">All Sitemaps (без Other)</option>
-                                <option value="static">Static Pages</option>
-                                <option value="categories">Categories</option>
-                                <option value="stock">Products in Stock</option>
-                                <option value="enriched">Enriched Products</option>
-                                <option value="index">Index File Only</option>
-                                <option value="images">Product Images</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-gear"></i> Generate
+<div class="row g-4 mb-4">
+    <!-- Generate Sitemaps -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-gear me-2"></i>{{ _('Generate Sitemaps') }}
+            </div>
+            <div class="card-body">
+                <p class="text-muted">{{ _('Generate sitemap files for different sections of the website.') }}</p>
+                <form action="{{ url_for('admin_generate_sitemaps', token=token) }}" method="post">
+                    <div class="mb-3">
+                        <label for="type" class="form-label">{{ _('Generation Type') }}</label>
+                        <select class="form-select" name="type" id="type">
+                            <option value="all">{{ _('All Sitemaps') }} ({{ _('without Other') }})</option>
+                            <option value="static">{{ _('Static Pages') }}</option>
+                            <option value="categories">{{ _('Categories') }}</option>
+                            <option value="stock">{{ _('Products in Stock') }}</option>
+                            <option value="enriched">{{ _('Enriched Products') }}</option>
+                            <option value="index">{{ _('Index File Only') }}</option>
+                            <option value="images">{{ _('Product Images') }}</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-gear"></i> {{ _('Generate') }}
+                    </button>
+                </form>
+                
+                <!-- Other Products (Large Files) -->
+                <div class="mt-4 pt-3 border-top">
+                    <h6 class="text-warning">
+                        <i class="bi bi-exclamation-triangle"></i> {{ _('Large Files (caution!)') }}
+                    </h6>
+                    <p class="text-muted small">
+                        {{ _('Other Products contains all products from price lists without descriptions/photos. This may create very large files!') }}
+                    </p>
+                    <form action="{{ url_for('admin_generate_sitemaps', token=token) }}" method="post" 
+                          onsubmit="return confirm('{{ _('WARNING! This may create very large sitemap files. Continue?') }}');">
+                        <input type="hidden" name="type" value="other">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-exclamation-triangle"></i> {{ _('Generate Other Products') }}
                         </button>
                     </form>
-                    
-                    <!-- ДОДАНА ОКРЕМА КНОПКА ДЛЯ OTHER -->
-                    <div class="mt-3 pt-3 border-top">
-                        <h6 class="text-warning">
-                            <i class="bi bi-exclamation-triangle"></i> Великі файли (обережно!)
-                        </h6>
-                        <p class="text-muted small">
-                            Other Products містить всі товари з прайс-листів без описів/фото. 
-                            Це може створити дуже великі файли!
-                        </p>
-                        <form action="{{ url_for('admin_generate_sitemaps', token=token) }}" method="post" 
-                              onsubmit="return confirm('УВАГА! Це може створити дуже великі файли sitemap. Продовжити?');">
-                            <input type="hidden" name="type" value="other">
-                            <button type="submit" class="btn btn-warning">
-                                <i class="bi bi-exclamation-triangle"></i> Generate Other Products (великі файли)
-                            </button>
-                        </form>
-                    </div>
-                    
-                    <!-- CLEANUP OLD FILES -->
-                    <div class="mt-3 pt-3 border-top">
-                        <h6 class="text-danger">
-                            <i class="bi bi-trash"></i> Очистити старі файли
-                        </h6>
-                        <p class="text-muted small">
-                            Видаляє старі sitemap-other файли, які більше не використовуються і займають місце.
-                        </p>
-                        <form action="{{ url_for('admin_generate_sitemaps', token=token) }}" method="post" 
-                              onsubmit="return confirm('Видалити всі старі sitemap-other файли?');">
-                            <input type="hidden" name="type" value="cleanup">
-                            <button type="submit" class="btn btn-outline-danger">
-                                <i class="bi bi-trash"></i> Delete Old Other Files
-                            </button>
-                        </form>
-                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Sitemap Information</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Sitemap Directory:</strong> {{ sitemap_dir }}</p>
-                    <p><strong>Files Count:</strong> {{ sitemap_files|length }}</p>
-                    
-                    <h6 class="mt-3">Sitemap Tools</h6>
-                    <div class="d-flex gap-2 mt-3">
-                        <a href="{{ url_for('admin_check_sitemap_data', token=token) }}" class="btn btn-outline-primary">
-                            <i class="bi bi-database-check"></i> Check Sitemap Data
-                        </a>
-                        <a href="{{ url_for('admin_sitemap_utils', token=token) }}" class="btn btn-outline-primary">
-                            <i class="bi bi-tools"></i> Sitemap Utils
-                        </a>
-                    </div>
-                    
-                    <h6 class="mt-3">Scheduled Jobs</h6>
-                    {% if scheduler_jobs %}
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Job</th>
-                                    <th>Next Run</th>
-                                    <th>Schedule</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for job in scheduler_jobs %}
-                                <tr>
-                                    <td>{{ job.id }}</td>
-                                    <td>{{ job.next_run }}</td>
-                                    <td>{{ job.trigger }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p class="text-muted">No scheduled jobs found.</p>
-                    {% endif %}
+                
+                <!-- Cleanup Old Files -->
+                <div class="mt-3 pt-3 border-top">
+                    <h6 class="text-danger">
+                        <i class="bi bi-trash"></i> {{ _('Cleanup Old Files') }}
+                    </h6>
+                    <p class="text-muted small">
+                        {{ _('Removes old sitemap-other files that are no longer used and take up space.') }}
+                    </p>
+                    <form action="{{ url_for('admin_generate_sitemaps', token=token) }}" method="post" 
+                          onsubmit="return confirm('{{ _('Delete all old sitemap-other files?') }}');">
+                        <input type="hidden" name="type" value="cleanup">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="bi bi-trash"></i> {{ _('Delete Old Files') }}
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Sitemap Files</h5>
-        </div>
-        <div class="card-body">
-            {% if sitemap_files %}
+    
+    <!-- Scheduled Jobs -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-clock-history me-2"></i>{{ _('Scheduled Jobs') }}
+            </div>
+            <div class="card-body">
+                {% if scheduler_jobs %}
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-sm">
                         <thead>
                             <tr>
-                                <th>Filename</th>
-                                <th>Size</th>
-                                <th>Modified</th>
-                                <th>Actions</th>
+                                <th>{{ _('Job') }}</th>
+                                <th>{{ _('Next Run') }}</th>
+                                <th>{{ _('Schedule') }}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for file in sitemap_files %}
+                            {% for job in scheduler_jobs %}
                             <tr>
-                                <td>{{ file.name }}</td>
-                                <td>{{ file.size }}</td>
-                                <td>{{ file.modified.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                                <td>
-                                    <div class="btn-group">
-                                        <a href="{{ url_for('admin_view_sitemap', token=token, filename=file.name) }}" 
-                                           class="btn btn-sm btn-info">
-                                            <i class="bi bi-eye"></i> View
-                                        </a>
-                                        <a href="/{{ file.name }}" target="_blank" 
-                                           class="btn btn-sm btn-secondary">
-                                            <i class="bi bi-box-arrow-up-right"></i> Open
-                                        </a>
-                                        <form action="{{ url_for('admin_delete_sitemap', token=token, filename=file.name) }}" 
-                                              method="post" style="display: inline;" 
-                                              onsubmit="return confirm('Are you sure you want to delete this file?');">
-                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                <i class="bi bi-trash"></i> Delete
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
+                                <td><code>{{ job.id }}</code></td>
+                                <td>{{ job.next_run }}</td>
+                                <td><small>{{ job.trigger }}</small></td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            {% else %}
-                <div class="alert alert-info">
-                    No sitemap files found in the directory.
+                {% else %}
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    {{ _('No scheduled jobs found.') }}
                 </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="card-title mb-0">Scheduled Jobs</h5>
-        </div>
-        <div class="card-body">
-            <table class="table table-striped table-hover">
-                <!-- Таблиця з завданнями -->
-            </table>
-            
-            <!-- Додайте цей блок з посиланням -->
-            <div class="mt-3">
-                <a href="{{ url_for('admin_scheduler_status', token=token) }}" class="btn btn-info">
-                    <i class="bi bi-clock"></i> Detailed Scheduler Status
-                </a>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('admin_scheduler_status', token=token) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-clock"></i> {{ _('Detailed Scheduler Status') }}
+                    </a>
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Додайте цей блок на сторінку manage_sitemaps.html, якщо його ще немає -->
-    <div class="mt-3">
-        <a href="{{ url_for('admin_scheduler_status', token=token) }}" class="btn btn-info">
-            <i class="bi bi-clock"></i> View Scheduler Status
-        </a>
+<!-- Sitemap Files List -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-files me-2"></i>{{ _('Sitemap Files') }}
     </div>
+    {% if sitemap_files %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>{{ _('Filename') }}</th>
+                    <th>{{ _('Size') }}</th>
+                    <th>{{ _('Modified') }}</th>
+                    <th>{{ _('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in sitemap_files %}
+                <tr>
+                    <td><code>{{ file.name }}</code></td>
+                    <td>{{ file.size }}</td>
+                    <td>{{ file.modified.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('admin_view_sitemap', token=token, filename=file.name) }}" 
+                               class="btn btn-outline-primary" title="{{ _('View') }}">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="/{{ file.name }}" target="_blank" 
+                               class="btn btn-outline-secondary" title="{{ _('Open') }}">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                            <form action="{{ url_for('admin_delete_sitemap', token=token, filename=file.name) }}" 
+                                  method="post" style="display: inline;" 
+                                  onsubmit="return confirm('{{ _('Delete this file?') }}');">
+                                <button type="submit" class="btn btn-outline-danger" title="{{ _('Delete') }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card-body">
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-info-circle me-2"></i>
+            {{ _('No sitemap files found in the directory.') }}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

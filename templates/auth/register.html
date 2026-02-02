@@ -47,13 +47,16 @@
                                 {{ _('Enter phone number in international format (e.g. +421907123456)') }}
                             </small>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mt-4">
-                            <button type="submit" class="btn-action btn-action-info">
+                        <div class="auth-footer">
+                            <button type="submit" class="btn-action btn-action-primary">
                                 <i class="bi bi-person-check me-2"></i>{{ _('Register') }}
                             </button>
-                            <span class="text-muted">{{ _("Already have an account?") }} 
-                                <a href="{{ url_for('login') }}" class="text-decoration-none">{{ _('Login here') }}</a>
-                            </span>
+                            <div class="auth-footer-links">
+                                <span class="text-muted">{{ _("Already have an account?") }}</span>
+                                <a href="{{ url_for('login') }}" class="auth-link">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i>{{ _('Login') }}
+                                </a>
+                            </div>
                         </div>
                     </form>
                 </div>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% block head %}{% endblock %}
     
-    <title>{% block title %}AutogroupEU{% endblock %}</title>
+    <title>{% block title %}AutogroupEU - Náhradné diely pre Land Rover & Range Rover{% endblock %}</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
@@ -13,11 +13,143 @@
     <link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 
-    <meta name="description" content="{% block meta_description %}{{ _('AutogroupEU - Your reliable partner in auto parts supply across Europe.') }}{% endblock %}">
-    <meta property="og:title" content="{% block og_title %}AutogroupEU{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}{{ _('Find the best auto parts for your vehicle with quick delivery across Europe') }}{% endblock %}">
+    <meta name="description" content="{% block meta_description %}{{ _('AutogroupEU - Original and quality aftermarket parts for Land Rover, Range Rover, Jaguar. Fast delivery across Europe. Professional service.') }}{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}AutogroupEU - Land Rover & Range Rover Parts{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ _('Original and aftermarket parts for Land Rover, Range Rover, Jaguar. Over 100,000 parts in stock. Fast delivery across EU.') }}{% endblock %}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:site_name" content="AutogroupEU">
+    <meta property="og:image" content="https://autogroup.sk/static/images/og-image.jpg">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{% block canonical %}{{ request.url.split('?')[0] }}{% endblock %}">
+    
+    <!-- Organization Schema (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "AUTOGROUP-EU s.r.o.",
+        "alternateName": "AutogroupEU",
+        "legalName": "AUTOGROUP-EU s.r.o.",
+        "url": "https://autogroup.sk",
+        "logo": "https://autogroup.sk/static/images/logo.png",
+        "image": "https://autogroup.sk/static/images/og-image.jpg",
+        "description": "{{ _('Professional supplier of original and aftermarket parts for Land Rover, Range Rover, and Jaguar vehicles. Fast delivery across Europe.') }}",
+        "foundingDate": "2020",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Mierová 99",
+            "addressLocality": "Humenné",
+            "postalCode": "066 01",
+            "addressCountry": "SK"
+        },
+        "location": [
+            {
+                "@type": "Place",
+                "name": "AutogroupEU Warehouse",
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "Tušická Nová Ves 90",
+                    "addressLocality": "Tušice",
+                    "postalCode": "072 02",
+                    "addressCountry": "SK"
+                }
+            }
+        ],
+        "contactPoint": [
+            {
+                "@type": "ContactPoint",
+                "telephone": "+421-907-400-865",
+                "contactType": "customer service",
+                "availableLanguage": ["Slovak", "Czech", "Polish"]
+            },
+            {
+                "@type": "ContactPoint",
+                "telephone": "+421-907-539-325",
+                "contactType": "customer service",
+                "availableLanguage": ["Hungarian", "English"]
+            }
+        ],
+        "email": "info@autogroup.sk",
+        "sameAs": [
+            "https://www.facebook.com/autogroup.sk/"
+        ],
+        "areaServed": {
+            "@type": "GeoCircle",
+            "geoMidpoint": {
+                "@type": "GeoCoordinates",
+                "latitude": 48.9372,
+                "longitude": 21.9067
+            },
+            "geoRadius": "2000km"
+        },
+        "priceRange": "€€"
+    }
+    </script>
+    
+    <!-- Website Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "AutogroupEU",
+        "url": "https://autogroup.sk",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://autogroup.sk/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    
+    <!-- LocalBusiness Schema for rich results (фізична адреса магазину) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "AutoPartsStore",
+        "name": "AUTOGROUP-EU s.r.o.",
+        "image": "https://autogroup.sk/static/images/logo.png",
+        "url": "https://autogroup.sk",
+        "telephone": "+421-907-400-865",
+        "email": "info@autogroup.sk",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Tušická Nová Ves 90",
+            "addressLocality": "Tušice",
+            "postalCode": "072 02",
+            "addressCountry": "SK"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 48.72158,
+            "longitude": 21.75137
+        },
+        "openingHoursSpecification": [
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "opens": "08:00",
+                "closes": "17:00"
+            }
+        ],
+        "priceRange": "€€",
+        "paymentAccepted": ["Cash", "Credit Card", "Bank Transfer"],
+        "currenciesAccepted": "EUR",
+        "sameAs": [
+            "https://www.facebook.com/autogroup.sk/"
+        ]
+    }
+    </script>
+    
+    <!-- Hreflang for multilingual -->
+    {% set base_path = request.path %}
+    <link rel="alternate" hreflang="sk" href="https://autogroup.sk{{ base_path }}?lang=sk">
+    <link rel="alternate" hreflang="en" href="https://autogroup.sk{{ base_path }}?lang=en">
+    <link rel="alternate" hreflang="pl" href="https://autogroup.sk{{ base_path }}?lang=pl">
+    <link rel="alternate" hreflang="x-default" href="https://autogroup.sk{{ base_path }}">
+    
+    {% block structured_data %}{% endblock %}
 </head>
 <body>
     <div id="cookieNotice" class="cookie-notice" style="display: none;">
@@ -346,11 +478,7 @@
                     </div>
                     <div class="contact-item">
                         <i class="bi bi-geo-alt"></i>
-                        <span>066 01 Humenné, Mierová 99, Slovakia</span>
-                    </div>
-                    <div class="contact-item">
-                        <i class="bi bi-box-seam"></i>
-                        <span>{{ _('Warehouse') }}: Tušická Nová Ves 90, Tušice 07202, Slovakia</span>
+                        <span>{{ _('Store') }}: Tušická Nová Ves 90, 072 02 Tušice, Slovakia</span>
                     </div>
                     <div class="social-icons">
                         <a href="https://facebook.com/autogroup.sk/" target="_blank"><i class="bi bi-facebook"></i></a>
@@ -381,6 +509,8 @@
                 <div class="footer-section">
                     <h5>{{ _('Company Info') }}</h5>
                     <p>AUTOGROUP-EU s.r.o.<br>
+                       Mierová 99, 066 01 Humenné<br>
+                       Slovakia<br><br>
                        IČO: 47948311<br>
                        DIČ: 2120009089<br>
                        DIČ DPH: SK2120009089<br>

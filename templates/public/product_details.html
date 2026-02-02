@@ -93,7 +93,7 @@
         "itemCondition": "https://schema.org/NewCondition",
         "seller": {
           "@type": "Organization",
-          "name": "AutogroupEU s.r.o.",
+          "name": "AUTOGROUP-EU s.r.o.",
           "url": "https://autogroup.sk"
         },
         "shippingDetails": {
@@ -127,7 +127,41 @@
     }
 </script>
 
+<!-- BreadcrumbList Schema -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "{{ _('Home') }}",
+            "item": "https://autogroup.sk/"
+        }{% if product_categories and product_categories|length > 0 %},
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "{{ product_categories[0].name }}",
+            "item": "https://autogroup.sk/?category={{ product_categories[0].id }}"
+        },
+        {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "{% if product_data.name %}{{ product_data.name|e }}{% else %}{{ article }}{% endif %}"
+        }{% else %},
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "{% if product_data.name %}{{ product_data.name|e }}{% else %}{{ article }}{% endif %}"
+        }{% endif %}
+    ]
+}
+</script>
+
 {% endblock %}
+
+{% block canonical %}https://autogroup.sk/product/{{ article }}{% endblock %}
 
 {% block title %}
 {% if product_data.name %}{{ product_data.name }} - {{ brand_name }}{% else %}{{ _('Auto Part') }} {{ article }} - {{ _('Find it at AutogroupEU') }}{% endif %}
@@ -212,7 +246,7 @@
                             </div>
                         </div>
 
-                        <h4 class="mb-3"><i class="bi bi-tag-fill me-2 text-primary"></i>{{ _('Available Prices') }}</h4>
+                        <h4 class="prices-title mb-2"><i class="bi bi-tag-fill me-2 text-primary"></i>{{ _('Available Prices') }}</h4>
                         {% for price in prices %}
                         <div class="price-card">
                             <div class="price-info{% if price.table_name == 'stock' and not price.in_stock %} out-of-stock-layout{% endif %}">

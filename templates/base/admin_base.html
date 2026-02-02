@@ -1,132 +1,420 @@
-{# filepath: templates/base/admin_base.html #}
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="{{ admin_lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Admin Panel{% endblock %}</title>
+    <title>{% block title %}{{ _('Dashboard') }}{% endblock %} - Admin</title>
     
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     
     <style>
         :root {
-            --primary-color: #343a40;
-            --accent-color: #dc3545;
-            --hover-color: #c82333;
+            --sidebar-width: 250px;
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #334155;
+            --sidebar-active: #3b82f6;
+            --sidebar-text: #94a3b8;
+            --sidebar-text-active: #ffffff;
+            --content-bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
         }
+
+        * { box-sizing: border-box; }
 
         body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            background: var(--content-bg);
+            color: var(--text-primary);
+            margin: 0;
+            min-height: 100vh;
         }
 
-        /* Sidebar styles */
+        /* ===== SIDEBAR ===== */
         .sidebar {
             position: fixed;
             top: 0;
-            bottom: 0;
             left: 0;
-            z-index: 100;
-            padding: 48px 0 0;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-            background-color: var(--primary-color);
-            width: 250px;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
         }
 
-        .sidebar-sticky {
-            position: relative;
-            top: 0;
-            height: calc(100vh - 48px);
-            padding-top: .5rem;
-            overflow-x: hidden;
-            overflow-y: auto;
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
-        .sidebar .nav-link {
-            padding: 0.8rem 1rem;
-            color: rgba(255, 255, 255, 0.8);
+        .sidebar-logo {
+            color: #fff;
+            font-weight: 700;
+            font-size: 18px;
+            text-decoration: none;
             display: flex;
             align-items: center;
             gap: 10px;
-            transition: all 0.3s ease;
         }
 
-        .sidebar .nav-link:hover {
-            color: white;
-            background-color: rgba(255, 255, 255, 0.1);
-            padding-left: 1.5rem;
+        .sidebar-logo i { color: var(--accent); font-size: 24px; }
+
+        .lang-switch {
+            display: flex;
+            gap: 2px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 2px;
         }
 
-        .sidebar .nav-link.active {
-            color: white;
-            background-color: var(--accent-color);
+        .lang-switch a {
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.2s;
         }
 
-        .sidebar .nav-link i {
-            width: 20px;
+        .lang-switch a:hover { color: #fff; }
+        .lang-switch a.active { background: var(--accent); color: #fff; }
+
+        /* Navigation */
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 0;
+        }
+
+        .nav-section { padding: 0 12px; margin-bottom: 8px; }
+
+        .nav-section-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--sidebar-text);
+            padding: 8px 12px 4px;
+            opacity: 0.6;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 2px 0;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .nav-link:hover {
+            background: var(--sidebar-hover);
+            color: var(--sidebar-text-active);
+        }
+
+        .nav-link.active {
+            background: var(--sidebar-active);
+            color: var(--sidebar-text-active);
+        }
+
+        .nav-link i { font-size: 18px; width: 20px; text-align: center; }
+
+        .nav-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 12px;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-header h1 i { color: var(--accent); }
+
+        .page-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            background: transparent;
+        }
+
+        .card-body { padding: 20px; }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            font-weight: 500;
+            font-size: 13px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .btn-success {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            border-color: var(--warning);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .btn-outline-secondary {
+            color: var(--text-secondary);
+            border-color: var(--border-color);
+        }
+
+        .btn-outline-secondary:hover {
+            background: var(--content-bg);
+            color: var(--text-primary);
+        }
+
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-lg { padding: 12px 24px; font-size: 15px; }
+
+        .btn-back {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        .btn-back:hover { color: var(--accent); }
+
+        /* ===== TABLES ===== */
+        .table {
+            font-size: 13px;
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background: var(--sidebar-bg);
+            color: #fff;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 12px 16px;
+            border: none;
+        }
+
+        .table tbody td {
+            padding: 12px 16px;
+            vertical-align: middle;
+            border-color: var(--border-color);
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background: rgba(0,0,0,0.02);
+        }
+
+        .table-hover tbody tr:hover {
+            background: rgba(59, 130, 246, 0.04);
+        }
+
+        /* ===== FORMS ===== */
+        .form-label {
+            font-weight: 500;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+
+        .form-control, .form-select {
+            font-size: 14px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* ===== BADGES ===== */
+        .badge {
+            font-weight: 500;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        /* ===== ALERTS ===== */
+        .alert {
+            border: none;
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 14px;
+        }
+
+        .alert-success { background: rgba(34, 197, 94, 0.1); color: #15803d; }
+        .alert-danger { background: rgba(239, 68, 68, 0.1); color: #b91c1c; }
+        .alert-warning { background: rgba(245, 158, 11, 0.1); color: #b45309; }
+        .alert-info { background: rgba(59, 130, 246, 0.1); color: #1d4ed8; }
+
+        /* ===== PAGINATION ===== */
+        .pagination { gap: 4px; }
+
+        .page-link {
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-size: 13px;
+            padding: 8px 14px;
+        }
+
+        .page-link:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .page-item.active .page-link {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* ===== STAT CARDS ===== */
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
         }
 
-        /* Main content area */
-        main {
-            margin-left: 250px;
-            padding: 2rem;
+        .stat-card.primary { border-left: 4px solid var(--accent); }
+        .stat-card.success { border-left: 4px solid var(--success); }
+        .stat-card.warning { border-left: 4px solid var(--warning); }
+        .stat-card.danger { border-left: 4px solid var(--danger); }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
         }
 
-        /* Cards */
-        .card {
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-content {
             border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            border-radius: 12px;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 20px;
         }
 
-        /* Buttons */
-        .btn-admin {
-            background-color: var(--accent-color);
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            color: white;
-            transition: all 0.3s ease;
+        .modal-body { padding: 20px; }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: 16px 20px;
         }
 
-        .btn-admin:hover {
-            background-color: var(--hover-color);
-            transform: translateY(-2px);
-        }
-
-        /* Tables */
-        .admin-table {
-            background-color: white;
-            border-radius: 10px;
+        /* ===== UTILITIES ===== */
+        .text-truncate-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .admin-table th {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1rem;
-            font-weight: 500;
+        .filter-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
         }
 
-        .admin-table td {
-            padding: 1rem;
-            vertical-align: middle;
-        }
-
-        /* Alert messages */
-        .alert {
-            border-radius: 8px;
-            margin-bottom: 1rem;
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .sidebar { width: 70px; }
+            .sidebar-logo span, .nav-section-label, .nav-link span, .lang-switch { display: none; }
+            .nav-link { justify-content: center; padding: 12px; }
+            .main-content { margin-left: 70px; }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -134,67 +422,130 @@
 <body>
     <!-- Sidebar -->
     <nav class="sidebar">
-        <div class="sidebar-sticky">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" 
-                       href="{{ url_for('admin_dashboard', token=token) }}">
-                        <i class="bi bi-speedometer2"></i> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'process_orders' %}active{% endif %}" 
-                       href="{{ url_for('process_orders', token=token) }}">
-                        <i class="bi bi-check2-circle"></i> Process Orders
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'upload_price_list' %}active{% endif %}" 
-                       href="{{ url_for('upload_price_list', token=token) }}">
-                        <i class="bi bi-upload"></i> Upload Price List
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'manage_stock' %}active{% endif %}" 
-                       href="{{ url_for('manage_stock', token=token) }}">
-                        <i class="bi bi-boxes"></i> Manage Stock
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'create_user' %}active{% endif %}" 
-                       href="{{ url_for('create_user', token=token) }}">
-                        <i class="bi bi-person-plus"></i> Create User
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'manage_descriptions' %}active{% endif %}" 
-                       href="{{ url_for('manage_descriptions', token=token) }}">
-                        <i class="bi bi-file-text"></i> Manage Descriptions
-                    </a>
-                </li>
-                <hr class="my-2" style="border-color: rgba(255,255,255,0.2);">
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'admin_categories' %}active{% endif %}" 
-                       href="{{ url_for('admin_categories', token=token) }}">
-                        <i class="bi bi-folder-check"></i> Manage Categories
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'admin_product_categories' %}active{% endif %}" 
-                       href="{{ url_for('admin_product_categories', token=token) }}">
-                        <i class="bi bi-link-45deg"></i> Product → Categories
-                    </a>
-                </li>
-            </ul>
+        <div class="sidebar-header">
+            <a href="{{ url_for('admin_dashboard', token=token) }}" class="sidebar-logo">
+                <i class="bi bi-gear-fill"></i>
+                <span>Admin</span>
+            </a>
+            <div class="lang-switch">
+                <a href="{{ url_for('set_admin_language', lang='en') }}" 
+                   class="{% if admin_lang == 'en' %}active{% endif %}">EN</a>
+                <a href="{{ url_for('set_admin_language', lang='uk') }}" 
+                   class="{% if admin_lang == 'uk' %}active{% endif %}">UA</a>
+            </div>
+        </div>
+
+        <div class="sidebar-nav">
+            <!-- Main -->
+            <div class="nav-section">
+                <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" 
+                   href="{{ url_for('admin_dashboard', token=token) }}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>{{ _('Dashboard') }}</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'process_orders' %}active{% endif %}" 
+                   href="{{ url_for('process_orders', token=token) }}">
+                    <i class="bi bi-cart-check"></i>
+                    <span>{{ _('Orders') }}</span>
+                </a>
+            </div>
+
+            <div class="nav-divider"></div>
+
+            <!-- Catalog & Content -->
+            <div class="nav-section">
+                <div class="nav-section-label">{{ _('Catalog & Content') }}</div>
+                <a class="nav-link {% if request.endpoint == 'manage_stock' %}active{% endif %}" 
+                   href="{{ url_for('manage_stock', token=token) }}">
+                    <i class="bi bi-boxes"></i>
+                    <span>{{ _('Manage Stock') }}</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'admin_product_categories' %}active{% endif %}" 
+                   href="{{ url_for('admin_product_categories', token=token) }}">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>{{ _('Product Categories') }}</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'admin_categories' %}active{% endif %}" 
+                   href="{{ url_for('admin_categories', token=token) }}">
+                    <i class="bi bi-folder"></i>
+                    <span>{{ _('Manage Categories') }}</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'manage_descriptions' %}active{% endif %}" 
+                   href="{{ url_for('manage_descriptions', token=token) }}">
+                    <i class="bi bi-file-text"></i>
+                    <span>{{ _('Descriptions') }}</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'admin_manage_photos' %}active{% endif %}" 
+                   href="{{ url_for('admin_manage_photos', token=token) }}">
+                    <i class="bi bi-image"></i>
+                    <span>{{ _('Photos') }}</span>
+                </a>
+            </div>
+
+            <div class="nav-divider"></div>
+
+            <!-- Needs Attention -->
+            <div class="nav-section">
+                <div class="nav-section-label">{{ _('Needs Attention') }}</div>
+                <a class="nav-link {% if request.endpoint == 'admin_products_missing_descriptions' %}active{% endif %}" 
+                   href="{{ url_for('admin_products_missing_descriptions', token=token) }}">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>{{ _('Missing Descriptions') }}</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'admin_products_missing_photos' %}active{% endif %}" 
+                   href="{{ url_for('admin_products_missing_photos', token=token) }}">
+                    <i class="bi bi-image"></i>
+                    <span>{{ _('Missing Photos') }}</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'admin_product_categories' and request.args.get('status') == 'unassigned' %}active{% endif %}" 
+                   href="{{ url_for('admin_product_categories', token=token, status='unassigned') }}">
+                    <i class="bi bi-exclamation-diamond"></i>
+                    <span>{{ _('Products without categories') }}</span>
+                </a>
+            </div>
+
+            <div class="nav-divider"></div>
+
+            <!-- SEO & Feeds -->
+            <div class="nav-section">
+                <div class="nav-section-label">{{ _('SEO & Feeds') }}</div>
+                <a class="nav-link {% if request.endpoint == 'upload_price_list' %}active{% endif %}" 
+                   href="{{ url_for('upload_price_list', token=token) }}">
+                    <i class="bi bi-upload"></i>
+                    <span>{{ _('Price Lists') }}</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'admin_sitemaps' %}active{% endif %}" 
+                   href="{{ url_for('admin_sitemaps', token=token) }}">
+                    <i class="bi bi-map"></i>
+                    <span>Sitemaps</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'manage_google_feed' %}active{% endif %}" 
+                   href="{{ url_for('manage_google_feed', token=token) }}">
+                    <i class="bi bi-google"></i>
+                    <span>Google Feed</span>
+                </a>
+            </div>
+
+            <div class="nav-divider"></div>
+
+            <!-- Settings -->
+            <div class="nav-section">
+                <div class="nav-section-label">{{ _('Settings') }}</div>
+                <a class="nav-link {% if request.endpoint == 'admin_manage_users' %}active{% endif %}" 
+                   href="{{ url_for('admin_manage_users', token=token) }}">
+                    <i class="bi bi-people"></i>
+                    <span>{{ _('Users') }}</span>
+                </a>
+            </div>
         </div>
     </nav>
 
-    <!-- Main content -->
-    <main>
+    <!-- Main Content -->
+    <main class="main-content">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                         {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
@@ -206,23 +557,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- В секції head або перед закриваючим body -->
-    <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Replace all elements with class 'wysiwyg-editor' with CKEditor
-            document.querySelectorAll('.wysiwyg-editor').forEach(function(element) {
-                ClassicEditor
-                    .create(element, {
-                        toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'insertTable', 'undo', 'redo']
-                    })
-                    .catch(error => {
-                        console.error(error);
-                    });
-            });
-        });
-    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

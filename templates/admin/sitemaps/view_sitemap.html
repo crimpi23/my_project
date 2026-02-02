@@ -1,36 +1,41 @@
 {% extends "base/admin_base.html" %}
 
-{% block title %}View Sitemap - {{ filename }}{% endblock %}
+{% block title %}{{ _('View Sitemap') }} - {{ filename }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h2">View Sitemap: {{ filename }}</h1>
-        <div>
-            <a href="{{ url_for('admin_sitemaps', token=token) }}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Sitemaps
-            </a>
+<div class="page-header">
+    <h1><i class="bi bi-file-code"></i> {{ _('View Sitemap') }}: {{ filename }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_sitemaps', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Sitemaps') }}
+        </a>
+    </div>
+</div>
+
+<!-- File Info -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="stat-card primary">
+            <div class="stat-value">{{ (content|length / 1024)|round(2) }} KB</div>
+            <div class="stat-label">{{ _('File Size') }}</div>
         </div>
     </div>
-
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">File Information</h5>
-        </div>
-        <div class="card-body">
-            <p><strong>Path:</strong> {{ file_path }}</p>
-            <p><strong>Size:</strong> {{ (content|length / 1024)|round(2) }} KB</p>
+    <div class="col-md-6">
+        <div class="stat-card secondary">
+            <div class="stat-value" style="font-size: 0.9rem;">{{ file_path }}</div>
+            <div class="stat-label">{{ _('Path') }}</div>
         </div>
     </div>
+</div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">File Content</h5>
-        </div>
-        <div class="card-body">
-            <div class="bg-light p-3 rounded">
-                <pre><code class="language-xml">{{ content }}</code></pre>
-            </div>
+<!-- File Content -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-code-slash me-2"></i>{{ _('File Content') }}
+    </div>
+    <div class="card-body">
+        <div class="bg-light p-3 rounded" style="max-height: 600px; overflow: auto;">
+            <pre class="mb-0"><code class="language-xml">{{ content }}</code></pre>
         </div>
     </div>
 </div>

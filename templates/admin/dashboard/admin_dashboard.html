@@ -1,358 +1,167 @@
 {% extends "base/admin_base.html" %}
 
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}{{ _('Dashboard') }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Заголовок -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h2">Admin Dashboard</h1>
-        <div>
-            <a href="{{ url_for('admin_scheduler_status', token=token) }}" class="btn btn-outline-secondary me-2">
-                <i class="bi bi-clock"></i> Scheduler Status
-            </a>
-            <a href="{{ url_for('test_ftp_admin', token=token) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-server"></i> Test FTP Connection
-            </a>
-        </div>
-    </div>
-
-    <!-- Керування замовленнями (тільки активна функція Process Orders) -->
-    <div class="card mb-4">
-        <div class="card-header bg-warning text-dark">
-            <h5 class="mb-0"><i class="bi bi-cart3 me-2"></i>Orders Management</h5>
-        </div>
-        <div class="card-body">
-            <div class="row g-3">
-                <!-- Обробка замовлень (активна) -->
-                <div class="col-md-4 col-lg-3">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h6 class="mb-0">Process Orders</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <a href="{{ url_for('process_orders', token=token) }}" class="btn btn-warning">
-                                    <i class="bi bi-check2-circle me-1"></i>Process Orders
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Активні модулі -->
-    <div class="row g-4 mb-5">
-        <!-- Керування каталогом -->
-        <div class="col-xl-4 col-md-6">
-            <div class="card h-100 border-primary">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-archive me-2"></i>Catalog Management</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('upload_price_list', token=token) }}" class="btn btn-outline-primary">
-                                    <i class="bi bi-upload me-2"></i>Upload Price List
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('manage_stock', token=token) }}" class="btn btn-outline-primary">
-                                    <i class="bi bi-boxes me-2"></i>Manage Stock
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="btn btn-warning">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                    <strong>Products Missing Photos</strong>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_products_missing_descriptions', token=token) }}" class="btn btn-danger">
-                                    <i class="bi bi-file-text me-2"></i>
-                                    <strong>Products Missing Descriptions</strong>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Керування контентом -->
-        <div class="col-xl-4 col-md-6">
-            <div class="card h-100 border-success">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="bi bi-image-alt me-2"></i>Content Management</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_manage_photos', token=token) }}" class="btn btn-outline-success">
-                                    <i class="bi bi-images me-2"></i>Manage Photos
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_upload_photos', token=token) }}" class="btn btn-outline-success">
-                                    <i class="bi bi-image-add me-2"></i>Add Images
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="btn btn-warning">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>Products Missing Photos
-                                    <small class="d-block text-muted">Find products without images</small>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <hr>
-                            <h6 class="mb-3">Product Descriptions</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('manage_descriptions', token=token) }}" class="btn btn-outline-success">
-                                    <i class="bi bi-file-text me-2"></i>Manage Descriptions
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('add_product_descriptions', token=token) }}" class="btn btn-outline-success">
-                                    <i class="bi bi-file-plus me-2"></i>Add Descriptions
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <hr>
-                            <h6 class="mb-3">Blog</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_blog_posts', token=token) }}" class="btn btn-outline-success">
-                                    <i class="bi bi-file-richtext me-2"></i>Manage Blog Posts
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_blog_categories', token=token) }}" class="btn btn-outline-success">
-                                    <i class="bi bi-folder-plus me-2"></i>Blog Categories
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mt-2">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_blog_new_post', token=token) }}" class="btn btn-outline-success">
-                                    <i class="bi bi-pencil-square me-2"></i>Create New Post
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mt-2">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_blog_statistics', token=token) }}" class="btn btn-outline-success">
-                                    <i class="bi bi-graph-up me-2"></i>Blog Statistics
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Керування SEO та маркетингом -->
-        <div class="col-xl-4 col-md-6">
-            <div class="card h-100 border-info">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-search me-2"></i>SEO & Marketing</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_sitemaps', token=token) }}" class="btn btn-outline-info">
-                                    <i class="bi bi-diagram-3 me-2"></i>Sitemaps
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_sitemap_utils', token=token) }}" class="btn btn-outline-info">
-                                    <i class="bi bi-gear-wide me-2"></i>Sitemap Utils
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_scheduler_status', token=token) }}" class="btn btn-outline-info mt-2">
-                                    <i class="bi bi-clock-history me-2"></i>Scheduler Status
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('manage_google_feed', token=token) }}" class="btn btn-outline-info mt-2">
-                                    <i class="bi bi-google me-2"></i>Google Feed
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <hr>
-                            <h6 class="mb-3">Users</h6>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="d-grid">
-                                <a href="{{ url_for('create_user', token=token) }}" class="btn btn-outline-info">
-                                    <i class="bi bi-person-plus me-2"></i>Create User
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="d-grid">
-                                <a href="{{ url_for('assign_roles', token=token) }}" class="btn btn-outline-info">
-                                    <i class="bi bi-person-check me-2"></i>Assign Roles
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="d-grid">
-                                <a href="{{ url_for('admin_manage_users', token=token) }}" class="btn btn-outline-warning">
-                                    <i class="bi bi-key me-2"></i>Manage Passwords
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <hr>
-                            <h6 class="mb-3">Analysis</h6>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="d-grid">
-                                <a href="{{ url_for('analyze_sitemap_data', token=token) }}" class="btn btn-outline-info">
-                                    <i class="bi bi-graph-up me-2"></i>Analyze Sitemap Data
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Навігаційна панель блогу -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Blog Management</h5>
-        </div>
-        <div class="card-body">
-            <div class="d-flex flex-wrap gap-2">
-                <a href="{{ url_for('admin_blog_posts', token=token) }}" class="btn btn-sm {% if request.endpoint == 'admin_blog_posts' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    <i class="bi bi-list-ul me-1"></i> All Posts
-                </a>
-                <a href="{{ url_for('admin_blog_new_post', token=token) }}" class="btn btn-sm {% if request.endpoint == 'admin_blog_new_post' %}btn-success{% else %}btn-outline-success{% endif %}">
-                    <i class="bi bi-plus-circle me-1"></i> New Post
-                </a>
-                <a href="{{ url_for('admin_blog_categories', token=token) }}" class="btn btn-sm {% if request.endpoint == 'admin_blog_categories' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    <i class="bi bi-folder me-1"></i> Categories
-                </a>
-                <a href="{{ url_for('admin_blog_statistics', token=token) }}" class="btn btn-sm {% if request.endpoint == 'admin_blog_statistics' %}btn-info{% else %}btn-outline-info{% endif %}">
-                    <i class="bi bi-bar-chart me-1"></i> Statistics
-                </a>
-                <a href="{{ url_for('blog_index') }}" class="btn btn-sm btn-outline-secondary" target="_blank">
-                    <i class="bi bi-box-arrow-up-right me-1"></i> View Blog
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Керування імпортом -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="bi bi-upload"></i> Import Management</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <a href="{{ url_for('admin_import_dashboard', token=token) }}" class="btn btn-primary w-100 mb-2">
-                                <i class="bi bi-speedometer2"></i><br>
-                                Import Dashboard
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('admin_import_upload', token=token) }}" class="btn btn-success w-100 mb-2">
-                                <i class="bi bi-upload"></i><br>
-                                Upload File
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('admin_import_queue', token=token) }}" class="btn btn-warning w-100 mb-2">
-                                <i class="bi bi-clock"></i><br>
-                                Queue
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('admin_import_history', token=token) }}" class="btn btn-info w-100 mb-2">
-                                <i class="bi bi-clock-history"></i><br>
-                                Import History
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="page-header">
+    <h1><i class="bi bi-speedometer2"></i> {{ _('Dashboard') }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_scheduler_status', token=token) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-clock-history"></i> Scheduler
+        </a>
+        <a href="{{ url_for('test_ftp_admin', token=token) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-diagram-2"></i> Test FTP
+        </a>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-    // Простий JavaScript без збереження стану
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Admin dashboard loaded');
-    });
-</script>
-{% endblock %}
+<!-- Quick Actions Grid -->
+<div class="row g-4">
+    
+    <!-- Catalog & Content -->
+    <div class="col-xl-4 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-box-seam text-primary me-2"></i>{{ _('Catalog & Content') }}
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('manage_stock', token=token) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-boxes"></i> {{ _('Manage Stock') }}
+                    </a>
+                    <a href="{{ url_for('admin_product_categories', token=token) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-diagram-3"></i> {{ _('Product Categories') }}
+                    </a>
+                    <a href="{{ url_for('admin_categories', token=token) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-folder-check"></i> {{ _('Manage Categories') }}
+                    </a>
+                    <a href="{{ url_for('manage_descriptions', token=token) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-card-text"></i> {{ _('Manage Descriptions') }}
+                    </a>
+                    <a href="{{ url_for('admin_manage_photos', token=token) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-images"></i> {{ _('Manage Photos') }}
+                    </a>
+                    <hr class="my-2">
+                    <a href="{{ url_for('process_orders', token=token) }}" class="btn btn-info">
+                        <i class="bi bi-list-check"></i> {{ _('Process Orders') }} <small class="d-block text-muted">Для менеджерів</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-{% block extra_css %}
-<style>
-    .card {
-        transition: transform 0.2s, box-shadow 0.2s;
-        border: none;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
-    .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    }
-    .card-header {
-        font-weight: 500;
-    }
-    .btn {
-        transition: all 0.3s;
-    }
-    .btn:hover {
-        transform: translateY(-2px);
-    }
-    hr {
-        margin: 0.75rem 0;
-    }
-    .card-header h6 {
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-</style>
+    <!-- Needs Attention -->
+    <div class="col-xl-4 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-exclamation-triangle text-warning me-2"></i>{{ _('Needs Attention') }}
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="btn btn-warning">
+                        <i class="bi bi-image"></i> {{ _('Missing Photos') }}
+                    </a>
+                    <a href="{{ url_for('admin_products_missing_descriptions', token=token) }}" class="btn btn-danger">
+                        <i class="bi bi-file-text"></i> {{ _('Missing Descriptions') }}
+                    </a>
+                    <a href="{{ url_for('admin_product_categories', token=token, status='unassigned') }}" class="btn btn-outline-warning">
+                        <i class="bi bi-exclamation-diamond"></i> {{ _('Products without categories') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEO & Feeds -->
+    <div class="col-xl-4 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-graph-up text-secondary me-2"></i>SEO & Feeds
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('manage_price_lists', token=token) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-list-ul"></i> {{ _('Price Lists') }}
+                    </a>
+                    <a href="{{ url_for('upload_price_list', token=token) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-upload"></i> {{ _('Upload Price List') }}
+                    </a>
+                    <a href="{{ url_for('admin_sitemaps', token=token) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-diagram-3"></i> Sitemaps
+                    </a>
+                    <a href="{{ url_for('manage_google_feed', token=token) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-google"></i> Google Feed
+                    </a>
+                    <a href="{{ url_for('analyze_sitemap_data', token=token) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-bar-chart"></i> {{ _('Analytics') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import -->
+    <div class="col-xl-4 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-cloud-arrow-up text-warning me-2"></i>{{ _('Import') }}
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin_import_dashboard', token=token) }}" class="btn btn-warning">
+                        <i class="bi bi-speedometer2"></i> {{ _('Import Dashboard') }}
+                    </a>
+                    <a href="{{ url_for('admin_import_upload', token=token) }}" class="btn btn-outline-warning">
+                        <i class="bi bi-upload"></i> {{ _('Upload File') }}
+                    </a>
+                    <a href="{{ url_for('admin_import_queue', token=token) }}" class="btn btn-outline-warning">
+                        <i class="bi bi-clock"></i> {{ _('Queue') }}
+                    </a>
+                    <a href="{{ url_for('admin_import_history', token=token) }}" class="btn btn-outline-warning">
+                        <i class="bi bi-clock-history"></i> {{ _('History') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users -->
+    <div class="col-xl-4 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-people me-2"></i>{{ _('Users') }}
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('create_user', token=token) }}" class="btn btn-outline-dark">
+                        <i class="bi bi-person-plus"></i> {{ _('Create User') }}
+                    </a>
+                    <a href="{{ url_for('assign_roles', token=token) }}" class="btn btn-outline-dark">
+                        <i class="bi bi-person-check"></i> {{ _('Assign Roles') }}
+                    </a>
+                    <a href="{{ url_for('admin_manage_users', token=token) }}" class="btn btn-outline-dark">
+                        <i class="bi bi-key"></i> {{ _('Manage Users') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders -->
+    <div class="col-xl-4 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-cart-check me-2"></i>{{ _('Orders') }}
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('process_orders', token=token) }}" class="btn btn-outline-dark">
+                        <i class="bi bi-list-check"></i> {{ _('Process Orders') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
 {% endblock %}

@@ -1,153 +1,150 @@
-<!-- templates/admin/photos/upload_photos.html -->
 {% extends "base/admin_base.html" %}
 
-{% block title %}Завантаження фотографій{% endblock %}
+{% block title %}{{ _('Bulk Photo Import') }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h2">Завантаження фотографій товарів</h1>
-        <div>
-            <a href="{{ url_for('admin_manage_photos', token=token) }}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Повернутись до управління
-            </a>
-        </div>
+<div class="page-header">
+    <h1><i class="bi bi-cloud-upload"></i> {{ _('Bulk Photo Import') }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_manage_photos', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Photos') }}
+        </a>
     </div>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    
-    <div class="card mb-4">
-        <div class="card-header">
-            <ul class="nav nav-tabs card-header-tabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" 
-                            type="button" role="tab" aria-controls="files" aria-selected="true">
-                        <i class="bi bi-file-earmark-image"></i> Завантаження файлів
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="card mb-4">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" 
+                        type="button" role="tab" aria-controls="files" aria-selected="true">
+                    <i class="bi bi-file-earmark-image"></i> {{ _('File Upload') }}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="urls-tab" data-bs-toggle="tab" data-bs-target="#urls" 
+                        type="button" role="tab" aria-controls="urls" aria-selected="false">
+                    <i class="bi bi-link"></i> {{ _('URL Import') }}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="bulk-tab" data-bs-toggle="tab" data-bs-target="#bulk" 
+                        type="button" role="tab" aria-controls="bulk" aria-selected="false">
+                    <i class="bi bi-list"></i> {{ _('Bulk Upload') }}
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content">
+            <!-- File Upload -->
+            <div class="tab-pane fade show active" id="files" role="tabpanel" aria-labelledby="files-tab">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="article" class="form-label">{{ _('Product Article') }}</label>
+                        <input type="text" class="form-control" id="article" name="article" 
+                               value="{{ request.args.get('article', '') }}" required>
+                        <div class="form-text">{{ _('Enter the article of the product for which you are uploading photos') }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="photos" class="form-label">{{ _('Select image files') }}</label>
+                        <input type="file" class="form-control" id="photos" name="photos" 
+                               accept="image/*" multiple required>
+                        <div class="form-text">{{ _('You can select multiple files. Supported formats: JPG, PNG, GIF, WebP') }}</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-cloud-upload"></i> {{ _('Upload Photos') }}
                     </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="urls-tab" data-bs-toggle="tab" data-bs-target="#urls" 
-                            type="button" role="tab" aria-controls="urls" aria-selected="false">
-                        <i class="bi bi-link"></i> Завантаження за URL
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="bulk-tab" data-bs-toggle="tab" data-bs-target="#bulk" 
-                            type="button" role="tab" aria-controls="bulk" aria-selected="false">
-                        <i class="bi bi-list"></i> Масове завантаження
-                    </button>
-                </li>
-            </ul>
-        </div>
-        <div class="card-body">
-            <div class="tab-content">
-                <!-- Завантаження файлів -->
-                <div class="tab-pane fade show active" id="files" role="tabpanel" aria-labelledby="files-tab">
-                    <form method="POST" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="article" class="form-label">Артикул товару</label>
-                            <input type="text" class="form-control" id="article" name="article" 
-                                   value="{{ request.args.get('article', '') }}" required>
-                            <div class="form-text">Вкажіть артикул товару, для якого завантажуєте фото</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="photos" class="form-label">Виберіть файли зображень</label>
-                            <input type="file" class="form-control" id="photos" name="photos" 
-                                   accept="image/*" multiple required>
-                            <div class="form-text">Можна вибрати декілька файлів. Підтримувані формати: JPG, PNG, GIF, WebP</div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-cloud-upload"></i> Завантажити фотографії
-                        </button>
-                    </form>
-                </div>
-                
-                <!-- Завантаження за URL -->
-                <div class="tab-pane fade" id="urls" role="tabpanel" aria-labelledby="urls-tab">
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label for="article" class="form-label">Артикул товару</label>
-                            <input type="text" class="form-control" id="article" name="article" 
-                                   value="{{ request.args.get('article', '') }}" required>
-                            <div class="form-text">Вкажіть артикул товару, для якого завантажуєте фото</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="photo_urls" class="form-label">URL зображень</label>
-                            <textarea class="form-control" id="photo_urls" name="photo_urls" 
-                                      rows="5" required placeholder="https://example.com/image1.jpg
+                </form>
+            </div>
+            
+            <!-- URL Import -->
+            <div class="tab-pane fade" id="urls" role="tabpanel" aria-labelledby="urls-tab">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="article" class="form-label">{{ _('Product Article') }}</label>
+                        <input type="text" class="form-control" id="article" name="article" 
+                               value="{{ request.args.get('article', '') }}" required>
+                        <div class="form-text">{{ _('Enter the article of the product for which you are uploading photos') }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="photo_urls" class="form-label">{{ _('Image URLs') }}</label>
+                        <textarea class="form-control" id="photo_urls" name="photo_urls" 
+                                  rows="5" required placeholder="https://example.com/image1.jpg
 https://example.com/image2.jpg"></textarea>
-                            <div class="form-text">Вказуйте кожен URL з нового рядка</div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-cloud-download"></i> Імпортувати за URL
-                        </button>
-                    </form>
-                </div>
-                
-                <!-- Масове завантаження -->
-                <div class="tab-pane fade" id="bulk" role="tabpanel" aria-labelledby="bulk-tab">
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label for="images_data" class="form-label">Дані зображень</label>
-                            <textarea class="form-control" id="images_data" name="images_data" 
-                                      rows="10" required placeholder="LR014305&#9;https://image.autogroup.sk/products/LR014305.jpg
+                        <div class="form-text">{{ _('Enter each URL on a new line') }}</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-cloud-download"></i> {{ _('Import by URL') }}
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Bulk Upload -->
+            <div class="tab-pane fade" id="bulk" role="tabpanel" aria-labelledby="bulk-tab">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="images_data" class="form-label">{{ _('Image Data') }}</label>
+                        <textarea class="form-control" id="images_data" name="images_data" 
+                                  rows="10" required placeholder="LR014305&#9;https://image.autogroup.sk/products/LR014305.jpg
 W123456&#9;https://image.autogroup.sk/products/W123456.jpg"></textarea>
-                            <div class="form-text">
-                                Формат: Артикул[TAB]URL (по одному на рядок).<br>
-                                Використовуйте символ табуляції для розділення артикулу та URL.
-                            </div>
+                        <div class="form-text">
+                            {{ _('Format: Article[TAB]URL (one per line).') }}<br>
+                            {{ _('Use the tab character to separate article and URL.') }}
                         </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-cloud-upload"></i> Масове завантаження
-                        </button>
-                    </form>
-                </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-cloud-upload"></i> {{ _('Bulk Upload') }}
+                    </button>
+                </form>
             </div>
         </div>
     </div>
-    
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Інструкції</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <h6><i class="bi bi-file-earmark-image me-2"></i>Завантаження файлів</h6>
-                    <p>Використовуйте цю вкладку для завантаження фотографій з вашого комп'ютера.</p>
-                    <ol>
-                        <li>Введіть артикул товару</li>
-                        <li>Виберіть один або декілька файлів зображень</li>
-                        <li>Натисніть "Завантажити фотографії"</li>
-                    </ol>
-                </div>
-                <div class="col-md-4">
-                    <h6><i class="bi bi-link me-2"></i>Завантаження за URL</h6>
-                    <p>Використовуйте цю вкладку для імпорту фотографій за URL.</p>
-                    <ol>
-                        <li>Введіть артикул товару</li>
-                        <li>Введіть URL-адреси зображень (кожен з нового рядка)</li>
-                        <li>Натисніть "Імпортувати за URL"</li>
-                    </ol>
-                </div>
-                <div class="col-md-4">
-                    <h6><i class="bi bi-list me-2"></i>Масове завантаження</h6>
-                    <p>Використовуйте для масового завантаження по декількох товарах.</p>
-                    <ol>
-                        <li>Введіть дані у форматі Артикул[TAB]URL</li>
-                        <li>Кожний товар з нового рядка</li>
-                        <li>Натисніть "Масове завантаження"</li>
-                    </ol>
-                </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">{{ _('Instructions') }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <h6><i class="bi bi-file-earmark-image me-2"></i>{{ _('File Upload') }}</h6>
+                <p>{{ _('Use this tab to upload photos from your computer.') }}</p>
+                <ol>
+                    <li>{{ _('Enter product article') }}</li>
+                    <li>{{ _('Select one or more image files') }}</li>
+                    <li>{{ _('Click "Upload Photos"') }}</li>
+                </ol>
+            </div>
+            <div class="col-md-4">
+                <h6><i class="bi bi-link me-2"></i>{{ _('URL Import') }}</h6>
+                <p>{{ _('Use this tab to import photos by URL.') }}</p>
+                <ol>
+                    <li>{{ _('Enter product article') }}</li>
+                    <li>{{ _('Enter image URLs (each on a new line)') }}</li>
+                    <li>{{ _('Click "Import by URL"') }}</li>
+                </ol>
+            </div>
+            <div class="col-md-4">
+                <h6><i class="bi bi-list me-2"></i>{{ _('Bulk Upload') }}</h6>
+                <p>{{ _('Use for bulk uploading for multiple products.') }}</p>
+                <ol>
+                    <li>{{ _('Enter data in Article[TAB]URL format') }}</li>
+                    <li>{{ _('Each product on a new line') }}</li>
+                    <li>{{ _('Click "Bulk Upload"') }}</li>
+                </ol>
             </div>
         </div>
     </div>

@@ -1,24 +1,51 @@
 {% extends "base/admin_login_base.html" %}
-{% block title %}Admin Login{% endblock %}
+
+{% block title %}{{ _('Admin Login') }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="text-center">{{ _("Admin Login") }}</h3>
-                </div>
-                <div class="card-body">
-                    <form method="POST">
-                        
-                        <div class="form-group">
-                            <label for="password">{{ _("Password") }}</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5 col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0">
+                    <i class="bi bi-shield-lock me-2"></i>{{ _('Admin Login') }}
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="password" class="form-label">{{ _('Password') }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-key"></i>
+                            </span>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   name="password" 
+                                   required 
+                                   autofocus
+                                   placeholder="{{ _('Enter admin password') }}">
                         </div>
-                        <button type="submit" class="btn btn-primary btn-block mt-3">{{ _("Login") }}</button>
-                    </form>
-                </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>{{ _('Login') }}
+                    </button>
+                </form>
+            </div>
+            <div class="card-footer text-center text-muted small">
+                <i class="bi bi-lock me-1"></i>{{ _('Secure Admin Access') }}
             </div>
         </div>
     </div>

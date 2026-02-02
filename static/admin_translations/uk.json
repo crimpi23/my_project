@@ -1,0 +1,173 @@
+{
+    "nav": {
+        "dashboard": "Панель керування",
+        "process_orders": "Обробка замовлень",
+        "catalog": "КАТАЛОГ",
+        "upload_price_list": "Завантажити прайс",
+        "manage_stock": "Управління складом",
+        "content": "КОНТЕНТ",
+        "manage_descriptions": "Управління описами",
+        "manage_photos": "Управління фото",
+        "categories": "КАТЕГОРІЇ",
+        "manage_categories": "Управління категоріями",
+        "product_categories": "Товар → Категорії",
+        "settings": "НАЛАШТУВАННЯ",
+        "suppliers": "Постачальники",
+        "brands": "Бренди",
+        "users": "Користувачі",
+        "sitemaps": "Sitemaps",
+        "google_feed": "Google Feed",
+        "logout": "Вихід"
+    },
+    "common": {
+        "save": "Зберегти",
+        "cancel": "Скасувати",
+        "delete": "Видалити",
+        "edit": "Редагувати",
+        "add": "Додати",
+        "search": "Пошук",
+        "filter": "Фільтр",
+        "reset": "Скинути",
+        "actions": "Дії",
+        "status": "Статус",
+        "date": "Дата",
+        "total": "Всього",
+        "yes": "Так",
+        "no": "Ні",
+        "loading": "Завантаження...",
+        "confirm": "Підтвердити",
+        "close": "Закрити",
+        "back": "Назад",
+        "next": "Далі",
+        "previous": "Назад",
+        "page": "Сторінка",
+        "of": "з",
+        "items": "записів",
+        "found": "Знайдено",
+        "no_results": "Нічого не знайдено",
+        "success": "Успішно",
+        "error": "Помилка",
+        "warning": "Попередження",
+        "info": "Інформація"
+    },
+    "dashboard": {
+        "title": "Панель керування",
+        "welcome": "Ласкаво просимо до адмін-панелі",
+        "quick_stats": "Швидка статистика",
+        "total_products": "Всього товарів",
+        "total_orders": "Всього замовлень",
+        "pending_orders": "Очікують обробки",
+        "today_orders": "Замовлень сьогодні",
+        "recent_orders": "Останні замовлення",
+        "quick_actions": "Швидкі дії"
+    },
+    "orders": {
+        "title": "Замовлення",
+        "order_number": "№ замовлення",
+        "customer": "Клієнт",
+        "total_amount": "Сума",
+        "status": "Статус",
+        "created_at": "Дата створення",
+        "updated_at": "Дата оновлення",
+        "items": "Товари",
+        "shipping_address": "Адреса доставки",
+        "billing_address": "Адреса оплати",
+        "notes": "Примітки",
+        "statuses": {
+            "pending": "Очікує",
+            "processing": "В обробці",
+            "shipped": "Відправлено",
+            "delivered": "Доставлено",
+            "cancelled": "Скасовано"
+        }
+    },
+    "products": {
+        "title": "Товари",
+        "article": "Артикул",
+        "name": "Назва",
+        "price": "Ціна",
+        "stock": "Наявність",
+        "brand": "Бренд",
+        "category": "Категорія",
+        "description": "Опис",
+        "photo": "Фото",
+        "photos": "Фотографії",
+        "add_product": "Додати товар",
+        "edit_product": "Редагувати товар",
+        "no_photo": "Без фото",
+        "in_stock": "В наявності",
+        "out_of_stock": "Немає в наявності"
+    },
+    "categories": {
+        "title": "Категорії",
+        "name": "Назва категорії",
+        "parent": "Батьківська категорія",
+        "products_count": "Кількість товарів",
+        "add_category": "Додати категорію",
+        "edit_category": "Редагувати категорію",
+        "no_parent": "Без батьківської",
+        "assign": "Призначити",
+        "unassign": "Відкріпити"
+    },
+    "stock": {
+        "title": "Управління складом",
+        "available": "Доступно",
+        "reserved": "Зарезервовано",
+        "supplier": "Постачальник",
+        "last_update": "Останнє оновлення",
+        "update_stock": "Оновити залишки"
+    },
+    "price_list": {
+        "title": "Прайс-листи",
+        "upload": "Завантажити прайс",
+        "supplier": "Постачальник",
+        "file": "Файл",
+        "uploaded_at": "Завантажено",
+        "processed": "Оброблено",
+        "errors": "Помилки"
+    },
+    "photos": {
+        "title": "Управління фото",
+        "upload": "Завантажити фото",
+        "source": "Джерело",
+        "all_sources": "Всі джерела",
+        "with_photo": "З фото",
+        "without_photo": "Без фото",
+        "delete_confirm": "Видалити це фото?"
+    },
+    "descriptions": {
+        "title": "Управління описами",
+        "bulk_import": "Масове додавання",
+        "language": "Мова",
+        "mode": "Режим",
+        "create_only": "Тільки нові записи",
+        "update_existing": "Оновлювати існуючі",
+        "data_format": "Дані (формат: артикул [TAB] brand_id [TAB] назва [TAB] опис)"
+    },
+    "suppliers": {
+        "title": "Постачальники",
+        "name": "Назва",
+        "contact": "Контакт",
+        "email": "Email",
+        "phone": "Телефон",
+        "add_supplier": "Додати постачальника"
+    },
+    "users": {
+        "title": "Користувачі",
+        "username": "Ім'я користувача",
+        "email": "Email",
+        "role": "Роль",
+        "created_at": "Дата реєстрації",
+        "last_login": "Останній вхід",
+        "roles": {
+            "admin": "Адміністратор",
+            "manager": "Менеджер",
+            "user": "Користувач"
+        }
+    },
+    "language": {
+        "switch": "Мова інтерфейсу",
+        "uk": "Українська",
+        "en": "English"
+    }
+}

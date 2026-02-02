@@ -1,309 +1,360 @@
 {% extends "base/admin_base.html" %}
 
-{% block title %}Product → Categories (Many-to-Many) - Admin{% endblock %}
+{% block title %}{{ _('Product Categories') }} - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Select dropdown styling */
+.category-select {
+    color: #000 !important;
+    font-size: 14px;
+    background-color: #ffffff !important;
+}
+
+.category-select option {
+    padding: 8px;
+    background-color: white !important;
+    color: #000 !important;
+}
+
+.category-select option:hover {
+    background-color: #e7f3ff !important;
+}
+
+.category-select option:checked {
+    background-color: #b3d9ff !important;
+    color: #000 !important;
+}
+
+/* Table category badges - ensure visibility */
+td .badge {
+    background-color: #f0f0f0 !important;
+    color: #000 !important;
+    border: 1px solid #ddd;
+    padding: 0.35rem 0.65rem;
+}
+
+td .badge.bg-primary {
+    background-color: #0d6efd !important;
+    color: #fff !important;
+    border: none;
+}
+
+td .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+td .badge.bg-outline-secondary {
+    background-color: #fff !important;
+    color: #6c757d !important;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-diagram-3"></i> Product → Categories (Multiple)</h1>
-        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
+<div class="page-header">
+    <h1><i class="bi bi-diagram-3"></i> {{ _('Product Categories') }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Dashboard') }}
         </a>
     </div>
+</div>
 
-    <!-- Статистика -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-center border-primary">
-                <div class="card-body py-2">
-                    <h4 class="text-primary mb-0">{{ total_items }}</h4>
-                    <small class="text-muted"><i class="bi bi-box-seam"></i> Total Products</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-success">
-                <div class="card-body py-2">
-                    <h4 class="text-success mb-0">{{ assigned_count }}</h4>
-                    <small class="text-muted"><i class="bi bi-check-circle"></i> With Categories</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-warning">
-                <div class="card-body py-2">
-                    <h4 class="text-warning mb-0">{{ multiple_count }}</h4>
-                    <small class="text-muted"><i class="bi bi-layers"></i> In Multiple Categories</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-info">
-                <div class="card-body py-2">
-                    <h4 class="text-info mb-0">{{ categories|length }}</h4>
-                    <small class="text-muted"><i class="bi bi-collection"></i> Available Categories</small>
-                </div>
-            </div>
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card primary">
+            <div class="stat-value">{{ total_items }}</div>
+            <div class="stat-label">{{ _('Total Products') }}</div>
         </div>
     </div>
-
-    <!-- Фільтри -->
-    <div class="card mb-4">
-        <div class="card-header bg-secondary text-white">
-            <h6 class="mb-0"><i class="bi bi-funnel"></i> Filters & Search</h6>
-        </div>
-        <div class="card-body">
-            <form method="GET" class="row g-2 align-items-end">
-                <div class="col-md-2">
-                    <label class="form-label small">Article</label>
-                    <input type="text" name="article" class="form-control form-control-sm" 
-                           value="{{ article_filter }}" placeholder="🔍 Search...">
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="form-label small">Brand</label>
-                    <select name="brand" class="form-select form-select-sm">
-                        <option value="">All Brands</option>
-                        {% for brand in brands %}
-                        <option value="{{ brand.id }}" {% if brand_filter == brand.id %}selected{% endif %}>
-                            {{ brand.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label small">Category</label>
-                    <select name="category" class="form-select form-select-sm">
-                        <option value="">📂 All Categories</option>
-                        {% for cat in categories %}
-                        <option value="{{ cat.id }}" {% if category_filter == cat.id %}selected{% endif %}
-                            style="{% if cat.level == 0 %}font-weight: bold;{% endif %}">
-                            {{ cat.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="form-label small">Status</label>
-                    <select name="status" class="form-select form-select-sm">
-                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>📊 All</option>
-                        <option value="assigned" {% if status_filter == 'assigned' %}selected{% endif %}>✓ With Categories</option>
-                        <option value="unassigned" {% if status_filter == 'unassigned' %}selected{% endif %}>✗ Without</option>
-                        <option value="multiple" {% if status_filter == 'multiple' %}selected{% endif %}>📚 Multiple ({{ multiple_count }})</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="bi bi-search"></i> Filter
-                    </button>
-                    {% if article_filter or category_filter or brand_filter or status_filter != 'all' %}
-                    <a href="{{ url_for('admin_product_categories', token=token) }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-x-circle"></i> Clear
-                    </a>
-                    {% endif %}
-                    <span class="ms-2 small text-muted">
-                        {{ start_item }}-{{ end_item }} of {{ total_items }}
-                    </span>
-                </div>
-            </form>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="stat-value">{{ assigned_count }}</div>
+            <div class="stat-label">{{ _('With Categories') }}</div>
         </div>
     </div>
+    <div class="col-md-3">
+        <div class="stat-card warning">
+            <div class="stat-value">{{ multiple_count }}</div>
+            <div class="stat-label">{{ _('Multiple Categories') }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">{{ categories|length }}</div>
+            <div class="stat-label">{{ _('Available Categories') }}</div>
+        </div>
+    </div>
+</div>
 
-    <!-- Масові операції -->
-    <form method="POST" id="bulkForm">
-        <div class="card mb-4">
-            <div class="card-header bg-info text-white">
-                <div class="row align-items-center">
-                    <div class="col-md-4">
-                        <div class="form-check d-inline-block">
-                            <input type="checkbox" id="selectAllCheckbox" class="form-check-input" onchange="toggleSelectAll()">
-                            <label class="form-check-label" for="selectAllCheckbox">Select All</label>
-                        </div>
-                        <span id="selectedCount" class="badge bg-light text-dark ms-2">0 selected</span>
-                    </div>
-                    
-                    <div class="col-md-8">
-                        <div class="d-flex gap-2 justify-content-end flex-wrap">
-                            <!-- Додати до категорії -->
-                            <div class="input-group input-group-sm" style="max-width: 400px;">
-                                <select name="target_category" class="form-select form-select-sm">
-                                    <option value="">Select category...</option>
-                                    {% for cat in categories %}
-                                    <option value="{{ cat.id }}" 
-                                            style="{% if cat.level == 0 %}font-weight: bold;{% endif %}">
-                                        {{ cat.name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                                <div class="input-group-text bg-white">
-                                    <input type="checkbox" name="set_as_primary" id="set_as_primary" class="form-check-input mt-0">
-                                    <label for="set_as_primary" class="ms-1 small mb-0">★ Primary</label>
-                                </div>
-                                <button type="button" class="btn btn-success btn-sm" onclick="submitBulkAction('bulk_assign')">
-                                    <i class="bi bi-plus-circle"></i> Add
-                                </button>
-                            </div>
-                            
-                            <!-- Видалити з категорії -->
-                            <div class="input-group input-group-sm" style="max-width: 300px;">
-                                <select name="remove_from_category" class="form-select form-select-sm">
-                                    <option value="">All categories</option>
-                                    {% for cat in categories %}
-                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <button type="button" class="btn btn-danger btn-sm" onclick="submitBulkAction('bulk_remove')">
-                                    <i class="bi bi-trash"></i> Remove
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Таблиця товарів -->
-            {% if products %}
-            <div class="table-responsive">
-                <table class="table table-hover table-sm mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 40px;"></th>
-                            <th>Article</th>
-                            <th>Name</th>
-                            <th>Brand</th>
-                            <th>Categories</th>
-                            <th class="text-end" style="width: 80px;">Price</th>
-                            <th class="text-end" style="width: 60px;">Qty</th>
-                            <th style="width: 60px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for product in products %}
-                        <tr>
-                            <td>
-                                <input type="checkbox" name="articles" value="{{ product.article }}" 
-                                       class="form-check-input product-checkbox" onchange="updateSelectedCount()">
-                            </td>
-                            <td>
-                                <a href="{{ url_for('product_details', article=product.article) }}" target="_blank">
-                                    <code>{{ product.article }}</code>
-                                </a>
-                            </td>
-                            <td class="text-truncate" style="max-width: 200px;" title="{{ product.name_sk or '—' }}">
-                                {{ product.name_sk or '—' }}
-                            </td>
-                            <td>
-                                {% if product.brand_name %}
-                                <a href="{{ url_for('admin_product_categories', token=token, brand=product.brand_id) }}" 
-                                   class="badge bg-secondary text-decoration-none">
-                                    {{ product.brand_name }}
-                                </a>
-                                {% else %}
-                                —
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if product.categories %}
-                                <div class="d-flex flex-wrap gap-1">
-                                    {% for cat_name in product.categories.split(', ') %}
-                                    <span class="badge {% if '★' in cat_name %}bg-primary{% else %}bg-outline-secondary border{% endif %} small">
-                                        {{ cat_name }}
-                                    </span>
-                                    {% endfor %}
-                                </div>
-                                {% if product.category_count > 1 %}
-                                <small class="text-muted">({{ product.category_count }} categories)</small>
-                                {% endif %}
-                                {% else %}
-                                <span class="badge bg-warning text-dark">No category</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-end">{{ "%.2f"|format(product.price) if product.price else '—' }} €</td>
-                            <td class="text-end">
-                                <span class="badge bg-{% if product.quantity > 0 %}info{% else %}secondary{% endif %}">
-                                    {{ product.quantity }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if product.category_count and product.category_count > 1 %}
-                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                        data-bs-toggle="modal" data-bs-target="#primaryModal{{ loop.index }}"
-                                        title="Set primary category">
-                                    <i class="bi bi-star"></i>
-                                </button>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+<!-- Filters -->
+<div class="filter-card">
+    <form method="GET" class="row g-3">
+        <div class="col-md-2">
+            <label class="form-label">{{ _('Article') }}</label>
+            <input type="text" name="article" class="form-control" 
+                   value="{{ article_filter }}" placeholder="{{ _('Search...') }}">
+        </div>
+        
+        <div class="col-md-2">
+            <label class="form-label">{{ _('Brand') }}</label>
+            <select name="brand" class="form-select">
+                <option value="">{{ _('All Brands') }}</option>
+                {% for brand in brands %}
+                <option value="{{ brand.id }}" {% if brand_filter == brand.id %}selected{% endif %}>
+                    {{ brand.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label">{{ _('Category') }}</label>
+            <select name="category" class="form-select category-select">
+                <option value="">📂 {{ _('All Categories') }}</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if category_filter == cat.id %}selected{% endif %} 
+                    class="{% if category_filter == cat.id %}selected-category{% endif %}" 
+                    style="padding-left: {% if cat.level > 0 %}{{ cat.level * 20 }}px{% endif %}; {% if cat.level == 0 %}font-weight: bold;{% endif %}">
+                    {% for i in range(cat.level) %}→ {% endfor %}{{ cat.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="col-md-2">
+            <label class="form-label">{{ _('Status') }}</label>
+            <select name="status" class="form-select">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>📊 {{ _('All') }}</option>
+                <option value="assigned" {% if status_filter == 'assigned' %}selected{% endif %}>✓ {{ _('With Categories') }}</option>
+                <option value="unassigned" {% if status_filter == 'unassigned' %}selected{% endif %}>✗ {{ _('Without') }}</option>
+                <option value="multiple" {% if status_filter == 'multiple' %}selected{% endif %}>📚 {{ _('Multiple') }} ({{ multiple_count }})</option>
+            </select>
+        </div>
+        
+        <div class="col-md-1">
+            <label class="form-label">{{ _('In Stock') }}</label>
+            <select name="in_stock" class="form-select">
+                <option value="all" {% if in_stock_filter == 'all' %}selected{% endif %}>{{ _('All') }}</option>
+                <option value="yes" {% if in_stock_filter == 'yes' %}selected{% endif %}>✓</option>
+                <option value="no" {% if in_stock_filter == 'no' %}selected{% endif %}>✗</option>
+            </select>
+        </div>
 
-            <!-- Пагінація -->
-            {% if total_pages > 1 %}
-            <div class="card-footer bg-light">
-                <nav aria-label="Page navigation">
-                    <ul class="pagination pagination-sm mb-0 justify-content-center">
-                        {% if page > 1 %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=1) }}">
-                                <i class="bi bi-chevron-double-left"></i>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=page-1) }}">
-                                <i class="bi bi-chevron-left"></i>
-                            </a>
-                        </li>
-                        {% endif %}
-                        
-                        {% for p in page_range %}
-                        <li class="page-item {% if p == page %}active{% endif %}">
-                            <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=p) }}">
-                                {{ p }}
-                            </a>
-                        </li>
-                        {% endfor %}
-                        
-                        {% if page < total_pages %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=page+1) }}">
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=total_pages) }}">
-                                <i class="bi bi-chevron-double-right"></i>
-                            </a>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-            </div>
-            {% endif %}
-            {% else %}
-            <div class="card-body">
-                <div class="alert alert-info mb-0">
-                    <i class="bi bi-info-circle me-2"></i>
-                    No products found for the selected filters.
-                </div>
-            </div>
+        <div class="col-md-2 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> {{ _('Filter') }}
+            </button>
+            {% if article_filter or category_filter or brand_filter or status_filter != 'all' or in_stock_filter != 'all' %}
+            <a href="{{ url_for('admin_product_categories', token=token) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i>
+            </a>
             {% endif %}
         </div>
     </form>
+    <div class="mt-2 text-muted small">
+        {{ _('Showing') }} {{ start_item }}-{{ end_item }} {{ _('of') }} {{ total_items }}
+    </div>
 </div>
 
-<!-- Модальні вікна для встановлення головної категорії -->
+<!-- Bulk Operations -->
+<form method="POST" id="bulkForm">
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="form-check d-inline-block">
+                        <input type="checkbox" id="selectAllCheckbox" class="form-check-input" onchange="toggleSelectAll()">
+                        <label class="form-check-label" for="selectAllCheckbox">{{ _('Select All') }}</label>
+                    </div>
+                    <span id="selectedCount" class="badge bg-secondary ms-2">0 {{ _('selected') }}</span>
+                </div>
+                
+                <div class="col-md-8">
+                    <div class="d-flex gap-2 justify-content-end flex-wrap">
+                        <!-- Add to category -->
+                        <div class="input-group input-group-sm" style="max-width: 400px;">
+                            <select name="target_category" class="form-select form-select-sm">
+                                <option value="">{{ _('Select category...') }}</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" 
+                                        style="{% if cat.level == 0 %}font-weight: bold;{% endif %}">
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="input-group-text bg-white">
+                                <input type="checkbox" name="set_as_primary" id="set_as_primary" class="form-check-input mt-0">
+                                <label for="set_as_primary" class="ms-1 small mb-0">★ {{ _('Primary') }}</label>
+                            </div>
+                            <button type="button" class="btn btn-success btn-sm" onclick="submitBulkAction('bulk_assign')">
+                                <i class="bi bi-plus-circle"></i> {{ _('Add') }}
+                            </button>
+                        </div>
+                        
+                        <!-- Remove from category -->
+                        <div class="input-group input-group-sm" style="max-width: 300px;">
+                            <select name="remove_from_category" class="form-select form-select-sm">
+                                <option value="">{{ _('All categories') }}</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="submitBulkAction('bulk_remove')">
+                                <i class="bi bi-trash"></i> {{ _('Remove') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Products table -->
+        {% if products %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"></th>
+                        <th>{{ _('Article') }}</th>
+                        <th>{{ _('Name') }}</th>
+                        <th>{{ _('Brand') }}</th>
+                        <th>{{ _('Categories') }}</th>
+                        <th class="text-end" style="width: 80px;">{{ _('Price') }}</th>
+                        <th class="text-end" style="width: 60px;">{{ _('Qty') }}</th>
+                        <th style="width: 60px;">{{ _('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="articles" value="{{ product.article }}" 
+                                   class="form-check-input product-checkbox" onchange="updateSelectedCount()">
+                        </td>
+                        <td>
+                            <a href="{{ url_for('product_details', article=product.article) }}" target="_blank">
+                                <code>{{ product.article }}</code>
+                            </a>
+                        </td>
+                        <td class="text-truncate" style="max-width: 200px;" title="{{ product.name_sk or '—' }}">
+                            {{ product.name_sk or '—' }}
+                        </td>
+                        <td>
+                            {% if product.brand_name %}
+                            <a href="{{ url_for('admin_product_categories', token=token, brand=product.brand_id) }}" 
+                               class="badge bg-secondary text-decoration-none">
+                                {{ product.brand_name }}
+                            </a>
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if product.categories %}
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for cat_name in product.categories.split(', ') %}
+                                <span class="badge {% if '★' in cat_name %}bg-primary{% else %}bg-outline-secondary border{% endif %} small">
+                                    {{ cat_name }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                            {% if product.category_count > 1 %}
+                            <small class="text-muted">({{ product.category_count }} {{ _('categories') }})</small>
+                            {% endif %}
+                            {% else %}
+                            <span class="badge bg-warning text-dark">{{ _('No category') }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">{{ "%.2f"|format(product.price) if product.price else '—' }} €</td>
+                        <td class="text-end">
+                            <span class="badge bg-{% if product.quantity > 0 %}info{% else %}secondary{% endif %}">
+                                {{ product.quantity }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin_product_card', token=token, article=product.article) }}" 
+                               class="btn btn-sm btn-primary" title="{{ _('Edit Product Card') }}">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            {% if product.category_count and product.category_count > 1 %}
+                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                    data-bs-toggle="modal" data-bs-target="#primaryModal{{ loop.index }}"
+                                    title="{{ _('Set primary category') }}">
+                                <i class="bi bi-star"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination pagination-sm mb-0 justify-content-center">
+                    {% if page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=1) }}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=page-1) }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for p in page_range %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=p) }}">
+                            {{ p }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if page < total_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=page+1) }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=total_pages) }}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="card-body">
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                {{ _('No products found for the selected filters.') }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</form>
+
+<!-- Modals for setting primary category -->
 {% for product in products %}
 {% if product.category_count and product.category_count > 1 and product.category_ids %}
 <div class="modal fade" id="primaryModal{{ loop.index }}" tabindex="-1">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header py-2">
-                <h6 class="modal-title"><i class="bi bi-star"></i> Set Primary Category</h6>
+                <h6 class="modal-title"><i class="bi bi-star"></i> {{ _('Set Primary Category') }}</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
@@ -322,9 +373,9 @@
                     </select>
                 </div>
                 <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
                     <button type="submit" class="btn btn-sm btn-primary">
-                        <i class="bi bi-star-fill"></i> Set Primary
+                        <i class="bi bi-star-fill"></i> {{ _('Set Primary') }}
                     </button>
                 </div>
             </form>
@@ -333,7 +384,9 @@
 </div>
 {% endif %}
 {% endfor %}
+{% endblock %}
 
+{% block extra_js %}
 <script>
 function toggleSelectAll() {
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
@@ -349,9 +402,8 @@ function toggleSelectAll() {
 function updateSelectedCount() {
     const checked = document.querySelectorAll('.product-checkbox:checked').length;
     const total = document.querySelectorAll('.product-checkbox').length;
-    document.getElementById('selectedCount').textContent = `${checked} selected`;
+    document.getElementById('selectedCount').textContent = `${checked} {{ _('selected') }}`;
     
-    // Оновлюємо стан "select all"
     const selectAll = document.getElementById('selectAllCheckbox');
     selectAll.checked = checked === total && total > 0;
     selectAll.indeterminate = checked > 0 && checked < total;
@@ -362,19 +414,18 @@ function submitBulkAction(action) {
     const checked = document.querySelectorAll('.product-checkbox:checked').length;
     
     if (checked === 0) {
-        alert('⚠️ Please select at least one product');
+        alert('{{ _("Please select at least one product") }}');
         return;
     }
     
     if (action === 'bulk_assign') {
         const category = document.querySelector('select[name="target_category"]').value;
         if (!category) {
-            alert('⚠️ Please select a category');
+            alert('{{ _("Please select a category") }}');
             return;
         }
     }
     
-    // Видаляємо попередній action якщо є
     const existingAction = form.querySelector('input[name="action"]');
     if (existingAction) existingAction.remove();
     
@@ -387,9 +438,42 @@ function submitBulkAction(action) {
     form.submit();
 }
 
-// Ініціалізація при завантаженні
 document.addEventListener('DOMContentLoaded', function() {
     updateSelectedCount();
+    highlightSelectedCategories();
 });
+
+// JavaScript рішення для підсвічування вибраної категорії в dropdown
+function highlightSelectedCategories() {
+    const selects = document.querySelectorAll('.category-select');
+    
+    selects.forEach(select => {
+        // Функція для оновлення стилів опцій
+        function updateOptionStyles() {
+            const options = select.querySelectorAll('option');
+            options.forEach(option => {
+                if (option.selected) {
+                    option.style.backgroundColor = '#2563eb';
+                    option.style.color = 'white';
+                    option.style.fontWeight = 'bold';
+                } else {
+                    option.style.backgroundColor = 'white';
+                    option.style.color = '#000';
+                    option.style.fontWeight = 'normal';
+                }
+            });
+        }
+        
+        // Оновлюємо при завантаженні
+        updateOptionStyles();
+        
+        // Оновлюємо при зміні
+        select.addEventListener('change', updateOptionStyles);
+        
+        // Оновлюємо при відкритті dropdown (для деяких браузерів)
+        select.addEventListener('focus', updateOptionStyles);
+        select.addEventListener('click', updateOptionStyles);
+    });
+}
 </script>
 {% endblock %}

@@ -1,34 +1,46 @@
 {% extends "base/admin_base.html" %}
 
-{% block title %}Додавання зображень{% endblock %}
+{% block title %}{{ _('Add Images') }} - Admin{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Додавання зображень товарів</h2>
-    
-    <div class="card">
-        <div class="card-body">
-            <form method="POST">
-                <div class="form-group mb-3">
-                    <label for="images_data">Вставте дані зображень (Артикул ТАБ URL):</label>
-                    <textarea class="form-control" id="images_data" name="images_data" 
-                              rows="10" placeholder="LR014305&#9;https://image.autogroup.sk/products/LR014305.jpg"></textarea>
-                    <small class="text-muted">Формат: Артикул[TAB]URL (по одному на рядок)</small>
-                </div>
-                <button type="submit" class="btn btn-primary">Додати зображення</button>
-                <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn btn-secondary">Назад до панелі</a>
-            </form>
-        </div>
+<div class="page-header">
+    <h1><i class="bi bi-images"></i> {{ _('Bulk Add Images') }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Dashboard') }}
+        </a>
     </div>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} mt-3">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
 </div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-link-45deg me-2"></i>{{ _('Import Images by URL') }}
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="images_data" class="form-label">{{ _('Image Data') }}</label>
+                <textarea class="form-control" id="images_data" name="images_data" 
+                          rows="10" placeholder="LR014305&#9;https://image.autogroup.sk/products/LR014305.jpg"></textarea>
+                <div class="form-text">{{ _('Format: Article[TAB]URL (one per line)') }}</div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-cloud-download me-2"></i>{{ _('Import Images') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} mt-3 alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 {% endblock %}

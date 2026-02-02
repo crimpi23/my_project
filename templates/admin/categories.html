@@ -1,261 +1,247 @@
 {% extends "base/admin_base.html" %}
 
-{% block title %}Manage Categories - Admin{% endblock %}
+{% block title %}{{ _('Manage Categories') }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-folder-check"></i> Manage Product Categories</h1>
-        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
+<div class="page-header">
+    <h1><i class="bi bi-folder-check"></i> {{ _('Manage Categories') }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Dashboard') }}
         </a>
     </div>
+</div>
 
-    <!-- Quick Statistics -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card text-center border-primary">
-                <div class="card-body">
-                    <h3 class="text-primary">{{ categories|length }}</h3>
-                    <p class="mb-0"><i class="bi bi-collection"></i> Total Categories</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-center border-success">
-                <div class="card-body">
-                    <h3 class="text-success">{{ categories|selectattr('parent_id', 'none')|list|length }}</h3>
-                    <p class="mb-0"><i class="bi bi-diagram-3"></i> Main Categories</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-center border-info">
-                <div class="card-body">
-                    <h3 class="text-info">{{ categories|selectattr('parent_id')|list|length }}</h3>
-                    <p class="mb-0"><i class="bi bi-diagram-2"></i> Subcategories</p>
-                </div>
-            </div>
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card primary">
+            <div class="stat-value">{{ categories|length }}</div>
+            <div class="stat-label">{{ _('Total Categories') }}</div>
         </div>
     </div>
-
-    <!-- Add New Category -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Add New Category</h5>
-        </div>
-        <div class="card-body">
-            <form method="POST" class="row g-3">
-                <input type="hidden" name="action" value="add">
-                
-                <div class="col-md-4">
-                    <label for="slug" class="form-label">Slug (Identifier) *</label>
-                    <input type="text" id="slug" name="slug" class="form-control" 
-                           placeholder="engines, brakes, suspension" required>
-                    <small class="form-text text-muted">No spaces, lowercase, letters/numbers/hyphens only</small>
-                </div>
-                
-                <div class="col-md-4">
-                    <label for="parent_id" class="form-label">Parent Category (Subcategory?)</label>
-                    <select id="parent_id" name="parent_id" class="form-select">
-                        <option value="">-- No, this is main category --</option>
-                        {% for cat in categories %}
-                        {% set indent = '' %}
-                        {% if cat.parent_id %}
-                            {% set parent = categories|selectattr('id', 'eq', cat.parent_id)|first %}
-                            {% if parent and parent.parent_id %}
-                                {% set indent = '── ── ' %}
-                            {% else %}
-                                {% set indent = '── ' %}
-                            {% endif %}
-                        {% endif %}
-                        <option value="{{ cat.id }}">
-                            {{ indent }}{{ cat.translations.get('en', cat.translations.get('sk', {})).get('name', cat.slug) }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <small class="form-text text-muted">Select parent to create subcategory (supports 3+ levels)</small>
-                </div>
-                
-                <div class="col-md-4">
-                    <label for="icon_class" class="form-label">Icon (Bootstrap Icons)</label>
-                    <input type="text" id="icon_class" name="icon_class" class="form-control" 
-                           placeholder="bi-gear, bi-disc, bi-spring">
-                    <small class="form-text text-muted">
-                        <a href="https://icons.getbootstrap.com/" target="_blank">Search icons →</a>
-                    </small>
-                </div>
-
-                <!-- Translations for 4 languages -->
-                <div class="col-12">
-                    <hr>
-                    <h6 class="mb-3">Translations</h6>
-                </div>
-
-                <!-- SLOVAK (SK) -->
-                <div class="col-md-6">
-                    <label for="name_sk" class="form-label">🇸🇰 Name (SK) *</label>
-                    <input type="text" id="name_sk" name="name_sk" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="description_sk" class="form-label">Description (SK)</label>
-                    <textarea id="description_sk" name="description_sk" class="form-control" rows="2"></textarea>
-                </div>
-
-                <!-- ENGLISH (EN) -->
-                <div class="col-md-6">
-                    <label for="name_en" class="form-label">🇬🇧 Name (EN) *</label>
-                    <input type="text" id="name_en" name="name_en" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="description_en" class="form-label">Description (EN)</label>
-                    <textarea id="description_en" name="description_en" class="form-control" rows="2"></textarea>
-                </div>
-
-                <!-- UKRAINIAN (UK) -->
-                <div class="col-md-6">
-                    <label for="name_uk" class="form-label">🇺🇦 Name (UK) *</label>
-                    <input type="text" id="name_uk" name="name_uk" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="description_uk" class="form-label">Description (UK)</label>
-                    <textarea id="description_uk" name="description_uk" class="form-control" rows="2"></textarea>
-                </div>
-
-                <!-- POLISH (PL) -->
-                <div class="col-md-6">
-                    <label for="name_pl" class="form-label">🇵🇱 Name (PL) *</label>
-                    <input type="text" id="name_pl" name="name_pl" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="description_pl" class="form-label">Description (PL)</label>
-                    <textarea id="description_pl" name="description_pl" class="form-control" rows="2"></textarea>
-                </div>
-                
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-2"></i>
-                        Add Category
-                    </button>
-                </div>
-            </form>
+    <div class="col-md-4">
+        <div class="stat-card success">
+            <div class="stat-value">{{ categories|selectattr('parent_id', 'none')|list|length }}</div>
+            <div class="stat-label">{{ _('Main Categories') }}</div>
         </div>
     </div>
-
-    <!-- Categories List -->
-    <div class="card">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Existing Categories</h5>
-        </div>
-        <div class="card-body">
-            {% if not categories %}
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i>
-                No categories yet. Add the first category above!
-            </div>
-            {% else %}
-            <div class="table-responsive">
-                <table class="table table-hover table-sm">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Name (SK)</th>
-                            <th>Slug</th>
-                            <th>Parent</th>
-                            <th>Icon</th>
-                            <th>Order</th>
-                            <th>Active</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for cat in categories %}
-                        <tr>
-                            <td><strong>#{{ cat.id }}</strong></td>
-                            <td>
-                                <strong>{{ cat.translations.get('sk', {}).get('name', '—') }}</strong>
-                                <br>
-                                <small class="text-muted">
-                                    EN: {{ cat.translations.get('en', {}).get('name', '—') }} | 
-                                    UK: {{ cat.translations.get('uk', {}).get('name', '—') }} | 
-                                    PL: {{ cat.translations.get('pl', {}).get('name', '—') }}
-                                </small>
-                            </td>
-                            <td><code>{{ cat.slug }}</code></td>
-                            <td>
-                                {% if cat.parent_id %}
-                                    {% set parent = categories|selectattr('id', 'equalto', cat.parent_id)|first %}
-                                    {% if parent %}
-                                        {% if parent.parent_id %}
-                                            {% set grandparent = categories|selectattr('id', 'equalto', parent.parent_id)|first %}
-                                            {% if grandparent %}
-                                            <small class="text-muted">{{ grandparent.translations.get('en', {}).get('name', grandparent.slug) }} → </small>
-                                            {% endif %}
-                                        {% endif %}
-                                    <small>{{ parent.translations.get('en', {}).get('name', parent.slug) }}</small>
-                                    {% else %}
-                                    <span class="text-muted">—</span>
-                                    {% endif %}
-                                {% else %}
-                                    <span class="badge bg-primary">Main</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if cat.icon_class %}
-                                    <i class="bi {{ cat.icon_class }}"></i>
-                                {% else %}
-                                    <span class="text-muted">—</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ cat.sort_order }}</td>
-                            <td>
-                                <span class="badge {% if cat.is_active %}bg-success{% else %}bg-danger{% endif %}">
-                                    {% if cat.is_active %}Active{% else %}Inactive{% endif %}
-                                </span>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-warning" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#editModal"
-                                        data-id="{{ cat.id }}"
-                                        data-parent="{{ cat.parent_id or '' }}"
-                                        data-icon="{{ cat.icon_class or '' }}"
-                                        data-sort="{{ cat.sort_order }}"
-                                        data-active="{{ 'on' if cat.is_active else '' }}"
-                                        data-langs='{{ {
-                                            "sk": cat.translations.get("sk", {}),
-                                            "en": cat.translations.get("en", {}),
-                                            "uk": cat.translations.get("uk", {}),
-                                            "pl": cat.translations.get("pl", {})
-                                        }|tojson }}'>
-                                    <i class="bi bi-pencil"></i> Edit
-                                </button>
-                                <form method="POST" style="display:inline;">
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="category_id" value="{{ cat.id }}">
-                                    <button type="submit" class="btn btn-sm btn-danger" 
-                                            onclick="return confirm('Delete &quot;{{ cat.translations.get('sk', {}).get('name', cat.slug) }}&quot;?')">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-value">{{ categories|selectattr('parent_id')|list|length }}</div>
+            <div class="stat-label">{{ _('Subcategories') }}</div>
         </div>
     </div>
 </div>
 
-<!-- Modal for editing -->
+<!-- Add New Category -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="bi bi-plus-circle me-2"></i>{{ _('Add New Category') }}
+    </div>
+    <div class="card-body">
+        <form method="POST" class="row g-3">
+            <input type="hidden" name="action" value="add">
+            
+            <div class="col-md-4">
+                <label for="slug" class="form-label">{{ _('Slug (Identifier)') }} *</label>
+                <input type="text" id="slug" name="slug" class="form-control" 
+                       placeholder="engines, brakes, suspension" required>
+                <small class="form-text text-muted">{{ _('No spaces, lowercase, letters/numbers/hyphens only') }}</small>
+            </div>
+            
+            <div class="col-md-4">
+                <label for="parent_id" class="form-label">{{ _('Parent Category') }}</label>
+                <select id="parent_id" name="parent_id" class="form-select">
+                    <option value="">-- {{ _('Main category') }} --</option>
+                    {% for cat in categories %}
+                    {% set indent = '' %}
+                    {% if cat.parent_id %}
+                        {% set parent = categories|selectattr('id', 'eq', cat.parent_id)|first %}
+                        {% if parent and parent.parent_id %}
+                            {% set indent = '── ── ' %}
+                        {% else %}
+                            {% set indent = '── ' %}
+                        {% endif %}
+                    {% endif %}
+                    <option value="{{ cat.id }}">
+                        {{ indent }}{{ cat.translations.get('en', cat.translations.get('sk', {})).get('name', cat.slug) }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-4">
+                <label for="icon_class" class="form-label">{{ _('Icon') }}</label>
+                <input type="text" id="icon_class" name="icon_class" class="form-control" 
+                       placeholder="bi-gear, bi-disc">
+                <small class="form-text text-muted">
+                    <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons →</a>
+                </small>
+            </div>
+
+            <!-- Translations -->
+            <div class="col-12">
+                <hr>
+                <h6 class="mb-3">{{ _('Translations') }}</h6>
+            </div>
+
+            <!-- SK -->
+            <div class="col-md-6">
+                <label for="name_sk" class="form-label">🇸🇰 {{ _('Name') }} (SK) *</label>
+                <input type="text" id="name_sk" name="name_sk" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label for="description_sk" class="form-label">{{ _('Description') }} (SK)</label>
+                <textarea id="description_sk" name="description_sk" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- EN -->
+            <div class="col-md-6">
+                <label for="name_en" class="form-label">🇬🇧 {{ _('Name') }} (EN) *</label>
+                <input type="text" id="name_en" name="name_en" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label for="description_en" class="form-label">{{ _('Description') }} (EN)</label>
+                <textarea id="description_en" name="description_en" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- UK -->
+            <div class="col-md-6">
+                <label for="name_uk" class="form-label">🇺🇦 {{ _('Name') }} (UK) *</label>
+                <input type="text" id="name_uk" name="name_uk" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label for="description_uk" class="form-label">{{ _('Description') }} (UK)</label>
+                <textarea id="description_uk" name="description_uk" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- PL -->
+            <div class="col-md-6">
+                <label for="name_pl" class="form-label">🇵🇱 {{ _('Name') }} (PL) *</label>
+                <input type="text" id="name_pl" name="name_pl" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label for="description_pl" class="form-label">{{ _('Description') }} (PL)</label>
+                <textarea id="description_pl" name="description_pl" class="form-control" rows="2"></textarea>
+            </div>
+            
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> {{ _('Add Category') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Categories List -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-list-ul me-2"></i>{{ _('Existing Categories') }}
+    </div>
+    {% if not categories %}
+    <div class="card-body">
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-info-circle me-2"></i>
+            {{ _('No categories yet. Add the first category above!') }}
+        </div>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>{{ _('Name') }} (SK)</th>
+                    <th>{{ _('Slug') }}</th>
+                    <th>{{ _('Parent') }}</th>
+                    <th>{{ _('Icon') }}</th>
+                    <th>{{ _('Order') }}</th>
+                    <th>{{ _('Active') }}</th>
+                    <th>{{ _('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in categories %}
+                <tr>
+                    <td><strong>#{{ cat.id }}</strong></td>
+                    <td>
+                        <strong>{{ cat.translations.get('sk', {}).get('name', '—') }}</strong>
+                        <br>
+                        <small class="text-muted">
+                            EN: {{ cat.translations.get('en', {}).get('name', '—') }} | 
+                            UK: {{ cat.translations.get('uk', {}).get('name', '—') }} | 
+                            PL: {{ cat.translations.get('pl', {}).get('name', '—') }}
+                        </small>
+                    </td>
+                    <td><code>{{ cat.slug }}</code></td>
+                    <td>
+                        {% if cat.parent_id %}
+                            {% set parent = categories|selectattr('id', 'equalto', cat.parent_id)|first %}
+                            {% if parent %}
+                            <small>{{ parent.translations.get('en', {}).get('name', parent.slug) }}</small>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-primary">{{ _('Main') }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if cat.icon_class %}
+                            <i class="bi {{ cat.icon_class }}"></i>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ cat.sort_order }}</td>
+                    <td>
+                        <span class="badge {% if cat.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if cat.is_active %}{{ _('Active') }}{% else %}{{ _('Inactive') }}{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-warning" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#editModal"
+                                data-id="{{ cat.id }}"
+                                data-parent="{{ cat.parent_id or '' }}"
+                                data-icon="{{ cat.icon_class or '' }}"
+                                data-sort="{{ cat.sort_order }}"
+                                data-active="{{ 'on' if cat.is_active else '' }}"
+                                data-langs='{{ {
+                                    "sk": cat.translations.get("sk", {}),
+                                    "en": cat.translations.get("en", {}),
+                                    "uk": cat.translations.get("uk", {}),
+                                    "pl": cat.translations.get("pl", {})
+                                }|tojson }}'>
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="category_id" value="{{ cat.id }}">
+                            <button type="submit" class="btn btn-sm btn-danger" 
+                                    onclick="return confirm('{{ _('Delete this category?') }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Edit Modal -->
 <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Edit Category</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Edit Category') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
                 <div class="modal-body">
@@ -264,9 +250,9 @@
                     
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="edit_parent" class="form-label">Parent Category</label>
+                            <label for="edit_parent" class="form-label">{{ _('Parent Category') }}</label>
                             <select id="edit_parent" name="parent_id" class="form-select">
-                                <option value="">-- No parent (main) --</option>
+                                <option value="">-- {{ _('Main category') }} --</option>
                                 {% for cat in categories %}
                                 {% set indent = '' %}
                                 {% if cat.parent_id %}
@@ -285,80 +271,81 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <label for="edit_icon" class="form-label">Icon</label>
+                            <label for="edit_icon" class="form-label">{{ _('Icon') }}</label>
                             <input type="text" id="edit_icon" name="icon_class" class="form-control">
                         </div>
 
                         <div class="col-md-6">
-                            <label for="edit_sort" class="form-label">Sort Order</label>
+                            <label for="edit_sort" class="form-label">{{ _('Order') }}</label>
                             <input type="number" id="edit_sort" name="sort_order" class="form-control" value="0">
                         </div>
 
-                        <div class="col-md-6">
-                            <label for="edit_active" class="form-check-label">
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check">
                                 <input type="checkbox" id="edit_active" name="is_active" class="form-check-input">
-                                Active
-                            </label>
+                                <label for="edit_active" class="form-check-label">{{ _('Active') }}</label>
+                            </div>
                         </div>
                     </div>
 
                     <hr class="my-3">
-                    <h6>Translations</h6>
+                    <h6>{{ _('Translations') }}</h6>
 
                     <div class="row g-3">
-                        <!-- SLOVAK (SK) -->
+                        <!-- SK -->
                         <div class="col-md-6">
-                            <label for="edit_name_sk" class="form-label">🇸🇰 Name (SK)</label>
+                            <label for="edit_name_sk" class="form-label">🇸🇰 {{ _('Name') }} (SK)</label>
                             <input type="text" id="edit_name_sk" name="name_sk" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label for="edit_desc_sk" class="form-label">Description (SK)</label>
+                            <label for="edit_desc_sk" class="form-label">{{ _('Description') }} (SK)</label>
                             <textarea id="edit_desc_sk" name="description_sk" class="form-control" rows="2"></textarea>
                         </div>
 
-                        <!-- ENGLISH (EN) -->
+                        <!-- EN -->
                         <div class="col-md-6">
-                            <label for="edit_name_en" class="form-label">🇬🇧 Name (EN)</label>
+                            <label for="edit_name_en" class="form-label">🇬🇧 {{ _('Name') }} (EN)</label>
                             <input type="text" id="edit_name_en" name="name_en" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label for="edit_desc_en" class="form-label">Description (EN)</label>
+                            <label for="edit_desc_en" class="form-label">{{ _('Description') }} (EN)</label>
                             <textarea id="edit_desc_en" name="description_en" class="form-control" rows="2"></textarea>
                         </div>
 
-                        <!-- UKRAINIAN (UK) -->
+                        <!-- UK -->
                         <div class="col-md-6">
-                            <label for="edit_name_uk" class="form-label">🇺🇦 Name (UK)</label>
+                            <label for="edit_name_uk" class="form-label">🇺🇦 {{ _('Name') }} (UK)</label>
                             <input type="text" id="edit_name_uk" name="name_uk" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label for="edit_desc_uk" class="form-label">Description (UK)</label>
+                            <label for="edit_desc_uk" class="form-label">{{ _('Description') }} (UK)</label>
                             <textarea id="edit_desc_uk" name="description_uk" class="form-control" rows="2"></textarea>
                         </div>
 
-                        <!-- POLISH (PL) -->
+                        <!-- PL -->
                         <div class="col-md-6">
-                            <label for="edit_name_pl" class="form-label">🇵🇱 Name (PL)</label>
+                            <label for="edit_name_pl" class="form-label">🇵🇱 {{ _('Name') }} (PL)</label>
                             <input type="text" id="edit_name_pl" name="name_pl" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label for="edit_desc_pl" class="form-label">Description (PL)</label>
+                            <label for="edit_desc_pl" class="form-label">{{ _('Description') }} (PL)</label>
                             <textarea id="edit_desc_pl" name="description_pl" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-2"></i>
-                        Save Changes
+                        <i class="bi bi-check-circle"></i> {{ _('Save') }}
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
 document.getElementById('editModal').addEventListener('show.bs.modal', function(e) {
     const btn = e.relatedTarget;
@@ -375,7 +362,6 @@ document.getElementById('editModal').addEventListener('show.bs.modal', function(
     document.getElementById('edit_sort').value = sort;
     document.getElementById('edit_active').checked = active === 'on';
 
-    // Fill translations
     ['sk', 'en', 'uk', 'pl'].forEach(lang => {
         document.getElementById(`edit_name_${lang}`).value = langs[lang].name || '';
         document.getElementById(`edit_desc_${lang}`).value = langs[lang].description || '';

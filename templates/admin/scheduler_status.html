@@ -1,78 +1,111 @@
 {% extends "base/admin_base.html" %}
 
+{% block title %}{{ _('Scheduler Status') }}{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h1>Scheduler Status</h1>
-    
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="card-title mb-0">Scheduled Jobs</h5>
-        </div>
-        <div class="card-body">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Job ID</th>
-                        <th>Next Run</th>
-                        <th>Schedule</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for job in jobs %}
-                    <tr>
-                        <td>{{ job.id }}</td>
-                        <td>
-                            {% if job.next_run %}
-                                {{ job.next_run }}
-                            {% else %}
-                                <span class="text-danger">Not scheduled</span>
-                            {% endif %}
-                        </td>
-                        <td><code>{{ job.schedule }}</code></td>
-                        <td>
-                            {% if job.next_run %}
-                                <span class="badge bg-success">Active</span>
-                            {% else %}
-                                <span class="badge bg-warning">Paused</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4" class="text-center">No scheduled jobs found</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-header bg-info text-white">
-            <h5 class="card-title mb-0">Manual Job Execution</h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ url_for('admin_run_scheduler_job', token=token) }}" method="post" class="row g-3">
-                <div class="col-md-8">
-                    <select name="job_id" class="form-select" required>
-                        <option value="" selected disabled>Select job to run</option>
-                        {% for job in jobs %}
-                        <option value="{{ job.id }}">{{ job.id }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary">Run Now</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="mt-3">
-        <a href="{{ url_for('admin_sitemaps', token=token) }}" class="btn btn-secondary">
-            Back to Sitemap Management
+<div class="page-header">
+    <h1><i class="bi bi-clock-history"></i> {{ _('Scheduler Status') }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_sitemaps', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Sitemaps') }}
         </a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card primary">
+            <div class="stat-value">{{ jobs|length }}</div>
+            <div class="stat-label">{{ _('Total Jobs') }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card success">
+            <div class="stat-value">{{ jobs|selectattr('next_run')|list|length }}</div>
+            <div class="stat-label">{{ _('Active Jobs') }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card warning">
+            <div class="stat-value">{{ jobs|rejectattr('next_run')|list|length }}</div>
+            <div class="stat-label">{{ _('Paused Jobs') }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Scheduled Jobs -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="bi bi-list-task me-2"></i>{{ _('Scheduled Jobs') }}
+    </div>
+    {% if jobs %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>{{ _('Job ID') }}</th>
+                    <th>{{ _('Next Run') }}</th>
+                    <th>{{ _('Schedule') }}</th>
+                    <th>{{ _('Status') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td><code>{{ job.id }}</code></td>
+                    <td>
+                        {% if job.next_run %}
+                            {{ job.next_run }}
+                        {% else %}
+                            <span class="text-danger">{{ _('Not scheduled') }}</span>
+                        {% endif %}
+                    </td>
+                    <td><code>{{ job.schedule }}</code></td>
+                    <td>
+                        {% if job.next_run %}
+                            <span class="badge bg-success">{{ _('Active') }}</span>
+                        {% else %}
+                            <span class="badge bg-warning">{{ _('Paused') }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card-body">
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-info-circle me-2"></i>
+            {{ _('No scheduled jobs found.') }}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Manual Job Execution -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-play-circle me-2"></i>{{ _('Manual Job Execution') }}
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('admin_run_scheduler_job', token=token) }}" method="post" class="row g-3">
+            <div class="col-md-8">
+                <label class="form-label">{{ _('Select Job') }}</label>
+                <select name="job_id" class="form-select" required>
+                    <option value="" selected disabled>{{ _('Select job to run') }}</option>
+                    {% for job in jobs %}
+                    <option value="{{ job.id }}">{{ job.id }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-play-fill"></i> {{ _('Run Now') }}
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

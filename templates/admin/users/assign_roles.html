@@ -1,122 +1,151 @@
 {% extends "base/admin_base.html" %}
 
-{% block title %}Assign Roles{% endblock %}
+{% block title %}{{ _('Role Management') }} - Admin{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <h1 class="mb-4">Role Management</h1>
+<div class="page-header">
+    <h1><i class="bi bi-shield-lock"></i> {{ _('Role Management') }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_manage_users', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Users') }}
+        </a>
+    </div>
+</div>
 
-    <div class="row">
-        <!-- Current User Roles -->
-        <div class="col-md-8">
-            <div class="card admin-table mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Current User Roles</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Role</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user_role in user_roles %}
-                                <tr>
-                                    <td>{{ user_role.username }}</td>
-                                    <td>
-                                        <span class="badge bg-primary">{{ user_role.role_name }}</span>
-                                    </td>
-                                    <td>
-                                        <form method="POST" action="{{ url_for('assign_roles', token=token) }}" class="d-inline">
-                                            <input type="hidden" name="user_id" value="{{ user_role.user_id }}">
-                                            <input type="hidden" name="role_id" value="{{ user_role.role_id }}">
-                                            <button type="submit" name="action" value="remove" class="btn btn-danger btn-sm">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card primary">
+            <div class="stat-value">{{ user_roles|length }}</div>
+            <div class="stat-label">{{ _('Assigned Roles') }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card success">
+            <div class="stat-value">{{ users|length }}</div>
+            <div class="stat-label">{{ _('Total Users') }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card warning">
+            <div class="stat-value">{{ roles|length }}</div>
+            <div class="stat-label">{{ _('Available Roles') }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Current User Roles -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-people me-2"></i>{{ _('Current User Roles') }}
+            </div>
+            {% if user_roles %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Username') }}</th>
+                            <th>{{ _('Role') }}</th>
+                            <th>{{ _('Actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user_role in user_roles %}
+                        <tr>
+                            <td>
+                                <i class="bi bi-person me-2"></i>
+                                <strong>{{ user_role.username }}</strong>
+                            </td>
+                            <td>
+                                {% if user_role.role_name == 'admin' %}
+                                    <span class="badge bg-danger">{{ user_role.role_name }}</span>
+                                {% elif user_role.role_name == 'manager' %}
+                                    <span class="badge bg-warning text-dark">{{ user_role.role_name }}</span>
+                                {% else %}
+                                    <span class="badge bg-primary">{{ user_role.role_name }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('assign_roles', token=token) }}" class="d-inline">
+                                    <input type="hidden" name="user_id" value="{{ user_role.user_id }}">
+                                    <input type="hidden" name="role_id" value="{{ user_role.role_id }}">
+                                    <button type="submit" name="action" value="remove" 
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('{{ _('Remove this role?') }}')">
+                                        <i class="bi bi-trash"></i> {{ _('Remove') }}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="card-body">
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle me-2"></i> {{ _('No roles assigned yet.') }}
                 </div>
             </div>
+            {% endif %}
         </div>
+    </div>
 
-        <!-- Assign New Role Form -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Assign New Role</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('assign_roles', token=token) }}">
-                        <input type="hidden" name="action" value="assign">
+    <!-- Assign New Role Form -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-plus-circle me-2"></i>{{ _('Assign New Role') }}
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('assign_roles', token=token) }}">
+                    <input type="hidden" name="action" value="assign">
 
-                        <div class="mb-3">
-                            <label class="form-label">Search User</label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-search"></i>
-                                </span>
-                                <input type="text" 
-                                       id="search_user" 
-                                       class="form-control" 
-                                       placeholder="Search by username or email"
-                                       oninput="filterUsers()">
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Search User') }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" 
+                                   id="search_user" 
+                                   class="form-control" 
+                                   placeholder="{{ _('Search by username') }}"
+                                   oninput="filterUsers()">
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Select User</label>
-                            <select name="user_id" id="user_list" class="form-select" required>
-                                {% for user in users %}
-                                <option value="{{ user.id }}">{{ user.username }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Select User') }} *</label>
+                        <select name="user_id" id="user_list" class="form-select" required>
+                            <option value="">{{ _('Select User') }}</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Select Role</label>
-                            <select name="role_id" id="role_id" class="form-select" required>
-                                {% for role in roles %}
-                                <option value="{{ role.id }}">{{ role.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Select Role') }} *</label>
+                        <select name="role_id" id="role_id" class="form-select" required>
+                            <option value="">{{ _('Select Role') }}</option>
+                            {% for role in roles %}
+                            <option value="{{ role.id }}">{{ role.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                        <button type="submit" class="btn btn-admin w-100">
-                            <i class="bi bi-plus-circle me-2"></i>Assign Role
-                        </button>
-                    </form>
-                </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-circle me-2"></i>{{ _('Assign Role') }}
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_css %}
-<style>
-    .badge {
-        font-size: 0.8rem;
-        padding: 0.4em 0.8em;
-    }
-    .form-select {
-        cursor: pointer;
-    }
-    .table td {
-        vertical-align: middle;
-    }
-</style>
-{% endblock %}
-
-{% block extra_js %}
 <script>
 function filterUsers() {
     const searchInput = document.getElementById('search_user').value.toLowerCase();

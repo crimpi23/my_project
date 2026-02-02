@@ -1,0 +1,173 @@
+{
+    "nav": {
+        "dashboard": "Dashboard",
+        "process_orders": "Process Orders",
+        "catalog": "CATALOG",
+        "upload_price_list": "Upload Price List",
+        "manage_stock": "Manage Stock",
+        "content": "CONTENT",
+        "manage_descriptions": "Manage Descriptions",
+        "manage_photos": "Manage Photos",
+        "categories": "CATEGORIES",
+        "manage_categories": "Manage Categories",
+        "product_categories": "Product → Categories",
+        "settings": "SETTINGS",
+        "suppliers": "Suppliers",
+        "brands": "Brands",
+        "users": "Users",
+        "sitemaps": "Sitemaps",
+        "google_feed": "Google Feed",
+        "logout": "Logout"
+    },
+    "common": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "add": "Add",
+        "search": "Search",
+        "filter": "Filter",
+        "reset": "Reset",
+        "actions": "Actions",
+        "status": "Status",
+        "date": "Date",
+        "total": "Total",
+        "yes": "Yes",
+        "no": "No",
+        "loading": "Loading...",
+        "confirm": "Confirm",
+        "close": "Close",
+        "back": "Back",
+        "next": "Next",
+        "previous": "Previous",
+        "page": "Page",
+        "of": "of",
+        "items": "items",
+        "found": "Found",
+        "no_results": "No results found",
+        "success": "Success",
+        "error": "Error",
+        "warning": "Warning",
+        "info": "Info"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "welcome": "Welcome to Admin Panel",
+        "quick_stats": "Quick Stats",
+        "total_products": "Total Products",
+        "total_orders": "Total Orders",
+        "pending_orders": "Pending Orders",
+        "today_orders": "Today's Orders",
+        "recent_orders": "Recent Orders",
+        "quick_actions": "Quick Actions"
+    },
+    "orders": {
+        "title": "Orders",
+        "order_number": "Order #",
+        "customer": "Customer",
+        "total_amount": "Total",
+        "status": "Status",
+        "created_at": "Created",
+        "updated_at": "Updated",
+        "items": "Items",
+        "shipping_address": "Shipping Address",
+        "billing_address": "Billing Address",
+        "notes": "Notes",
+        "statuses": {
+            "pending": "Pending",
+            "processing": "Processing",
+            "shipped": "Shipped",
+            "delivered": "Delivered",
+            "cancelled": "Cancelled"
+        }
+    },
+    "products": {
+        "title": "Products",
+        "article": "Article",
+        "name": "Name",
+        "price": "Price",
+        "stock": "Stock",
+        "brand": "Brand",
+        "category": "Category",
+        "description": "Description",
+        "photo": "Photo",
+        "photos": "Photos",
+        "add_product": "Add Product",
+        "edit_product": "Edit Product",
+        "no_photo": "No photo",
+        "in_stock": "In stock",
+        "out_of_stock": "Out of stock"
+    },
+    "categories": {
+        "title": "Categories",
+        "name": "Category Name",
+        "parent": "Parent Category",
+        "products_count": "Products Count",
+        "add_category": "Add Category",
+        "edit_category": "Edit Category",
+        "no_parent": "No parent",
+        "assign": "Assign",
+        "unassign": "Unassign"
+    },
+    "stock": {
+        "title": "Stock Management",
+        "available": "Available",
+        "reserved": "Reserved",
+        "supplier": "Supplier",
+        "last_update": "Last Update",
+        "update_stock": "Update Stock"
+    },
+    "price_list": {
+        "title": "Price Lists",
+        "upload": "Upload Price List",
+        "supplier": "Supplier",
+        "file": "File",
+        "uploaded_at": "Uploaded",
+        "processed": "Processed",
+        "errors": "Errors"
+    },
+    "photos": {
+        "title": "Photo Management",
+        "upload": "Upload Photo",
+        "source": "Source",
+        "all_sources": "All Sources",
+        "with_photo": "With Photo",
+        "without_photo": "Without Photo",
+        "delete_confirm": "Delete this photo?"
+    },
+    "descriptions": {
+        "title": "Description Management",
+        "bulk_import": "Bulk Import",
+        "language": "Language",
+        "mode": "Mode",
+        "create_only": "Create new only",
+        "update_existing": "Update existing",
+        "data_format": "Data (format: article [TAB] brand_id [TAB] name [TAB] description)"
+    },
+    "suppliers": {
+        "title": "Suppliers",
+        "name": "Name",
+        "contact": "Contact",
+        "email": "Email",
+        "phone": "Phone",
+        "add_supplier": "Add Supplier"
+    },
+    "users": {
+        "title": "Users",
+        "username": "Username",
+        "email": "Email",
+        "role": "Role",
+        "created_at": "Registration Date",
+        "last_login": "Last Login",
+        "roles": {
+            "admin": "Administrator",
+            "manager": "Manager",
+            "user": "User"
+        }
+    },
+    "language": {
+        "switch": "Interface Language",
+        "uk": "Українська",
+        "en": "English"
+    }
+}

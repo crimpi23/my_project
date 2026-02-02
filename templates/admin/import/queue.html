@@ -1,235 +1,229 @@
-<!-- filepath: c:\Users\IBM24\Desktop\Local\templates\admin\import\queue.html -->
 {% extends "base/admin_base.html" %}
 
-{% block title %}Import Queue - Import System{% endblock %}
+{% block title %}{{ _('Import Queue') }} - Admin{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title mb-0">Import Queue</h3>
-                    <div>
-                        <span class="badge bg-warning me-2">Unprocessed: {{ unprocessed_count }}</span>
-                        <span class="badge bg-success">Processed: {{ processed_count }}</span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <!-- Фільтри -->
-                    <form method="GET" class="row g-3 mb-4">
-                        <div class="col-md-3">
-                            <label for="search" class="form-label">Search Article</label>
-                            <input type="text" class="form-control" name="search" id="search" 
-                                   value="{{ search }}" placeholder="Enter article...">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="brand" class="form-label">Brand</label>
-                            <select class="form-control" name="brand" id="brand">
-                                <option value="">All Brands</option>
-                                {% for brand in available_brands %}
-                                <option value="{{ brand }}" {% if brand == brand_filter %}selected{% endif %}>
-                                    {{ brand }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="processed" class="form-label">Status</label>
-                            <select class="form-control" name="processed" id="processed">
-                                <option value="false" {% if processed_filter == 'false' %}selected{% endif %}>Unprocessed</option>
-                                <option value="true" {% if processed_filter == 'true' %}selected{% endif %}>Processed</option>
-                                <option value="all" {% if processed_filter == 'all' %}selected{% endif %}>All</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">Filter</button>
-                            <a href="{{ url_for('admin_import_queue', token=token) }}" class="btn btn-secondary">Reset</a>
-                        </div>
-                    </form>
+<div class="page-header">
+    <h1><i class="bi bi-clock"></i> {{ _('Import Queue') }}</h1>
+    <div class="page-actions">
+        <span class="badge bg-warning me-2">{{ _('Unprocessed') }}: {{ unprocessed_count }}</span>
+        <span class="badge bg-success me-2">{{ _('Processed') }}: {{ processed_count }}</span>
+        <a href="{{ url_for('admin_import_dashboard', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Import') }}
+        </a>
+    </div>
+</div>
 
-                    <!-- Статистика -->
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <p class="mb-0">
-                                Showing {{ queue_items|length }} of {{ total_items }} items 
-                                (Page {{ page }} of {{ total_pages }})
-                            </p>
-                        </div>
-                    </div>
-
-                    {% if queue_items %}
-                    <!-- Форма для масових дій -->
-                    <form method="POST" action="{{ url_for('admin_import_queue_process', token=token) }}">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="input-group">
-                                    <select name="action" class="form-control" required>
-                                        <option value="">Select Action</option>
-                                        <option value="move_to_whitelist">Move to Whitelist</option>
-                                        <option value="move_to_blacklist">Move to Blacklist</option>
-                                        <option value="delete">Delete from Queue</option>
-                                    </select>
-                                    <button type="submit" class="btn btn-primary" 
-                                            onclick="return confirm('Apply action to selected items?')">
-                                        Apply
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-6 text-end">
-                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                        onclick="toggleAllCheckboxes()">
-                                    Toggle All
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-striped admin-table">
-                                <thead>
-                                    <tr>
-                                        <th>
-                                            <input type="checkbox" id="selectAll">
-                                        </th>
-                                        <th>Article</th>
-                                        <th>Name</th>
-                                        <th>Brand</th>
-                                        <th>Quantity</th>
-                                        <th>Price</th>
-                                        <th>Status</th>
-                                        <th>Import Date</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in queue_items %}
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" name="selected_items" value="{{ item.id }}" 
-                                                   class="item-checkbox">
-                                        </td>
-                                        <td><strong>{{ item.article }}</strong></td>
-                                        <td>{{ item.name or '-' }}</td>
-                                        <td>{{ item.brand or 'Unknown' }}</td>
-                                        <td>{{ item.quantity }}</td>
-                                        <td>€{{ "%.2f"|format(item.price) }}</td>
-                                        <td>
-                                            {% if item.processed %}
-                                                <span class="badge bg-success">Processed</span>
-                                            {% else %}
-                                                <span class="badge bg-warning">Pending</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ item.imported_at.strftime('%d.%m.%Y %H:%M') if item.imported_at else '-' }}</td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-success btn-sm" 
-                                                        onclick="moveToWhitelist({{ item.id }})">
-                                                    Whitelist
-                                                </button>
-                                                <button type="button" class="btn btn-danger btn-sm" 
-                                                        onclick="moveToBlacklist({{ item.id }})">
-                                                    Blacklist
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </form>
-
-                    <!-- Пагінація -->
-                    {% if total_pages > 1 %}
-                    <nav aria-label="Queue pagination" class="mt-4">
-                        <ul class="pagination justify-content-center">
-                            <!-- Попередня сторінка -->
-                            {% if has_prev %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('admin_import_queue', token=token, page=page-1, search=search, brand=brand_filter, processed=processed_filter) }}">
-                                    Previous
-                                </a>
-                            </li>
-                            {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">Previous</span>
-                            </li>
-                            {% endif %}
-
-                            <!-- Номери сторінок -->
-                            {% set start_page = [1, page - 2]|max %}
-                            {% set end_page = [total_pages, page + 2]|min %}
-
-                            {% if start_page > 1 %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('admin_import_queue', token=token, page=1, search=search, brand=brand_filter, processed=processed_filter) }}">1</a>
-                            </li>
-                            {% if start_page > 2 %}
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
-                            {% endif %}
-                            {% endif %}
-
-                            {% for page_num in range(start_page, end_page + 1) %}
-                            <li class="page-item {% if page_num == page %}active{% endif %}">
-                                <a class="page-link" href="{{ url_for('admin_import_queue', token=token, page=page_num, search=search, brand=brand_filter, processed=processed_filter) }}">
-                                    {{ page_num }}
-                                </a>
-                            </li>
-                            {% endfor %}
-
-                            {% if end_page < total_pages %}
-                            {% if end_page < total_pages - 1 %}
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
-                            {% endif %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('admin_import_queue', token=token, page=total_pages, search=search, brand=brand_filter, processed=processed_filter) }}">{{ total_pages }}</a>
-                            </li>
-                            {% endif %}
-
-                            <!-- Наступна сторінка -->
-                            {% if has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('admin_import_queue', token=token, page=page+1, search=search, brand=brand_filter, processed=processed_filter) }}">
-                                    Next
-                                </a>
-                            </li>
-                            {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">Next</span>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                    {% endif %}
-
-                    {% else %}
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> No items found in the import queue.
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card warning">
+            <div class="stat-value">{{ unprocessed_count }}</div>
+            <div class="stat-label">{{ _('Pending Items') }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card success">
+            <div class="stat-value">{{ processed_count }}</div>
+            <div class="stat-label">{{ _('Processed Items') }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_items }}</div>
+            <div class="stat-label">{{ _('Total Items') }}</div>
         </div>
     </div>
 </div>
 
+<!-- Filters -->
+<div class="filter-card">
+    <form method="GET" class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">{{ _('Search Article') }}</label>
+            <input type="text" class="form-control" name="search" 
+                   value="{{ search }}" placeholder="{{ _('Enter article...') }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">{{ _('Brand') }}</label>
+            <select class="form-select" name="brand">
+                <option value="">{{ _('All Brands') }}</option>
+                {% for brand in available_brands %}
+                <option value="{{ brand }}" {% if brand == brand_filter %}selected{% endif %}>
+                    {{ brand }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">{{ _('Status') }}</label>
+            <select class="form-select" name="processed">
+                <option value="false" {% if processed_filter == 'false' %}selected{% endif %}>{{ _('Unprocessed') }}</option>
+                <option value="true" {% if processed_filter == 'true' %}selected{% endif %}>{{ _('Processed') }}</option>
+                <option value="all" {% if processed_filter == 'all' %}selected{% endif %}>{{ _('All') }}</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> {{ _('Filter') }}
+            </button>
+            <a href="{{ url_for('admin_import_queue', token=token) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> {{ _('Reset') }}
+            </a>
+        </div>
+    </form>
+    <div class="mt-2 text-muted small">
+        {{ _('Showing') }} {{ queue_items|length }} {{ _('of') }} {{ total_items }} {{ _('items') }} 
+        ({{ _('Page') }} {{ page }} {{ _('of') }} {{ total_pages }})
+    </div>
+</div>
+
+{% if queue_items %}
+<!-- Bulk Actions Form -->
+<form method="POST" action="{{ url_for('admin_import_queue_process', token=token) }}">
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <select name="action" class="form-select" required>
+                            <option value="">{{ _('Select Action') }}</option>
+                            <option value="move_to_whitelist">{{ _('Move to Whitelist') }}</option>
+                            <option value="move_to_blacklist">{{ _('Move to Blacklist') }}</option>
+                            <option value="delete">{{ _('Delete from Queue') }}</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary" 
+                                onclick="return confirm('{{ _('Apply action to selected items?') }}')">
+                            {{ _('Apply') }}
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleAllCheckboxes()">
+                        {{ _('Toggle All') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll"></th>
+                        <th>{{ _('Article') }}</th>
+                        <th>{{ _('Name') }}</th>
+                        <th>{{ _('Brand') }}</th>
+                        <th>{{ _('Quantity') }}</th>
+                        <th>{{ _('Price') }}</th>
+                        <th>{{ _('Status') }}</th>
+                        <th>{{ _('Import Date') }}</th>
+                        <th>{{ _('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in queue_items %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="selected_items" value="{{ item.id }}" class="item-checkbox">
+                        </td>
+                        <td><strong>{{ item.article }}</strong></td>
+                        <td>{{ item.name or '—' }}</td>
+                        <td>{{ item.brand or _('Unknown') }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>€{{ "%.2f"|format(item.price) }}</td>
+                        <td>
+                            {% if item.processed %}
+                                <span class="badge bg-success">{{ _('Processed') }}</span>
+                            {% else %}
+                                <span class="badge bg-warning">{{ _('Pending') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.imported_at.strftime('%d.%m.%Y %H:%M') if item.imported_at else '—' }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-success" 
+                                        onclick="moveToWhitelist({{ item.id }})" title="{{ _('Whitelist') }}">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="moveToBlacklist({{ item.id }})" title="{{ _('Blacklist') }}">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination pagination-sm mb-0 justify-content-center">
+                    {% if has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_import_queue', token=token, page=page-1, search=search, brand=brand_filter, processed=processed_filter) }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% set start_page = [1, page - 2]|max %}
+                    {% set end_page = [total_pages, page + 2]|min %}
+                    
+                    {% for page_num in range(start_page, end_page + 1) %}
+                    <li class="page-item {% if page_num == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_import_queue', token=token, page=page_num, search=search, brand=brand_filter, processed=processed_filter) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_import_queue', token=token, page=page+1, search=search, brand=brand_filter, processed=processed_filter) }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</form>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted"></i>
+        <h5 class="mt-3">{{ _('No items in queue') }}</h5>
+        <p class="text-muted">{{ _('Upload a file to add items to the queue.') }}</p>
+        <a href="{{ url_for('admin_import_upload', token=token) }}" class="btn btn-primary">
+            <i class="bi bi-upload"></i> {{ _('Upload File') }}
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
 <script>
+document.getElementById('selectAll')?.addEventListener('change', function() {
+    document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = this.checked);
+});
+
 function toggleAllCheckboxes() {
-    const selectAll = document.getElementById('selectAll');
     const checkboxes = document.querySelectorAll('.item-checkbox');
-    
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAll.checked;
-    });
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
+    document.getElementById('selectAll').checked = !allChecked;
 }
 
 function moveToWhitelist(itemId) {
-    if (confirm('Move this item to whitelist?')) {
+    if (confirm('{{ _("Move this item to whitelist?") }}')) {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ url_for("admin_import_queue_process", token=token) }}';
@@ -238,21 +232,21 @@ function moveToWhitelist(itemId) {
         actionInput.type = 'hidden';
         actionInput.name = 'action';
         actionInput.value = 'move_to_whitelist';
+        form.appendChild(actionInput);
         
         const itemInput = document.createElement('input');
         itemInput.type = 'hidden';
         itemInput.name = 'selected_items';
         itemInput.value = itemId;
-        
-        form.appendChild(actionInput);
         form.appendChild(itemInput);
+        
         document.body.appendChild(form);
         form.submit();
     }
 }
 
 function moveToBlacklist(itemId) {
-    if (confirm('Move this item to blacklist?')) {
+    if (confirm('{{ _("Move this item to blacklist?") }}')) {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ url_for("admin_import_queue_process", token=token) }}';
@@ -261,22 +255,17 @@ function moveToBlacklist(itemId) {
         actionInput.type = 'hidden';
         actionInput.name = 'action';
         actionInput.value = 'move_to_blacklist';
+        form.appendChild(actionInput);
         
         const itemInput = document.createElement('input');
         itemInput.type = 'hidden';
         itemInput.name = 'selected_items';
         itemInput.value = itemId;
-        
-        form.appendChild(actionInput);
         form.appendChild(itemInput);
+        
         document.body.appendChild(form);
         form.submit();
     }
 }
-
-// Синхронізація головного чекбокса
-document.getElementById('selectAll').addEventListener('change', function() {
-    toggleAllCheckboxes();
-});
 </script>
 {% endblock %}

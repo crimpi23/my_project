@@ -1,124 +1,230 @@
 {% extends "base/admin_base.html" %}
 
+{% block title %}{{ _('Manage Stock') }}{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>Управління складом</h2>
-
-    <!-- Форма завантаження файлу -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h4>Завантаження даних (Excel)</h4>
-        </div>
-        <div class="card-body">
-            <form action="{{ url_for('upload_stock', token=token) }}" method="post" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label>Оберіть Excel файл з колонками: Артикуль, кть, Ціна, id бренду</label>
-                    <input type="file" class="form-control" name="file" accept=".xlsx,.xls" required>
-                </div>
-                <button type="submit" class="btn btn-primary mt-2">Завантажити</button>
-            </form>
-        </div>
+<div class="page-header">
+    <h1><i class="bi bi-boxes"></i> {{ _('Manage Stock') }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Dashboard') }}
+        </a>
     </div>
+</div>
 
-    <!-- Форма додавання окремої позиції -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h4>Додати нову позицію</h4>
-        </div>
-        <div class="card-body">
-            <form action="{{ url_for('add_stock_item', token=token) }}" method="post">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label>Артикул</label>
-                        <input type="text" class="form-control" name="article" required>
+<div class="row g-4">
+    <!-- Upload Excel -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-file-earmark-excel me-2"></i>{{ _('Upload Data (Excel)') }}
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('upload_stock', token=token) }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Select Excel file with columns') }}: Article, Qty, Price, Brand ID</label>
+                        <input type="file" class="form-control" name="file" accept=".xlsx,.xls" required>
                     </div>
-                    <div class="col-md-2">
-                        <label>Кількість</label>
-                        <input type="number" class="form-control" name="quantity" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label>Ціна</label>
-                        <input type="text" class="form-control" name="price" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label>Бренд</label>
-                        <select class="form-control" name="brand_id" required>
-                            {% for brand in brands %}
-                            <option value="{{ brand.id }}">{{ brand.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-success">Додати</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Таблиця стоку -->
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4>Поточний сток</h4>
-            <form action="{{ url_for('clear_stock', token=token) }}" method="post" class="d-inline">
-                <button type="submit" class="btn btn-danger" onclick="return confirm('Ви впевнені що хочете очистити весь сток?')">
-                    Очистити сток
-                </button>
-            </form>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Артикул</th>
-                            <th>Кількість</th>
-                            <th>Ціна</th>
-                            <th>Бренд</th>
-                            <th>Дії</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in stock_items %}
-                        <tr>
-                            <td>{{ item.article }}</td>
-                            <td>
-                                <form action="{{ url_for('update_stock_item', token=token, article=item.article) }}" 
-                                      method="post" class="d-inline">
-                                    <input type="number" name="quantity" value="{{ item.quantity }}" 
-                                           class="form-control form-control-sm d-inline" style="width: 80px;">
-                            </td>
-                            <td>
-                                <input type="text" name="price" value="{{ item.price }}" 
-                                       class="form-control form-control-sm d-inline" style="width: 80px;">
-                            </td>
-                            <td>
-                                <select name="brand_id" class="form-control form-control-sm d-inline">
-                                    {% for brand in brands %}
-                                    <option value="{{ brand.id }}" 
-                                            {% if brand.id == item.brand_id %}selected{% endif %}>
-                                        {{ brand.name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-                            <td>
-                                <button type="submit" class="btn btn-sm btn-primary">Оновити</button>
-                                </form>
-                                <form action="{{ url_for('delete_stock_item', token=token, article=item.article) }}" 
-                                      method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-danger" 
-                                            onclick="return confirm('Ви впевнені що хочете видалити цю позицію?')">
-                                        Видалити
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> {{ _('Upload') }}
+                    </button>
+                </form>
             </div>
         </div>
     </div>
+
+    <!-- Add Single Item -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-plus-circle me-2"></i>{{ _('Add New Item') }}
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('add_stock_item', token=token) }}" method="post">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ _('Article') }}</label>
+                            <input type="text" class="form-control" name="article" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">{{ _('Qty') }}</label>
+                            <input type="number" class="form-control" name="quantity" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ _('Price') }}</label>
+                            <input type="text" class="form-control" name="price" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ _('Brand') }}</label>
+                            <select class="form-select" name="brand_id" required>
+                                {% for brand in brands %}
+                                <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success mt-3">
+                        <i class="bi bi-plus"></i> {{ _('Add') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Stock Table -->
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-list-ul me-2"></i>{{ _('Current Stock') }} ({{ total_count }} {{ _('items') }})</span>
+        <form action="{{ url_for('clear_stock', token=token) }}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-danger btn-sm" 
+                    onclick="return confirm(&quot;{{ _('Are you sure you want to clear all stock?') }}&quot;)">
+                <i class="bi bi-trash"></i> {{ _('Clear All') }}
+            </button>
+        </form>
+    </div>
+    
+    <!-- Фільтри -->
+    <div class="card-body border-bottom">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">{{ _('Article') }}</label>
+                <input type="text" name="article" class="form-control" 
+                       value="{{ article_filter }}" placeholder="{{ _('Search...') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{{ _('Brand') }}</label>
+                <select name="brand" class="form-select">
+                    <option value="">{{ _('All Brands') }}</option>
+                    {% for brand in brands %}
+                    <option value="{{ brand.id }}" {% if brand_filter|string == brand.id|string %}selected{% endif %}>
+                        {{ brand.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">{{ _('Min Qty') }}</label>
+                <input type="number" name="min_qty" class="form-control" 
+                       value="{{ min_quantity }}" placeholder="0">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">{{ _('Max Qty') }}</label>
+                <input type="number" name="max_qty" class="form-control" 
+                       value="{{ max_quantity }}" placeholder="9999">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> {{ _('Filter') }}
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>{{ _('Product') }}</th>
+                    <th>{{ _('Quantity') }}</th>
+                    <th>{{ _('Price') }}</th>
+                    <th>{{ _('Brand') }}</th>
+                    <th>{{ _('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in stock_items %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('admin_product_card', token=token, article=item.article) }}" 
+                           class="fw-semibold text-decoration-none">
+                            {{ item.article }}
+                        </a>
+                        {% if item.product_name %}
+                        <div class="text-muted small">{{ item.product_name }}</div>
+                        {% else %}
+                        <div class="text-muted small">—</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form action="{{ url_for('update_stock_item', token=token, article=item.article) }}" 
+                              method="post" class="d-inline update-form">
+                            <input type="number" name="quantity" value="{{ item.quantity }}" 
+                                   class="form-control form-control-sm d-inline" style="width: 80px;">
+                    </td>
+                    <td>
+                        <input type="text" name="price" value="{{ item.price }}" 
+                               class="form-control form-control-sm d-inline" style="width: 90px;">
+                    </td>
+                    <td>
+                        <select name="brand_id" class="form-select form-select-sm" style="width: 120px;">
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}" {% if brand.id == item.brand_id %}selected{% endif %}>
+                                {{ brand.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="bi bi-check"></i>
+                        </button>
+                        </form>
+                        <form action="{{ url_for('delete_stock_item', token=token, article=item.article) }}" 
+                              method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger" 
+                                    onclick="return confirm(&quot;{{ _('Delete this item?') }}&quot;)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="card-footer">
+        <nav>
+            <ul class="pagination pagination-sm mb-0 justify-content-center">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('manage_stock', token=token, article=article_filter, brand=brand_filter, min_qty=min_quantity, max_qty=max_quantity, page=1) }}">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('manage_stock', token=token, article=article_filter, brand=brand_filter, min_qty=min_quantity, max_qty=max_quantity, page=page-1) }}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for p in range([1, page-2]|max, [total_pages, page+2]|min + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('manage_stock', token=token, article=article_filter, brand=brand_filter, min_qty=min_quantity, max_qty=max_quantity, page=p) }}">
+                        {{ p }}
+                    </a>
+                </li>
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('manage_stock', token=token, article=article_filter, brand=brand_filter, min_qty=min_quantity, max_qty=max_quantity, page=page+1) }}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('manage_stock', token=token, article=article_filter, brand=brand_filter, min_qty=min_quantity, max_qty=max_quantity, page=total_pages) }}">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -1,77 +1,102 @@
 {% extends "base/admin_base.html" %}
-{% block title %}Price Lists Management{% endblock %}
+
+{% block title %}{{ _('Manage Price Lists') }} - Admin{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card mb-4">
-                <div class="card-header pb-0">
-                    <h6>Price Lists Management</h6>
-                </div>
-                <div class="card-body px-0 pt-0 pb-2">
-                    <div class="table-responsive p-0">
-                        <table class="table align-items-center mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">ID</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Назва таблиці</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Постачальник</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Термін поставки</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Дата створення</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Дії</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for price_list in price_lists %}
-                                <tr>
-                                    <td>
-                                        <div class="d-flex px-3 py-1">
-                                            <p class="text-xs font-weight-bold mb-0">{{ price_list.id }}</p>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <p class="text-xs font-weight-bold mb-0">{{ price_list.table_name }}</p>
-                                    </td>
-                                    <td>
-                                        <form action="{{ url_for('update_price_list_supplier', token=token) }}" method="post" class="d-flex align-items-center">
-                                            <input type="hidden" name="price_list_id" value="{{ price_list.id }}">
-                                            <select name="supplier_id" class="form-control form-control-sm" style="width: auto;">
-                                                <option value="">-- Виберіть постачальника --</option>
-                                                {% for supplier in suppliers %}
-                                                <option value="{{ supplier.id }}" {% if supplier.id == price_list.supplier_id %}selected{% endif %}>
-                                                    {{ supplier.name }}
-                                                </option>
-                                                {% endfor %}
-                                            </select>
-                                    </td>
-                                    <td>
-                                        <!-- Додаємо поле для терміну доставки -->
-                                        <input type="text" name="delivery_time" class="form-control form-control-sm" style="width: 80px;" 
-                                               value="{{ price_list.delivery_time }}" placeholder="дні">
-                                    </td>
-                                    <td>
-                                        <p class="text-xs text-secondary mb-0">
-                                            {{ price_list.created_at.strftime('%Y-%m-%d %H:%M') if price_list.created_at }}
-                                        </p>
-                                    </td>
-                                    <td>
-                                        <button type="submit" class="btn btn-sm btn-primary">Зберегти</button>
-                                        </form>
-                                        <form action="{{ url_for('delete_price_list', token=token, price_list_id=price_list.id) }}" method="post" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this price list?')">
-                                                Видалити
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+<div class="page-header">
+    <h1><i class="bi bi-list-ul"></i> {{ _('Price Lists Management') }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('upload_price_list', token=token) }}" class="btn btn-success">
+            <i class="bi bi-upload"></i> {{ _('Upload Price List') }}
+        </a>
+        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Dashboard') }}
+        </a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card primary">
+            <div class="stat-value">{{ price_lists|length }}</div>
+            <div class="stat-label">{{ _('Total Price Lists') }}</div>
         </div>
     </div>
+</div>
+
+<!-- Price Lists Table -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-table me-2"></i>{{ _('Price Lists') }}
+    </div>
+    {% if price_lists %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>{{ _('Table Name') }}</th>
+                    <th>{{ _('Supplier') }}</th>
+                    <th>{{ _('Delivery Time') }}</th>
+                    <th>{{ _('Created') }}</th>
+                    <th>{{ _('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for price_list in price_lists %}
+                <tr>
+                    <td>{{ price_list.id }}</td>
+                    <td><strong>{{ price_list.table_name }}</strong></td>
+                    <td>
+                        <form action="{{ url_for('update_price_list_supplier', token=token) }}" method="post" class="d-flex align-items-center gap-2">
+                            <input type="hidden" name="price_list_id" value="{{ price_list.id }}">
+                            <select name="supplier_id" class="form-select form-select-sm" style="width: auto;">
+                                <option value="">{{ _('Select Supplier') }}</option>
+                                {% for supplier in suppliers %}
+                                <option value="{{ supplier.id }}" {% if supplier.id == price_list.supplier_id %}selected{% endif %}>
+                                    {{ supplier.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                    </td>
+                    <td>
+                        <input type="text" name="delivery_time" class="form-control form-control-sm" style="width: 80px;" 
+                               value="{{ price_list.delivery_time or '' }}" placeholder="{{ _('days') }}">
+                    </td>
+                    <td>
+                        {% if price_list.created_at %}
+                            {{ price_list.created_at.strftime('%d.%m.%Y %H:%M') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button type="submit" class="btn btn-outline-primary" title="{{ _('Save') }}">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                            </form>
+                            <form action="{{ url_for('delete_price_list', token=token, price_list_id=price_list.id) }}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger" 
+                                        onclick="return confirm('{{ _('Delete this price list?') }}')" 
+                                        title="{{ _('Delete') }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card-body">
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-info-circle me-2"></i> {{ _('No price lists found. Upload a new one.') }}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends "base/admin_base.html" %}
 
-{% block title %}Додати фото для {{ article }} - {{ super() }}{% endblock %}
+{% block title %}{{ _('Add Photos') }} - {{ article }}{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -44,118 +44,106 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2><i class="bi bi-plus-circle"></i> Додати фото для товару</h2>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item">
-                                <a href="{{ url_for('admin_dashboard', token=token) }}">Панель адміністратора</a>
-                            </li>
-                            <li class="breadcrumb-item">
-                                <a href="{{ url_for('admin_products_missing_photos', token=token) }}">Товари без фото</a>
-                            </li>
-                            <li class="breadcrumb-item active">{{ article }}</li>
-                        </ol>
-                    </nav>
-                </div>
-                <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Назад до списку
-                </a>
+<div class="page-header">
+    <h1><i class="bi bi-image"></i> {{ _('Add Photos') }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to List') }}
+        </a>
+    </div>
+</div>
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('admin_dashboard', token=token) }}">{{ _('Dashboard') }}</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('admin_products_missing_photos', token=token) }}">{{ _('Missing Photos') }}</a>
+        </li>
+        <li class="breadcrumb-item active">{{ article }}</li>
+    </ol>
+</nav>
+
+<!-- Product Info -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="bi bi-info-circle me-2"></i>{{ _('Product Info') }}
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>{{ _('Article') }}:</strong><br>
+                <code class="text-primary fs-5">{{ product.article }}</code>
             </div>
-
-            <!-- Інформація про товар -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5><i class="bi bi-info-circle"></i> Інформація про товар</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <strong>Артикул:</strong><br>
-                            <code class="text-primary fs-5">{{ product.article }}</code>
-                        </div>
-                        <div class="col-md-3">
-                            <strong>Бренд:</strong><br>
-                            <span class="badge bg-secondary fs-6">{{ product.brand_name or 'N/A' }}</span>
-                        </div>
-                        <div class="col-md-3">
-                            <strong>Кількість:</strong><br>
-                            <span class="badge bg-success fs-6">{{ product.quantity }}</span>
-                        </div>
-                        <div class="col-md-3">
-                            <strong>Ціна:</strong><br>
-                            <span class="fs-5 fw-bold">{{ "%.2f"|format(product.price) }} €</span>
-                        </div>
-                    </div>
-                    {% if product.name_sk or product.name_en %}
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <strong>Назва:</strong><br>
-                            {{ product.name_sk or product.name_en }}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
+            <div class="col-md-3">
+                <strong>{{ _('Brand') }}:</strong><br>
+                <span class="badge bg-secondary fs-6">{{ product.brand_name or 'N/A' }}</span>
             </div>
-
-            <!-- Форма завантаження фото -->
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="bi bi-upload"></i> Завантаження фотографій</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data" id="photoForm">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="mb-3">
-                                    <label for="photos" class="form-label">
-                                        <i class="bi bi-images"></i>
-                                        Оберіть фотографії (можна декілька)
-                                    </label>
-                                    <input type="file" 
-                                           class="form-control" 
-                                           id="photos" 
-                                           name="photos" 
-                                           multiple 
-                                           accept="image/*" 
-                                           required>
-                                    <div class="form-text">
-                                        Підтримувані формати: JPG, PNG, GIF, WEBP. Максимальний розмір: 5MB на файл.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Попередній перегляд -->
-                        <div id="photoPreview" class="mb-4"></div>
-
-                        <!-- Вибір головного фото -->
-                        <div id="mainPhotoSection" class="mb-3" style="display: none;">
-                            <label class="form-label">
-                                <i class="bi bi-star"></i>
-                                Головне фото
-                            </label>
-                            <p class="text-muted">Натисніть на фото, щоб вибрати його як головне</p>
-                            <input type="hidden" name="main_photo" id="mainPhotoInput" value="0">
-                        </div>
-
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
-                                <i class="bi bi-cloud-upload"></i>
-                                Завантажити фото
-                            </button>
-                            <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="btn btn-outline-secondary">
-                                Скасувати
-                            </a>
-                        </div>
-                    </form>
-                </div>
+            <div class="col-md-3">
+                <strong>{{ _('Quantity') }}:</strong><br>
+                <span class="badge bg-success fs-6">{{ product.quantity }}</span>
+            </div>
+            <div class="col-md-3">
+                <strong>{{ _('Price') }}:</strong><br>
+                <span class="fs-5 fw-bold">{{ "%.2f"|format(product.price) }} €</span>
             </div>
         </div>
+        {% if product.name_sk or product.name_en %}
+        <div class="row mt-3">
+            <div class="col-12">
+                <strong>{{ _('Name') }}:</strong><br>
+                {{ product.name_sk or product.name_en }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Upload Form -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-upload me-2"></i>{{ _('Upload Photos') }}
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" id="photoForm">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label for="photos" class="form-label">
+                            <i class="bi bi-images me-1"></i>{{ _('Select photos (multiple allowed)') }}
+                        </label>
+                        <input type="file" class="form-control" id="photos" name="photos" 
+                               multiple accept="image/*" required>
+                        <div class="form-text">
+                            {{ _('Supported formats: JPG, PNG, GIF, WEBP. Max size: 5MB per file.') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div id="photoPreview" class="mb-4"></div>
+
+            <!-- Main Photo Selection -->
+            <div id="mainPhotoSection" class="mb-3" style="display: none;">
+                <label class="form-label">
+                    <i class="bi bi-star me-1"></i>{{ _('Main Photo') }}
+                </label>
+                <p class="text-muted">{{ _('Click on a photo to set it as main') }}</p>
+                <input type="hidden" name="main_photo" id="mainPhotoInput" value="0">
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                    <i class="bi bi-cloud-upload me-2"></i>{{ _('Upload Photos') }}
+                </button>
+                <a href="{{ url_for('admin_products_missing_photos', token=token) }}" class="btn btn-outline-secondary">
+                    {{ _('Cancel') }}
+                </a>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}
@@ -203,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     previewDiv.innerHTML = `
                         <img src="${e.target.result}" alt="Preview ${index + 1}">
                         ${index === selectedMainPhoto ? '<div class="main-photo-badge">★</div>' : ''}
-                        ${files.length > 1 ? `<button type="button" class="btn btn-sm btn-outline-primary photo-select-btn" onclick="selectMainPhoto(${index})">Головне</button>` : ''}
+                        ${files.length > 1 ? `<button type="button" class="btn btn-sm btn-outline-primary photo-select-btn" onclick="selectMainPhoto(${index})">{{ _('Main') }}</button>` : ''}
                     `;
                     
                     photoPreview.appendChild(previewDiv);
@@ -218,14 +206,9 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedMainPhoto = index;
         mainPhotoInput.value = index;
         
-        // Оновлюємо всі превью
         document.querySelectorAll('.photo-preview').forEach((preview, i) => {
             if (i === index) {
                 preview.classList.add('main-photo');
-                preview.innerHTML = preview.innerHTML.replace(
-                    /<div class="main-photo-badge">.*?<\/div>/g, 
-                    '<div class="main-photo-badge">★</div>'
-                );
                 if (!preview.querySelector('.main-photo-badge')) {
                     preview.innerHTML += '<div class="main-photo-badge">★</div>';
                 }
@@ -237,7 +220,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-    // Попередження при закритті сторінки з незбереженими змінами
     let formChanged = false;
     photosInput.addEventListener('change', () => formChanged = true);
     

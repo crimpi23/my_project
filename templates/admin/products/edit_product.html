@@ -1,204 +1,203 @@
 {% extends "base/admin_base.html" %}
 
-{% block title %}{% if is_new %}Додати опис{% else %}Редагувати{% endif %} - {{ article }} - {{ super() }}{% endblock %}
+{% block title %}{% if is_new %}{{ _('Add Description') }}{% else %}{{ _('Edit Product') }}{% endif %} - {{ article }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="page-header">
+    <h1>
+        <i class="bi bi-{% if is_new %}plus-circle{% else %}pencil{% endif %}"></i>
+        {% if is_new %}{{ _('Add Product Description') }}{% else %}{{ _('Edit Product') }}{% endif %}
+    </h1>
+    <div class="page-actions">
+        <a href="https://www.google.com/search?q={{ article }}+Land+Rover+part" 
+           target="_blank" class="btn btn-outline-primary">
+            <i class="bi bi-google"></i> {{ _('Search Google') }}
+        </a>
+        <a href="{{ url_for('admin_products_missing_descriptions', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to List') }}
+        </a>
+    </div>
+</div>
+
+<!-- Article Info -->
+<div class="alert alert-secondary d-flex align-items-center gap-3 mb-4">
+    <div>
+        <strong>{{ _('Article') }}:</strong> <code class="fs-5">{{ article }}</code>
+    </div>
+    {% if stock_info %}
+    <div>
+        <span class="badge bg-{% if stock_info.quantity > 0 %}success{% else %}danger{% endif %}">
+            {{ _('Qty') }}: {{ stock_info.quantity }}
+        </span>
+    </div>
+    <div>
+        <span class="badge bg-info">{{ "%.2f"|format(stock_info.price) }} €</span>
+    </div>
+    {% endif %}
+</div>
+
+<form method="POST">
     <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2>
-                        <i class="bi bi-{% if is_new %}plus-circle{% else %}pencil{% endif %}"></i>
-                        {% if is_new %}Додати опис товару{% else %}Редагувати товар{% endif %}
-                    </h2>
-                    <p class="text-muted mb-0">
-                        Артикул: <code class="fs-5">{{ article }}</code>
-                        {% if stock_info %}
-                        <span class="badge bg-{% if stock_info.quantity > 0 %}success{% else %}danger{% endif %} ms-2">
-                            Кількість: {{ stock_info.quantity }}
-                        </span>
-                        <span class="badge bg-info ms-1">{{ "%.2f"|format(stock_info.price) }} €</span>
-                        {% endif %}
-                    </p>
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2"></i>{{ _('Product Information') }}
                 </div>
-                <div>
-                    <a href="{{ url_for('admin_products_missing_descriptions', token=token) }}" class="btn btn-outline-secondary me-2">
-                        <i class="bi bi-arrow-left"></i> Назад до списку
-                    </a>
-                    <a href="https://www.google.com/search?q={{ article }}+Land+Rover+part" 
-                       target="_blank" class="btn btn-outline-primary">
-                        <i class="bi bi-google"></i> Шукати в Google
-                    </a>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="brand_id" class="form-label">{{ _('Brand') }}</label>
+                            <select name="brand_id" id="brand_id" class="form-select">
+                                {% for brand in brands %}
+                                <option value="{{ brand.id }}" 
+                                    {% if product and product.brand_id == brand.id %}selected{% endif %}
+                                    {% if not product and stock_info and stock_info.brand_id == brand.id %}selected{% endif %}>
+                                    {{ brand.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Language Tabs -->
+                    <ul class="nav nav-tabs" id="langTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="sk-tab" data-bs-toggle="tab" data-bs-target="#sk" type="button">
+                                🇸🇰 Slovensky
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="en-tab" data-bs-toggle="tab" data-bs-target="#en" type="button">
+                                🇬🇧 English
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pl-tab" data-bs-toggle="tab" data-bs-target="#pl" type="button">
+                                🇵🇱 Polski
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content p-3 border border-top-0 rounded-bottom" id="langTabsContent">
+                        <!-- Slovak -->
+                        <div class="tab-pane fade show active" id="sk" role="tabpanel">
+                            <div class="mb-3">
+                                <label for="name_sk" class="form-label">{{ _('Name') }} (SK)</label>
+                                <input type="text" class="form-control" id="name_sk" name="name_sk" 
+                                       value="{{ product.name_sk if product else '' }}" 
+                                       placeholder="{{ _('Enter name in Slovak') }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="description_sk" class="form-label">{{ _('Description') }} (SK)</label>
+                                <textarea class="form-control" id="description_sk" name="description_sk" 
+                                          rows="4" placeholder="{{ _('Enter description in Slovak') }}">{{ product.description_sk if product else '' }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- English -->
+                        <div class="tab-pane fade" id="en" role="tabpanel">
+                            <div class="mb-3">
+                                <label for="name_en" class="form-label">{{ _('Name') }} (EN)</label>
+                                <input type="text" class="form-control" id="name_en" name="name_en" 
+                                       value="{{ product.name_en if product else '' }}" 
+                                       placeholder="{{ _('Enter name in English') }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="description_en" class="form-label">{{ _('Description') }} (EN)</label>
+                                <textarea class="form-control" id="description_en" name="description_en" 
+                                          rows="4" placeholder="{{ _('Enter description in English') }}">{{ product.description_en if product else '' }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Polish -->
+                        <div class="tab-pane fade" id="pl" role="tabpanel">
+                            <div class="mb-3">
+                                <label for="name_pl" class="form-label">{{ _('Name') }} (PL)</label>
+                                <input type="text" class="form-control" id="name_pl" name="name_pl" 
+                                       value="{{ product.name_pl if product else '' }}" 
+                                       placeholder="{{ _('Enter name in Polish') }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="description_pl" class="form-label">{{ _('Description') }} (PL)</label>
+                                <textarea class="form-control" id="description_pl" name="description_pl" 
+                                          rows="4" placeholder="{{ _('Enter description in Polish') }}">{{ product.description_pl if product else '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-gear me-2"></i>{{ _('Actions') }}
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-lg me-2"></i>
+                            {% if is_new %}{{ _('Create Description') }}{% else %}{{ _('Save Changes') }}{% endif %}
+                        </button>
+                        <a href="{{ url_for('admin_add_photos_to_product', token=token, article=article) }}" 
+                           class="btn btn-outline-success">
+                            <i class="bi bi-image me-2"></i>{{ _('Add Photos') }}
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            <!-- Форма редагування -->
-            <form method="POST">
-                <div class="row">
-                    <!-- Основна інформація -->
-                    <div class="col-lg-8">
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Основна інформація</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label for="brand_id" class="form-label">Бренд</label>
-                                        <select name="brand_id" id="brand_id" class="form-select">
-                                            {% for brand in brands %}
-                                            <option value="{{ brand.id }}" 
-                                                {% if product and product.brand_id == brand.id %}selected{% endif %}
-                                                {% if not product and stock_info and stock_info.brand_id == brand.id %}selected{% endif %}>
-                                                {{ brand.name }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- Табулятор мов -->
-                                <ul class="nav nav-tabs" id="langTabs" role="tablist">
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link active" id="sk-tab" data-bs-toggle="tab" data-bs-target="#sk" type="button">
-                                            🇸🇰 Slovensky
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="en-tab" data-bs-toggle="tab" data-bs-target="#en" type="button">
-                                            🇬🇧 English
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="pl-tab" data-bs-toggle="tab" data-bs-target="#pl" type="button">
-                                            🇵🇱 Polski
-                                        </button>
-                                    </li>
-                                </ul>
-                                
-                                <div class="tab-content p-3 border border-top-0 rounded-bottom" id="langTabsContent">
-                                    <!-- Словацька -->
-                                    <div class="tab-pane fade show active" id="sk" role="tabpanel">
-                                        <div class="mb-3">
-                                            <label for="name_sk" class="form-label">Назва (SK)</label>
-                                            <input type="text" class="form-control" id="name_sk" name="name_sk" 
-                                                   value="{{ product.name_sk if product else '' }}" 
-                                                   placeholder="Введіть назву словацькою">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="description_sk" class="form-label">Опис (SK)</label>
-                                            <textarea class="form-control" id="description_sk" name="description_sk" 
-                                                      rows="4" placeholder="Введіть опис словацькою">{{ product.description_sk if product else '' }}</textarea>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Англійська -->
-                                    <div class="tab-pane fade" id="en" role="tabpanel">
-                                        <div class="mb-3">
-                                            <label for="name_en" class="form-label">Назва (EN)</label>
-                                            <input type="text" class="form-control" id="name_en" name="name_en" 
-                                                   value="{{ product.name_en if product else '' }}" 
-                                                   placeholder="Enter name in English">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="description_en" class="form-label">Опис (EN)</label>
-                                            <textarea class="form-control" id="description_en" name="description_en" 
-                                                      rows="4" placeholder="Enter description in English">{{ product.description_en if product else '' }}</textarea>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Польська -->
-                                    <div class="tab-pane fade" id="pl" role="tabpanel">
-                                        <div class="mb-3">
-                                            <label for="name_pl" class="form-label">Назва (PL)</label>
-                                            <input type="text" class="form-control" id="name_pl" name="name_pl" 
-                                                   value="{{ product.name_pl if product else '' }}" 
-                                                   placeholder="Wpisz nazwę po polsku">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="description_pl" class="form-label">Опис (PL)</label>
-                                            <textarea class="form-control" id="description_pl" name="description_pl" 
-                                                      rows="4" placeholder="Wpisz opis po polsku">{{ product.description_pl if product else '' }}</textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Бічна панель -->
-                    <div class="col-lg-4">
-                        <!-- Дії -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="bi bi-gear"></i> Дії</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-primary btn-lg">
-                                        <i class="bi bi-check-lg"></i>
-                                        {% if is_new %}Створити опис{% else %}Зберегти зміни{% endif %}
-                                    </button>
-                                    <a href="{{ url_for('admin_add_photos_to_product', token=token, article=article) }}" 
-                                       class="btn btn-outline-success">
-                                        <i class="bi bi-image"></i> Додати фото
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Інформація зі складу -->
-                        {% if stock_info %}
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="bi bi-boxes"></i> Інформація зі складу</h5>
-                            </div>
-                            <div class="card-body">
-                                <table class="table table-sm mb-0">
-                                    <tr>
-                                        <td>Бренд:</td>
-                                        <td><strong>{{ stock_info.brand_name or 'N/A' }}</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Кількість:</td>
-                                        <td>
-                                            <span class="badge bg-{% if stock_info.quantity > 0 %}success{% else %}danger{% endif %}">
-                                                {{ stock_info.quantity }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Ціна:</td>
-                                        <td><strong>{{ "%.2f"|format(stock_info.price) }} €</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Вартість:</td>
-                                        <td>{{ "%.2f"|format(stock_info.price * stock_info.quantity) }} €</td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        <!-- Швидке копіювання -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="bi bi-lightning"></i> Швидке заповнення</h5>
-                            </div>
-                            <div class="card-body">
-                                <p class="text-muted small">Введіть назву англійською і натисніть кнопку для копіювання в інші мови:</p>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyEnToAll()">
-                                    <i class="bi bi-files"></i> Копіювати EN → всі мови
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Stock Info -->
+            {% if stock_info %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-boxes me-2"></i>{{ _('Stock Info') }}
                 </div>
-            </form>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td>{{ _('Brand') }}:</td>
+                            <td><strong>{{ stock_info.brand_name or 'N/A' }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Quantity') }}:</td>
+                            <td>
+                                <span class="badge bg-{% if stock_info.quantity > 0 %}success{% else %}danger{% endif %}">
+                                    {{ stock_info.quantity }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Price') }}:</td>
+                            <td><strong>{{ "%.2f"|format(stock_info.price) }} €</strong></td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Total Value') }}:</td>
+                            <td>{{ "%.2f"|format(stock_info.price * stock_info.quantity) }} €</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Fill -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightning me-2"></i>{{ _('Quick Fill') }}
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">{{ _('Enter name in English and click button to copy to other languages') }}:</p>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyEnToAll()">
+                        <i class="bi bi-files me-1"></i> {{ _('Copy EN → all languages') }}
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+</form>
 
 <script>
 function copyEnToAll() {
@@ -206,11 +205,10 @@ function copyEnToAll() {
     const descEn = document.getElementById('description_en').value;
     
     if (!nameEn && !descEn) {
-        alert('Спочатку заповніть поля англійською мовою!');
+        alert('{{ _("Please fill in English fields first!") }}');
         return;
     }
     
-    // Копіюємо в інші мови (якщо поля порожні)
     ['sk', 'pl'].forEach(lang => {
         const nameField = document.getElementById('name_' + lang);
         const descField = document.getElementById('description_' + lang);
@@ -219,7 +217,7 @@ function copyEnToAll() {
         if (!descField.value && descEn) descField.value = descEn;
     });
     
-    alert('Скопійовано! Тепер можете перекласти тексти.');
+    alert('{{ _("Copied! Now you can translate the texts.") }}');
 }
 </script>
 {% endblock %}

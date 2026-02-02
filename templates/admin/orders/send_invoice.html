@@ -1,118 +1,142 @@
 {% extends "base/admin_base.html" %}
 
-{% block title %}Send Invoice{% endblock %}
+{% block title %}{{ _('Send Invoice') }} - Admin{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Send Invoice for Order #{{ order.id }}</h2>
-    
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5>Order Information</h5>
+<div class="page-header">
+    <h1><i class="bi bi-receipt"></i> {{ _('Send Invoice') }} #{{ order.id }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('process_orders', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Orders') }}
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Order Information -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>{{ _('Order Information') }}
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>{{ _('Order Date') }}:</strong> {{ order.created_at|datetime if order.created_at else '—' }}</p>
+                        <p><strong>{{ _('Customer') }}:</strong> {{ order.username }}</p>
+                        <p><strong>{{ _('Email') }}:</strong> <a href="mailto:{{ order.email }}">{{ order.email }}</a></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>{{ _('Total Amount') }}:</strong> <span class="fs-5 text-primary">€{{ "%.2f"|format(order.total_price) }}</span></p>
+                        <p><strong>{{ _('Status') }}:</strong> 
+                            <span class="badge bg-{{ 'success' if order.status == 'completed' 
+                                                   else 'danger' if order.status == 'rejected' 
+                                                   else 'warning' if order.status in ['processing', 'ordered_supplier', 'invoice_received']
+                                                   else 'primary' if order.status == 'accepted' 
+                                                   else 'secondary' }}">
+                                {{ order.status|upper }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <p><strong>Order Date:</strong> {{ order.created_at|datetime }}</p>
-            <p><strong>Customer:</strong> {{ order.username }}</p>
-            <p><strong>Email:</strong> {{ order.email }}</p>
-            <p><strong>Total Amount:</strong> €{{ "%.2f"|format(order.total_price) }}</p>
-            <p><strong>Status:</strong> <span class="badge bg-{{ order.status|default('new')|status_color }}">{{ order.status|default('new') }}</span></p>
+
+        <!-- Order Items -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-box me-2"></i>{{ _('Order Items') }}
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Article') }}</th>
+                            <th>{{ _('Brand') }}</th>
+                            <th>{{ _('Price') }}</th>
+                            <th>{{ _('Quantity') }}</th>
+                            <th>{{ _('Total') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order_items %}
+                        <tr>
+                            <td><strong>{{ item.article }}</strong></td>
+                            <td>{{ item.brand_name or 'N/A' }}</td>
+                            <td>€{{ "%.2f"|format(item.price) }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>€{{ "%.2f"|format(item.price * item.quantity) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-light">
+                            <td colspan="4" class="text-end"><strong>{{ _('Total') }}:</strong></td>
+                            <td><strong class="text-primary">€{{ "%.2f"|format(order.total_price) }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     </div>
-    
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5>Order Items</h5>
-        </div>
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Article</th>
-                        <th>Brand</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in order_items %}
-                    <tr>
-                        <td>{{ item.article }}</td>
-                        <td>{{ item.brand_name or 'N/A' }}</td>
-                        <td>€{{ "%.2f"|format(item.price) }}</td>
-                        <td>{{ item.quantity }}</td>
-                        <td>€{{ "%.2f"|format(item.price * item.quantity) }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="4" class="text-end"><strong>Total:</strong></td>
-                        <td><strong>€{{ "%.2f"|format(order.total_price) }}</strong></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-    </div>
-    
-    <div class="card">
-        <div class="card-header">
-            <h5>Send Invoice</h5>
-        </div>
-        <div class="card-body">
-            <form method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label for="invoice_file" class="form-label">Invoice PDF File</label>
-                    <input type="file" class="form-control" id="invoice_file" name="invoice_file" accept=".pdf" required>
-                    <div class="form-text">Please upload the invoice PDF file that was generated in your accounting software.</div>
-                </div>
-                
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="is_self_pickup" name="is_self_pickup">
-                    <label class="form-check-label" for="is_self_pickup">Self Pickup (No delivery cost)</label>
-                </div>
-                
-                <div class="mb-3" id="delivery_cost_group">
-                    <label for="delivery_cost" class="form-label">Delivery Cost (€)</label>
-                    <input type="number" class="form-control" id="delivery_cost" name="delivery_cost" step="0.01" min="0" value="0">
-                </div>
-                
-                <div class="mb-3">
-                    <label for="delivery_info" class="form-label">Delivery Information</label>
-                    <textarea class="form-control" id="delivery_info" name="delivery_info" rows="3" 
-                              placeholder="Enter delivery details, such as carrier name, tracking information, or pickup instructions"></textarea>
-                </div>
-                
-                <div class="alert alert-info">
-                    <p><strong>Note:</strong> Sending this invoice will:</p>
-                    <ul>
-                        <li>Update the order status to "invoice_sent"</li>
-                        <li>Send an email to the customer with the invoice attached</li>
-                        <li>Update the payment status to "awaiting_payment"</li>
-                    </ul>
-                </div>
-                
-                <div class="d-flex justify-content-between">
-                    <a href="{{ url_for('process_orders', token=token) }}" class="btn btn-secondary">Back to Orders</a>
-                    <button type="submit" class="btn btn-primary">Send Invoice</button>
-                </div>
-            </form>
+
+    <!-- Send Invoice Form -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-send me-2"></i>{{ _('Send Invoice') }}
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="invoice_file" class="form-label">{{ _('Invoice PDF File') }} *</label>
+                        <input type="file" class="form-control" id="invoice_file" name="invoice_file" accept=".pdf" required>
+                        <div class="form-text">{{ _('Upload invoice PDF from your accounting software') }}</div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_self_pickup" name="is_self_pickup">
+                        <label class="form-check-label" for="is_self_pickup">{{ _('Self Pickup (No delivery cost)') }}</label>
+                    </div>
+                    
+                    <div class="mb-3" id="delivery_cost_group">
+                        <label for="delivery_cost" class="form-label">{{ _('Delivery Cost') }} (€)</label>
+                        <input type="number" class="form-control" id="delivery_cost" name="delivery_cost" step="0.01" min="0" value="0">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="delivery_info" class="form-label">{{ _('Delivery Information') }}</label>
+                        <textarea class="form-control" id="delivery_info" name="delivery_info" rows="3" 
+                                  placeholder="{{ _('Carrier, tracking number, pickup instructions...') }}"></textarea>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <p class="mb-1"><strong>{{ _('Note') }}:</strong> {{ _('Sending this invoice will') }}:</p>
+                        <ul class="mb-0 small">
+                            <li>{{ _('Update order status to "invoice_sent"') }}</li>
+                            <li>{{ _('Send email to customer with invoice attached') }}</li>
+                            <li>{{ _('Update payment status to "awaiting_payment"') }}</li>
+                        </ul>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-send me-2"></i>{{ _('Send Invoice') }}
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Toggle delivery cost field based on self pickup checkbox
-    document.getElementById('is_self_pickup').addEventListener('change', function() {
-        const deliveryCostGroup = document.getElementById('delivery_cost_group');
-        const deliveryCostInput = document.getElementById('delivery_cost');
-        
-        if (this.checked) {
-            deliveryCostGroup.style.display = 'none';
-            deliveryCostInput.value = '0';
-        } else {
-            deliveryCostGroup.style.display = 'block';
-        }
-    });
+document.getElementById('is_self_pickup').addEventListener('change', function() {
+    const deliveryCostGroup = document.getElementById('delivery_cost_group');
+    if (this.checked) {
+        deliveryCostGroup.style.display = 'none';
+        document.getElementById('delivery_cost').value = '0';
+    } else {
+        deliveryCostGroup.style.display = 'block';
+    }
+});
 </script>
 {% endblock %}

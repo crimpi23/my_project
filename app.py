@@ -65,6 +65,11 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 
 
 def get_locale():
+    # Для адмін-панелі використовуємо окрему мову (uk або en)
+    if request.path.startswith('/') and '/admin' in request.path:
+        admin_lang = session.get('admin_lang', 'en')
+        return admin_lang if admin_lang in ['uk', 'en'] else 'en'
+    
     if 'user_id' in session:
         # Якщо користувач авторизований, беремо його мову з БД
         try:
@@ -96,7 +101,7 @@ def get_locale():
 
 # Configure Babel
 app.config['BABEL_DEFAULT_LOCALE'] = 'sk'
-app.config['BABEL_SUPPORTED_LOCALES'] = ['sk', 'en', 'pl']
+app.config['BABEL_SUPPORTED_LOCALES'] = ['sk', 'en', 'pl', 'uk']  # Додаємо uk для адмінки
 # Set secret key for sessions and CSRF
 # app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
@@ -112,8 +117,8 @@ babel.init_app(app, locale_selector=get_locale)
 cache = Cache(app, config={
     'CACHE_TYPE': 'FileSystemCache',  # Замість SimpleCache
     'CACHE_DIR': '/tmp/flask_cache',  # Директорія для кеш-файлів
-    'CACHE_THRESHOLD': 200,           # Зменшено з 1000 для економії пам'яті
-    'CACHE_DEFAULT_TIMEOUT': 300      # Зменшено з 600 секунд
+    'CACHE_THRESHOLD': 100,           # Зменшено для економії пам'яті на Render
+    'CACHE_DEFAULT_TIMEOUT': 180      # 3 хвилини замість 5 для швидшого звільнення пам'яті
 })
 
 # Налаштування планувальника
@@ -168,6 +173,27 @@ def close_db_pool():
         db_pool.closeall()
         logging.info("Database connection pool closed")
 atexit.register(close_db_pool)
+
+
+# ============================================
+# Перемикання мови для адмін-панелі (UK/EN)
+# ============================================
+
+def get_admin_lang():
+    """Отримує поточну мову адмін-панелі"""
+    return session.get('admin_lang', 'en')
+
+@app.context_processor
+def inject_admin_lang():
+    """Додає admin_lang в контекст шаблонів"""
+    return {'admin_lang': get_admin_lang()}
+
+@app.route('/admin/set-language/<lang>')
+def set_admin_language(lang):
+    """Перемикає мову адмін-панелі"""
+    if lang in ['uk', 'en']:
+        session['admin_lang'] = lang
+    return redirect(request.referrer or '/')
 
 
 # Налаштування шляху для збереження sitemap файлів залежно від середовища
@@ -449,8 +475,8 @@ def generate_sitemap_index_file():
         # Відстежуємо кількість доданих sitemap файлів
         total_sitemaps = 0
         
-        # Додаємо посилання на статичні файли sitemap
-        static_files = ['sitemap-static.xml', 'sitemap-categories.xml', 'sitemap-blog.xml', 'sitemap-images.xml']
+        # Додаємо посилання на статичні файли sitemap (без блогу)
+        static_files = ['sitemap-static.xml', 'sitemap-categories.xml', 'sitemap-images.xml']
         for static_file in static_files:
             if os.path.exists(os.path.join(SITEMAP_DIR, static_file)):
                 sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{static_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
@@ -1255,7 +1281,7 @@ def generate_all_sitemaps():
         generate_sitemap_enriched_files()  # Тільки з описами/фото
         # generate_sitemap_other_files()  # ПОВНІСТЮ ВИКЛЮЧЕНО
         generate_sitemap_images_file()
-        generate_sitemap_blog_file()  # Якщо є блог
+        # generate_sitemap_blog_file()  # БЛОГ ВИДАЛЕНО
         generate_sitemap_index_file()  # Автоматично видаляє old other files
         
         logging.info("Sitemap files generated successfully (without other)")
@@ -1295,15 +1321,6 @@ def cleanup_old_sitemap_files():
     except Exception as e:
         logging.error(f"Error in cleanup_old_sitemap_files: {e}")
         return 0, [], 0
-        generate_sitemap_images_file()
-        generate_sitemap_blog_file()  # Якщо є блог
-        generate_sitemap_index_file()
-        
-        logging.info("Sitemap files generated successfully (without other)")
-        return True
-    except Exception as e:
-        logging.error(f"Error generating sitemap files: {e}", exc_info=True)
-        return False
 
 
 # Додавання дампера для закриття невикористаних з'єднань
@@ -1433,6 +1450,11 @@ def add_more_cache_headers(response):
         response.headers['Vary'] = 'Cookie, Accept-Language'
     return response
 
+@app.teardown_request
+def cleanup_after_request(exception=None):
+    """Очищення пам'яті після кожного запиту для Render"""
+    gc.collect()
+
 @app.route('/robots.txt')
 def robots():
     robots_content = """User-agent: *
@@ -1442,7 +1464,6 @@ Crawl-delay: 10
 Allow: /
 Allow: /product/
 Allow: /category/
-Allow: /blog/
 Allow: /about
 Allow: /contacts
 Allow: /shipping-payment
@@ -1454,9 +1475,9 @@ Allow: /sitemap-categories.xml
 Allow: /sitemap-stock-*
 Allow: /sitemap-enriched-*
 Allow: /sitemap-images.xml
-Allow: /sitemap-blog.xml
 
 # БЛОКУЄМО неіснуючі URL (спам від ботів)
+Disallow: /blog/
 Disallow: /select/
 Disallow: /en/select/
 Disallow: /sk/select/
@@ -2649,26 +2670,6 @@ def send_email(to_email, subject, ordered_items, delivery_data, lang='en'):
                 'footer_text': 'This email was generated automatically. Please do not reply to it.',
                 'invoice_note': 'We will send you an invoice for payment in the near future.'
             },
-            'uk': {
-                'subject': 'Підтвердження замовлення',
-                'greeting': 'Дякуємо за ваше замовлення!',
-                'order_details': 'Деталі замовлення:',
-                'delivery_info': 'Інформація про доставку:',
-                'name': 'Ім\'я:',
-                'phone': 'Телефон:',
-                'address': 'Адреса:',
-                'article': 'Код:',
-                'price': 'Ціна:',
-                'quantity': 'Кількість:',
-                'total': 'Загалом:',
-                'in_stock': 'В наявності',
-                'delivery_time': 'Час доставки:',
-                'order_submitted': 'Ваше замовлення успішно прийнято',
-                'thank_you': 'Дякуємо за покупку!',
-                'contact_us': 'Якщо у вас є питання, будь ласка, зв\'яжіться з нами',
-                'footer_text': 'Цей лист згенеровано автоматично. Будь ласка, не відповідайте на нього.',
-                'invoice_note': 'Найближчим часом ми надішлемо вам рахунок для оплати.'
-            },
             'pl': {
                 'subject': 'Potwierdzenie zamówienia',
                 'greeting': 'Dziękujemy za złożenie zamówienia!',
@@ -3393,7 +3394,7 @@ def api_products():
             SELECT DISTINCT
                 s.article, 
                 s.price, 
-                COALESCE(p.name_{lang}, p.name_uk, p.name_en, p.name_sk, s.article) as name, 
+                COALESCE(p.name_{lang}, p.name_en, p.name_sk, s.article) as name, 
                 b.name as brand_name,
                 b.id as brand_id,
                 pi.image_url
@@ -3460,6 +3461,7 @@ def admin_products_missing_photos(token):
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
             # Запит товарів зі stock без фото
+            # Виключаємо товари з blacklist (немає сенсу шукати фото для заблокованих)
             query = """
                 SELECT 
                     s.article,
@@ -3472,7 +3474,9 @@ def admin_products_missing_photos(token):
                 FROM stock s
                 LEFT JOIN brands b ON s.brand_id = b.id
                 LEFT JOIN products p ON s.article = p.article
+                LEFT JOIN import_blacklist bl ON s.article = bl.article
                 WHERE s.quantity > 0 
+                AND bl.article IS NULL
                 AND NOT EXISTS (
                     SELECT 1 FROM product_images pi 
                     WHERE pi.product_article = s.article
@@ -3542,16 +3546,20 @@ def admin_products_missing_descriptions(token):
         per_page = 50
         brand_filter = request.args.get('brand', '')
         min_price = request.args.get('min_price', 0, type=float)
+        incomplete_only = request.args.get('incomplete_only', '0') == '1'  # Фільтр неповних описів
         
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
             # Базовий запит - товари в stock без запису в products
+            # Виключаємо товари з blacklist (немає сенсу додавати описи для заблокованих)
             base_query = """
                 FROM stock s
                 LEFT JOIN brands b ON s.brand_id = b.id
                 LEFT JOIN products p ON s.article = p.article
+                LEFT JOIN import_blacklist bl ON s.article = bl.article
                 WHERE p.article IS NULL
+                AND bl.article IS NULL
             """
             params = []
             
@@ -3611,6 +3619,17 @@ def admin_products_missing_descriptions(token):
             """)
             brands = [row[0] for row in cursor.fetchall()]
             
+            # Отримуємо статистику товарів з неповними описами
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) FILTER (WHERE (name_en IS NULL OR name_en = '') 
+                                      OR (name_sk IS NULL OR name_sk = '') 
+                                      OR (name_pl IS NULL OR name_pl = '')) as incomplete_count
+                FROM products
+            """)
+            incomplete_stats = cursor.fetchone()
+            incomplete_products_count = incomplete_stats['incomplete_count'] or 0
+            
             # Пагінація
             total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
             
@@ -3625,6 +3644,8 @@ def admin_products_missing_descriptions(token):
                 total_value=total_value,
                 brand_filter=brand_filter,
                 min_price=min_price,
+                incomplete_only=incomplete_only,
+                incomplete_products_count=incomplete_products_count,
                 token=token
             )
             
@@ -3724,6 +3745,464 @@ def admin_edit_product(token, article):
         logging.error(f"Error in admin_edit_product: {e}")
         flash(f"Помилка: {str(e)}", "error")
         return redirect(url_for('admin_products_missing_descriptions', token=token))
+
+
+@app.route('/<token>/admin/product-card/<article>', methods=['GET'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_product_card(token, article):
+    """Повна карточка товару для редагування (всі дані в одному місці)"""
+    try:
+        logging.info(f"=== Loading product card for article: {article} ===")
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            
+            # 1. Основні дані products
+            try:
+                cursor.execute("""
+                    SELECT p.*, b.name as brand_name
+                    FROM products p
+                    LEFT JOIN brands b ON p.brand_id = b.id
+                    WHERE p.article = %s
+                """, (article,))
+                product = cursor.fetchone()
+                logging.info(f"Product found: {product is not None}")
+            except Exception as e:
+                logging.error(f"Error fetching products: {e}")
+                product = None
+            
+            # 2. Дані зі stock
+            try:
+                cursor.execute("""
+                    SELECT s.*, b.name as brand_name
+                    FROM stock s
+                    LEFT JOIN brands b ON s.brand_id = b.id
+                    WHERE s.article = %s
+                """, (article,))
+                stock_info = cursor.fetchone()
+                logging.info(f"Stock info found: {stock_info is not None}")
+                if stock_info:
+                    logging.info(f"Stock columns: {list(stock_info.keys())}")
+            except Exception as e:
+                logging.error(f"Error fetching stock: {e}")
+                stock_info = None
+            
+            # 3. Фотографії
+            try:
+                cursor.execute("""
+                    SELECT id, image_url, is_main
+                    FROM product_images
+                    WHERE product_article = %s
+                    ORDER BY is_main DESC, id ASC
+                """, (article,))
+                photos = cursor.fetchall()
+                logging.info(f"Photos found: {len(photos)}")
+                if photos:
+                    logging.info(f"Photo columns: {list(photos[0].keys())}")
+            except Exception as e:
+                logging.error(f"Error fetching photos: {e}")
+                photos = []
+            
+            # 4. Категорії товару (з breadcrumbs)
+            try:
+                cursor.execute("""
+                    SELECT pcm.category_id, pcm.is_primary, 
+                           pct.name as name,
+                           pc.parent_id
+                    FROM product_category_mapping pcm
+                    JOIN product_category_translations pct ON pcm.category_id = pct.category_id
+                    JOIN product_categories pc ON pcm.category_id = pc.id
+                    WHERE pcm.article = %s AND pct.language = 'sk'
+                """, (article,))
+                categories_raw = cursor.fetchall()
+                
+                # Отримуємо всі категорії для побудови breadcrumbs
+                cursor.execute("""
+                    SELECT pc.id, pc.parent_id, pct.name
+                    FROM product_categories pc
+                    JOIN product_category_translations pct ON pc.id = pct.category_id
+                    WHERE pct.language = 'sk'
+                """)
+                all_cats_dict = {row['id']: {'name': row['name'], 'parent_id': row['parent_id']} for row in cursor.fetchall()}
+                
+                # Будуємо breadcrumbs для кожної категорії
+                product_categories = []
+                for cat in categories_raw:
+                    breadcrumbs = []
+                    current_id = cat['category_id']
+                    
+                    # Йдемо вгору по дереву
+                    while current_id and current_id in all_cats_dict:
+                        breadcrumbs.insert(0, all_cats_dict[current_id]['name'])
+                        current_id = all_cats_dict[current_id]['parent_id']
+                    
+                    product_categories.append({
+                        'category_id': cat['category_id'],
+                        'is_primary': cat['is_primary'],
+                        'name': cat['name'],
+                        'breadcrumbs': ' > '.join(breadcrumbs)  # Повний шлях
+                    })
+                
+                logging.info(f"Categories found: {len(product_categories)}")
+            except Exception as e:
+                logging.error(f"Error fetching product categories: {e}")
+                product_categories = []
+            
+            # 5. Всі категорії для dropdown (як дерево, а не плоский список)
+            try:
+                # Отримуємо всі категорії з їхною ієрархією
+                cursor.execute("""
+                    SELECT pc.id, pc.parent_id, pct.name
+                    FROM product_categories pc
+                    JOIN product_category_translations pct ON pc.id = pct.category_id
+                    WHERE pct.language = 'sk'
+                    ORDER BY pc.parent_id NULLS FIRST, pc.sort_order, pct.name
+                """)
+                categories_flat = cursor.fetchall()
+                
+                # Будуємо дерево категорій правильно (як на головній)
+                all_categories_by_id = {}
+                all_categories_tree = []
+                
+                # Спочатку створюємо словник всіх категорій
+                for cat in categories_flat:
+                    cat_dict = {
+                        'id': cat['id'],
+                        'name': cat['name'],
+                        'parent_id': cat['parent_id'],
+                        'children': [],
+                        'has_children': False  # Позначаємо чи є діти
+                    }
+                    all_categories_by_id[cat['id']] = cat_dict
+                
+                # Потім будуємо ієрархію - додаємо дітей до батьків
+                for cat_id, cat_data in all_categories_by_id.items():
+                    if cat_data['parent_id'] is None:
+                        # Це коренева категорія
+                        all_categories_tree.append(cat_data)
+                    elif cat_data['parent_id'] in all_categories_by_id:
+                        # Додаємо як дитина батькові
+                        parent = all_categories_by_id[cat_data['parent_id']]
+                        parent['children'].append(cat_data)
+                        parent['has_children'] = True
+                
+                # Позначаємо батьків (категорії у яких є діти)
+                for cat_data in all_categories_by_id.values():
+                    if len(cat_data['children']) > 0:
+                        cat_data['has_children'] = True
+                
+                all_categories = all_categories_tree
+                logging.info(f"Categories tree built: {len(all_categories_by_id)} total categories")
+            except Exception as e:
+                logging.error(f"Error fetching all categories: {e}")
+                all_categories = []
+            
+            # 6. Ціни від постачальників (не потрібно в Product Card - ціна розраховується через calculate_final_price)
+            supplier_prices = []
+            
+            # 7. Список брендів
+            cursor.execute("SELECT id, name FROM brands ORDER BY name")
+            brands = cursor.fetchall()
+            
+            # Brand name
+            brand_name = stock_info['brand_name'] if stock_info else (product['brand_name'] if product else None)
+
+            # Безпечне посилання "Назад" (з referrer)
+            back_url = request.referrer
+            try:
+                if back_url:
+                    ref_parsed = urllib.parse.urlparse(back_url)
+                    host_parsed = urllib.parse.urlparse(request.host_url)
+
+                    # Забороняємо зовнішні домени і повторне відкриття тієї ж сторінки
+                    if ref_parsed.netloc != host_parsed.netloc or ref_parsed.path == request.path:
+                        back_url = None
+            except Exception as e:
+                logging.warning(f"Не вдалося обробити referrer для кнопки назад: {e}")
+                back_url = None
+
+            if not back_url:
+                back_url = url_for('admin_product_categories', token=token, article=article)
+            
+            return render_template(
+                'admin/products/product_card.html',
+                article=article,
+                product=product,
+                stock_info=stock_info,
+                photos=photos,
+                product_categories=product_categories,
+                all_categories=all_categories,
+                supplier_prices=supplier_prices,
+                brands=brands,
+                brand_name=brand_name,
+                token=token,
+                back_url=back_url
+            )
+            
+    except Exception as e:
+        logging.error(f"Error in admin_product_card: {e}")
+        flash(f"Помилка: {str(e)}", "error")
+        return redirect(url_for('admin_product_categories', token=token))
+
+
+@app.route('/<token>/admin/product-card/<article>/update', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_product_card_update(token, article):
+    """Оновлення даних товару з Product Card"""
+    try:
+        action = request.form.get('action')
+        # Визначаємо вкладку для повернення
+        tab_anchor = ''
+        if action == 'update_basic':
+            tab_anchor = '#basic'
+        elif action == 'update_stock':
+            tab_anchor = '#stock'
+        elif action in ('add_category', 'remove_category'):
+            tab_anchor = '#categories'
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            if action == 'update_basic':
+                # Оновлення описів
+                brand_id = request.form.get('brand_id', type=int)
+                name_sk = request.form.get('name_sk', '').strip()
+                name_en = request.form.get('name_en', '').strip()
+                name_pl = request.form.get('name_pl', '').strip()
+                description_sk = request.form.get('description_sk', '').strip()
+                description_en = request.form.get('description_en', '').strip()
+                description_pl = request.form.get('description_pl', '').strip()
+                
+                # Перевіряємо чи існує товар
+                cursor.execute("SELECT id FROM products WHERE article = %s", (article,))
+                exists = cursor.fetchone()
+                
+                if exists:
+                    cursor.execute("""
+                        UPDATE products SET
+                            brand_id = COALESCE(%s, brand_id),
+                            name_sk = COALESCE(NULLIF(%s, ''), name_sk),
+                            name_en = COALESCE(NULLIF(%s, ''), name_en),
+                            name_pl = COALESCE(NULLIF(%s, ''), name_pl),
+                            description_sk = COALESCE(NULLIF(%s, ''), description_sk),
+                            description_en = COALESCE(NULLIF(%s, ''), description_en),
+                            description_pl = COALESCE(NULLIF(%s, ''), description_pl)
+                        WHERE article = %s
+                    """, (brand_id, name_sk, name_en, name_pl,
+                          description_sk, description_en, description_pl, article))
+                else:
+                    cursor.execute("""
+                        INSERT INTO products (
+                            article, brand_id, 
+                            name_sk, name_en, name_pl,
+                            description_sk, description_en, description_pl
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (article, brand_id, name_sk, name_en, name_pl,
+                          description_sk, description_en, description_pl))
+                
+                conn.commit()
+                flash("Основну інформацію оновлено!", "success")
+                
+            elif action == 'update_stock':
+                # Оновлення складу
+                quantity = request.form.get('quantity', type=int)
+                price = request.form.get('price', type=float)
+                
+                cursor.execute("""
+                    UPDATE stock SET quantity = %s, price = %s
+                    WHERE article = %s
+                """, (quantity, price, article))
+                conn.commit()
+                flash("Склад оновлено!", "success")
+                
+            elif action == 'add_category':
+                # Додавання категорії
+                category_id = request.form.get('category_id', type=int)
+                is_primary = request.form.get('is_primary') == 'on'
+                
+                if is_primary:
+                    # Знімаємо прапор primary з інших
+                    cursor.execute("""
+                        UPDATE product_category_mapping SET is_primary = FALSE
+                        WHERE article = %s
+                    """, (article,))
+                
+                cursor.execute("""
+                    INSERT INTO product_category_mapping (article, category_id, is_primary)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (article, category_id) DO UPDATE SET is_primary = EXCLUDED.is_primary
+                """, (article, category_id, is_primary))
+                conn.commit()
+                flash("Категорію додано!", "success")
+                
+            elif action == 'remove_category':
+                # Видалення категорії
+                category_id = request.form.get('category_id', type=int)
+                cursor.execute("""
+                    DELETE FROM product_category_mapping
+                    WHERE article = %s AND category_id = %s
+                """, (article, category_id))
+                conn.commit()
+                flash("Категорію видалено!", "success")
+            
+            return redirect(url_for('admin_product_card', token=token, article=article) + tab_anchor)
+            
+    except Exception as e:
+        logging.error(f"Error in admin_product_card_update: {e}")
+        flash(f"Помилка: {str(e)}", "error")
+        return redirect(url_for('admin_product_card', token=token, article=article) + tab_anchor)
+
+
+@app.route('/<token>/admin/product-card/<article>/photo/upload', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_product_card_upload_photo(token, article):
+    """Завантаження фото через Product Card"""
+    try:
+        files = request.files.getlist('photos')
+        set_primary = request.form.get('set_primary') == 'on'
+        
+        if not files or all(f.filename == '' for f in files):
+            return jsonify({'success': False, 'error': _('Select files')}), 400
+        
+        uploaded_urls = []
+        
+        # Завантажуємо кожен файл
+        for file in files:
+            if file.filename == '':
+                continue
+            
+            if not allowed_file(file.filename):
+                return jsonify({'success': False, 'error': _('Invalid file format')}), 400
+            
+            try:
+                # Генеруємо унікальне ім'я (формат: article_timestamp_filename)
+                timestamp = int(time.time())
+                filename = secure_filename(f"{article}_{timestamp}_{file.filename}")
+                
+                # Зберігаємо локально (для резервної копії)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                logging.info(f"Photo saved locally: {file_path}")
+                
+                # Завантажуємо на FTP - ЦЕ ПРІОРИТЕТНИЙ МЕТОД
+                photo_url = None
+                try:
+                    logging.info(f"Attempting FTP upload for: {filename}")
+                    photo_url = upload_to_ftp(file_path, filename)
+                    logging.info(f"✓ Photo uploaded to FTP successfully: {photo_url}")
+                except Exception as ftp_error:
+                    logging.error(f"✗ FTP upload FAILED for {filename}: {ftp_error}", exc_info=True)
+                    # Якщо FTP не вдалося, використовуємо локальний шлях
+                    photo_url = f"/static/uploads/{filename}"
+                    logging.warning(f"Fallback to local path: {photo_url}")
+                
+                if photo_url:
+                    uploaded_urls.append(photo_url)
+                else:
+                    logging.error(f"No valid URL generated for {filename}")
+                    continue
+                
+            except Exception as e:
+                logging.error(f"Error processing file {file.filename}: {e}", exc_info=True)
+                continue
+        
+        if not uploaded_urls:
+            return jsonify({'success': False, 'error': _('No photos uploaded')}), 400
+        
+        # Зберігаємо в базу
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Якщо set_primary, знімаємо primary з усіх
+            if set_primary:
+                cursor.execute("""
+                    UPDATE product_images SET is_main = FALSE
+                    WHERE product_article = %s
+                """, (article,))
+            
+            for i, url in enumerate(uploaded_urls):
+                is_main = (set_primary and i == 0)  # Тільки перше фото як primary
+                
+                cursor.execute("""
+                    INSERT INTO product_images (product_article, image_url, is_main)
+                    VALUES (%s, %s, %s)
+                """, (article, url, is_main))
+            
+            conn.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f"{len(uploaded_urls)} фото додано",
+            'count': len(uploaded_urls)
+        })
+        
+    except Exception as e:
+        logging.error(f"Error uploading photos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+        return redirect(url_for('admin_product_card', token=token, article=article))
+
+
+@app.route('/<token>/admin/product-card/<article>/photo/<int:photo_id>/primary', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_product_card_set_primary_photo(token, article, photo_id):
+    """Встановлення головного фото"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Знімаємо primary з усіх фото товару
+            cursor.execute("""
+                UPDATE product_images SET is_main = FALSE
+                WHERE product_article = %s
+            """, (article,))
+            
+            # Встановлюємо primary для обраного
+            cursor.execute("""
+                UPDATE product_images SET is_main = TRUE
+                WHERE id = %s AND product_article = %s
+            """, (photo_id, article))
+            
+            conn.commit()
+            return jsonify({'success': True})
+            
+    except Exception as e:
+        logging.error(f"Error setting primary photo: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/<token>/admin/product-card/<article>/photo/<int:photo_id>/delete', methods=['POST'])
+@requires_token_and_roles('admin', 'manager')
+@add_noindex_header
+def admin_product_card_delete_photo(token, article, photo_id):
+    """Видалення фото"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Отримуємо URL зображення
+            cursor.execute("SELECT image_url FROM product_images WHERE id = %s", (photo_id,))
+            result = cursor.fetchone()
+            
+            if result:
+                image_url = result[0]
+                # Видаляємо файл (якщо це локальний файл)
+                if image_url and not image_url.startswith('http'):
+                    filepath = os.path.join('static', image_url.lstrip('/'))
+                    if os.path.exists(filepath):
+                        os.remove(filepath)
+                
+                # Видаляємо запис з БД
+                cursor.execute("DELETE FROM product_images WHERE id = %s", (photo_id,))
+                conn.commit()
+            
+            return jsonify({'success': True})
+            
+    except Exception as e:
+        logging.error(f"Error deleting photo: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/<token>/admin/products/add-photos/<article>', methods=['GET', 'POST'])
@@ -4615,25 +5094,28 @@ def admin_manage_photos(token):
     cursor = None
     
     try:
-        # Параметри фільтру
+        # Параметри фільтру та пагінації
         article_filter = request.args.get('article', '')
-        source_filter = request.args.get('source', 'all')  # 'all', 'stock', 'enriched'
+        source_filter = request.args.get('source', 'stock')  # За замовчуванням 'stock'
+        page = request.args.get('page', 1, type=int)
+        per_page = 50
         
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-        # Базовий запит для отримання товарів (виправлений)
+        # Базовий запит для підрахунку та отримання товарів
+        count_query = """
+            SELECT COUNT(DISTINCT pi.product_article)
+            FROM product_images pi
+        """
+        
         products_query = """
             SELECT DISTINCT pi.product_article as article, 
-                           null as name, 
+                           COALESCE(p.name_sk, p.name_en, p.name_pl) as name,
                            b.name as brand_name
             FROM product_images pi
-            LEFT JOIN brands b ON 
-                CASE 
-                    WHEN LEFT(pi.product_article, 2) ~ '^[0-9]+$' 
-                    THEN CAST(LEFT(pi.product_article, 2) AS INTEGER) = b.id
-                    ELSE false
-                END
+            LEFT JOIN products p ON pi.product_article = p.article
+            LEFT JOIN brands b ON p.brand_id = b.id
         """
         
         # Додаємо умови фільтрації
@@ -4658,11 +5140,20 @@ def admin_manage_photos(token):
             """)
         
         # Додаємо WHERE якщо є умови
+        where_clause = ""
         if where_conditions:
-            products_query += " WHERE " + " AND ".join(where_conditions)
+            where_clause = " WHERE " + " AND ".join(where_conditions)
+            count_query += where_clause
+            products_query += where_clause
         
-        # Додаємо сортування
-        products_query += " ORDER BY pi.product_article LIMIT 100"
+        # Підраховуємо загальну кількість
+        cursor.execute(count_query, params)
+        total_count = cursor.fetchone()[0]
+        total_pages = (total_count + per_page - 1) // per_page
+        
+        # Додаємо сортування та пагінацію
+        offset = (page - 1) * per_page
+        products_query += f" ORDER BY pi.product_article LIMIT {per_page} OFFSET {offset}"
         
         # Виконуємо запит для отримання товарів
         cursor.execute(products_query, params)
@@ -4700,6 +5191,9 @@ def admin_manage_photos(token):
                               products=products, 
                               article_filter=article_filter,
                               source_filter=source_filter,
+                              page=page,
+                              total_pages=total_pages,
+                              total_count=total_count,
                               token=token)
                               
     except Exception as e:
@@ -5318,7 +5812,7 @@ def generate_feed_item(item, lang, settings):
             if cat['google_category_id'] and not google_category_id:
                 google_category_id = cat['google_category_id']
             
-            cat_name = cat[f'name_{lang}'] or cat['name_en'] or cat['name_uk']
+            cat_name = cat[f'name_{lang}'] or cat['name_en'] or cat['name_sk']
             if cat_name:
                 product_type.append(cat_name)
         
@@ -5394,9 +5888,19 @@ def upload_to_ftp(file_path, filename):
         FTP_DIR = "sub/image/products/"
         FTP_URL = os.environ.get('FTP_URL', 'https://image.autogroup.sk/products/')
         
+        logging.info(f"=== FTP UPLOAD START ===")
+        logging.info(f"File: {filename}")
+        logging.info(f"Local path: {file_path}")
+        logging.info(f"FTP Host: {FTP_HOST}")
+        logging.info(f"FTP User: {FTP_USER}")
+        logging.info(f"FTP Dir: {FTP_DIR}")
+        logging.info(f"FTP URL: {FTP_URL}")
+        
         # Перевіряємо наявність обов'язкових налаштувань
         if not FTP_HOST or not FTP_USER or not FTP_PASS:
-            raise ValueError("Відсутні обов'язкові налаштування FTP. Перевірте змінні середовища.")
+            error_msg = f"Missing FTP credentials! HOST={bool(FTP_HOST)}, USER={bool(FTP_USER)}, PASS={bool(FTP_PASS)}"
+            logging.error(error_msg)
+            raise ValueError(error_msg)
         
         # Розділяємо хост і порт, якщо вони вказані разом
         if ':' in FTP_HOST:
@@ -5406,49 +5910,62 @@ def upload_to_ftp(file_path, filename):
         else:
             FTP_PORT = 21
         
+        logging.info(f"Connecting to {FTP_HOST}:{FTP_PORT}...")
+        
         # Підключення до FTP з кількома спробами
         max_attempts = 3
         for attempt in range(max_attempts):
             try:
-                logging.info(f"FTP підключення, спроба {attempt+1}/{max_attempts}")
+                logging.info(f"FTP connection attempt {attempt+1}/{max_attempts}")
                 ftp = ftplib.FTP(timeout=30)
                 ftp.connect(FTP_HOST, FTP_PORT, timeout=30)
+                logging.info(f"Connected! Logging in as {FTP_USER}...")
                 ftp.login(FTP_USER, FTP_PASS)
+                logging.info("Login successful!")
                 
                 # Переходимо в директорію
                 try:
+                    logging.info(f"Changing to directory: {FTP_DIR}")
                     ftp.cwd(FTP_DIR)
-                except ftplib.error_perm:
+                    logging.info(f"Successfully changed to {FTP_DIR}")
+                except ftplib.error_perm as e:
+                    logging.warning(f"Directory {FTP_DIR} doesn't exist, creating it...")
                     # Якщо директорії немає, створюємо її
                     ftp.mkd(FTP_DIR)
                     ftp.cwd(FTP_DIR)
+                    logging.info(f"Created and changed to {FTP_DIR}")
                 
                 # Завантажуємо файл
+                logging.info(f"Uploading file {filename}...")
                 with open(file_path, 'rb') as file:
                     ftp.storbinary(f'STOR {filename}', file)
+                logging.info(f"File uploaded successfully!")
                 
                 # Закриваємо з'єднання
                 ftp.quit()
+                logging.info("FTP connection closed")
                 
                 # Повертаємо URL
-                return f"{FTP_URL}{filename}"
+                final_url = f"{FTP_URL}{filename}"
+                logging.info(f"=== FTP UPLOAD SUCCESS === URL: {final_url}")
+                return final_url
             
             except (socket.error, ftplib.error_temp) as e:
-                logging.warning(f"Спроба підключення до FTP {attempt+1} не вдалася: {e}")
+                logging.warning(f"FTP attempt {attempt+1} failed: {e}")
                 if attempt == max_attempts - 1:
-                    logging.error(f"Всі спроби підключення до FTP не вдалися.")
-                    raise Exception(f"Не вдалося підключитися до FTP після {max_attempts} спроб: {e}")
+                    logging.error(f"All {max_attempts} FTP attempts failed!")
+                    raise Exception(f"Failed to connect to FTP after {max_attempts} attempts: {e}")
                 time.sleep(1)  # Чекаємо секунду перед повторною спробою
     
     except socket.error as e:
-        logging.error(f"FTP помилка socket: {e}")
-        raise Exception(f"FTP помилка socket: {e}")
+        logging.error(f"=== FTP SOCKET ERROR === {e}", exc_info=True)
+        raise Exception(f"FTP socket error: {e}")
     except ftplib.error_perm as e:
-        logging.error(f"FTP помилка доступу: {e}")
-        raise Exception(f"FTP помилка доступу: {e}")
+        logging.error(f"=== FTP PERMISSION ERROR === {e}", exc_info=True)
+        raise Exception(f"FTP permission error: {e}")
     except Exception as e:
-        logging.error(f"Помилка завантаження на FTP: {e}", exc_info=True)
-        raise Exception(f"Помилка завантаження на FTP: {e}")
+        logging.error(f"=== FTP UPLOAD FAILED === {e}", exc_info=True)
+        raise Exception(f"FTP upload error: {e}")
 
 
 def allowed_file(filename):
@@ -5924,6 +6441,9 @@ class DatabaseConnection:
                     self.conn.close()
             except:
                 pass  # Ігноруємо помилки при закритті
+            finally:
+                # Звільняємо пам'ять після закриття з'єднання
+                gc.collect()
 
 
 
@@ -5935,6 +6455,9 @@ def release_db_connection(conn):
             conn.close()
     except Exception as e:
         logging.error(f"Error closing connection: {e}")
+    finally:
+        # Звільняємо пам'ять після закриття з'єднання
+        gc.collect()
 
 
 
@@ -6063,7 +6586,7 @@ def index():
                     s.article, 
                     s.price, 
                     s.quantity,
-                    COALESCE(p.name_{lang}, p.name_uk, p.name_en, p.name_sk, s.article) as name, 
+                    COALESCE(p.name_{lang}, p.name_en, p.name_sk, s.article) as name, 
                     b.name as brand_name,
                     b.id as brand_id,
                     pi.image_url
@@ -6101,7 +6624,8 @@ def index():
                 query += " WHERE " + " AND ".join(where_clauses)
             
             # Додаємо сортування: спочатку в наявності (quantity > 0), потім по ціні від дорогих до дешевих
-            query += " ORDER BY CASE WHEN s.quantity > 0 THEN 0 ELSE 1 END, s.price DESC LIMIT %s OFFSET %s"
+            # Додаємо s.article для стабільності пагінації (товари з однаковою ціною не будуть дублюватись)
+            query += " ORDER BY CASE WHEN s.quantity > 0 THEN 0 ELSE 1 END, s.price DESC, s.article LIMIT %s OFFSET %s"
             params.extend([per_page, (page - 1) * per_page])
             
             cursor.execute(query, params)
@@ -6498,11 +7022,11 @@ def admin_manage_users(token):
         
         # Отримуємо список всіх користувачів з їх ролями
         cursor.execute("""
-            SELECT u.id, u.username, u.email, u.created_at, r.name as role_name
+            SELECT u.id, u.username, u.email, r.name as role_name
             FROM users u
             LEFT JOIN user_roles ur ON u.id = ur.user_id
             LEFT JOIN roles r ON ur.role_id = r.id
-            ORDER BY u.created_at DESC
+            ORDER BY u.id DESC
         """)
         users = cursor.fetchall()
         
@@ -7379,28 +7903,113 @@ def add_brand(token):
 @requires_token_and_roles('admin')
 @add_noindex_header
 def manage_stock(token):
-    """Сторінка управління складом"""
+    """Сторінка управління складом з фільтрами та пагінацією"""
     try:
+        def _safe_int(value, field_name):
+            try:
+                if value in (None, ''):
+                    return None
+                return int(value)
+            except (TypeError, ValueError):
+                logging.warning(
+                    f"manage_stock: invalid int for {field_name}: '{value}'",
+                )
+                return None
+
+        # Параметри фільтрів та пагінації
+        article_filter = request.args.get('article', '')
+        brand_filter = request.args.get('brand', '', type=str)
+        min_quantity = request.args.get('min_qty', '', type=str)
+        max_quantity = request.args.get('max_qty', '', type=str)
+        page = request.args.get('page', 1, type=int)
+        logging.info(
+            "manage_stock filters: article=%s brand=%s min_qty=%s max_qty=%s page=%s",
+            article_filter,
+            brand_filter,
+            min_quantity,
+            max_quantity,
+            page,
+        )
+        per_page = 50
+        
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             
-            # Отримуємо дані зі стоку з назвами брендів
-            cursor.execute("""
-                SELECT s.article, s.quantity, s.price, s.brand_id, b.name as brand_name 
+            # Базові частини запитів
+            base_from = """
                 FROM stock s
                 LEFT JOIN brands b ON s.brand_id = b.id
-                ORDER BY s.article
-            """)
+                LEFT JOIN products p ON p.article = s.article
+            """
+
+            base_query = """
+                SELECT s.article, s.quantity, s.price, s.brand_id, b.name as brand_name,
+                       COALESCE(p.name_sk, p.name_en, p.name_pl) as product_name
+            """ + base_from
+            
+            # Додаємо умови фільтрації
+            where_conditions = []
+            params = []
+            
+            if article_filter:
+                where_conditions.append("s.article ILIKE %s")
+                params.append(f"%{article_filter}%")
+            
+            brand_id = _safe_int(brand_filter, "brand")
+            if brand_id is not None:
+                where_conditions.append("s.brand_id = %s")
+                params.append(brand_id)
+            
+            min_qty = _safe_int(min_quantity, "min_qty")
+            if min_qty is not None:
+                where_conditions.append("s.quantity >= %s")
+                params.append(min_qty)
+            
+            max_qty = _safe_int(max_quantity, "max_qty")
+            if max_qty is not None:
+                where_conditions.append("s.quantity <= %s")
+                params.append(max_qty)
+            
+            # Додаємо WHERE якщо є умови
+            if where_conditions:
+                base_query += " WHERE " + " AND ".join(where_conditions)
+            
+            # Підраховуємо загальну кількість
+            count_query = "SELECT COUNT(*) " + base_from
+            if where_conditions:
+                count_query += " WHERE " + " AND ".join(where_conditions)
+            cursor.execute(count_query, params)
+            total_count = int(cursor.fetchone()[0] or 0)
+            total_pages = (total_count + per_page - 1) // per_page
+            
+            # Додаємо сортування та пагінацію
+            base_query += " ORDER BY s.article LIMIT %s OFFSET %s"
+            params.extend([per_page, (page - 1) * per_page])
+            
+            # Виконуємо запит
+            cursor.execute(base_query, params)
             stock_items = cursor.fetchall()
             
-            # Отримуємо список брендів для форми
-            cursor.execute("SELECT id, name FROM brands ORDER BY name")
+            # Отримуємо список брендів для фільтру (тільки ті, що є в стоку)
+            cursor.execute("""
+                SELECT DISTINCT b.id, b.name
+                FROM stock s
+                JOIN brands b ON s.brand_id = b.id
+                ORDER BY b.name
+            """)
             brands = cursor.fetchall()
             
             return render_template(
                 'admin/stock/manage_stock.html',
                 stock_items=stock_items,
                 brands=brands,
+                article_filter=article_filter,
+                brand_filter=brand_filter,
+                min_quantity=min_quantity,
+                max_quantity=max_quantity,
+                page=page,
+                total_pages=total_pages,
+                total_count=total_count,
                 token=token
             )
             
@@ -8383,19 +8992,97 @@ def add_product_images(token):
     return render_template('admin/products/add_images.html', token=token)
 
 
-@app.route('/<token>/admin/manage-descriptions', methods=['GET'])
+@app.route('/<token>/admin/manage-descriptions', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
 @add_noindex_header
 def manage_descriptions(token):
     """
-    Відображає сторінку керування описами товарів
+    Відображає сторінку керування описами товарів + масове додавання
     """
+    # Обробка POST для масового додавання
+    if request.method == 'POST':
+        try:
+            data = request.form.get('descriptions_data')
+            language = request.form.get('language')
+            update_mode = request.form.get('update_mode', 'create')
+            
+            if not all([data, language]):
+                flash("Будь ласка, заповніть всі поля", "warning") 
+                return redirect(url_for('manage_descriptions', token=token))
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            added = 0
+            updated = 0
+            errors = 0
+            
+            for line in data.splitlines():
+                if not line.strip():
+                    continue
+                    
+                parts = line.split('\t')
+                if len(parts) < 4:
+                    errors += 1
+                    continue
+                    
+                article, brand_id, name, description = parts[:4]
+                
+                try:
+                    cursor.execute("SELECT id FROM products WHERE article = %s", (article,))
+                    exists = cursor.fetchone()
+                    
+                    if exists:
+                        if update_mode == 'update':
+                            cursor.execute(f"""
+                                UPDATE products 
+                                SET name_{language} = %s, description_{language} = %s
+                                WHERE article = %s
+                            """, (name, description, article))
+                            updated += 1
+                    else:
+                        cursor.execute(f"""
+                            INSERT INTO products (article, brand_id, name_{language}, description_{language})
+                            VALUES (%s, %s, %s, %s)
+                        """, (article, brand_id, name, description))
+                        added += 1
+                        
+                    conn.commit()
+                except Exception as e:
+                    errors += 1
+                    logging.error(f"Error processing line: {line}. Error: {str(e)}")
+                    continue
+                    
+            flash(f"Додано: {added}, Оновлено: {updated}, Помилок: {errors}", "success")
+            conn.close()
+            return redirect(url_for('manage_descriptions', token=token))
+            
+        except Exception as e:
+            flash(f"Помилка: {str(e)}", "error")
+            return redirect(url_for('manage_descriptions', token=token))
+    
+    # GET запит - показуємо сторінку
     try:
+        # Пагінація
+        page = request.args.get('page', 1, type=int)
+        per_page = 50
+        search = request.args.get('search', '')
+        
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
+        # Підрахунок
+        count_query = "SELECT COUNT(*) FROM products"
+        count_params = []
+        if search:
+            count_query += " WHERE article ILIKE %s"
+            count_params.append(f"%{search}%")
+        cursor.execute(count_query, count_params)
+        total_count = cursor.fetchone()[0]
+        total_pages = (total_count + per_page - 1) // per_page
+        
         # Отримуємо список товарів з описами
-        cursor.execute("""
+        query = """
             SELECT 
                 article,
                 brand_id,
@@ -8404,15 +9091,24 @@ def manage_descriptions(token):
                 name_sk, description_sk,
                 name_pl, description_pl
             FROM products
-            ORDER BY article
-        """)
+        """
+        params = []
+        if search:
+            query += " WHERE article ILIKE %s"
+            params.append(f"%{search}%")
+        query += f" ORDER BY article LIMIT {per_page} OFFSET {(page - 1) * per_page}"
         
+        cursor.execute(query, params)
         products = cursor.fetchall()
         
         return render_template(
             'admin/products/manage_descriptions.html',
             products=products,
-            token=token
+            token=token,
+            page=page,
+            total_pages=total_pages,
+            total_count=total_count,
+            search=search
         )
         
     except Exception as e:
@@ -8471,87 +9167,33 @@ def update_description(token):
             conn.close()
 
 
-@app.route('/<token>/admin/add_product_descriptions', methods=['GET', 'POST'])
+@app.route('/<token>/admin/get-description/<article>')
 @requires_token_and_roles('admin')
 @add_noindex_header
-def add_product_descriptions(token):
-    if request.method == 'POST':
-        try:
-            data = request.form.get('descriptions_data')
-            language = request.form.get('language')
-            update_mode = request.form.get('update_mode', 'create') # create або update
-            
-            if not all([data, language]):
-                flash("Будь ласка, заповніть всі поля", "warning") 
-                return redirect(url_for('add_product_descriptions', token=token))
-
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            
-            added = 0
-            updated = 0
-            errors = 0
-            
-            for line in data.splitlines():
-                if not line.strip():
-                    continue
-                    
-                parts = line.split('\t')
-                if len(parts) < 4:
-                    errors += 1
-                    continue
-                    
-                article, brand_id, name, description = parts[:4]
-                
-                try:
-                    # Перевіряємо чи існує товар
-                    cursor.execute(f"""
-                        SELECT id FROM products 
-                        WHERE article = %s
-                    """, (article,))
-                    
-                    exists = cursor.fetchone()
-                    
-                    if exists:
-                        if update_mode == 'update':
-                            # Оновлюємо існуючий опис
-                            cursor.execute(f"""
-                                UPDATE products 
-                                SET name_{language} = %s,
-                                    description_{language} = %s
-                                WHERE article = %s
-                            """, (name, description, article))
-                            updated += 1
-                    else:
-                        # Створюємо новий запис
-                        cursor.execute(f"""
-                            INSERT INTO products (
-                                article, brand_id, name_{language}, description_{language}
-                            ) VALUES (%s, %s, %s, %s)
-                        """, (article, brand_id, name, description))
-                        added += 1
-                        
-                    conn.commit()
-                    
-                except Exception as e:
-                    errors += 1
-                    logging.error(f"Error processing line: {line}. Error: {str(e)}")
-                    continue
-                    
-            flash(f"Додано: {added}, Оновлено: {updated}, Помилок: {errors}", "success")
-            
-        except Exception as e:
-            flash(f"Помилка: {str(e)}", "error")
-            
-        finally:
-            if conn:
-                conn.close()
-                
-        return redirect(url_for('add_product_descriptions', token=token))
+def get_description(token, article):
+    """Отримати опис товару для редагування"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-    return render_template('admin/products/add_descriptions.html', token=token)
-
-
+        cursor.execute("""
+            SELECT name_en, description_en, name_sk, description_sk, name_pl, description_pl
+            FROM products WHERE article = %s
+        """, (article,))
+        
+        result = cursor.fetchone()
+        if result:
+            return jsonify(dict(result))
+        return jsonify({}), 404
+        
+    except Exception as e:
+        logging.error(f"Error getting description: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 @app.route('/user-profile', methods=['GET', 'POST'])
@@ -8810,7 +9452,7 @@ def public_user_profile():
             user=user,
             addresses=addresses,
             companies=companies,
-            available_languages=[('uk', _('Ukrainian')), ('en', _('English')), ('sk', _('Slovak')), ('pl', _('Polish'))]
+            available_languages=[('sk', _('Slovak')), ('en', _('English')), ('pl', _('Polish'))]
         )
 
     except Exception as e:
@@ -9685,7 +10327,7 @@ def admin_check_sitemap_data(token):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
         # Перевірка категорій
-        cursor.execute("SELECT COUNT(*) FROM categories WHERE slug IS NOT NULL AND slug != ''")
+        cursor.execute("SELECT COUNT(*) FROM product_categories WHERE slug IS NOT NULL AND slug != ''")
         categories_count = cursor.fetchone()[0]
         result += f"<p>Categories with slug: {categories_count}</p>"
         
@@ -9821,1522 +10463,7 @@ def admin_sitemap_utils(token):
         return redirect(url_for('admin_sitemaps', token=token))
 
 
-# Список всіх статей з фільтрацією
-@app.route('/<token>/admin/blog', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def admin_blog_posts(token):
-    try:
-        status_filter = request.args.get('status', '')
-        category_filter = request.args.get('category', '')
-        
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Base query
-            query = """
-                SELECT 
-                    bp.id, 
-                    bp.slug,
-                    bp.published, 
-                    bp.published_at,
-                    bp.views,
-                    bpt_sk.title as title_sk,
-                    bpt_en.title as title_en,
-                    bpt_pl.title as title_pl,
-                    bpt_hu.title as title_hu,
-                    array_agg(DISTINCT bct.name) as categories
-                FROM blog_posts bp
-                LEFT JOIN blog_post_translations bpt_sk ON bp.id = bpt_sk.post_id AND bpt_sk.language = 'sk'
-                LEFT JOIN blog_post_translations bpt_en ON bp.id = bpt_en.post_id AND bpt_en.language = 'en'
-                LEFT JOIN blog_post_translations bpt_pl ON bp.id = bpt_pl.post_id AND bpt_pl.language = 'pl'
-                LEFT JOIN blog_post_translations bpt_hu ON bp.id = bpt_hu.post_id AND bpt_hu.language = 'hu'
-                LEFT JOIN blog_post_categories bpc ON bp.id = bpc.post_id
-                LEFT JOIN blog_categories bc ON bpc.category_id = bc.id
-                LEFT JOIN blog_category_translations bct ON bc.id = bct.category_id AND bct.language = 'sk'
-            """
-            
-            # Filter conditions
-            conditions = []
-            params = []
-            
-            if status_filter:
-                if status_filter == 'published':
-                    conditions.append("bp.published = TRUE")
-                elif status_filter == 'draft':
-                    conditions.append("bp.published = FALSE")
-            
-            if category_filter:
-                conditions.append("bc.id = %s")
-                params.append(category_filter)
-            
-            # Add conditions to query
-            if conditions:
-                query += " WHERE " + " AND ".join(conditions)
-                
-            # Grouping and sorting
-            query += " GROUP BY bp.id, bp.slug, bp.published, bp.published_at, bp.views, bpt_sk.title, bpt_en.title, bpt_pl.title, bpt_hu.title ORDER BY bp.published_at DESC"
-            
-            cursor.execute(query, params)
-            posts = cursor.fetchall()
-            
-            # Get categories for filter
-            cursor.execute("""
-                SELECT bc.id, bct.name
-                FROM blog_categories bc
-                JOIN blog_category_translations bct ON bc.id = bct.category_id 
-                WHERE bct.language = 'sk'
-                ORDER BY bct.name
-            """)
-            categories = cursor.fetchall()
-            
-            return render_template(
-                'admin/blog/posts_list.html',
-                token=token,
-                posts=posts,
-                categories=categories,
-                status_filter=status_filter,
-                category_filter=category_filter
-            )
-            
-    except Exception as e:
-        logging.error(f"Error in admin_blog_posts: {e}", exc_info=True)
-        flash("Error loading blog posts", "error")
-        return redirect(url_for('admin_dashboard', token=token)) 
-
-
-@app.route('/blog/')
-@app.route('/blog')
-def blog_index():
-    try:
-        # Get parameters
-        lang = session.get('language', app.config['BABEL_DEFAULT_LOCALE'])
-        page = request.args.get('page', 1, type=int)
-        category_slug = request.args.get('category', '')
-        per_page = 10
-        
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Base query
-            query = """
-                SELECT 
-                    bp.id,
-                    bp.slug,
-                    bp.featured_image,
-                    bp.published_at,
-                    bpt.title,
-                    bpt.excerpt,
-                    bp.views,
-                    array_agg(DISTINCT bct.name) as categories
-                FROM blog_posts bp
-                JOIN blog_post_translations bpt ON bp.id = bpt.post_id AND bpt.language = %s
-                LEFT JOIN blog_post_categories bpc ON bp.id = bpc.post_id
-                LEFT JOIN blog_categories bc ON bpc.category_id = bc.id
-                LEFT JOIN blog_category_translations bct ON bc.id = bct.category_id AND bct.language = %s
-                WHERE bp.published = TRUE
-            """
-            
-            params = [lang, lang]
-            
-            # Apply category filter if needed
-            if category_slug:
-                query += " AND EXISTS (SELECT 1 FROM blog_post_categories bpc2 JOIN blog_categories bc2 ON bpc2.category_id = bc2.id WHERE bpc2.post_id = bp.id AND bc2.slug = %s)"
-                params.append(category_slug)
-            
-            # Complete query with grouping and order
-            query += """
-                GROUP BY 
-                    bp.id,
-                    bp.slug,
-                    bp.featured_image,
-                    bp.published_at,
-                    bpt.title,
-                    bpt.excerpt,
-                    bp.views
-                ORDER BY bp.published_at DESC
-                LIMIT %s OFFSET %s
-            """
-            params.extend([per_page, (page - 1) * per_page])
-            
-            # Get the count of posts (for pagination)
-            count_query = """
-                SELECT COUNT(DISTINCT bp.id)
-                FROM blog_posts bp
-                JOIN blog_post_translations bpt ON bp.id = bpt.post_id AND bpt.language = %s
-                WHERE bp.published = TRUE
-            """
-            
-            count_params = [lang]
-            
-            if category_slug:
-                count_query += " AND EXISTS (SELECT 1 FROM blog_post_categories bpc JOIN blog_categories bc ON bpc.category_id = bc.id WHERE bpc.post_id = bp.id AND bc.slug = %s)"
-                count_params.append(category_slug)
-            
-            cursor.execute(count_query, count_params)
-            total_posts = cursor.fetchone()[0] or 0  # Use 0 if None
-            
-            if total_posts > 0:
-                # Get the posts
-                cursor.execute(query, params)
-                posts = cursor.fetchall()
-            else:
-                posts = []  # No posts found
-            
-            # Get categories for the sidebar - always try to show categories if they exist
-            cursor.execute("""
-                SELECT 
-                    bc.slug,
-                    bct.name,
-                    COUNT(DISTINCT bp.id) as post_count
-                FROM blog_categories bc
-                JOIN blog_category_translations bct ON bc.id = bct.category_id AND bct.language = %s
-                LEFT JOIN blog_post_categories bpc ON bc.id = bpc.category_id
-                LEFT JOIN blog_posts bp ON bpc.post_id = bp.id AND bp.published = TRUE
-                GROUP BY bc.slug, bct.name
-                HAVING COUNT(DISTINCT bp.id) > 0
-                ORDER BY bct.name
-            """, [lang])
-            
-            categories = cursor.fetchall()
-            
-            # Get recent posts for sidebar
-            cursor.execute("""
-                SELECT 
-                    bp.slug,
-                    bpt.title,
-                    bp.published_at
-                FROM blog_posts bp
-                JOIN blog_post_translations bpt ON bp.id = bpt.post_id AND bpt.language = %s
-                WHERE bp.published = TRUE
-                ORDER BY bp.published_at DESC
-                LIMIT 5
-            """, [lang])
-            
-            recent_posts = cursor.fetchall()
-            
-            # Calculate total pages
-            total_pages = (total_posts + per_page - 1) // per_page if total_posts > 0 else 1
-            
-            # Get selected category name if filtering
-            selected_category = None
-            if category_slug:
-                cursor.execute("""
-                    SELECT bct.name 
-                    FROM blog_categories bc
-                    JOIN blog_category_translations bct ON bc.id = bct.category_id AND bct.language = %s
-                    WHERE bc.slug = %s
-                """, [lang, category_slug])
-                
-                category_result = cursor.fetchone()
-                if category_result:
-                    selected_category = category_result[0]
-            
-            return render_template(
-                'public/blog/index.html',
-                posts=posts,
-                total_posts=total_posts,
-                page=page,
-                total_pages=total_pages,
-                categories=categories or [],  # Ensure it's never None
-                recent_posts=recent_posts or [],  # Ensure it's never None
-                selected_category=selected_category,
-                category_slug=category_slug,
-                lang=lang
-            )
-            
-    except Exception as e:
-        logging.error(f"Error in blog_index: {e}", exc_info=True)
-        flash(_("An error occurred while loading blog posts"), "error")
-        return redirect(url_for('index'))
-
-
-# Add this route near your other admin routes
-@app.route('/<token>/admin/generate-slug', methods=['POST'])
-@requires_token_and_roles('admin', 'manager')
-@add_noindex_header
-def admin_generate_slug(token):
-    """Generate a SEO-friendly slug from provided text"""
-    try:
-        data = request.get_json()
-        if not data or 'text' not in data:
-            return jsonify({'error': 'No text provided'}), 400
-            
-        text = data.get('text', '').strip()
-        lang = data.get('lang', 'en')
-        
-        if not text:
-            return jsonify({'error': 'Empty text provided'}), 400
-            
-        slug = generate_slug(text, lang)
-        return jsonify({'slug': slug})
-    except Exception as e:
-        logging.error(f"Error generating slug: {e}", exc_info=True)
-        return jsonify({'error': str(e)}), 500
-        
-# Створення нової статті
-@app.route('/<token>/admin/blog/create', methods=['GET', 'POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def admin_create_blog_post(token):
-    if request.method == 'POST':
-        try:
-            slug = request.form.get('slug', '').strip()
-            featured_image = request.form.get('featured_image', '')
-            published = request.form.get('published') == 'on'
-            
-            # Якщо slug не вказано, генеруємо з title_sk
-            if not slug:
-                title_sk = request.form.get('title_sk', '').strip()
-                slug = generate_slug(title_sk, 'sk')
-            
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                
-                # Створюємо запис у головній таблиці
-                cursor.execute("""
-                    INSERT INTO blog_posts 
-                    (slug, author_id, featured_image, published, published_at, created_at, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
-                    RETURNING id
-                """, (
-                    slug, 
-                    session.get('user_id'), 
-                    featured_image, 
-                    published,
-                    datetime.now() if published else None
-                ))
-                
-                post_id = cursor.fetchone()[0]
-                
-                # Створюємо переклади для всіх мов
-                languages = ['sk', 'en', 'pl', 'hu']
-                
-                for lang in languages:
-                    title = request.form.get(f'title_{lang}', '').strip()
-                    excerpt = request.form.get(f'excerpt_{lang}', '').strip()
-                    content = request.form.get(f'content_{lang}', '').strip()
-                    meta_title = request.form.get(f'meta_title_{lang}', '').strip()
-                    meta_description = request.form.get(f'meta_description_{lang}', '').strip()
-                    
-                    # Якщо переклад для мови не надано, пропускаємо
-                    if not title and not content:
-                        continue
-                        
-                    cursor.execute("""
-                        INSERT INTO blog_post_translations 
-                        (post_id, language, title, excerpt, content, meta_title, meta_description)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """, (
-                        post_id, 
-                        lang, 
-                        title, 
-                        excerpt, 
-                        content, 
-                        meta_title or title, 
-                        meta_description or excerpt
-                    ))
-                
-                # Зберігаємо зв'язки з категоріями
-                categories = request.form.getlist('categories')
-                for category_id in categories:
-                    cursor.execute("""
-                        INSERT INTO blog_post_categories 
-                        (post_id, category_id)
-                        VALUES (%s, %s)
-                    """, (post_id, category_id))
-                
-                # Зберігаємо зв'язки з тегами
-                tags = request.form.get('tags', '').strip().split(',')
-                for tag_name in tags:
-                    tag_name = tag_name.strip()
-                    if not tag_name:
-                        continue
-                        
-                    # Шукаємо тег або створюємо новий
-                    cursor.execute("SELECT id FROM blog_tags WHERE slug = %s", (generate_slug(tag_name),))
-                    tag_row = cursor.fetchone()
-                    
-                    if tag_row:
-                        tag_id = tag_row[0]
-                    else:
-                        cursor.execute("""
-                            INSERT INTO blog_tags (slug) 
-                            VALUES (%s) 
-                            RETURNING id
-                        """, (generate_slug(tag_name),))
-                        tag_id = cursor.fetchone()[0]
-                        
-                        # Створюємо переклади тегу
-                        for lang in languages:
-                            cursor.execute("""
-                                INSERT INTO blog_tag_translations 
-                                (tag_id, language, name)
-                                VALUES (%s, %s, %s)
-                            """, (tag_id, lang, tag_name))
-                    
-                    # Створюємо зв'язок
-                    cursor.execute("""
-                        INSERT INTO blog_post_tags 
-                        (post_id, tag_id)
-                        VALUES (%s, %s)
-                    """, (post_id, tag_id))
-                
-                conn.commit()
-                flash("Blog post created successfully", "success")
-                return redirect(url_for('admin_edit_blog_post', token=token, post_id=post_id))
-                
-        except Exception as e:
-            logging.error(f"Error creating blog post: {e}", exc_info=True)
-            flash(f"Error creating blog post: {str(e)}", "error")
-    
-    # GET запит - відображаємо форму
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Отримуємо категорії для вибору
-            cursor.execute("""
-                SELECT bc.id, bct.name
-                FROM blog_categories bc
-                JOIN blog_category_translations bct ON bc.id = bct.category_id 
-                WHERE bct.language = 'sk'
-                ORDER BY bct.name
-            """)
-            categories = cursor.fetchall()
-            
-            # Створюємо словник доступних мов для шаблону
-            supported_languages = {
-                'sk': 'Slovenčina',
-                'en': 'English',
-                'pl': 'Polski',
-                'hu': 'Magyar'
-            }
-            
-            return render_template(
-                'admin/blog/post_form.html',
-                token=token,
-                post=None,
-                categories=categories,
-                supported_languages=supported_languages,
-                mode='create'
-            )
-            
-    except Exception as e:
-        logging.error(f"Error in admin_create_blog_post: {e}", exc_info=True)
-        flash("Error loading form", "error")
-        return redirect(url_for('admin_blog_posts', token=token))
-
-# Редагування статті
-@app.route('/<token>/admin/blog/edit/<int:post_id>', methods=['GET', 'POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def admin_edit_blog_post(token, post_id):
-    if request.method == 'POST':
-        try:
-            slug = request.form.get('slug', '').strip()
-            featured_image = request.form.get('featured_image', '')
-            published = request.form.get('published') == 'on'
-            
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                
-                # Оновлюємо головний запис
-                cursor.execute("""
-                    UPDATE blog_posts
-                    SET slug = %s,
-                        featured_image = %s,
-                        published = %s,
-                        published_at = %s,
-                        updated_at = NOW()
-                    WHERE id = %s
-                """, (
-                    slug,
-                    featured_image,
-                    published,
-                    datetime.now() if published else None,
-                    post_id
-                ))
-                
-                # Оновлюємо переклади
-                languages = ['sk', 'en', 'pl', 'hu']
-                
-                for lang in languages:
-                    title = request.form.get(f'title_{lang}', '').strip()
-                    excerpt = request.form.get(f'excerpt_{lang}', '').strip()
-                    content = request.form.get(f'content_{lang}', '').strip()
-                    meta_title = request.form.get(f'meta_title_{lang}', '').strip()
-                    meta_description = request.form.get(f'meta_description_{lang}', '').strip()
-                    
-                    # Перевіряємо, чи існує вже переклад для цієї мови
-                    cursor.execute("""
-                        SELECT id FROM blog_post_translations
-                        WHERE post_id = %s AND language = %s
-                    """, (post_id, lang))
-                    
-                    translation_exists = cursor.fetchone()
-                    
-                    if translation_exists:
-                        # Якщо не вказано ні заголовок, ні контент - видаляємо переклад
-                        if not title and not content:
-                            cursor.execute("""
-                                DELETE FROM blog_post_translations
-                                WHERE post_id = %s AND language = %s
-                            """, (post_id, lang))
-                        else:
-                            # Інакше - оновлюємо
-                            cursor.execute("""
-                                UPDATE blog_post_translations
-                                SET title = %s,
-                                    excerpt = %s,
-                                    content = %s,
-                                    meta_title = %s,
-                                    meta_description = %s
-                                WHERE post_id = %s AND language = %s
-                            """, (
-                                title,
-                                excerpt,
-                                content,
-                                meta_title or title,
-                                meta_description or excerpt,
-                                post_id,
-                                lang
-                            ))
-                    else:
-                        # Якщо не існує і є хоча б заголовок або контент - створюємо
-                        if title or content:
-                            cursor.execute("""
-                                INSERT INTO blog_post_translations
-                                (post_id, language, title, excerpt, content, meta_title, meta_description)
-                                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                            """, (
-                                post_id,
-                                lang,
-                                title,
-                                excerpt,
-                                content,
-                                meta_title or title,
-                                meta_description or excerpt
-                            ))
-                
-                # Оновлюємо зв'язки з категоріями
-                cursor.execute("DELETE FROM blog_post_categories WHERE post_id = %s", (post_id,))
-                categories = request.form.getlist('categories')
-                for category_id in categories:
-                    cursor.execute("""
-                        INSERT INTO blog_post_categories 
-                        (post_id, category_id)
-                        VALUES (%s, %s)
-                    """, (post_id, category_id))
-                
-                # Оновлюємо зв'язки з тегами
-                cursor.execute("DELETE FROM blog_post_tags WHERE post_id = %s", (post_id,))
-                tags = request.form.get('tags', '').strip().split(',')
-                for tag_name in tags:
-                    tag_name = tag_name.strip()
-                    if not tag_name:
-                        continue
-                        
-                    # Шукаємо тег або створюємо новий
-                    cursor.execute("SELECT id FROM blog_tags WHERE slug = %s", (generate_slug(tag_name),))
-                    tag_row = cursor.fetchone()
-                    
-                    if tag_row:
-                        tag_id = tag_row[0]
-                    else:
-                        cursor.execute("""
-                            INSERT INTO blog_tags (slug) 
-                            VALUES (%s) 
-                            RETURNING id
-                        """, (generate_slug(tag_name),))
-                        tag_id = cursor.fetchone()[0]
-                        
-                        # Створюємо переклади тегу
-                        for lang in languages:
-                            cursor.execute("""
-                                INSERT INTO blog_tag_translations 
-                                (tag_id, language, name)
-                                VALUES (%s, %s, %s)
-                            """, (tag_id, lang, tag_name))
-                    
-                    # Створюємо зв'язок
-                    cursor.execute("""
-                        INSERT INTO blog_post_tags 
-                        (post_id, tag_id)
-                        VALUES (%s, %s)
-                    """, (post_id, tag_id))
-                
-                conn.commit()
-                flash("Blog post updated successfully", "success")
-                return redirect(url_for('admin_blog_posts', token=token))
-                
-        except Exception as e:
-            logging.error(f"Error updating blog post: {e}", exc_info=True)
-            flash(f"Error updating blog post: {str(e)}", "error")
-    
-    # GET запит - завантажуємо дані для форми
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Отримуємо основні дані посту
-            cursor.execute("""
-                SELECT * FROM blog_posts WHERE id = %s
-            """, (post_id,))
-            post = cursor.fetchone()
-            
-            if not post:
-                flash("Blog post not found", "error")
-                return redirect(url_for('admin_blog_posts', token=token))
-            
-            # Отримуємо переклади
-            cursor.execute("""
-                SELECT * FROM blog_post_translations WHERE post_id = %s
-            """, (post_id,))
-            translations = cursor.fetchall()
-            
-            # Перетворюємо у словник перекладів по мовах
-            post_translations = {}
-            for translation in translations:
-                post_translations[translation['language']] = dict(translation)
-            
-            # Отримуємо категорії для вибору
-            cursor.execute("""
-                SELECT bc.id, bct.name
-                FROM blog_categories bc
-                JOIN blog_category_translations bct ON bc.id = bct.category_id 
-                WHERE bct.language = 'sk'
-                ORDER BY bct.name
-            """)
-            all_categories = cursor.fetchall()
-            
-            # Отримуємо вибрані категорії
-            cursor.execute("""
-                SELECT category_id FROM blog_post_categories WHERE post_id = %s
-            """, (post_id,))
-            selected_categories = [row[0] for row in cursor.fetchall()]
-            
-            # Отримуємо теги
-            cursor.execute("""
-                SELECT bt.id, btt.name
-                FROM blog_post_tags bpt
-                JOIN blog_tags bt ON bpt.tag_id = bt.id
-                JOIN blog_tag_translations btt ON bt.id = btt.tag_id
-                WHERE bpt.post_id = %s AND btt.language = 'sk'
-            """, (post_id,))
-            tags = cursor.fetchall()
-            tags_string = ', '.join(row[1] for row in tags)
-            
-            # Створюємо словник доступних мов для шаблону
-            supported_languages = {
-                'sk': 'Slovenčina',
-                'en': 'English',
-                'pl': 'Polski',
-                'hu': 'Magyar'
-            }
-            
-            return render_template(
-                'admin/blog/post_form.html',
-                token=token,
-                post=post,
-                post_translations=post_translations,
-                categories=all_categories,
-                selected_categories=selected_categories,
-                tags=tags_string,
-                supported_languages=supported_languages,
-                mode='edit'
-            )
-            
-    except Exception as e:
-        logging.error(f"Error loading blog post for edit: {e}", exc_info=True)
-        flash("Error loading blog post", "error")
-        return redirect(url_for('admin_blog_posts', token=token))
-
-# Видалення статті
-@app.route('/<token>/admin/blog/delete/<int:post_id>', methods=['POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def admin_delete_blog_post(token, post_id):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            # Видаляємо всі пов'язані записи
-            cursor.execute("DELETE FROM blog_post_tags WHERE post_id = %s", (post_id,))
-            cursor.execute("DELETE FROM blog_post_categories WHERE post_id = %s", (post_id,))
-            cursor.execute("DELETE FROM blog_post_translations WHERE post_id = %s", (post_id,))
-            cursor.execute("DELETE FROM blog_posts WHERE id = %s", (post_id,))
-            
-            conn.commit()
-            flash("Blog post deleted successfully", "success")
-            
-    except Exception as e:
-        logging.error(f"Error deleting blog post: {e}", exc_info=True)
-        flash(f"Error deleting blog post: {str(e)}", "error")
-        
-    return redirect(url_for('admin_blog_posts', token=token))
-
-# Управління категоріями блогу
-@app.route('/<token>/admin/blog/categories', methods=['GET', 'POST'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def admin_blog_categories(token):
-    # Обробка POST запиту на створення або оновлення категорії
-    if request.method == 'POST':
-        try:
-            action = request.form.get('action')
-            
-            if action == 'create':
-                # Створення нової категорії
-                slug = request.form.get('slug', '').strip()
-                name_sk = request.form.get('name_sk', '').strip()
-                
-                # Якщо slug не вказано, генеруємо з імені категорії
-                if not slug and name_sk:
-                    slug = generate_slug(name_sk)
-                
-                with get_db_connection() as conn:
-                    cursor = conn.cursor()
-                    
-                    # Створюємо запис категорії
-                    cursor.execute("""
-                        INSERT INTO blog_categories (slug, created_at, updated_at)
-                        VALUES (%s, NOW(), NOW())
-                        RETURNING id
-                    """, (slug,))
-                    
-                    category_id = cursor.fetchone()[0]
-                    
-                    # Додаємо переклади для всіх мов
-                    languages = ['sk', 'en', 'pl', 'hu']
-                    
-                    for lang in languages:
-                        name = request.form.get(f'name_{lang}', '').strip()
-                        description = request.form.get(f'description_{lang}', '').strip()
-                        
-                        # Якщо переклад не надано, пропускаємо
-                        if not name:
-                            continue
-                            
-                        cursor.execute("""
-                            INSERT INTO blog_category_translations
-                            (category_id, language, name, description)
-                            VALUES (%s, %s, %s, %s)
-                        """, (category_id, lang, name, description))
-                    
-                    conn.commit()
-                    flash("Category created successfully", "success")
-                    
-            elif action == 'update':
-                # Оновлення існуючої категорії
-                category_id = request.form.get('category_id')
-                slug = request.form.get('slug', '').strip()
-                
-                with get_db_connection() as conn:
-                    cursor = conn.cursor()
-                    
-                    # Оновлюємо запис категорії
-                    cursor.execute("""
-                        UPDATE blog_categories
-                        SET slug = %s, updated_at = NOW()
-                        WHERE id = %s
-                    """, (slug, category_id))
-                    
-                    # Оновлюємо переклади
-                    languages = ['sk', 'en', 'pl', 'hu']
-                    
-                    for lang in languages:
-                        name = request.form.get(f'name_{lang}', '').strip()
-                        description = request.form.get(f'description_{lang}', '').strip()
-                        
-                        cursor.execute("""
-                            SELECT id FROM blog_category_translations
-                            WHERE category_id = %s AND language = %s
-                        """, (category_id, lang))
-                        
-                        translation_exists = cursor.fetchone()
-                        
-                        if translation_exists:
-                            if name:
-                                cursor.execute("""
-                                    UPDATE blog_category_translations
-                                    SET name = %s, description = %s
-                                    WHERE category_id = %s AND language = %s
-                                """, (name, description, category_id, lang))
-                            else:
-                                cursor.execute("""
-                                    DELETE FROM blog_category_translations
-                                    WHERE category_id = %s AND language = %s
-                                """, (category_id, lang))
-                        elif name:
-                            cursor.execute("""
-                                INSERT INTO blog_category_translations
-                                (category_id, language, name, description)
-                                VALUES (%s, %s, %s, %s)
-                            """, (category_id, lang, name, description))
-                    
-                    conn.commit()
-                    flash("Category updated successfully", "success")
-                    
-            elif action == 'delete':
-                # Видалення категорії
-                category_id = request.form.get('category_id')
-                
-                with get_db_connection() as conn:
-                    cursor = conn.cursor()
-                    
-                    # Перевіряємо, чи є статті з цією категорією
-                    cursor.execute("""
-                        SELECT COUNT(*) FROM blog_post_categories
-                        WHERE category_id = %s
-                    """, (category_id,))
-                    
-                    if cursor.fetchone()[0] > 0:
-                        flash("Cannot delete category with associated posts", "error")
-                    else:
-                        # Видаляємо переклади та саму категорію
-                        cursor.execute("""
-                            DELETE FROM blog_category_translations
-                            WHERE category_id = %s
-                        """, (category_id,))
-                        
-                        cursor.execute("""
-                            DELETE FROM blog_categories
-                            WHERE id = %s
-                        """, (category_id,))
-                        
-                        conn.commit()
-                        flash("Category deleted successfully", "success")
-        
-        except Exception as e:
-            logging.error(f"Error in admin_blog_categories: {e}", exc_info=True)
-            flash(f"Error processing category: {str(e)}", "error")
-        
-        return redirect(url_for('admin_blog_categories', token=token))
-    
-    # GET запит - відображення списку категорій
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Отримуємо всі категорії з перекладами
-            cursor.execute("""
-                SELECT 
-                    bc.id,
-                    bc.slug,
-                    bc.created_at,
-                    bc.updated_at,
-                    COALESCE(sk.name, '') as name_sk,
-                    COALESCE(en.name, '') as name_en,
-                    COALESCE(pl.name, '') as name_pl,
-                    COALESCE(hu.name, '') as name_hu,
-                    (SELECT COUNT(*) FROM blog_post_categories WHERE category_id = bc.id) as post_count
-                FROM blog_categories bc
-                LEFT JOIN blog_category_translations sk ON bc.id = sk.category_id AND sk.language = 'sk'
-                LEFT JOIN blog_category_translations en ON bc.id = en.category_id AND en.language = 'en'
-                LEFT JOIN blog_category_translations pl ON bc.id = pl.category_id AND pl.language = 'pl'
-                LEFT JOIN blog_category_translations hu ON bc.id = hu.category_id AND hu.language = 'hu'
-                ORDER BY bc.created_at DESC
-            """)
-            
-            categories = cursor.fetchall()
-            
-            # Створюємо словник доступних мов для шаблону
-            supported_languages = {
-                'sk': 'Slovenčina',
-                'en': 'English',
-                'pl': 'Polski',
-                'hu': 'Magyar'
-            }
-            
-            return render_template(
-                'admin/blog/categories.html',
-                token=token,
-                categories=categories,
-                supported_languages=supported_languages
-            )
-            
-    except Exception as e:
-        logging.error(f"Error loading blog categories: {e}", exc_info=True)
-        flash("Error loading categories", "error")
-        return redirect(url_for('admin_dashboard', token=token))
-
-# Статистика блогу
-@app.route('/<token>/admin/blog/statistics', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def admin_blog_statistics(token):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Загальна кількість постів
-            cursor.execute("SELECT COUNT(*) FROM blog_posts")
-            total_posts = cursor.fetchone()[0]
-            
-            # Опубліковані пости
-            cursor.execute("SELECT COUNT(*) FROM blog_posts WHERE published = TRUE")
-            published_posts = cursor.fetchone()[0]
-            
-            # Недавно додані пости (за останній місяць)
-            cursor.execute("SELECT COUNT(*) FROM blog_posts WHERE created_at >= NOW() - INTERVAL '1 month'")
-            recent_posts = cursor.fetchone()[0]
-            
-            # Загальна кількість переглядів
-            cursor.execute("SELECT SUM(views) FROM blog_posts")
-            total_views = cursor.fetchone()[0] or 0
-            
-            # Найпопулярніші пости
-            cursor.execute("""
-                SELECT 
-                    bp.id,
-                    bp.slug,
-                    bp.views,
-                    bpt.title
-                FROM blog_posts bp
-                JOIN blog_post_translations bpt ON bp.id = bpt.post_id AND bpt.language = 'sk'
-                ORDER BY bp.views DESC
-                LIMIT 10
-            """)
-            popular_posts = cursor.fetchall()
-            
-            # Статистика по категоріях
-            cursor.execute("""
-                SELECT 
-                    bc.id,
-                    bct.name,
-                    COUNT(bpc.post_id) as post_count
-                FROM blog_categories bc
-                JOIN blog_category_translations bct ON bc.id = bct.category_id AND bct.language = 'sk'
-                LEFT JOIN blog_post_categories bpc ON bc.id = bpc.category_id
-                GROUP BY bc.id, bct.name
-                ORDER BY post_count DESC
-            """)
-            category_stats = cursor.fetchall()
-            
-            # Статистика по мовах
-            cursor.execute("""
-                SELECT 
-                    language,
-                    COUNT(DISTINCT post_id) as post_count
-                FROM blog_post_translations
-                GROUP BY language
-                ORDER BY post_count DESC
-            """)
-            language_stats = cursor.fetchall()
-            
-            return render_template(
-                'admin/blog/statistics.html',
-                token=token,
-                total_posts=total_posts,
-                published_posts=published_posts,
-                recent_posts=recent_posts,
-                total_views=total_views,
-                popular_posts=popular_posts,
-                category_stats=category_stats,
-                language_stats=language_stats
-            )
-            
-    except Exception as e:
-        logging.error(f"Error in admin_blog_statistics: {e}", exc_info=True)
-        flash("Error loading blog statistics", "error")
-        return redirect(url_for('admin_blog_posts', token=token))
-
-
-
-
-# Сторінка окремої статті блогу
-@app.route('/blog/<slug>', methods=['GET'])
-def blog_post(slug):
-    try:
-        # Визначення поточної мови
-        lang = session.get('language', app.config['BABEL_DEFAULT_LOCALE'])
-        
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Отримуємо дані статті
-            cursor.execute("""
-                SELECT 
-                    bp.id,
-                    bp.slug,
-                    bp.featured_image,
-                    bp.published_at,
-                    bp.views,
-                    bp.reading_time,
-                    bpt.title,
-                    bpt.content,
-                    bpt.excerpt,
-                    bpt.meta_title,
-                    bpt.meta_description
-                FROM blog_posts bp
-                JOIN blog_post_translations bpt ON bp.id = bpt.post_id AND bpt.language = %s
-                WHERE bp.slug = %s AND bp.published = TRUE
-            """, [lang, slug])
-            
-            post = cursor.fetchone()
-            
-            if not post:
-                flash(_("Article not found"), "error")
-                return redirect(url_for('blog_index'))
-            
-            # Отримання категорій статті
-            cursor.execute("""
-                SELECT bc.slug, bct.name
-                FROM blog_categories bc
-                JOIN blog_post_categories bpc ON bc.id = bpc.category_id
-                JOIN blog_category_translations bct ON bc.id = bct.category_id AND bct.language = %s
-                WHERE bpc.post_id = %s
-            """, [lang, post['id']])
-            
-            categories = cursor.fetchall()
-            
-            # Отримання тегів статті
-            cursor.execute("""
-                SELECT bt.slug, btt.name
-                FROM blog_tags bt
-                JOIN blog_post_tags bpt ON bt.id = bpt.tag_id
-                JOIN blog_tag_translations btt ON bt.id = btt.tag_id AND btt.language = %s
-                WHERE bpt.post_id = %s
-            """, [lang, post['id']])
-            
-            tags = cursor.fetchall()
-            
-            # Отримуємо пов'язані статті (за категоріями) - ВИПРАВЛЕНО SQL
-            cursor.execute("""
-                SELECT 
-                    bp.id,
-                    bp.slug,
-                    bp.featured_image,
-                    bpt.title,
-                    bpt.excerpt,
-                    bp.published_at
-                FROM blog_posts bp
-                JOIN blog_post_translations bpt ON bp.id = bpt.post_id AND bpt.language = %s
-                JOIN blog_post_categories bpc ON bp.id = bpc.post_id
-                WHERE bp.published = TRUE
-                AND bpc.category_id IN (
-                    SELECT category_id 
-                    FROM blog_post_categories 
-                    WHERE post_id = %s
-                )
-                AND bp.id != %s
-                GROUP BY bp.id, bp.slug, bp.featured_image, bpt.title, bpt.excerpt, bp.published_at
-                ORDER BY bp.published_at DESC
-                LIMIT 3
-            """, [lang, post['id'], post['id']])
-            
-            related_posts = cursor.fetchall()
-            
-            # Оновлюємо лічильник переглядів
-            cursor.execute("""
-                UPDATE blog_posts SET views = views + 1 WHERE id = %s
-            """, [post['id']])
-            conn.commit()
-            
-            return render_template(
-                'public/blog/post.html',
-                post=post,
-                categories=categories,
-                tags=tags,
-                related_posts=related_posts,
-                full_uri=request.url,
-                lang=lang
-            )
-            
-    except Exception as e:
-        logging.error(f"Error in blog_post: {e}", exc_info=True)
-        flash(_("An error occurred while loading the article"), "error")
-        return redirect(url_for('blog_index'))
-
-# Сторінка категорії блогу
-@app.route('/blog/category/<slug>', methods=['GET'])
-def blog_category(slug):
-    # Перенаправляємо на головну сторінку блогу з параметром категорії
-    return redirect(url_for('blog_index', category=slug))
-
-# Сторінка тегу блогу
-@app.route('/blog/tag/<slug>', methods=['GET'])
-def blog_tag(slug):
-    # Перенаправляємо на головну сторінку блогу з параметром тега
-    return redirect(url_for('blog_index', tag=slug))
-
-# Оптимізоване відображення зображень блогу
-@app.route('/blog/image/<path:filename>')
-def blog_image(filename):
-    # Обробка зображень з кешуванням
-    return send_from_directory('static/blog/images', filename, max_age=31536000)  # 1 рік кешування
-
-
-def generate_sitemap_blog_file():
-    """Генерує sitemap файл для блогу і зберігає на диск"""
-    try:
-        logging.info("Starting blog sitemap generation")
-        base_url = os.getenv('BASE_URL', 'https://autogroup.sk')
-        
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Отримуємо всі опубліковані статті з усіма доступними перекладами
-            cursor.execute("""
-                SELECT DISTINCT
-                    bp.id,
-                    bp.slug,
-                    bp.updated_at,
-                    array_agg(DISTINCT bpt.language) as languages
-                FROM blog_posts bp
-                JOIN blog_post_translations bpt ON bp.id = bpt.post_id
-                WHERE bp.published = TRUE
-                GROUP BY bp.id, bp.slug, bp.updated_at
-                ORDER BY bp.updated_at DESC
-            """)
-            
-            posts = cursor.fetchall()
-            
-            # Отримуємо всі категорії блогу з усіма доступними перекладами
-            cursor.execute("""
-                SELECT DISTINCT
-                    bc.id,
-                    bc.slug,
-                    bc.updated_at,
-                    array_agg(DISTINCT bct.language) as languages
-                FROM blog_categories bc
-                JOIN blog_category_translations bct ON bc.id = bct.category_id
-                JOIN blog_post_categories bpc ON bc.id = bpc.category_id
-                JOIN blog_posts bp ON bpc.post_id = bp.id
-                WHERE bp.published = TRUE
-                GROUP BY bc.id, bc.slug, bc.updated_at
-                ORDER BY bc.updated_at DESC
-            """)
-            
-            categories = cursor.fetchall()
-            
-            # Отримуємо всі теги блогу з усіма доступними перекладами
-            cursor.execute("""
-                SELECT DISTINCT
-                    bt.id,
-                    bt.slug,
-                    array_agg(DISTINCT btt.language) as languages
-                FROM blog_tags bt
-                JOIN blog_tag_translations btt ON bt.id = btt.tag_id
-                JOIN blog_post_tags bpt ON bt.id = bpt.tag_id
-                JOIN blog_posts bp ON bpt.post_id = bp.id
-                WHERE bp.published = TRUE
-                GROUP BY bt.id, bt.slug
-                ORDER BY bt.id
-            """)
-            
-            tags = cursor.fetchall()
-        
-        # Створюємо sitemap-blog.xml
-        sitemap_path = os.path.join(SITEMAP_DIR, 'sitemap-blog.xml')
-        
-        # Визначаємо URL-и для sitemap
-        urls = []
-        
-        # Додаємо головну сторінку блогу з усіма мовними версіями
-        for lang in app.config['BABEL_SUPPORTED_LOCALES']:
-            urls.append({
-                'loc': f"{base_url}/blog?lang_code={lang}",
-                'changefreq': 'daily',
-                'priority': '0.8'
-            })
-        
-        # Додаємо сторінки статей блогу
-        for post in posts:
-            for lang in post['languages']:
-                urls.append({
-                    'loc': f"{base_url}/blog/{post['slug']}?lang_code={lang}",
-                    'lastmod': post['updated_at'].strftime('%Y-%m-%d'),
-                    'changefreq': 'weekly',
-                    'priority': '0.7'
-                })
-        
-        # Додаємо сторінки категорій
-        for category in categories:
-            for lang in category['languages']:
-                urls.append({
-                    'loc': f"{base_url}/blog/category/{category['slug']}?lang_code={lang}",
-                    'changefreq': 'weekly',
-                    'priority': '0.6'
-                })
-        
-        # Додаємо сторінки тегів
-        for tag in tags:
-            for lang in tag['languages']:
-                urls.append({
-                    'loc': f"{base_url}/blog/tag/{tag['slug']}?lang_code={lang}",
-                    'changefreq': 'weekly',
-                    'priority': '0.5'
-                })
-        
-        # Створюємо XML-контент
-        xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        xml_content += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        
-        for url in urls:
-            xml_content += '  <url>\n'
-            xml_content += f'    <loc>{url["loc"]}</loc>\n'
-            if 'lastmod' in url:
-                xml_content += f'    <lastmod>{url["lastmod"]}</lastmod>\n'
-            if 'changefreq' in url:
-                xml_content += f'    <changefreq>{url["changefreq"]}</changefreq>\n'
-            if 'priority' in url:
-                xml_content += f'    <priority>{url["priority"]}</priority>\n'
-            xml_content += '  </url>\n'
-        
-        xml_content += '</urlset>'
-        
-        # Записуємо файл
-        with open(sitemap_path, 'w', encoding='utf-8') as f:
-            f.write(xml_content)
-        
-        logging.info(f"Blog sitemap generated successfully: {sitemap_path}")
-        return True
-        
-    except Exception as e:
-        logging.error(f"Error generating blog sitemap: {e}", exc_info=True)
-        return False
-
-def generate_slug(text, lang='en'):
-    """Автоматично генерує SEO-оптимізований slug з тексту"""
-    if not text:
-        return None
-    
-    # Перетворюємо на нижній регістр і замінюємо пробіли дефісами
-    text = text.lower().strip()
-    
-    # Транслітерація для різних мов
-    if lang == 'sk':
-        # Словацька транслітерація
-        transliteration_map = {
-            'á': 'a', 'ä': 'a', 'č': 'c', 'ď': 'd', 'é': 'e', 'í': 'i', 
-            'ĺ': 'l', 'ľ': 'l', 'ň': 'n', 'ó': 'o', 'ŕ': 'r', 'š': 's', 
-            'ť': 't', 'ú': 'u', 'ý': 'y', 'ž': 'z'
-        }
-    elif lang == 'pl':
-        # Польська транслітерація
-        transliteration_map = {
-            'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 
-            'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z'
-        }
-    elif lang == 'hu':
-        # Угорська транслітерація
-        transliteration_map = {
-            'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ö': 'o', 'ő': 'o',
-            'ú': 'u', 'ü': 'u', 'ű': 'u'
-        }
-    else:  # en - англійська транслітерація за замовчуванням
-        transliteration_map = {}
-    
-    # Застосовуємо транслітерацію
-    for char, replacement in transliteration_map.items():
-        text = text.replace(char, replacement)
-    
-    # Замінюємо всі неалфавітні та нецифрові символи на дефіси
-    slug = re.sub(r'[^a-z0-9]+', '-', text)
-    
-    # Видаляємо дефіси на початку та в кінці
-    slug = slug.strip('-')
-    
-    # Замінюємо подвійні дефіси на одинарні
-    slug = re.sub(r'-+', '-', slug)
-    
-    return slug
-
-# Пошук по блогу
-@app.route('/blog/search', methods=['GET'])
-def blog_search():
-    try:
-        query = request.args.get('q', '').strip()
-        page = request.args.get('page', 1, type=int)
-        per_page = 9  # 3x3 сітка статей
-        
-        if not query:
-            return redirect(url_for('blog_index'))
-        
-        # Визначення поточної мови
-        lang = session.get('language', app.config['BABEL_DEFAULT_LOCALE'])
-        
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Запит для пошуку статей з врахуванням мови
-            search_query = """
-                SELECT 
-                    bp.id,
-                    bp.slug,
-                    bp.featured_image,
-                    bp.published_at,
-                    bp.views,
-                    bpt.title,
-                    bpt.excerpt,
-                    ts_rank_cd(to_tsvector(%s, bpt.title || ' ' || COALESCE(bpt.content, '')), plainto_tsquery(%s, %s)) AS rank
-                FROM blog_posts bp
-                JOIN blog_post_translations bpt ON bp.id = bpt.post_id AND bpt.language = %s
-                WHERE bp.published = TRUE
-                AND (
-                    to_tsvector(%s, bpt.title || ' ' || COALESCE(bpt.content, '')) @@ plainto_tsquery(%s, %s)
-                    OR bpt.title ILIKE %s
-                    OR bpt.content ILIKE %s
-                )
-                ORDER BY rank DESC
-                LIMIT %s OFFSET %s
-            """
-            
-            # Пошук у всьому тексті статті
-            like_pattern = f'%{query}%'
-            
-            # Виконуємо пошук
-            cursor.execute(search_query, [
-                lang, lang, query,  # для ts_rank_cd
-                lang,               # для join
-                lang, lang, query,  # для to_tsvector
-                like_pattern, like_pattern,  # для ILIKE
-                per_page, (page - 1) * per_page  # для пагінації
-            ])
-            
-            posts = cursor.fetchall()
-            
-            # Підраховуємо загальну кількість результатів для пагінації
-            count_query = """
-                SELECT COUNT(*)
-                FROM blog_posts bp
-                JOIN blog_post_translations bpt ON bp.id = bpt.post_id AND bpt.language = %s
-                WHERE bp.published = TRUE
-                AND (
-                    to_tsvector(%s, bpt.title || ' ' || COALESCE(bpt.content, '')) @@ plainto_tsquery(%s, %s)
-                    OR bpt.title ILIKE %s
-                    OR bpt.content ILIKE %s
-                )
-            """
-            
-            cursor.execute(count_query, [
-                lang,
-                lang, lang, query,
-                like_pattern, like_pattern
-            ])
-            
-            total_posts = cursor.fetchone()[0]
-            total_pages = (total_posts + per_page - 1) // per_page
-            
-            return render_template(
-                'public/blog/search_results.html',
-                query=query,
-                posts=posts,
-                total_posts=total_posts,
-                page=page,
-                total_pages=total_pages,
-                lang=lang
-            )
-            
-    except Exception as e:
-        logging.error(f"Error in blog_search: {e}", exc_info=True)
-        flash(_("An error occurred during search"), "error")
-        return redirect(url_for('blog_index'))
-
-
-# Список публікацій блогу
-
-
-@app.route('/<token>/admin/blog/posts/new', methods=['GET', 'POST'])
-@requires_token_and_roles('admin', 'manager')
-@add_noindex_header
-def admin_blog_new_post(token):
-    """Create a new blog post"""
-    if request.method == 'POST':
-        try:
-            slug = request.form.get('slug', '').strip()
-            featured_image = request.form.get('featured_image', '')
-            published = request.form.get('published') == 'on'
-            
-            # If no slug provided, generate from title_sk
-            if not slug:
-                title_sk = request.form.get('title_sk', '').strip()
-                slug = generate_slug(title_sk, 'sk')
-            
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                
-                # Create post in main table
-                cursor.execute("""
-                    INSERT INTO blog_posts 
-                    (slug, author_id, featured_image, published, published_at, created_at, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
-                    RETURNING id
-                """, (
-                    slug, 
-                    session.get('user_id'), 
-                    featured_image, 
-                    published,
-                    datetime.now() if published else None
-                ))
-                
-                post_id = cursor.fetchone()[0]
-                
-                # Create translations for all languages
-                languages = ['sk', 'en', 'pl', 'hu']
-                
-                for lang in languages:
-                    title = request.form.get(f'title_{lang}', '').strip()
-                    excerpt = request.form.get(f'excerpt_{lang}', '').strip()
-                    content = request.form.get(f'content_{lang}', '').strip()
-                    meta_title = request.form.get(f'meta_title_{lang}', '').strip()
-                    meta_description = request.form.get(f'meta_description_{lang}', '').strip()
-                    
-                    # Skip if no translation provided
-                    if not title and not content:
-                        continue
-                        
-                    cursor.execute("""
-                        INSERT INTO blog_post_translations 
-                        (post_id, language, title, excerpt, content, meta_title, meta_description)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """, (
-                        post_id, 
-                        lang, 
-                        title, 
-                        excerpt, 
-                        content, 
-                        meta_title or title, 
-                        meta_description or excerpt
-                    ))
-                
-                # Save category associations
-                categories = request.form.getlist('categories')
-                for category_id in categories:
-                    cursor.execute("""
-                        INSERT INTO blog_post_categories 
-                        (post_id, category_id)
-                        VALUES (%s, %s)
-                    """, (post_id, category_id))
-                
-                # Save tag associations
-                tags = request.form.get('tags', '').strip().split(',')
-                for tag_name in tags:
-                    tag_name = tag_name.strip()
-                    if not tag_name:
-                        continue
-                        
-                    # Find tag or create new
-                    cursor.execute("SELECT id FROM blog_tags WHERE slug = %s", (generate_slug(tag_name),))
-                    tag_row = cursor.fetchone()
-                    
-                    if tag_row:
-                        tag_id = tag_row[0]
-                    else:
-                        cursor.execute("""
-                            INSERT INTO blog_tags (slug) 
-                            VALUES (%s) 
-                            RETURNING id
-                        """, (generate_slug(tag_name),))
-                        tag_id = cursor.fetchone()[0]
-                        
-                        # Create tag translations
-                        for lang in languages:
-                            cursor.execute("""
-                                INSERT INTO blog_tag_translations 
-                                (tag_id, language, name)
-                                VALUES (%s, %s, %s)
-                            """, (tag_id, lang, tag_name))
-                    
-                    # Create association
-                    cursor.execute("""
-                        INSERT INTO blog_post_tags 
-                        (post_id, tag_id)
-                        VALUES (%s, %s)
-                    """, (post_id, tag_id))
-                
-                conn.commit()
-                flash("Blog post created successfully", "success")
-                return redirect(url_for('admin_blog_posts', token=token))
-                
-        except Exception as e:
-            logging.error(f"Error creating blog post: {e}", exc_info=True)
-            flash(f"Error creating blog post: {str(e)}", "error")
-            return redirect(url_for('admin_blog_posts', token=token))
-    
-    # GET request - display the form
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            
-            # Get categories for selection
-            cursor.execute("""
-                SELECT bc.id, bct.name
-                FROM blog_categories bc
-                JOIN blog_category_translations bct ON bc.id = bct.category_id 
-                WHERE bct.language = 'sk'
-                ORDER BY bct.name
-            """)
-            categories = cursor.fetchall()
-            
-            # Create supported languages dict for template
-            supported_languages = {
-                'sk': 'Slovenčina',
-                'en': 'English',
-                'pl': 'Polski',
-                'hu': 'Magyar'
-            }
-            
-            return render_template(
-                'admin/blog/post_form.html',
-                token=token,
-                post=None,
-                categories=categories,
-                supported_languages=supported_languages,
-                mode='create'
-            )
-            
-    except Exception as e:
-        logging.error(f"Error in admin_blog_new_post: {e}", exc_info=True)
-        flash("Error loading form", "error")
-        return redirect(url_for('admin_blog_posts', token=token))
-
-
-# Зміна статусу публікації (опублікувати/приховати)
-@app.route('/<token>/admin/blog/posts/<int:post_id>/toggle-publish', methods=['POST'])
-@requires_token_and_roles('admin', 'manager')
-@add_noindex_header
-def admin_toggle_blog_post(token, post_id):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            # Отримуємо поточний статус
-            cursor.execute("SELECT published FROM blog_posts WHERE id = %s", (post_id,))
-            current_status = cursor.fetchone()[0]
-            
-            # Змінюємо статус
-            new_status = not current_status
-            now = datetime.now()
-            
-            # Оновлюємо запис
-            if new_status:
-                # Якщо публікуємо, встановлюємо дату публікації
-                cursor.execute("""
-                    UPDATE blog_posts 
-                    SET published = TRUE, published_at = %s, updated_at = %s 
-                    WHERE id = %s
-                """, (now, now, post_id))
-                flash("Post published successfully", "success")
-            else:
-                # Якщо приховуємо, прибираємо published прапорець
-                cursor.execute("""
-                    UPDATE blog_posts 
-                    SET published = FALSE, updated_at = %s 
-                    WHERE id = %s
-                """, (now, post_id))
-                flash("Post unpublished", "success")
-            
-            conn.commit()
-            return redirect(url_for('admin_blog_posts', token=token))
-            
-    except Exception as e:
-        logging.error(f"Error toggling blog post publish status: {e}", exc_info=True)
-        flash("Error updating post status", "error")
-        return redirect(url_for('admin_blog_posts', token=token))
-
+# ���� �������� (��� ��� �� ������ 9813-11331)
 
 
 
@@ -11386,23 +10513,6 @@ def test_ftp_admin(token):
     
     return redirect(url_for('admin_dashboard', token=token))
 
-
-
-@app.route('/<token>/admin/generate-image-sitemap', methods=['GET'])
-@requires_token_and_roles('admin')
-@add_noindex_header
-def admin_generate_image_sitemap(token):
-    try:
-        if generate_sitemap_images_file():
-            flash("Image sitemap generated successfully", "success")
-        else:
-            flash("Error generating image sitemap", "error")
-            
-        return redirect(url_for('admin_dashboard', token=token))
-    except Exception as e:
-        logging.error(f"Error in admin_generate_image_sitemap: {e}", exc_info=True)
-        flash("Error generating image sitemap", "error")
-        return redirect(url_for('admin_dashboard', token=token))
 
 
 
@@ -12750,7 +11860,7 @@ def admin_import_queue(token):
     try:
         # Параметри пагінації
         page = request.args.get('page', 1, type=int)
-        per_page = 100
+        per_page = 50  # Зменшено з 100 для економії пам'яті
         offset = (page - 1) * per_page
         
         # Фільтри
@@ -14582,7 +13692,7 @@ def admin_categories(token):
                     category_id = cursor.fetchone()['id']
                     
                     # Додаємо переклади для кожної мови
-                    langs = ['sk', 'en', 'uk', 'pl']  # Наші мови
+                    langs = ['sk', 'en', 'pl']  # Наші мови
                     for lang in langs:
                         name = request.form.get(f'name_{lang}', '').strip()
                         description = request.form.get(f'description_{lang}', '').strip()
@@ -14614,7 +13724,7 @@ def admin_categories(token):
                     """, (parent_id, icon_class, sort_order, is_active, category_id))
                     
                     # Оновлюємо переклади
-                    langs = ['sk', 'en', 'uk', 'pl']
+                    langs = ['sk', 'en', 'pl']  # Підтримувані мови
                     for lang in langs:
                         name = request.form.get(f'name_{lang}', '').strip()
                         description = request.form.get(f'description_{lang}', '').strip()
@@ -14720,6 +13830,7 @@ def admin_product_categories(token):
         category_filter = request.args.get('category', type=int)
         brand_filter = request.args.get('brand', type=int)
         status_filter = request.args.get('status', 'all')  # all, assigned, unassigned, multiple
+        in_stock_filter = request.args.get('in_stock', 'all')  # all, yes, no
         page = request.args.get('page', 1, type=int)
         per_page = 30
         
@@ -14767,7 +13878,7 @@ def admin_product_categories(token):
                         conn.commit()
                         flash(f"✅ Додано/оновлено {count} товарів до категорії", "success")
                     
-                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=page))
+                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, in_stock=in_stock_filter, page=page))
                 
                 elif action == 'bulk_remove':
                     # Масове видалення з категорії
@@ -14801,7 +13912,7 @@ def admin_product_categories(token):
                         conn.commit()
                         flash(f"✅ Видалено {count} зв'язків", "success")
                     
-                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=page))
+                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, in_stock=in_stock_filter, page=page))
                 
                 elif action == 'set_primary':
                     # Встановлення головної категорії
@@ -14826,7 +13937,7 @@ def admin_product_categories(token):
                         conn.commit()
                         flash(f"✅ Головна категорія встановлена для {article}", "success")
                     
-                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, page=page))
+                    return redirect(url_for('admin_product_categories', token=token, article=article_filter, category=category_filter, brand=brand_filter, status=status_filter, in_stock=in_stock_filter, page=page))
             
             # Отримуємо категорії для фільтра та вибору
             lang = session.get('language', 'sk')
@@ -14937,6 +14048,12 @@ def admin_product_categories(token):
             elif status_filter == 'unassigned':
                 base_query += " AND pcm.category_id IS NULL"
             
+            # Фільтр по наявності
+            if in_stock_filter == 'yes':
+                base_query += " AND s.quantity > 0"
+            elif in_stock_filter == 'no':
+                base_query += " AND s.quantity = 0"
+            
             base_query += " GROUP BY s.article, b.name, b.id, p.name_sk, s.price, s.quantity"
             
             # HAVING для фільтру "multiple" (товари в кількох категоріях)
@@ -14988,6 +14105,7 @@ def admin_product_categories(token):
                 category_filter=category_filter,
                 brand_filter=brand_filter,
                 status_filter=status_filter,
+                in_stock_filter=in_stock_filter,
                 page=page,
                 total_pages=total_pages,
                 total_items=total,

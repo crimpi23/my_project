@@ -1,10 +1,18 @@
 {% extends "base/admin_base.html" %}
 
+{% block title %}{{ _('Process Orders') }}{% endblock %}
+
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h2>{{ _("Process Public Orders") }}</h2>
+<div class="page-header">
+    <h1><i class="bi bi-box-seam"></i> {{ _("Process Orders") }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_dashboard', token=token) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> {{ _('Back to Dashboard') }}
+        </a>
     </div>
+</div>
+
+<div class="card">
     <div class="card-body">
         {% for order in orders %}
         <div class="card mb-3">
@@ -230,7 +238,7 @@
                     <!-- Додайте кнопку для відправки інвойсу -->
                     <a href="{{ url_for('admin_send_invoice', token=token, order_id=order.order_id) }}" 
                        class="btn btn-sm btn-primary mb-1">
-                       <i class="bi bi-file-earmark-pdf"></i> Send Invoice
+                       <i class="bi bi-file-earmark-pdf"></i> {{ _('Send Invoice') }}
                     </a>
                 </div>
             </div>

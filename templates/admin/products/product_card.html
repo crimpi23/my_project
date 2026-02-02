@@ -1,0 +1,685 @@
+{% extends "base/admin_base.html" %}
+
+{% block title %}{{ article }} - Product Card{% endblock %}
+
+{% block extra_css %}
+<style>
+.product-card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px 12px 0 0;
+    margin-bottom: 0;
+}
+
+.product-card-tabs .nav-link {
+    color: #64748b;
+    font-weight: 500;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.product-card-tabs .nav-link:hover {
+    color: #2563eb;
+    background: #f8fafc;
+}
+
+.product-card-tabs .nav-link.active {
+    color: #2563eb;
+    background: white;
+    border-bottom-color: #2563eb;
+}
+
+.info-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.photo-item {
+    position: relative;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 1;
+}
+
+.photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-item.primary {
+    border-color: #22c55e;
+    border-width: 3px;
+}
+
+.photo-actions {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+}
+
+.category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #f1f5f9;
+    border-radius: 8px;
+    margin: 0.25rem;
+}
+
+.category-badge.primary {
+    background: #dbeafe;
+    border: 2px solid #2563eb;
+}
+
+.stat-box {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2563eb;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Заголовок карточки -->
+<div class="product-card-header">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <h1 class="mb-2">
+                <i class="bi bi-box-seam"></i> {{ article }}
+            </h1>
+            <div class="d-flex gap-3 flex-wrap">
+                {% if product %}
+                <div class="info-badge">
+                    <i class="bi bi-tag"></i> {{ product.name_sk or product.name_en or article }}
+                </div>
+                {% endif %}
+                {% if stock_info %}
+                <div class="info-badge">
+                    <i class="bi bi-boxes"></i> {{ _('In Stock') }}: {{ stock_info.quantity }}
+                </div>
+                <div class="info-badge">
+                    <i class="bi bi-cash"></i> {{ "%.2f"|format(stock_info.price) }} €
+                </div>
+                {% endif %}
+                {% if brand_name %}
+                <div class="info-badge">
+                    <i class="bi bi-award"></i> {{ brand_name }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <a href="{{ back_url }}" class="btn btn-light">
+                <i class="bi bi-arrow-left"></i> {{ _('Back') }}
+            </a>
+            <a href="{{ url_for('product_details', article=article) }}" target="_blank" class="btn btn-light">
+                <i class="bi bi-eye"></i> {{ _('View on Site') }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Табулятори -->
+<ul class="nav nav-tabs product-card-tabs bg-white" id="productTabs" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button">
+            <i class="bi bi-info-circle"></i> {{ _('Basic Info') }}
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button">
+            <i class="bi bi-images"></i> {{ _('Photos') }} ({{ photos|length }})
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button">
+            <i class="bi bi-folder"></i> {{ _('Categories') }} ({{ product_categories|length }})
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" id="stock-tab" data-bs-toggle="tab" data-bs-target="#stock" type="button">
+            <i class="bi bi-box"></i> {{ _('Stock & Pricing') }}
+        </button>
+    </li>
+</ul>
+
+<!-- Контент табів -->
+<div class="tab-content bg-white p-4" id="productTabsContent">
+    
+    <!-- Основна інформація -->
+    <div class="tab-pane fade show active" id="basic" role="tabpanel">
+        <form method="POST" action="{{ url_for('admin_product_card_update', token=token, article=article) }}" onsubmit="window.location.hash = 'basic';">
+            <input type="hidden" name="action" value="update_basic">
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <h4 class="mb-3">{{ _('Descriptions') }}</h4>
+                    
+                    <!-- Мовні вкладки -->
+                    <ul class="nav nav-pills mb-3" id="langTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" id="sk-lang-tab" data-bs-toggle="tab" data-bs-target="#sk-lang" type="button">
+                                🇸🇰 Slovenčina
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="en-lang-tab" data-bs-toggle="tab" data-bs-target="#en-lang" type="button">
+                                🇬🇧 English
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="pl-lang-tab" data-bs-toggle="tab" data-bs-target="#pl-lang" type="button">
+                                🇵🇱 Polski
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="langTabsContent">
+                        <!-- Словацька -->
+                        <div class="tab-pane fade show active" id="sk-lang">
+                            <div class="mb-3">
+                                <label class="form-label">{{ _('Name') }} (SK)</label>
+                                <input type="text" name="name_sk" class="form-control" value="{{ product.name_sk if product else '' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ _('Description') }} (SK)</label>
+                                <textarea name="description_sk" class="form-control" rows="6">{{ product.description_sk if product else '' }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Англійська -->
+                        <div class="tab-pane fade" id="en-lang">
+                            <div class="mb-3">
+                                <label class="form-label">{{ _('Name') }} (EN)</label>
+                                <input type="text" name="name_en" class="form-control" value="{{ product.name_en if product else '' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ _('Description') }} (EN)</label>
+                                <textarea name="description_en" class="form-control" rows="6">{{ product.description_en if product else '' }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Польська -->
+                        <div class="tab-pane fade" id="pl-lang">
+                            <div class="mb-3">
+                                <label class="form-label">{{ _('Name') }} (PL)</label>
+                                <input type="text" name="name_pl" class="form-control" value="{{ product.name_pl if product else '' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ _('Description') }} (PL)</label>
+                                <textarea name="description_pl" class="form-control" rows="6">{{ product.description_pl if product else '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Бічна панель -->
+                <div class="col-md-4">
+                    <h4 class="mb-3">{{ _('Quick Info') }}</h4>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Brand') }}</label>
+                        <select name="brand_id" class="form-select">
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}" {% if product and product.brand_id == brand.id %}selected{% endif %}>
+                                {{ brand.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Статистика -->
+                    <div class="row g-2 mt-4">
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="stat-value">{{ photos|length }}</div>
+                                <div class="stat-label">{{ _('Photos') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="stat-value">{{ product_categories|length }}</div>
+                                <div class="stat-label">{{ _('Categories') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save"></i> {{ _('Save Changes') }}
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="copyEnToAll()">
+                            <i class="bi bi-files"></i> {{ _('Copy EN → All') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Фото -->
+    <div class="tab-pane fade" id="photos" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">{{ _('Product Photos') }}</h4>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadPhotoModal">
+                <i class="bi bi-upload"></i> {{ _('Upload Photos') }}
+            </button>
+        </div>
+        
+        {% if photos %}
+        <div class="photo-grid">
+            {% for photo in photos %}
+            <div class="photo-item {% if photo.is_main %}primary{% endif %}">
+                <img src="{{ photo.image_url }}" alt="{{ article }}">
+                <div class="photo-actions">
+                    {% if not photo.is_main %}
+                    <button class="btn btn-sm btn-success" onclick="setPrimaryPhoto({{ photo.id }})">
+                        <i class="bi bi-star"></i>
+                    </button>
+                    {% endif %}
+                    <button class="btn btn-sm btn-danger" onclick="deletePhoto({{ photo.id }})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                {% if photo.is_main %}
+                <div class="badge bg-success position-absolute bottom-0 start-0 m-2">
+                    <i class="bi bi-star-fill"></i> {{ _('Primary') }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-3">{{ _('No photos yet') }}</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Категорії -->
+    <div class="tab-pane fade" id="categories" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">{{ _('Product Categories') }}</h4>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                <i class="bi bi-plus"></i> {{ _('Add Category') }}
+            </button>
+        </div>
+        
+        {% if product_categories %}
+        <div class="d-flex flex-wrap gap-2">
+            {% for cat in product_categories %}
+            <div class="category-badge {% if cat.is_primary %}primary{% endif %}">
+                <small class="text-muted" style="font-size: 0.8em;">{{ cat.breadcrumbs }}</small>
+                {% if cat.is_primary %}
+                <span class="badge bg-primary ms-1">★</span>
+                {% endif %}
+                <button class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="removeCategory({{ cat.category_id }})" title="{{ _('Remove') }}">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i> {{ _('No categories assigned') }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Склад і ціни -->
+    <div class="tab-pane fade" id="stock" role="tabpanel">
+        <h4 class="mb-4">{{ _('Stock & Pricing') }}</h4>
+        
+        <form method="POST" action="{{ url_for('admin_product_card_update', token=token, article=article) }}" onsubmit="window.location.hash = 'stock';">
+            <input type="hidden" name="action" value="update_stock">
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Quantity') }}</label>
+                        <input type="number" name="quantity" class="form-control" value="{{ stock_info.quantity if stock_info else 0 }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Price') }} (€)</label>
+                        <input type="number" step="0.01" name="price" class="form-control" value="{{ stock_info.price if stock_info else '' }}">
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> {{ _('Update Stock') }}
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal для завантаження фото -->
+<div class="modal fade" id="uploadPhotoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Upload Photos') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="file" id="photoInput" class="form-control" multiple accept="image/*">
+                <div class="form-check mt-3">
+                    <input type="checkbox" name="set_primary" class="form-check-input" id="setPrimary">
+                    <label class="form-check-label" for="setPrimary">
+                        {{ _('Set first photo as primary') }}
+                    </label>
+                </div>
+                <div id="uploadProgress" class="mt-3" style="display: none;">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">{{ _('Loading...') }}</span>
+                    </div>
+                    <span class="ms-2">{{ _('Uploading...') }}</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="button" class="btn btn-primary" onclick="uploadPhotos()">{{ _('Upload') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal для додавання категорії -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Add Category') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_product_card_update', token=token, article=article) }}" onsubmit="window.location.hash = 'categories';">
+                <input type="hidden" name="action" value="add_category">
+                <input type="hidden" name="category_id" id="selectedCategoryId" value="">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Category') }}</label>
+                        
+                        <!-- Дерево категорій -->
+                        <div class="category-tree border rounded p-3" style="max-height: 400px; overflow-y: auto;">
+                            {% macro render_category_tree(categories) %}
+                                {% for cat in categories %}
+                                <div class="category-item">
+                                    {% if cat.children and cat.children|length > 0 %}
+                                    <!-- Батьківська категорія з дітьми - не можна вибирати -->
+                                    <div class="d-flex align-items-center">
+                                        <button type="button" class="btn btn-sm btn-link p-0" onclick="toggleChildren(this)" style="width: 20px;">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </button>
+                                        <span class="category-name-disabled" style="color: #999; opacity: 0.6; cursor: not-allowed;">
+                                            <strong>{{ cat.name }}</strong>
+                                            <small class="text-muted">(група)</small>
+                                        </span>
+                                    </div>
+                                    <div class="category-children ps-3" style="display: none;">
+                                        {{ render_category_tree(cat.children) }}
+                                    </div>
+                                    {% else %}
+                                    <!-- Листна категорія - можна вибирати -->
+                                    <div class="d-flex align-items-center ps-3">
+                                        <span class="category-name" onclick="selectCategory(this, {{ cat.id }}, '{{ cat.name }}')" style="cursor: pointer;">
+                                            {{ cat.name }}
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            {% endmacro %}
+                            
+                            {{ render_category_tree(all_categories) }}
+                        </div>
+                        
+                        <!-- Вибрана категорія -->
+                        <div class="mt-3 alert alert-info" id="selectedCategoryInfo" style="display: none;">
+                            <strong>{{ _('Selected') }}:</strong> <span id="selectedCategoryName"></span>
+                            <button type="button" class="btn-close btn-sm float-end" onclick="clearSelection()"></button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" name="is_primary" class="form-check-input" id="isPrimary">
+                        <label class="form-check-label" for="isPrimary">
+                            {{ _('Set as primary category') }}
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary" id="addCategoryBtn" disabled>{{ _('Add') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Відновлення активної вкладки при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash.substring(1); // Видаляємо #
+    if (hash) {
+        // Знаходимо відповідну кнопку табу
+        const tabButton = document.getElementById(`${hash}-tab`);
+        if (tabButton) {
+            // Активуємо таб
+            const tab = new bootstrap.Tab(tabButton);
+            tab.show();
+        }
+    }
+    
+    // Зберігаємо активний таб при переключенні
+    const tabButtons = document.querySelectorAll('button[data-bs-toggle="tab"]');
+    tabButtons.forEach(button => {
+        button.addEventListener('shown.bs.tab', function(e) {
+            const targetId = e.target.getAttribute('data-bs-target');
+            if (targetId) {
+                window.location.hash = targetId.substring(1); // Видаляємо #
+            }
+        });
+    });
+});
+
+// Дерево категорій в модалі
+function toggleChildren(button) {
+    const childrenDiv = button.closest('.category-item').querySelector('.category-children');
+    const icon = button.querySelector('i');
+    
+    if (childrenDiv.style.display === 'none') {
+        childrenDiv.style.display = 'block';
+        icon.classList.remove('bi-chevron-right');
+        icon.classList.add('bi-chevron-down');
+    } else {
+        childrenDiv.style.display = 'none';
+        icon.classList.remove('bi-chevron-down');
+        icon.classList.add('bi-chevron-right');
+    }
+}
+
+function selectCategory(element, categoryId, categoryName) {
+    // Видаляємо попередню виділення
+    document.querySelectorAll('.category-name').forEach(el => {
+        el.style.backgroundColor = '';
+        el.style.color = '';
+    });
+    
+    // Виділяємо нову категорію
+    element.style.backgroundColor = '#2563eb';
+    element.style.color = 'white';
+    element.style.padding = '5px 10px';
+    element.style.borderRadius = '4px';
+    
+    // Встановлюємо вибрану категорію
+    document.getElementById('selectedCategoryId').value = categoryId;
+    document.getElementById('selectedCategoryName').textContent = categoryName;
+    document.getElementById('selectedCategoryInfo').style.display = 'block';
+    document.getElementById('addCategoryBtn').disabled = false;
+}
+
+function clearSelection() {
+    document.getElementById('selectedCategoryId').value = '';
+    document.getElementById('selectedCategoryName').textContent = '';
+    document.getElementById('selectedCategoryInfo').style.display = 'none';
+    document.getElementById('addCategoryBtn').disabled = true;
+    
+    document.querySelectorAll('.category-name').forEach(el => {
+        el.style.backgroundColor = '';
+        el.style.color = '';
+    });
+}
+
+function copyEnToAll() {
+    const nameEn = document.querySelector('input[name="name_en"]').value;
+    const descEn = document.querySelector('textarea[name="description_en"]').value;
+    
+    if (!nameEn && !descEn) {
+        alert('{{ _("Fill in English fields first") }}!');
+        return;
+    }
+    
+    ['sk', 'pl'].forEach(lang => {
+        const nameField = document.querySelector(`input[name="name_${lang}"]`);
+        const descField = document.querySelector(`textarea[name="description_${lang}"]`);
+        
+        if (!nameField.value && nameEn) nameField.value = nameEn;
+        if (!descField.value && descEn) descField.value = descEn;
+    });
+    
+    alert('{{ _("Copied! Now you can translate the texts.") }}');
+}
+
+function setPrimaryPhoto(photoId) {
+    if (confirm('{{ _("Set as primary photo?") }}')) {
+        fetch(`/{{ token }}/admin/product-card/{{ article }}/photo/${photoId}/primary`, {
+            method: 'POST'
+        }).then(() => {
+            // Зберігаємо активну вкладку
+            window.location.hash = 'photos';
+            location.reload();
+        });
+    }
+}
+
+function deletePhoto(photoId) {
+    if (confirm('{{ _("Delete photo?") }}')) {
+        fetch(`/{{ token }}/admin/product-card/{{ article }}/photo/${photoId}/delete`, {
+            method: 'POST'
+        }).then(() => {
+            // Зберігаємо активну вкладку
+            window.location.hash = 'photos';
+            location.reload();
+        });
+    }
+}
+
+function removeCategory(categoryId) {
+    if (confirm('{{ _("Remove category?") }}')) {
+        // Зберігаємо активну вкладку перед submit
+        window.location.hash = 'categories';
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("admin_product_card_update", token=token, article=article) }}';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'remove_category';
+        
+        const catInput = document.createElement('input');
+        catInput.type = 'hidden';
+        catInput.name = 'category_id';
+        catInput.value = categoryId;
+        
+        form.appendChild(actionInput);
+        form.appendChild(catInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Завантаження фото через AJAX
+function uploadPhotos() {
+    const files = document.getElementById('photoInput').files;
+    const setPrimary = document.getElementById('setPrimary').checked;
+    
+    if (files.length === 0) {
+        alert('{{ _("Select files first") }}');
+        return;
+    }
+    
+    const formData = new FormData();
+    for (let file of files) {
+        formData.append('photos', file);
+    }
+    formData.append('set_primary', setPrimary ? 'on' : 'off');
+    
+    // Показуємо индикатор завантаження
+    document.getElementById('uploadProgress').style.display = 'block';
+    const uploadBtn = event.target;
+    uploadBtn.disabled = true;
+    
+    fetch('{{ url_for("admin_product_card_upload_photo", token=token, article=article) }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('uploadProgress').style.display = 'none';
+        uploadBtn.disabled = false;
+        
+        if (data.success) {
+            alert(`{{ _("Success!") }} ${data.count} {{ _("photos added") }}`);
+            // Закриваємо модаль
+            const modal = bootstrap.Modal.getInstance(document.getElementById('uploadPhotoModal'));
+            modal.hide();
+            // Зберігаємо активну вкладку і перезавантажуємо
+            window.location.hash = 'photos';
+            location.reload();
+        } else {
+            alert(`{{ _("Error:") }} ${data.error}`);
+        }
+    })
+    .catch(error => {
+        document.getElementById('uploadProgress').style.display = 'none';
+        uploadBtn.disabled = false;
+        alert(`{{ _("Upload error:") }} ${error}`);
+    });
+}
+</script>
+
+{% endblock %}

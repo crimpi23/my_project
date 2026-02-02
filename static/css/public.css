@@ -6266,3 +6266,122 @@ tr:hover .article-badge {
 @media (max-width: 575.98px) {
   .product-column { width: 100% !important; max-width: 100% !important; }
 }
+
+/* ========================================
+   AUTH PAGES (Login, Register, Forgot Password) - Mobile Optimization
+   ======================================== */
+.info-card .card-body {
+    padding: 1.5rem;
+}
+
+/* Посилання в auth-формах */
+.info-card .text-muted a,
+.info-card a.text-decoration-none {
+    color: var(--primary-color, #2563eb);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.info-card .text-muted a:hover,
+.info-card a.text-decoration-none:hover {
+    color: var(--primary-hover, #1d4ed8);
+    text-decoration: underline !important;
+}
+
+/* Auth links styled as subtle buttons */
+.auth-link {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    background: #f1f5f9;
+    border-radius: 6px;
+    color: var(--primary-color, #2563eb) !important;
+    font-weight: 500;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+
+.auth-link:hover {
+    background: #e0e7ff;
+    color: var(--primary-hover, #1d4ed8) !important;
+}
+
+/* Auth footer section */
+.auth-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.auth-footer .btn-action {
+    width: 100%;
+    justify-content: center;
+}
+
+.auth-footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+    text-align: center;
+}
+
+@media (min-width: 576px) {
+    .auth-footer {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .auth-footer .btn-action {
+        width: auto;
+    }
+    
+    .auth-footer-links {
+        flex-direction: row;
+        gap: 1rem;
+        align-items: center;
+    }
+}
+
+/* Mobile Auth Pages */
+@media (max-width: 575.98px) {
+    .container.mt-5 {
+        margin-top: 1.5rem !important;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .info-card {
+        margin-bottom: 1rem;
+    }
+    
+    .info-card .card-body {
+        padding: 1rem;
+    }
+    
+    .info-card-header {
+        padding: 1rem;
+    }
+    
+    .info-card-header h5 {
+        font-size: 1.1rem;
+    }
+    
+    .d-flex.justify-content-between.align-items-center {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch !important;
+    }
+    
+    .d-flex.justify-content-between .btn-action {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .d-flex.justify-content-between .text-muted,
+    .d-flex.justify-content-between > a {
+        text-align: center;
+        font-size: 0.9rem;
+    }
+}

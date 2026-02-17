@@ -66,8 +66,8 @@
     {
       "@context": "https://schema.org/",
       "@type": "Product",
-      "name": "{% if product_data.name %}{{ product_data.name|e }}{% else %}{{ _('Auto Part') }} {{ article }}{% endif %}",
-      "description": "{% if product_data.description %}{{ product_data.description|e }}{% else %}{{ _('Quality auto part with article number') }} {{ article }}. {{ _('Available for order at AutogroupEU. Fast delivery across Europe.') }}{% endif %}",
+      "name": "{% if product_data.name and product_data.name|trim %}{{ product_data.name|e }}{% else %}{{ _('Auto Part') }} {{ article }}{% endif %}",
+      "description": "{% if product_data.description and product_data.description|trim %}{{ product_data.description|e }}{% else %}{{ _('Quality auto part with article number') }} {{ article }}. {{ _('Available for order at AutogroupEU. Fast delivery across Europe.') }}{% endif %}",
       "sku": "{{ article }}",
       "mpn": "{{ article }}",
       "image": [

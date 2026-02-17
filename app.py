@@ -11918,16 +11918,14 @@ def admin_import_queue(token):
             count_query = """
                 SELECT COUNT(*)
                 FROM import_queue q
-                LEFT JOIN brands b ON q.brand = b.name
                 LEFT JOIN import_files if ON q.import_file_id = if.id
                 WHERE 1=1
             """
             
-            # Базовий запит для отримання даних
+            # Базовий запит для отримання даних (brand вже є в таблиці)
             data_query = """
-                SELECT q.*, b.name as brand_name, if.imported_at
+                SELECT q.*, q.brand as brand_name, if.imported_at
                 FROM import_queue q
-                LEFT JOIN brands b ON q.brand = b.name
                 LEFT JOIN import_files if ON q.import_file_id = if.id
                 WHERE 1=1
             """
@@ -12105,11 +12103,11 @@ def admin_import_queue_process(token):
                 
                 for item_id in selected_items:
                     try:
-                        # Отримуємо інформацію про артикул
+                        # Отримуємо інформацію про артикул (case-insensitive пошук бренду)
                         cursor.execute("""
                             SELECT q.id, q.article, q.brand, b.id as brand_id
                             FROM import_queue q
-                            LEFT JOIN brands b ON q.brand = b.name
+                            LEFT JOIN brands b ON UPPER(q.brand) = UPPER(b.name)
                             WHERE q.id = %s
                         """, (item_id,))
                         
@@ -12955,7 +12953,7 @@ def process_import_file_optimized(file_data, safe_mode=True):
                     logging.warning(f"Stock backup failed: {be}")
 
             # 7) Завантажуємо кеші для швидких перевірок
-                return redirect(_get_safe_next_url(url_for('admin_import_queue', token=token)))
+            brand_mappings = {}
             cursor.execute("""
                 SELECT file_brand_name, brand_id 
                 FROM import_brands_mapping 
@@ -12975,11 +12973,15 @@ def process_import_file_optimized(file_data, safe_mode=True):
                 whitelist_articles[f"{r['article']}:{r['brand_id']}"] = (r['markup_percent'] or 15)
             logging.info(f"Whitelist entries: {len(whitelist_articles)}")
 
-            blacklist_articles = set()
-            cursor.execute("SELECT article, brand_id FROM import_blacklist WHERE brand_id IS NOT NULL")
+            # Blacklist: два набори - по article:brand_id та по самому article
+            blacklist_articles = set()  # article:brand_id
+            blacklist_articles_only = set()  # тільки article
+            cursor.execute("SELECT article, brand_id FROM import_blacklist")
             for r in cursor.fetchall():
-                blacklist_articles.add(f"{r['article']}:{r['brand_id']}")
-            logging.info(f"Blacklist entries: {len(blacklist_articles)}")
+                blacklist_articles_only.add(r['article'])  # завжди додаємо артикул
+                if r['brand_id'] is not None:
+                    blacklist_articles.add(f"{r['article']}:{r['brand_id']}")
+            logging.info(f"Blacklist entries: {len(blacklist_articles)} (with brand), {len(blacklist_articles_only)} (articles only)")
 
             price_override_articles = set()
             cursor.execute("SELECT CONCAT(article, ':', brand_id) as key FROM import_price_overrides WHERE brand_id IS NOT NULL")
@@ -13046,7 +13048,8 @@ def process_import_file_optimized(file_data, safe_mode=True):
                         continue
 
                     # 9.3) Пріоритет 2: blacklist -> ігноримо імпорт
-                    if key in blacklist_articles:
+                    # Перевіряємо і по article:brand_id, і по самому article
+                    if key in blacklist_articles or article in blacklist_articles_only:
                         blacklist_count += 1
                         processed_count += 1
                         continue
@@ -13522,11 +13525,11 @@ def admin_move_to_whitelist(token):
             deleted_count = 0
             
             for item_id in selected_items:
-                # Отримуємо інформацію про артикул
+                # Отримуємо інформацію про артикул (case-insensitive пошук бренду)
                 cursor.execute("""
                     SELECT q.article, q.brand, b.id as brand_id
                     FROM import_queue q
-                    LEFT JOIN brands b ON q.brand = b.name
+                    LEFT JOIN brands b ON UPPER(q.brand) = UPPER(b.name)
                     WHERE q.id = %s
                 """, (item_id,))
                 

@@ -476,7 +476,8 @@ def generate_sitemap_index_file():
         total_sitemaps = 0
         
         # Додаємо посилання на статичні файли sitemap (без блогу)
-        static_files = ['sitemap-static.xml', 'sitemap-categories.xml', 'sitemap-images.xml']
+        # sitemap-categories.xml видалено - категорії відключені, порожній файл викликає помилку в Google
+        static_files = ['sitemap-static.xml', 'sitemap-images.xml']
         for static_file in static_files:
             if os.path.exists(os.path.join(SITEMAP_DIR, static_file)):
                 sitemap_xml += f'  <sitemap>\n    <loc>{host_base}/{static_file}</loc>\n    <lastmod>{today}</lastmod>\n  </sitemap>\n'
@@ -556,8 +557,8 @@ def generate_sitemap_images_file():
             for article_row in articles:
                 article = article_row['product_article']
                 
-                # Генеруємо URL товару
-                product_url = f"{host_base}/product/{article}"
+                # Генеруємо URL товару з мовним префіксом (основна мова sk)
+                product_url = f"{host_base}/sk/product/{article}"
                 
                 # Додаємо URL товару
                 sitemap_xml += f'  <url>\n'
@@ -1458,7 +1459,7 @@ def cleanup_after_request(exception=None):
 @app.route('/robots.txt')
 def robots():
     robots_content = """User-agent: *
-Crawl-delay: 10
+Crawl-delay: 5
 
 # Дозволяємо основні сторінки
 Allow: /
@@ -1471,7 +1472,6 @@ Allow: /returns
 
 # Дозволяємо тільки якісні sitemap
 Allow: /sitemap-static.xml
-Allow: /sitemap-categories.xml
 Allow: /sitemap-stock-*
 Allow: /sitemap-enriched-*
 Allow: /sitemap-images.xml
@@ -3706,7 +3706,7 @@ def admin_edit_product(token, article):
                     flash(f"Товар {article} створено!", "success")
                 
                 conn.commit()
-                return redirect(url_for('admin_products_missing_descriptions', token=token))
+                return redirect(_get_safe_next_url(url_for('admin_products_missing_descriptions', token=token)))
             
             # GET - показуємо форму
             # Перевіряємо чи існує товар в products
@@ -3738,13 +3738,14 @@ def admin_edit_product(token, article):
                 stock_info=stock_info,
                 brands=brands,
                 is_new=product is None,
+                next_url=request.args.get('next') or '',
                 token=token
             )
             
     except Exception as e:
         logging.error(f"Error in admin_edit_product: {e}")
         flash(f"Помилка: {str(e)}", "error")
-        return redirect(url_for('admin_products_missing_descriptions', token=token))
+        return redirect(_get_safe_next_url(url_for('admin_products_missing_descriptions', token=token)))
 
 
 @app.route('/<token>/admin/product-card/<article>', methods=['GET'])
@@ -3907,15 +3908,17 @@ def admin_product_card(token, article):
             # Brand name
             brand_name = stock_info['brand_name'] if stock_info else (product['brand_name'] if product else None)
 
-            # Безпечне посилання "Назад" (з referrer)
-            back_url = request.referrer
+            # Безпечне посилання "Назад" (next або referrer)
+            back_url = _get_safe_next_url(None)
+            if not back_url:
+                back_url = request.referrer
             try:
                 if back_url:
                     ref_parsed = urllib.parse.urlparse(back_url)
                     host_parsed = urllib.parse.urlparse(request.host_url)
 
                     # Забороняємо зовнішні домени і повторне відкриття тієї ж сторінки
-                    if ref_parsed.netloc != host_parsed.netloc or ref_parsed.path == request.path:
+                    if (ref_parsed.netloc and ref_parsed.netloc != host_parsed.netloc) or ref_parsed.path == request.path:
                         back_url = None
             except Exception as e:
                 logging.warning(f"Не вдалося обробити referrer для кнопки назад: {e}")
@@ -4046,11 +4049,17 @@ def admin_product_card_update(token, article):
                 conn.commit()
                 flash("Категорію видалено!", "success")
             
+            next_url = _get_safe_next_url(None)
+            if next_url:
+                return redirect(url_for('admin_product_card', token=token, article=article, next=next_url) + tab_anchor)
             return redirect(url_for('admin_product_card', token=token, article=article) + tab_anchor)
             
     except Exception as e:
         logging.error(f"Error in admin_product_card_update: {e}")
         flash(f"Помилка: {str(e)}", "error")
+        next_url = _get_safe_next_url(None)
+        if next_url:
+            return redirect(url_for('admin_product_card', token=token, article=article, next=next_url) + tab_anchor)
         return redirect(url_for('admin_product_card', token=token, article=article) + tab_anchor)
 
 
@@ -4210,6 +4219,7 @@ def admin_product_card_delete_photo(token, article, photo_id):
 @add_noindex_header
 def admin_add_photos_to_product(token, article):
     """Додавання фото до конкретного товару"""
+    next_url = request.form.get('next') or request.args.get('next')
     if request.method == 'POST':
         try:
             files = request.files.getlist('photos')
@@ -4217,6 +4227,8 @@ def admin_add_photos_to_product(token, article):
             
             if not files or not files[0].filename:
                 flash("Будь ласка, оберіть хоча б одне фото", "error")
+                if next_url:
+                    return redirect(url_for('admin_add_photos_to_product', token=token, article=article, next=next_url))
                 return redirect(url_for('admin_add_photos_to_product', token=token, article=article))
             
             uploaded_urls = []
@@ -4251,6 +4263,8 @@ def admin_add_photos_to_product(token, article):
             
             if not uploaded_urls:
                 flash("Не вдалося завантажити жодне фото", "error")
+                if next_url:
+                    return redirect(url_for('admin_add_photos_to_product', token=token, article=article, next=next_url))
                 return redirect(url_for('admin_add_photos_to_product', token=token, article=article))
             
             # Зберігаємо в базу
@@ -4268,7 +4282,7 @@ def admin_add_photos_to_product(token, article):
                 conn.commit()
             
             flash(f"Успішно додано {len(uploaded_urls)} фото для артикула {article}", "success")
-            return redirect(url_for('admin_products_missing_photos', token=token))
+            return redirect(_get_safe_next_url(url_for('admin_products_missing_photos', token=token)))
             
         except Exception as e:
             logging.error(f"Error adding photos to product {article}: {e}")
@@ -4298,19 +4312,20 @@ def admin_add_photos_to_product(token, article):
             
             if not product:
                 flash("Товар не знайдено", "error")
-                return redirect(url_for('admin_products_missing_photos', token=token))
+                return redirect(_get_safe_next_url(url_for('admin_products_missing_photos', token=token)))
             
             return render_template(
                 'admin/products/add_photos_form.html',
                 product=product,
                 token=token,
-                article=article
+                article=article,
+                next_url=request.args.get('next') or ''
             )
             
     except Exception as e:
         logging.error(f"Error loading product {article}: {e}")
         flash("Помилка завантаження товару", "error")
-        return redirect(url_for('admin_products_missing_photos', token=token))
+        return redirect(_get_safe_next_url(url_for('admin_products_missing_photos', token=token)))
 
 
 
@@ -7898,6 +7913,25 @@ def add_brand(token):
         flash(f"Error adding new brand: {str(e)}", "error")
         return redirect(url_for('upload_price_list', token=token))
 
+
+def _get_safe_next_url(default_url):
+    """Повертає безпечний URL для редіректу з фільтрами."""
+    next_url = request.form.get('next') or request.args.get('next')
+    if not next_url:
+        return default_url
+
+    try:
+        parsed = urllib.parse.urlparse(next_url)
+        if parsed.scheme or parsed.netloc:
+            return default_url
+        if not parsed.path.startswith('/'):
+            return default_url
+    except Exception as e:
+        logging.warning(f"_get_safe_next_url: invalid next_url '{next_url}': {e}")
+        return default_url
+
+    return next_url
+
 # Оновлення та керування stock
 @app.route('/<token>/admin/manage-stock', methods=['GET'])
 @requires_token_and_roles('admin')
@@ -7997,12 +8031,21 @@ def manage_stock(token):
                 JOIN brands b ON s.brand_id = b.id
                 ORDER BY b.name
             """)
-            brands = cursor.fetchall()
+            brands_filter = cursor.fetchall()
+            
+            # Отримуємо ВСІ бренди для форми додавання нового артикула
+            cursor.execute("""
+                SELECT id, name
+                FROM brands
+                ORDER BY name
+            """)
+            all_brands = cursor.fetchall()
             
             return render_template(
                 'admin/stock/manage_stock.html',
                 stock_items=stock_items,
-                brands=brands,
+                brands=brands_filter,
+                all_brands=all_brands,
                 article_filter=article_filter,
                 brand_filter=brand_filter,
                 min_quantity=min_quantity,
@@ -8060,7 +8103,7 @@ def upload_stock(token):
         logging.error(f"Error in upload_stock: {e}")
         flash(f"Error uploading file: {str(e)}", "error")
         
-    return redirect(url_for('manage_stock', token=token))
+    return redirect(_get_safe_next_url(url_for('manage_stock', token=token)))
 
 # Робота зі stock
 @app.route('/<token>/admin/stock/add', methods=['POST'])
@@ -8093,7 +8136,7 @@ def add_stock_item(token):
         logging.error(f"Error in add_stock_item: {e}")
         flash(f"Error adding item: {str(e)}", "error")
         
-    return redirect(url_for('manage_stock', token=token))
+    return redirect(_get_safe_next_url(url_for('manage_stock', token=token)))
 
 # Робота зі stock
 @app.route('/<token>/admin/stock/update/<article>', methods=['POST'])
@@ -8121,7 +8164,7 @@ def update_stock_item(token, article):
         logging.error(f"Error in update_stock_item: {e}")
         flash(f"Error updating item: {str(e)}", "error")
         
-    return redirect(url_for('manage_stock', token=token))
+    return redirect(_get_safe_next_url(url_for('manage_stock', token=token)))
 
 # Робота зі stock
 @app.route('/<token>/admin/stock/delete/<article>', methods=['POST'])
@@ -8141,7 +8184,7 @@ def delete_stock_item(token, article):
         logging.error(f"Error in delete_stock_item: {e}")
         flash(f"Error deleting item: {str(e)}", "error")
         
-    return redirect(url_for('manage_stock', token=token))
+    return redirect(_get_safe_next_url(url_for('manage_stock', token=token)))
 
 # Робота зі stock
 @app.route('/<token>/admin/stock/clear', methods=['POST'])
@@ -9008,7 +9051,7 @@ def manage_descriptions(token):
             
             if not all([data, language]):
                 flash("Будь ласка, заповніть всі поля", "warning") 
-                return redirect(url_for('manage_descriptions', token=token))
+                return redirect(_get_safe_next_url(url_for('manage_descriptions', token=token)))
 
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -9055,11 +9098,11 @@ def manage_descriptions(token):
                     
             flash(f"Додано: {added}, Оновлено: {updated}, Помилок: {errors}", "success")
             conn.close()
-            return redirect(url_for('manage_descriptions', token=token))
+            return redirect(_get_safe_next_url(url_for('manage_descriptions', token=token)))
             
         except Exception as e:
             flash(f"Помилка: {str(e)}", "error")
-            return redirect(url_for('manage_descriptions', token=token))
+            return redirect(_get_safe_next_url(url_for('manage_descriptions', token=token)))
     
     # GET запит - показуємо сторінку
     try:
@@ -10972,7 +11015,7 @@ def admin_import_queue_clear(token):
         logging.error(f"Error clearing import queue: {e}", exc_info=True)
         flash("Error clearing import queue", "error")
     
-    return redirect(url_for('admin_import_queue', token=token))
+    return redirect(_get_safe_next_url(url_for('admin_import_queue', token=token)))
 
 
 def process_import_file_main(file_data, safe_mode=True):
@@ -11579,7 +11622,7 @@ def admin_import_whitelist_add(token):
         
         if not article:
             flash("Артикул обов'язковий", "error")
-            return redirect(url_for('admin_import_whitelist', token=token))
+            return redirect(_get_safe_next_url(url_for('admin_import_whitelist', token=token)))
         
         # ВИПРАВЛЕНО: Перевірка brand_id
         if not brand_id or brand_id in ['', 'null', 'None']:
@@ -11610,10 +11653,10 @@ def admin_import_whitelist_add(token):
                         logging.info(f"Auto-found brand_id {brand_id} for article {article}")
                     else:
                         flash(f"Бренд '{queue_brand['brand']}' не знайдено в базі. Створіть його спочатку.", "error")
-                        return redirect(url_for('admin_import_whitelist', token=token))
+                        return redirect(_get_safe_next_url(url_for('admin_import_whitelist', token=token)))
                 else:
                     flash("Потрібно вибрати бренд", "error")
-                    return redirect(url_for('admin_import_whitelist', token=token))
+                    return redirect(_get_safe_next_url(url_for('admin_import_whitelist', token=token)))
         
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -11623,7 +11666,7 @@ def admin_import_whitelist_add(token):
             brand = cursor.fetchone()
             if not brand:
                 flash(f"Бренд з ID {brand_id} не існує", "error")
-                return redirect(url_for('admin_import_whitelist', token=token))
+                return redirect(_get_safe_next_url(url_for('admin_import_whitelist', token=token)))
             
             cursor.execute("""
                 INSERT INTO import_whitelist 
@@ -11662,7 +11705,7 @@ def admin_import_whitelist_add(token):
         logging.error(f"Error adding to whitelist: {e}", exc_info=True)
         flash("Помилка додавання в білий список", "error")
     
-    return redirect(url_for('admin_import_whitelist', token=token))
+    return redirect(_get_safe_next_url(url_for('admin_import_whitelist', token=token)))
 
 
 
@@ -11683,7 +11726,7 @@ def admin_import_queue_cleanup(token):
         logging.error(f"Error cleaning queue: {e}", exc_info=True)
         flash("Помилка очищення черги", "error")
     
-    return redirect(url_for('admin_import_queue', token=token))
+    return redirect(_get_safe_next_url(url_for('admin_import_queue', token=token)))
 
 
 
@@ -11703,7 +11746,7 @@ def admin_import_whitelist_remove(token, item_id):
         logging.error(f"Error removing from whitelist: {e}", exc_info=True)
         flash("Помилка видалення з білого списку", "error")
     
-    return redirect(url_for('admin_import_whitelist', token=token))
+    return redirect(_get_safe_next_url(url_for('admin_import_whitelist', token=token)))
 
 @app.route('/<token>/admin/import/blacklist')
 @requires_token_and_roles('admin', 'manager')
@@ -11849,7 +11892,7 @@ def admin_import_whitelist_edit(token, item_id):
         logging.error(f"Error updating whitelist item: {e}", exc_info=True)
         flash("Error updating whitelist item", "error")
     
-    return redirect(url_for('admin_import_whitelist', token=token))
+    return redirect(_get_safe_next_url(url_for('admin_import_whitelist', token=token)))
 
 
 @app.route('/<token>/admin/import/queue')
@@ -11993,7 +12036,7 @@ def admin_import_queue_process(token):
         
         if not selected_items:
             flash("Виберіть артикули для обробки", "warning")
-            return redirect(url_for('admin_import_queue', token=token))
+            return redirect(_get_safe_next_url(url_for('admin_import_queue', token=token)))
         
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -12129,7 +12172,7 @@ def admin_import_queue_process(token):
         if 'conn' in locals():
             conn.rollback()
     
-    return redirect(url_for('admin_import_queue', token=token))
+    return redirect(_get_safe_next_url(url_for('admin_import_queue', token=token)))
 
 
 
@@ -12171,7 +12214,7 @@ def admin_cleanup_queue_duplicates(token):
         logging.error(f"Error cleaning duplicates: {e}", exc_info=True)
         flash("Помилка очищення дублікатів", "error")
     
-    return redirect(url_for('admin_import_queue', token=token))
+    return redirect(_get_safe_next_url(url_for('admin_import_queue', token=token)))
 
 
 
@@ -12912,7 +12955,7 @@ def process_import_file_optimized(file_data, safe_mode=True):
                     logging.warning(f"Stock backup failed: {be}")
 
             # 7) Завантажуємо кеші для швидких перевірок
-            brand_mappings = {}
+                return redirect(_get_safe_next_url(url_for('admin_import_queue', token=token)))
             cursor.execute("""
                 SELECT file_brand_name, brand_id 
                 FROM import_brands_mapping 
@@ -13470,7 +13513,7 @@ def admin_move_to_whitelist(token):
         
         if not selected_items:
             flash("Виберіть артикули для переміщення", "warning")
-            return redirect(url_for('admin_import_queue', token=token))
+            return redirect(_get_safe_next_url(url_for('admin_import_queue', token=token)))
         
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -13526,7 +13569,7 @@ def admin_move_to_whitelist(token):
         if 'conn' in locals():
             conn.rollback()
     
-    return redirect(url_for('admin_import_queue', token=token))
+    return redirect(_get_safe_next_url(url_for('admin_import_queue', token=token)))
 
 
 

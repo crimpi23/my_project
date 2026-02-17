@@ -179,6 +179,7 @@
     <div class="tab-pane fade show active" id="basic" role="tabpanel">
         <form method="POST" action="{{ url_for('admin_product_card_update', token=token, article=article) }}" onsubmit="window.location.hash = 'basic';">
             <input type="hidden" name="action" value="update_basic">
+            <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
             
             <div class="row">
                 <div class="col-md-8">
@@ -362,6 +363,7 @@
         
         <form method="POST" action="{{ url_for('admin_product_card_update', token=token, article=article) }}" onsubmit="window.location.hash = 'stock';">
             <input type="hidden" name="action" value="update_stock">
+            <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
             
             <div class="row">
                 <div class="col-md-6">
@@ -427,6 +429,7 @@
             <form method="POST" action="{{ url_for('admin_product_card_update', token=token, article=article) }}" onsubmit="window.location.hash = 'categories';">
                 <input type="hidden" name="action" value="add_category">
                 <input type="hidden" name="category_id" id="selectedCategoryId" value="">
+                <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">{{ _('Category') }}</label>
@@ -624,9 +627,15 @@ function removeCategory(categoryId) {
         catInput.type = 'hidden';
         catInput.name = 'category_id';
         catInput.value = categoryId;
+
+        const nextInput = document.createElement('input');
+        nextInput.type = 'hidden';
+        nextInput.name = 'next';
+        nextInput.value = '{{ request.args.get("next", "") }}';
         
         form.appendChild(actionInput);
         form.appendChild(catInput);
+        form.appendChild(nextInput);
         document.body.appendChild(form);
         form.submit();
     }

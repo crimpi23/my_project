@@ -139,7 +139,7 @@ function addNewArticle() {
         return;
     }
     // Редирект на форму редагування з новим артикулом
-    window.location.href = "{{ url_for('admin_edit_product', token=token, article='PLACEHOLDER') }}".replace('PLACEHOLDER', article);
+    window.location.href = "{{ url_for('admin_edit_product', token=token, article='PLACEHOLDER', next=request.full_path) }}".replace('PLACEHOLDER', article);
 }
 </script>
     </div>
@@ -182,7 +182,7 @@ function addNewArticle() {
                     <td>{{ "%.2f"|format(product.price) }} €</td>
                     <td><strong>{{ "%.2f"|format(product.price * product.quantity) }} €</strong></td>
                     <td>
-                        <a href="{{ url_for('admin_product_card', token=token, article=product.article) }}" 
+                        <a href="{{ url_for('admin_product_card', token=token, article=product.article, next=request.full_path) }}" 
                            class="btn btn-primary btn-sm" title="{{ _('Edit Product Card') }}">
                             <i class="bi bi-pencil-square"></i>
                         </a>
@@ -204,14 +204,14 @@ function addNewArticle() {
             <ul class="pagination justify-content-center mb-0">
                 {% if current_page > 1 %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('admin_products_missing_descriptions', token=token, page=current_page-1, brand=brand_filter, min_price=min_price) }}">«</a>
+                    <a class="page-link" href="{{ url_for('admin_products_missing_descriptions', token=token, page=current_page-1, brand=brand_filter, min_price=min_price, incomplete_only=1 if incomplete_only else 0) }}">«</a>
                 </li>
                 {% endif %}
 
                 {% for page_num in range(1, total_pages + 1) %}
                     {% if page_num <= 3 or page_num >= total_pages - 2 or (page_num >= current_page - 1 and page_num <= current_page + 1) %}
                     <li class="page-item {% if page_num == current_page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin_products_missing_descriptions', token=token, page=page_num, brand=brand_filter, min_price=min_price) }}">{{ page_num }}</a>
+                        <a class="page-link" href="{{ url_for('admin_products_missing_descriptions', token=token, page=page_num, brand=brand_filter, min_price=min_price, incomplete_only=1 if incomplete_only else 0) }}">{{ page_num }}</a>
                     </li>
                     {% elif page_num == 4 and current_page > 5 %}
                     <li class="page-item disabled"><span class="page-link">...</span></li>
@@ -222,7 +222,7 @@ function addNewArticle() {
 
                 {% if current_page < total_pages %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('admin_products_missing_descriptions', token=token, page=current_page+1, brand=brand_filter, min_price=min_price) }}">»</a>
+                    <a class="page-link" href="{{ url_for('admin_products_missing_descriptions', token=token, page=current_page+1, brand=brand_filter, min_price=min_price, incomplete_only=1 if incomplete_only else 0) }}">»</a>
                 </li>
                 {% endif %}
             </ul>

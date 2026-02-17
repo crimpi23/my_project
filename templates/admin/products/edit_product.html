@@ -13,7 +13,7 @@
            target="_blank" class="btn btn-outline-primary">
             <i class="bi bi-google"></i> {{ _('Search Google') }}
         </a>
-        <a href="{{ url_for('admin_products_missing_descriptions', token=token) }}" class="btn-back">
+        <a href="{{ next_url or url_for('admin_products_missing_descriptions', token=token) }}" class="btn-back">
             <i class="bi bi-arrow-left"></i> {{ _('Back to List') }}
         </a>
     </div>
@@ -37,6 +37,7 @@
 </div>
 
 <form method="POST">
+    <input type="hidden" name="next" value="{{ next_url }}">
     <div class="row">
         <!-- Main Content -->
         <div class="col-lg-8">

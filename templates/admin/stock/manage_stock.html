@@ -21,6 +21,7 @@
             </div>
             <div class="card-body">
                 <form action="{{ url_for('upload_stock', token=token) }}" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="next" value="{{ request.full_path }}">
                     <div class="mb-3">
                         <label class="form-label">{{ _('Select Excel file with columns') }}: Article, Qty, Price, Brand ID</label>
                         <input type="file" class="form-control" name="file" accept=".xlsx,.xls" required>
@@ -41,6 +42,7 @@
             </div>
             <div class="card-body">
                 <form action="{{ url_for('add_stock_item', token=token) }}" method="post">
+                    <input type="hidden" name="next" value="{{ request.full_path }}">
                     <div class="row g-2">
                         <div class="col-md-4">
                             <label class="form-label">{{ _('Article') }}</label>
@@ -57,7 +59,7 @@
                         <div class="col-md-3">
                             <label class="form-label">{{ _('Brand') }}</label>
                             <select class="form-select" name="brand_id" required>
-                                {% for brand in brands %}
+                                {% for brand in all_brands %}
                                 <option value="{{ brand.id }}">{{ brand.name }}</option>
                                 {% endfor %}
                             </select>
@@ -77,6 +79,7 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bi bi-list-ul me-2"></i>{{ _('Current Stock') }} ({{ total_count }} {{ _('items') }})</span>
         <form action="{{ url_for('clear_stock', token=token) }}" method="post" class="d-inline">
+            <input type="hidden" name="next" value="{{ request.full_path }}">
             <button type="submit" class="btn btn-danger btn-sm" 
                     onclick="return confirm(&quot;{{ _('Are you sure you want to clear all stock?') }}&quot;)">
                 <i class="bi bi-trash"></i> {{ _('Clear All') }}
@@ -136,7 +139,7 @@
                 {% for item in stock_items %}
                 <tr>
                     <td>
-                        <a href="{{ url_for('admin_product_card', token=token, article=item.article) }}" 
+                        <a href="{{ url_for('admin_product_card', token=token, article=item.article, next=request.full_path) }}" 
                            class="fw-semibold text-decoration-none">
                             {{ item.article }}
                         </a>
@@ -147,8 +150,9 @@
                         {% endif %}
                     </td>
                     <td>
-                        <form action="{{ url_for('update_stock_item', token=token, article=item.article) }}" 
+                                                <form action="{{ url_for('update_stock_item', token=token, article=item.article) }}" 
                               method="post" class="d-inline update-form">
+                                                        <input type="hidden" name="next" value="{{ request.full_path }}">
                             <input type="number" name="quantity" value="{{ item.quantity }}" 
                                    class="form-control form-control-sm d-inline" style="width: 80px;">
                     </td>
@@ -172,6 +176,7 @@
                         </form>
                         <form action="{{ url_for('delete_stock_item', token=token, article=item.article) }}" 
                               method="post" class="d-inline">
+                            <input type="hidden" name="next" value="{{ request.full_path }}">
                             <button type="submit" class="btn btn-sm btn-danger" 
                                     onclick="return confirm(&quot;{{ _('Delete this item?') }}&quot;)">
                                 <i class="bi bi-trash"></i>

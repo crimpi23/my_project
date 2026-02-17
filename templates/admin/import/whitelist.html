@@ -126,6 +126,7 @@
                         </button>
                         <form method="POST" style="display: inline;" 
                               action="{{ url_for('admin_import_whitelist_remove', token=token, item_id=item.id) }}">
+                            <input type="hidden" name="next" value="{{ request.full_path }}">
                             <button type="submit" class="btn btn-sm btn-outline-danger"
                                     onclick="return confirm('{{ _('Remove this item from whitelist?') }}')">
                                 <i class="bi bi-trash"></i>
@@ -153,6 +154,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ url_for('admin_import_whitelist_add', token=token) }}">
+                <input type="hidden" name="next" value="{{ request.full_path }}">
                 <div class="modal-header">
                     <h5 class="modal-title">{{ _('Add to Whitelist') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -220,6 +222,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" id="editWhitelistForm">
+                <input type="hidden" name="next" value="{{ request.full_path }}">
                 <div class="modal-header">
                     <h5 class="modal-title">{{ _('Edit Whitelist Item') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

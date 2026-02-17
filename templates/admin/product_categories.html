@@ -276,7 +276,7 @@ td .badge.bg-outline-secondary {
                             </span>
                         </td>
                         <td>
-                            <a href="{{ url_for('admin_product_card', token=token, article=product.article) }}" 
+                            <a href="{{ url_for('admin_product_card', token=token, article=product.article, next=request.full_path) }}" 
                                class="btn btn-sm btn-primary" title="{{ _('Edit Product Card') }}">
                                 <i class="bi bi-pencil-square"></i>
                             </a>

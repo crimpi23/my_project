@@ -73,11 +73,11 @@
                     <td><span class="badge bg-success">{{ product.quantity }}</span></td>
                     <td><strong>{{ "%.2f"|format(product.price) }} €</strong></td>
                     <td>
-                        <a href="{{ url_for('admin_product_card', token=token, article=product.article) }}" 
+                        <a href="{{ url_for('admin_product_card', token=token, article=product.article, next=request.full_path) }}" 
                            class="btn btn-primary btn-sm me-1" title="{{ _('Edit Product Card') }}">
                             <i class="bi bi-pencil-square"></i>
                         </a>
-                        <a href="{{ url_for('admin_add_photos_to_product', token=token, article=product.article) }}" 
+                        <a href="{{ url_for('admin_add_photos_to_product', token=token, article=product.article, next=request.full_path) }}" 
                            class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-plus-circle"></i>
                         </a>

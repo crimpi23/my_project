@@ -115,7 +115,7 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{{ url_for('admin_product_card', token=token, article=product.article) }}" 
+                        <a href="{{ url_for('admin_product_card', token=token, article=product.article, next=request.full_path) }}" 
                            class="btn btn-sm btn-primary" title="{{ _('Edit Product Card') }}">
                             <i class="bi bi-pencil-square"></i>
                         </a>
@@ -214,6 +214,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
+                <input type="hidden" name="next" value="{{ request.full_path }}">
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">

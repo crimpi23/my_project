@@ -161,7 +161,7 @@
 
 {% endblock %}
 
-{% block canonical %}https://autogroup.sk/product/{{ article }}{% endblock %}
+{% block canonical %}https://autogroup.sk/{{ session.get('language', 'sk') }}/product/{{ article }}{% endblock %}
 
 {% block title %}
 {% if product_data.name %}{{ product_data.name }} - {{ brand_name }}{% else %}{{ _('Auto Part') }} {{ article }} - {{ _('Find it at AutogroupEU') }}{% endif %}

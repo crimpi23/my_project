@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-02 23:29+0200\n"
+"POT-Creation-Date: 2026-02-03 17:10+0200\n"
 "PO-Revision-Date: 2025-03-03 22:26+0200\n"
 "Last-Translator: AutogroupEU Team <info@autogroup.sk>\n"
 "Language: pl\n"
@@ -253,7 +253,7 @@ msgstr "Nieprawidłowy format ceny"
 msgid "All fields are required"
 msgstr "Wszystkie pola są wymagane"
 
-#: app.py:4582 app.py:9256
+#: app.py:4582 app.py:9265
 msgid "Invalid email format"
 msgstr "Nieprawidłowy format email"
 
@@ -363,95 +363,95 @@ msgstr "Hasło zostało pomyślnie zmienione"
 msgid "Error changing password"
 msgstr "Błąd podczas zmiany hasła"
 
-#: app.py:8752
+#: app.py:8761
 msgid "Delivery address updated"
 msgstr "Adres dostawy zaktualizowany"
 
-#: app.py:8768
+#: app.py:8777
 msgid "Invoice details updated"
 msgstr "Szczegóły faktury zaktualizowane"
 
-#: app.py:8770
+#: app.py:8779
 msgid "Invalid invoice data format"
 msgstr "Nieprawidłowy format danych faktury"
 
-#: app.py:8862
+#: app.py:8871
 msgid "Item processed successfully"
 msgstr "Przedmiot przetworzony pomyślnie"
 
-#: app.py:8875
+#: app.py:8884
 msgid "Error processing orders"
 msgstr "Błąd podczas przetwarzania zamówień"
 
-#: app.py:9206
+#: app.py:9215
 msgid "Please login to access your profile"
 msgstr "Zaloguj się, aby uzyskać dostęp do swojego profilu"
 
-#: app.py:9263 app.py:9317
+#: app.py:9272 app.py:9326
 msgid "This email is already in use by another user"
 msgstr "Ten email jest już używany przez innego użytkownika"
 
-#: app.py:9269 app.py:9319
+#: app.py:9278 app.py:9328
 msgid "This phone number is already in use by another user"
 msgstr "Ten numer telefonu jest już używany przez innego użytkownika"
 
-#: app.py:9280
+#: app.py:9289
 msgid "Current password is incorrect"
 msgstr "Aktualne hasło jest nieprawidłowe"
 
-#: app.py:9285
+#: app.py:9294
 msgid "New passwords do not match"
 msgstr "Nowe hasła nie są zgodne"
 
-#: app.py:9298
+#: app.py:9307
 msgid "Profile and password updated successfully"
 msgstr "Profil i hasło zaktualizowane pomyślnie"
 
-#: app.py:9311
+#: app.py:9320
 msgid "Profile updated successfully"
 msgstr "Profil zaktualizowany pomyślnie"
 
-#: app.py:9321
+#: app.py:9330
 msgid "Error updating profile: duplicate value"
 msgstr "Błąd podczas aktualizacji profilu: duplikat wartości"
 
-#: app.py:9352
+#: app.py:9361
 msgid "Address added successfully"
 msgstr "Adres dodany pomyślnie"
 
-#: app.py:9364
+#: app.py:9373
 msgid "Address deleted successfully"
 msgstr "Adres usunięty pomyślnie"
 
-#: app.py:9386
+#: app.py:9395
 msgid "Default address updated"
 msgstr "Domyślny adres zaktualizowany"
 
-#: app.py:9413
+#: app.py:9422
 msgid "Company added successfully"
 msgstr "Firma dodana pomyślnie"
 
-#: app.py:9425
+#: app.py:9434
 msgid "Company deleted successfully"
 msgstr "Firma usunięta pomyślnie"
 
-#: app.py:9447
+#: app.py:9456
 msgid "Default company updated"
 msgstr "Domyślna firma zaktualizowana"
 
-#: app.py:9455
+#: app.py:9464
 msgid "Slovak"
 msgstr "Słowacki"
 
-#: app.py:9455
+#: app.py:9464
 msgid "English"
 msgstr "Angielski"
 
-#: app.py:9455
+#: app.py:9464
 msgid "Polish"
 msgstr "Polski"
 
-#: app.py:9461
+#: app.py:9470
 msgid "Error accessing user profile"
 msgstr "Błąd podczas dostępu do profilu użytkownika"
 
@@ -6679,280 +6679,6 @@ msgstr "Wybierz plik"
 msgid "Upload and Search"
 msgstr "Produkty i usługi"
 
-#: venv/Lib/site-packages/click/_termui_impl.py:556
-msgid "{editor}: Editing failed"
-msgstr "{editor}: Edycja nie powiodła się"
-
-#: venv/Lib/site-packages/click/_termui_impl.py:560
-msgid "{editor}: Editing failed: {e}"
-msgstr "{editor}: Edycja nie powiodła się: {e}"
-
-#: venv/Lib/site-packages/click/core.py:1124
-msgid "Aborted!"
-msgstr "Przerwano!"
-
-#: venv/Lib/site-packages/click/core.py:1349
-#: venv/Lib/site-packages/click/core.py:1379
-msgid "(Deprecated) {text}"
-msgstr "(Przestarzałe) {text}"
-
-#: venv/Lib/site-packages/click/core.py:1396
-msgid "Options"
-msgstr "Opcje"
-
-#: venv/Lib/site-packages/click/core.py:1424
-msgid "Got unexpected extra argument ({args})"
-msgid_plural "Got unexpected extra arguments ({args})"
-msgstr[0] "Otrzymano nieoczekiwany dodatkowy argument ({args})"
-msgstr[1] "Otrzymano nieoczekiwane dodatkowe argumenty ({args})"
-msgstr[2] "Otrzymano nieoczekiwanych dodatkowych argumentów ({args})"
-
-#: venv/Lib/site-packages/click/core.py:1437
-msgid "DeprecationWarning: The command {name!r} is deprecated."
-msgstr "Ostrzeżenie o przestarzałości: Polecenie {name!r} jest przestarzałe."
-
-#: venv/Lib/site-packages/click/core.py:1645
-msgid "Commands"
-msgstr "Polecenia"
-
-#: venv/Lib/site-packages/click/core.py:1677
-msgid "Missing command."
-msgstr "Brakujące polecenie."
-
-#: venv/Lib/site-packages/click/core.py:1755
-msgid "No such command {name!r}."
-msgstr "Nie ma takiego polecenia {name!r}."
-
-#: venv/Lib/site-packages/click/core.py:2313
-msgid "Value must be an iterable."
-msgstr "Wartość musi być iterowalną."
-
-#: venv/Lib/site-packages/click/core.py:2336
-msgid "Takes {nargs} values but 1 was given."
-msgid_plural "Takes {nargs} values but {len} were given."
-msgstr[0] "Przyjmuje {nargs} wartości, ale podano 1."
-msgstr[1] "Przyjmuje {nargs} wartości, ale podano {len}."
-msgstr[2] "Przyjmuje {nargs} wartości, ale podano {len}."
-
-#: venv/Lib/site-packages/click/core.py:2783
-msgid "env var: {var}"
-msgstr "zmienna środowiskowa: {var}"
-
-#: venv/Lib/site-packages/click/core.py:2813
-msgid "(dynamic)"
-msgstr "(dynamiczne)"
-
-#: venv/Lib/site-packages/click/core.py:2828
-msgid "default: {default}"
-msgstr "domyślnie: {default}"
-
-#: venv/Lib/site-packages/click/core.py:2841
-msgid "required"
-msgstr "wymagane"
-
-#: venv/Lib/site-packages/click/decorators.py:457
-#, python-format
-msgid "%(prog)s, version %(version)s"
-msgstr "%(prog)s, wersja %(version)s"
-
-#: venv/Lib/site-packages/click/decorators.py:520
-msgid "Show the version and exit."
-msgstr "Pokaż wersję i wyjdź."
-
-#: venv/Lib/site-packages/click/decorators.py:541
-msgid "Show this message and exit."
-msgstr "Pokaż tę wiadomość i wyjdź."
-
-#: venv/Lib/site-packages/click/exceptions.py:49
-#: venv/Lib/site-packages/click/exceptions.py:88
-msgid "Error: {message}"
-msgstr "Błąd: {message}"
-
-#: venv/Lib/site-packages/click/exceptions.py:80
-msgid "Try '{command} {option}' for help."
-msgstr "Spróbuj '{command} {option}' aby uzyskać pomoc."
-
-#: venv/Lib/site-packages/click/exceptions.py:129
-msgid "Invalid value: {message}"
-msgstr "Nieprawidłowa wartość: {message}"
-
-#: venv/Lib/site-packages/click/exceptions.py:131
-msgid "Invalid value for {param_hint}: {message}"
-msgstr "Nieprawidłowa wartość dla {param_hint}: {message}"
-
-#: venv/Lib/site-packages/click/exceptions.py:187
-msgid "Missing argument"
-msgstr "Brakujący argument"
-
-#: venv/Lib/site-packages/click/exceptions.py:189
-msgid "Missing option"
-msgstr "Brakująca opcja"
-
-#: venv/Lib/site-packages/click/exceptions.py:191
-msgid "Missing parameter"
-msgstr "Brakujący parametr"
-
-#: venv/Lib/site-packages/click/exceptions.py:193
-msgid "Missing {param_type}"
-msgstr "Brakujący {param_type}"
-
-#: venv/Lib/site-packages/click/exceptions.py:200
-msgid "Missing parameter: {param_name}"
-msgstr "Brakujący parametr: {param_name}"
-
-#: venv/Lib/site-packages/click/exceptions.py:220
-msgid "No such option: {name}"
-msgstr "Nie ma takiej opcji: {name}"
-
-#: venv/Lib/site-packages/click/exceptions.py:234
-msgid "Did you mean {possibility}?"
-msgid_plural "(Possible options: {possibilities})"
-msgstr[0] "Czy chodziło Ci o {possibility}?"
-msgstr[1] "(Możliwe opcje: {possibilities})"
-msgstr[2] "(Możliwe opcje: {possibilities})"
-
-#: venv/Lib/site-packages/click/exceptions.py:270
-msgid "unknown error"
-msgstr "nieznany błąd"
-
-#: venv/Lib/site-packages/click/exceptions.py:277
-msgid "Could not open file {filename!r}: {message}"
-msgstr "Nie można otworzyć pliku {filename!r}: {message}"
-
-#: venv/Lib/site-packages/click/formatting.py:156
-msgid "Usage:"
-msgstr "Użycie:"
-
-#: venv/Lib/site-packages/click/parser.py:233
-msgid "Argument {name!r} takes {nargs} values."
-msgstr "Argument {name!r} przyjmuje {nargs} wartości."
-
-#: venv/Lib/site-packages/click/parser.py:415
-msgid "Option {name!r} does not take a value."
-msgstr "Opcja {name!r} nie przyjmuje wartości."
-
-#: venv/Lib/site-packages/click/parser.py:475
-msgid "Option {name!r} requires an argument."
-msgid_plural "Option {name!r} requires {nargs} arguments."
-msgstr[0] "Opcja {name!r} wymaga argumentu."
-msgstr[1] "Opcja {name!r} wymaga {nargs} argumentów."
-msgstr[2] "Opcja {name!r} wymaga {nargs} argumentów."
-
-#: venv/Lib/site-packages/click/shell_completion.py:325
-msgid "Shell completion is not supported for Bash versions older than 4.4."
-msgstr ""
-"Uzupełnianie powłoki nie jest obsługiwane dla wersji Bash starszych niż "
-"4.4."
-
-#: venv/Lib/site-packages/click/shell_completion.py:333
-msgid "Couldn't detect Bash version, shell completion is not supported."
-msgstr "Nie można wykryć wersji Bash, uzupełnianie powłoki nie jest obsługiwane."
-
-#: venv/Lib/site-packages/click/termui.py:158
-msgid "Repeat for confirmation"
-msgstr "Powtórz w celu potwierdzenia"
-
-#: venv/Lib/site-packages/click/termui.py:174
-msgid "Error: The value you entered was invalid."
-msgstr "Błąd: Wprowadzona wartość jest nieprawidłowa."
-
-#: venv/Lib/site-packages/click/termui.py:176
-msgid "Error: {e.message}"
-msgstr "Błąd: {e.message}"
-
-#: venv/Lib/site-packages/click/termui.py:187
-msgid "Error: The two entered values do not match."
-msgstr "Błąd: Dwie wprowadzone wartości nie są zgodne."
-
-#: venv/Lib/site-packages/click/termui.py:243
-msgid "Error: invalid input"
-msgstr "Błąd: nieprawidłowe dane wejściowe"
-
-#: venv/Lib/site-packages/click/termui.py:773
-msgid "Press any key to continue..."
-msgstr "Naciśnij dowolny klawisz, aby kontynuować..."
-
-#: venv/Lib/site-packages/click/types.py:267
-msgid ""
-"Choose from:\n"
-"\t{choices}"
-msgstr ""
-"Wybierz z:\n"
-"\t{choices}"
-
-#: venv/Lib/site-packages/click/types.py:301
-msgid "{value!r} is not {choice}."
-msgid_plural "{value!r} is not one of {choices}."
-msgstr[0] "{value!r} nie jest {choice}."
-msgstr[1] "{value!r} nie jest jednym z {choices}."
-msgstr[2] "{value!r} nie jest jednym z {choices}."
-
-#: venv/Lib/site-packages/click/types.py:395
-msgid "{value!r} does not match the format {format}."
-msgid_plural "{value!r} does not match the formats {formats}."
-msgstr[0] "{value!r} nie pasuje do formatu {format}."
-msgstr[1] "{value!r} nie pasuje do formatów {formats}."
-msgstr[2] "{value!r} nie pasuje do formatów {formats}."
-
-#: venv/Lib/site-packages/click/types.py:415
-msgid "{value!r} is not a valid {number_type}."
-msgstr "{value!r} nie jest prawidłowym {number_type}."
-
-#: venv/Lib/site-packages/click/types.py:471
-msgid "{value} is not in the range {range}."
-msgstr "{value} nie jest w zakresie {range}."
-
-#: venv/Lib/site-packages/click/types.py:612
-msgid "{value!r} is not a valid boolean."
-msgstr "{value!r} nie jest prawidłową wartością logiczną."
-
-#: venv/Lib/site-packages/click/types.py:636
-msgid "{value!r} is not a valid UUID."
-msgstr "{value!r} nie jest prawidłowym UUID."
-
-#: venv/Lib/site-packages/click/types.py:826
-msgid "file"
-msgstr "plik"
-
-#: venv/Lib/site-packages/click/types.py:828
-msgid "directory"
-msgstr "katalog"
-
-#: venv/Lib/site-packages/click/types.py:830
-msgid "path"
-msgstr "ścieżka"
-
-#: venv/Lib/site-packages/click/types.py:881
-msgid "{name} {filename!r} does not exist."
-msgstr "{name} {filename!r} nie istnieje."
-
-#: venv/Lib/site-packages/click/types.py:890
-msgid "{name} {filename!r} is a file."
-msgstr "{name} {filename!r} jest plikiem."
-
-#: venv/Lib/site-packages/click/types.py:898
-msgid "{name} {filename!r} is a directory."
-msgstr "{name} {filename!r} jest katalogiem."
-
-#: venv/Lib/site-packages/click/types.py:907
-msgid "{name} {filename!r} is not readable."
-msgstr "{name} {filename!r} nie jest czytelny."
-
-#: venv/Lib/site-packages/click/types.py:916
-msgid "{name} {filename!r} is not writable."
-msgstr "{name} {filename!r} nie jest zapisywalny."
-
-#: venv/Lib/site-packages/click/types.py:925
-msgid "{name} {filename!r} is not executable."
-msgstr "{name} {filename!r} nie jest wykonywalny."
-
-#: venv/Lib/site-packages/click/types.py:991
-msgid "{len_type} values are required, but {len_value} was given."
-msgid_plural "{len_type} values are required, but {len_value} were given."
-msgstr[0] "Wymagane są {len_type} wartości, ale podano {len_value}."
-msgstr[1] "Wymagane są {len_type} wartości, ale podano {len_value}."
-msgstr[2] "Wymaganych jest {len_type} wartości, ale podano {len_value}."
-
 #~ msgid "Your Shopping Cart"
 #~ msgstr "Twój koszyk zakupów"
 
@@ -8120,4 +7846,216 @@ msgstr[2] "Wymaganych jest {len_type} wartości, ale podano {len_value}."
 
 #~ msgid "Add Photo"
 #~ msgstr "Dodaj do koszyka"
+
+#~ msgid "{editor}: Editing failed"
+#~ msgstr "{editor}: Edycja nie powiodła się"
+
+#~ msgid "{editor}: Editing failed: {e}"
+#~ msgstr "{editor}: Edycja nie powiodła się: {e}"
+
+#~ msgid "Aborted!"
+#~ msgstr "Przerwano!"
+
+#~ msgid "(Deprecated) {text}"
+#~ msgstr "(Przestarzałe) {text}"
+
+#~ msgid "Options"
+#~ msgstr "Opcje"
+
+#~ msgid "Got unexpected extra argument ({args})"
+#~ msgid_plural "Got unexpected extra arguments ({args})"
+#~ msgstr[0] "Otrzymano nieoczekiwany dodatkowy argument ({args})"
+#~ msgstr[1] "Otrzymano nieoczekiwane dodatkowe argumenty ({args})"
+#~ msgstr[2] "Otrzymano nieoczekiwanych dodatkowych argumentów ({args})"
+
+#~ msgid "DeprecationWarning: The command {name!r} is deprecated."
+#~ msgstr "Ostrzeżenie o przestarzałości: Polecenie {name!r} jest przestarzałe."
+
+#~ msgid "Commands"
+#~ msgstr "Polecenia"
+
+#~ msgid "Missing command."
+#~ msgstr "Brakujące polecenie."
+
+#~ msgid "No such command {name!r}."
+#~ msgstr "Nie ma takiego polecenia {name!r}."
+
+#~ msgid "Value must be an iterable."
+#~ msgstr "Wartość musi być iterowalną."
+
+#~ msgid "Takes {nargs} values but 1 was given."
+#~ msgid_plural "Takes {nargs} values but {len} were given."
+#~ msgstr[0] "Przyjmuje {nargs} wartości, ale podano 1."
+#~ msgstr[1] "Przyjmuje {nargs} wartości, ale podano {len}."
+#~ msgstr[2] "Przyjmuje {nargs} wartości, ale podano {len}."
+
+#~ msgid "env var: {var}"
+#~ msgstr "zmienna środowiskowa: {var}"
+
+#~ msgid "(dynamic)"
+#~ msgstr "(dynamiczne)"
+
+#~ msgid "default: {default}"
+#~ msgstr "domyślnie: {default}"
+
+#~ msgid "required"
+#~ msgstr "wymagane"
+
+#~ msgid "%(prog)s, version %(version)s"
+#~ msgstr "%(prog)s, wersja %(version)s"
+
+#~ msgid "Show the version and exit."
+#~ msgstr "Pokaż wersję i wyjdź."
+
+#~ msgid "Show this message and exit."
+#~ msgstr "Pokaż tę wiadomość i wyjdź."
+
+#~ msgid "Error: {message}"
+#~ msgstr "Błąd: {message}"
+
+#~ msgid "Try '{command} {option}' for help."
+#~ msgstr "Spróbuj '{command} {option}' aby uzyskać pomoc."
+
+#~ msgid "Invalid value: {message}"
+#~ msgstr "Nieprawidłowa wartość: {message}"
+
+#~ msgid "Invalid value for {param_hint}: {message}"
+#~ msgstr "Nieprawidłowa wartość dla {param_hint}: {message}"
+
+#~ msgid "Missing argument"
+#~ msgstr "Brakujący argument"
+
+#~ msgid "Missing option"
+#~ msgstr "Brakująca opcja"
+
+#~ msgid "Missing parameter"
+#~ msgstr "Brakujący parametr"
+
+#~ msgid "Missing {param_type}"
+#~ msgstr "Brakujący {param_type}"
+
+#~ msgid "Missing parameter: {param_name}"
+#~ msgstr "Brakujący parametr: {param_name}"
+
+#~ msgid "No such option: {name}"
+#~ msgstr "Nie ma takiej opcji: {name}"
+
+#~ msgid "Did you mean {possibility}?"
+#~ msgid_plural "(Possible options: {possibilities})"
+#~ msgstr[0] "Czy chodziło Ci o {possibility}?"
+#~ msgstr[1] "(Możliwe opcje: {possibilities})"
+#~ msgstr[2] "(Możliwe opcje: {possibilities})"
+
+#~ msgid "unknown error"
+#~ msgstr "nieznany błąd"
+
+#~ msgid "Could not open file {filename!r}: {message}"
+#~ msgstr "Nie można otworzyć pliku {filename!r}: {message}"
+
+#~ msgid "Usage:"
+#~ msgstr "Użycie:"
+
+#~ msgid "Argument {name!r} takes {nargs} values."
+#~ msgstr "Argument {name!r} przyjmuje {nargs} wartości."
+
+#~ msgid "Option {name!r} does not take a value."
+#~ msgstr "Opcja {name!r} nie przyjmuje wartości."
+
+#~ msgid "Option {name!r} requires an argument."
+#~ msgid_plural "Option {name!r} requires {nargs} arguments."
+#~ msgstr[0] "Opcja {name!r} wymaga argumentu."
+#~ msgstr[1] "Opcja {name!r} wymaga {nargs} argumentów."
+#~ msgstr[2] "Opcja {name!r} wymaga {nargs} argumentów."
+
+#~ msgid "Shell completion is not supported for Bash versions older than 4.4."
+#~ msgstr ""
+#~ "Uzupełnianie powłoki nie jest obsługiwane "
+#~ "dla wersji Bash starszych niż 4.4."
+
+#~ msgid "Couldn't detect Bash version, shell completion is not supported."
+#~ msgstr ""
+#~ "Nie można wykryć wersji Bash, "
+#~ "uzupełnianie powłoki nie jest obsługiwane."
+
+#~ msgid "Repeat for confirmation"
+#~ msgstr "Powtórz w celu potwierdzenia"
+
+#~ msgid "Error: The value you entered was invalid."
+#~ msgstr "Błąd: Wprowadzona wartość jest nieprawidłowa."
+
+#~ msgid "Error: {e.message}"
+#~ msgstr "Błąd: {e.message}"
+
+#~ msgid "Error: The two entered values do not match."
+#~ msgstr "Błąd: Dwie wprowadzone wartości nie są zgodne."
+
+#~ msgid "Error: invalid input"
+#~ msgstr "Błąd: nieprawidłowe dane wejściowe"
+
+#~ msgid "Press any key to continue..."
+#~ msgstr "Naciśnij dowolny klawisz, aby kontynuować..."
+
+#~ msgid ""
+#~ "Choose from:\n"
+#~ "\t{choices}"
+#~ msgstr ""
+#~ "Wybierz z:\n"
+#~ "\t{choices}"
+
+#~ msgid "{value!r} is not {choice}."
+#~ msgid_plural "{value!r} is not one of {choices}."
+#~ msgstr[0] "{value!r} nie jest {choice}."
+#~ msgstr[1] "{value!r} nie jest jednym z {choices}."
+#~ msgstr[2] "{value!r} nie jest jednym z {choices}."
+
+#~ msgid "{value!r} does not match the format {format}."
+#~ msgid_plural "{value!r} does not match the formats {formats}."
+#~ msgstr[0] "{value!r} nie pasuje do formatu {format}."
+#~ msgstr[1] "{value!r} nie pasuje do formatów {formats}."
+#~ msgstr[2] "{value!r} nie pasuje do formatów {formats}."
+
+#~ msgid "{value!r} is not a valid {number_type}."
+#~ msgstr "{value!r} nie jest prawidłowym {number_type}."
+
+#~ msgid "{value} is not in the range {range}."
+#~ msgstr "{value} nie jest w zakresie {range}."
+
+#~ msgid "{value!r} is not a valid boolean."
+#~ msgstr "{value!r} nie jest prawidłową wartością logiczną."
+
+#~ msgid "{value!r} is not a valid UUID."
+#~ msgstr "{value!r} nie jest prawidłowym UUID."
+
+#~ msgid "file"
+#~ msgstr "plik"
+
+#~ msgid "directory"
+#~ msgstr "katalog"
+
+#~ msgid "path"
+#~ msgstr "ścieżka"
+
+#~ msgid "{name} {filename!r} does not exist."
+#~ msgstr "{name} {filename!r} nie istnieje."
+
+#~ msgid "{name} {filename!r} is a file."
+#~ msgstr "{name} {filename!r} jest plikiem."
+
+#~ msgid "{name} {filename!r} is a directory."
+#~ msgstr "{name} {filename!r} jest katalogiem."
+
+#~ msgid "{name} {filename!r} is not readable."
+#~ msgstr "{name} {filename!r} nie jest czytelny."
+
+#~ msgid "{name} {filename!r} is not writable."
+#~ msgstr "{name} {filename!r} nie jest zapisywalny."
+
+#~ msgid "{name} {filename!r} is not executable."
+#~ msgstr "{name} {filename!r} nie jest wykonywalny."
+
+#~ msgid "{len_type} values are required, but {len_value} was given."
+#~ msgid_plural "{len_type} values are required, but {len_value} were given."
+#~ msgstr[0] "Wymagane są {len_type} wartości, ale podano {len_value}."
+#~ msgstr[1] "Wymagane są {len_type} wartości, ale podano {len_value}."
+#~ msgstr[2] "Wymaganych jest {len_type} wartości, ale podano {len_value}."
 

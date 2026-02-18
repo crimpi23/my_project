@@ -10585,7 +10585,7 @@ def validate_csv_structure(file_content):
         return False, f"Error validating CSV: {str(e)}"
 
 def parse_csv_import_file(file_content):
-    """Парсить CSV файл і фільтрує тільки 'Склад Словакия' + ПРОПУСКАЄ товари без бренду"""
+    """Парсить CSV файл і фільтрує тільки склад 'Склад Словакия/MKSOFT' + ПРОПУСКАЄ товари без бренду"""
     try:
         lines = file_content.decode('utf-8').strip().split('\n')
         data = []
@@ -10608,8 +10608,16 @@ def parse_csv_import_file(file_content):
                 warehouse = parts[2].strip() if len(parts) > 2 and parts[2].strip() else ''
                 brand = parts[3].strip() if len(parts) > 3 and parts[3].strip() else ''
                 
-                # ОСНОВНИЙ ФІЛЬТР - тільки "Склад Словакия"
-                if warehouse != 'Склад Словакия':
+                # ОСНОВНИЙ ФІЛЬТР - ТІЛЬКИ склад MKSOFT
+                # Дозволені значення після нормалізації:
+                # - "Склад Словакия/MKSOFT"
+                # - "Словакия/MKSOFT"
+                normalized_warehouse = re.sub(r'\s+', ' ', warehouse).strip().lower()
+                allowed_warehouses = {
+                    'склад словакия/mksoft',
+                    'словакия/mksoft'
+                }
+                if normalized_warehouse not in allowed_warehouses:
                     continue
                 
                 # Конвертація quantity

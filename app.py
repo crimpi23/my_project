@@ -1,6 +1,6 @@
 import hashlib
 import csv
-import pandas as pdimport 
+import pandas as pd
 import io
 import re
 import time
@@ -6426,9 +6426,16 @@ def verify_password(password, stored_hash):
 def get_db_connection():
     """Створює пряме з'єднання з базою даних (без пулу)"""
     try:
+        dsn = os.environ.get('DATABASE_URL')
+        if not dsn:
+            raise RuntimeError("DATABASE_URL is not set")
+
+        connect_timeout = int(os.environ.get('DB_CONNECT_TIMEOUT', '5'))
+
         conn = psycopg2.connect(
-            dsn=os.environ.get('DATABASE_URL'),
+            dsn=dsn,
             sslmode="require",
+            connect_timeout=connect_timeout,
             cursor_factory=psycopg2.extras.DictCursor
         )
         
@@ -7550,6 +7557,96 @@ def update_price_list_supplier(token):
     return redirect(url_for('manage_price_lists', token=token))
 
 
+def ensure_price_list_import_logs_table(conn):
+    """Створює таблицю логів імпорту прайсів, якщо її ще немає."""
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS price_list_import_logs (
+            id BIGSERIAL PRIMARY KEY,
+            table_name TEXT NOT NULL,
+            file_name TEXT,
+            status TEXT NOT NULL,
+            rows_parsed INTEGER NOT NULL DEFAULT 0,
+            duration_seconds NUMERIC(10, 2),
+            error_message TEXT,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        )
+    """)
+    conn.commit()
+    cursor.close()
+
+
+def log_price_list_import_event(table_name, file_name, status, rows_parsed=0, duration_seconds=None, error_message=None):
+    """Логує результат імпорту прайс-листа. Не має ламати основний процес."""
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        ensure_price_list_import_logs_table(conn)
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO price_list_import_logs (
+                table_name, file_name, status, rows_parsed, duration_seconds, error_message, created_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, NOW())
+            """,
+            (table_name, file_name, status, rows_parsed, duration_seconds, error_message)
+        )
+        conn.commit()
+    except Exception as log_error:
+        logging.warning(f"Could not log price list import event: {log_error}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+def send_price_list_import_email_notification(table_name, file_name, rows_parsed, duration_seconds):
+    """Надсилає повідомлення про успішний імпорт прайс-листа на адмінську пошту."""
+    try:
+        smtp_host = os.getenv("SMTP_HOST")
+        smtp_port_raw = os.getenv("SMTP_PORT")
+        sender_email = os.getenv("SMTP_EMAIL")
+        sender_password = os.getenv("SMTP_PASSWORD")
+
+        notify_to = os.getenv("PRICE_IMPORT_NOTIFY_EMAIL") or sender_email
+
+        if not (smtp_host and smtp_port_raw and sender_email and sender_password and notify_to):
+            logging.info("Price-list import email notification skipped: SMTP or recipient is not configured")
+            return False
+
+        smtp_port = int(smtp_port_raw)
+        recipients = [addr.strip() for addr in notify_to.split(',') if addr.strip()]
+        if not recipients:
+            return False
+
+        subject = f"Price list import completed: {table_name}"
+        body = (
+            f"Price list import completed successfully.\n\n"
+            f"Table: {table_name}\n"
+            f"File: {file_name}\n"
+            f"Rows imported: {rows_parsed}\n"
+            f"Duration (sec): {duration_seconds:.2f}\n"
+            f"Completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+
+        message = MIMEText(body, "plain", "utf-8")
+        message["From"] = sender_email
+        message["To"] = ", ".join(recipients)
+        message["Subject"] = subject
+
+        server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=20)
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, recipients, message.as_string())
+        server.quit()
+        logging.info(f"Price-list import email notification sent to: {recipients}")
+        return True
+    except Exception as email_error:
+        logging.warning(f"Price-list import email notification failed: {email_error}")
+        return False
+
+
 # Завантаження прайсу в Адмінці
 @app.route('/<token>/admin/upload_price_list', methods=['GET', 'POST'])
 @requires_token_and_roles('admin')
@@ -7580,15 +7677,37 @@ def upload_price_list(token):
                     pl.id,
                     pl.table_name,
                     s.name as supplier_name,
+                    b.id as brand_id,
+                    b.name as brand_name,
                     pl.delivery_time,
                     pl.created_at,
                     pl.last_updated,
                     pl.supplier_id
                 FROM price_lists pl
                 LEFT JOIN suppliers s ON pl.supplier_id = s.id
+                LEFT JOIN brands b ON pl.brand_id = b.id
                 ORDER BY pl.created_at DESC
             """)
             price_lists_info = cursor.fetchall()
+
+            ensure_price_list_import_logs_table(conn)
+            cursor.execute("""
+                SELECT
+                    COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') AS imports_24h,
+                    COUNT(*) FILTER (WHERE status = 'failed' AND created_at >= NOW() - INTERVAL '24 hours') AS failures_24h,
+                    COALESCE(AVG(duration_seconds) FILTER (WHERE status = 'success' AND created_at >= NOW() - INTERVAL '24 hours'), 0) AS avg_duration_24h,
+                    MAX(created_at) FILTER (WHERE status = 'success') AS last_success_at
+                FROM price_list_import_logs
+            """)
+            import_health = cursor.fetchone()
+
+            cursor.execute("""
+                SELECT table_name, file_name, status, rows_parsed, duration_seconds, error_message, created_at
+                FROM price_list_import_logs
+                ORDER BY created_at DESC
+                LIMIT 12
+            """)
+            recent_imports = cursor.fetchall()
 
             conn.close()
             
@@ -7596,6 +7715,8 @@ def upload_price_list(token):
                 'admin/price_lists/upload_price_list.html', 
                 price_lists=price_lists,
                 price_lists_info=price_lists_info,
+                import_health=import_health,
+                recent_imports=recent_imports,
                 brands=brands, 
                 token=token
             )
@@ -7617,10 +7738,13 @@ def upload_price_list(token):
             start_time = time.time()
 
             # Отримання параметрів форми
-            table_name = request.form['table_name']
+            table_name = (request.form.get('table_name') or '').strip()
             new_table_name = request.form.get('new_table_name', '').strip()
-            brand_id = request.form.get('brand_id')  # Отримання brand_id
+            brand_id = request.form.get('brand_id')
             file = request.files.get('file')
+
+            if not table_name and new_table_name:
+                table_name = 'new'
 
             # Базове логування вхідних даних
             logging.info(f"Processing file upload: table_name={table_name}, new_table_name={new_table_name}, brand_id={brand_id}")
@@ -7639,101 +7763,10 @@ def upload_price_list(token):
             filename = file.filename.lower()
             logging.info(f"Processing file: {filename}")
             
-            data = []  # Тут зберігатимемо дані для завантаження
-            
-            if filename.endswith('.xlsx') or filename.endswith('.xls'):
-                # Обробка Excel файлу
-                logging.info("Detected Excel file format")
-                df = pd.read_excel(file)
-                # Переконуємося, що у нас є правильні стовпці
-                if len(df.columns) >= 2:
-                    # Приводимо назви стовпців до нижнього регістру
-                    df.columns = [str(col).lower() for col in df.columns]
-                    # Шукаємо стовпці з артикулом і ціною
-                    article_col = None
-                    price_col = None
-                    
-                    # Відповідність можливих назв стовпців
-                    article_names = ['article', 'артикул', 'код', 'code', 'номер', 'number']
-                    price_names = ['price', 'ціна', 'цена', 'price', 'cost', 'вартість']
-                    
-                    for col in df.columns:
-                        if article_col is None and any(name in col.lower() for name in article_names):
-                            article_col = col
-                        if price_col is None and any(name in col.lower() for name in price_names):
-                            price_col = col
-                    
-                    # Якщо не знайдено, використовуємо перші два стовпці
-                    if article_col is None:
-                        article_col = df.columns[0]
-                    if price_col is None:
-                        price_col = df.columns[1]
-                    
-                    logging.info(f"Using columns: article_col={article_col}, price_col={price_col}")
-                    logging.info(f"Processing {len(df)} rows from Excel file")
-                    
-                    # Обробляємо дані
-                    for _, row in df.iterrows():
-                        try:
-                            article = str(row[article_col]).strip().upper()
-                            price_str = str(row[price_col]).replace(',', '.')
-                            price = float(price_str)
-                            if article and price > 0:
-                                data.append((article, price))
-                        except Exception:
-                            # Пропускаємо некоректні рядки
-                            continue
-                else:
-                    logging.warning(f"Invalid Excel format: only {len(df.columns)} columns found")
-                        
-            else:
-                # Обробка CSV/TXT файлу
-                logging.info("Detected CSV/TXT file format")
-                file_content = file.read().decode('utf-8', errors='ignore')
-                
-                # Визначаємо розділювач
-                delimiters = [',', ';', '\t']
-                delimiter = max(delimiters, key=lambda d: file_content.count(d))
-                logging.info(f"Detected delimiter: '{delimiter}'")
-                
-                # Читаємо рядки
-                lines = file_content.strip().split('\n')
-                total_lines = len(lines)
-                logging.info(f"Total lines in file: {total_lines}")
-                
-                # Пропускаємо заголовок
-                processed_lines = 0
-                for line_index, line in enumerate(lines):
-                    if line_index == 0 and any(c.isalpha() for c in line):
-                        continue
-                    
-                    parts = line.split(delimiter)
-                    if len(parts) >= 2:
-                        try:
-                            article = parts[0].strip().replace(" ", "").upper()
-                            price_str = parts[1].strip().replace(',', '.')
-                            price = float(price_str)
-                            if article and price > 0:
-                                data.append((article, price))
-                                processed_lines += 1
-                        except Exception:
-                            # Пропускаємо некоректні рядки
-                            continue
-                
-                logging.info(f"Successfully processed {processed_lines} out of {total_lines} lines")
+            valid_rows = 0
+            batch_size = 5000
 
-            # Відновлюємо рівень логування для виводу інформації
-            logging.getLogger().setLevel(current_log_level)
-            
-            # Логування кількості успішно оброблених рядків
-            valid_rows = len(data)
-            logging.info(f"Total valid rows extracted: {valid_rows}")
-            
-            if valid_rows == 0:
-                flash("No valid data found in file.", "error")
-                return redirect(url_for('upload_price_list', token=token))
-
-            # Підключення до бази даних
+            # Підключення до бази даних до початку імпорту
             conn = get_db_connection()
             cursor = conn.cursor()
 
@@ -7741,6 +7774,10 @@ def upload_price_list(token):
             if table_name == 'new':
                 if not new_table_name:
                     flash("New table name is required.", "error")
+                    return redirect(url_for('upload_price_list', token=token))
+
+                if not brand_id:
+                    flash("Brand is required for new price list.", "error")
                     return redirect(url_for('upload_price_list', token=token))
 
                 table_name = new_table_name.strip().replace(" ", "_").lower()
@@ -7768,6 +7805,22 @@ def upload_price_list(token):
                     logging.error(f"Error creating new table: {e}")
                     flash("Error creating new table. Please check the table name and try again.", "error")
                     return redirect(url_for('upload_price_list', token=token))
+            else:
+                # Для існуючого прайсу бренд беремо тільки з БД, щоб уникнути ручної помилки
+                cursor.execute(
+                    "SELECT brand_id FROM price_lists WHERE table_name = %s",
+                    (table_name,)
+                )
+                existing_price_list = cursor.fetchone()
+                if not existing_price_list:
+                    flash("Price list is not registered in price_lists.", "error")
+                    return redirect(url_for('upload_price_list', token=token))
+
+                brand_id = existing_price_list[0]
+
+            if not re.match(r'^[a-z_][a-z0-9_]*$', table_name):
+                flash("Invalid table name. Only lowercase letters, numbers, and underscores are allowed.", "error")
+                return redirect(url_for('upload_price_list', token=token))
 
             # Перевірка існування таблиці
             try:
@@ -7782,30 +7835,124 @@ def upload_price_list(token):
 
             # Очищення таблиці
             cursor.execute(f"TRUNCATE TABLE {table_name} RESTART IDENTITY;")
-            conn.commit()
             logging.info(f"Truncated table: {table_name}")
 
-            # Завантаження даних пакетами для підвищення продуктивності
-            batch_size = 5000
-            total_batches = (len(data) + batch_size - 1) // batch_size
-            
-            logging.info(f"Starting data upload: {valid_rows} rows in {total_batches} batches")
-            for batch_num in range(total_batches):
-                start_idx = batch_num * batch_size
-                end_idx = min(start_idx + batch_size, len(data))
-                batch = data[start_idx:end_idx]
-                current_batch_size = len(batch)
-                
-                # Використовуємо execute_values для пакетного додавання (швидше ніж COPY)
+            def flush_batch(batch_rows):
+                if not batch_rows:
+                    return
                 psycopg2.extras.execute_values(
                     cursor,
                     f"INSERT INTO {table_name} (article, price) VALUES %s ON CONFLICT (article) DO UPDATE SET price = EXCLUDED.price",
-                    [(a, p) for a, p in batch],
+                    batch_rows,
                     template="(%s, %s)",
                     page_size=1000
                 )
-                conn.commit()
-                logging.info(f"Batch {batch_num+1}/{total_batches}: Inserted {current_batch_size} rows")
+
+            logging.info(f"Starting data upload into '{table_name}'")
+            batch_rows = []
+
+            if filename.endswith('.xlsx') or filename.endswith('.xls'):
+                # Обробка Excel файлу
+                logging.info("Detected Excel file format")
+                df = pd.read_excel(file)
+                if len(df.columns) < 2:
+                    logging.warning(f"Invalid Excel format: only {len(df.columns)} columns found")
+                    flash("No valid data found in file.", "error")
+                    return redirect(url_for('upload_price_list', token=token))
+
+                df.columns = [str(col).lower() for col in df.columns]
+                article_col = None
+                price_col = None
+
+                article_names = ['article', 'артикул', 'код', 'code', 'номер', 'number']
+                price_names = ['price', 'ціна', 'цена', 'price', 'cost', 'вартість']
+
+                for col in df.columns:
+                    if article_col is None and any(name in col.lower() for name in article_names):
+                        article_col = col
+                    if price_col is None and any(name in col.lower() for name in price_names):
+                        price_col = col
+
+                if article_col is None:
+                    article_col = df.columns[0]
+                if price_col is None:
+                    price_col = df.columns[1]
+
+                logging.info(f"Using columns: article_col={article_col}, price_col={price_col}")
+
+                for _, row in df.iterrows():
+                    try:
+                        article = str(row[article_col]).strip().replace(" ", "").upper()
+                        price_str = str(row[price_col]).replace(',', '.')
+                        price = float(price_str)
+                        if article and price > 0:
+                            batch_rows.append((article, price))
+                            valid_rows += 1
+                    except Exception:
+                        continue
+
+                    if len(batch_rows) >= batch_size:
+                        flush_batch(batch_rows)
+                        batch_rows = []
+            else:
+                # Обробка CSV/TXT файлу
+                logging.info("Detected CSV/TXT file format")
+                file.stream.seek(0)
+                text_stream = io.TextIOWrapper(file.stream, encoding='utf-8', errors='ignore', newline='')
+                sample = text_stream.read(16384)
+                text_stream.seek(0)
+
+                delimiters = [',', ';', '\t']
+                delimiter = max(delimiters, key=lambda d: sample.count(d))
+                logging.info(f"Detected delimiter: '{delimiter}'")
+
+                reader = csv.reader(text_stream, delimiter=delimiter)
+
+                first_row = next(reader, None)
+                if first_row:
+                    first_line_joined = ' '.join(first_row)
+                    has_header = any(c.isalpha() for c in first_line_joined)
+
+                    if not has_header and len(first_row) >= 2:
+                        try:
+                            article = first_row[0].strip().replace(" ", "").upper()
+                            price_str = first_row[1].strip().replace(',', '.')
+                            price = float(price_str)
+                            if article and price > 0:
+                                batch_rows.append((article, price))
+                                valid_rows += 1
+                        except Exception:
+                            pass
+
+                for parts in reader:
+                    if len(parts) < 2:
+                        continue
+                    try:
+                        article = parts[0].strip().replace(" ", "").upper()
+                        price_str = parts[1].strip().replace(',', '.')
+                        price = float(price_str)
+                        if article and price > 0:
+                            batch_rows.append((article, price))
+                            valid_rows += 1
+                    except Exception:
+                        continue
+
+                    if len(batch_rows) >= batch_size:
+                        flush_batch(batch_rows)
+                        batch_rows = []
+
+                text_stream.detach()
+
+            flush_batch(batch_rows)
+
+            # Відновлюємо рівень логування для виводу інформації
+            logging.getLogger().setLevel(current_log_level)
+
+            if valid_rows == 0:
+                flash("No valid data found in file.", "error")
+                return redirect(url_for('upload_price_list', token=token))
+
+            logging.info(f"Total valid rows extracted: {valid_rows}")
             
             # Оновлюємо brand_id та last_updated в price_lists
             try:
@@ -7815,14 +7962,31 @@ def upload_price_list(token):
                         last_updated = NOW()
                     WHERE table_name = %s
                 """, (brand_id, table_name))
-                conn.commit()
                 logging.info(f"Updated brand_id={brand_id} and last_updated for price_list: {table_name}")
             except Exception as update_error:
                 logging.warning(f"Could not update price_lists metadata: {update_error}")
                 # Продовжуємо виконання, оскільки дані вже завантажені успішно
+
+            conn.commit()
             
             execution_time = time.time() - start_time
             execution_time_formatted = f"{execution_time:.2f}"
+
+            log_price_list_import_event(
+                table_name=table_name,
+                file_name=file.filename,
+                status='success',
+                rows_parsed=valid_rows,
+                duration_seconds=execution_time,
+                error_message=None
+            )
+
+            send_price_list_import_email_notification(
+                table_name=table_name,
+                file_name=file.filename,
+                rows_parsed=valid_rows,
+                duration_seconds=execution_time
+            )
             
             # Детальний лог з інформацією про результати
             logging.info(f"Price list upload complete: {valid_rows} rows imported to '{table_name}' in {execution_time_formatted} seconds")
@@ -7835,6 +7999,19 @@ def upload_price_list(token):
 
         except Exception as e:
             logging.error(f"Error during price list upload: {e}", exc_info=True)
+            failed_table = table_name if 'table_name' in locals() else 'unknown'
+            failed_file = file.filename if 'file' in locals() and file else 'unknown'
+            failed_duration = time.time() - start_time if 'start_time' in locals() else None
+
+            log_price_list_import_event(
+                table_name=failed_table,
+                file_name=failed_file,
+                status='failed',
+                rows_parsed=0,
+                duration_seconds=failed_duration,
+                error_message=str(e)[:2000]
+            )
+
             flash(f"An error occurred during upload: {str(e)}", "error")
             if conn:
                 conn.rollback()

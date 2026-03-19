@@ -17,14 +17,14 @@
 }
 
 .breadcrumb-link {
-    color: #1a4d2e;
+    color: #2563eb;
     text-decoration: none;
     transition: color 0.2s ease;
     white-space: nowrap;
 }
 
 .breadcrumb-link:hover {
-    color: #0f3020;
+    color: #1d4ed8;
     text-decoration: underline;
 }
 
@@ -44,12 +44,6 @@
     }
 }
 </style>
-{% endblock %}
-
-{% block critical_preload %}
-{% if product_data.photo_urls and product_data.photo_urls|length > 0 %}
-<link rel="preload" as="image" href="{{ product_data.photo_urls[0] }}" fetchpriority="high">
-{% endif %}
 {% endblock %}
 
 {% block head %}
@@ -91,7 +85,7 @@
       },
       "offers": {
         "@type": "Offer",
-                "url": "https://autogroup.sk/{{ session.get('language', 'sk') }}/product/{{ article }}",
+        "url": "{{ request.url }}",
         "priceCurrency": "EUR",
         "price": "{% if price %}{{ price.price }}{% elif prices and prices|length > 0 %}{{ prices[0].price }}{% else %}0.00{% endif %}",
         "priceValidUntil": "{{ (now() + timedelta(days=30)).strftime('%Y-%m-%d') }}",
@@ -149,7 +143,7 @@
             "@type": "ListItem",
             "position": 2,
             "name": "{{ product_categories[0].name }}",
-            "item": "https://autogroup.sk/{{ session.get('language', 'sk') }}/?category={{ product_categories[0].id }}"
+            "item": "https://autogroup.sk/?category={{ product_categories[0].id }}"
         },
         {
             "@type": "ListItem",
@@ -167,17 +161,6 @@
 
 {% endblock %}
 
-{% block og_image %}
-{% if product_data.photo_urls and product_data.photo_urls|length > 0 %}
-<meta property="og:image" content="{{ product_data.photo_urls[0] }}">
-<meta property="og:image:alt" content="{{ product_data.name }}">
-{% else %}
-<meta property="og:image" content="https://autogroup.sk/static/images/og-image.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-{% endif %}
-{% endblock %}
-
 {% block canonical %}https://autogroup.sk/{{ session.get('language', 'sk') }}/product/{{ article }}{% endblock %}
 
 {% block title %}
@@ -185,45 +168,37 @@
 {% endblock %}
 
 {% block content %}
-{% if product_categories and product_categories|length > 0 %}
-    {% set back_url = url_for('localized_index', lang=session.get('language', 'sk'), category=product_categories[0].id) %}
-{% else %}
-    {% set back_url = url_for('localized_index', lang=session.get('language', 'sk')) %}
-{% endif %}
-<div class="container product-details-shell mt-0 mt-md-4">
+<div class="container mt-4">
     <!-- Хлібні крихти -->
     <nav class="breadcrumb-nav" aria-label="breadcrumb">
-            <a href="{{ url_for('localized_index', lang=session.get('language', 'sk')) }}" class="breadcrumb-link">
+        <a href="{{ url_for('index') }}" class="breadcrumb-link">
             <i class="bi bi-house-door"></i> {{ _('Home') }}
         </a>
         <span class="breadcrumb-sep">/</span>
         {% if product_categories and product_categories|length > 0 %}
             {% set cat = product_categories[0] %}
-            <a href="{{ url_for('localized_index', lang=session.get('language', 'sk'), category=cat.id) }}" class="breadcrumb-link">{{ cat.name }}</a>
+            <a href="{{ url_for('index', category=cat.id) }}" class="breadcrumb-link">{{ cat.name }}</a>
             <span class="breadcrumb-sep">/</span>
         {% endif %}
         <span class="breadcrumb-current">{{ product_data.name[:50] }}{% if product_data.name|length > 50 %}...{% endif %}</span>
     </nav>
     
     <div class="product-container fade-in">
-        <div class="mobile-pdp-title">
-            <h1 class="product-name mobile-pdp-title-text">{{ product_data.name }}</h1>
-        </div>
-        <div class="product-hero-grid">
-            <div class="product-media">
+        <div class="row">
+            <div class="col-md-6 mobile-second">
                 <div class="image-section">
                     <div class="image-container">
                         {% if product_data.photo_urls and product_data.photo_urls|length > 0 %}
                         <img id="productImage"
                              src="{{ product_data.photo_urls[0] }}"
                              alt="{{ product_data.name }}"
-                                loading="eager" fetchpriority="high" decoding="async" width="800" height="600">
+                             loading="lazy" decoding="async" width="800" height="600">
                         {% else %}
                         <img id="productImage"
                              src="{{ url_for('static', filename='img/no-photo.svg') }}"
                              alt="{{ _('No photo available') }} - {{ product_data.name }}"
                              class="no-photo-placeholder"
-                                loading="eager" fetchpriority="high" decoding="async" width="800" height="600">
+                             loading="lazy" decoding="async" width="800" height="600">
                         {% endif %}
                     </div>
                     
@@ -254,10 +229,10 @@
                 </div>
             </div>
 
-            <div class="product-buy-panel">
+            <div class="col-md-6 mobile-first">
                 <div class="product-info-card">
                     <div class="product-info-header">
-                        <h1 class="product-name desktop-pdp-title">{{ product_data.name }}</h1>
+                        <h1>{{ product_data.name }}</h1>
                     </div>
                     <div class="product-info-body">
                         <div class="product-meta">
@@ -267,13 +242,13 @@
                             </div>
                             <div class="product-meta-item">
                                 <span class="meta-label">{{ _('Brand') }}:</span>
-                                <span class="meta-value brand-value">{{ brand_name or '-' }}</span>
+                                <span class="meta-value">{{ brand_name or '-' }}</span>
                             </div>
                         </div>
 
                         <h4 class="prices-title mb-2"><i class="bi bi-tag-fill me-2 text-primary"></i>{{ _('Available Prices') }}</h4>
                         {% for price in prices %}
-                        <div class="price-card" data-price-card>
+                        <div class="price-card">
                             <div class="price-info{% if price.table_name == 'stock' and not price.in_stock %} out-of-stock-layout{% endif %}">
                                 <div class="price-column">
                                     <div class="price-row price-main">
@@ -304,8 +279,7 @@
                                         <i class="bi bi-info-circle"></i> {{ _('Temporarily unavailable on our stock. You can order this part by regular price.') }}
                                     </span>
                                 {% else %}
-                                    <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-form" data-cart-form>
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <form method="POST" action="{{ url_for('public_add_to_cart') }}" class="cart-form">
                                         <input type="hidden" name="article" value="{{ article }}">
                                         <input type="hidden" name="selected_price" value="{{ price.table_name }}:{{ price.price }}|{{ price.brand_id }}">
                                         <div class="quantity-column">
@@ -315,7 +289,6 @@
                                         <div class="button-column">
                                             <button type="submit" class="btn-add-to-cart" title="{{ _('Add to Cart') }}">
                                                 <i class="bi bi-cart-plus"></i>
-                                                <span class="btn-add-to-cart-label">{{ _('Add to Cart') }}</span>
                                             </button>
                                         </div>
                                     </form>
@@ -325,7 +298,7 @@
                         {% endfor %}
                         
                         <div class="mt-4">
-                                <a href="{{ back_url }}" class="btn-outline btn-outline-primary">
+                            <a href="{{ url_for('index') }}" class="btn-outline btn-outline-primary">
                                 <i class="bi bi-arrow-left me-2"></i>
                                 {{ _('Continue Shopping') }}
                             </a>
@@ -355,7 +328,7 @@
                         <li><i class="bi bi-check-circle text-success"></i> {{ _('Warranty on all parts') }}</li>
                     </ul>
                     <div class="call-to-action mt-3">
-                                    <a href="{{ url_for('localized_contacts', lang=session.get('language', 'sk')) }}" class="btn btn-primary">
+                        <a href="{{ url_for('contacts') }}" class="btn btn-primary">
                             <i class="bi bi-headset me-2"></i> {{ _('Contact Us') }}
                         </a>
                         <a href="tel:+421XXXXXXXX" class="btn btn-outline-primary ms-2">
@@ -377,10 +350,144 @@
                 <a href="{{ url_for('public_search', article=article ~ ' original') }}">{{ article }} {{ _('original') }}</a>
             </div>
         </div>
+
+        <style>
+        .related-searches {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .related-search-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .related-search-tags a {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #e9ecef;
+            color: #495057;
+            border-radius: 20px;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .related-search-tags a:hover {
+            background: #0d6efd;
+            color: white;
+        }
+        </style>
         {% endif %}
     </div>
 </div>
 
+        <style>
+        .category-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .category-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background-color: rgba(13, 110, 253, 0.1);
+            color: var(--primary-color);
+            font-size: 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .category-badge:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        </style>
+<style>
+.description-section {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    margin-bottom: 1.5rem;
+}
+.description-header {
+    border-bottom: 1px solid #e9ecef;
+    padding: 15px 20px;
+}
+.description-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #0d6efd;
+}
+.description-body {
+    padding: 20px;
+}
+
+.category-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.category-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background-color: rgba(13, 110, 253, 0.1);
+    color: var(--primary-color, #0d6efd);
+    font-size: 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.category-badge:hover {
+    background-color: var(--primary-color, #0d6efd);
+    color: white;
+}
+.no-description-alert {
+    background-color: #f8f9fa;
+    border-left: 5px solid #0d6efd;
+    padding: 20px;
+    border-radius: 4px;
+}
+.part-benefits {
+    list-style: none;
+    padding-left: 0;
+    margin: 15px 0;
+}
+.part-benefits li {
+    padding: 5px 0;
+}
+.call-to-action {
+    margin-top: 20px;
+}
+.sticky-buy-btn {
+    position: -webkit-sticky;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    padding: 10px;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+.btn-add-to-cart {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.btn-add-to-cart:hover {
+    background-color: #0056b3;
+}
+</style>
     </div>
 </div>
 
@@ -529,15 +636,14 @@ document.querySelectorAll('form.cart-form').forEach(form => {
     form.addEventListener('submit', function(e) {
         const articleId = this.querySelector('input[name="article"]').value;
         const quantity = parseInt(this.querySelector('input[name="quantity"]').value || 1);
-        const priceEl = this.closest('.price-card').querySelector('.price-value-main');
-        const price = parseFloat((priceEl ? priceEl.textContent : '0').replace(',', '.').replace(/[^\d.]/g, '')) || 0;
-        const productNameEl = document.querySelector('.product-name');
-        const productName = productNameEl ? productNameEl.textContent.trim() : articleId;
-        const brandNameEl = document.querySelector('.brand-value');
-        const brandName = brandNameEl ? brandNameEl.textContent.trim() : '{{ brand_name|default('AutogroupEU') }}';
+        const price = parseFloat(this.closest('.price-card').querySelector('.price-value').textContent);
+        const productName = document.querySelector('h1[itemprop="name"]').textContent;
+        const brandName = document.querySelector('span[itemprop="brand"]') ? 
+                          document.querySelector('span[itemprop="brand"]').textContent :
+                          '{{ brand_name|default('AutogroupEU') }}';
         
         window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({
+        dataLayer.push({
             'event': 'add_to_cart',
             'ecommerce': {
                 'currency': 'EUR',
@@ -554,10 +660,7 @@ document.querySelectorAll('form.cart-form').forEach(form => {
     });
 });
 
-
-
-window.dataLayer = window.dataLayer || [];
-window.dataLayer.push({
+dataLayer.push({
   'event': 'view_item',
   'ecommerce': {
     'currency': 'EUR',

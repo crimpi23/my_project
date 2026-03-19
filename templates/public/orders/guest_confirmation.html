@@ -158,7 +158,7 @@
     </div>
 
     <div class="d-flex justify-content-center mt-4 gap-3 fade-in">
-        <a href="{{ url_for('localized_index', lang=session.get('language', 'sk')) }}" class="btn btn-outline-primary">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
             <i class="bi bi-house me-2"></i>{{ _('Continue Shopping') }}
         </a>
         <a href="{{ url_for('login') }}" class="btn btn-primary">

@@ -37,11 +37,11 @@
                     <!-- Пошук видалено тут -->
 
                     <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
-                            <a href="{{ url_for('localized_index', lang=session.get('language', 'sk')) }}" class="btn btn-outline-primary">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
                             <i class="bi bi-house me-2"></i>
                             {{ _('Back to Home') }}
                         </a>
-                            <a href="{{ url_for('localized_contacts', lang=session.get('language', 'sk')) }}" class="btn btn-info text-white">
+                        <a href="{{ url_for('contacts') }}" class="btn btn-info text-white">
                             <i class="bi bi-headset me-2"></i>
                             {{ _('Contact Support') }}
                         </a>
@@ -87,7 +87,7 @@
                                 <span class="meta-value product-price">{{ "%.2f"|format(product.price) }} €</span>
                             </div>
                         </div>
-                                <a href="{{ url_for('localized_product_details', lang=session.get('language', 'sk'), article=product.article) }}" 
+                        <a href="{{ url_for('product_details', article=product.article) }}" 
                            class="btn btn-primary btn-sm w-100 mt-2">
                             <i class="bi bi-eye-fill me-2"></i>
                             {{ _('View Details') }}

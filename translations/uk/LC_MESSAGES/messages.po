@@ -7453,37 +7453,6 @@ msgstr "Завантажити та шукати"
 #~ "найнижчими цінами. Всі запчастини оригінальні та нові."
 
 #~ msgid "Content"
-#~ msgstr ""
-
-msgid "Stale Imports"
-msgstr "Завислі імпорти"
-
-msgid "Failed Imports"
-msgstr "Провалені імпорти"
-
-msgid "Last Import Failure"
-msgstr "Останній збій імпорту"
-
-msgid "Issues Detected"
-msgstr "Виявлено проблеми"
-
-msgid "Status:"
-msgstr "Статус:"
-
-msgid "File:"
-msgstr "Файл:"
-
-msgid "Time:"
-msgstr "Час:"
-
-msgid "Reason:"
-msgstr "Причина:"
-
-msgid "unknown"
-msgstr "невідомо"
-
-msgid "n/a"
-msgstr "н/д"
 #~ msgstr "Контент"
 
 #~ msgid "Back to Management"

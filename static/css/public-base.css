@@ -1,513 +1,192 @@
-/* ========== UI BASE STYLES - PHASE 1: FOUNDATION ========== */
-/* Design System inspired by Land Rover Premium Heritage */
+/* ========== UI BASE STYLES (header, footer, buttons, contacts, cookie, social) ========== */
 
 :root {
-    /* Brand Colors - Land Rover Heritage */
-    --lr-forest-green: #1a4d2e;
-    --lr-british-racing: #0f3020;
-    --lr-silver: #a8b3b8;
-    --lr-gold: #c9a961;
-    
-    /* Modern Accents */
-    --primary-color: #2d6a4f;
-    --primary-hover: #1a4d2e;
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
     --secondary-color: #64748b;
-    
-    /* Neutrals */
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
     --border-color: #e2e8f0;
     --light-bg: #f8fafc;
     --white: #ffffff;
-    
-    /* Semantic Colors */
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    
-    /* Shadows */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
-    --shadow-premium: 0 8px 32px rgba(26, 77, 46, 0.15);
-    
-    /* Spacing System */
-    --space-xs: 0.25rem;
-    --space-sm: 0.5rem;
-    --space-md: 1rem;
-    --space-lg: 1.5rem;
-    --space-xl: 2rem;
-    --space-2xl: 3rem;
-    
-    /* Border Radius */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --radius-sm: 0.375rem;
     --radius-md: 0.5rem;
     --radius-lg: 0.75rem;
-    --radius-xl: 1rem;
-    
-    /* Typography */
-    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-headings: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 
 
-/* Base Styles */
+/* public-base.css */
 *,
 *::before,
 *::after {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
 }
-
 body {
-    font-family: var(--font-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.6;
     color: var(--text-primary);
     background-color: #fafafa;
     margin: 0;
     padding: 0;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Typography System */
-h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-headings);
-    font-weight: 600;
-    line-height: 1.3;
-    margin: 0;
-}
-
-h1 { font-size: 2.5rem; font-weight: 700; }
-h2 { font-size: 2rem; font-weight: 600; }
-h3 { font-size: 1.5rem; font-weight: 600; }
-h4 { font-size: 1.25rem; }
-h5 { font-size: 1.125rem; }
-h6 { font-size: 1rem; }
-
-/* ==============================================
-   HEADER - FIXED HEIGHT SOLUTION (NO FLICKERING)
-   ============================================== */
-
+/* --- HEADER --- */
 .main-header {
     background: var(--white);
     box-shadow: var(--shadow-sm);
     z-index: 1030;
-    font-family: var(--font-headings);
-    position: sticky;
-    top: 0;
-    transition: box-shadow 0.3s ease;
 }
-
-.main-header.is-sticky {
-    box-shadow: var(--shadow-lg);
-}
-
-/* Top Bar - Land Rover Heritage */
 .header-top {
-    background: linear-gradient(135deg, var(--lr-forest-green) 0%, var(--lr-british-racing) 100%);
-    color: var(--white);
-    font-size: 0.85rem;
-    padding: 0.5rem 0;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-/* Compact state - opacity fade, NO height change */
-.main-header.is-compact .header-top {
-    opacity: 0;
-    transform: translateY(-10px);
-    pointer-events: none;
-}
-
-/* Main Header Bar - FIXED 80px */
-.header-main {
-    padding: 1rem 0;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid var(--border-light);
-}
-
-/* Navigation Bar - FIXED 60px */
-.header-subnav {
     background: var(--light-bg);
-    padding: 0 0;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    overflow: hidden;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    padding: 6px 0;
 }
-
-/* Compact state - opacity fade, NO height change */
-.main-header.is-compact .header-subnav {
-    opacity: 0;
-    transform: translateY(-10px);
-    pointer-events: none;
-    height: 0;
-    padding: 0;
-}
-/* Header Content Containers */
 .header-top-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-
-/* Header Contacts - White text on green */
 .header-contacts {
     display: flex;
-    gap: 1.5rem;
+    gap: 18px;
     flex-wrap: wrap;
 }
-
 .header-contact-item {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--primary-color);
     text-decoration: none;
     transition: color 0.2s;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
+    gap: 6px;
 }
-
 .header-contact-item:hover {
-    color: var(--lr-gold);
+    color: var(--primary-hover);
+    text-decoration: underline;
 }
-
-.header-contact-item i {
-    font-size: 0.9rem;
-}
-
-/* Language Selector */
 .language-selector .btn {
-    color: rgba(255, 255, 255, 0.9);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    font-size: 0.85rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: var(--radius-sm);
-    transition: all 0.2s;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    padding: 2px 10px;
 }
 
-.language-selector .btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: var(--lr-gold);
-    color: var(--lr-gold);
+/* --- HEADER MAIN --- */
+.header-main {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+    background: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
-/* Header Main Content Layout */
-.header-shell {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 2rem;
-    align-items: center;
-}
-
-.header-left {
+.adaptive-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    justify-content: space-between;
+    gap: 18px;
 }
-
-.header-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    max-width: 600px;
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 1.5rem;
-}
-
-/* Logo */
 .header-logo .navbar-brand {
     font-weight: 700;
     font-size: 1.5rem;
-    color: var(--lr-forest-green);
+    color: var(--primary-color);
     text-decoration: none;
-    font-family: var(--font-headings);
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
 }
-
 .header-logo .navbar-brand:hover {
-    color: var(--lr-gold);
+    color: var(--primary-hover);
 }
-/* Navigation Menu */
 .header-nav .nav-menu {
     display: flex;
-    gap: 0.5rem;
+    gap: 8px;
     list-style: none;
     margin: 0;
     padding: 0;
 }
-
 .nav-link {
     color: var(--text-primary);
-    font-weight: 500;
-    padding: 0.5rem 1rem;
+    font-weight: 600;
+    padding: 10px 18px;
     border-radius: var(--radius-md);
     text-decoration: none;
-    transition: all 0.2s;
-    font-size: 0.95rem;
-    border-bottom: 2px solid transparent;
+    transition: background 0.18s, color 0.18s;
 }
-
-.nav-link:hover {
-    color: var(--primary-color);
-    background: var(--light-bg);
-    border-bottom-color: var(--primary-color);
-}
-
-.nav-link.active {
-    background: var(--light-bg);
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
+.nav-link:hover, .nav-link.active {
+    background: #eff6ff;
+    color: #2563eb;
 }
 
 /* --- SEARCH --- */
-.header-search-modern {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 0.75rem;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 0.5rem 0.6rem 0.5rem 0.9rem;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
-    min-width: 420px;
-    max-width: 720px;
-}
-
-.header-search-modern .header-search-icon {
-    color: #0f172a;
-    font-size: 1.1rem;
-    background: transparent !important;
-}
-
-.header-search-modern input {
-    border: none;
-    outline: none;
-    font-size: 1rem;
-    background: transparent;
-    width: 100%;
-}
-
-.header-search-modern .search-submit {
-    border: none;
-    border-radius: 12px;
-    padding: 0.55rem 1.1rem;
-    font-weight: 700;
-    color: #ffffff;
-    background: #2d6a4f;
-    box-shadow: 0 4px 14px rgba(45, 106, 79, 0.25);
-}
-
-.header-search-modern .search-submit:hover {
-    background: #1a4d2e;
-}
-
-.header-subnav {
-    margin-top: 0.75rem;
-    padding-top: 0.35rem;
-    border-top: 1px solid #e2e8f0;
-    align-items: center;
-    justify-content: space-between;
-    max-height: 300px;
-    opacity: 1;
-    overflow: hidden;
-    transition: all 0.25s ease-in-out;
-}
-
-.header-subnav .nav-link {
-    background: #f8fafc;
-    border-radius: 999px;
-    font-weight: 600;
-}
-
-/* Header Quick Actions (VIN, Help, Service) */
-.header-quick-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.quick-action,
-.quick-chip {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-md);
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    white-space: nowrap;
-    border: 1px solid var(--border-color);
-    background: var(--white);
-    color: var(--text-primary);
-}
-
-.quick-action:hover,
-.quick-chip:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    transform: translateY(-1px);
+.search-container .input-group {
     box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-md);
+    overflow: hidden;
 }
-
-/* VIN Request - Primary CTA */
-.quick-action[data-open-vin-modal] {
-    background: var(--primary-color);
-    color: var(--white);
-    border-color: var(--primary-color);
+.search-container .form-control {
+    border: 1px solid var(--border-color);
+    border-right: none;
+    padding: 8px 15px;
+    height: 40px;
+}
+.search-container .btn {
+    padding: 0 15px;
+    height: 40px;
+    border-radius: 0;
+}
+.stylish-search {
+    box-shadow: 0 2px 8px rgba(37,99,235,0.12);
+    border-radius: 2rem;
+    overflow: hidden;
+    background: #fff;
+    max-width: 420px;
+    border: 2px solid #2563eb;
+}
+.stylish-search .form-control {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    font-size: 1.1rem;
+}
+.stylish-search .input-group-text {
+    background: #fff;
+    border: none;
+    font-size: 1.2rem;
+}
+.stylish-search .btn-primary {
+    border-radius: 2rem;
     font-weight: 600;
+    transition: background 0.18s;
+}
+.stylish-search .btn-primary:hover {
+    background: #1d4ed8;
+}
+@media (max-width: 991px) {
+    .stylish-search { max-width: 100%; }
 }
 
-.quick-action[data-open-vin-modal]:hover {
-    background: var(--primary-hover);
-    border-color: var(--primary-hover);
-    color: var(--white);
-}
-
-
-/* Header User Actions (Cart, Profile, Wishlist) */
+/* --- USER ACTIONS (Cart, Account) --- */
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 16px;
 }
-
 .header-action-btn {
     position: relative;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 0.25rem;
-    color: var(--text-primary);
+    color: var(--primary-color);
     background: none;
     border: none;
-    padding: 0;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.header-action-btn i {
-    font-size: 1.5rem;
-    transition: all 0.2s;
-}
-
-.header-action-btn:hover {
-    color: var(--primary-color);
-    transform: translateY(-2px);
-}
-
-.header-action-btn:hover i {
-    transform: scale(1.1);
-}
-
-/* Cart Badge */
-#cart-badge {
-    position: absolute;
-    top: -5px;
-    right: -10px;
-    background: var(--danger);
-    color: var(--white);
-    width: 20px;
-    height: 20px;
+    padding: 7px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: 700;
-    box-shadow: var(--shadow-sm);
+    font-size: 1.25rem;
+    transition: background 0.18s, color 0.18s;
 }
-
-/* Mobile Search Bar */
-.mobile-search-bar {
-    padding: 0.75rem 0;
-    background: var(--white);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.mobile-search-field {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-lg);
-    border: 2px solid var(--border-color);
-    background: var(--white);
-    transition: all 0.2s;
-}
-
-.mobile-search-field:focus-within {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-}
-
-.mobile-search-field .form-control {
-    border: none;
-    box-shadow: none;
-    padding: 0;
-    font-size: 0.95rem;
-}
-
-.mobile-search-field .form-control:focus {
-    outline: none;
-}
-
-.mobile-search-field .btn {
-    border-radius: var(--radius-md);
+.header-action-btn:hover {
     background: var(--primary-color);
-    color: var(--white);
-    font-weight: 600;
-    padding: 0.5rem 1rem;
-}
-
-.mobile-search-field .btn:hover {
-    background: var(--primary-hover);
-}
-
-
-@media (max-width: 1200px) {
-    .header-search-modern {
-        min-width: 320px;
-    }
-}
-
-@media (max-width: 991px) {
-    .header-shell {
-        grid-template-columns: auto auto;
-    }
-
-    .header-center {
-        display: none;
-    }
-
-    .header-subnav {
-        display: none;
-    }
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.08);
 }
 .cart-badge {
     position: absolute;
@@ -547,83 +226,23 @@ h6 { font-size: 1rem; }
 .cookie-link { color: var(--primary-color); text-decoration: underline; }
 .cookie-actions { display: flex; gap: 10px; }
 
-/* ==============================================
-   BUTTONS - PHASE 1 FOUNDATION
-   ============================================== */
-
-.btn {
-    font-family: var(--font-primary);
-    font-weight: 600;
-    border-radius: var(--radius-md);
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    border: none;
-}
-
-.btn-primary {
-    background: var(--primary-color);
-    color: var(--white);
-    border: 1px solid var(--primary-color);
-}
-
-.btn-primary:hover {
-    background: var(--primary-hover);
-    border-color: var(--primary-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.btn-outline-primary {
-    background: transparent;
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-}
-
-.btn-outline-primary:hover {
-    background: var(--primary-color);
-    color: var(--white);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-.btn-secondary {
-    background: var(--secondary-color);
-    color: var(--white);
-    border: 1px solid var(--secondary-color);
-}
-
-.btn-secondary:hover {
-    background: var(--text-secondary);
-    transform: translateY(-1px);
-}
-
-.btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-}
-
-.btn-lg {
-    padding: 0.75rem 1.5rem;
-    font-size: 1.125rem;
-}
-
 /* --- CONTACT BUTTONS --- */
-.fixed-contact-buttons {
+.floating-contact, .fixed-contact-buttons {
     position: fixed;
     right: 24px;
-    bottom: 24px;
     z-index: 100;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
-.whatsapp-button {
-    background: #25d366;
-    color: #fff !important;
+.floating-contact { bottom: 180px; }
+.fixed-contact-buttons { bottom: 24px; }
+.contact-toggle {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.contact-option, .whatsapp-button {
+    background: #fff;
+    color: #007bff;
     border-radius: 50%;
     width: 48px;
     height: 48px;
@@ -635,6 +254,13 @@ h6 { font-size: 1rem; }
     transition: background 0.2s, color 0.2s;
     text-decoration: none;
 }
+.contact-option:hover {
+    background: #007bff;
+    color: #fff;
+}
+.whatsapp-button {
+    background: #25d366;
+    color: #fff !important;
     transition: background 0.2s;
 }
 .whatsapp-button:hover {
@@ -788,6 +414,7 @@ h6 { font-size: 1rem; }
 /* --- RESPONSIVE --- */
 @media (max-width: 991px) {
     .footer-grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .floating-contact { right: 8px; bottom: 140px; }
     .fixed-contact-buttons { right: 8px; bottom: 70px; }
 }
 @media (max-width: 767px) {

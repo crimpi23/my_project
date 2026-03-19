@@ -1,7 +1,6 @@
 {% extends "base/public_base.html" %}
 {% block extra_css %}
-<!-- NEW CATALOG PAGE DESIGN -->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/new-public-index.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/public-index.css') }}">
 {% endblock %}
 
 {% block meta_description %}{{ _('AutogroupEU - Your reliable partner in auto parts supply across Europe.') }}{% endblock %}
@@ -9,56 +8,36 @@
 {% block og_description %}{{ _('Find the best auto parts for your vehicle with quick delivery across Europe') }}{% endblock %}
 
 {% block title %}{{ _('Home') }} - AutogroupEU{% endblock %}
-{% block canonical %}https://autogroup.sk/{{ session.get('language', 'sk') }}/{% endblock %}
-
-{% macro render_category_nodes(nodes, selected_category, level=1) %}
-    {% if nodes %}
-    <ul class="subcategory-list level-{{ level }}">
-        {% for node in nodes %}
-        <li class="subcategory-item level-{{ level }} {% if node.children %}tree-node has-children{% endif %}" data-node-id="{{ node.id }}">
-            <div class="subcategory-row level-{{ level }}">
-                {% if node.children %}
-                <button type="button"
-                        class="subcategory-link level-{{ level }} subcategory-parent-trigger {% if selected_category == node.id %}active{% endif %}"
-                        aria-expanded="false"
-                        aria-controls="cat-children-{{ node.id }}">
-                    {{ node.name }}
-                </button>
-                {% else %}
-                <a href="{{ url_for('localized_index', lang=session.get('language', 'sk'), category=node.id) }}"
-                   class="subcategory-link level-{{ level }} {% if selected_category == node.id %}active{% endif %}">
-                    {{ node.name }}
-                </a>
-                {% endif %}
-                {% if node.children %}
-                <button class="category-toggle" type="button" aria-expanded="false" aria-controls="cat-children-{{ node.id }}" aria-label="{{ _('Toggle category') }}">
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-                {% endif %}
-            </div>
-            {% if node.children %}
-            <div id="cat-children-{{ node.id }}" class="tree-children" hidden>
-                {{ render_category_nodes(node.children, selected_category, level + 1) }}
-            </div>
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-{% endmacro %}
 
 {% block content %}
-<!-- Catalog Page with New Design -->
-<div class="catalog-page">
-    <div class="catalog-container">
+<div class="main-content-wide mt-4 home-page">
+    <div class="pre-products-bar-scroll">
+      <div class="pre-products-bar-inner">
+        <!-- Need Help -->
+        <button class="mini-card btn-card" id="openHelpModal" type="button">
+          <div class="mini-title"><i class="bi bi-headset me-2"></i>{{ _('Need Help?') }}</div>
+          <div class="mini-sub">{{ _("If you have any questions, don't hesitate to contact us:") }}</div>
+        </button>
+        <!-- Car Service -->
+        <button class="mini-card btn-card" id="openServiceModal" type="button">
+          <div class="mini-title"><i class="bi bi-tools me-2"></i>{{ _('Car Service & Programming') }}</div>
+          <div class="mini-sub">{{ _('We offer professional car repair and programming services.') }}</div>
+        </button>
+        <!-- VIN Request -->
+        <button class="mini-card btn-card" id="openVinModal" type="button">
+          <div class="mini-title"><i class="bi bi-key me-2"></i>{{ _('VIN Request') }}</div>
+          <div class="mini-sub">{{ _('Request parts by VIN code') }}</div>
+        </button>
+      </div>
+    </div>
 
     {% if selected_category %}
     <nav aria-label="breadcrumb" class="breadcrumb-nav mb-3">
-        <a href="{{ url_for('localized_index', lang=session.get('language', 'sk')) }}" class="breadcrumb-link">{{ _('All Products') }}</a>
+        <a href="{{ url_for('index') }}" class="breadcrumb-link">{{ _('All Products') }}</a>
         
         {% if parent_category_obj %}
         <span class="breadcrumb-sep">/</span>
-        <a href="{{ url_for('localized_index', lang=session.get('language', 'sk'), category=parent_category_obj.id) }}" class="breadcrumb-link">
+        <a href="{{ url_for('index', category=parent_category_obj.id) }}" class="breadcrumb-link">
             {{ parent_category_obj.name }}
         </a>
         {% endif %}
@@ -72,234 +51,239 @@
 
     <div class="catalog-layout">
         {% if categories %}
-        <!-- Modern Sidebar -->
         <aside class="catalog-sidebar" id="catalogSidebar">
             <div class="sidebar-header">
                 <h3 class="sidebar-title">
-                    <i class="bi bi-list-nested"></i>
-                    {{ _('Product Categories') }}
+                    <i class="bi bi-list-nested me-2"></i>{{ _('Product Categories') }}
                 </h3>
             </div>
-            <ul class="category-list">
-                <li class="category-item">
-                    <a href="{{ url_for('localized_index', lang=session.get('language', 'sk')) }}" class="category-link {% if not selected_category %}active{% endif %}">
-                        <i class="bi bi-grid-3x3-gap-fill category-icon"></i>
-                        <span>{{ _('All Products') }}</span>
-                    </a>
-                </li>
-                {% for category in categories %}
-                <li class="category-item {% if category.children %}tree-node has-children{% endif %}" data-node-id="{{ category.id }}">
-                    <div class="category-row">
-                        {% if category.children %}
-                    <button type="button"
-                        class="category-link category-parent-trigger {% if selected_category == category.id %}active{% endif %}"
-                        aria-expanded="false"
-                        aria-controls="cat-children-{{ category.id }}">
-                            <i class="{{ category.icon_class or 'bi bi-folder' }} category-icon"></i>
-                            <span>{{ category.name }}</span>
-                    </button>
-                        {% else %}
-                                <a href="{{ url_for('localized_index', lang=session.get('language', 'sk'), category=category.id) }}" 
-                           class="category-link {% if selected_category == category.id %}active{% endif %}">
-                            <i class="{{ category.icon_class or 'bi bi-folder' }} category-icon"></i>
-                            <span>{{ category.name }}</span>
+            <nav class="sidebar-nav">
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <a href="{{ url_for('index') }}" class="sidebar-link {% if not selected_category %}active{% endif %}">
+                            <i class="bi bi-grid-3x3-gap-fill"></i>
+                            <span>{{ _('All Products') }}</span>
                         </a>
-                        {% endif %}
+                    </li>
+                    {% for category in categories %}
+                    <li class="sidebar-item {% if category.id == selected_category or category.id in parent_category_ids %}expanded{% endif %}">
+                        <div class="sidebar-link-row">
+                            {% if category.children %}
+                            <button type="button" class="sidebar-toggle" data-target="sidebarSub{{ category.id }}">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                            {% endif %}
+                            <a href="{{ url_for('index', category=category.id) }}" 
+                               class="sidebar-link {% if selected_category == category.id %}active{% endif %}">
+                                {% if category.icon_class %}<i class="bi {{ category.icon_class }}"></i>{% else %}<i class="bi bi-folder"></i>{% endif %}
+                                <span>{{ category.name }}</span>
+                            </a>
+                        </div>
                         {% if category.children %}
-                        <button class="category-toggle" type="button" aria-expanded="false" aria-controls="cat-children-{{ category.id }}" aria-label="{{ _('Toggle category') }}">
-                            <i class="bi bi-chevron-down"></i>
-                        </button>
+                        <ul class="sidebar-submenu {% if category.id == selected_category or category.id in parent_category_ids %}open{% endif %}" id="sidebarSub{{ category.id }}">
+                            {% for sub in category.children %}
+                            <li class="sidebar-item {% if sub.id == selected_category or sub.id in parent_category_ids %}expanded{% endif %}">
+                                <div class="sidebar-link-row">
+                                    {% if sub.children %}
+                                    <button type="button" class="sidebar-toggle sidebar-toggle-l2" data-target="sidebarSub{{ sub.id }}">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </button>
+                                    {% endif %}
+                                    <a href="{{ url_for('index', category=sub.id) }}" 
+                                       class="sidebar-link {% if selected_category == sub.id %}active{% endif %}">
+                                        <span>{{ sub.name }}</span>
+                                    </a>
+                                </div>
+                                {% if sub.children %}
+                                <ul class="sidebar-submenu sidebar-submenu-l3 {% if sub.id == selected_category or sub.id in parent_category_ids %}open{% endif %}" id="sidebarSub{{ sub.id }}">
+                                    {% for sub3 in sub.children %}
+                                    <li class="sidebar-item">
+                                        <a href="{{ url_for('index', category=sub3.id) }}" 
+                                           class="sidebar-link sidebar-link-l3 {% if selected_category == sub3.id %}active{% endif %}">
+                                            <span>{{ sub3.name }}</span>
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
                         {% endif %}
-                    </div>
-                    {% if category.children %}
-                    <div id="cat-children-{{ category.id }}" class="tree-children" hidden>
-                        {{ render_category_nodes(category.children, selected_category) }}
-                    </div>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
         </aside>
         {% endif %}
 
-        <!-- Main Content Area -->
-        <div class="catalog-main">
-            <!-- Catalog Header -->
-            <div class="catalog-header">
-                {% if selected_category_obj %}
-                <h1 class="catalog-title">{{ selected_category_obj.name }}</h1>
-                <p class="catalog-subtitle">{{ _('Available parts and accessories') }}</p>
-                {% else %}
-                <h1 class="catalog-title">{{ _('All Products') }}</h1>
-                <p class="catalog-subtitle">{{ _('Complete catalog of Land Rover & Range Rover parts') }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Stock Banner -->
-            <div class="stock-banner">
-                <div class="stock-banner-icon">
-                    <i class="bi bi-box-seam-fill"></i>
-                </div>
-                <div class="stock-banner-content">
-                    <h3>{{ _('Items in Our Stock') }}</h3>
-                    <p>{{ _('Available for immediate delivery') }}</p>
-                </div>
-            </div>
-
-            <!-- Products Grid - Luxury Design -->
-            <div class="products-grid">
-                {% for product in products %}
-                <div class="product-card">
-                    <!-- Product Image -->
-                    <div class="product-image-wrapper">
-                            <a href="{{ url_for('localized_product_details', lang=session.get('language', 'sk'), article=product.article) }}">
-                            {% if product.image_url %}
-                            <img src="{{ product.image_url }}" 
-                                 class="product-img" 
-                                 alt="{{ product.name or product.article }}"
-                                   loading="lazy" decoding="async" width="320" height="240">
-                            {% else %}
-                            <div class="product-img" style="display: flex; align-items: center; justify-content: center; background: var(--bg-light);">
-                                <i class="bi bi-image" style="font-size: 3rem; color: var(--text-muted);"></i>
-                            </div>
-                            {% endif %}
-                        </a>
-                        
-                        <!-- Wishlist Button -->
-                        <button class="product-wishlist" type="button" title="{{ _('Add to wishlist') }}">
-                            <i class="bi bi-heart"></i>
-                        </button>
-                        
-                        <!-- Badges -->
-                        <div class="product-badge-group">
-                            {% if product.quantity > 0 %}
-                            <span class="product-badge badge-stock">
-                                <i class="bi bi-check-circle"></i>
-                                {{ _('In stock') }}
-                            </span>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- Product Content -->
-                    <div class="product-content">
-                        <!-- Brand Name -->
-                        <p class="product-brand">{{ product.brand_name }}</p>
-                        
-                        <!-- Product Title -->
-                        <h3 class="product-title">
-                            <a href="{{ url_for('localized_product_details', lang=session.get('language', 'sk'), article=product.article) }}">
-                                {% if product.name %}{{ product.name }}{% else %}{{ product.article }}{% endif %}
-                            </a>
-                        </h3>
-                        
-                        <!-- Article Code -->
-                        <div class="product-article">
-                            <i class="bi bi-upc-scan"></i>
-                            {{ product.article }}
-                        </div>
-                        
-                        <!-- Price Section -->
-                        <div class="product-price-section">
-                            <div class="product-price-main">
-                                <span class="price-currency">€</span>
-                                {{ "%.2f"|format(product.price|float) }}
-                                <span class="price-vat-badge">{{ _('incl. VAT') }}</span>
-                            </div>
-                            <p class="product-price-secondary">
-                                {{ "%.2f"|format((product.price|float) / 1.23) }} € {{ _('excl. VAT') }}
-                            </p>
-                        </div>
-                        
-                        <!-- Product Actions -->
-                        <div class="product-actions">
-                            {% if product.quantity > 0 %}
-                            <button type="button" 
-                                    class="btn-add-to-cart add-to-cart-btn"
-                                    data-article="{{ product.article }}"
-                                    data-table="stock"
-                                    data-price="{{ product.price }}"
-                                    data-quantity="{{ product.quantity or 0 }}"
-                                    data-brand-id="{{ product.brand_id or '' }}">
-                                <i class="bi bi-cart-plus"></i>
-                                {{ _('Add to Cart') }}
-                            </button>
-                            {% else %}
-                            <button type="button" class="btn-add-to-cart" disabled style="opacity: 0.5;">
-                                <i class="bi bi-clock-history"></i>
-                                {{ _('Out of Stock') }}
-                            </button>
-                            {% endif %}
-                            <button class="btn-quick-view"
-                                    type="button"
-                                    title="{{ _('Quick view') }}"
-                                    data-article="{{ product.article }}"
-                                    data-name="{{ product.name or product.article }}"
-                                    data-brand="{{ product.brand_name or '' }}"
-                                    data-price="{{ product.price }}"
-                                    data-quantity="{{ product.quantity or 0 }}"
-                                    data-image-url="{{ product.image_url or '' }}"
-                                    data-product-url="{{ url_for('localized_product_details', lang=session.get('language', 'sk'), article=product.article) }}"
-                                    data-brand-id="{{ product.brand_id or '' }}">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
-            {% if has_more %}
-            <!-- Pagination / Load More -->
-            <div class="load-more-wrap">
-                <button id="loadMoreButton" 
-                        class="btn btn-primary btn-lg" 
-                        data-next-page="{{ (page or 1)|int + 1 }}">
-                    <i class="bi bi-plus-circle"></i>
-                    <span class="button-text">{{ _('Show More Products') }}</span>
-                    <span class="spinner-border spinner-border-sm d-none ms-2" role="status"></span>
+        <div class="catalog-main-content">
+            <div class="mobile-catalog-toggle d-lg-none mb-3">
+                <button class="catalog-btn w-100" type="button" id="openMobileCat">
+                    <i class="bi bi-list-nested me-2"></i>
+                    <span>{{ _('Categories') }}</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
                 </button>
             </div>
-            {% endif %}
-        </div>
-    </div>
-    </div>
-</div>
-
-<div id="quickViewModal" class="quick-view-modal d-none" aria-hidden="true">
-    <div class="quick-view-backdrop" data-quick-view-close></div>
-    <div class="quick-view-window" role="dialog" aria-modal="true" aria-labelledby="quickViewTitle">
-        <button class="quick-view-close" type="button" data-quick-view-close aria-label="{{ _('Close') }}">
-            <i class="bi bi-x-lg"></i>
-        </button>
-        <div class="quick-view-grid">
-            <div class="quick-view-media" id="quickViewMedia"></div>
-            <div class="quick-view-panel">
-                <h2 class="quick-view-title" id="quickViewTitle"></h2>
-                <div class="quick-view-meta">
-                    <div class="meta-item"><span>{{ _('Article Number') }}:</span> <strong id="quickViewArticle"></strong></div>
-                    <div class="meta-item"><span>{{ _('Brand') }}:</span> <strong id="quickViewBrand"></strong></div>
-                </div>
-                <div class="quick-view-price-box">
-                    <div class="quick-view-price-main" id="quickViewPrice"></div>
-                    <div class="quick-view-price-sub" id="quickViewPriceExcl"></div>
-                    <div class="quick-view-availability"><span>{{ _('Availability') }}:</span> <strong id="quickViewAvailability"></strong></div>
-                </div>
-                <div class="quick-view-actions">
-                    <button type="button" class="btn-add-to-cart quick-view-add-to-cart" id="quickViewAddToCart">
-                        <i class="bi bi-cart-plus"></i>
-                        {{ _('Add to Cart') }}
-                    </button>
-                    <a href="#" class="btn-quick-view-open" id="quickViewOpenLink">
-                        <i class="bi bi-box-arrow-up-right"></i>
-                        {{ _('Open Full Product') }}
-                    </a>
+        
+            <div class="stock-header-card mb-4">
+                <div class="stock-header-content">
+                    <div class="stock-header-icon">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                    <div class="stock-header-text">
+                        {% if selected_category_obj %}
+                        <h2 class="stock-header-title">{{ selected_category_obj.name }}</h2>
+                        {% else %}
+                        <h2 class="stock-header-title">{{ _('Items in Our Stock') }}</h2>
+                        {% endif %}
+                        <p class="stock-header-subtitle">
+                            <i class="bi bi-lightning-charge-fill text-warning me-1"></i>
+                            {{ _('Available for immediate delivery') }}
+                        </p>
+                    </div>
                 </div>
             </div>
+
+        <div class="products-grid" id="productsGrid">
+            {% for product in products %}
+            <div class="product-card {% if product.quantity <= 0 %}out-of-stock{% endif %}">
+                <a href="{{ url_for('product_details', article=product.article) }}" class="product-image-link">
+                    <div class="product-image-container">
+                        {% if product.quantity <= 0 %}
+                        <div class="out-of-stock-badge">
+                            <i class="bi bi-clock-history"></i>
+                            {{ _('Out of Stock') }}
+                        </div>
+                        {% endif %}
+                        {% if product.image_url %}
+                        <img src="{{ product.image_url }}" 
+                             class="product-image" 
+                             alt="{{ product.name or product.article }}"
+                             loading="lazy" 
+                             decoding="async">
+                        {% else %}
+                        <div class="product-image-placeholder">
+                            <i class="bi bi-image"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </a>
+
+                <div class="product-content">
+                    <a href="{{ url_for('product_details', article=product.article) }}" class="product-title-link">
+                        <h3 class="product-title">
+                            {% if product.name %}{{ product.name }}{% else %}{{ product.article }}{% endif %}
+                        </h3>
+                    </a>
+                    
+                    <div class="product-meta-compact">
+                        <span class="product-brand">{{ product.brand_name }}</span>
+                        <span class="product-article">{{ product.article }}</span>
+                    </div>
+                    
+                    <div class="product-prices">
+                        <div class="price-main-line">
+                            <span class="price-with-vat">{{ "%.2f"|format(product.price|float) }} €</span>
+                            <span class="price-vat-label">{{ _('incl. VAT') }}</span>
+                        </div>
+                        <div class="price-secondary-line">
+                            <span class="price-without-vat">{{ "%.2f"|format((product.price|float) / 1.23) }} €</span>
+                            <span class="price-novat-label">{{ _('excl. VAT') }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="product-actions">
+                        {% if product.quantity > 0 %}
+                        <button type="button" 
+                                class="btn btn-success btn-sm product-btn add-to-cart-btn"
+                                data-article="{{ product.article }}"
+                                data-table="stock"
+                                data-price="{{ product.price }}"
+                                data-brand-id="{{ product.brand_id or '' }}">
+                            <i class="bi bi-cart-plus me-1"></i>
+                            {{ _('Add to Cart') }}
+                        </button>
+                        {% else %}
+                        <a href="{{ url_for('product_details', article=product.article) }}" 
+                           class="btn btn-outline-primary btn-sm product-btn">
+                            <i class="bi bi-eye me-1"></i>
+                            {{ _('View Details') }}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if has_more %}
+        <div class="text-center mt-4">
+            <button id="loadMoreButton" 
+                    class="btn btn-outline-primary btn-lg load-more-btn" 
+                    data-next-page="{{ (page or 1)|int + 1 }}">
+                <span class="button-text">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    {{ _('Show More Products') }}
+                </span>
+                <span class="spinner-border spinner-border-sm d-none ms-2" role="status"></span>
+            </button>
+        </div>
+        {% endif %}
         </div>
     </div>
 </div>
 
+    <div id="helpModalOverlay" class="vin-modal-overlay d-none">
+        <div class="vin-modal-window">
+            <button class="vin-modal-close" id="closeHelpModal" aria-label="Close">&times;</button>
+            <h2 class="vin-modal-title"><i class="bi bi-headset me-2"></i>{{ _('Need Help?') }}</h2>
+            <p>{{ _("If you have any questions, don't hesitate to contact us:") }}</p>
+            <p>
+                <a href="tel:+421907400865" class="text-primary" style="font-size:1.2rem;">
+                    +421 907 400 865
+                </a><br>
+                <span class="text-muted">{{ _('Mon-Fri: 9:00 - 19:00') }}</span>
+            </p>
+        </div>
+    </div>
+
+    <div id="serviceModalOverlay" class="vin-modal-overlay d-none">
+        <div class="vin-modal-window">
+            <button class="vin-modal-close" id="closeServiceModal" aria-label="Close">&times;</button>
+            <h2 class="vin-modal-title"><i class="bi bi-tools me-2"></i>{{ _('Car Service & Programming') }}</h2>
+            <p>{{ _('We offer professional car repair and programming services.') }}</p>
+            <a href="{{ url_for('car_service') }}" class="btn btn-primary mt-2">{{ _('Learn More') }}</a>
+        </div>
+    </div>
+
+    <div id="vinModalOverlay" class="vin-modal-overlay d-none">
+    <div class="vin-modal-window">
+        <button class="vin-modal-close" id="closeVinModal" aria-label="Close">&times;</button>
+        <h2 class="vin-modal-title"><i class="bi bi-key me-2"></i>{{ _('VIN Request') }}</h2>
+        <form id="vinModalForm" autocomplete="off">
+            <div class="mb-3">
+                <label for="vin_code" class="form-label">{{ _('VIN code (17 characters)') }}</label>
+                <input type="text" name="vin_code" id="vin_code" maxlength="17" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">{{ _('Phone') }} (+421...)</label>
+                <input type="text" name="phone" id="phone" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">{{ _('Email') }}</label>
+                <input type="email" name="email" id="email" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="parts_description" class="form-label">{{ _('Describe needed parts') }}</label>
+                <textarea name="parts_description" id="parts_description" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">{{ _('Send Request') }}</button>
+            <div id="vinModalStatus" class="mt-2 small"></div>
+        </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -307,158 +291,13 @@
 window.translations = {
     'Brand': '{{ _("Brand") }}',
     'Article': '{{ _("Article") }}',
-    'Article Number': '{{ _("Article Number") }}',
     'Price': '{{ _("Price") }}',
     'No description available.': '{{ _("No description available.") }}',
     'View Details': '{{ _("View Details") }}',
-    'incl. VAT': '{{ _("incl. VAT") }}',
-    'excl. VAT': '{{ _("excl. VAT") }}',
-    'In stock': '{{ _("In stock") }}',
-    'On request': '{{ _("On request") }}',
-    'Availability': '{{ _("Availability") }}',
-    'Quick view': '{{ _("Quick view") }}',
-    'Open Full Product': '{{ _("Open Full Product") }}',
-    'Close': '{{ _("Close") }}',
-    'Add to Cart': '{{ _("Add to Cart") }}'
+    'incl. VAT': '{{ _("incl. VAT") }}'
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    const quickViewModal = document.getElementById('quickViewModal');
-    const quickViewMedia = document.getElementById('quickViewMedia');
-    const quickViewTitle = document.getElementById('quickViewTitle');
-    const quickViewArticle = document.getElementById('quickViewArticle');
-    const quickViewBrand = document.getElementById('quickViewBrand');
-    const quickViewPrice = document.getElementById('quickViewPrice');
-    const quickViewPriceExcl = document.getElementById('quickViewPriceExcl');
-    const quickViewAvailability = document.getElementById('quickViewAvailability');
-    const quickViewAddToCart = document.getElementById('quickViewAddToCart');
-    const quickViewOpenLink = document.getElementById('quickViewOpenLink');
-    let quickViewPayload = null;
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-
-    function closeQuickView() {
-        if (!quickViewModal) return;
-        quickViewModal.classList.add('d-none');
-        quickViewModal.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('modal-open');
-        quickViewPayload = null;
-    }
-
-    function openQuickView(button) {
-        if (!button || !quickViewModal) return;
-
-        const data = {
-            article: button.dataset.article || '',
-            name: button.dataset.name || button.dataset.article || '',
-            brand: button.dataset.brand || '',
-            price: parseFloat(button.dataset.price || '0') || 0,
-            quantity: parseInt(button.dataset.quantity || '0', 10) || 0,
-            imageUrl: button.dataset.imageUrl || '',
-            productUrl: button.dataset.productUrl || '#',
-            brandId: button.dataset.brandId || ''
-        };
-
-        const inStock = data.quantity > 0;
-        const priceIncl = data.price.toFixed(2);
-        const priceExcl = (data.price / 1.23).toFixed(2);
-
-        quickViewTitle.textContent = data.name;
-        quickViewArticle.textContent = data.article;
-        quickViewBrand.textContent = data.brand || '—';
-        quickViewPrice.textContent = `${priceIncl} € ${window.translations['incl. VAT']}`;
-        quickViewPriceExcl.textContent = `${priceExcl} € ${window.translations['excl. VAT']}`;
-        quickViewAvailability.textContent = inStock ? window.translations['In stock'] : window.translations['On request'];
-        quickViewAvailability.className = inStock ? 'availability-in-stock' : 'availability-on-request';
-
-        quickViewMedia.innerHTML = data.imageUrl
-            ? `<img src="${data.imageUrl}" alt="${data.name}" class="quick-view-img" loading="lazy" decoding="async" width="640" height="480">`
-            : `<div class="quick-view-placeholder"><i class="bi bi-image"></i></div>`;
-
-        quickViewOpenLink.href = data.productUrl;
-        quickViewPayload = data;
-
-        quickViewAddToCart.disabled = !inStock;
-        quickViewModal.classList.remove('d-none');
-        quickViewModal.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('modal-open');
-    }
-
-    document.addEventListener('click', function(e) {
-        const quickViewButton = e.target.closest('.btn-quick-view');
-        if (quickViewButton) {
-            e.preventDefault();
-            openQuickView(quickViewButton);
-            return;
-        }
-
-        if (e.target.closest('[data-quick-view-close]')) {
-            e.preventDefault();
-            closeQuickView();
-        }
-    });
-
-    if (quickViewAddToCart) {
-        quickViewAddToCart.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (!quickViewPayload || quickViewPayload.quantity <= 0) return;
-
-            const selectedPrice = `stock:${quickViewPayload.price}|${quickViewPayload.brandId || ''}`;
-            const originalText = quickViewAddToCart.innerHTML;
-            quickViewAddToCart.disabled = true;
-            quickViewAddToCart.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>{{ _("Adding...") }}';
-
-            fetch('/public_add_to_cart', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: `article=${encodeURIComponent(quickViewPayload.article)}&selected_price=${encodeURIComponent(selectedPrice)}&quantity=1&csrf_token=${encodeURIComponent(csrfToken)}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (typeof window.updateCartBadge === 'function') {
-                        window.updateCartBadge(data.cart_count);
-                    } else {
-                        const cartBadge = document.getElementById('cart-badge');
-                        const bottomCartBadge = document.getElementById('bottomCartBadge');
-                        if (cartBadge) {
-                            cartBadge.textContent = data.cart_count;
-                            cartBadge.style.display = data.cart_count > 0 ? '' : 'none';
-                        }
-                        if (bottomCartBadge) {
-                            bottomCartBadge.textContent = data.cart_count;
-                            bottomCartBadge.style.display = data.cart_count > 0 ? '' : 'none';
-                        }
-                    }
-                    quickViewAddToCart.innerHTML = '<i class="bi bi-check me-1"></i>{{ _("Added!") }}';
-                    setTimeout(() => {
-                        quickViewAddToCart.innerHTML = originalText;
-                        quickViewAddToCart.disabled = false;
-                    }, 1200);
-                } else {
-                    quickViewAddToCart.innerHTML = '<i class="bi bi-x me-1"></i>{{ _("Error") }}';
-                    setTimeout(() => {
-                        quickViewAddToCart.innerHTML = originalText;
-                        quickViewAddToCart.disabled = false;
-                    }, 1200);
-                }
-            })
-            .catch(() => {
-                quickViewAddToCart.innerHTML = originalText;
-                quickViewAddToCart.disabled = false;
-            });
-        });
-    }
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && quickViewModal && !quickViewModal.classList.contains('d-none')) {
-            closeQuickView();
-        }
-    });
-
     const productLinks = document.querySelectorAll('.product-card a');
     productLinks.forEach(link => {
         link.addEventListener('auxclick', function(e) {
@@ -472,7 +311,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadMoreButton = document.getElementById('loadMoreButton');
     if (loadMoreButton) {
         loadMoreButton.addEventListener('click', function() {
-            const nextPage = parseInt(this.dataset.nextPage || '2', 10);
+            const productsGrid = document.getElementById('productsGrid');
+            const currentCount = productsGrid ? productsGrid.querySelectorAll('.product-card').length : 0;
+
+            const perPageApi = 8;
+
+            const nextPage = Math.floor(currentCount / perPageApi) + 1;
 
             const brandFilter = document.getElementById('brandFilter');
             const brandId = brandFilter ? brandFilter.value : '';
@@ -544,52 +388,35 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         const priceWithVat = parseFloat(product.price).toFixed(2);
         const priceWithoutVat = (parseFloat(product.price) / 1.23).toFixed(2);
-        const productTitle = product.name || product.article;
-        const inStock = Number(product.quantity || 0) > 0;
         
         return `
-            <div class="product-image-wrapper">
-                <a href="/{{ session.get('language', 'sk') }}/product/${product.article}">
-                    ${product.image_url
-                        ? `<img src="${product.image_url}" class="product-img" alt="${productTitle}" loading="lazy" decoding="async" width="320" height="240">`
-                        : `<div class="product-img" style="display:flex;align-items:center;justify-content:center;background:var(--bg-light);"><i class="bi bi-image" style="font-size:3rem;color:var(--text-muted);"></i></div>`
-                    }
-                </a>
-                <button class="product-wishlist" type="button" title="${t('Add to wishlist')}">
-                    <i class="bi bi-heart"></i>
-                </button>
-                <div class="product-badge-group">
-                    ${inStock
-                        ? `<span class="product-badge badge-stock"><i class="bi bi-check-circle"></i>${t('In stock')}</span>`
-                        : ''
-                    }
-                </div>
+            <div class="product-image-container">
+                ${product.image_url 
+                    ? `<img src="${product.image_url}" class="product-image" alt="${product.name || product.article}" loading="lazy" decoding="async">`
+                    : `<div class="product-image-placeholder"><i class="bi bi-image"></i></div>`
+                }
             </div>
             <div class="product-content">
-                <p class="product-brand">${product.brand_name || ''}</p>
-                <h3 class="product-title">
-                    <a href="/{{ session.get('language', 'sk') }}/product/${product.article}">${productTitle}</a>
-                </h3>
-                <div class="product-article">
-                    <i class="bi bi-upc-scan"></i>
-                    ${product.article}
+                <h3 class="product-title">${product.name || product.article}</h3>
+                <div class="product-meta-compact">
+                    <span class="product-brand">${product.brand_name}</span>
+                    <span class="product-article">${product.article}</span>
                 </div>
-                <div class="product-price-section">
-                    <div class="product-price-main">
-                        <span class="price-currency">€</span>
-                        ${priceWithVat}
-                        <span class="price-vat-badge">${t('incl. VAT')}</span>
+                <div class="product-prices">
+                    <div class="price-main-line">
+                        <span class="price-with-vat">${priceWithVat} €</span>
+                        <span class="price-vat-label">${t('incl. VAT')}</span>
                     </div>
-                    <p class="product-price-secondary">${priceWithoutVat} € ${t('excl. VAT')}</p>
+                    <div class="price-secondary-line">
+                        <span class="price-without-vat">${priceWithoutVat} €</span>
+                        <span class="price-novat-label">${t('excl. VAT')}</span>
+                    </div>
                 </div>
                 <div class="product-actions">
-                    ${inStock
-                        ? `<button type="button" class="btn-add-to-cart add-to-cart-btn" data-article="${product.article}" data-table="stock" data-price="${product.price}" data-quantity="${product.quantity || 0}" data-brand-id="${product.brand_id || ''}"><i class="bi bi-cart-plus"></i>${t('Add to Cart')}</button>`
-                        : `<button type="button" class="btn-add-to-cart" disabled style="opacity:0.5;"><i class="bi bi-clock-history"></i>${t('Out of Stock')}</button>`
-                    }
-                    <button class="btn-quick-view" type="button" title="${t('Quick view')}" data-article="${product.article}" data-name="${productTitle}" data-brand="${product.brand_name || ''}" data-price="${product.price}" data-quantity="${product.quantity || 0}" data-image-url="${product.image_url || ''}" data-product-url="/{{ session.get('language', 'sk') }}/product/${product.article}" data-brand-id="${product.brand_id || ''}">
-                        <i class="bi bi-eye"></i>
-                    </button>
+                    <a href="/product/${product.article}" class="btn btn-primary btn-sm product-btn">
+                        <i class="bi bi-eye me-1"></i>
+                        ${t('View Details')}
+                    </a>
                 </div>
             </div>
         `;
@@ -598,7 +425,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     // Accordion toggle
     const toggleBtn = document.getElementById('vinRequestToggle');
     const collapseDiv = document.getElementById('vinRequestCollapse');
@@ -709,229 +535,305 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    document.addEventListener('click', function(e) {
-        const button = e.target.closest('.add-to-cart-btn');
-        if (!button) return;
-
-        e.preventDefault();
-        const article = button.dataset.article;
-        const table = button.dataset.table || 'stock';
-        const price = button.dataset.price;
-
-        const originalText = button.innerHTML;
-        button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>{{ _("Adding...") }}';
-        button.disabled = true;
-
-        const brandId = button.dataset.brandId || '';
-        const selectedPrice = `${table}:${price}|${brandId}`;
-
-        fetch('/public_add_to_cart', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Accept': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: `article=${encodeURIComponent(article)}&selected_price=${encodeURIComponent(selectedPrice)}&quantity=1&csrf_token=${encodeURIComponent(csrfToken)}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                button.innerHTML = '<i class="bi bi-check me-1"></i>{{ _("Added!") }}';
-                button.classList.add('added');
-                if (typeof window.updateCartBadge === 'function') {
-                    window.updateCartBadge(data.cart_count);
+    // VIN Modal form AJAX
+    const vinModalForm = document.getElementById('vinModalForm');
+    if (vinModalForm) {
+        vinModalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const statusDiv = document.getElementById('vinModalStatus');
+            statusDiv.textContent = '';
+            statusDiv.className = 'mt-2 small';
+            fetch('/vin-request', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    vin_code: form.vin_code.value,
+                    phone: form.phone.value,
+                    email: form.email.value,
+                    parts_description: form.parts_description.value
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.textContent = '{{ _("Request sent successfully!") }}';
+                    statusDiv.className = 'mt-2 small text-success';
+                    form.reset();
+                    document.getElementById('vinModalOverlay').classList.add('d-none');
                 } else {
+                    statusDiv.textContent = data.error || '{{ _("Error sending request") }}';
+                    statusDiv.className = 'mt-2 small text-danger';
+                }
+            })
+            .catch((err) => {
+                statusDiv.textContent = '{{ _("Server error") }}';
+                statusDiv.className = 'mt-2 small text-danger';
+                console.error('VIN request error:', err);
+            });
+        });
+    }
+
+    const closeVinModal = document.getElementById('closeVinModal');
+    if (closeVinModal) {
+        closeVinModal.addEventListener('click', () => {
+            document.getElementById('vinModalOverlay').classList.add('d-none');
+        });
+    }
+
+    const openVinModalButtons = document.querySelectorAll('[data-open-vin-modal]');
+    openVinModalButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            document.getElementById('vinModalOverlay').classList.remove('d-none');
+        });
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const openVinModal = document.getElementById('openVinModal');
+    if (openVinModal) {
+        openVinModal.addEventListener('click', function() {
+            document.getElementById('vinModalOverlay').classList.remove('d-none');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+    const closeVinModal = document.getElementById('closeVinModal');
+    if (closeVinModal) {
+        closeVinModal.addEventListener('click', function() {
+            document.getElementById('vinModalOverlay').classList.add('d-none');
+            document.body.style.overflow = '';
+        });
+    }
+    const vinModalOverlay = document.getElementById('vinModalOverlay');
+    if (vinModalOverlay) {
+        vinModalOverlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('d-none');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+    const vinModalForm = document.getElementById('vinModalForm');
+    if (vinModalForm) {
+        vinModalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const status = document.getElementById('vinModalStatus');
+            status.textContent = '';
+            fetch('/vin-request', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    vin_code: this.vin_code.value,
+                    phone: this.phone.value,
+                    email: this.email.value,
+                    parts_description: this.parts_description.value
+                })
+            }).then(r=>r.json()).then(data=>{
+                if (data.success) {
+                    status.textContent = 'Request sent!';
+                    status.className = 'text-success small';
+                    this.reset();
+                    setTimeout(() => {
+                        document.getElementById('vinModalOverlay').classList.add('d-none');
+                        document.body.style.overflow = '';
+                        status.textContent = '';
+                    }, 1200);
+                } else {
+                    status.textContent = data.error || 'Error';
+                    status.className = 'text-danger small';
+                }
+            }).catch(()=>{
+                status.textContent = 'Server error';
+                status.className = 'text-danger small';
+            });
+        });
+    }
+
+    // Need Help Modal
+    const openHelpModal = document.getElementById('openHelpModal');
+    const helpModalOverlay = document.getElementById('helpModalOverlay');
+    const closeHelpModal = document.getElementById('closeHelpModal');
+    
+    if (openHelpModal && helpModalOverlay) {
+        openHelpModal.onclick = function() {
+            helpModalOverlay.classList.remove('d-none');
+            document.body.style.overflow = 'hidden';
+        };
+        if (closeHelpModal) {
+            closeHelpModal.onclick = function() {
+                helpModalOverlay.classList.add('d-none');
+                document.body.style.overflow = '';
+            };
+        }
+        helpModalOverlay.onclick = function(e) {
+            if (e.target === this) {
+                this.classList.add('d-none');
+                document.body.style.overflow = '';
+            }
+        };
+    }
+
+    // Car Service Modal
+    const openServiceModal = document.getElementById('openServiceModal');
+    const serviceModalOverlay = document.getElementById('serviceModalOverlay');
+    const closeServiceModal = document.getElementById('closeServiceModal');
+    
+    if (openServiceModal && serviceModalOverlay) {
+        openServiceModal.onclick = function() {
+            serviceModalOverlay.classList.remove('d-none');
+            document.body.style.overflow = 'hidden';
+        };
+        if (closeServiceModal) {
+            closeServiceModal.onclick = function() {
+                serviceModalOverlay.classList.add('d-none');
+                document.body.style.overflow = '';
+            };
+        }
+        serviceModalOverlay.onclick = function(e) {
+            if (e.target === this) {
+                this.classList.add('d-none');
+                document.body.style.overflow = '';
+            }
+        };
+    }
+
+
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const article = this.dataset.article;
+            const table = this.dataset.table || 'stock';
+            const price = this.dataset.price;
+            const button = this;
+            
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>{{ _("Adding...") }}';
+            button.disabled = true;
+            
+            const brandId = this.dataset.brandId || '';
+            const selectedPrice = `${table}:${price}|${brandId}`;
+            
+            fetch('/public_add_to_cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: `article=${encodeURIComponent(article)}&selected_price=${encodeURIComponent(selectedPrice)}&quantity=1`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.innerHTML = '<i class="bi bi-check me-1"></i>{{ _("Added!") }}';
+                    button.classList.add('added');
                     const cartBadge = document.getElementById('cart-badge');
-                    const bottomCartBadge = document.getElementById('bottomCartBadge');
                     if (cartBadge) {
                         cartBadge.textContent = data.cart_count;
                         cartBadge.style.display = data.cart_count > 0 ? '' : 'none';
                     }
-                    if (bottomCartBadge) {
-                        bottomCartBadge.textContent = data.cart_count;
-                        bottomCartBadge.style.display = data.cart_count > 0 ? '' : 'none';
-                    }
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.classList.remove('added');
+                        button.disabled = false;
+                    }, 2000);
+                } else {
+                    button.innerHTML = '<i class="bi bi-x me-1"></i>{{ _("Error") }}';
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }, 2000);
                 }
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.classList.remove('added');
-                    button.disabled = false;
-                }, 2000);
-            } else {
-                button.innerHTML = '<i class="bi bi-x me-1"></i>{{ _("Error") }}';
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.disabled = false;
-                }, 2000);
-            }
-        })
-        .catch(err => {
-            console.error('Add to cart error:', err);
-            button.innerHTML = originalText;
-            button.disabled = false;
+            })
+            .catch(err => {
+                console.error('Add to cart error:', err);
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
         });
     });
 
-    const SIDEBAR_STATE_KEY = 'catalogTreeExpandedV1';
-    const MOBILE_TREE_BREAKPOINT = 992;
-
-    function isMobileTreeMode() {
-        return window.innerWidth <= MOBILE_TREE_BREAKPOINT;
-    }
-
-    function expandNode(node, shouldSave = true) {
-        if (!node || !node.classList.contains('tree-node')) return;
-        const toggle = node.querySelector(':scope > .category-row .category-toggle, :scope > .subcategory-row .category-toggle');
-        const parentTrigger = node.querySelector(':scope > .category-row .category-parent-trigger, :scope > .subcategory-row .subcategory-parent-trigger');
-        const children = node.querySelector(':scope > .tree-children');
-        if (!children) return;
-
-        const parentContainer = node.parentElement;
-        if (parentContainer) {
-            parentContainer.querySelectorAll(':scope > .tree-node.is-expanded').forEach(sibling => {
-                if (sibling !== node) {
-                    collapseNode(sibling, false);
-                }
-            });
-        }
-
-        node.classList.add('is-expanded');
-        children.hidden = false;
-        if (toggle) toggle.setAttribute('aria-expanded', 'true');
-        if (parentTrigger) parentTrigger.setAttribute('aria-expanded', 'true');
-        if (shouldSave) saveSidebarState();
-    }
-
-    function collapseNode(node, shouldSave = true) {
-        if (!node || !node.classList.contains('tree-node')) return;
-        const toggle = node.querySelector(':scope > .category-row .category-toggle, :scope > .subcategory-row .category-toggle');
-        const parentTrigger = node.querySelector(':scope > .category-row .category-parent-trigger, :scope > .subcategory-row .subcategory-parent-trigger');
-        const children = node.querySelector(':scope > .tree-children');
-        if (!children) return;
-
-        children.querySelectorAll('.tree-node.is-expanded').forEach(childNode => {
-            collapseNode(childNode, false);
+    const SIDEBAR_STATE_KEY = 'sidebarCatalogState';
+    const catalogSidebar = document.getElementById('catalogSidebar');
+    const openMobileCatBtn = document.getElementById('openMobileCat');
+    
+    if (openMobileCatBtn && catalogSidebar) {
+        openMobileCatBtn.addEventListener('click', () => {
+            catalogSidebar.classList.toggle('open');
+            document.body.style.overflow = catalogSidebar.classList.contains('open') ? 'hidden' : '';
         });
-
-        node.classList.remove('is-expanded');
-        children.hidden = true;
-        if (toggle) toggle.setAttribute('aria-expanded', 'false');
-        if (parentTrigger) parentTrigger.setAttribute('aria-expanded', 'false');
-        if (shouldSave) saveSidebarState();
-    }
-
-    function saveSidebarState() {
-        if (isMobileTreeMode()) return;
-        try {
-            const expandedIds = [];
-            document.querySelectorAll('.tree-node.is-expanded[data-node-id]').forEach(node => {
-                expandedIds.push(node.dataset.nodeId);
-            });
-            localStorage.setItem(SIDEBAR_STATE_KEY, JSON.stringify(expandedIds));
-        } catch (error) {
-            console.error('Error saving sidebar state:', error);
-        }
-    }
-
-    function restoreSidebarState() {
-        if (isMobileTreeMode()) return;
-        try {
-            const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
-            if (!savedState) return;
-            const expandedIds = JSON.parse(savedState);
-            expandedIds.forEach(nodeId => {
-                const node = document.querySelector(`.tree-node[data-node-id="${nodeId}"]`);
-                if (node) expandNode(node, false);
-            });
-        } catch (error) {
-            console.error('Error restoring sidebar state:', error);
-        }
-    }
-
-    function collapseAllNodes() {
-        document.querySelectorAll('.tree-node.is-expanded').forEach(node => {
-            collapseNode(node, false);
-        });
-    }
-
-    function setActiveTrail() {
-        document.querySelectorAll('.tree-node.is-active-trail').forEach(node => {
-            node.classList.remove('is-active-trail');
-        });
-
-        document.querySelectorAll('.category-link.active, .subcategory-link.active').forEach(activeLink => {
-            let node = activeLink.closest('.tree-node');
-            while (node) {
-                node.classList.add('is-active-trail');
-                expandNode(node, false);
-                node = node.parentElement ? node.parentElement.closest('.tree-node') : null;
+        
+        catalogSidebar.addEventListener('click', (e) => {
+            if (e.target === catalogSidebar) {
+                catalogSidebar.classList.remove('open');
+                document.body.style.overflow = '';
             }
         });
     }
-
-    function initSidebarTree() {
-        document.querySelectorAll('.tree-node').forEach(node => {
-            node.classList.remove('is-expanded');
-            const toggle = node.querySelector(':scope > .category-row .category-toggle, :scope > .subcategory-row .category-toggle');
-            const parentTrigger = node.querySelector(':scope > .category-row .category-parent-trigger, :scope > .subcategory-row .subcategory-parent-trigger');
-            const children = node.querySelector(':scope > .tree-children');
-            if (children) {
-                children.hidden = true;
-            }
-            if (toggle) toggle.setAttribute('aria-expanded', 'false');
-            if (parentTrigger) parentTrigger.setAttribute('aria-expanded', 'false');
-        });
-
-        if (!isMobileTreeMode()) {
-            restoreSidebarState();
-        }
-
-        setActiveTrail();
-        if (isMobileTreeMode()) {
-            collapseAllNodes();
-            setActiveTrail();
-        }
-    }
-
-    document.querySelectorAll('.category-toggle').forEach(toggle => {
+    
+    document.querySelectorAll('.sidebar-toggle').forEach(toggle => {
         toggle.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const node = toggle.closest('.tree-node');
-            if (!node) return;
-
-            if (node.classList.contains('is-expanded')) {
-                collapseNode(node);
-            } else {
-                expandNode(node);
+            
+            const targetId = toggle.getAttribute('data-target');
+            const subMenu = document.getElementById(targetId);
+            
+            if (subMenu) {
+                const isOpen = subMenu.classList.contains('open');
+                
+                if (isOpen) {
+                    subMenu.classList.remove('open');
+                    toggle.classList.remove('open');
+                    subMenu.querySelectorAll('.sidebar-submenu.open').forEach(nested => {
+                        nested.classList.remove('open');
+                        const nestedToggle = document.querySelector(`[data-target="${nested.id}"]`);
+                        if (nestedToggle) nestedToggle.classList.remove('open');
+                    });
+                } else {
+                    subMenu.classList.add('open');
+                    toggle.classList.add('open');
+                }
+                
+                saveSidebarState();
             }
         });
     });
-
-    document.querySelectorAll('.category-parent-trigger, .subcategory-parent-trigger').forEach(trigger => {
-        trigger.addEventListener('click', (e) => {
-            e.preventDefault();
-            const node = trigger.closest('.tree-node');
-            if (!node) return;
-
-            if (node.classList.contains('is-expanded')) {
-                collapseNode(node);
-            } else {
-                expandNode(node);
+    
+    function saveSidebarState() {
+        try {
+            const openItems = [];
+            document.querySelectorAll('.sidebar-submenu.open').forEach(sub => {
+                if (sub.id) openItems.push(sub.id);
+            });
+            localStorage.setItem(SIDEBAR_STATE_KEY, JSON.stringify(openItems));
+        } catch (e) {
+            console.error('Error saving sidebar state:', e);
+        }
+    }
+    
+    function restoreSidebarState() {
+        try {
+            const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
+            if (savedState) {
+                const openItems = JSON.parse(savedState);
+                openItems.forEach(id => {
+                    const subMenu = document.getElementById(id);
+                    const toggle = document.querySelector(`[data-target="${id}"]`);
+                    if (subMenu) {
+                        subMenu.classList.add('open');
+                    }
+                    if (toggle) {
+                        toggle.classList.add('open');
+                    }
+                });
             }
-        });
-    });
-
-    initSidebarTree();
-
-    let wasMobileTreeMode = isMobileTreeMode();
-    window.addEventListener('resize', () => {
-        const isMobileNow = isMobileTreeMode();
-        if (isMobileNow === wasMobileTreeMode) return;
-        wasMobileTreeMode = isMobileNow;
-        initSidebarTree();
-    });
+        } catch (e) {
+            console.error('Error restoring sidebar state:', e);
+        }
+    }
+    
+    restoreSidebarState();
 });
 </script>
 {% endblock %}

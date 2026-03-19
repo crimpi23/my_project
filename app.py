@@ -7,8 +7,9 @@ import time
 import json
 import logging
 from flask_caching import Cache
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
+from datetime import datetime
 import os
 import bcrypt
 from functools import wraps
@@ -22,7 +23,7 @@ from flask import (
 )
 import jinja2
 from flask_babel import Babel, gettext as _
-from flask_wtf import CSRFProtect
+# from flask_wtf import CSRFProtect
 # from flask_wtf.csrf import generate_csrf
 import sys
 import urllib.parse
@@ -36,17 +37,22 @@ from email import encoders
 import math
 import gc  # Для примусового очищення пам'яті
 from flask_apscheduler import APScheduler
+from functools import wraps
 from logging.handlers import RotatingFileHandler
 from psycopg2.pool import ThreadedConnectionPool
 import atexit
 from contextlib import contextmanager
+from datetime import datetime, timedelta
+from flask_caching import Cache
+from datetime import datetime, timedelta  # додаємо timedelta до імпорту
+from decimal import Decimal
 import secrets
 import ftplib
+from werkzeug.utils import secure_filename
 import uuid
 import socket
+import uuid
 from dotenv import load_dotenv
-import threading
-import html
 from urllib.parse import urlencode
 
 
@@ -63,11 +69,6 @@ def get_locale():
     if request.path.startswith('/') and '/admin' in request.path:
         admin_lang = session.get('admin_lang', 'en')
         return admin_lang if admin_lang in ['uk', 'en'] else 'en'
-
-    # Для public пріоритет має мова в URL
-    path_lang = get_public_lang_from_path(request.path)
-    if path_lang:
-        return path_lang
     
     if 'user_id' in session:
         # Якщо користувач авторизований, беремо його мову з БД
@@ -101,18 +102,6 @@ def get_locale():
 # Configure Babel
 app.config['BABEL_DEFAULT_LOCALE'] = 'sk'
 app.config['BABEL_SUPPORTED_LOCALES'] = ['sk', 'en', 'pl', 'uk']  # Додаємо uk для адмінки
-PUBLIC_LANGUAGES = ('sk', 'en', 'pl')
-
-
-def get_public_lang_from_path(path):
-    """Витягує мову public з URL виду /sk/... /en/... /pl/..."""
-    if not path:
-        return None
-    match = re.match(r'^/([a-z]{2})(?:/|$)', path)
-    if not match:
-        return None
-    lang = match.group(1)
-    return lang if lang in PUBLIC_LANGUAGES else None
 # Set secret key for sessions and CSRF
 # app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
@@ -122,8 +111,7 @@ def get_public_lang_from_path(path):
 
 
 # Initialize extensions
-csrf = CSRFProtect(app)
-# УВАГА: Для коректної роботи CSRF потрібно додати {{ csrf_token() }} у всі POST-форми
+# csrf = CSRFProtect(app)
 babel = Babel(app)
 babel.init_app(app, locale_selector=get_locale)
 cache = Cache(app, config={
@@ -150,58 +138,6 @@ try:
 except Exception as e:
     logging.error(f"Error starting scheduler: {e}")
 
-
-def get_public_language():
-    """Повертає дозволену мову для public частини."""
-    lang = session.get('language', 'sk')
-    return lang if lang in PUBLIC_LANGUAGES else 'sk'
-
-
-def preserve_checkout_form_data(form_data):
-    """Зберігає дані checkout-форми в сесії при помилці валідації."""
-    session['checkout_form_data'] = {
-        'email': (form_data.get('email') or '').strip(),
-        'full_name': (form_data.get('full_name') or '').strip(),
-        'phone': (form_data.get('phone') or '').strip(),
-        'country': (form_data.get('country') or '').strip(),
-        'postal_code': (form_data.get('postal_code') or '').strip(),
-        'city': (form_data.get('city') or '').strip(),
-        'street': (form_data.get('street') or '').strip(),
-        'company_name': (form_data.get('company_name') or '').strip(),
-        'vat_number': (form_data.get('vat_number') or '').strip(),
-        'registration_number': (form_data.get('registration_number') or '').strip(),
-        'company_address': (form_data.get('company_address') or '').strip(),
-        'needs_invoice': form_data.get('needs_invoice') == 'on',
-        'shipping_method': (form_data.get('shipping_method') or 'pickup').strip(),
-        'save_address': form_data.get('save_address') == 'on',
-        'delivery_address': (form_data.get('delivery_address') or '').strip(),
-        'use_new_address': form_data.get('use_new_address') == '1',
-    }
-    session.modified = True
-
-
-def clear_checkout_form_data():
-    """Очищає тимчасово збережені checkout-дані з сесії."""
-    session.pop('checkout_form_data', None)
-    session.modified = True
-
-
-def activate_public_language(lang):
-    """Активує мову public частини у сесії, якщо вона дозволена."""
-    if lang in PUBLIC_LANGUAGES and session.get('language') != lang:
-        session['language'] = lang
-        session.modified = True
-
-
-def render_localized_public_template(lang, template_name):
-    """Рендерить public шаблон лише для підтримуваних public мов."""
-    if lang not in PUBLIC_LANGUAGES:
-        return redirect(url_for('localized_index', lang='sk'))
-
-    activate_public_language(lang)
-    clear_page_cache_for_user()
-    return render_template(template_name)
-
 def make_lang_cache_key():
     """Cache key that isolates per-language AND per-user cart state"""
     lang = session.get('language', app.config.get('BABEL_DEFAULT_LOCALE', 'sk'))
@@ -218,7 +154,7 @@ def clear_page_cache_for_user():
     """Очищає кеш поточної сторінки для користувача"""
     try:
         # Створюємо ключі кешу для всіх можливих мов поточної сторінки
-        languages = PUBLIC_LANGUAGES
+        languages = app.config['BABEL_SUPPORTED_LOCALES']
         user = session.get('user_id', 'guest')
         cart_count = session.get('cart_count', 0)
         
@@ -732,7 +668,7 @@ def generate_sitemap_static_file():
     """Генерує static sitemap з мовними префіксами"""
     try:
         host_base = "https://autogroup.sk"
-        languages = list(PUBLIC_LANGUAGES)
+        languages = ['sk', 'en', 'pl']
         
         sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
         sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
@@ -769,11 +705,6 @@ def generate_sitemap_static_file():
                     else:
                         alt_url = f"{host_base}/{alt_lang}{page}"
                     sitemap_xml += f'    <xhtml:link rel="alternate" hreflang="{alt_lang}" href="{alt_url}" />\n'
-                if page == '/':
-                    x_default_url = f"{host_base}/sk/"
-                else:
-                    x_default_url = f"{host_base}/sk{page}"
-                sitemap_xml += f'    <xhtml:link rel="alternate" hreflang="x-default" href="{x_default_url}" />\n'
                 
                 # Пріоритет та частота оновлення
                 if page == '/':
@@ -828,7 +759,7 @@ def generate_sitemap_stock_files():
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
         # Підтримувані мови
-        languages = list(PUBLIC_LANGUAGES)
+        languages = ['sk', 'en', 'pl']
         
         # Рахуємо загальну кількість товарів
         cursor.execute("SELECT COUNT(*) FROM stock WHERE quantity > 0")
@@ -904,7 +835,6 @@ def generate_sitemap_stock_files():
                     # Додаємо hreflang посилання на інші мовні версії
                     for alt_lang in languages:
                         sitemap_xml += f'    <xhtml:link rel="alternate" hreflang="{alt_lang}" href="{host_base}/{alt_lang}/product/{article}" />\n'
-                    sitemap_xml += f'    <xhtml:link rel="alternate" hreflang="x-default" href="{host_base}/sk/product/{article}" />\n'
                     
                     sitemap_xml += f'    <changefreq>weekly</changefreq>\n'
                     sitemap_xml += f'    <priority>0.8</priority>\n'
@@ -955,7 +885,7 @@ def generate_sitemap_enriched_files():
         start_time = datetime.now()
         
         host_base = "https://autogroup.sk"
-        languages = list(PUBLIC_LANGUAGES)
+        languages = ['sk', 'en', 'pl']
         products_per_sitemap = 3500
         
         with get_db_connection() as conn:
@@ -1024,7 +954,6 @@ def generate_sitemap_enriched_files():
                             for alt_lang in languages:
                                 f.write(f'    <xhtml:link rel="alternate" hreflang="{alt_lang}" ')
                                 f.write(f'href="{host_base}/{alt_lang}/product/{article}" />\n')
-                            f.write(f'    <xhtml:link rel="alternate" hreflang="x-default" href="{host_base}/sk/product/{article}" />\n')
                             
                             f.write(f'    <changefreq>weekly</changefreq>\n')
                             f.write(f'    <priority>0.8</priority>\n')
@@ -1501,55 +1430,25 @@ def add_noindex_header(f):
 
 
 @app.after_request
-def apply_seo_and_cache_headers(response):
-    """Єдина політика SEO та кеш-заголовків для публічної частини."""
-    path = request.path or ''
-    endpoint = request.endpoint or ''
-
-    # Токен-URL завжди noindex
-    if re.search(r'/[0-9a-f]{32,}/', path, re.IGNORECASE):
+def add_noindex_headers_for_token_pages(response):
+    """Додає заголовок X-Robots-Tag до всіх сторінок з токенами в URL"""
+    # Перевіряємо чи URL містить гексадецимальний токен (32+ символи)
+    if re.search(r'/[0-9a-f]{32,}/', request.path, re.IGNORECASE):
         response.headers['X-Robots-Tag'] = 'noindex, nofollow'
-    # Параметричні листинги не індексуємо (уникаємо дублів)
-    elif endpoint in ('index', 'localized_index') and any(
-        p in request.args for p in ('page', 'category', 'brand')
-    ):
-        response.headers['X-Robots-Tag'] = 'noindex, follow'
-    # Валідні товарні сторінки можна індексувати
-    elif '/product/' in path and response.status_code == 200:
-        response.headers['X-Robots-Tag'] = 'index, follow'
+    return response
 
-    # Кешування static
-    if path.startswith('/static/'):
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-        if request.is_secure:
-            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-        response.headers['X-XSS-Protection'] = '1; mode=block'
-        response.headers['Cache-Control'] = 'public, max-age=604800'
-        return response
+@app.after_request
+def add_cache_headers(response):
+    if request.path.startswith('/product/') and not request.args.get('refresh'):
+        response.headers['Cache-Control'] = 'public, max-age=3600'  # 1 година
+    return response
 
-    is_html = response.content_type and response.content_type.startswith('text/html')
-    if request.method == 'GET' and is_html and response.status_code == 200 and not request.args.get('refresh'):
-        if endpoint in ('product_details', 'localized_product_details'):
-            response.headers['Cache-Control'] = 'public, max-age=1800, stale-while-revalidate=300'
-        elif endpoint in ('index', 'localized_index'):
-            response.headers['Cache-Control'] = 'public, max-age=600, stale-while-revalidate=300'
-        else:
-            response.headers['Cache-Control'] = 'public, max-age=300'
-
-        vary_values = [v.strip() for v in response.headers.get('Vary', '').split(',') if v.strip()]
-        for item in ('Accept-Language', 'Cookie'):
-            if item not in vary_values:
-                vary_values.append(item)
-        response.headers['Vary'] = ', '.join(vary_values)
-
-    # Додаємо security headers
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-    if request.is_secure:
-        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-
+@app.after_request
+def add_more_cache_headers(response):
+    if (request.path.startswith('/product/') or 
+        request.path.startswith('/category/')) and not request.args.get('refresh'):
+        response.headers['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=600'
+        response.headers['Vary'] = 'Cookie, Accept-Language'
     return response
 
 @app.teardown_request
@@ -1653,11 +1552,6 @@ def validate_phone(phone_number):
 def save_delivery_address():
     try:
         user_id = session['user_id']
-        # Визначаємо чи це перша адреса для користувача
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM delivery_addresses WHERE user_id = %s", (user_id,))
-            count = cursor.fetchone()[0]
         address_data = {
             'full_name': request.form['full_name'],
             'phone': request.form['phone'],
@@ -1665,7 +1559,7 @@ def save_delivery_address():
             'postal_code': request.form['postal_code'],
             'city': request.form['city'],
             'street': request.form['street'],
-            'is_default': not bool(count)  # Перша адреса буде default
+            'is_default': not bool(get_user_addresses(user_id))  # Перша адреса буде default
         }
 
         with get_db_connection() as conn:
@@ -1763,32 +1657,17 @@ def validate_eu_vat(vat_number):
 # Сторінка "Доставка і оплата"
 @app.route('/shipping-payment')
 def shipping_payment():
-    return redirect(url_for('localized_shipping_payment', lang=get_public_language()), code=301)
-
-
-@app.route('/<lang>/shipping-payment')
-def localized_shipping_payment(lang):
-    return render_localized_public_template(lang, 'public/shipping_payment.html')
+    return render_template('public/shipping_payment.html')
 
 # Сторінка "Повернення та обмін"
 @app.route('/returns')
 def returns():
-    return redirect(url_for('localized_returns', lang=get_public_language()), code=301)
-
-
-@app.route('/<lang>/returns')
-def localized_returns(lang):
-    return render_localized_public_template(lang, 'public/returns.html')
+    return render_template('public/returns.html')
 
 # Сторінка "Контакти"
 @app.route('/contacts')
 def contacts():
-    return redirect(url_for('localized_contacts', lang=get_public_language()), code=301)
-
-
-@app.route('/<lang>/contacts')
-def localized_contacts(lang):
-    return render_localized_public_template(lang, 'public/contacts.html')
+    return render_template('public/contacts.html')
 
 
 
@@ -1996,8 +1875,7 @@ def from_json(value):
 @app.route('/validate_phone', methods=['POST'])
 def validate_phone_route():
     try:
-        payload = request.get_json(silent=True) or {}
-        phone = payload.get('phone', '')
+        phone = request.json.get('phone', '')
         is_valid, message = validate_phone(phone)  # Використовуємо існуючу функцію
         return jsonify({
             'valid': is_valid,
@@ -2014,8 +1892,7 @@ def validate_phone_route():
 def validate_vat_route():
     """API endpoint для перевірки VAT номера"""
     try:
-        payload = request.get_json(silent=True) or {}
-        vat_number = payload.get('vat_number', '')
+        vat_number = request.json.get('vat_number', '')
         result = validate_eu_vat(vat_number)
         return jsonify(result)
     except Exception as e:
@@ -2229,7 +2106,7 @@ def inject_template_vars():
     )
 
 def get_categories_tree_for_menu():
-    """Повертає ієрархічне дерево категорій для меню (тільки категорії з видимими товарами + батьки)"""
+    """Повертає ієрархічне дерево категорій для меню в навігації"""
     lang = session.get('language', 'sk')
     categories = []
     try:
@@ -2246,36 +2123,17 @@ def get_categories_tree_for_menu():
                 """, (lang,))
                 all_cats = cursor.fetchall()
                 
+                # Будуємо дерево категорій (підтримка 3+ рівнів)
                 all_cats_by_id = {}
                 for cat in all_cats:
                     cat_data = dict(cat)
                     cat_data['children'] = []
                     all_cats_by_id[cat['id']] = cat_data
-
-                # Отримуємо ID категорій що мають видимі товари з фото
-                cursor.execute("""
-                    SELECT DISTINCT pm.category_id
-                    FROM product_category_mapping pm
-                    INNER JOIN stock s ON s.article = pm.article
-                    INNER JOIN product_images pi ON pi.product_article = s.article AND pi.is_main = true
-                """)
-                cats_with_products = {row['category_id'] for row in cursor.fetchall()}
-
-                # Розширюємо видимі категорії батьківськими вузлами
-                visible_cat_ids = set(cats_with_products)
-                for cid in list(cats_with_products):
-                    current = all_cats_by_id.get(cid)
-                    while current and current.get('parent_id'):
-                        visible_cat_ids.add(current['parent_id'])
-                        current = all_cats_by_id.get(current['parent_id'])
-
-                # Будуємо дерево тільки з видимих категорій
+                
                 for cat_id, cat_data in all_cats_by_id.items():
-                    if cat_id not in visible_cat_ids:
-                        continue
                     if cat_data['parent_id'] is None:
                         categories.append(cat_data)
-                    elif cat_data['parent_id'] in visible_cat_ids:
+                    elif cat_data['parent_id'] in all_cats_by_id:
                         all_cats_by_id[cat_data['parent_id']]['children'].append(cat_data)
     except Exception as e:
         logging.error(f"Error fetching categories tree: {e}")
@@ -2364,12 +2222,7 @@ def register():
 # сторінка про нас public
 @app.route('/about')
 def about():
-    return redirect(url_for('localized_about', lang=get_public_language()), code=301)
-
-
-@app.route('/<lang>/about')
-def localized_about(lang):
-    return render_localized_public_template(lang, 'public/about.html')
+    return render_template('public/about.html')
 
 # Сторінка категорій - ВІДКЛЮЧЕНА, використовуємо dropdown в хедері
 # @app.route('/categories')
@@ -2496,20 +2349,20 @@ def login():
                 update_cart_count_in_session()
                 
                 # Перевіряємо, чи є URL для перенаправлення
-                # Пріоритет: next у формі > next_url у сесії
-                next_url = request.form.get('next') or session.get('next_url')
+                next_url = session.get('next_url')
                 if next_url:
                     session.pop('next_url', None)
-                    # Безпека: тільки відносні URL
-                    if next_url.startswith('/'):
-                        return redirect(next_url)
+                    return redirect(next_url)
                 
                 return redirect(url_for('index'))
             
             flash(_("Invalid username or password"), "error")
             return redirect(url_for('login'))
 
-    return render_template('auth/login.html', next=request.args.get('next', ''))
+    return render_template('auth/login.html')
+
+
+# =============== ВІДНОВЛЕННЯ ПАРОЛЮ ===============
 
 import secrets
 import hashlib
@@ -2974,7 +2827,6 @@ def public_place_order():
                 logging.debug(f"Found existing address: {delivery_data}")
             else:
                 flash(_("Selected address not found"), "error")
-                preserve_checkout_form_data(request.form)
                 return redirect(url_for('public_cart'))
         else:
             # Using new address
@@ -3039,7 +2891,6 @@ def public_place_order():
                     logging.debug(f"Found existing company: {invoice_details}")
                 else:
                     flash(_("Selected company not found"), "error")
-                    preserve_checkout_form_data(request.form)
                     return redirect(url_for('public_cart'))
             else:
                 # Using new company details
@@ -3152,7 +3003,6 @@ def public_place_order():
         if not order_items:
             logging.warning("No items to process in cart (neither in session nor database)")
             flash(_("Your cart is empty"), "error")
-            preserve_checkout_form_data(request.form)
             return redirect(url_for('public_cart'))
 
         # Create order in database
@@ -3264,7 +3114,6 @@ def public_place_order():
         logging.info("Clearing cart")
         session['public_cart'] = {}
         session['cart_count'] = 0
-        clear_checkout_form_data()
         session.modified = True
         
         # Очищаємо корзину в базі даних
@@ -3280,13 +3129,13 @@ def public_place_order():
             order = get_order_by_id(order_id)
             if not order:
                 flash(_("Order not found"), "error")
-                return redirect(url_for('localized_public_view_orders', lang=get_public_language()))
+                return redirect(url_for('public_view_orders'))
             
             # Конвертуємо DictRow в звичайний словник
             order_dict = dict(order)
             
             # Отримуємо товари замовлення
-            order_items = get_order_items(order_id, get_public_language())
+            order_items = get_order_items(order_id)
             
             # Рендеримо шаблон напряму
             return render_template(
@@ -3297,7 +3146,7 @@ def public_place_order():
         except Exception as e:
             logging.error(f"Error displaying order confirmation: {e}", exc_info=True)
             flash(_("Error displaying order confirmation."), "error")
-            return redirect(url_for('localized_public_view_orders', lang=get_public_language()))
+            return redirect(url_for('public_view_orders'))
     finally:
         if 'conn' in locals():
             conn.close()
@@ -3325,17 +3174,17 @@ def order_confirmation(order_id):
         order = get_order_by_id(order_id)
         if not order:
             flash(_("Order not found"), "error")
-            return redirect(url_for('localized_public_view_orders', lang=get_public_language()))
+            return redirect(url_for('public_view_orders'))
             
         if order['user_id'] != user_id:
             flash(_("Access denied"), "error")
-            return redirect(url_for('localized_public_view_orders', lang=get_public_language()))
+            return redirect(url_for('public_view_orders'))
         
         # ВАЖЛИВО: Конвертуємо DictRow в звичайний словник
         order_dict = dict(order)
         
         # Отримуємо товари замовлення як окремий об'єкт
-        order_items = get_order_items(order_id, get_public_language())
+        order_items = get_order_items(order_id)
         logging.debug(f"Found {len(order_items)} items for order {order_id}")
         
         # Передаємо в шаблон два окремих параметри
@@ -3349,7 +3198,7 @@ def order_confirmation(order_id):
     except Exception as e:
         logging.error(f"Error displaying order confirmation: {e}", exc_info=True)
         flash(_("Error displaying order confirmation."), "error")
-        return redirect(url_for('localized_public_view_orders', lang=get_public_language()))
+        return redirect(url_for('public_view_orders'))
 
 
 
@@ -3366,24 +3215,20 @@ def get_order_by_id(order_id):
         logging.error(f"Error getting order by id: {e}", exc_info=True)
         return None
 
-def get_order_items(order_id, lang='sk'):
-    """Отримує позиції замовлення за його ID з локалізованими назвами"""
+def get_order_items(order_id):
+    """Отримує позиції замовлення за його ID"""
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor.execute("""
                 SELECT od.*,
-                       CASE %s
-                         WHEN 'en' THEN COALESCE(p.name_en, p.name_sk, od.article)
-                         WHEN 'pl' THEN COALESCE(p.name_pl, p.name_sk, od.article)
-                         ELSE COALESCE(p.name_sk, p.name_en, od.article)
-                       END as product_name,
+                       COALESCE(p.name_uk, od.article) as product_name,
                        b.name as brand_name
                 FROM public_order_details od
                 LEFT JOIN products p ON od.article = p.article
                 LEFT JOIN brands b ON od.brand_id = b.id
                 WHERE od.order_id = %s
-            """, (lang, order_id))
+            """, (order_id,))
             return cursor.fetchall()
     except Exception as e:
         logging.error(f"Error getting order items: {e}", exc_info=True)
@@ -3418,19 +3263,9 @@ def cart_clear():
 
 @app.route('/public_orders')
 def public_view_orders():
-    return redirect(url_for('localized_public_view_orders', lang=get_public_language()), code=301)
-
-
-@app.route('/<lang>/public_orders')
-def localized_public_view_orders(lang):
     """
     Відображає список замовлень публічного користувача
     """
-    if lang not in PUBLIC_LANGUAGES:
-        return redirect(url_for('localized_public_view_orders', lang='sk'), code=301)
-
-    activate_public_language(lang)
-
     user_id = session.get('user_id')
     if not user_id:
         flash(_("Please log in to view your orders."), "error")
@@ -3465,22 +3300,6 @@ def localized_public_view_orders(lang):
 
 @app.route('/public_order/<int:order_id>')
 def public_view_order_details(order_id):
-    return redirect(
-        url_for('localized_public_view_order_details', lang=get_public_language(), order_id=order_id),
-        code=301
-    )
-
-
-@app.route('/<lang>/public_order/<int:order_id>')
-def localized_public_view_order_details(lang, order_id):
-    if lang not in PUBLIC_LANGUAGES:
-        return redirect(
-            url_for('localized_public_view_order_details', lang='sk', order_id=order_id),
-            code=301
-        )
-
-    activate_public_language(lang)
-
     try:
         user_id = session.get('user_id')
         if not user_id:
@@ -3503,24 +3322,20 @@ def localized_public_view_order_details(lang, order_id):
 
         if not order:
             flash(_("Order not found."), "error")
-            return redirect(url_for('localized_public_view_orders', lang=lang))
+            return redirect(url_for('public_view_orders'))
 
         # Get order items with correct product name
         cursor.execute("""
             SELECT 
                 od.*,
-                CASE %s
-                    WHEN 'en' THEN COALESCE(p.name_en, p.name_sk, od.article)
-                    WHEN 'pl' THEN COALESCE(p.name_pl, p.name_sk, od.article)
-                    ELSE COALESCE(p.name_sk, p.name_en, od.article)
-                END as product_name,
+                COALESCE(p.name_uk, od.article) as product_name,
                 b.name as brand_name
             FROM public_order_details od
             LEFT JOIN products p ON od.article = p.article
             LEFT JOIN brands b ON od.brand_id = b.id
             WHERE od.order_id = %s
             ORDER BY od.id
-        """, (lang, order_id))
+        """, (order_id,))
         
         order_items = cursor.fetchall()
 
@@ -3533,72 +3348,7 @@ def localized_public_view_order_details(lang, order_id):
     except Exception as e:
         logging.error(f"Error viewing public order details: {e}", exc_info=True)
         flash(_("Error loading order details."), "error")
-        return redirect(url_for('localized_public_view_orders', lang=lang))
-    finally:
-        if 'conn' in locals():
-            conn.close()
-
-@app.route('/api/public_order/<int:order_id>/partial')
-def api_public_order_partial(order_id):
-    return redirect(
-        url_for('localized_api_public_order_partial', lang=get_public_language(), order_id=order_id),
-        code=301
-    )
-
-
-@app.route('/<lang>/api/public_order/<int:order_id>/partial')
-def localized_api_public_order_partial(lang, order_id):
-    """HTML partial для модального вікна деталей замовлення"""
-    if lang not in PUBLIC_LANGUAGES:
-        lang = 'sk'
-
-    activate_public_language(lang)
-
-    user_id = session.get('user_id')
-    if not user_id:
-        return _("Please log in to view order details."), 401
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        cursor.execute("""
-            SELECT o.*, COUNT(od.id) as items_count
-            FROM public_orders o
-            LEFT JOIN public_order_details od ON o.id = od.order_id
-            WHERE o.id = %s AND o.user_id = %s
-            GROUP BY o.id
-        """, (order_id, user_id))
-
-        order = cursor.fetchone()
-        if not order:
-            return _("Order not found."), 404
-
-        cursor.execute("""
-            SELECT od.*,
-                   CASE %s
-                     WHEN 'en' THEN COALESCE(p.name_en, p.name_sk, od.article)
-                     WHEN 'pl' THEN COALESCE(p.name_pl, p.name_sk, od.article)
-                     ELSE COALESCE(p.name_sk, p.name_en, od.article)
-                   END as product_name,
-                   b.name as brand_name
-            FROM public_order_details od
-            LEFT JOIN products p ON od.article = p.article
-            LEFT JOIN brands b ON od.brand_id = b.id
-            WHERE od.order_id = %s
-            ORDER BY od.id
-        """, (lang, order_id))
-
-        items = cursor.fetchall()
-
-        return render_template(
-            'public/orders/order_modal_partial.html',
-            order=order,
-            items=items
-        )
-    except Exception as e:
-        logging.error(f"Error fetching order partial: {e}", exc_info=True)
-        return _("Error loading order details."), 500
+        return redirect(url_for('public_view_orders'))
     finally:
         if 'conn' in locals():
             conn.close()
@@ -3630,7 +3380,7 @@ def api_products():
     """API endpoint для отримання додаткових продуктів (тільки з фото)"""
     try:
         page = request.args.get('page', 1, type=int)
-        per_page = 24
+        per_page = 8
         brand_id = request.args.get('brand', type=int)
         category_id = request.args.get('category', type=int)  # Додано фільтр по категорії
         
@@ -3643,8 +3393,7 @@ def api_products():
         query = f"""
             SELECT DISTINCT
                 s.article, 
-                s.price,
-                s.quantity,
+                s.price, 
                 COALESCE(p.name_{lang}, p.name_en, p.name_sk, s.article) as name, 
                 b.name as brand_name,
                 b.id as brand_id,
@@ -3656,7 +3405,7 @@ def api_products():
         """
         
         params = []
-        conditions = []
+        conditions = ["s.quantity > 0"]
         
         # Фільтр по категорії (включаючи підкатегорії)
         if category_id:
@@ -3672,9 +3421,8 @@ def api_products():
             conditions.append("s.brand_id = %s")
             params.append(brand_id)
         
-        if conditions:
-            query += " WHERE " + " AND ".join(conditions)
-        query += " ORDER BY s.price DESC, s.article LIMIT %s OFFSET %s"
+        query += " WHERE " + " AND ".join(conditions)
+        query += " ORDER BY s.price DESC LIMIT %s OFFSET %s"
         params.extend([per_page, (page - 1) * per_page])
         
         cursor.execute(query, params)
@@ -4592,7 +4340,6 @@ def public_cart():
     total_price = Decimal('0')
     saved_addresses = []
     saved_companies = []
-    checkout_form = session.pop('checkout_form_data', {})
 
     try:
         conn = get_db_connection()
@@ -4799,8 +4546,7 @@ def public_cart():
         total_price=total_price,
         saved_addresses=saved_addresses,
         saved_companies=saved_companies,
-        is_authenticated=is_authenticated,
-        checkout_form=checkout_form,
+        is_authenticated=is_authenticated
     )
 
 
@@ -4833,33 +4579,28 @@ def guest_checkout():
                 vat_check = validate_eu_vat(invoice_details['vat_number'])
                 if not vat_check.get('valid'):
                     flash(_("Invalid VAT number format"), "error")
-                    preserve_checkout_form_data(request.form)
                     return redirect(url_for('public_cart'))
 
         # Валідація основних полів
         if not all([email, full_name, phone, country, city, street]):
             flash(_("All fields are required"), "error")
-            preserve_checkout_form_data(request.form)
             return redirect(url_for('public_cart'))
         
         # Валідація телефону
         is_valid, phone_message = validate_phone(phone)
         if not is_valid:
             flash(_(phone_message), "error")
-            preserve_checkout_form_data(request.form)
             return redirect(url_for('public_cart'))
         
         # Валідація email
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             flash(_("Invalid email format"), "error")
-            preserve_checkout_form_data(request.form)
             return redirect(url_for('public_cart'))
         
         # Отримуємо корзину з сесії
         cart = session.get('public_cart', {})
         if not cart:
             flash(_("Your cart is empty"), "error")
-            preserve_checkout_form_data(request.form)
             return redirect(url_for('public_cart'))
         
         # Підключення до бази даних
@@ -5031,7 +4772,6 @@ def guest_checkout():
         # Очищаємо кошик
         session['public_cart'] = {}
         session['cart_count'] = 0
-        clear_checkout_form_data()
         session.modified = True
         
         # Зберігаємо інформацію про замовлення для сторінки підтвердження
@@ -5057,7 +4797,6 @@ def guest_checkout():
         logging.error(f"Error in guest_checkout: {e}", exc_info=True)
         if 'conn' in locals():
             conn.rollback()
-        preserve_checkout_form_data(request.form)
         flash(_("Error processing your order. Please try again."), "error")
         return redirect(url_for('public_cart'))
     
@@ -5077,7 +4816,7 @@ def guest_order_confirmation():
     
     if not guest_order:
         flash(_("Order information not found."), "error")
-        return redirect(url_for('localized_index', lang=get_public_language()))
+        return redirect(url_for('index'))
     
     return render_template(
         'public/orders/guest_confirmation.html',
@@ -5118,7 +4857,7 @@ def get_cart_count(user_id):
 def localized_product_details(lang, article):
     """Сторінка товару з мовним префіксом"""
     # Перевіряємо, чи підтримується мова
-    if lang not in PUBLIC_LANGUAGES:
+    if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
         # Якщо мова не підтримується, перенаправляємо на стандартну версію
         return redirect(url_for('product_details', article=article))
     
@@ -5135,8 +4874,8 @@ def localized_product_details(lang, article):
 @app.route('/<lang>/')
 def localized_index(lang):
     """Головна сторінка з мовним префіксом"""
-    if lang not in PUBLIC_LANGUAGES:
-        return redirect(url_for('localized_index', lang='sk'))
+    if lang not in app.config['BABEL_SUPPORTED_LOCALES']:
+        return redirect(url_for('index'))
     
     session['language'] = lang
     session.modified = True
@@ -5144,18 +4883,36 @@ def localized_index(lang):
     
     return index()
 
+@app.after_request
+def add_headers(response):
+    # Додаємо заголовок для сторінок продуктів
+    if '/product/' in request.path:
+        response.headers['X-Robots-Tag'] = 'index, follow'
+    
+    # Додаємо заголовок для URL з токенами
+    if re.search(r'/[0-9a-f]{32,}/', request.path, re.IGNORECASE):
+        response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+    
+    return response
+
+
+@app.after_request
+def add_indexing_header(response):
+    if request.path.endswith('/product/') or '/product/' in request.path:
+        response.headers['X-Robots-Tag'] = 'index, follow'
+    return response
+
+@app.after_request
+def add_x_robots_tag(response):
+    if '/product/' in request.path:
+        response.headers['X-Robots-Tag'] = 'index, follow'
+    return response
+
 # ...existing code...
 @app.route('/product/<article>')
 @cache.cached(timeout=3600, key_prefix=make_lang_cache_key)
 def product_details(article):
     try:
-        # Нормалізуємо canonical URL для товару у формат /<lang>/product/<article>
-        if request.path.startswith('/product/'):
-            current_lang = session.get('language', 'sk')
-            if current_lang not in PUBLIC_LANGUAGES:
-                current_lang = 'sk'
-            return redirect(url_for('localized_product_details', lang=current_lang, article=article), code=301)
-
         normalized_article = normalize_article(article)
         with safe_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -5309,13 +5066,8 @@ def product_details(article):
                     }
                     prices.append(price_data)
 
-            # 6. Сортуємо: спочатку наш склад у наявності, далі інші за ціною
-            prices.sort(
-                key=lambda item: (
-                    0 if item.get('table_name') == 'stock' and item.get('in_stock') else 1,
-                    float(item['price'])
-                )
-            )
+            # 6. Сортуємо за ціною
+            prices.sort(key=lambda x: float(x['price']))
             price = prices[0] if prices else None
 
             # Якщо бренд не визначено раніше — беремо з першої ціни
@@ -5327,7 +5079,7 @@ def product_details(article):
                 return render_template(
                     'public/article_not_found.html',
                     article=article
-                ), 404
+                )
 
             return render_template(
                 'public/product_details.html',
@@ -6596,7 +6348,7 @@ def set_language(lang):
     if lang == 'uk':
         lang = 'sk'
         
-    if lang in PUBLIC_LANGUAGES:
+    if lang in app.config['BABEL_SUPPORTED_LOCALES']:
         session['language'] = lang
         
         # Якщо користувач авторизований, зберігаємо його вибір в БД
@@ -6617,19 +6369,12 @@ def set_language(lang):
         clear_page_cache_for_user()
     
     # Перенаправляємо користувача на сторінку, з якої він прийшов
-    fallback_lang = session.get('language', 'sk')
-    if fallback_lang not in PUBLIC_LANGUAGES:
-        fallback_lang = 'sk'
-    return redirect(request.referrer or url_for('localized_index', lang=fallback_lang))
+    return redirect(request.referrer or url_for('index'))
 
 @app.before_request
 def before_request():
-    # Для локалізованих public URL застосовуємо мову з path у цьому ж запиті
-    path_lang = get_public_lang_from_path(request.path)
-    if path_lang:
-        session['language'] = path_lang
-        session.modified = True
-    elif session.get('language') not in PUBLIC_LANGUAGES:
+    # Якщо користувач раніше використовував українську мову, змінюємо на словацьку
+    if session.get('language') == 'uk':
         session['language'] = 'sk'
         session.modified = True
     
@@ -6658,14 +6403,6 @@ secret_key = os.environ.get('SECRET_KEY')
 if not secret_key:
     raise ValueError("SECRET_KEY environment variable must be set in production!")
 app.secret_key = secret_key
-
-# Безпека cookies для сесій
-if os.environ.get('RENDER'):
-    app.config['SESSION_COOKIE_SECURE'] = True
-else:
-    app.config['SESSION_COOKIE_SECURE'] = False
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 
 # Генерує унікальний токен для користувача
@@ -6964,34 +6701,14 @@ def index():
                 }
                 all_cats_by_id[cat['id']] = cat_dict
             
-            # Отримуємо ID категорій, що мають товари з фото (прямі)
-            cursor.execute("""
-                SELECT DISTINCT pm.category_id
-                FROM product_category_mapping pm
-                INNER JOIN stock s ON s.article = pm.article
-                INNER JOIN product_images pi ON pi.product_article = s.article AND pi.is_main = true
-            """)
-            cats_with_products = {row[0] for row in cursor.fetchall()}
-
-            # Розширюємо набір батьківськими категоріями (щоб вони теж відображались)
-            visible_cat_ids = set(cats_with_products)
-            for cid in cats_with_products:
-                current = all_cats_by_id.get(cid)
-                while current and current.get('parent_id'):
-                    visible_cat_ids.add(current['parent_id'])
-                    current = all_cats_by_id.get(current['parent_id'])
-
-            # Тепер прив'язуємо дітей до батьків (тільки видимі категорії)
+            # Тепер прив'язуємо дітей до батьків
             for cat_id, cat_dict in all_cats_by_id.items():
-                if cat_id not in visible_cat_ids:
-                    continue
                 if cat_dict['parent_id'] is None:
                     # Це головна категорія (рівень 1)
                     categories.append(cat_dict)
                 elif cat_dict['parent_id'] in all_cats_by_id:
-                    # Додаємо як дочірню до батька (тільки якщо батько теж видимий)
-                    if cat_dict['parent_id'] in visible_cat_ids:
-                        all_cats_by_id[cat_dict['parent_id']]['children'].append(cat_dict)
+                    # Додаємо як дочірню до батька
+                    all_cats_by_id[cat_dict['parent_id']]['children'].append(cat_dict)
             
             # Знаходимо обрану категорію з усіх категорій (включаючи підкатегорії)
             selected_cat_obj = all_cats_by_id.get(category_filter) if category_filter else None
@@ -7703,12 +7420,7 @@ def get_category_breadcrumbs(category_id, cursor):
 # Додайте в app.py:
 @app.route('/car-service')
 def car_service():
-    return redirect(url_for('localized_car_service', lang=get_public_language()), code=301)
-
-
-@app.route('/<lang>/car-service')
-def localized_car_service(lang):
-    return render_localized_public_template(lang, 'public/car_service.html')
+    return render_template('public/car_service.html')
 
 
 
@@ -9976,22 +9688,12 @@ def public_user_profile():
 
 @app.route('/terms')
 def terms():
-    return redirect(url_for('localized_terms', lang=get_public_language()), code=301)
-
-
-@app.route('/<lang>/terms')
-def localized_terms(lang):
-    return render_localized_public_template(lang, 'public/terms.html')
+    return render_template('public/terms.html')
 
 
 @app.route('/privacy')
 def privacy():
-    return redirect(url_for('localized_privacy', lang=get_public_language()), code=301)
-
-
-@app.route('/<lang>/privacy')
-def localized_privacy(lang):
-    return render_localized_public_template(lang, 'public/privacy.html')
+    return render_template('public/privacy.html')
 
 
 
@@ -14099,9 +13801,7 @@ def handle_vin_request():
     logging.info("VIN request endpoint called")
     """Обробляє запити на підбір запчастин за VIN кодом"""
     try:
-        data = request.get_json(silent=True) or {}
-        if not data:
-            return jsonify({'success': False, 'error': 'Invalid request payload'}), 400
+        data = request.get_json()
         logging.info(f"VIN request data: vin_code={data.get('vin_code')}, phone={data.get('phone')}, email={data.get('email')}, parts_description={data.get('parts_description')}")
         
         # Валідація даних
@@ -14112,13 +13812,13 @@ def handle_vin_request():
         
         # Основна валідація
         if not vin_code or len(vin_code) != 17:
-            return jsonify({'success': False, 'error': 'Invalid VIN code'}), 400
+            return jsonify({'success': False, 'error': 'Invalid VIN code'})
         
         if not phone or not phone.startswith('+') or len(phone) < 10:
-            return jsonify({'success': False, 'error': 'Invalid phone number'}), 400
+            return jsonify({'success': False, 'error': 'Invalid phone number'})
         
         if not email or '@' not in email:
-            return jsonify({'success': False, 'error': 'Invalid email address'}), 400
+            return jsonify({'success': False, 'error': 'Invalid email address'})
         
         # Логування запиту (поки що без збереження в БД)
         logging.info(f"VIN Request received: VIN={vin_code}, Phone={phone}, Email={email}")
@@ -14133,7 +13833,7 @@ def handle_vin_request():
         
     except Exception as e:
         logging.error(f"Error handling VIN request: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
+        return jsonify({'success': False, 'error': 'Server error'})
 
 def send_vin_request_notification(vin_code, phone, email, parts_description):
     """Відправляє сповіщення про VIN запит"""

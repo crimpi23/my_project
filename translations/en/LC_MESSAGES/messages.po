@@ -7244,6 +7244,36 @@ msgstr ""
 #~ msgid "Back to Management"
 #~ msgstr "User Management"
 
+msgid "Stale Imports"
+msgstr "Stale Imports"
+
+msgid "Failed Imports"
+msgstr "Failed Imports"
+
+msgid "Last Import Failure"
+msgstr "Last Import Failure"
+
+msgid "Issues Detected"
+msgstr "Issues Detected"
+
+msgid "Status:"
+msgstr "Status:"
+
+msgid "File:"
+msgstr "File:"
+
+msgid "Time:"
+msgstr "Time:"
+
+msgid "Reason:"
+msgstr "Reason:"
+
+msgid "unknown"
+msgstr "unknown"
+
+msgid "n/a"
+msgstr "n/a"
+
 #~ msgid "Edit"
 #~ msgstr ""
 

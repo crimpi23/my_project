@@ -4,14 +4,14 @@
 .cart-container, .page-header, .delivery-card, .info-card {
     background: #fff;
     border-radius: 14px;
-    box-shadow: 0 4px 16px rgba(37,99,235,0.08);
+    box-shadow: 0 4px 16px rgba(26,77,46,0.07);
     padding: 28px 20px;
-    border: 1.5px solid #e0e7ff;
+    border: 1.5px solid #d1fae5;
     margin-bottom: 2rem;
 }
 
 .page-header h2 {
-    color: #2563eb;
+    color: #1a4d2e;
     font-weight: 700;
     margin-bottom: 0;
 }
@@ -34,11 +34,11 @@
 }
 
 .cart-table th {
-    background: #f8fafc;
-    color: #2563eb;
+    background: #2d6a4f;
+    color: #fff;
     font-weight: 700;
     font-size: 1.05rem;
-    border-top: 1.5px solid #e0e7ff;
+    border-top: none;
 }
 
 .cart-table tfoot td {
@@ -51,19 +51,20 @@
 
 /* Спільні стилі для всіх розмірів екрану */
 .article-badge {
-    background: #e0e7ff;
-    color: #2563eb;
+    background: #f0f7f3;
+    color: #1a4d2e;
     border-radius: 6px;
     padding: 2px 10px;
     font-size: 1em;
     font-weight: 600;
     display: inline-block;
+    border: 1px solid #d1fae5;
 }
 
 .price-value, .total-value, .product-price {
     font-weight: 700;
     font-size: 1.08rem;
-    color: #2563eb;
+    color: #1a4d2e;
     white-space: nowrap;
 }
 
@@ -135,7 +136,7 @@
     height: 36px;
     min-width: 36px;
     min-height: 36px;
-    background: #2563eb;
+    background: #2d6a4f;
     color: #fff;
     border: none;
     cursor: pointer;
@@ -151,7 +152,7 @@
 }
 
 .quantity-update-btn:hover {
-    background: #1d4ed8;
+    background: #1a4d2e;
 }
 
 .quantity-update-btn i {
@@ -170,7 +171,7 @@
 }
 
 .cart-table .form-control:focus {
-    border-color: #2563eb;
+    border-color: #1a4d2e;
     background: #fff;
     outline: none;
 }
@@ -190,15 +191,15 @@
 .form-check-label {
     pointer-events: auto !important;
     font-weight: 500;
-    color: #2563eb;
+    color: #1a4d2e;
 }
 
 /* Стилі адресних карток */
 .address-card {
-    border: 1.5px solid #e0e7ef;
+    border: 1.5px solid #e2e8f0;
     border-radius: 12px;
     background: #fff;
-    box-shadow: 0 2px 8px rgba(37,99,235,0.04);
+    box-shadow: 0 2px 8px rgba(26,77,46,0.05);
     margin-bottom: 15px;
     padding: 12px 18px;
     transition: all 0.2s ease;
@@ -209,9 +210,9 @@
 }
 
 .address-card.selected {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
-    background: #f0f7ff;
+    border-color: #1a4d2e;
+    box-shadow: 0 0 0 2px rgba(26, 77, 46, 0.15);
+    background: #f0f7f3;
 }
 
 .address-name {
@@ -228,14 +229,15 @@
 }
 
 .phone-badge {
-    background: #e0e7ff;
-    color: #2563eb;
+    background: #f0f7f3;
+    color: #1a4d2e;
     border-radius: 20px;
     padding: 2px 10px;
     font-size: 0.85rem;
     font-weight: 600;
     display: inline-block;
     margin-top: 5px;
+    border: 1px solid #d1fae5;
 }
 
 /* Стилі кнопок */
@@ -249,76 +251,79 @@
     font-weight: 600;
     border: none;
     transition: background 0.2s, box-shadow 0.18s;
-    box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+    box-shadow: 0 2px 8px rgba(26,77,46,0.12);
     text-decoration: none;
     margin-right: 10px;
 }
 
 .btn-continue {
     background: #f8fafc;
-    color: #2563eb;
-    border: 1.5px solid #2563eb;
+    color: #1a4d2e;
+    border: 1.5px solid #1a4d2e;
 }
 
 .btn-continue:hover {
-    background: #e0e7ff;
-    color: #1d4ed8;
+    background: #f0f7f3;
+    color: #0f3020;
 }
 
 .btn-place-order {
-    background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+    background: #2d6a4f;
     color: #fff;
+    box-shadow: 0 4px 12px rgba(26, 77, 46, 0.25);
 }
 
 .btn-place-order:hover {
-    background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 100%);
+    background: #1a4d2e;
     color: #fff;
-}
-
-.btn-action {
-    padding: 10px 20px;
-    border-radius: 4px;
-    font-weight: 500;
+    box-shadow: 0 6px 18px rgba(26, 77, 46, 0.35);
+    transform: translateY(-1px);
 }
 
 .btn-action-primary {
-    background-color: var(--primary-color, #0d6efd);
+    background: #2d6a4f;
     color: white;
 }
-
 .btn-action-primary:hover {
-    background-color: #0b5ed7;
+    background: #1a4d2e;
     color: white;
 }
 
 /* Стилі розділів */
 .section-title {
-    color: #2563eb;
+    color: #1a4d2e;
     font-weight: 600;
     margin-bottom: 0.7rem;
     font-size: 1.08rem;
 }
 
 .section-divider {
-    border-top: 1.5px solid #e0e7ff;
+    border-top: 1.5px solid #e8f5ee;
     margin: 2rem 0 1.5rem 0;
 }
 
 /* Стилі для карток */
 .delivery-card, .info-card {
-    border: 1.5px solid #e0e7ff;
+    border: 1.5px solid #d1fae5;
     border-radius: 14px;
     background: #fff;
-    box-shadow: 0 4px 16px rgba(37,99,235,0.08);
+    box-shadow: 0 4px 16px rgba(26,77,46,0.07);
     margin-bottom: 2rem;
     overflow: hidden;
 }
 
 .delivery-card .card-header, .info-card-header {
-    background: #f8fafc;
-    border-bottom: 1px solid #e0e7ef;
+    background: #2d6a4f;
+    color: #fff;
+    border-bottom: none;
     border-radius: 14px 14px 0 0;
     padding: 14px 18px;
+}
+
+.delivery-card .card-header h5,
+.delivery-card .card-header h4 {
+    color: #fff;
+    margin-bottom: 0;
 }
 
 .delivery-card .card-body, .info-card .card-body {
@@ -333,9 +338,9 @@
 }
 
 .info-card-header.section-header-primary {
-    background: #e0e7ff;
-    color: #2563eb;
-    border-bottom: 1.5px solid #e0e7ff;
+    background: #2d6a4f;
+    color: #fff;
+    border-bottom: none;
     border-radius: 14px 14px 0 0;
     padding: 18px 24px 12px 24px;
 }
@@ -349,13 +354,68 @@
 }
 
 .empty-icon {
-    color: #2563eb;
+    color: #1a4d2e;
     opacity: 0.5;
 }
 
 .invoice-toggle {
     border-bottom: 1px solid #eee;
     padding-bottom: 15px;
+}
+
+/* ── Чекбокс фактури ── */
+.invoice-toggle .form-check-input {
+    width: 1.1em;
+    height: 1.1em;
+    margin-top: 0.2em;
+    accent-color: #1a4d2e;
+    border-color: #1a4d2e;
+}
+
+.invoice-toggle .form-check-label {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #1a4d2e;
+    cursor: pointer;
+}
+
+/* ── Блок полів фактури ── */
+#invoice_fields {
+    background: #f0f7f3;
+    border: 1.5px solid #1a4d2e !important;
+    border-radius: 10px !important;
+    padding: 1.25rem 1.25rem 0.75rem !important;
+    margin-top: 0.75rem;
+}
+
+#invoice_fields .mb-2:last-child {
+    margin-bottom: 0 !important;
+}
+
+#invoice_fields .form-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #0f3020;
+    margin-bottom: 0.3rem;
+}
+
+#invoice_fields .form-control {
+    border-color: #c9dfd2;
+    background: #fff;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#invoice_fields .form-control:focus {
+    border-color: #1a4d2e;
+    box-shadow: 0 0 0 3px rgba(26, 77, 46, 0.12);
+    outline: none;
+}
+
+#invoice_fields .form-control::placeholder {
+    color: #94a3b8;
+    font-size: 0.875rem;
 }
 
 /* Анімація */

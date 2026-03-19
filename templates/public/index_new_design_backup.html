@@ -9,7 +9,6 @@
 {% block og_description %}{{ _('Find the best auto parts for your vehicle with quick delivery across Europe') }}{% endblock %}
 
 {% block title %}{{ _('Home') }} - AutogroupEU{% endblock %}
-{% block canonical %}https://autogroup.sk/{{ session.get('language', 'sk') }}/{% endblock %}
 
 {% macro render_category_nodes(nodes, selected_category, level=1) %}
     {% if nodes %}
@@ -25,7 +24,7 @@
                     {{ node.name }}
                 </button>
                 {% else %}
-                <a href="{{ url_for('localized_index', lang=session.get('language', 'sk'), category=node.id) }}"
+                <a href="{{ url_for('index', category=node.id) }}"
                    class="subcategory-link level-{{ level }} {% if selected_category == node.id %}active{% endif %}">
                     {{ node.name }}
                 </a>
@@ -54,11 +53,11 @@
 
     {% if selected_category %}
     <nav aria-label="breadcrumb" class="breadcrumb-nav mb-3">
-        <a href="{{ url_for('localized_index', lang=session.get('language', 'sk')) }}" class="breadcrumb-link">{{ _('All Products') }}</a>
+        <a href="{{ url_for('index') }}" class="breadcrumb-link">{{ _('All Products') }}</a>
         
         {% if parent_category_obj %}
         <span class="breadcrumb-sep">/</span>
-        <a href="{{ url_for('localized_index', lang=session.get('language', 'sk'), category=parent_category_obj.id) }}" class="breadcrumb-link">
+        <a href="{{ url_for('index', category=parent_category_obj.id) }}" class="breadcrumb-link">
             {{ parent_category_obj.name }}
         </a>
         {% endif %}
@@ -82,7 +81,7 @@
             </div>
             <ul class="category-list">
                 <li class="category-item">
-                    <a href="{{ url_for('localized_index', lang=session.get('language', 'sk')) }}" class="category-link {% if not selected_category %}active{% endif %}">
+                    <a href="{{ url_for('index') }}" class="category-link {% if not selected_category %}active{% endif %}">
                         <i class="bi bi-grid-3x3-gap-fill category-icon"></i>
                         <span>{{ _('All Products') }}</span>
                     </a>
@@ -91,15 +90,15 @@
                 <li class="category-item {% if category.children %}tree-node has-children{% endif %}" data-node-id="{{ category.id }}">
                     <div class="category-row">
                         {% if category.children %}
-                    <button type="button"
-                        class="category-link category-parent-trigger {% if selected_category == category.id %}active{% endif %}"
-                        aria-expanded="false"
-                        aria-controls="cat-children-{{ category.id }}">
+                        <button type="button"
+                                class="category-link category-parent-trigger {% if selected_category == category.id %}active{% endif %}"
+                                aria-expanded="false"
+                                aria-controls="cat-children-{{ category.id }}">
                             <i class="{{ category.icon_class or 'bi bi-folder' }} category-icon"></i>
                             <span>{{ category.name }}</span>
-                    </button>
+                        </button>
                         {% else %}
-                                <a href="{{ url_for('localized_index', lang=session.get('language', 'sk'), category=category.id) }}" 
+                        <a href="{{ url_for('index', category=category.id) }}" 
                            class="category-link {% if selected_category == category.id %}active{% endif %}">
                             <i class="{{ category.icon_class or 'bi bi-folder' }} category-icon"></i>
                             <span>{{ category.name }}</span>
@@ -152,12 +151,12 @@
                 <div class="product-card">
                     <!-- Product Image -->
                     <div class="product-image-wrapper">
-                            <a href="{{ url_for('localized_product_details', lang=session.get('language', 'sk'), article=product.article) }}">
+                        <a href="{{ url_for('product_details', article=product.article) }}">
                             {% if product.image_url %}
                             <img src="{{ product.image_url }}" 
                                  class="product-img" 
                                  alt="{{ product.name or product.article }}"
-                                   loading="lazy" decoding="async" width="320" height="240">
+                                 loading="lazy">
                             {% else %}
                             <div class="product-img" style="display: flex; align-items: center; justify-content: center; background: var(--bg-light);">
                                 <i class="bi bi-image" style="font-size: 3rem; color: var(--text-muted);"></i>
@@ -188,7 +187,7 @@
                         
                         <!-- Product Title -->
                         <h3 class="product-title">
-                            <a href="{{ url_for('localized_product_details', lang=session.get('language', 'sk'), article=product.article) }}">
+                            <a href="{{ url_for('product_details', article=product.article) }}">
                                 {% if product.name %}{{ product.name }}{% else %}{{ product.article }}{% endif %}
                             </a>
                         </h3>
@@ -239,7 +238,7 @@
                                     data-price="{{ product.price }}"
                                     data-quantity="{{ product.quantity or 0 }}"
                                     data-image-url="{{ product.image_url or '' }}"
-                                    data-product-url="{{ url_for('localized_product_details', lang=session.get('language', 'sk'), article=product.article) }}"
+                                    data-product-url="{{ url_for('product_details', article=product.article) }}"
                                     data-brand-id="{{ product.brand_id or '' }}">
                                 <i class="bi bi-eye"></i>
                             </button>
@@ -334,7 +333,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const quickViewAddToCart = document.getElementById('quickViewAddToCart');
     const quickViewOpenLink = document.getElementById('quickViewOpenLink');
     let quickViewPayload = null;
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
     function closeQuickView() {
         if (!quickViewModal) return;
@@ -371,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
         quickViewAvailability.className = inStock ? 'availability-in-stock' : 'availability-on-request';
 
         quickViewMedia.innerHTML = data.imageUrl
-            ? `<img src="${data.imageUrl}" alt="${data.name}" class="quick-view-img" loading="lazy" decoding="async" width="640" height="480">`
+            ? `<img src="${data.imageUrl}" alt="${data.name}" class="quick-view-img" loading="lazy">`
             : `<div class="quick-view-placeholder"><i class="bi bi-image"></i></div>`;
 
         quickViewOpenLink.href = data.productUrl;
@@ -411,27 +409,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept': 'application/json',
-                    'X-CSRFToken': csrfToken
+                    'Accept': 'application/json'
                 },
-                body: `article=${encodeURIComponent(quickViewPayload.article)}&selected_price=${encodeURIComponent(selectedPrice)}&quantity=1&csrf_token=${encodeURIComponent(csrfToken)}`
+                body: `article=${encodeURIComponent(quickViewPayload.article)}&selected_price=${encodeURIComponent(selectedPrice)}&quantity=1`
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    if (typeof window.updateCartBadge === 'function') {
-                        window.updateCartBadge(data.cart_count);
-                    } else {
-                        const cartBadge = document.getElementById('cart-badge');
-                        const bottomCartBadge = document.getElementById('bottomCartBadge');
-                        if (cartBadge) {
-                            cartBadge.textContent = data.cart_count;
-                            cartBadge.style.display = data.cart_count > 0 ? '' : 'none';
-                        }
-                        if (bottomCartBadge) {
-                            bottomCartBadge.textContent = data.cart_count;
-                            bottomCartBadge.style.display = data.cart_count > 0 ? '' : 'none';
-                        }
+                    const cartBadge = document.getElementById('cart-badge');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cart_count;
+                        cartBadge.style.display = data.cart_count > 0 ? '' : 'none';
                     }
                     quickViewAddToCart.innerHTML = '<i class="bi bi-check me-1"></i>{{ _("Added!") }}';
                     setTimeout(() => {
@@ -549,9 +537,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return `
             <div class="product-image-wrapper">
-                <a href="/{{ session.get('language', 'sk') }}/product/${product.article}">
+                <a href="/product/${product.article}">
                     ${product.image_url
-                        ? `<img src="${product.image_url}" class="product-img" alt="${productTitle}" loading="lazy" decoding="async" width="320" height="240">`
+                        ? `<img src="${product.image_url}" class="product-img" alt="${productTitle}" loading="lazy" decoding="async">`
                         : `<div class="product-img" style="display:flex;align-items:center;justify-content:center;background:var(--bg-light);"><i class="bi bi-image" style="font-size:3rem;color:var(--text-muted);"></i></div>`
                     }
                 </a>
@@ -568,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="product-content">
                 <p class="product-brand">${product.brand_name || ''}</p>
                 <h3 class="product-title">
-                    <a href="/{{ session.get('language', 'sk') }}/product/${product.article}">${productTitle}</a>
+                    <a href="/product/${product.article}">${productTitle}</a>
                 </h3>
                 <div class="product-article">
                     <i class="bi bi-upc-scan"></i>
@@ -587,7 +575,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         ? `<button type="button" class="btn-add-to-cart add-to-cart-btn" data-article="${product.article}" data-table="stock" data-price="${product.price}" data-quantity="${product.quantity || 0}" data-brand-id="${product.brand_id || ''}"><i class="bi bi-cart-plus"></i>${t('Add to Cart')}</button>`
                         : `<button type="button" class="btn-add-to-cart" disabled style="opacity:0.5;"><i class="bi bi-clock-history"></i>${t('Out of Stock')}</button>`
                     }
-                    <button class="btn-quick-view" type="button" title="${t('Quick view')}" data-article="${product.article}" data-name="${productTitle}" data-brand="${product.brand_name || ''}" data-price="${product.price}" data-quantity="${product.quantity || 0}" data-image-url="${product.image_url || ''}" data-product-url="/{{ session.get('language', 'sk') }}/product/${product.article}" data-brand-id="${product.brand_id || ''}">
+                    <button class="btn-quick-view" type="button" title="${t('Quick view')}" data-article="${product.article}" data-name="${productTitle}" data-brand="${product.brand_name || ''}" data-price="${product.price}" data-quantity="${product.quantity || 0}" data-image-url="${product.image_url || ''}" data-product-url="/product/${product.article}" data-brand-id="${product.brand_id || ''}">
                         <i class="bi bi-eye"></i>
                     </button>
                 </div>
@@ -598,7 +586,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     // Accordion toggle
     const toggleBtn = document.getElementById('vinRequestToggle');
     const collapseDiv = document.getElementById('vinRequestCollapse');
@@ -729,29 +716,19 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'Accept': 'application/json',
-                'X-CSRFToken': csrfToken
+                'Accept': 'application/json'
             },
-            body: `article=${encodeURIComponent(article)}&selected_price=${encodeURIComponent(selectedPrice)}&quantity=1&csrf_token=${encodeURIComponent(csrfToken)}`
+            body: `article=${encodeURIComponent(article)}&selected_price=${encodeURIComponent(selectedPrice)}&quantity=1`
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 button.innerHTML = '<i class="bi bi-check me-1"></i>{{ _("Added!") }}';
                 button.classList.add('added');
-                if (typeof window.updateCartBadge === 'function') {
-                    window.updateCartBadge(data.cart_count);
-                } else {
-                    const cartBadge = document.getElementById('cart-badge');
-                    const bottomCartBadge = document.getElementById('bottomCartBadge');
-                    if (cartBadge) {
-                        cartBadge.textContent = data.cart_count;
-                        cartBadge.style.display = data.cart_count > 0 ? '' : 'none';
-                    }
-                    if (bottomCartBadge) {
-                        bottomCartBadge.textContent = data.cart_count;
-                        bottomCartBadge.style.display = data.cart_count > 0 ? '' : 'none';
-                    }
+                const cartBadge = document.getElementById('cart-badge');
+                if (cartBadge) {
+                    cartBadge.textContent = data.cart_count;
+                    cartBadge.style.display = data.cart_count > 0 ? '' : 'none';
                 }
                 setTimeout(() => {
                     button.innerHTML = originalText;
@@ -774,11 +751,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     const SIDEBAR_STATE_KEY = 'catalogTreeExpandedV1';
-    const MOBILE_TREE_BREAKPOINT = 992;
-
-    function isMobileTreeMode() {
-        return window.innerWidth <= MOBILE_TREE_BREAKPOINT;
-    }
 
     function expandNode(node, shouldSave = true) {
         if (!node || !node.classList.contains('tree-node')) return;
@@ -822,7 +794,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function saveSidebarState() {
-        if (isMobileTreeMode()) return;
         try {
             const expandedIds = [];
             document.querySelectorAll('.tree-node.is-expanded[data-node-id]').forEach(node => {
@@ -835,7 +806,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function restoreSidebarState() {
-        if (isMobileTreeMode()) return;
         try {
             const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
             if (!savedState) return;
@@ -846,51 +816,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } catch (error) {
             console.error('Error restoring sidebar state:', error);
-        }
-    }
-
-    function collapseAllNodes() {
-        document.querySelectorAll('.tree-node.is-expanded').forEach(node => {
-            collapseNode(node, false);
-        });
-    }
-
-    function setActiveTrail() {
-        document.querySelectorAll('.tree-node.is-active-trail').forEach(node => {
-            node.classList.remove('is-active-trail');
-        });
-
-        document.querySelectorAll('.category-link.active, .subcategory-link.active').forEach(activeLink => {
-            let node = activeLink.closest('.tree-node');
-            while (node) {
-                node.classList.add('is-active-trail');
-                expandNode(node, false);
-                node = node.parentElement ? node.parentElement.closest('.tree-node') : null;
-            }
-        });
-    }
-
-    function initSidebarTree() {
-        document.querySelectorAll('.tree-node').forEach(node => {
-            node.classList.remove('is-expanded');
-            const toggle = node.querySelector(':scope > .category-row .category-toggle, :scope > .subcategory-row .category-toggle');
-            const parentTrigger = node.querySelector(':scope > .category-row .category-parent-trigger, :scope > .subcategory-row .subcategory-parent-trigger');
-            const children = node.querySelector(':scope > .tree-children');
-            if (children) {
-                children.hidden = true;
-            }
-            if (toggle) toggle.setAttribute('aria-expanded', 'false');
-            if (parentTrigger) parentTrigger.setAttribute('aria-expanded', 'false');
-        });
-
-        if (!isMobileTreeMode()) {
-            restoreSidebarState();
-        }
-
-        setActiveTrail();
-        if (isMobileTreeMode()) {
-            collapseAllNodes();
-            setActiveTrail();
         }
     }
 
@@ -923,14 +848,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    initSidebarTree();
+    document.querySelectorAll('.tree-node').forEach(node => {
+        const children = node.querySelector(':scope > .tree-children');
+        if (children) {
+            children.hidden = true;
+        }
+    });
 
-    let wasMobileTreeMode = isMobileTreeMode();
-    window.addEventListener('resize', () => {
-        const isMobileNow = isMobileTreeMode();
-        if (isMobileNow === wasMobileTreeMode) return;
-        wasMobileTreeMode = isMobileNow;
-        initSidebarTree();
+    restoreSidebarState();
+
+    document.querySelectorAll('.category-link.active, .subcategory-link.active').forEach(activeLink => {
+        let node = activeLink.closest('.tree-node');
+        while (node) {
+            node.classList.add('is-active-trail');
+            expandNode(node, false);
+            node = node.parentElement ? node.parentElement.closest('.tree-node') : null;
+        }
     });
 });
 </script>

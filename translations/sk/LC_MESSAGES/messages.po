@@ -4699,6 +4699,18 @@ msgstr "Pridať do košíka"
 msgid "Show More Products"
 msgstr "Zobraziť viac produktov"
 
+#: templates/public/index.html:234
+msgid "Quick view"
+msgstr "Rýchly náhľad"
+
+#: templates/public/index.html:294
+msgid "Open Full Product"
+msgstr "Otvoriť celý produkt"
+
+#: templates/public/index.html:316
+msgid "On request"
+msgstr "Na objednávku"
+
 #: templates/public/index.html:246
 msgid "Mon-Fri: 9:00 - 19:00"
 msgstr "Po-Pi: 9:00 - 19:00"
@@ -7632,3 +7644,33 @@ msgstr "Vyhľadávanie podľa čísla dielu"
 #~ msgstr[1] "Vyžadujú sa {len_type} hodnoty, ale boli zadané {len_value}."
 #~ msgstr[2] "Vyžaduje sa {len_type} hodnôt, ale bolo zadaných {len_value}."
 
+
+msgid "Stale Imports"
+msgstr "Zaseknute importy"
+
+msgid "Failed Imports"
+msgstr "Zlyhane importy"
+
+msgid "Last Import Failure"
+msgstr "Posledne zlyhanie importu"
+
+msgid "Issues Detected"
+msgstr "Zistene problemy"
+
+msgid "Status:"
+msgstr "Stav:"
+
+msgid "File:"
+msgstr "Subor:"
+
+msgid "Time:"
+msgstr "Cas:"
+
+msgid "Reason:"
+msgstr "Dovod:"
+
+msgid "unknown"
+msgstr "nezname"
+
+msgid "n/a"
+msgstr "nedostupne"

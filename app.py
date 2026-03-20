@@ -528,53 +528,6 @@ try:
 except Exception as e:
     logging.error(f"Error initializing scheduler during startup: {e}")
 
-def init_scheduler():
-    """Ініціалізує планувальник та додає всі заплановані завдання"""
-    try:
-        # Перевіряємо, чи планувальник уже запущено
-        if not scheduler.running:
-            scheduler.start()
-            logging.info("Scheduler started successfully")
-        else:
-            logging.info("Scheduler is already running")
-        
-        # Перевіряємо наявність наших завдань
-        job_ids = [job.id for job in scheduler.get_jobs()]
-        
-        # Додаємо завдання, якщо вони не існують
-        if 'generate_sitemap_daily' not in job_ids:
-            scheduler.add_job(
-                generate_sitemap_daily,
-                'cron', 
-                hour=2, 
-                minute=0,
-                id='generate_sitemap_daily'
-            )
-        
-        if 'generate_sitemap_weekly' not in job_ids:
-            scheduler.add_job(
-                generate_sitemap_weekly,
-                'cron', 
-                day_of_week='mon', 
-                hour=3, 
-                minute=0,
-                id='generate_sitemap_weekly'
-            )
-        
-        if 'generate_sitemap_monthly' not in job_ids:
-            scheduler.add_job(
-                generate_sitemap_monthly,
-                'cron', 
-                day=1, 
-                hour=4, 
-                minute=0,
-                id='generate_sitemap_monthly'
-            )
-            
-        logging.info("All scheduler jobs initialized")
-    except Exception as e:
-        logging.error(f"Error initializing scheduler: {e}", exc_info=True)
-
 
 def generate_sitemap_index_file():
     """Генерує sitemap index і зберігає на диск. Видаляє старі other файли."""
@@ -2188,41 +2141,6 @@ def get_categories_for_menu():
     """Повертає порожній список категорій (категорії відключені)"""
     return []
 
-def get_subcategories(parent_id):
-    """Отримує підкатегорії для вказаної батьківської категорії"""
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        
-        # Отримуємо поточну мову
-        lang = session.get('language', 'sk')
-        
-        # Запит для отримання підкатегорій
-        cursor.execute(f"""
-            SELECT 
-                id, 
-                name_{lang} as name,
-                name_uk as name_uk, 
-                name_en as name_en,
-                name_sk as name_sk,
-                name_pl as name_pl,
-                slug
-            FROM categories 
-            WHERE parent_id = %s 
-            ORDER BY order_index
-        """, (parent_id,))
-        
-        # Конвертуємо в звичайні словники
-        subcategories = [dict(row) for row in cursor.fetchall()]
-        
-        cursor.close()
-        conn.close()
-        return subcategories
-        
-    except Exception as e:
-        logging.error(f"Error getting subcategories: {e}", exc_info=True)
-        return []
-
 def get_category_breadcrumbs(category_id, cursor):
     """
     Повертає порожній список (категорії відключені)
@@ -2347,10 +2265,6 @@ def get_categories_tree_for_menu():
     except Exception as e:
         logging.error(f"Error fetching categories tree: {e}")
     return categories
-
-def get_categories_for_menu():
-    """Повертає порожній список категорій (категорії відключені)"""
-    return []
 
 
 @app.template_filter('tojson')
@@ -7757,14 +7671,6 @@ def assign_roles(token):
 
 
 
-def get_category_breadcrumbs(category_id, cursor):
-    """
-    Повертає порожній список (категорії відключені)
-    """
-    return []
-
-
-
 
 # Додайте в app.py:
 @app.route('/car-service')
@@ -13049,16 +12955,6 @@ def admin_import_zero_stock(token):
         logging.error(f"Error in admin_import_zero_stock: {e}", exc_info=True)
         flash("Error loading zero stock items", "error")
         return redirect(url_for('admin_import_dashboard', token=token))
-
-# Автоматичне очищення старих даних імпорту
-@scheduler.task('cron', id='cleanup_import_data', hour=1, minute=0)
-def scheduled_cleanup_import_data():
-    """Автоматичне очищення старих даних імпорту"""
-    try:
-        cleanup_old_import_data()
-        logging.info("Import data cleanup completed")
-    except Exception as e:
-        logging.error(f"Error in scheduled import cleanup: {e}", exc_info=True)
 
 def create_import_price_changes_table():
     """Створює таблицю для відстеження цінових змін"""

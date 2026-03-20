@@ -588,7 +588,10 @@ function copyEnToAll() {
 function setPrimaryPhoto(photoId) {
     if (confirm('{{ _("Set as primary photo?") }}')) {
         fetch(`/{{ token }}/admin/product-card/{{ article }}/photo/${photoId}/primary`, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
         }).then(() => {
             // Зберігаємо активну вкладку
             window.location.hash = 'photos';
@@ -600,7 +603,10 @@ function setPrimaryPhoto(photoId) {
 function deletePhoto(photoId) {
     if (confirm('{{ _("Delete photo?") }}')) {
         fetch(`/{{ token }}/admin/product-card/{{ article }}/photo/${photoId}/delete`, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
         }).then(() => {
             // Зберігаємо активну вкладку
             window.location.hash = 'photos';
@@ -664,6 +670,9 @@ function uploadPhotos() {
     
     fetch('{{ url_for("admin_product_card_upload_photo", token=token, article=article) }}', {
         method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
         body: formData
     })
     .then(response => response.json())
